@@ -1,0 +1,11 @@
+#
+# Use this file to track when dependencies were added, who added them, and why.
+#
+# Use the following template to document a new dependency.
+#
+#     < dependency goes here >
+#         Added on:
+#         Added by:
+#         Why is this dependency necessary? Why is it trustworthy?
+#         Sources
+#

@@ -1,0 +1,26 @@
+# Ignore local environment configuration files
+.env
+client/.env.*
+
+# Ignore local git directory
+.git/
+
+# Ignore compiled Python
+*.pyc
+__pycache__/
+
+# Ignore local static files and media
+server/static-files/
+server/media-files/
+node_modules/
+logs/
+
+# Ignore npm error logs
+npm-debug.log*
+
+# Ignore thumbnail files on OSX
+.DS_Store
+
+# Ignore built and static files
+static
+client/dist
