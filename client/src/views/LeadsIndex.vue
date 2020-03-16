@@ -15,11 +15,20 @@
 <script>
 import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
+import { getSerializedLists } from '@/db.js'
 
 export default {
   components: {
     ToolBar,
     ListsContainer,
+  },
+  data() {
+    return {
+      lists: [],
+    }
+  },
+  created() {
+    this.lists = getSerializedLists()
   },
 }
 </script>
