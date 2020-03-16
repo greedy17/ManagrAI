@@ -6,7 +6,7 @@
         <ToolBar />
       </div>
       <div class="lists-container-pane">
-        <ListsContainer />
+        <ListsContainer :lists="lists" />
       </div>
     </div>
   </div>
@@ -49,10 +49,12 @@ export default {
 .toolbar-pane {
   width: 16.67%;
   padding: 1%;
+  background-color: #fafafa;
 }
 
 .lists-container-pane {
   flex-grow: 1;
   padding: 1%;
+  background-color: #fafafa;
 }
 </style>
