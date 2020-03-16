@@ -8,10 +8,12 @@ import Vuex from 'vuex'
 import App from './App'
 import router from './router'
 import store from './store'
+import NavBar from '@/components/NavBar'
 
 Vue.config.productionTip = false
 
 Vue.use(Vuex)
+Vue.component('NavBar', NavBar)
 
 /* eslint-disable no-new */
 new Vue({
