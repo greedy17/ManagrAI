@@ -86,7 +86,7 @@ const leads = [
   {
     id: 5,
     name: 'Delta Airlines',
-    amount: 100000,
+    amount: 50000,
     rank: 4,
     primaryNote: 'May not need but have a lot of money',
     secondaryNote: null,
@@ -114,7 +114,7 @@ const leads = [
   {
     id: 7,
     name: 'Salesforce',
-    amount: 100000,
+    amount: 50000,
     rank: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
@@ -142,7 +142,7 @@ const leads = [
   {
     id: 9,
     name: 'Amazon Web Services',
-    amount: 100000,
+    amount: 5000,
     rank: 5,
     primaryNote: 'On competitor',
     secondaryNote: 'Up for renewal in Jan',
@@ -170,7 +170,7 @@ const leads = [
   {
     id: 11,
     name: 'Slack',
-    amount: 100000,
+    amount: 50000,
     rank: 5,
     primaryNote: 'Using competitor',
     secondaryNote: 'up for renewal in March',
@@ -212,7 +212,7 @@ const leads = [
   {
     id: 14,
     name: 'Uber',
-    amount: 100000,
+    amount: 50000,
     rank: 4,
     primaryNote: 'Launched a sales team for MBA program!',
     secondaryNote: null,
