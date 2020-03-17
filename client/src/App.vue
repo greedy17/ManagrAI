@@ -31,8 +31,8 @@ body {
 }
 
 /* for development purposes */
-div {
-  border-style: dashed;
-  border-width: 1px;
-}
+// div {
+//   border-style: dashed;
+//   border-width: 1px;
+// }
 </style>

@@ -19,5 +19,7 @@ export default {
 <style lang="scss" scoped>
 .lists-container {
   background-color: white;
+  padding-top: 1vh;
+  padding-bottom: 1vh;
 }
 </style>

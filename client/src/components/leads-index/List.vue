@@ -1,28 +1,43 @@
 <template>
   <div class="list">
-    <div class="list-header" @click="toggleDetails">
+    <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
       <img class="icon" src="/list-header.svg" />
       <span class="list-title"> {{ list.title }} </span>
-      <span class="list-length"> {{ list.leads.length }} Leads </span>
+      <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
-    <div class="list-details" v-if="showDetails">
-      Details!
+    <div class="list-leads" v-if="showLeads">
+      <Lead v-for="lead in list.leads" :key="lead.id" :lead="lead" />
     </div>
   </div>
 </template>
 
 <script>
+import Lead from '@/components/leads-index/Lead'
+
 export default {
   name: 'List',
   props: ['list'],
+  components: {
+    Lead,
+  },
   data() {
     return {
-      showDetails: false,
+      showLeads: false,
     }
   },
   methods: {
-    toggleDetails() {
-      this.showDetails = !this.showDetails
+    toggleLeads() {
+      this.showLeads = !this.showLeads
+    },
+  },
+  computed: {
+    numOfLeads() {
+      return this.list.leads.length
+    },
+    listHeaderBorder() {
+      return this.showLeads
+        ? { borderWidth: '2px', borderStyle: 'solid', borderColor: '#fafafa' }
+        : { borderWidth: '0 0 2px 0', borderStyle: 'solid', borderColor: '#fafafa' }
     },
   },
 }
@@ -33,7 +48,8 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: stretch;
-  margin-left: 2%;
+  margin: 1vh 1%;
+  padding-left: 1%;
 
   &:hover {
     cursor: pointer;
@@ -52,7 +68,12 @@ export default {
 }
 .list-length {
   align-self: center;
-  margin-left: auto;
-  margin-right: 50%;
+  margin-left: 10%;
+  margin-right: auto;
+}
+
+.list-leads {
+  margin-left: 1%;
+  margin-right: 1%;
 }
 </style>

@@ -54,7 +54,7 @@ export default {
 
 .lists-container-pane {
   flex-grow: 1;
-  padding: 1%;
+  padding: 1% 2% 1% 1%;
   background-color: #fafafa;
 }
 </style>
