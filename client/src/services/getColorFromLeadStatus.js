@@ -1,15 +1,17 @@
 const statusToPrimaryColor = {
   ready: '#FAB900',
-  trial: '#D7D7DD',
-  demo: '#fA646A',
+  trial: '#9596B3',
+  demo: '#88C9F9',
   waiting: '#9596B4',
-  customer: '#199E54',
+  customer: '#2F9E54',
 }
 
 const statusToSecondaryColor = {
-  ready: '#FEF1CC',
-  demo: '#FFE0E1',
+  ready: '#FEF1CD',
+  trial: '#EFF0F5',
+  demo: '#E8F4FE',
   waiting: '#EFEFF5',
+  customer: '#D1ECDD',
 }
 
 function statusSlugger(status) {
