@@ -34,19 +34,21 @@
         <img class="add-list-icon" src="/lead-header-add-list.svg" />
       </span>
     </div>
-    <div class="lead-details" v-if="showDetails">
-      Showing Lead Details...
-    </div>
+    <LeadDetails :lead="lead" v-if="showDetails" />
   </div>
 </template>
 
 <script>
 import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import currencyFormatter from '@/services/currencyFormatter'
+import LeadDetails from '@/components/leads-index/LeadDetails'
 
 export default {
   name: 'Lead',
   props: ['lead'],
+  components: {
+    LeadDetails,
+  },
   data() {
     return {
       showDetails: false,
@@ -257,9 +259,5 @@ export default {
   width: 15px;
   margin-left: auto;
   margin-right: 15%;
-}
-
-.lead-details {
-  padding-left: 4%;
 }
 </style>
