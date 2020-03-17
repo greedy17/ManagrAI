@@ -4,16 +4,35 @@
       <span class="lead-name"> {{ lead.name }} </span>
       <span class="lead-rank"> {{ lead.rank }} </span>
       <span class="lead-description"> {{ leadDescription }} </span>
-      <span class="lead-amount"> {{ lead.amount }} </span>
+      <span class="lead-amount"> {{ leadAmount }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <span class="lead-forecast"> {{ lead.forecast }} </span>
-      <span class="lead-status" v-bind:style="statusBackgroundColor">
-        {{ lead.status }}
-      </span>
-      <div class="lead-lists">
-        <span class="lead-list"> List One </span>
-        <span class="lead-list"> List Two </span>
+      <div class="lead-forecast-container">
+        <span class="lead-forecast"> {{ lead.forecast }} </span>
+        <img src="/lead-header-dropdown.svg" />
       </div>
+      <div class="lead-status-container">
+        <span class="lead-status" :style="statusBackgroundColor">
+          {{ lead.status }}
+        </span>
+        <img src="/lead-header-dropdown.svg" />
+      </div>
+      <div class="lead-lists">
+        <div class="lead-list-container">
+          <span class="lead-list">
+            Growth Accounts
+          </span>
+          <img class="remove-list-icon" src="/lead-header-remove-list.svg" />
+        </div>
+        <div class="lead-list-container">
+          <span class="lead-list">
+            Q2 Buyers
+          </span>
+          <img class="remove-list-icon" src="/lead-header-remove-list.svg" />
+        </div>
+      </div>
+      <span class="lead-add-list">
+        <img class="add-list-icon" src="/lead-header-add-list.svg" />
+      </span>
     </div>
     <div class="lead-details" v-if="showDetails">
       Showing Lead Details...
@@ -23,6 +42,7 @@
 
 <script>
 import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import currencyFormatter from '@/services/currencyFormatter'
 
 export default {
   name: 'Lead',
@@ -51,13 +71,20 @@ export default {
           description += secondaryNote
         }
       }
-      return description.slice(0, 34) + '...'
+      let sliced = description.slice(0, 50)
+      if (sliced.length > description.length) {
+        sliced += '...'
+      }
+      return sliced
     },
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
     },
     statusBackgroundColor() {
       return getStatusPrimaryColor(this.lead.status)
+    },
+    leadAmount() {
+      return currencyFormatter.format(this.lead.amount)
     },
   },
 }
@@ -75,19 +102,11 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 49px;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  /* temprorary: */
-  & > * {
-    flex-grow: 1;
-  }
 }
 
 .lead-name {
-  margin-left: 1%;
+  width: 15%;
+  padding-left: 1%;
   height: 16px;
   font-family: 'Lato', sans-serif;
   font-weight: bold;
@@ -97,9 +116,15 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: #110f24;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .lead-rank {
+  width: 4%;
+  text-align: center;
   opacity: 0.5;
   font-family: 'Lato', sans-serif;
   font-size: 12px;
@@ -124,8 +149,31 @@ export default {
   color: #110f24;
 }
 
+.lead-description {
+  width: 12.5%;
+}
+
+.lead-amount {
+  width: 7.5%;
+  padding-left: 10px;
+}
+
+.lead-last-update {
+  width: 5%;
+}
+
+.lead-forecast-container {
+  width: 12%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .lead-forecast {
   border-radius: 100px;
+  width: 65px;
+  padding: 2px 15px;
   background-color: #9596b4;
   font-family: 'Lato', sans-serif;
   font-size: 10px;
@@ -138,8 +186,18 @@ export default {
   color: #ffffff;
 }
 
+.lead-status-container {
+  width: 9%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .lead-status {
   border-radius: 100px;
+  width: 35px;
+  padding: 2px 15px;
   font-family: Lato;
   font-size: 10px;
   font-weight: bold;
@@ -152,13 +210,56 @@ export default {
 }
 
 .lead-lists {
+  width: 28%;
+  display: flex;
+}
+
+.lead-list-container {
+  display: flex;
+  align-items: center;
+  margin: 0 1vh;
+  width: 142px;
+  height: 24px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+}
+
+.lead-list {
+  padding-left: 5%;
+  width: 70%;
+  font-family: Lato;
+  font-size: 11px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.45;
+  letter-spacing: normal;
+  color: #484a6e;
+  text-decoration: underline;
+}
+
+.remove-list-icon {
+  height: 55%;
+  margin-left: auto;
+  padding-right: 5%;
+}
+
+.lead-add-list {
+  width: 5%;
+  display: flex;
+}
+
+.add-list-icon {
+  background-color: #eff0f5;
+  border-radius: 5px;
+  height: 15px;
+  width: 15px;
+  margin-left: auto;
+  margin-right: 15%;
 }
 
 .lead-details {
   padding-left: 4%;
-}
-
-.lead-lists {
-  display: inline-block;
 }
 </style>

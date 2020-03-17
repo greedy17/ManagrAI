@@ -1,7 +1,7 @@
 <template>
   <div class="list">
     <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
-      <img class="icon" src="/list-header.svg" />
+      <img class="icon" src="/list-header-accordion.svg" />
       <span class="list-title"> {{ list.title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
@@ -44,12 +44,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+
 .list-header {
   display: flex;
   flex-flow: row;
-  align-items: stretch;
+  align-items: center;
   margin: 1vh 1%;
   padding-left: 1%;
+  height: 49px;
 
   &:hover {
     cursor: pointer;
@@ -57,18 +60,22 @@ export default {
 }
 
 .icon {
-  height: 40px;
-  width: 40px;
+  height: 26px;
+  width: 26px;
   display: block;
 }
 
 .list-title {
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
   align-self: center;
   width: 25%;
+  margin-left: 11px;
 }
 .list-length {
   align-self: center;
-  margin-left: 10%;
+  margin-left: 20%;
   margin-right: auto;
 }
 
