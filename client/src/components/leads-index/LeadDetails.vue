@@ -36,14 +36,19 @@ export default {
 
 .actions-pane {
   width: 72.5%;
+  display: flex;
+  justify-content: center;
 }
 
 .insights-pane {
   flex-grow: 1;
+  display: flex;
+  justify-content: center;
 }
+
 /* for development purposes */
-div {
-  border-style: dashed;
-  border-width: 1px;
-}
+// div {
+//   border-style: dashed;
+//   border-width: 1px;
+// }
 </style>
