@@ -53,6 +53,14 @@ export default {
   margin: 1vh 1%;
   padding-left: 1%;
   height: 49px;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.14;
+  letter-spacing: normal;
+  color: #110f24;
 
   &:hover {
     cursor: pointer;
@@ -66,13 +74,12 @@ export default {
 }
 
 .list-title {
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
   font-weight: bold;
   align-self: center;
   width: 25%;
   margin-left: 11px;
 }
+
 .list-length {
   align-self: center;
   margin-left: 20%;
