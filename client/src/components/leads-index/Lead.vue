@@ -1,7 +1,7 @@
 <template>
   <div class="lead">
-    <div class="lead-header" @click="toggleDetails" v-bind:style="headerBackgroundColor">
-      <span class="lead-name"> {{ lead.name }} </span>
+    <div class="lead-header" v-bind:style="headerBackgroundColor">
+      <span class="lead-name" @click="toggleDetails"> {{ lead.name }} </span>
       <span class="lead-rank"> {{ lead.rank }} </span>
       <span class="lead-description"> {{ leadDescription }} </span>
       <span class="lead-amount"> {{ leadAmount }} </span>
