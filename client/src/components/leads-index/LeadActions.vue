@@ -27,7 +27,7 @@ import CallAction from '@/components/leads-index/CallAction'
 import EmailAction from '@/components/leads-index/EmailAction'
 import ReminderAction from '@/components/leads-index/ReminderAction'
 import ActionAction from '@/components/leads-index/ActionAction'
-import NoteAction from '@/components/leads-index/EmailAction'
+import NoteAction from '@/components/leads-index/NoteAction'
 
 export default {
   name: 'LeadActions',
@@ -42,8 +42,8 @@ export default {
   },
   data() {
     return {
-      activeTab: 0,
-      tabs: ['call', 'email', 'reminder', 'action', 'notes'],
+      activeTab: 4,
+      tabs: ['call', 'email', 'reminder', 'action', 'note'],
     }
   },
   methods: {
@@ -78,8 +78,4 @@ export default {
   display: flex;
   flex-flow: row;
 }
-
-// div {
-//   border: 1px dashed black;
-// }
 </style>
