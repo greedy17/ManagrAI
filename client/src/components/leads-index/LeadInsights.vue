@@ -26,8 +26,10 @@ export default {
 }
 
 .insights-header {
+  height: 48px;
   display: flex;
   flex-flow: row;
+  align-items: center;
   box-shadow: 0 1px 0 0 #ececee;
 }
 
