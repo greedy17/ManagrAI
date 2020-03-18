@@ -179,7 +179,7 @@ input {
 textarea {
   resize: none;
   height: 94%;
-  width: 98%;
+  width: 100%;
   box-sizing: border-box;
   padding: 3%;
   border-radius: 4px;
