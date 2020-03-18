@@ -74,12 +74,12 @@ export default {
 
 .action-tab-content {
   flex-grow: 1;
-  padding: 2vh; // padding: 2%;
+  padding: 2vh;
   display: flex;
   flex-flow: row;
 }
 
-div {
-  border: 1px dashed black;
-}
+// div {
+//   border: 1px dashed black;
+// }
 </style>
