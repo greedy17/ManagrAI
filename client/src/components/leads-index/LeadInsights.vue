@@ -2,7 +2,9 @@
   <div class="insights">
     <div class="insights-header">
       <span class="insights-header-title">Insights</span>
-      <span class="insights-header-link">See All Detail</span>
+      <div class="insights-header-link-container">
+        <span class="insights-header-link">See All Detail</span>
+      </div>
     </div>
   </div>
 </template>
@@ -46,11 +48,15 @@ export default {
   color: #110f24;
 }
 
-.insights-header-link {
+.insights-header-link-container {
   flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insights-header-link {
   text-transform: uppercase;
-  text-align: right;
-  padding: 5% 7% 5% 0%;
   font-family: 'Lato', sans-serif;
   font-size: 14px;
   font-weight: bold;
@@ -59,5 +65,13 @@ export default {
   line-height: 1.29;
   letter-spacing: 0.5px;
   color: #199e54;
+
+  &:hover {
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 4px 6px;
+    background-color: #199e54;
+    color: #ffffff;
+  }
 }
 </style>
