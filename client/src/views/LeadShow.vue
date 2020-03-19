@@ -9,7 +9,7 @@
         center
       </div>
       <div class="right-pane">
-        right pane
+        <LeadInsights :lead="lead" />
       </div>
     </div>
   </div>
@@ -23,7 +23,7 @@ export default {
   name: 'LeadShow',
   props: ['id'],
   components: {
-    LeadInsights
+    LeadInsights,
   },
   data() {
     return {
@@ -54,15 +54,12 @@ export default {
 }
 
 .center-pane {
-  width: 53%;
+  flex-grow: 1;
 }
 
 .right-pane {
-  padding-top: 1%;
-  width: 31%;
-}
-
-div {
-  border: 1px dashed black;
+  width: 30%;
+  box-sizing: border-box;
+  padding: 2% 1% 1% 1%;
 }
 </style>
