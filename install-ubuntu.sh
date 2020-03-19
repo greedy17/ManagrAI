@@ -17,10 +17,10 @@
 #
 
 # Configuration Variables
-db_user='{database_user}'
-db_pass='{database_password}'
-db_name='{database_name}'
-virtualenv_name='{managr}'
+db_user='managr'
+db_pass='manager'
+db_name='managr_db'
+virtualenv_name='managr'
 
 # DO NOT EDIT BEYOND THIS POINT
 
