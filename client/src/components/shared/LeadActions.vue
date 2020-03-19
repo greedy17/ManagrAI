@@ -22,12 +22,12 @@
 </template>
 
 <script>
-import ActionTabHeader from '@/components/leads-index/ActionTabHeader'
-import CallAction from '@/components/leads-index/CallAction'
-import EmailAction from '@/components/leads-index/EmailAction'
-import ReminderAction from '@/components/leads-index/ReminderAction'
-import ActionAction from '@/components/leads-index/ActionAction'
-import NoteAction from '@/components/leads-index/NoteAction'
+import ActionTabHeader from '@/components/shared/ActionTabHeader'
+import CallAction from '@/components/shared/CallAction'
+import EmailAction from '@/components/shared/EmailAction'
+import ReminderAction from '@/components/shared/ReminderAction'
+import ActionAction from '@/components/shared/ActionAction'
+import NoteAction from '@/components/shared/NoteAction'
 
 export default {
   name: 'LeadActions',
