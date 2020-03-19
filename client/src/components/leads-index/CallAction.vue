@@ -3,18 +3,18 @@
     <div class="call-action-left-pane">
       <div class="contacts-container">
         <div class="contact">
-          <img class="contact-img" src="/sara-smith.png" />
+          <img class="contact-img" src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="contact-name">Sara Smith</span>
           <div class="contact-phone-number-container">
-            <img class="telephone-icon" src="/telephone.svg" />
+            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
             <span class="contact-phone-number">555-555-5555</span>
           </div>
         </div>
         <div class="contact">
-          <img class="contact-img" src="/jake-murray.png" />
+          <img class="contact-img" src="@/assets/images/jake-murray.png" alt="contact image" />
           <span class="contact-name">Jake Murray</span>
           <div class="contact-phone-number-container">
-            <img class="telephone-icon" src="/telephone.svg" />
+            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
             <span class="contact-phone-number">555-555-5555</span>
           </div>
         </div>

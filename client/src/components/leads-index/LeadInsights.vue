@@ -8,7 +8,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/telephone.svg" />
+        <img class="insight-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -21,7 +21,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/email.svg" />
+        <img class="insight-icon" src="@/assets/images/email.svg" alt="email icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -34,7 +34,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/message.svg" />
+        <img class="insight-icon" src="@/assets/images/message.svg" alt="message icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -47,7 +47,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/contact.svg" />
+        <img class="insight-icon" src="@/assets/images/contact.svg" alt="contact icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -60,7 +60,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/calendar.svg" />
+        <img class="insight-icon" src="@/assets/images/calendar.svg" alt="calendar icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
