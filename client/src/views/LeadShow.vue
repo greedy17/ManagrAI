@@ -7,6 +7,9 @@
       </div>
       <div class="center-pane">
         <LeadBanner :lead="lead" />
+        <div class="lead-actions-container">
+          <LeadActions :lead="lead" />
+        </div>
       </div>
       <div class="right-pane">
         <LeadInsights :lead="lead" />
@@ -18,6 +21,7 @@
 <script>
 import { getSerializedLead } from '@/db.js'
 import LeadBanner from '@/components/lead-show/LeadBanner'
+import LeadActions from '@/components/shared/LeadActions'
 import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
@@ -25,6 +29,7 @@ export default {
   props: ['id'],
   components: {
     LeadBanner,
+    LeadActions,
     LeadInsights,
   },
   data() {
@@ -56,8 +61,15 @@ export default {
 }
 
 .center-pane {
-  flex-grow: 1;
+  width: 54%;
   padding: 2% 1% 1% 1%;
+}
+
+.lead-actions-container {
+  margin-top: 3%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .right-pane {
