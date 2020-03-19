@@ -3,7 +3,9 @@
     <div class="insights-header">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
-        <span class="insights-header-link">See All Detail</span>
+        <router-link :to="{ name: 'lead-show', params: { id: lead.id } }">
+          <span class="insights-header-link">See All Detail</span>
+        </router-link>
       </div>
     </div>
     <div class="insight-container">
@@ -188,5 +190,9 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: rgba($color: #110f24, $alpha: 0.4);
+}
+
+a {
+  text-decoration: none;
 }
 </style>
