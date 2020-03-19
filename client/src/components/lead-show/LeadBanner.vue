@@ -138,7 +138,6 @@ export default {
   }
 }
 
-
 .days-in-status-container {
   width: 29%;
   display: flex;
