@@ -38,7 +38,8 @@
     <div class="email-content" contenteditable="true">
       Hi <span class="template-variable example">First Name</span> , <br /><br />
 
-      Hope all is well today! Just following up to see if you have time to chat Friday about our demo! Looking forward to syncing up about our product for a March start date. <br />
+      Hope all is well today! Just following up to see if you have time to chat Friday about our
+      demo! Looking forward to syncing up about our product for a March start date. <br />
     </div>
     <div class="send-button-container">
       <span class="send-button">Send</span>

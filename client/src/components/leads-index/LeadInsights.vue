@@ -189,5 +189,4 @@ export default {
   letter-spacing: normal;
   color: rgba($color: #110f24, $alpha: 0.4);
 }
-
 </style>
