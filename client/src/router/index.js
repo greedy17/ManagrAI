@@ -9,6 +9,10 @@ export default new Router({
   mode: 'history',
   routes: [
     {
+      path: '/',
+      redirect: '/leads',
+    },
+    {
       path: '/leads',
       name: 'leads-index',
       component: LeadsIndex,
