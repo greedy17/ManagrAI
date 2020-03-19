@@ -47,13 +47,13 @@ export default {
 }
 
 .toolbar-pane {
-  width: 16.67%;
+  width: 17%;
   padding: 1%;
   background-color: #fafafa;
 }
 
 .lists-container-pane {
-  flex-grow: 1;
+  width: 83%;
   padding: 1% 2% 1% 1%;
   background-color: #fafafa;
 }
