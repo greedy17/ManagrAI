@@ -8,30 +8,30 @@
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <div class="lead-forecast-container">
         <span class="lead-forecast"> {{ lead.forecast }} </span>
-        <img src="/lead-header-dropdown.svg" />
+        <img src="/dropdown-arrow.svg" />
       </div>
       <div class="lead-status-container">
         <span class="lead-status" :style="statusBackgroundColor">
           {{ lead.status }}
         </span>
-        <img src="/lead-header-dropdown.svg" />
+        <img src="/dropdown-arrow.svg" />
       </div>
       <div class="lead-lists">
         <div class="lead-list-container">
           <span class="lead-list">
             Growth Accounts
           </span>
-          <img class="remove-list-icon" src="/lead-header-remove-list.svg" />
+          <img class="remove-list-icon" src="/remove.svg" />
         </div>
         <div class="lead-list-container">
           <span class="lead-list">
             Q2 Buyers
           </span>
-          <img class="remove-list-icon" src="/lead-header-remove-list.svg" />
+          <img class="remove-list-icon" src="/remove.svg" />
         </div>
       </div>
       <span class="lead-add-list">
-        <img class="add-list-icon" src="/lead-header-add-list.svg" />
+        <img class="add-list-icon" src="/add.svg" />
       </span>
     </div>
     <LeadDetails :lead="lead" v-if="showDetails" />
