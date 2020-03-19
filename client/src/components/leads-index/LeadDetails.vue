@@ -13,7 +13,7 @@
 
 <script>
 import LeadActions from '@/components/leads-index/LeadActions'
-import LeadInsights from '@/components/leads-index/LeadInsights'
+import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
   name: 'LeadDetails',
@@ -45,10 +45,4 @@ export default {
   display: flex;
   justify-content: center;
 }
-
-/* for development purposes */
-// div {
-//   border-style: dashed;
-//   border-width: 1px;
-// }
 </style>

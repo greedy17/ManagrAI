@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav>
-      <img src="/logo.png" />
+      <img src="@/assets/images/logo.png" alt="managr logo" />
       <span class="managr">
         managr
       </span>

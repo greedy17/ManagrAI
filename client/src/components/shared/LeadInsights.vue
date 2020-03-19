@@ -3,12 +3,14 @@
     <div class="insights-header">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
-        <span class="insights-header-link">See All Detail</span>
+        <router-link :to="{ name: 'lead-show', params: { id: lead.id } }">
+          <span class="insights-header-link">See All Detail</span>
+        </router-link>
       </div>
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/telephone.svg" />
+        <img class="insight-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -21,7 +23,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/email.svg" />
+        <img class="insight-icon" src="@/assets/images/email.svg" alt="email icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -34,7 +36,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/message.svg" />
+        <img class="insight-icon" src="@/assets/images/message.svg" alt="message icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -47,7 +49,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/contact.svg" />
+        <img class="insight-icon" src="@/assets/images/contact.svg" alt="contact icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -60,7 +62,7 @@
     </div>
     <div class="insight-container">
       <div class="icon-container">
-        <img class="insight-icon" src="/calendar.svg" />
+        <img class="insight-icon" src="@/assets/images/calendar.svg" alt="calendar icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -188,5 +190,9 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: rgba($color: #110f24, $alpha: 0.4);
+}
+
+a {
+  text-decoration: none;
 }
 </style>
