@@ -6,6 +6,71 @@
         <span class="insights-header-link">See All Detail</span>
       </div>
     </div>
+    <div class="insight-container">
+      <div class="icon-container">
+        <img class="insight-icon" src="/telephone.svg" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          4 Calls
+        </span>
+        <span class="insight-bottom">
+          3 mins ago
+        </span>
+      </div>
+    </div>
+    <div class="insight-container">
+      <div class="icon-container">
+        <img class="insight-icon" src="/email.svg" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          9 Emails
+        </span>
+        <span class="insight-bottom">
+          Yesterday
+        </span>
+      </div>
+    </div>
+    <div class="insight-container">
+      <div class="icon-container">
+        <img class="insight-icon" src="/message.svg" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          03/01/20
+        </span>
+        <span class="insight-bottom">
+          Last Action
+        </span>
+      </div>
+    </div>
+    <div class="insight-container">
+      <div class="icon-container">
+        <img class="insight-icon" src="/contact.svg" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          03/01/20
+        </span>
+        <span class="insight-bottom">
+          Contact Update
+        </span>
+      </div>
+    </div>
+    <div class="insight-container">
+      <div class="icon-container">
+        <img class="insight-icon" src="/calendar.svg" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          0 Demos
+        </span>
+        <span class="insight-bottom">
+          N/A
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -76,4 +141,53 @@ export default {
     color: #ffffff;
   }
 }
+
+.insight-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  height: 48px;
+  box-shadow: 0 1px 0 0 #ececee;
+}
+
+.insight-info {
+  display: flex;
+  flex-flow: column;
+  flex-grow: 1;
+}
+
+.icon-container {
+  width: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insight-icon {
+  height: 20px;
+  width: 20px;
+}
+
+.insight-top {
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.14;
+  letter-spacing: normal;
+  color: #110f24;
+}
+
+.insight-bottom {
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.14;
+  letter-spacing: normal;
+  color: rgba($color: #110f24, $alpha: 0.4);
+}
+
 </style>
