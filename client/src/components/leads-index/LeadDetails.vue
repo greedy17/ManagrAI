@@ -5,7 +5,7 @@
         <LeadActions :lead="lead" />
       </div>
       <div class="insights-pane">
-        <LeadInsights :lead="lead" />
+        <LeadInsights :lead="lead" :showLink="true" />
       </div>
     </div>
   </div>
