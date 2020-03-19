@@ -34,8 +34,12 @@
         </div>
       </div>
     </div>
-    <input class="email-subject" placeholder="Subject" />
-    <div class="email-content" />
+    <input class="email-subject" placeholder="Call Friday?" />
+    <div class="email-content" contenteditable="true">
+      Hi <span class="template-variable example">First Name</span> , <br /><br />
+
+      Hope all is well today! Just following up to see if you have time to chat Friday about our demo! Looking forward to syncing up about our product for a March start date. <br />
+    </div>
     <div class="send-button-container">
       <span class="send-button">Send</span>
     </div>
@@ -162,6 +166,16 @@ export default {
   }
 }
 
+.example {
+  margin-right: unset;
+  padding: 2px 0;
+  display: inline-block;
+  height: 16px;
+  width: 70px;
+  text-align: center;
+  vertical-align: center;
+}
+
 .template-selector-container {
   display: flex;
   flex-flow: row;
@@ -247,6 +261,21 @@ input {
   border-radius: 4px;
   border: solid 1px #ececee;
   background-color: #ffffff;
+  padding: 1vh;
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: rgba($color: #444444, $alpha: 0.5);
+
+  &:focus {
+    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    outline: none;
+    background-color: #ffffff;
+  }
 }
 
 .send-button-container {
