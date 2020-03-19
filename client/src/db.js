@@ -415,3 +415,12 @@ function serializeList(list) {
 export function getSerializedLists() {
   return lists.map(serializeList)
 }
+/**
+ * Simulate a GET request that returns a a list for current user, serialized with related data
+ * @returns {Object} - single serialized list
+ */
+export function getSerializedLead(id) {
+  let intId = parseInt(id, 10)
+  let lead = leads.find(lead => lead.id === intId)
+  return lead ? serializeLead(lead) : null
+}
