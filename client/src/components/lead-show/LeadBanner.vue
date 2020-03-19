@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-banner" v-bind:style="bannerBackgroundColor">
+  <div class="lead-banner" :style="bannerBackgroundColor">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
       <div class="forecast-dropdown">
@@ -83,7 +83,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    margin-left: 5%;
 
     .forecast {
       border-radius: 100px;
