@@ -7,8 +7,11 @@
       </div>
       <div class="center-pane">
         <LeadBanner :lead="lead" />
-        <div class="lead-actions-container">
+        <div class="container">
           <LeadActions :lead="lead" />
+        </div>
+        <div class="container">
+          <PinnedNotes />
         </div>
       </div>
       <div class="right-pane">
@@ -22,6 +25,7 @@
 import { getSerializedLead } from '@/db.js'
 import LeadBanner from '@/components/lead-show/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
+import PinnedNotes from '@/components/lead-show/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
@@ -30,6 +34,7 @@ export default {
   components: {
     LeadBanner,
     LeadActions,
+    PinnedNotes,
     LeadInsights,
   },
   data() {
@@ -43,7 +48,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .lead-show {
   height: inherit;
   display: flex;
@@ -63,13 +68,13 @@ export default {
 .center-pane {
   width: 54%;
   padding: 2% 1% 1% 1%;
-}
 
-.lead-actions-container {
-  margin-top: 3%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  .container {
+    margin-top: 3%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .right-pane {
