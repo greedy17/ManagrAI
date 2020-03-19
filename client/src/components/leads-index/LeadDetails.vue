@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import LeadActions from '@/components/leads-index/LeadActions'
+import LeadActions from '@/components/shared/LeadActions'
 import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
