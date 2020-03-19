@@ -42,7 +42,7 @@ export default {
   },
   data() {
     return {
-      activeTab: 4,
+      activeTab: 0,
       tabs: ['call', 'email', 'reminder', 'action', 'note'],
     }
   },
