@@ -43,7 +43,9 @@
       Hi <span class="template-variable example">First Name</span> , <br /><br />
 
       Hope all is well today! Just following up to see if you have time to chat Friday about our
-      demo! Looking forward to syncing up about our product for a March start date. <br />
+      demo! Looking forward to syncing up about our product for a March start date. <br /><br />
+
+      Joe
     </div>
     <div class="send-button-container">
       <span class="send-button">Send</span>
@@ -240,6 +242,7 @@ input {
   border: none;
   box-sizing: border-box;
   padding: 3%;
+  margin-top: 2%;
 
   &:focus {
     box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
@@ -262,7 +265,8 @@ input {
 
 .email-content {
   margin: 1% 0 2% 0;
-  height: 35%;
+  // height: 30%;
+  flex-grow: 1;
   border-radius: 4px;
   border: solid 1px #ececee;
   background-color: #ffffff;
