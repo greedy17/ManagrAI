@@ -61,7 +61,7 @@ export default {
   display: flex;
   flex-flow: column;
   padding: 20px 3%;
-  border: solid 1px #f2f2f3;
+  border-bottom: solid 1px #f2f2f3;
 }
 
 .note-header {
@@ -72,6 +72,10 @@ export default {
 
   .expand {
     margin-left: auto;
+
+    &:hover {
+      cursor: pointer;
+    }
   }
 }
 
