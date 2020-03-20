@@ -64,6 +64,7 @@ export default {
   height: inherit;
   display: flex;
   flex-flow: column;
+  background-color: #fafafa;
 }
 
 .page-content {
