@@ -3,7 +3,11 @@
     <NavBar />
     <div class="page-content">
       <div class="left-pane">
-        left pane
+        <img
+          class="left-pane-screenshot"
+          src="@/assets/images/screenshots/lead-show-left.png"
+          alt="screenshot"
+        />
       </div>
       <div class="center-pane">
         <LeadBanner :lead="lead" />
@@ -12,6 +16,13 @@
         </div>
         <div class="container">
           <PinnedNotes />
+        </div>
+        <div class="container">
+          <img
+            class="additional-information"
+            src="@/assets/images/screenshots/AdditionalInformation.png"
+            alt="screenshot"
+          />
         </div>
       </div>
       <div class="right-pane">
@@ -62,7 +73,19 @@ export default {
 }
 
 .left-pane {
-  width: 16%;
+  width: 21%;
+  padding-top: 2%;
+  padding-right: 1%;
+  display: flex;
+  flex-flow: row;
+  // justify-content: center;
+
+  .left-pane-screenshot {
+    width: 243px;
+    height: 773px;
+    display: block;
+    margin-left: auto;
+  }
 }
 
 .center-pane {
@@ -77,8 +100,13 @@ export default {
   }
 }
 
+.additional-information {
+  width: 100%;
+  border-top: solid 1px #f2f2f3;
+}
+
 .right-pane {
-  width: 30%;
+  width: 25%;
   box-sizing: border-box;
   padding: 2% 1% 1% 1%;
 }
