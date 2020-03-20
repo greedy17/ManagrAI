@@ -1,5 +1,5 @@
 <template>
-  <div class="actions">
+  <div class="actions" :style="height">
     <div class="actions-tab-headers">
       <ActionTabHeader
         v-for="(tab, index) in tabs"
@@ -22,12 +22,12 @@
 </template>
 
 <script>
-import ActionTabHeader from '@/components/leads-index/ActionTabHeader'
-import CallAction from '@/components/leads-index/CallAction'
-import EmailAction from '@/components/leads-index/EmailAction'
-import ReminderAction from '@/components/leads-index/ReminderAction'
-import ActionAction from '@/components/leads-index/ActionAction'
-import NoteAction from '@/components/leads-index/NoteAction'
+import ActionTabHeader from '@/components/shared/ActionTabHeader'
+import CallAction from '@/components/shared/CallAction'
+import EmailAction from '@/components/shared/EmailAction'
+import ReminderAction from '@/components/shared/ReminderAction'
+import ActionAction from '@/components/shared/ActionAction'
+import NoteAction from '@/components/shared/NoteAction'
 
 export default {
   name: 'LeadActions',
@@ -51,13 +51,23 @@ export default {
       this.activeTab = index
     },
   },
+  computed: {
+    height() {
+      if (this.tabs[this.activeTab] === 'email') {
+        return { height: '441px' }
+      } else {
+        return { height: '325px' }
+      }
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 .actions {
-  width: 765px;
-  height: 325px;
+  min-width: 765px;
+  width: 100%;
+  min-height: 325px;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px #f2f2f3;
   background-color: #ffffff;

@@ -170,6 +170,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .lead-forecast {
@@ -194,6 +198,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .lead-status {
@@ -239,12 +247,20 @@ export default {
   letter-spacing: normal;
   color: #484a6e;
   text-decoration: underline;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .remove-list-icon {
   height: 55%;
   margin-left: auto;
   padding-right: 5%;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .lead-add-list {
@@ -259,5 +275,9 @@ export default {
   width: 15px;
   margin-left: auto;
   margin-right: 15%;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>

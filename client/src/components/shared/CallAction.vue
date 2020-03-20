@@ -108,6 +108,10 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .telephone-icon {

@@ -3,10 +3,27 @@
     <NavBar />
     <div class="page-content">
       <div class="left-pane">
-        left pane
+        <img
+          class="left-pane-screenshot"
+          src="@/assets/images/screenshots/lead-show-left.png"
+          alt="screenshot"
+        />
       </div>
       <div class="center-pane">
-        center
+        <LeadBanner :lead="lead" />
+        <div class="container">
+          <LeadActions :lead="lead" />
+        </div>
+        <div class="container">
+          <PinnedNotes />
+        </div>
+        <div class="container">
+          <img
+            class="additional-information"
+            src="@/assets/images/screenshots/AdditionalInformation.png"
+            alt="screenshot"
+          />
+        </div>
       </div>
       <div class="right-pane">
         <LeadInsights :lead="lead" />
@@ -17,12 +34,18 @@
 
 <script>
 import { getSerializedLead } from '@/db.js'
+import LeadBanner from '@/components/lead-show/LeadBanner'
+import LeadActions from '@/components/shared/LeadActions'
+import PinnedNotes from '@/components/lead-show/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
   name: 'LeadShow',
   props: ['id'],
   components: {
+    LeadBanner,
+    LeadActions,
+    PinnedNotes,
     LeadInsights,
   },
   data() {
@@ -31,12 +54,12 @@ export default {
     }
   },
   created() {
-    this.list = getSerializedLead(this.id)
+    this.lead = getSerializedLead(this.id)
   },
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .lead-show {
   height: inherit;
   display: flex;
@@ -50,15 +73,40 @@ export default {
 }
 
 .left-pane {
-  width: 16%;
+  width: 21%;
+  padding-top: 2%;
+  padding-right: 1%;
+  display: flex;
+  flex-flow: row;
+  // justify-content: center;
+
+  .left-pane-screenshot {
+    width: 243px;
+    height: 773px;
+    display: block;
+    margin-left: auto;
+  }
 }
 
 .center-pane {
-  flex-grow: 1;
+  width: 54%;
+  padding: 2% 1% 1% 1%;
+
+  .container {
+    margin-top: 3%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.additional-information {
+  width: 100%;
+  border-top: solid 1px #f2f2f3;
 }
 
 .right-pane {
-  width: 30%;
+  width: 25%;
   box-sizing: border-box;
   padding: 2% 1% 1% 1%;
 }
