@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import ToolBar from '@/components/leads-index/ToolBar'
+// import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import { getSerializedLists } from '@/db.js'
 
@@ -43,6 +43,7 @@ export default {
   height: inherit;
   display: flex;
   flex-flow: column;
+  background-color: #fafafa;
 }
 
 .page-content {
