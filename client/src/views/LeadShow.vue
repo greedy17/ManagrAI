@@ -75,6 +75,7 @@ export default {
 
 .left-pane {
   width: 21%;
+  min-width: 294.75px;
   padding-top: 2%;
   padding-right: 1%;
   display: flex;
@@ -91,6 +92,7 @@ export default {
 
 .center-pane {
   width: 54%;
+  min-width: 795.5px;
   padding: 2% 1% 1% 1%;
 
   .container {
@@ -103,11 +105,13 @@ export default {
 
 .additional-information {
   width: 100%;
-  border-top: solid 1px #f2f2f3;
+  // border-top: solid 1px #f2f2f3;
+  display: inline-block;
 }
 
 .right-pane {
   width: 25%;
+  min-width: 335.5px;
   box-sizing: border-box;
   padding: 2% 1% 1% 1%;
 }
