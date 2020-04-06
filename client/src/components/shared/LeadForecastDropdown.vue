@@ -5,7 +5,7 @@
   </div> -->
   <div class="forecast-dropdown">
     <select @change="onChange" :style="computedStyles">
-      <option :selected="option === forecast" v-for="option in enums" :key="option">
+      <option :selected="option === forecast" v-for="option in enums" :key="option" :value="option">
         {{ option }}
       </option>
     </select>
