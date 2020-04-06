@@ -7,12 +7,7 @@
       <span class="lead-amount"> {{ leadAmount }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown :forecast="lead.forecast" />
-      <div class="lead-status-container">
-        <span class="lead-status" :style="statusBackgroundColor">
-          {{ lead.status }}
-        </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
+      <LeadStatusDropdown :status="lead.status" />
       <div class="lead-lists">
         <div class="lead-list-container">
           <span class="lead-list">
@@ -36,10 +31,11 @@
 </template>
 
 <script>
-import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import currencyFormatter from '@/services/currencyFormatter'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 
 export default {
   name: 'Lead',
@@ -47,6 +43,7 @@ export default {
   components: {
     LeadDetails,
     LeadForecastDropdown,
+    LeadStatusDropdown,
   },
   data() {
     return {
@@ -80,9 +77,6 @@ export default {
     },
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
-    },
-    statusBackgroundColor() {
-      return getStatusPrimaryColor(this.lead.status)
     },
     leadAmount() {
       return currencyFormatter.format(this.lead.amount)
@@ -191,32 +185,32 @@ export default {
 //   color: #ffffff;
 // }
 
-.lead-status-container {
-  width: 9%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// .lead-status-container {
+//   width: 9%;
+//   text-align: center;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 
-  &:hover {
-    cursor: pointer;
-  }
-}
+//   &:hover {
+//     cursor: pointer;
+//   }
+// }
 
-.lead-status {
-  border-radius: 100px;
-  width: 35px;
-  padding: 2px 15px;
-  font-family: Lato;
-  font-size: 10px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.6;
-  letter-spacing: normal;
-  text-align: center;
-  color: #ffffff;
-}
+// .lead-status {
+//   border-radius: 100px;
+//   width: 35px;
+//   padding: 2px 15px;
+//   font-family: Lato;
+//   font-size: 10px;
+//   font-weight: bold;
+//   font-stretch: normal;
+//   font-style: normal;
+//   line-height: 1.6;
+//   letter-spacing: normal;
+//   text-align: center;
+//   color: #ffffff;
+// }
 
 .lead-lists {
   width: 28%;

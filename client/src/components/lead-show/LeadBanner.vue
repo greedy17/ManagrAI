@@ -8,14 +8,7 @@
         :transparent="true"
       />
     </div>
-    <div class="status-container">
-      <div class="status-dropdown">
-        <span class="status" :style="statusBackgroundColor">
-          {{ lead.status }}
-        </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
-    </div>
+    <LeadStatusDropdown :status="lead.status" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Days In Status</span>
       <span class="days-in-status">7 Days</span>
@@ -34,8 +27,9 @@
 </template>
 
 <script>
-import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 
 export default {
   name: 'LeadBanner',
@@ -44,13 +38,11 @@ export default {
   },
   components: {
     LeadForecastDropdown,
+    LeadStatusDropdown,
   },
   computed: {
     bannerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
-    },
-    statusBackgroundColor() {
-      return getStatusPrimaryColor(this.lead.status)
     },
   },
 }
@@ -86,39 +78,6 @@ export default {
 
   .forecast-dropdown {
     margin-left: 5%;
-  }
-}
-
-.status-container {
-  width: 18%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .status-dropdown {
-    display: flex;
-    flex-flow: row;
-    align-items: center;
-
-    .status {
-      border-radius: 100px;
-      width: 35px;
-      padding: 2px 15px;
-      font-family: Lato;
-      font-size: 10px;
-      font-weight: bold;
-      font-stretch: normal;
-      font-style: normal;
-      line-height: 1.6;
-      letter-spacing: normal;
-      text-align: center;
-      color: #ffffff;
-    }
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 }
 
