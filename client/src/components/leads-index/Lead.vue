@@ -86,7 +86,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .lead {
   margin-bottom: 10px;
@@ -103,14 +103,14 @@ export default {
   width: 15%;
   padding-left: 1%;
   height: 16px;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 
   &:hover {
     cursor: pointer;
@@ -121,7 +121,7 @@ export default {
   width: 4%;
   text-align: center;
   opacity: 0.5;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: bold;
   font-stretch: normal;
@@ -134,14 +134,14 @@ export default {
 .lead-description,
 .lead-amount,
 .lead-last-update {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .lead-description {
@@ -176,14 +176,14 @@ export default {
 .lead-list {
   padding-left: 5%;
   width: 70%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #484a6e;
+  color: $dark-gray-blue;
   text-decoration: underline;
 
   &:hover {

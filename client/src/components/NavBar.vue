@@ -32,6 +32,7 @@ export default {
 
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import '@/styles/variables';
 
 nav {
   display: flex;
@@ -58,7 +59,7 @@ nav {
     font-stretch: normal;
     font-style: normal;
     line-height: normal;
-    color: #199e54;
+    color: $dark-green;
   }
 }
 

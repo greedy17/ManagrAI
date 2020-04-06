@@ -31,6 +31,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .pinned-notes {
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px #f2f2f3;
@@ -38,13 +40,13 @@ export default {
   display: flex;
   flex-flow: column;
   width: 100%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .header {
@@ -80,6 +82,6 @@ export default {
 }
 
 .note-content {
-  color: rgba($color: #110f24, $alpha: 0.4);
+  color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 </style>

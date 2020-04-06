@@ -15,7 +15,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .note-action {
   width: 100%;
@@ -26,20 +26,20 @@ export default {
 input {
   height: 40px;
   border-radius: 4px;
-  background-color: #fafafa;
+  background-color: $off-white;
   border: none;
   box-sizing: border-box;
   padding: 3%;
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
 
   &::placeholder {
     opacity: 0.5;
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
     font-weight: normal;
     font-stretch: normal;
@@ -59,8 +59,8 @@ textarea {
   padding: 3%;
   border-radius: 4px;
   border: none;
-  background-color: #fafafa;
-  font-family: 'Lato', sans-serif;
+  background-color: $off-white;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
@@ -70,14 +70,14 @@ textarea {
   color: #444444;
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
 
   &::placeholder {
     opacity: 0.5;
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
     font-weight: normal;
     font-stretch: normal;
@@ -100,8 +100,8 @@ textarea {
   justify-content: center;
   padding: 5px 15px;
   border-radius: 5px;
-  background-color: #199e54;
-  font-family: 'Lato', sans-serif;
+  background-color: $dark-green;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;

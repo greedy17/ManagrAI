@@ -60,11 +60,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .lead-show {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 .page-content {
@@ -81,7 +83,6 @@ export default {
   padding-right: 1%;
   display: flex;
   flex-flow: row;
-  // justify-content: center;
 
   .left-pane-screenshot {
     width: 243px;
@@ -106,7 +107,6 @@ export default {
 
 .additional-information {
   width: 100%;
-  // border-top: solid 1px #f2f2f3;
   display: inline-block;
 }
 

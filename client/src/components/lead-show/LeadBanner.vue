@@ -49,7 +49,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .lead-banner {
   height: 49px;
@@ -66,14 +66,14 @@ export default {
   align-items: center;
 
   .forecast-label {
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 12px;
     font-weight: bold;
     font-stretch: normal;
     font-style: normal;
     line-height: 2.25;
     letter-spacing: normal;
-    color: #110f24;
+    color: $main-font-gray;
   }
 
   .forecast-dropdown {
@@ -90,26 +90,26 @@ export default {
 }
 
 .days-in-status-label {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.71;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
   margin-right: 5%;
 }
 
 .days-in-status {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 2.25;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .banner-buttons {
@@ -127,14 +127,14 @@ export default {
   padding: 5px 10px;
   border-radius: 5px;
   background-color: #efeff5;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 
   .button-icon {
     height: 16px;

@@ -56,7 +56,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .forecast-dropdown {
   width: 100px;
@@ -68,7 +68,7 @@ export default {
     height: 100%;
     padding: 2px 15px;
 
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-stretch: normal;
     font-style: normal;
     line-height: 1.6;

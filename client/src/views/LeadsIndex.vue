@@ -39,11 +39,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .leads-index {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 .page-content {
@@ -55,7 +57,7 @@ export default {
 .toolbar-pane {
   width: 17%;
   padding: 1%;
-  background-color: #fafafa;
+  background-color: $off-white;
   /* screenshot -related */
   display: flex;
   flex-flow: row;
@@ -71,6 +73,6 @@ export default {
 .lists-container-pane {
   width: 83%;
   padding: 1% 2% 1% 1%;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 </style>

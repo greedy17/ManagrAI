@@ -44,7 +44,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .list-header {
   display: flex;
@@ -53,14 +53,14 @@ export default {
   margin: 1vh 1%;
   padding-left: 1%;
   height: 49px;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 
   &:hover {
     cursor: pointer;
