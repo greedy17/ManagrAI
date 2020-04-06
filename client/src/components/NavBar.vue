@@ -53,7 +53,7 @@ nav {
   .name {
     display: flex;
     align-items: center;
-    font-family: Quicksand;
+    font-family: $logo-font-family;
     font-size: 36px;
     font-weight: 500;
     font-stretch: normal;
