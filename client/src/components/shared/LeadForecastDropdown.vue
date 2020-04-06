@@ -1,8 +1,4 @@
 <template>
-  <!-- <div class="lead-forecast-container">
-    <span class="lead-forecast"> {{ forecast }} </span>
-    <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-  </div> -->
   <div class="forecast-dropdown">
     <select @change="onChange" :style="computedStyles">
       <option :selected="option === forecast" v-for="option in enums" :key="option" :value="option">
