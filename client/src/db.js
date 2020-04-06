@@ -37,7 +37,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Demo',
     lastUpdateDate: '3/1/20',
-    forecast: 'Feeling Lucky',
+    forecast: '50/50',
     listId: 1,
     // related value: lead has many notes
   },
@@ -93,7 +93,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Waiting',
     lastUpdateDate: '3/5/20',
-    forecast: 'Feeling Lucky',
+    forecast: '50/50',
     listId: 5,
     // related value: lead has many notes
   },
@@ -107,7 +107,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Waiting',
     lastUpdateDate: '3/6/20',
-    forecast: 'Feeling Lucky',
+    forecast: '50/50',
     listId: 1,
     // related value: lead has many notes
   },
