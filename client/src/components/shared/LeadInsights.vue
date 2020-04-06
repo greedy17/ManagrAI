@@ -4,7 +4,7 @@
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
         <router-link :to="{ name: 'lead-show', params: { id: lead.id } }" v-if="showLink">
-          <span class="insights-header-link">See All Detail</span>
+          <span class="insights-header-link">See Lead Detail</span>
         </router-link>
       </div>
     </div>
