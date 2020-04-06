@@ -157,61 +157,6 @@ export default {
   width: 5%;
 }
 
-// .lead-forecast-container {
-//   width: 12%;
-//   text-align: center;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-
-//   &:hover {
-//     cursor: pointer;
-//   }
-// }
-
-// .lead-forecast {
-//   border-radius: 100px;
-//   width: 65px;
-//   padding: 2px 15px;
-//   background-color: #9596b4;
-//   font-family: 'Lato', sans-serif;
-//   font-size: 10px;
-//   font-weight: bold;
-//   font-stretch: normal;
-//   font-style: normal;
-//   line-height: 1.6;
-//   letter-spacing: normal;
-//   text-align: center;
-//   color: #ffffff;
-// }
-
-// .lead-status-container {
-//   width: 9%;
-//   text-align: center;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-
-//   &:hover {
-//     cursor: pointer;
-//   }
-// }
-
-// .lead-status {
-//   border-radius: 100px;
-//   width: 35px;
-//   padding: 2px 15px;
-//   font-family: Lato;
-//   font-size: 10px;
-//   font-weight: bold;
-//   font-stretch: normal;
-//   font-style: normal;
-//   line-height: 1.6;
-//   letter-spacing: normal;
-//   text-align: center;
-//   color: #ffffff;
-// }
-
 .lead-lists {
   width: 28%;
   display: flex;

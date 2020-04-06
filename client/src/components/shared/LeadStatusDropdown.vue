@@ -1,19 +1,4 @@
 <template>
-  <!-- <div class="lead-status-container">
-    <span class="lead-status" :style="statusBackgroundColor">
-      {{ lead.status }}
-    </span>
-    <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-  </div> -->
-
-  <!-- <div class="forecast-dropdown">
-    <select @change="onChange" :style="computedStyles">
-      <option :selected="option === forecast" v-for="option in enums" :key="option" :value="option">
-        {{ option }}
-      </option>
-    </select>
-  </div> -->
-
   <div class="status-dropdown">
     <select @change="onChange" :style="computedStyles">
       <option :selected="option === status" v-for="option in enums" :key="option" :value="option">
