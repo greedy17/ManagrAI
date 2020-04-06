@@ -6,10 +6,7 @@
       <span class="lead-description"> {{ leadDescription }} </span>
       <span class="lead-amount"> {{ leadAmount }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <div class="lead-forecast-container">
-        <span class="lead-forecast"> {{ lead.forecast }} </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
+      <LeadForecastDropdown :forecast="lead.forecast" />
       <div class="lead-status-container">
         <span class="lead-status" :style="statusBackgroundColor">
           {{ lead.status }}
@@ -42,12 +39,14 @@
 import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import currencyFormatter from '@/services/currencyFormatter'
 import LeadDetails from '@/components/leads-index/LeadDetails'
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 
 export default {
   name: 'Lead',
   props: ['lead'],
   components: {
     LeadDetails,
+    LeadForecastDropdown,
   },
   data() {
     return {
@@ -164,33 +163,33 @@ export default {
   width: 5%;
 }
 
-.lead-forecast-container {
-  width: 12%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// .lead-forecast-container {
+//   width: 12%;
+//   text-align: center;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 
-  &:hover {
-    cursor: pointer;
-  }
-}
+//   &:hover {
+//     cursor: pointer;
+//   }
+// }
 
-.lead-forecast {
-  border-radius: 100px;
-  width: 65px;
-  padding: 2px 15px;
-  background-color: #9596b4;
-  font-family: 'Lato', sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.6;
-  letter-spacing: normal;
-  text-align: center;
-  color: #ffffff;
-}
+// .lead-forecast {
+//   border-radius: 100px;
+//   width: 65px;
+//   padding: 2px 15px;
+//   background-color: #9596b4;
+//   font-family: 'Lato', sans-serif;
+//   font-size: 10px;
+//   font-weight: bold;
+//   font-stretch: normal;
+//   font-style: normal;
+//   line-height: 1.6;
+//   letter-spacing: normal;
+//   text-align: center;
+//   color: #ffffff;
+// }
 
 .lead-status-container {
   width: 9%;

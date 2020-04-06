@@ -2,10 +2,11 @@
   <div class="lead-banner" :style="bannerBackgroundColor">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
-      <div class="forecast-dropdown">
-        <span class="forecast"> {{ lead.forecast }} </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
+      <LeadForecastDropdown
+        class="forecast-dropdown"
+        :forecast="lead.forecast"
+        :transparent="true"
+      />
     </div>
     <div class="status-container">
       <div class="status-dropdown">
@@ -34,11 +35,15 @@
 
 <script>
 import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 
 export default {
   name: 'LeadBanner',
   props: {
     lead: Object,
+  },
+  components: {
+    LeadForecastDropdown,
   },
   computed: {
     bannerBackgroundColor() {
@@ -80,28 +85,7 @@ export default {
   }
 
   .forecast-dropdown {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin-left: 5%;
-
-    .forecast {
-      border-radius: 100px;
-      padding: 2px 8px;
-      font-family: 'Lato', sans-serif;
-      font-size: 12px;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
-      line-height: 1.6;
-      letter-spacing: normal;
-      text-align: center;
-      color: #110f24;
-    }
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 }
 
