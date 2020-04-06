@@ -30,6 +30,7 @@ const leads = [
   {
     id: 1,
     name: 'Samsung',
+    amount: 100000,
     rank: 4,
     primaryNote: 'On competitor',
     secondaryNote: 'Up for renewal in Jan',
@@ -43,6 +44,7 @@ const leads = [
   {
     id: 2,
     name: 'Tesla',
+    amount: 100000,
     rank: 3,
     primaryNote: 'New director of marketing',
     secondaryNote: 'has budget',
@@ -56,6 +58,7 @@ const leads = [
   {
     id: 3,
     name: 'Boston University',
+    amount: 100000,
     rank: 3,
     primaryNote: 'Using competitor',
     secondaryNote: 'up for renewal in March',
@@ -69,6 +72,7 @@ const leads = [
   {
     id: 4,
     name: 'Georgia Pacific',
+    amount: 100000,
     rank: 4,
     primaryNote: 'Was interested last year',
     secondaryNote: 'Q2 is when they buy',
@@ -82,6 +86,7 @@ const leads = [
   {
     id: 5,
     name: 'Delta Airlines',
+    amount: 50000,
     rank: 4,
     primaryNote: 'May not need but have a lot of money',
     secondaryNote: null,
@@ -95,6 +100,7 @@ const leads = [
   {
     id: 6,
     name: 'Emory University',
+    amount: 100000,
     rank: 3,
     primaryNote: 'Launched a sales team for MBA program!',
     secondaryNote: null,
@@ -108,6 +114,7 @@ const leads = [
   {
     id: 7,
     name: 'Salesforce',
+    amount: 50000,
     rank: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
@@ -121,6 +128,7 @@ const leads = [
   {
     id: 8,
     name: 'Oracle',
+    amount: 100000,
     rank: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
@@ -134,6 +142,7 @@ const leads = [
   {
     id: 9,
     name: 'Amazon Web Services',
+    amount: 5000,
     rank: 5,
     primaryNote: 'On competitor',
     secondaryNote: 'Up for renewal in Jan',
@@ -147,6 +156,7 @@ const leads = [
   {
     id: 10,
     name: 'LinkedIn',
+    amount: 100000,
     rank: 5,
     primaryNote: 'New director of marketing',
     secondaryNote: 'has budget',
@@ -160,6 +170,7 @@ const leads = [
   {
     id: 11,
     name: 'Slack',
+    amount: 50000,
     rank: 5,
     primaryNote: 'Using competitor',
     secondaryNote: 'up for renewal in March',
@@ -173,6 +184,7 @@ const leads = [
   {
     id: 12,
     name: 'Tableau',
+    amount: 100000,
     rank: 5,
     primaryNote: 'Was interested last year',
     secondaryNote: 'Q2 is when they buy',
@@ -186,6 +198,7 @@ const leads = [
   {
     id: 13,
     name: 'Zoom',
+    amount: 100000,
     rank: 5,
     primaryNote: 'May not need but have a lot of money',
     secondaryNote: null,
@@ -199,6 +212,7 @@ const leads = [
   {
     id: 14,
     name: 'Uber',
+    amount: 50000,
     rank: 4,
     primaryNote: 'Launched a sales team for MBA program!',
     secondaryNote: null,
@@ -212,6 +226,7 @@ const leads = [
   {
     id: 15,
     name: "Mike's Pastry",
+    amount: 100000,
     rank: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
@@ -399,4 +414,13 @@ function serializeList(list) {
  */
 export function getSerializedLists() {
   return lists.map(serializeList)
+}
+/**
+ * Simulate a GET request that returns a a list for current user, serialized with related data
+ * @returns {Object} - single serialized list
+ */
+export function getSerializedLead(id) {
+  let intId = parseInt(id, 10)
+  let lead = leads.find(lead => lead.id === intId)
+  return lead ? serializeLead(lead) : null
 }

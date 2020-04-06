@@ -1,0 +1,48 @@
+<template>
+  <div class="lead-details">
+    <div class="lead-details-content">
+      <div class="actions-pane">
+        <LeadActions :lead="lead" />
+      </div>
+      <div class="insights-pane">
+        <LeadInsights :lead="lead" :showLink="true" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import LeadActions from '@/components/shared/LeadActions'
+import LeadInsights from '@/components/shared/LeadInsights'
+
+export default {
+  name: 'LeadDetails',
+  props: ['lead'],
+  components: {
+    LeadActions,
+    LeadInsights,
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+.lead-details {
+  padding: 2%;
+}
+.lead-details-content {
+  display: flex;
+  flex-flow: row;
+}
+
+.actions-pane {
+  width: 72.5%;
+  display: flex;
+  justify-content: center;
+}
+
+.insights-pane {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+</style>
