@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-list">
+  <div class="lead-list" :style="computedStyles">
     <span class="list-name" @click="handleNameClick">
       {{ listName }}
     </span>
@@ -20,6 +20,9 @@ export default {
       type: String,
       required: true,
     },
+    dark: {
+      type: Boolean,
+    },
   },
   data() {
     return {}
@@ -34,6 +37,19 @@ export default {
       this.$emit('deleted-lead-list', leadListID)
     },
   },
+  computed: {
+    computedStyles() {
+      if (this.dark) {
+        return {
+          'background-color': '#efeff5',
+        }
+      } else {
+        return {
+          'background-color': '#ffffff',
+        }
+      }
+    },
+  },
 }
 </script>
 
@@ -43,7 +59,6 @@ export default {
 .lead-list {
   display: flex;
   align-items: center;
-  margin: 0 1vh;
   padding: 0 8px;
   width: 142px;
   height: 20px;
