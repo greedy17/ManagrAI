@@ -9,8 +9,8 @@
       <LeadForecastDropdown :forecast="lead.forecast" />
       <LeadStatusDropdown :status="lead.status" />
       <div class="lead-lists">
-        <LeadList :listName="'Growth Accounts'" />
-        <LeadList :listName="'Q2 Buyers'" />
+        <LeadList class="lead-list" :listName="'Growth Accounts'" />
+        <LeadList class="lead-list" :listName="'Q2 Buyers'" />
       </div>
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="add icon" />
@@ -153,6 +153,10 @@ export default {
   width: 28%;
   display: flex;
   align-items: center;
+}
+
+.lead-list {
+  margin: 0 1vh;
 }
 
 .lead-add-list {
