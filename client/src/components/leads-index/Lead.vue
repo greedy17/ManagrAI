@@ -9,18 +9,8 @@
       <LeadForecastDropdown :forecast="lead.forecast" />
       <LeadStatusDropdown :status="lead.status" />
       <div class="lead-lists">
-        <div class="lead-list-container">
-          <span class="lead-list">
-            Growth Accounts
-          </span>
-          <img class="remove-list-icon" src="@/assets/images/remove.svg" alt="remove icon" />
-        </div>
-        <div class="lead-list-container">
-          <span class="lead-list">
-            Q2 Buyers
-          </span>
-          <img class="remove-list-icon" src="@/assets/images/remove.svg" alt="remove icon" />
-        </div>
+        <LeadList :listName="'Growth Accounts'" />
+        <LeadList :listName="'Q2 Buyers'" />
       </div>
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="add icon" />
@@ -36,6 +26,7 @@ import currencyFormatter from '@/services/currencyFormatter'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import LeadList from '@/components/shared/LeadList'
 
 export default {
   name: 'Lead',
@@ -44,6 +35,7 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
+    LeadList,
   },
   data() {
     return {
@@ -160,45 +152,7 @@ export default {
 .lead-lists {
   width: 28%;
   display: flex;
-}
-
-.lead-list-container {
-  display: flex;
   align-items: center;
-  margin: 0 1vh;
-  width: 142px;
-  height: 24px;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
-}
-
-.lead-list {
-  padding-left: 5%;
-  width: 70%;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 11px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.45;
-  letter-spacing: normal;
-  color: $dark-gray-blue;
-  text-decoration: underline;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.remove-list-icon {
-  height: 55%;
-  margin-left: auto;
-  padding-right: 5%;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .lead-add-list {
