@@ -2,7 +2,9 @@ import { API_BASE, apiClient, apiErrorHandler } from '@/services/api'
 import store from '@/store'
 
 // API Endpoints
-const LOGIN = `${API_BASE}login/`
+const LOGIN_ENDPOINT = `${API_BASE}login/`
+const INVITE_ENDPOINT = `${API_BASE}users/invite/`
+const GENERATE_ACTIVATE_ENDPOINT = uid => `${API_BASE}users/${uid}/activate/`
 
 export default class UserAPI {
   /**
@@ -23,10 +25,10 @@ export default class UserAPI {
     return new UserAPI(cls)
   }
 
-  static login(email, password) {
+  login(email, password) {
     const data = { email, password }
     const promise = apiClient()
-      .post(LOGIN, data)
+      .post(LOGIN_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'UserAPI.login' }))
     return promise
   }
@@ -34,5 +36,21 @@ export default class UserAPI {
   /* Perform logout by clearing the Vuex store. */
   logout() {
     store.commit('LOGOUT_USER')
+  }
+
+  invite(email, type, organization) {
+    const data = { email, type, organization }
+    const promise = apiClient()
+      .post(INVITE_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'UserAPI.invite' }))
+    return promise
+  }
+
+  activate(uid, token, password) {
+    const data = { token, password }
+    const promise = apiClient()
+      .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
+      .catch(apiErrorHandler({ apiName: 'UserAPI.invite' }))
+    return promise
   }
 }

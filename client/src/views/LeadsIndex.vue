@@ -18,6 +18,7 @@ import ListsContainer from '@/components/leads-index/ListsContainer'
 import { getSerializedLists } from '@/db.js'
 
 export default {
+  name: 'LeadsIndex',
   components: {
     ToolBar,
     ListsContainer,
