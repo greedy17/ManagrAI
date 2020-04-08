@@ -1,16 +1,28 @@
 from django.shortcuts import render
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.db import transaction
+from rest_framework.authtoken.models import Token
 from django.template.exceptions import TemplateDoesNotExist
-
+from rest_framework import (
+    authentication,
+    filters,
+    permissions,
+    generics,
+    mixins,
+    status,
+    views,
+    viewsets,
+)
 from rest_framework import (
     viewsets, mixins, generics, status, filters, permissions
 )
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import User
-from .serializers import UserSerializer, UserLoginSerializer, UserRegistrationSerializer
+from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED
+from .serializers import UserSerializer, UserLoginSerializer,  UserInvitationSerializer
+from .permissions import (IsOrganizationManager, IsSuperUser)
 
 
 def index(request):
@@ -20,14 +32,18 @@ def index(request):
         return render(request, 'core/index-placeholder.html', {})
 
 
-class UserLoginView(generics.GenericAPIView):
+class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
+    """
+    For admin login.
+    """
+    authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = UserLoginSerializer
-    authentication_classes = ()
-    permission_classes = ()
+    permission_classes = (permissions.AllowAny, )
 
     def post(self, request, *args, **kwargs):
-        """
-        Validate user credentials, login, and return serialized user + auth token.
+        """Validate user credentials.
+
+        Return serialized user and auth token.
         """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -36,32 +52,103 @@ class UserLoginView(generics.GenericAPIView):
         # Get the user entity, from which we can get (or create) the auth token
         user = authenticate(**serializer.validated_data)
         if user is None:
-            raise ValidationError(
-                detail='Incorrect email and password combination. Please try again.')
+            raise ValidationError({
+                'non_field_errors': [
+                    ('Incorrect email and password combination. '
+                     'Please try again')
+                ],
+            })
+        login(request, user)
+        # create token if one does not exist
+        Token.objects.get_or_create(user=user)
 
-        response_data = UserLoginSerializer.login(user, request)
+        # Build and send the response
+        serializer = UserSerializer(user, context={'request': request})
+        response_data = serializer.data
+        response_data['token'] = user.auth_token.key
+        return Response(response_data)
+# TODO: Add relevant mixins to manipulate users via API
+
+
+class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    """
+        this is a helper method to get the token for postman requests testing the user activation
+        it is currently only open to Super Users but will also allow self in the future
+    """
+
+    @action(methods=['get'], permission_classes=[IsSuperUser], detail=True, url_path='get_token')
+    def magic_token(self, request, *args, **kwargs):
+        user = request.user
+        res = {}
+        if(user.is_superuser):
+            try:
+                user = User.objects.get(pk=kwargs['pk'])
+                res['magic_token'] = user.magic_token
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(res)
+
+    @action(methods=['post'], permission_classes=[permissions.AllowAny], detail=True, url_path='activate')
+    def activate(self, request, *args, **kwargs):
+        # users should only be able to activate if they are in an invited state
+        magic_token = request.data.get('token', None)
+        password = request.data.get('password', None)
+        if not password or not magic_token:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(pk=kwargs['pk'])
+            if str(user.magic_token) == str(magic_token) and not user.magic_token_expired and user.state == STATE_INVITED:
+                user.set_password(password)
+                user.state = STATE_ACTIVE
+                # expire old magic token and create a new one for other uses
+                user.regen_magic_token()
+                user.save()
+
+                login(request, user)
+                # create token if one does not exist
+                Token.objects.get_or_create(user=user)
+
+                # Build and send the response
+                serializer = UserSerializer(user, context={'request': request})
+                response_data = serializer.data
+                response_data['token'] = user.auth_token.key
+                return Response(response_data)
+
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = UserInvitationSerializer
+    permission_classes = (IsSuperUser, IsOrganizationManager)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        if not user.is_superuser:
+            if str(user.organization.id) != str(request.data['organization']):
+                # allow custom organization in request only for SuperUsers
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_create(serializer)
+        user = serializer.instance
+
+        serializer = UserSerializer(user, context={'request': request})
+        response_data = serializer.data
+        response_data['activation_link'] = user.activation_link
+
         return Response(response_data)
 
 
-# TODO: Add relevant mixins to manipulate users via API
-class UserViewSet(viewsets.GenericViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    # TODO: Restrict Permissions appropriately
-    authentication_classes = ()
+class UserActivationView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = ()
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        """
-        Endpoint to create/register a new user.
-        """
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)  # This calls .create() on serializer
-        user = serializer.instance
-
-        # Log-in user and re-serialize response
-        response_data = UserLoginSerializer.login(user, request)
-        return Response(response_data, status=status.HTTP_201_CREATED)
+    serializer_class = UserSerializer
+    # will use a manager to filter out the correct users depending on the requesting user
+    queryset = User.objects.all()

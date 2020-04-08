@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
-from .models import User
+from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -39,7 +39,15 @@ class UserLoginSerializer(serializers.ModelSerializer):
         return response_data
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserInvitationSerializer(serializers.ModelSerializer):
+    """
+        Serializer for Inviting users to the platform. 
+        Only Managers can invite users, and only to their organization
+
+    """
+
+    def validate_details(self, value):
+        val = value
 
     class Meta:
         model = User
@@ -47,21 +55,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'email',
-            'password',
+            'organization',
+            'type',
         )
         extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
+            'email': {'required': True},
+            'organization': {'required': True},
+            'type': {'required': True}
         }
-
-    def validate(self, data):
-        password = data.get('password')
-        validate_password(password)
-
-        return data
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,4 +72,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'email',
+            'first_name',
+            'last_name',
+            'organization',
+            'type',
+            'state'
+
         )
