@@ -20,11 +20,13 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
 body {
   margin: 0px;
   height: 100vh;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 #app {
