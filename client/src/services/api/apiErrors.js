@@ -18,7 +18,6 @@ function toMessageString(data) {
     return message
   }
 }
-
 /**
  * A generic handler for API Errors.
  *
@@ -28,12 +27,12 @@ export function apiErrorHandler({
   apiName = '',
   enable400Alert = true,
   enable500Alert = true,
-  rethrowErrors = false,
+  rethrowErrors = true,
 } = {}) {
   return error => {
     const { response } = error
-
     // Console log for dev debug
+    // eslint-disable-next-line no-console
     console.log(`${apiName} Error:`, error)
 
     // Show error to user
@@ -41,7 +40,6 @@ export function apiErrorHandler({
       // Handle 4xx errors (probably bad user input)
       const { data } = response
       let message = '<h2>Error...</h2>'
-
       // Handle common error structures
       if (data.detail) {
         message += `<h2>${data.detail}</h2>`
@@ -50,7 +48,6 @@ export function apiErrorHandler({
       } else {
         message = toMessageString(data)
       }
-
       if (enable400Alert) {
         Vue.prototype.$Alert.alert({
           type: 'error',
@@ -58,11 +55,12 @@ export function apiErrorHandler({
           timeout: 6000,
         })
       }
-
       // Optionally re-raise for further optional error handling
       if (rethrowErrors) {
         throw error
       }
+
+      return
     }
 
     if (enable500Alert) {
@@ -73,7 +71,6 @@ export function apiErrorHandler({
         timeout: 6000,
       })
     }
-
     // Optionally re-raise for further optional error handling
     if (rethrowErrors) {
       throw error
