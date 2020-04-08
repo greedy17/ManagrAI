@@ -86,7 +86,7 @@ class User(AbstractUser, TimeStampModel):
     )
     magic_token_expiration = models.DateTimeField(
         help_text='The datetime when the magic token is expired.',
-        default=datetime.now()+timedelta(days=30)
+        default=timezone.now()+timedelta(days=30)
     )
 
     objects = UserManager()

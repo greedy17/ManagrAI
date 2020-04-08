@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
 from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED
+from managr.api.serializers import OrganizationRefSerializer
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -45,9 +46,8 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         Only Managers can invite users, and only to their organization
 
     """
-
-    def validate_details(self, value):
-        val = value
+    organization_ref = OrganizationRefSerializer(
+        many=False, source='organization', read_only=True)
 
     class Meta:
         model = User
@@ -56,6 +56,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             'last_name',
             'email',
             'organization',
+            'organization_ref',
             'type',
         )
         extra_kwargs = {
@@ -63,9 +64,14 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             'organization': {'required': True},
             'type': {'required': True}
         }
+        read_only_fields = ('organization_ref',)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """ UserSerializer to update user fields, only managers with admin access and superusers can update email """
+
+    organization_ref = OrganizationRefSerializer(
+        many=False, source='organization', read_only=True)
 
     class Meta:
         model = User
@@ -75,7 +81,10 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'organization',
+            'organization_ref',
             'type',
-            'state'
+            'state',
+
 
         )
+    read_only_fields = ('email', 'organization', 'type', 'state',)

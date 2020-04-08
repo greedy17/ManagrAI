@@ -26,6 +26,13 @@ class Organization(TimeStampModel):
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
 
+    def deactivate_all_users(self):
+        """ helper method to deactivate all users if their org is deactivated """
+        users = User.objects.filter(organization=self)
+        for u in users:
+            u.state = STATE_INACTIVE
+            u.save()
+
     def __str__(self):
         return f'{self.name}'
 

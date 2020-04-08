@@ -70,16 +70,45 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 # TODO: Add relevant mixins to manipulate users via API
 
 
-class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
-    queryset = User.objects.all()
+class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
+
     serializer_class = UserSerializer
-    """
-        this is a helper method to get the token for postman requests testing the user activation
-        it is currently only open to Super Users but will also allow self in the future
-    """
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return User.objects.all()
+        elif self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.state == STATE_ACTIVE:
+            return User.objects.filter(organization=self.request.user.organization)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def update(self, request, *args, **kwargs):
+        user = User.objects.get(pk=kwargs['pk'])
+        request_user = request.user
+        serializer = self.serializer_class(user,
+                                           data=request.data,  partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        if request_user != user:
+            return Response({'non_field_errors': ('You can only update your own details')}, status=status.HTTP_401_UNAUTHORIZED)
+        for field in serializer.read_only_fields:
+            # remove read_only_fields
+            serializer.validated_data.pop(field, None)
+        self.perform_update(serializer)
+        user = serializer.instance
+
+        serializer = UserSerializer(
+            user, context={'request': request})
+        response_data = serializer.data
+
+        return Response(response_data)
 
     @action(methods=['get'], permission_classes=[IsSuperUser], detail=True, url_path='get_token')
     def magic_token(self, request, *args, **kwargs):
+        """
+        this is a helper method to get the token for postman requests testing the user activation
+        it is currently only open to Super Users but will also allow self in the future
+        """
         user = request.user
         res = {}
         if(user.is_superuser):
@@ -97,7 +126,11 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         magic_token = request.data.get('token', None)
         password = request.data.get('password', None)
         if not password or not magic_token:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({
+                'detail': [
+                    ('A magic token and id are required')
+                ]
+            })
         try:
             user = User.objects.get(pk=kwargs['pk'])
             if str(user.magic_token) == str(magic_token) and not user.magic_token_expired and user.state == STATE_INVITED:
@@ -118,14 +151,14 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 return Response(response_data)
 
             else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response({'non_field_errors': ('Invalid Link or Token')}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
-    permission_classes = (IsSuperUser, IsOrganizationManager)
+    permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -145,10 +178,3 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)
-
-
-class UserActivationView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    permission_classes = ()
-    serializer_class = UserSerializer
-    # will use a manager to filter out the correct users depending on the requesting user
-    queryset = User.objects.all()
