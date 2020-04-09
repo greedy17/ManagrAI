@@ -6,7 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
 from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED
-from managr.api.serializers import OrganizationRefSerializer
+from managr.api.serializers import OrganizationRefSerializer, AccountRefSerializer
+from managr.api.models import Account
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -72,6 +73,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     organization_ref = OrganizationRefSerializer(
         many=False, source='organization', read_only=True)
+    accounts_ref = AccountRefSerializer(
+        many=True, source='organization.accounts', read_only=True)
 
     class Meta:
         model = User
@@ -82,6 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'organization',
             'organization_ref',
+            'accounts_ref',
             'type',
             'state',
 

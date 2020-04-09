@@ -13,6 +13,15 @@ class IsOrganizationManager(permissions.BasePermission):
         return user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.state == STATE_ACTIVE
 
 
+class IsSalesPerson(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or request.user.is_anonymous:
+            raise exceptions.ValidationError('Authentication Required.')
+
+        return user.organization and user.sate == STATE_ACTIVE
+
+
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user

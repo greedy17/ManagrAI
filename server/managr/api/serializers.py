@@ -11,7 +11,8 @@ from rest_framework.response import Response
 
 
 class OrganizationRefSerializer(serializers.ModelSerializer):
-    """ Read Only Serializer for ref of the organization """
+    """ Read Only Serializer for ref of the organization used for UserSerializer
+    """
 
     class Meta:
         model = Organization
@@ -20,7 +21,17 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
         )
 
 
+class AccountRefSerializer(serializers.ModelSerializer):
+    """
+        Read only serializer for ref of the Account used for the AccountSerializer
+    """
+    class Meta:
+        model = Account
+        fields = ('__all__')
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
+    """ Only Super Users can create, edit and delete Organizations """
 
     def create(self, validated_data):
         # only superusers can create new organizations
@@ -29,15 +40,22 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
         return Organization.objects.create(**validated_data)
 
+    accounts_ref = AccountRefSerializer(
+        many=True, source='accounts', read_only=True)
+
     class Meta:
         model = Organization
         fields = (
-            '__all__'
+            'id', 'name', 'state', 'accounts', 'accounts_ref'
         )
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    """ Serializer for Accounts tied to organization """
+    """ 
+        Serializer for Accounts tied to organization 
+        Only Organization Managers can add, update, delete accounts
+        Other users can list  
+    """
 
     def to_internal_value(self, data):
         """ Backend Setting organization by default """

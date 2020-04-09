@@ -23,7 +23,8 @@ from .models import Organization, Account, Contact, Lead
 from .serializers import OrganizationSerializer, AccountSerializer, LeadSerializer, ContactSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
-from managr.core.permissions import (IsOrganizationManager, IsSuperUser)
+from managr.core.permissions import (
+    IsOrganizationManager, IsSuperUser, IsSalesPerson)
 
 
 class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -40,6 +41,7 @@ class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
             return None
 
     def destroy(self, request, *args, **kwargs):
+        """ Only Super Users can delete Organizations """
         user = request.user
         if user.is_superuser:
             Organization.objects.get(pk=kwargs['pk']).delete()
@@ -53,7 +55,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    permissions_class = (IsOrganizationManager,)
+    permissions_class = (IsSalesPerson,)
 
     def get_queryset(self):
         if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
@@ -63,6 +65,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     def create(self, request, *args, **kwargs):
         user = request.user
+        # passing in the request as a context to manually add the organization
         serializer = AccountSerializer(
             data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -95,9 +98,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
 
 class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    """ All memebers of the organization can add, create and update contacts """
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ContactSerializer
-    permissions_class = (IsOrganizationManager,)
+    permissions_class = (IsSalesPerson,)
 
     def get_queryset(self):
         if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
@@ -124,7 +128,7 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    permissions_class = (IsOrganizationManager,)
+    permissions_class = (IsSalesPerson,)
 
     def get_queryset(self):
         if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
