@@ -57,6 +57,7 @@ class UserManager(BaseUserManager):
         """Create a superuser with the given email and password."""
         extra_fields['is_staff'] = True
         extra_fields['is_superuser'] = True
+        extra_fields['state'] = STATE_ACTIVE
         return self._create_user(email, password, **extra_fields)
 
     class Meta:

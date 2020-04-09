@@ -12,10 +12,8 @@ router = routers.SimpleRouter()
 
 router.register(r'users/invite', core_views.UserInvitationView, 'invite-user')
 router.register(r'users', core_views.UserViewSet, 'users')
-
 router.register(r'organizations',
                 api_views.OrganizationViewSet, 'organizations')
-
 router.register(r'accounts', api_views.AccountViewSet, 'accounts')
 router.register(r'contacts', api_views.ContactViewSet, 'contacts')
 

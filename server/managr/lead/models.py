@@ -52,7 +52,10 @@ class Lead(TimeStampModel):
 
     """
 
-    amount = models.IntegerField()
+    amount = models.PositiveIntegerField(
+        help_text="This field is editable", default=0)
+    closing_amount = models.PositiveIntegerField(
+        help_text="This field is set at close and non-editable", default=0)
     primary_description = models.CharField(max_length=150)
     secondary_description = models.CharField(max_length=150, blank=True)
     rank = models.IntegerField(choices=LEAD_RANK_CHOCIES)
@@ -105,8 +108,8 @@ class Note(TimeStampModel):
     last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
-    created_for = models.ManyToManyField(
-        'Lead')
+    created_for = models.ForeignKey(
+        'Lead', null=True, on_delete=models.SET_NULL)
 
 
 class Forecast(TimeStampModel):
