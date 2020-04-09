@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Organization, Account, Lead, Contact
+from .models import Organization, Account,  Contact
 
 
 class CustomOrganization(admin.ModelAdmin):
@@ -15,12 +15,7 @@ class CustomAccount(admin.ModelAdmin):
     list_display = ('name', 'url',)
 
 
-class CustomLead(admin.ModelAdmin):
-    model = Account
-    list_display = ('account', 'organization',)
-
-
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
-admin.site.register(Lead, CustomLead)
+
 admin.site.register(Contact)

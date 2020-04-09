@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Lead, Contact
+from .models import Organization, Account, Contact
 
 from rest_framework import (
     status, filters, permissions
@@ -100,8 +100,3 @@ class ContactSerializer(serializers.ModelSerializer):
         }
         read_only_fields = ('organization',)
 
-
-class LeadSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Lead
-        fields = ('__all__')
