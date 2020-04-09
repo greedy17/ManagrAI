@@ -3,11 +3,7 @@
     <NavBar />
     <div class="page-content">
       <div class="left-pane">
-        <img
-          class="left-pane-screenshot"
-          src="@/assets/images/screenshots/lead-show-left.png"
-          alt="screenshot"
-        />
+        <ToolBar class="toolbar" :lead="lead" />
       </div>
       <div class="center-pane">
         <LeadBanner :lead="lead" />
@@ -34,6 +30,7 @@
 
 <script>
 import { getSerializedLead } from '@/db.js'
+import ToolBar from '@/components/lead-show/ToolBar'
 import LeadBanner from '@/components/lead-show/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/lead-show/PinnedNotes'
@@ -43,6 +40,7 @@ export default {
   name: 'LeadShow',
   props: ['id'],
   components: {
+    ToolBar,
     LeadBanner,
     LeadActions,
     PinnedNotes,
@@ -60,11 +58,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .lead-show {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 .page-content {
@@ -81,12 +81,9 @@ export default {
   padding-right: 1%;
   display: flex;
   flex-flow: row;
-  // justify-content: center;
 
-  .left-pane-screenshot {
+  .toolbar {
     width: 243px;
-    height: 773px;
-    display: block;
     margin-left: auto;
   }
 }
@@ -106,7 +103,6 @@ export default {
 
 .additional-information {
   width: 100%;
-  // border-top: solid 1px #f2f2f3;
   display: inline-block;
 }
 

@@ -51,7 +51,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .call-action {
   width: 100%;
@@ -88,14 +88,14 @@ export default {
 .contact-name {
   margin-left: auto;
   width: 25%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .contact-phone-number-container {
@@ -122,14 +122,14 @@ export default {
 
 .contact-phone-number {
   margin-left: 5px;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .details-container {
@@ -148,14 +148,14 @@ input {
   padding: 3%;
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
 
   &::placeholder {
     opacity: 0.5;
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
     font-weight: normal;
     font-stretch: normal;
@@ -188,8 +188,8 @@ textarea {
   padding: 3%;
   border-radius: 4px;
   border: none;
-  background-color: #fafafa;
-  font-family: 'Lato', sans-serif;
+  background-color: $off-white;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
@@ -199,14 +199,14 @@ textarea {
   color: #444444;
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
 
   &::placeholder {
     opacity: 0.5;
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
     font-weight: normal;
     font-stretch: normal;
@@ -229,8 +229,8 @@ textarea {
   justify-content: center;
   padding: 5px 15px;
   border-radius: 5px;
-  background-color: #199e54;
-  font-family: 'Lato', sans-serif;
+  background-color: $dark-green;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;

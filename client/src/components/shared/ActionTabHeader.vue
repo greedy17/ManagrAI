@@ -37,11 +37,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .action-tab-header {
   width: 91px;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-stretch: normal;
   font-style: normal;
