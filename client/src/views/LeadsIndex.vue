@@ -4,11 +4,6 @@
     <div class="page-content">
       <div class="toolbar-pane">
         <ToolBar />
-        <!-- <img
-          class="left-pane-screenshot"
-          src="@/assets/images/screenshots/leads-index-left.png"
-          alt="screenshot"
-        /> -->
       </div>
       <div class="lists-container-pane">
         <ListsContainer :lists="lists" />
@@ -49,6 +44,7 @@ export default {
 }
 
 .page-content {
+  overflow-x: scroll;
   flex-grow: 1;
   display: flex;
   flex-flow: row;
