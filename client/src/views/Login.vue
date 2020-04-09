@@ -4,6 +4,11 @@
     <div class="page-content">
       <form @submit.prevent="handleLogin">
         <h2>Login</h2>
+        <div class="errors">
+          <div v-if="valid !== null && !valid">Fields may not be blank.</div>
+          <div v-else-if="success !== null && !success">Invalid email and/or password.</div>
+          <div v-else class="hidden">Placeholder</div>
+        </div>
         <input v-model="email" type="text" placeholder="email" />
         <input v-model="password" type="password" placeholder="password" />
         <button type="submit">Login</button>
@@ -13,7 +18,7 @@
 </template>
 
 <script>
-// import User from '@/services/users'
+import User from '@/services/users'
 
 export default {
   name: 'Login',
@@ -22,12 +27,48 @@ export default {
     return {
       email: '',
       password: '',
+      valid: null, // client side validations
+      success: null, //server side validations
     }
   },
   methods: {
     handleLogin() {
-      // let loginPromise = User.api.login(this.email, this.password)
-      // TODO(Bruno 4-8-20): Work with the response once app is live in staging
+      this.success = null
+      this.valid = this.clientSideValidations()
+      if (!this.valid) {
+        return
+      }
+
+      let loginPromise = User.api.login(this.email, this.password)
+
+      loginPromise
+        .then(response => {
+          // TODO(Bruno 4-9-20):
+          // there are checks that must take place before deciding
+          // if this person can be logged in
+          // the following is temporary code
+          let token = response.data.token
+          let user = response.data
+          delete user.token
+          this.$store.dispatch('updateUserToken', token)
+          this.$store.dispatch('updateUser', user)
+          this.$router.push({ name: 'LeadsIndex' })
+          this.success = true
+        })
+        .catch(() => {
+          this.success = false
+        })
+    },
+    clientSideValidations() {
+      return this.emailIsBlank || this.passwordIsBlank ? false : true
+    },
+  },
+  computed: {
+    emailIsBlank() {
+      return !this.email.length
+    },
+    passwordIsBlank() {
+      return !this.password.length
     },
   },
 }
@@ -58,6 +99,10 @@ h2 {
   text-align: center;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 form {
   margin-top: 50px;
   width: 500px;
@@ -74,7 +119,7 @@ input {
   height: 40px;
   width: 250px;
   display: block;
-  margin: 5px 0;
+  margin: 10px 0;
 }
 
 button {
