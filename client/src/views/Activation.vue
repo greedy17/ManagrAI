@@ -2,7 +2,7 @@
   <div class="invite">
     <NavBar />
     <div class="page-content">
-      <form @submit.prevent="handleInvite">
+      <form @submit.prevent="handleActivation">
         <h2>Activate Account</h2>
         <input v-model="password" type="password" placeholder="password" />
         <input v-model="passwordConfirmation" type="password" placeholder="confirm password" />
