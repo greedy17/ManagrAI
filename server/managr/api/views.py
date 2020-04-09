@@ -48,8 +48,8 @@ class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin):
-    """ Accounts can only be created, updated or deleted by Managers of an Organization """
+class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):
+    """ Accounts can only be created, updated or deleted by Managers of an Organization All users can list/retrieve  """
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
@@ -63,14 +63,35 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     def create(self, request, *args, **kwargs):
         user = request.user
-
-        serializer = AccountSerializer(user, data=request.data)
+        serializer = AccountSerializer(
+            data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
+        if user.type != ACCOUNT_TYPE_MANAGER:
+            return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
         self.perform_create(serializer)
-        account = serializer.instance
-        serializer = AccountSerializer(account)
         response_data = serializer.data
         return Response(response_data)
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        acc = Account.objects.get(pk=kwargs['pk'])
+        serializer = self.serializer_class(acc,
+                                           data=request.data, context={'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if user.organization != acc.organization or user.type != ACCOUNT_TYPE_MANAGER:
+            return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer.save()
+
+        response_data = serializer.data
+        return Response(response_data)
+
+    def destroy(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_superuser:
+            Organization.objects.get(pk=kwargs['pk']).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -83,6 +104,21 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             return Contact.objects.filter(account__organization=self.request.user.organization.id)
         else:
             return None
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        contact = Contact.objects.get(pk=kwargs['pk'])
+        serializer = self.serializer_class(contact,
+                                           data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):

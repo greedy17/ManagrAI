@@ -15,6 +15,8 @@ router.register(r'organizations',
                 api_views.OrganizationViewSet, 'organizations')
 
 router.register(r'accounts', api_views.AccountViewSet, 'accounts')
+router.register(r'contacts', api_views.ContactViewSet, 'contacts')
+
 
 urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view())
