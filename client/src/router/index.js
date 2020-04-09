@@ -19,27 +19,27 @@ export default new Router({
     },
     {
       path: '/login',
-      name: 'login',
+      name: 'Login',
       component: Login,
     },
     {
       path: '/invite',
-      name: 'invite',
+      name: 'Invite',
       component: Invite,
     },
     {
       path: '/activation/:uid/:token',
-      name: 'activation',
+      name: 'Activation',
       component: Activation,
     },
     {
       path: '/leads',
-      name: 'leads-index',
+      name: 'LeadsIndex',
       component: LeadsIndex,
     },
     {
       path: '/leads/:id',
-      name: 'lead-show',
+      name: 'LeadShow',
       component: LeadShow,
       props: true,
     },
