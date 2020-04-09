@@ -8,8 +8,10 @@ app_name = 'api'
 
 
 router = routers.SimpleRouter()
-router.register(r'users', core_views.UserViewSet, 'users')
+
+
 router.register(r'users/invite', core_views.UserInvitationView, 'invite-user')
+router.register(r'users', core_views.UserViewSet, 'users')
 
 router.register(r'organizations',
                 api_views.OrganizationViewSet, 'organizations')
@@ -23,3 +25,4 @@ urlpatterns = [
 
 ]
 urlpatterns += router.urls
+print(urlpatterns)

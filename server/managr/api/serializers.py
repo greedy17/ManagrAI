@@ -48,6 +48,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'state', 'accounts', 'accounts_ref'
         )
+        read_only_fields = ('accounts', )
 
 
 class AccountSerializer(serializers.ModelSerializer):

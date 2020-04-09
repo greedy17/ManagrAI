@@ -50,7 +50,7 @@ class Account(TimeStampModel):
     type = models.CharField(choices=ACCOUNT_TYPES,
                             default=ACCOUNT_TYPE_NEW,  max_length=255)
     organization = models.ForeignKey(
-        'Organization', related_name="accounts", blank=False, null=False, on_delete=models.CASCADE)
+        'Organization', related_name="accounts", blank=False, null=True, on_delete=models.CASCADE)
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
 
@@ -72,7 +72,7 @@ class Contact(TimeStampModel):
     phone_number_1 = models.CharField(max_length=255)
     phone_number_2 = models.CharField(max_length=255)
     account = models.ForeignKey(
-        'Account', related_name="contacts", blank=False, null=False, on_delete=models.CASCADE)
+        'Account', related_name="contacts", blank=False, null=True, on_delete=models.CASCADE)
     organization = models.ForeignKey(
         'Organization', related_name="contacts", blank=False, null=False, on_delete=models.CASCADE)
 
@@ -102,7 +102,7 @@ class Lead(TimeStampModel):
     secondar_description = models.CharField(max_length=150, blank=True)
     rank = models.IntegerField(choices=LEAD_RANK_CHOCIES)
     account = models.ForeignKey('Account', related_name="leads",
-                                on_delete=models.CASCADE, blank=False, null=False)
+                                on_delete=models.CASCADE, blank=False, null=True)
     organization = models.ForeignKey('Organization', related_name="leads",
                                      on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(

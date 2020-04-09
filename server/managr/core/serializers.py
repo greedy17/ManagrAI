@@ -63,7 +63,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'email': {'required': True},
             'organization': {'required': True},
-            'type': {'required': True}
         }
         read_only_fields = ('organization_ref',)
 
