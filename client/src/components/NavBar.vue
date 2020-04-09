@@ -1,7 +1,6 @@
 <template>
   <nav>
     <div class="logo">
-      <img class="image" src="@/assets/images/logo.png" alt="managr logo" />
       <span class="name">
         managr
       </span>
@@ -33,6 +32,7 @@ export default {
 
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import '@/styles/variables';
 
 nav {
   display: flex;
@@ -41,7 +41,7 @@ nav {
 }
 
 .logo {
-  margin-left: 35px;
+  margin-left: 25px;
   display: flex;
   align-items: center;
 
@@ -51,15 +51,15 @@ nav {
   }
 
   .name {
-    width: 111px;
-    height: 35px;
-    font-family: Quicksand;
-    font-size: 24px;
+    display: flex;
+    align-items: center;
+    font-family: $logo-font-family;
+    font-size: 36px;
     font-weight: 500;
     font-stretch: normal;
     font-style: normal;
     line-height: normal;
-    color: #199e54;
+    color: $dark-green;
   }
 }
 

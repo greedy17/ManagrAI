@@ -60,7 +60,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .email-action {
   width: 100%;
@@ -96,14 +96,14 @@ export default {
 .contact-name {
   margin-left: auto;
   width: 25%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .contact-email-container {
@@ -126,14 +126,14 @@ export default {
 
 .contact-email {
   margin-left: 5px;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 10px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .email-template-tools {
@@ -158,7 +158,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 10px;
   font-weight: bold;
   font-stretch: normal;
@@ -166,7 +166,7 @@ export default {
   line-height: 1.6;
   letter-spacing: normal;
   height: 24px;
-  color: rgba($color: #110f24, $alpha: 0.5);
+  color: rgba($color: $main-font-gray, $alpha: 0.5);
 
   &:hover {
     cursor: pointer;
@@ -192,14 +192,14 @@ export default {
 
 .template-selector-label {
   width: 25%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .template-selector-dropdown {
@@ -220,14 +220,14 @@ export default {
 
 .selected-template-name {
   margin-left: 5%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .dropdown-arrow-icon {
@@ -238,21 +238,21 @@ export default {
 input {
   height: 40px;
   border-radius: 4px;
-  background-color: #fafafa;
+  background-color: $off-white;
   border: none;
   box-sizing: border-box;
   padding: 3%;
   margin-top: 2%;
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
 
   &::placeholder {
     opacity: 0.5;
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
     font-weight: normal;
     font-stretch: normal;
@@ -265,13 +265,12 @@ input {
 
 .email-content {
   margin: 1% 0 2% 0;
-  // height: 30%;
   flex-grow: 1;
   border-radius: 4px;
   border: solid 1px #ececee;
   background-color: #ffffff;
   padding: 1vh;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: normal;
   font-stretch: normal;
@@ -281,7 +280,7 @@ input {
   color: rgba($color: #444444, $alpha: 0.5);
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: #ffffff;
   }
@@ -299,8 +298,8 @@ input {
   justify-content: center;
   padding: 5px 15px;
   border-radius: 5px;
-  background-color: #199e54;
-  font-family: 'Lato', sans-serif;
+  background-color: $dark-green;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;

@@ -6,29 +6,11 @@
       <span class="lead-description"> {{ leadDescription }} </span>
       <span class="lead-amount"> {{ leadAmount }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <div class="lead-forecast-container">
-        <span class="lead-forecast"> {{ lead.forecast }} </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
-      <div class="lead-status-container">
-        <span class="lead-status" :style="statusBackgroundColor">
-          {{ lead.status }}
-        </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
+      <LeadForecastDropdown :forecast="lead.forecast" />
+      <LeadStatusDropdown :status="lead.status" />
       <div class="lead-lists">
-        <div class="lead-list-container">
-          <span class="lead-list">
-            Growth Accounts
-          </span>
-          <img class="remove-list-icon" src="@/assets/images/remove.svg" alt="remove icon" />
-        </div>
-        <div class="lead-list-container">
-          <span class="lead-list">
-            Q2 Buyers
-          </span>
-          <img class="remove-list-icon" src="@/assets/images/remove.svg" alt="remove icon" />
-        </div>
+        <LeadList class="lead-list" :listName="'Growth Accounts'" />
+        <LeadList class="lead-list" :listName="'Q2 Buyers'" />
       </div>
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="add icon" />
@@ -39,15 +21,21 @@
 </template>
 
 <script>
-import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import currencyFormatter from '@/services/currencyFormatter'
 import LeadDetails from '@/components/leads-index/LeadDetails'
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import LeadList from '@/components/shared/LeadList'
 
 export default {
   name: 'Lead',
   props: ['lead'],
   components: {
     LeadDetails,
+    LeadForecastDropdown,
+    LeadStatusDropdown,
+    LeadList,
   },
   data() {
     return {
@@ -82,9 +70,6 @@ export default {
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
     },
-    statusBackgroundColor() {
-      return getStatusPrimaryColor(this.lead.status)
-    },
     leadAmount() {
       return currencyFormatter.format(this.lead.amount)
     },
@@ -93,7 +78,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .lead {
   margin-bottom: 10px;
@@ -110,14 +95,14 @@ export default {
   width: 15%;
   padding-left: 1%;
   height: 16px;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 
   &:hover {
     cursor: pointer;
@@ -128,7 +113,7 @@ export default {
   width: 4%;
   text-align: center;
   opacity: 0.5;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: bold;
   font-stretch: normal;
@@ -141,14 +126,14 @@ export default {
 .lead-description,
 .lead-amount,
 .lead-last-update {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .lead-description {
@@ -164,103 +149,14 @@ export default {
   width: 5%;
 }
 
-.lead-forecast-container {
-  width: 12%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.lead-forecast {
-  border-radius: 100px;
-  width: 65px;
-  padding: 2px 15px;
-  background-color: #9596b4;
-  font-family: 'Lato', sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.6;
-  letter-spacing: normal;
-  text-align: center;
-  color: #ffffff;
-}
-
-.lead-status-container {
-  width: 9%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.lead-status {
-  border-radius: 100px;
-  width: 35px;
-  padding: 2px 15px;
-  font-family: Lato;
-  font-size: 10px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.6;
-  letter-spacing: normal;
-  text-align: center;
-  color: #ffffff;
-}
-
 .lead-lists {
   width: 28%;
   display: flex;
-}
-
-.lead-list-container {
-  display: flex;
   align-items: center;
-  margin: 0 1vh;
-  width: 142px;
-  height: 24px;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
 }
 
 .lead-list {
-  padding-left: 5%;
-  width: 70%;
-  font-family: Lato;
-  font-size: 11px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.45;
-  letter-spacing: normal;
-  color: #484a6e;
-  text-decoration: underline;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.remove-list-icon {
-  height: 55%;
-  margin-left: auto;
-  padding-right: 5%;
-
-  &:hover {
-    cursor: pointer;
-  }
+  margin: 0 1vh;
 }
 
 .lead-add-list {

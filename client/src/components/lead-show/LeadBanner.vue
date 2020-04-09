@@ -2,19 +2,13 @@
   <div class="lead-banner" :style="bannerBackgroundColor">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
-      <div class="forecast-dropdown">
-        <span class="forecast"> {{ lead.forecast }} </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
+      <LeadForecastDropdown
+        class="forecast-dropdown"
+        :forecast="lead.forecast"
+        :transparent="true"
+      />
     </div>
-    <div class="status-container">
-      <div class="status-dropdown">
-        <span class="status" :style="statusBackgroundColor">
-          {{ lead.status }}
-        </span>
-        <img src="@/assets/images/dropdown-arrow.svg" alt="dropdown arrow icon" />
-      </div>
-    </div>
+    <LeadStatusDropdown :status="lead.status" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Days In Status</span>
       <span class="days-in-status">7 Days</span>
@@ -33,26 +27,29 @@
 </template>
 
 <script>
-import { getStatusPrimaryColor, getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 
 export default {
   name: 'LeadBanner',
   props: {
     lead: Object,
   },
+  components: {
+    LeadForecastDropdown,
+    LeadStatusDropdown,
+  },
   computed: {
     bannerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
-    },
-    statusBackgroundColor() {
-      return getStatusPrimaryColor(this.lead.status)
     },
   },
 }
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .lead-banner {
   height: 49px;
@@ -69,72 +66,18 @@ export default {
   align-items: center;
 
   .forecast-label {
-    font-family: 'Lato', sans-serif;
+    font-family: $base-font-family, $backup-base-font-family;
     font-size: 12px;
     font-weight: bold;
     font-stretch: normal;
     font-style: normal;
     line-height: 2.25;
     letter-spacing: normal;
-    color: #110f24;
+    color: $main-font-gray;
   }
 
   .forecast-dropdown {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin-left: 5%;
-
-    .forecast {
-      border-radius: 100px;
-      padding: 2px 8px;
-      font-family: 'Lato', sans-serif;
-      font-size: 12px;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
-      line-height: 1.6;
-      letter-spacing: normal;
-      text-align: center;
-      color: #110f24;
-    }
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-}
-
-.status-container {
-  width: 18%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .status-dropdown {
-    display: flex;
-    flex-flow: row;
-    align-items: center;
-
-    .status {
-      border-radius: 100px;
-      width: 35px;
-      padding: 2px 15px;
-      font-family: Lato;
-      font-size: 10px;
-      font-weight: bold;
-      font-stretch: normal;
-      font-style: normal;
-      line-height: 1.6;
-      letter-spacing: normal;
-      text-align: center;
-      color: #ffffff;
-    }
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 }
 
@@ -147,26 +90,26 @@ export default {
 }
 
 .days-in-status-label {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.71;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
   margin-right: 5%;
 }
 
 .days-in-status {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 2.25;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .banner-buttons {
@@ -184,14 +127,14 @@ export default {
   padding: 5px 10px;
   border-radius: 5px;
   background-color: #efeff5;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 
   .button-icon {
     height: 16px;

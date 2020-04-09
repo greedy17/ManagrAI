@@ -32,7 +32,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import '@/styles/variables';
 
 .nav-link {
   height: 63px;
@@ -53,7 +53,7 @@ export default {
 }
 
 .content {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
@@ -61,6 +61,6 @@ export default {
   line-height: 1.45;
   letter-spacing: normal;
   text-align: center;
-  color: #110f24;
+  color: $main-font-gray;
 }
 </style>

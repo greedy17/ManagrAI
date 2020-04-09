@@ -4,7 +4,7 @@
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
         <router-link :to="{ name: 'lead-show', params: { id: lead.id } }" v-if="showLink">
-          <span class="insights-header-link">See All Detail</span>
+          <span class="insights-header-link">See Lead Detail</span>
         </router-link>
       </div>
     </div>
@@ -87,7 +87,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
 
 .insights {
   width: 255px;
@@ -110,14 +110,14 @@ export default {
 .insights-header-title {
   flex-grow: 1;
   padding: 5% 0 5% 7%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .insights-header-link-container {
@@ -129,20 +129,20 @@ export default {
 
 .insights-header-link {
   text-transform: uppercase;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: #199e54;
+  color: $dark-green;
 
   &:hover {
     cursor: pointer;
     border-radius: 5px;
     padding: 4px 6px;
-    background-color: #199e54;
+    background-color: $dark-green;
     color: #ffffff;
   }
 }
@@ -174,25 +174,25 @@ export default {
 }
 
 .insight-top {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .insight-bottom {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: rgba($color: #110f24, $alpha: 0.4);
+  color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 
 a {
