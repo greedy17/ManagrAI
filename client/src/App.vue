@@ -24,6 +24,7 @@ export default {
 body {
   margin: 0px;
   height: 100vh;
+  background-color: #fafafa;
 }
 
 #app {
@@ -31,8 +32,8 @@ body {
 }
 
 /* for development purposes */
-div {
-  border-style: dashed;
-  border-width: 1px;
-}
+// div {
+//   border-style: dashed;
+//   border-width: 1px;
+// }
 </style>

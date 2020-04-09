@@ -9,6 +9,9 @@ client/.env.*
 *.pyc
 __pycache__/
 
+# Ignore editor directories
+.vscode/
+
 # Ignore local static files and media
 server/static-files/
 server/media-files/

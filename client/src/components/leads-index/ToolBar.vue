@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="toolbar">
     ToolBar
   </div>
 </template>
@@ -10,4 +10,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.toolbar {
+  background-color: white;
+}
+</style>
