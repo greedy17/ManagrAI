@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Login from '@/views/Login'
-import Invite from '@/views/Invite'
-import Activation from '@/views/Activation'
-import LeadsIndex from '@/views/LeadsIndex'
-import LeadsDetail from '@/views/LeadsDetail'
+import Login from '@/views/auth/Login'
+import Invite from '@/views/auth/Invite'
+import Activation from '@/views/auth/Activation'
+import LeadsIndex from '@/views/leads/LeadsIndex'
+import LeadsDetail from '@/views/leads/LeadsDetail'
 
 //TODO(Bruno 4-8-20): lazy-load views
 
