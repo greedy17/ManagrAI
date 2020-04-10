@@ -16,6 +16,7 @@ from rest_framework import (
 from rest_framework import (
     viewsets, mixins, generics, status, filters, permissions
 )
+from rest_framework.decorators import (api_view, permission_classes, )
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -67,7 +68,6 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         response_data = serializer.data
         response_data['token'] = user.auth_token.key
         return Response(response_data)
-# TODO: Add relevant mixins to manipulate users via API
 
 
 class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
@@ -154,6 +154,21 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
                 return Response({'non_field_errors': ('Invalid Link or Token')}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def get_account_status(request):
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(email=email)
+
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if user.state == STATE_ACTIVE:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
