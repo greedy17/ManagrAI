@@ -43,7 +43,7 @@ const plugins = [
 
 const getters = {
   userIsLoggedIn: state => {
-    return state.token && state.user
+    return !!(state.token && state.user)
   },
 }
 
