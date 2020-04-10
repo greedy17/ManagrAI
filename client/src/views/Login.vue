@@ -5,7 +5,15 @@
       <form @submit.prevent="handleLogin">
         <h2>Login</h2>
         <div class="errors">
-          <div v-if="valid !== null && !valid">Fields may not be blank.</div>
+          <div
+            v-if="
+              isFormValid !== null &&
+                !isFormValid &&
+                (errors.emailIsBlank || errors.passwordIsBlank)
+            "
+          >
+            Fields may not be blank.
+          </div>
           <div v-else-if="success !== null && !success">Invalid email and/or password.</div>
           <div v-else class="hidden">Placeholder</div>
         </div>
@@ -27,15 +35,23 @@ export default {
     return {
       email: '',
       password: '',
-      valid: null, // client side validations
+      isFormValid: null, // client side validations
       success: null, //server side validations
+      errors: {},
     }
   },
   methods: {
     handleLogin() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
       this.success = null
-      this.valid = this.clientSideValidations()
-      if (!this.valid) {
+      this.errors = {}
+
+      // check form data for this request
+      let validationResults = this.clientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
         return
       }
 
@@ -60,7 +76,13 @@ export default {
         })
     },
     clientSideValidations() {
-      return this.emailIsBlank || this.passwordIsBlank ? false : true
+      let formErrors = {
+        emailIsBlank: this.emailIsBlank,
+        passwordIsBlank: this.passwordIsBlank,
+      }
+      let isFormValid = !this.emailIsBlank && !this.passwordIsBlank
+
+      return [isFormValid, formErrors]
     },
   },
   computed: {
