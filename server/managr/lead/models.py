@@ -2,7 +2,7 @@ from django.db import models
 from managr.core.models import UserManager, TimeStampModel
 from managr.core.models import STATE_ACTIVE
 
-LEAD_RANK_CHOCIES = [(i, i) for i in range(5)]
+LEAD_RANK_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 FILE_TYPE_OTHER = 'OTHER'
 FILE_TYPE_CONTRACT = 'CONTRACT'
@@ -74,20 +74,31 @@ class Lead(TimeStampModel):
     account = models.ForeignKey('api.Account', related_name="leads",
                                 on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
-
+        "core.User", related_name="created_leads", null=True, on_delete=models.SET_NULL)
     linked_contacts = models.ManyToManyField(
         'api.Contact', related_name='leads', blank=True)
     # last_updated will also be updated when an action is taken
     last_updated_at = models.DateTimeField(auto_now=True)
     contract = models.CharField(
         max_length=500, blank=True, help_text="This field will be populated from either an upload of a document or selecting an existing document")
-
+    status = models.CharField(
+        max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
+    claimed_by = models.ForeignKey(
+        "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL)
+    last_updated_by = models.ForeignKey(
+        "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL)
     # will also need actions_allowed
     objects = LeadQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']
+
+    @property
+    def is_claimed(self):
+        """ property to define if lead is claimed or not """
+        if self.claimed_by:
+            return True
+        return False
 
 
 class List(TimeStampModel):
@@ -119,7 +130,7 @@ class Note(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL)
+        'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
 
 
 class Forecast(TimeStampModel):
