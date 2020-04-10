@@ -18,7 +18,7 @@
         <img class="button-icon" src="@/assets/images/undo.svg" alt="reset icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div class="banner-button">
+      <div class="banner-button" @click="emitClickedReleased">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="release icon" />
         <span class="button-content">Release</span>
       </div>
@@ -39,6 +39,11 @@ export default {
   components: {
     LeadForecastDropdown,
     LeadStatusDropdown,
+  },
+  methods: {
+    emitClickedReleased() {
+      this.$emit('clicked-release')
+    },
   },
   computed: {
     bannerBackgroundColor() {
@@ -120,12 +125,19 @@ export default {
 }
 
 .banner-button {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
   margin: 0 4% 0 auto;
   display: flex;
   flex-flow: row;
   align-items: center;
-  padding: 5px 10px;
+  justify-content: center;
+  width: 5rem;
+  height: 1.8rem;
   border-radius: 5px;
+  border: 1px solid #d1d1d1;
   background-color: #efeff5;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
@@ -143,6 +155,15 @@ export default {
 
   &:hover {
     cursor: pointer;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:active {
+    border-style: solid;
+    border-color: black;
   }
 }
 </style>

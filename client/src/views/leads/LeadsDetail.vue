@@ -6,7 +6,7 @@
         <ToolBar class="toolbar" :lead="lead" />
       </div>
       <div class="center-pane">
-        <LeadBanner :lead="lead" />
+        <LeadBanner :lead="lead" @clicked-release="deleteLead" />
         <div class="container">
           <LeadActions :lead="lead" />
         </div>
@@ -35,6 +35,7 @@ import LeadBanner from '@/components/lead-show/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/lead-show/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
+import Lead from '@/services/leads'
 
 export default {
   name: 'LeadsDetail',
@@ -53,6 +54,29 @@ export default {
   },
   created() {
     this.lead = getSerializedLead(this.id)
+  },
+  methods: {
+    deleteLead() {
+      Lead.api
+        .delete(this.lead.id)
+        .then(() => {
+          let message = `<h2>Success!</h2><p>Lead deleted.</p>`
+          this.$Alert.alert({
+            type: 'success',
+            message,
+            timeout: 6000,
+          })
+          this.$router.push({ name: 'LeadsIndex' })
+        })
+        .catch(() => {
+          let message = `<h2>Error...</h2><p>Please retry later.</p>`
+          this.$Alert.alert({
+            type: 'error',
+            message,
+            timeout: 6000,
+          })
+        })
+    },
   },
 }
 </script>
