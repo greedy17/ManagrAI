@@ -99,4 +99,3 @@ class ContactSerializer(serializers.ModelSerializer):
             'account': {'required': True}
         }
         read_only_fields = ('organization',)
-

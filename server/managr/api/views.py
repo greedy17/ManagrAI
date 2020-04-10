@@ -55,10 +55,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    permission_classes = (IsOrganizationManager,)
+    permission_classes = (IsSalesPerson,)
 
     def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
+        if self.request.user.organization:
             return Account.objects.filter(organization=self.request.user.organization.id)
         else:
             return None
