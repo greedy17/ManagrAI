@@ -37,9 +37,9 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
     """
     For admin login.
     """
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = ()
     serializer_class = UserLoginSerializer
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
         """Validate user credentials.
@@ -64,7 +64,8 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         Token.objects.get_or_create(user=user)
 
         # Build and send the response
-        serializer = UserSerializer(user, context={'request': request})
+        u = User.objects.get(pk=user.id)
+        serializer = UserSerializer(u, context={'request': request})
         response_data = serializer.data
         response_data['token'] = user.auth_token.key
         return Response(response_data)

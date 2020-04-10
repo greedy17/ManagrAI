@@ -55,10 +55,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    permissions_class = (IsSalesPerson,)
+    permission_classes = (IsSalesPerson,)
 
     def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
+        if self.request.user.organization:
             return Account.objects.filter(organization=self.request.user.organization.id)
         else:
             return None
@@ -124,14 +124,3 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         self.perform_create(serializer)
         return Response(serializer.data)
 
-
-class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
-    authentication_classes = (authentication.TokenAuthentication,)
-    serializer_class = AccountSerializer
-    permissions_class = (IsSalesPerson,)
-
-    def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
-            return Lead.objects.filter(account__organization=self.request.user.organization.id)
-        else:
-            return None
