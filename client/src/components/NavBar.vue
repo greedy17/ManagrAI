@@ -6,10 +6,10 @@
       </span>
     </div>
     <div v-if="userIsLoggedIn" class="links">
-      <NavLink icon="leads" :active="this.$route.path === '/leads'">Leads</NavLink>
-      <NavLink icon="prospect">Prospect</NavLink>
-      <NavLink icon="forecast">Forecast</NavLink>
-      <NavLink icon="reports">Reports</NavLink>
+      <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+      <NavLink icon="prospect" :to="'Prospects'">Prospect</NavLink>
+      <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
+      <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
     </div>
     <img
       v-if="userIsLoggedIn"

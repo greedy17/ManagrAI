@@ -11,19 +11,23 @@
 export default {
   name: 'NavLink',
   props: {
-    active: Boolean,
+    to: { type: String, required: true },
     icon: String,
   },
   methods: {
     handleClick() {
-      if (this.icon === 'leads') {
-        this.$router.push('/leads')
+      // NOTE: currently only for Leads link
+      if (this.to === 'LeadsIndex' && !this.isCurrentRoute) {
+        this.$router.push({ name: this.to })
       }
     },
   },
   computed: {
+    isCurrentRoute() {
+      return this.$route.name === this.to
+    },
     activeStyles() {
-      return this.active
+      return this.isCurrentRoute
         ? { borderBottom: '2px solid #2F9E54' }
         : { borderBottom: '2px solid #ffffff' }
     },
