@@ -4,7 +4,7 @@ import Login from '@/views/Login'
 import Invite from '@/views/Invite'
 import Activation from '@/views/Activation'
 import LeadsIndex from '@/views/LeadsIndex'
-import LeadShow from '@/views/LeadShow'
+import LeadsDetail from '@/views/LeadsDetail'
 
 //TODO(Bruno 4-8-20): lazy-load views
 
@@ -39,8 +39,8 @@ export default new Router({
     },
     {
       path: '/leads/:id',
-      name: 'LeadShow',
-      component: LeadShow,
+      name: 'LeadsDetail',
+      component: LeadsDetail,
       props: true,
     },
   ],
