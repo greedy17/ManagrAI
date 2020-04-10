@@ -3,6 +3,7 @@ from rest_framework import routers
 from django.urls import include, path
 from managr.core import views as core_views
 from managr.api import views as api_views
+from managr.lead import views as lead_views
 
 app_name = 'api'
 
@@ -16,6 +17,7 @@ router.register(r'organizations',
                 api_views.OrganizationViewSet, 'organizations')
 router.register(r'accounts', api_views.AccountViewSet, 'accounts')
 router.register(r'contacts', api_views.ContactViewSet, 'contacts')
+router.register(r'leads', lead_views.LeadViewSet, 'leads')
 
 
 urlpatterns = [

@@ -32,7 +32,6 @@ class CustomUserAdmin(UserAdmin):
     )
 
     list_display_links = (
-        'is_active',
         'email',
         'first_name',
         'last_name',

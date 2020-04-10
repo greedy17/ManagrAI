@@ -1,5 +1,6 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
+from managr.core.models import STATE_ACTIVE
 
 LEAD_RANK_CHOCIES = [(i, i) for i in range(5)]
 # Create your models here.
@@ -43,6 +44,17 @@ ACTIVITY_CHOICES = (
 )
 
 
+class LeadQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+        if not user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(account__organization=user.organization)
+        else:
+            return None
+
+
 class Lead(TimeStampModel):
     """ 
         Leads are collections of Accounts with forecasting, status and Notes attached
@@ -51,7 +63,7 @@ class Lead(TimeStampModel):
         delete
 
     """
-
+    title = models.CharField(max_length=255, blank=True, null=False)
     amount = models.PositiveIntegerField(
         help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
@@ -61,8 +73,6 @@ class Lead(TimeStampModel):
     rank = models.IntegerField(choices=LEAD_RANK_CHOCIES)
     account = models.ForeignKey('api.Account', related_name="leads",
                                 on_delete=models.CASCADE, blank=False, null=True)
-    organization = models.ForeignKey('api.Organization', related_name="leads",
-                                     on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
 
@@ -73,8 +83,8 @@ class Lead(TimeStampModel):
     contract = models.CharField(
         max_length=500, blank=True, help_text="This field will be populated from either an upload of a document or selecting an existing document")
 
-    # will also need actions_history
     # will also need actions_allowed
+    objects = LeadQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']
@@ -131,3 +141,10 @@ class ActivityLog(TimeStampModel):
         "core.User", null=True, on_delete=models.SET_NULL)
     lead = models.ForeignKey(
         'Lead', null=True, on_delete=models.SET_NULL)
+
+
+class Reminder(TimeStampModel):
+    reminder = models.CharField(max_length=255, blank=True, null=False)
+    datetime_for = models.DateTimeField()
+    datetime_reminded = models.DateTimeField()
+    viewed = models.BooleanField(default=False)
