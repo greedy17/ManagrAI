@@ -37,7 +37,7 @@ import PinnedNotes from '@/components/lead-show/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
-  name: 'LeadShow',
+  name: 'LeadsDetail',
   props: ['id'],
   components: {
     ToolBar,
