@@ -21,8 +21,9 @@ router.register(r'contacts', api_views.ContactViewSet, 'contacts')
 
 
 urlpatterns = [
-    path(r'login/', core_views.UserLoginView.as_view())
+    path(r'login/', core_views.UserLoginView.as_view()),
+    url(r'account-status/', core_views.get_account_status,
+        name='get_account_status')
 
 ]
 urlpatterns += router.urls
-print(urlpatterns)
