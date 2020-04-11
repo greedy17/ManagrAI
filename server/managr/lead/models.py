@@ -37,6 +37,10 @@ FORECAST_CHOICES = (
 ACTIVITY_NOTE_ADDED = 'NOTE_ADDED'
 ACTIVITY_NOTE_DELETED = 'NOTE_DELETED'
 ACTIVITY_NOTE_UPDATED = 'NOTE_UPDATED'
+ACTIVITY_LEAD_CREATED = "LEAD_CREATED"
+ACTIVITY_LEAD_UPDATED = "LEAD_UPDATED"
+ACTIVITY_LEAD_CLAIMED = "LEAD_CLAIMED"
+ACTIVITY_LEAD_UNCLAIMED = "LEAD_UNCLAIMED"
 # THERE WILL BE MANY MORE OF THESE, MAY MOVE THEM TO SEPARATE PY FILE
 ACTIVITY_CHOICES = (
     (ACTIVITY_NOTE_ADDED, 'Note Added'), (ACTIVITY_NOTE_DELETED,
@@ -152,6 +156,8 @@ class ActivityLog(TimeStampModel):
         "core.User", null=True, on_delete=models.SET_NULL)
     lead = models.ForeignKey(
         'Lead', null=True, on_delete=models.SET_NULL)
+    meta = models.CharField(
+        max_length=255, help_text="Extra details about activity")
 
 
 class Reminder(TimeStampModel):

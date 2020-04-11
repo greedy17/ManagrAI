@@ -57,10 +57,11 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
-        """ cant update account, cant update created_by cant update claimed by  """
+        """ cant update account, cant update created_by  """
         user = request.user
         # restricted fields array to delete them if they are in
-        restricted_fields = ('created_by', 'claimed_by', 'account',)
+        restricted_fields = ('created_by',
+                             'account', 'claimed_by',)
         # create new dict to not affect request data
         data = dict(request.data)
         for field in restricted_fields:
