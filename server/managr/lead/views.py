@@ -20,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
-    IsOrganizationManager, IsSuperUser, IsSalesPerson)
+    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
 from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
@@ -28,7 +28,7 @@ from managr.core.models import ACCOUNT_TYPE_MANAGER
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_class = (IsSalesPerson,)
+    permission_classes = (CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
 
     def get_queryset(self):
@@ -67,7 +67,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
-        # make sure the user that created the lead is in the created_by field
+        # make sure the user that created the lead is not updated as well
 
         data['last_updated_by'] = user.id
         # set its status to claimed by assigning it to the user that created the lead
@@ -83,42 +83,23 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         self.perform_update(serializer)
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        user = request.user
-        if user.type == ACCOUNT_TYPE_MANAGER:
-            Lead.objects.get(pk=kwargs['pk']).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
-
-    @action(methods=['POST'], permission_classes=(IsSalesPerson,), detail=True, url_path="claim")
+    @action(methods=['POST'], permission_classes=(IsSalesPerson, CanEditResourceOrReadOnly), detail=True, url_path="claim")
     def claim(self, request, *args, **kwargs):
         user = request.user
         lead = self.get_object()
-        if not lead.is_claimed and lead.account in user.organization.accounts.all():
-            lead.claimed_by = user
-            lead.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise PermissionDenied(
-                {'detail': 'Leads can only be claimed if they were previously unclaimed'})
+        lead.claimed_by = user
+        lead.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=['POST'], permission_classes=(IsSalesPerson,), detail=True, url_path="un-claim")
+    @action(methods=['POST'], permission_classes=(IsSalesPerson, CanEditResourceOrReadOnly,), detail=True, url_path="un-claim")
     def un_claim(self, request, *args, **kwargs):
-        user = request.user
+        """ anyone  who is a salesperson can un-claim a lead that is claimed_by them """
         lead = self.get_object()
-        if not lead.account in user.organization.accounts.all():
-            raise PermissionDenied()
-        elif lead.is_claimed and lead.claimed_by != user:
-            raise PermissionDenied(
-                {'detail': 'Cannot un claim a Lead that is not claimed By You'})
-        elif not lead.is_claimed:
-            raise PermissionDenied({'detail': 'lead is not claimed'})
-        else:
-            lead.claimed_by = None
-            lead.status = None
-            # delete lead forecast
-            lead.amount = 0
-            lead.save()
-            # register an action
-            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        lead.claimed_by = None
+        lead.status = None
+        # delete lead forecast
+        lead.amount = 0
+        lead.save()
+        # register an action
+        return Response(status=status.HTTP_204_NO_CONTENT)
