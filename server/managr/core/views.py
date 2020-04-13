@@ -191,6 +191,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
+        # TODO: PB 04/12/20 currently we are returning the link for dev purposes (so that we can test the auth flow) this will be removed when we add a mail service to send the link
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)
