@@ -12,12 +12,12 @@
   font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: #444444;
+  color: $base-gray;
 
   &:focus {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
-    background-color: white;
+    background-color: $white;
   }
 
   &::placeholder {
@@ -29,6 +29,6 @@
     font-style: normal;
     line-height: 1.29;
     letter-spacing: 0.5px;
-    color: #444444;
+    color: $base-gray;
   }
 }

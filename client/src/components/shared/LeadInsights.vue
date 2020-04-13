@@ -94,8 +94,8 @@ export default {
   width: 255px;
   height: 325px;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
 }
@@ -105,7 +105,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insights-header-title {
@@ -144,7 +144,7 @@ export default {
     border-radius: 5px;
     padding: 4px 6px;
     background-color: $dark-green;
-    color: white;
+    color: $white;
   }
 }
 
@@ -153,7 +153,7 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 48px;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insight-info {

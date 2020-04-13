@@ -36,8 +36,8 @@ export default {
 
 .pinned-notes {
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
   width: 100%;
@@ -55,7 +55,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
   padding-left: 3%;
   font-weight: bold;
 }
@@ -64,7 +64,7 @@ export default {
   display: flex;
   flex-flow: column;
   padding: 20px 3%;
-  border-bottom: solid 1px #f2f2f3;
+  border-bottom: solid 1px $soft-gray;
 }
 
 .note-header {

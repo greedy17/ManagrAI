@@ -46,7 +46,7 @@ nav {
   display: flex;
   flex-flow: row;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $white;
 }
 
 .logo {

@@ -137,8 +137,8 @@ export default {
   width: 5rem;
   height: 1.8rem;
   border-radius: 5px;
-  border: 1px solid #d1d1d1;
-  background-color: #efeff5;
+  border: 1px solid $mid-gray;
+  background-color: $soft-gray;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
@@ -159,7 +159,7 @@ export default {
 
   &:active {
     border-style: solid;
-    border-color: black;
+    border-color: $black;
   }
 }
 </style>

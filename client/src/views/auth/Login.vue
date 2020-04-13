@@ -125,7 +125,7 @@ form {
   margin-top: 50px;
   width: 500px;
   height: 300px;
-  background-color: white;
+  background-color: $white;
   border-radius: 5px;
   display: flex;
   flex-flow: column;

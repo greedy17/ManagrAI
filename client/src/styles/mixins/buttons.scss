@@ -28,7 +28,7 @@
 @mixin primary-button() {
   @include base-button();
   background-color: $dark-green;
-  color: white;
+  color: $white;
 }
 
 @mixin secondary-button() {

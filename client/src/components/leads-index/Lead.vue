@@ -119,7 +119,7 @@ export default {
   font-style: normal;
   line-height: normal;
   letter-spacing: 0.5px;
-  color: #444444;
+  color: $base-gray;
 }
 
 .lead-description,
@@ -165,7 +165,7 @@ export default {
 
 .add-list-icon {
   @include pointer-on-hover();
-  background-color: #eff0f5;
+  background-color: $soft-gray;
   border-radius: 5px;
   height: 15px;
   width: 15px;

@@ -94,7 +94,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 .toolbar {
-  background-color: white;
+  background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
 
   width: 100%;
@@ -102,7 +102,7 @@ export default {
   flex-flow: column;
 
   .section-shadow {
-    box-shadow: 0 1px 0 0 #ececee;
+    box-shadow: 0 1px 0 0 $soft-gray;
   }
 }
 
@@ -190,7 +190,7 @@ export default {
 }
 
 .section-shadow {
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .contacts {
@@ -231,7 +231,7 @@ export default {
       @include pointer-on-hover();
       height: 30px;
       width: 30px;
-      background-color: #efeff5;
+      background-color: $soft-gray;
       border-radius: 5px;
       display: flex;
       flex-flow: row;
@@ -281,7 +281,4 @@ export default {
     }
   }
 }
-// div {
-//   border: 1px dashed black;
-// }
 </style>

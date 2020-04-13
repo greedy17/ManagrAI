@@ -58,7 +58,7 @@ export default {
     font-style: normal;
     line-height: 1.6;
     letter-spacing: normal;
-    color: #ffffff;
+    color: $white;
     font-size: 10px;
     font-weight: bold;
 

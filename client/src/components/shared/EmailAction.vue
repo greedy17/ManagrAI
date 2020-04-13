@@ -113,7 +113,7 @@ export default {
   width: 50%;
   height: 24px;
   padding: 2px;
-  background-color: #efeff5;
+  background-color: $soft-gray;
   border-radius: 5px;
   margin-left: auto;
   display: flex;
@@ -156,7 +156,7 @@ export default {
 .template-variable {
   @include pointer-on-hover();
   border-radius: 100px;
-  background-color: #d7d7dd;
+  background-color: $theme-gray;
   margin-right: auto;
   width: 95px;
   display: flex;
@@ -207,7 +207,7 @@ export default {
   width: 50%;
   height: 24px;
   padding: 2px;
-  background-color: #efeff5;
+  background-color: $soft-gray;
   border-radius: 5px;
   margin-right: auto;
   display: flex;
@@ -242,8 +242,8 @@ input {
   margin: 1% 0 2% 0;
   flex-grow: 1;
   border-radius: 4px;
-  border: solid 1px #ececee;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   padding: 1vh;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
@@ -252,12 +252,12 @@ input {
   font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: rgba($color: #444444, $alpha: 0.5);
+  color: rgba($color: $base-gray, $alpha: 0.5);
 
   &:focus {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
-    background-color: #ffffff;
+    background-color: $white;
   }
 }
 

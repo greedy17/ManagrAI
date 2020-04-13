@@ -82,14 +82,14 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  background-color: white;
+  background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
   flex-flow: column;
 
   .section-shadow {
-    box-shadow: 0 1px 0 0 #ececee;
+    box-shadow: 0 1px 0 0 $soft-gray;
   }
 }
 

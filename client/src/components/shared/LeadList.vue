@@ -53,7 +53,7 @@ export default {
   height: 20px;
   border-radius: 5px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
+  background-color: $white;
 }
 
 .list-name {
@@ -77,6 +77,6 @@ export default {
 }
 
 .dark {
-  background-color: #efeff5;
+  background-color: $soft-gray;
 }
 </style>

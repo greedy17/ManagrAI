@@ -107,7 +107,7 @@ export default {
   height: 24px;
   padding: 2px;
   margin-left: auto;
-  background-color: #efeff5;
+  background-color: $soft-gray;
   border-radius: 5px;
   display: flex;
   flex-flow: row;
