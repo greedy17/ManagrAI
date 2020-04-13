@@ -64,10 +64,10 @@ export default {
           // if this person can be logged in
           // the following is temporary code
           let token = response.data.token
-          let user = response.data
-          delete user.token
+          let userData = response.data
+          delete userData.token
           this.$store.dispatch('updateUserToken', token)
-          this.$store.dispatch('updateUser', user)
+          this.$store.dispatch('updateUser', User.fromAPI(userData))
           this.$router.push({ name: 'LeadsIndex' })
           this.success = true
         })

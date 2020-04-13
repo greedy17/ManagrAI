@@ -16,6 +16,7 @@ from rest_framework import (
 from rest_framework import (
     viewsets, mixins, generics, status, filters, permissions
 )
+from rest_framework.decorators import (api_view, permission_classes, )
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -36,9 +37,9 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
     """
     For admin login.
     """
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = ()
     serializer_class = UserLoginSerializer
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
         """Validate user credentials.
@@ -63,11 +64,11 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         Token.objects.get_or_create(user=user)
 
         # Build and send the response
-        serializer = UserSerializer(user, context={'request': request})
+        u = User.objects.get(pk=user.id)
+        serializer = UserSerializer(u, context={'request': request})
         response_data = serializer.data
         response_data['token'] = user.auth_token.key
         return Response(response_data)
-# TODO: Add relevant mixins to manipulate users via API
 
 
 class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
@@ -156,6 +157,21 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def get_account_status(request):
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(email=email)
+
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_UNAUTHORIZED)
+    if user.state == STATE_ACTIVE:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
     permission_classes = (IsSuperUser | IsOrganizationManager,)
@@ -175,6 +191,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
+        # TODO: PB 04/12/20 currently we are returning the link for dev purposes (so that we can test the auth flow) this will be removed when we add a mail service to send the link
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)

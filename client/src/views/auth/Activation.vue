@@ -127,8 +127,8 @@ export default {
         return false
       }
       let castAsInteger = parseInt(this.password)
-      let castMatchesOriginal = castAsInteger.toString() !== this.password
-      return !Number.isNaN(castAsInteger) && !castMatchesOriginal
+      let areEqualAfterRecast = castAsInteger.toString() === this.password
+      return !Number.isNaN(castAsInteger) && areEqualAfterRecast
     },
   },
 }

@@ -7,33 +7,28 @@ export default class User {
   constructor(user) {
     user = user || {}
 
-    // TODO(Bruno 4-8-20): fill out constructor based on this app's user properties
-    // const {
-    //   id = '',
-    //   firstName = '',
-    //   lastName = '',
-    //   email = '',
-    //   fullName = '',
-    //   paypalEmail = '',
-    //   birthYear = null,
-    //   zipCode = null,
-    //   isEmployee = null,
-    //   isAdmin = null,
-    //   isStaff = null,
-    // } = user
-    // Object.assign(this, {
-    //   id,
-    //   firstName,
-    //   lastName,
-    //   email,
-    //   fullName,
-    //   paypalEmail,
-    //   birthYear,
-    //   zipCode,
-    //   isEmployee,
-    //   isAdmin,
-    //   isStaff,
-    // })
+    const {
+      id = '',
+      firstName = '',
+      lastName = '',
+      email = '',
+      organization = null,
+      organizationRef = null,
+      accountsRef = null,
+      state = null,
+      type = null,
+    } = user
+    Object.assign(this, {
+      id,
+      firstName,
+      lastName,
+      email,
+      organization,
+      organizationRef,
+      accountsRef,
+      state,
+      type,
+    })
   }
 
   static create(opts) {

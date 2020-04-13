@@ -19,8 +19,8 @@ from rest_framework import (
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from .models import Organization, Account, Contact, Lead
-from .serializers import OrganizationSerializer, AccountSerializer, LeadSerializer, ContactSerializer
+from .models import Organization, Account, Contact
+from .serializers import OrganizationSerializer, AccountSerializer, ContactSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
 from managr.core.permissions import (
@@ -55,10 +55,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    permissions_class = (IsSalesPerson,)
+    permission_classes = (IsSalesPerson,)
 
     def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
+        if self.request.user.organization:
             return Account.objects.filter(organization=self.request.user.organization.id)
         else:
             return None
@@ -123,15 +123,3 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
-
-
-class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
-    authentication_classes = (authentication.TokenAuthentication,)
-    serializer_class = AccountSerializer
-    permissions_class = (IsSalesPerson,)
-
-    def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
-            return Lead.objects.filter(account__organization=self.request.user.organization.id)
-        else:
-            return None

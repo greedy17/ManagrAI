@@ -86,27 +86,3 @@ class Contact(TimeStampModel):
     def full_name(self):
         """ Property for a user's full name """
         return f'{self.first_name} {self.last_name}'
-
-
-class Lead(TimeStampModel):
-    """ 
-        Leads are collections of Accounts with forecasting, status and Notes attached
-        Currently we are setting on_delete to null and allowing null values.
-        However we may choose to use PROTECT and require that leads are transferred before
-        delete
-
-    """
-
-    amount = models.IntegerField()
-    primary_description = models.CharField(max_length=150)
-    secondar_description = models.CharField(max_length=150, blank=True)
-    rank = models.IntegerField(choices=LEAD_RANK_CHOCIES)
-    account = models.ForeignKey('Account', related_name="leads",
-                                on_delete=models.CASCADE, blank=False, null=True)
-    organization = models.ForeignKey('Organization', related_name="leads",
-                                     on_delete=models.CASCADE, blank=False, null=True)
-    created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
-
-    class Meta:
-        ordering = ['-datetime_created']

@@ -1,10 +1,6 @@
 <template>
   <div class="rank">
     <span v-if="label" class="label">Rank</span>
-    <!-- <span v-for="(bool, index) in iconArray" :key="index" class="icon-container">
-      <img v-if="bool" src="@/assets/images/star.svg" alt="star icon" />
-      <img v-else src="@/assets/images/star_outline.svg" alt="star outline icon" />
-    </span> -->
     <span v-for="n in 5" :key="n" class="icon-container">
       <img v-if="n <= rank" src="@/assets/images/star.svg" alt="star icon" />
       <img v-else src="@/assets/images/star_outline.svg" alt="star outline icon" />
@@ -22,19 +18,6 @@ export default {
     },
     label: {
       type: Boolean,
-    },
-  },
-  computed: {
-    iconArray() {
-      let arr = []
-      for (let n = 1; n <= 5; ++n) {
-        if (n <= this.rank) {
-          arr.push(true)
-        } else {
-          arr.push(false)
-        }
-      }
-      return arr
     },
   },
 }
