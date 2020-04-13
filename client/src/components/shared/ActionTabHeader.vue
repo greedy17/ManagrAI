@@ -43,7 +43,7 @@ export default {
 .action-tab-header {
   @include disable-text-select();
   @include pointer-on-hover();
-  width: 91px;
+  width: 5.7rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-stretch: normal;

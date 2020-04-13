@@ -55,7 +55,7 @@ export default {
   align-items: center;
   margin: 1vh 1%;
   padding-left: 1%;
-  height: 49px;
+  height: 3rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
@@ -67,8 +67,8 @@ export default {
 }
 
 .icon {
-  height: 26px;
-  width: 26px;
+  height: 1.625rem;
+  width: 1.625rem;
   display: block;
 }
 
@@ -76,7 +76,7 @@ export default {
   font-weight: bold;
   align-self: center;
   width: 25%;
-  margin-left: 11px;
+  margin-left: 0.75rem;
 }
 
 .list-length {

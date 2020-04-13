@@ -83,8 +83,8 @@ export default {
 }
 
 .contact-img {
-  height: 24px;
-  width: 24px;
+  height: 1.5rem;
+  width: 1.5rem;
   border-radius: 50%;
 }
 
@@ -104,8 +104,8 @@ export default {
 .contact-phone-number-container {
   @include pointer-on-hover();
   width: 50%;
-  height: 24px;
-  padding: 2px;
+  height: 1.5rem;
+  padding: 0.125rem;
   margin-left: auto;
   background-color: $soft-gray;
   border-radius: 5px;
@@ -115,13 +115,13 @@ export default {
 }
 
 .telephone-icon {
-  height: 16px;
-  width: 16px;
-  margin-left: 5px;
+  height: 1rem;
+  width: 1rem;
+  margin-left: 0.375rem;
 }
 
 .contact-phone-number {
-  margin-left: 5px;
+  margin-left: 0.375rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
@@ -140,8 +140,8 @@ export default {
 
 input {
   @include input-field();
-  height: 40px;
-  margin: 5px 0;
+  height: 2.5rem;
+  margin: 0.375rem 0;
 }
 
 /* right-pane below */

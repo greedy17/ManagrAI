@@ -32,7 +32,7 @@ export default {
 
   .label {
     font-size: 0.8rem;
-    margin-right: 12px;
+    margin-right: 0.75rem;
   }
 }
 </style>

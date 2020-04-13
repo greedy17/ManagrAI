@@ -91,8 +91,8 @@ export default {
 @import '@/styles/mixins/utils';
 
 .insights {
-  width: 255px;
-  height: 325px;
+  width: 16rem;
+  height: 21rem;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px $soft-gray;
   background-color: $white;
@@ -101,7 +101,7 @@ export default {
 }
 
 .insights-header {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -142,7 +142,7 @@ export default {
 
   &:hover {
     border-radius: 5px;
-    padding: 4px 6px;
+    padding: 0.25rem 0.375rem;
     background-color: $dark-green;
     color: $white;
   }
@@ -152,7 +152,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 48px;
+  height: 3rem;
   box-shadow: 0 1px 0 0 $soft-gray;
 }
 
@@ -170,8 +170,8 @@ export default {
 }
 
 .insight-icon {
-  height: 20px;
-  width: 20px;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .insight-top {

@@ -42,7 +42,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 63px;
+  height: 4rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -51,20 +51,20 @@ nav {
 
 .logo {
   @include disable-text-select();
-  margin-left: 25px;
+  margin-left: 1.5rem;
   display: flex;
   align-items: center;
 
   .image {
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .name {
     display: flex;
     align-items: center;
     font-family: $logo-font-family;
-    font-size: 36px;
+    font-size: 2.25rem;
     font-weight: 500;
     font-stretch: normal;
     font-style: normal;

@@ -48,9 +48,9 @@ export default {
   @include disable-text-select();
   display: flex;
   align-items: center;
-  padding: 0 8px;
-  width: 142px;
-  height: 20px;
+  padding: 0 0.5rem;
+  width: 9rem;
+  height: 1.25rem;
   border-radius: 5px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   background-color: $white;

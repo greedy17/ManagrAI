@@ -162,9 +162,9 @@ h2 {
 
 form,
 .success-prompt {
-  margin-top: 50px;
-  width: 500px;
-  height: 300px;
+  margin-top: 3.125rem;
+  width: 31.25rem;
+  height: 18.75rem;
   background-color: $white;
   border-radius: 5px;
   display: flex;
@@ -174,16 +174,16 @@ form,
 
 input {
   @include input-field();
-  height: 40px;
-  width: 250px;
+  height: 2.5rem;
+  width: 15.65rem;
   display: block;
-  margin: 5px 0;
+  margin: 0.375rem 0;
 }
 
 button {
   @include primary-button();
-  margin-top: 20px;
-  height: 30px;
-  width: 150px;
+  margin-top: 1.25rem;
+  height: 1.875rem;
+  width: 9.375rem;
 }
 </style>

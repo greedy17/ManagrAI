@@ -100,21 +100,21 @@ export default {
 
 .left-pane {
   width: 21%;
-  min-width: 294.75px;
+  min-width: 18.45rem;
   padding-top: 2%;
   padding-right: 1%;
   display: flex;
   flex-flow: row;
 
   .toolbar {
-    width: 243px;
+    width: 15.2rem;
     margin-left: auto;
   }
 }
 
 .center-pane {
   width: 54%;
-  min-width: 795.5px;
+  min-width: 49.75rem;
   padding: 2% 1% 1% 1%;
 
   .container {
@@ -132,7 +132,7 @@ export default {
 
 .right-pane {
   width: 25%;
-  min-width: 335.5px;
+  min-width: 21rem;
   box-sizing: border-box;
   padding: 2% 1% 1% 1%;
 }

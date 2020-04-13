@@ -32,10 +32,4 @@ body {
 #app {
   height: inherit;
 }
-
-/* for development purposes */
-// div {
-//   border-style: dashed;
-//   border-width: 1px;
-// }
 </style>

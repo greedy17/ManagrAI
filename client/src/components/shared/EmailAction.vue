@@ -91,8 +91,8 @@ export default {
 }
 
 .contact-img {
-  height: 24px;
-  width: 24px;
+  height: 1.5rem;
+  width: 1.5rem;
   border-radius: 50%;
 }
 
@@ -111,8 +111,8 @@ export default {
 
 .contact-email-container {
   width: 50%;
-  height: 24px;
-  padding: 2px;
+  height: 1.5rem;
+  padding: 0.125rem;
   background-color: $soft-gray;
   border-radius: 5px;
   margin-left: auto;
@@ -122,13 +122,13 @@ export default {
 }
 
 .email-icon {
-  height: 16px;
-  width: 16px;
-  margin-left: 5px;
+  height: 1rem;
+  width: 1rem;
+  margin-left: 0.375rem;
 }
 
 .contact-email {
-  margin-left: 5px;
+  margin-left: 0.375rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 10px;
   font-weight: bold;
@@ -149,7 +149,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  padding: 2px;
+  padding: 0.125rem;
   margin-bottom: 2%;
 }
 
@@ -158,7 +158,7 @@ export default {
   border-radius: 100px;
   background-color: $theme-gray;
   margin-right: auto;
-  width: 95px;
+  width: 6rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,16 +169,16 @@ export default {
   font-style: normal;
   line-height: 1.6;
   letter-spacing: normal;
-  height: 24px;
+  height: 1.5rem;
   color: rgba($color: $main-font-gray, $alpha: 0.5);
 }
 
 .example {
   margin-right: unset;
-  padding: 2px 0;
+  padding: 0.125rem 0;
   display: inline-block;
-  height: 16px;
-  width: 70px;
+  height: 1rem;
+  width: 4.5rem;
   text-align: center;
   vertical-align: center;
 }
@@ -186,7 +186,7 @@ export default {
 .template-selector-container {
   display: flex;
   flex-flow: row;
-  height: 24px;
+  height: 1.5rem;
   align-items: center;
 }
 
@@ -205,8 +205,8 @@ export default {
 .template-selector-dropdown {
   @include pointer-on-hover();
   width: 50%;
-  height: 24px;
-  padding: 2px;
+  height: 1.5rem;
+  padding: 0.125rem;
   background-color: $soft-gray;
   border-radius: 5px;
   margin-right: auto;
@@ -234,7 +234,7 @@ export default {
 
 input {
   @include input-field();
-  height: 40px;
+  height: 2.5rem;
   margin-top: 2%;
 }
 

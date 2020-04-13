@@ -42,8 +42,8 @@ export default {
 .nav-link {
   @include disable-text-select();
   @include pointer-on-hover();
-  height: 63px;
-  width: 57px;
+  height: 4rem;
+  width: 3.6rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -52,8 +52,8 @@ export default {
 }
 
 .icon {
-  height: 24px;
-  width: 24px;
+  height: 1.5rem;
+  width: 1.5rem;
 }
 
 .content {

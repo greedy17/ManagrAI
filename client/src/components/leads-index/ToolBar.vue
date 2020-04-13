@@ -109,7 +109,7 @@ export default {
   display: flex;
   flex-flow: column;
   justify-content: center;
-  height: 48px;
+  height: 3rem;
 }
 
 .header {
@@ -134,7 +134,7 @@ export default {
 
 .filter {
   .filter-header {
-    height: 48px;
+    height: 3rem;
     display: flex;
     flex-flow: column;
     justify-content: center;
@@ -144,16 +144,16 @@ export default {
 
   .filter-options {
     padding-left: 14%;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     color: rgba($color: $main-font-gray, $alpha: 0.4);
 
     .option {
-      height: 28px;
+      height: 1.75rem;
     }
   }
 }
 
 .list {
-  margin-bottom: 14px;
+  margin-bottom: 0.875rem;
 }
 </style>

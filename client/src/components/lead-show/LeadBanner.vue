@@ -59,7 +59,7 @@ export default {
 
 .lead-banner {
   @include disable-text-select();
-  height: 49px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -149,8 +149,8 @@ export default {
   color: $main-font-gray;
 
   .button-icon {
-    height: 16px;
-    width: 16px;
+    height: 1rem;
+    width: 1rem;
   }
 
   &:focus {

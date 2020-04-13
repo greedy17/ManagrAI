@@ -51,7 +51,7 @@ export default {
 }
 
 .header {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -63,7 +63,7 @@ export default {
 .note {
   display: flex;
   flex-flow: column;
-  padding: 20px 3%;
+  padding: 1.25rem 3%;
   border-bottom: solid 1px $soft-gray;
 }
 
@@ -71,7 +71,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 
   .expand {
     @include pointer-on-hover();

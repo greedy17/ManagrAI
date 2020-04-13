@@ -27,7 +27,7 @@ export default {
 
 input {
   @include input-field();
-  height: 40px;
+  height: 2.5rem;
 }
 
 textarea {

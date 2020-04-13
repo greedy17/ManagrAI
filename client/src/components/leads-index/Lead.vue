@@ -82,7 +82,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 .lead {
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 }
 
 .lead-header {
@@ -90,14 +90,14 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 49px;
+  height: 3rem;
 }
 
 .lead-name {
   @include pointer-on-hover();
   width: 15%;
   padding-left: 1%;
-  height: 16px;
+  height: 1rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
@@ -141,7 +141,7 @@ export default {
 
 .lead-amount {
   width: 7.5%;
-  padding-left: 10px;
+  padding-left: 0.625rem;
 }
 
 .lead-last-update {
@@ -167,8 +167,8 @@ export default {
   @include pointer-on-hover();
   background-color: $soft-gray;
   border-radius: 5px;
-  height: 15px;
-  width: 15px;
+  height: 1rem;
+  width: 1rem;
   margin-left: auto;
   margin-right: 15%;
 }
