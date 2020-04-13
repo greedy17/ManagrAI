@@ -62,6 +62,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/inputs';
 
 .email-action {
   width: 100%;
@@ -237,31 +238,9 @@ export default {
 }
 
 input {
+  @include input-field();
   height: 40px;
-  border-radius: 4px;
-  background-color: $off-white;
-  border: none;
-  box-sizing: border-box;
-  padding: 3%;
   margin-top: 2%;
-
-  &:focus {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: #ffffff;
-  }
-
-  &::placeholder {
-    opacity: 0.5;
-    font-family: $base-font-family, $backup-base-font-family;
-    font-size: 14px;
-    font-weight: normal;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: #444444;
-  }
 }
 
 .email-content {

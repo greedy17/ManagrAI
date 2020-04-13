@@ -6,11 +6,18 @@
   border: none;
   box-sizing: border-box;
   padding: 3%;
-  
+  font-family: $base-font-family, $backup-base-font-family;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: #444444;
+
   &:focus {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
-    background-color: #ffffff;
+    background-color: white;
   }
 
   &::placeholder {
