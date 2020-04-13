@@ -94,6 +94,7 @@ export default {
 }
 
 .lead-name {
+  @include pointer-on-hover();
   width: 15%;
   padding-left: 1%;
   height: 16px;
@@ -105,10 +106,6 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: $main-font-gray;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .lead-rank {
@@ -167,15 +164,12 @@ export default {
 }
 
 .add-list-icon {
+  @include pointer-on-hover();
   background-color: #eff0f5;
   border-radius: 5px;
   height: 15px;
   width: 15px;
   margin-left: auto;
   margin-right: 15%;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

@@ -91,6 +91,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .toolbar {
   background-color: white;
@@ -227,6 +228,7 @@ export default {
     }
 
     .button {
+      @include pointer-on-hover();
       height: 30px;
       width: 30px;
       background-color: #efeff5;
@@ -247,10 +249,6 @@ export default {
 
       .phone {
         margin-left: auto;
-      }
-
-      &:hover {
-        cursor: pointer;
       }
     }
   }

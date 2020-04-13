@@ -127,10 +127,8 @@ export default {
 }
 
 .banner-button {
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+/Edge */
-  user-select: none; /* Standard */
+  @include disable-text-select();
+  @include pointer-on-hover();
   margin: 0 4% 0 auto;
   display: flex;
   flex-flow: row;
@@ -153,10 +151,6 @@ export default {
   .button-icon {
     height: 16px;
     width: 16px;
-  }
-
-  &:hover {
-    cursor: pointer;
   }
 
   &:focus {

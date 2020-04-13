@@ -54,6 +54,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/utils';
 
 .call-action {
   width: 100%;
@@ -101,6 +102,7 @@ export default {
 }
 
 .contact-phone-number-container {
+  @include pointer-on-hover();
   width: 50%;
   height: 24px;
   padding: 2px;
@@ -110,10 +112,6 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .telephone-icon {

@@ -137,6 +137,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
 
 .invite {
   height: inherit;
@@ -180,22 +181,9 @@ input {
 }
 
 button {
+  @include primary-button();
   margin-top: 20px;
   height: 30px;
   width: 150px;
-  border-radius: 5px;
-  background-color: $dark-green;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

@@ -15,7 +15,6 @@
             Fields may not be blank.
           </div>
           <div v-else-if="success !== null && !success">Invalid email and/or password.</div>
-          <div v-else class="hidden">Placeholder</div>
         </div>
         <input v-model="email" type="text" placeholder="email" />
         <input v-model="password" type="password" placeholder="password" />
@@ -99,6 +98,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
 
 .login {
   height: inherit;
@@ -121,10 +121,6 @@ h2 {
   text-align: center;
 }
 
-.hidden {
-  visibility: hidden;
-}
-
 form {
   margin-top: 50px;
   width: 500px;
@@ -145,22 +141,9 @@ input {
 }
 
 button {
+  @include primary-button();
   margin-top: 20px;
   height: 30px;
   width: 150px;
-  border-radius: 5px;
-  background-color: $dark-green;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

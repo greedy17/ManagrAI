@@ -70,6 +70,7 @@ export default {
 }
 
 .list-name {
+  @include pointer-on-hover();
   width: 90%;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
@@ -80,18 +81,11 @@ export default {
   letter-spacing: normal;
   color: $dark-gray-blue;
   text-decoration: underline;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .remove-list-icon {
+  @include pointer-on-hover();
   height: 55%;
   margin-left: auto;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

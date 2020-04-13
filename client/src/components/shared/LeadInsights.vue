@@ -88,6 +88,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .insights {
   width: 255px;
@@ -128,6 +129,7 @@ export default {
 }
 
 .insights-header-link {
+  @include pointer-on-hover();
   text-transform: uppercase;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
@@ -139,11 +141,10 @@ export default {
   color: $dark-green;
 
   &:hover {
-    cursor: pointer;
     border-radius: 5px;
     padding: 4px 6px;
     background-color: $dark-green;
-    color: #ffffff;
+    color: white;
   }
 }
 

@@ -41,6 +41,7 @@ export default {
 
 .nav-link {
   @include disable-text-select();
+  @include pointer-on-hover();
   height: 63px;
   width: 57px;
   display: flex;
@@ -48,9 +49,6 @@ export default {
   justify-content: center;
   align-items: center;
   margin: 0 3%;
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .icon {

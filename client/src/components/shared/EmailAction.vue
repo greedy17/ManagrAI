@@ -63,6 +63,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/utils';
 
 .email-action {
   width: 100%;
@@ -153,6 +154,7 @@ export default {
 }
 
 .template-variable {
+  @include pointer-on-hover();
   border-radius: 100px;
   background-color: #d7d7dd;
   margin-right: auto;
@@ -169,10 +171,6 @@ export default {
   letter-spacing: normal;
   height: 24px;
   color: rgba($color: $main-font-gray, $alpha: 0.5);
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .example {
@@ -205,6 +203,7 @@ export default {
 }
 
 .template-selector-dropdown {
+  @include pointer-on-hover();
   width: 50%;
   height: 24px;
   padding: 2px;
@@ -214,10 +213,6 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .selected-template-name {

@@ -3,6 +3,8 @@
 
 @mixin base-button() {
   @include disable-text-select();
+  @include pointer-on-hover();
+  @include disabled-button-styles();
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,9 +17,11 @@
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
+  text-indent: none;
+  border-style: none;
 
-  &:hover {
-    cursor: pointer;
+  &:focus {
+    outline: none;
   }
 }
 
@@ -33,8 +37,9 @@
   color: $main-font-gray;
 }
 
-@mixin disabled-button() {
-  @include base-button();
-  background-color: $light-gray-blue;
-  color: $dark-gray-blue;
+@mixin disabled-button-styles() {
+  &:disabled {
+    background-color: $light-gray-blue;
+    color: $dark-gray-blue;
+  }
 }

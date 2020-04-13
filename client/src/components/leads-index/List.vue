@@ -49,6 +49,7 @@ export default {
 
 .list-header {
   @include disable-text-select();
+  @include pointer-on-hover();
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -63,10 +64,6 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: $main-font-gray;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .icon {

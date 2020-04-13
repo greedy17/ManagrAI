@@ -32,6 +32,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .pinned-notes {
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
@@ -73,11 +74,8 @@ export default {
   margin-bottom: 10px;
 
   .expand {
+    @include pointer-on-hover();
     margin-left: auto;
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 }
 

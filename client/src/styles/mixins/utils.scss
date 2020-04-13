@@ -5,3 +5,9 @@
  -ms-user-select: none; /* IE10+/Edge */
  user-select: none; /* Standard */
 }
+
+@mixin pointer-on-hover() {
+    &:hover {
+        cursor: pointer;
+    }
+}

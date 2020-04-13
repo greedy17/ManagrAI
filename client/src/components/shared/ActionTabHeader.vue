@@ -42,6 +42,7 @@ export default {
 
 .action-tab-header {
   @include disable-text-select();
+  @include pointer-on-hover();
   width: 91px;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
@@ -53,9 +54,5 @@ export default {
   align-items: center;
   justify-content: center;
   text-transform: capitalize;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>
