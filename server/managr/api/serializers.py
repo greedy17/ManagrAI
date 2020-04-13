@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Lead, Contact
+from .models import Organization, Account, Contact
 
 from rest_framework import (
     status, filters, permissions
