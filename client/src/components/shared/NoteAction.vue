@@ -16,6 +16,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/buttons';
 
 .note-action {
   width: 100%;
@@ -94,24 +95,7 @@ textarea {
 }
 
 .save-button {
+  @include primary-button();
   margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 15px;
-  border-radius: 5px;
-  background-color: $dark-green;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>
