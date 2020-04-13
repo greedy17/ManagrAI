@@ -79,12 +79,14 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .lead {
   margin-bottom: 10px;
 }
 
 .lead-header {
+  @include disable-text-select();
   display: flex;
   flex-flow: row;
   align-items: center;

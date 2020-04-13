@@ -45,8 +45,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .list-header {
+  @include disable-text-select();
   display: flex;
   flex-flow: row;
   align-items: center;

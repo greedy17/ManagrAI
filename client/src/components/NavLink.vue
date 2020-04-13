@@ -37,8 +37,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .nav-link {
+  @include disable-text-select();
   height: 63px;
   width: 57px;
   display: flex;

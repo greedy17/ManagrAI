@@ -38,8 +38,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .action-tab-header {
+  @include disable-text-select();
   width: 91px;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;

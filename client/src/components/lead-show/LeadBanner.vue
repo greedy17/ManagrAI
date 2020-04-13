@@ -55,8 +55,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .lead-banner {
+  @include disable-text-select();
   height: 49px;
   display: flex;
   flex-flow: row;

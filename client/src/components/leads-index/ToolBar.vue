@@ -78,8 +78,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .toolbar {
+  @include disable-text-select();
   background-color: white;
   width: 78%;
   height: auto;

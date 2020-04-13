@@ -39,6 +39,7 @@ export default {
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 nav {
   height: 63px;
@@ -49,6 +50,7 @@ nav {
 }
 
 .logo {
+  @include disable-text-select();
   margin-left: 25px;
   display: flex;
   align-items: center;
