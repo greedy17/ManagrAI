@@ -45,7 +45,6 @@ export default {
 }
 
 .page-content {
-  overflow-x: scroll;
   flex-grow: 1;
   display: flex;
   flex-flow: row;

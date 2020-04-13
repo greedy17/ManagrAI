@@ -24,7 +24,9 @@ export default {
 @import '@/styles/variables';
 
 body {
-  margin: 0px;
+  overflow-y: scroll;
+  overflow-x: auto;
+  margin: 0;
   height: 100vh;
   background-color: $off-white;
 }
