@@ -3,7 +3,7 @@
     <NavBar />
     <div class="page-content">
       <div class="toolbar-pane">
-        <ToolBar />
+        <ToolBar class="toolbar" />
       </div>
       <div class="lists-container-pane">
         <ListsContainer :lists="lists" />
@@ -18,6 +18,7 @@ import ListsContainer from '@/components/leads-index/ListsContainer'
 import { getSerializedLists } from '@/db.js'
 
 export default {
+  name: 'LeadsIndex',
   components: {
     ToolBar,
     ListsContainer,
@@ -37,7 +38,7 @@ export default {
 @import '@/styles/variables';
 
 .leads-index {
-  height: inherit;
+  min-height: 100vh;
   display: flex;
   flex-flow: column;
   background-color: $off-white;
@@ -52,23 +53,19 @@ export default {
 
 .toolbar-pane {
   width: 17%;
-  padding: 1%;
-  background-color: $off-white;
-  /* screenshot -related */
+  padding: 2% 1% 1% 1%;
   display: flex;
-  flex-flow: row;
-  justify-content: center;
-  .left-pane-screenshot {
-    width: 217px;
-    height: 781px;
-    display: block;
+  flex-flow: column;
+  background-color: $off-white;
+
+  .toolbar {
     margin-left: auto;
   }
 }
 
 .lists-container-pane {
   width: 83%;
-  padding: 1% 2% 1% 1%;
+  padding: 2% 2% 1% 1%;
   background-color: $off-white;
 }
 </style>

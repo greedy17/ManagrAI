@@ -1,13 +1,13 @@
-import * as Cookies from 'js-cookie';
+import * as Cookies from 'js-cookie'
 
 export default {
   getToken() {
-    return Cookies.get('csrftoken');
+    return Cookies.get('csrftoken')
   },
   getHeaders() {
     return {
       'Content-Type': 'application/json',
       'X-CSRFToken': this.getToken(),
-    };
+    }
   },
-};
+}

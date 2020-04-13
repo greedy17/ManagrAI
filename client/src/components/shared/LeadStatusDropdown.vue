@@ -10,7 +10,7 @@
 
 <script>
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
-const enums = ['Ready', 'Trial', 'Demo', 'Waiting']
+const enums = ['Ready', 'Trial', 'Demo', 'Waiting', 'Closed', 'Lost']
 
 export default {
   name: 'LeadStatusDropdown',

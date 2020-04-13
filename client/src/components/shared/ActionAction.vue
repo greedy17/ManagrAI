@@ -43,7 +43,7 @@ export default {
 input {
   height: 40px;
   border-radius: 4px;
-  background-color: #fafafa;
+  background-color: $off-white;
   border: none;
   box-sizing: border-box;
   padding: 3%;

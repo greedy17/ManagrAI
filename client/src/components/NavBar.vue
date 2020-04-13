@@ -5,13 +5,14 @@
         managr
       </span>
     </div>
-    <div class="links">
+    <div v-if="userIsLoggedIn" class="links">
       <NavLink icon="leads" :active="this.$route.path === '/leads'">Leads</NavLink>
       <NavLink icon="prospect">Prospect</NavLink>
       <NavLink icon="forecast">Forecast</NavLink>
       <NavLink icon="reports">Reports</NavLink>
     </div>
     <img
+      v-if="userIsLoggedIn"
       src="@/assets/images/screenshots/navbar-search-and-profile.png"
       alt="screenshot"
       class="navbar-search-and-profile"
@@ -27,6 +28,11 @@ export default {
   components: {
     NavLink,
   },
+  computed: {
+    userIsLoggedIn() {
+      return this.$store.getters.userIsLoggedIn
+    },
+  },
 }
 </script>
 
@@ -35,7 +41,9 @@ export default {
 @import '@/styles/variables';
 
 nav {
+  height: 63px;
   display: flex;
+  flex-flow: row;
   align-items: center;
   background-color: #ffffff;
 }

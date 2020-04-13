@@ -142,7 +142,7 @@ input {
   height: 40px;
   margin: 5px 0;
   border-radius: 4px;
-  background-color: #fafafa;
+  background-color: $off-white;
   border: none;
   box-sizing: border-box;
   padding: 3%;

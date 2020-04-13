@@ -81,7 +81,8 @@ export default {
 
 .toolbar {
   background-color: white;
-  width: 100%;
+  width: 78%;
+  height: auto;
   display: flex;
   flex-flow: column;
 
