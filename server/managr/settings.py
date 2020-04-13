@@ -53,6 +53,7 @@ if CURRENT_DOMAIN not in ALLOWED_HOSTS:
 INSTALLED_APPS = [
     # Local
     'managr.core',
+    'managr.api',
     # Django
     'django.contrib.admin',
     'django.contrib.auth',
