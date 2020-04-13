@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-list" :style="computedStyles">
+  <div class="lead-list" :class="{ dark: dark }">
     <span class="list-name" @click="handleNameClick">
       {{ listName }}
     </span>
@@ -35,19 +35,6 @@ export default {
     handleIconClick() {
       let leadListID = null
       this.$emit('deleted-lead-list', leadListID)
-    },
-  },
-  computed: {
-    computedStyles() {
-      if (this.dark) {
-        return {
-          'background-color': '#efeff5',
-        }
-      } else {
-        return {
-          'background-color': '#ffffff',
-        }
-      }
     },
   },
 }
@@ -87,5 +74,9 @@ export default {
   @include pointer-on-hover();
   height: 55%;
   margin-left: auto;
+}
+
+.dark {
+  background-color: #efeff5;
 }
 </style>
