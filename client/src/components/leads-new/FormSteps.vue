@@ -5,13 +5,13 @@
     </div>
     <div class="step">
       <span class="title">Step 1</span>
-      <div class="checkmark">
+      <div v-if="currentStep > 1" class="checkmark">
         <img class="icon" alt="checkmark" src="@/assets/images/checkmark.svg" />
       </div>
     </div>
     <div class="step">
       <span class="title">Step 2</span>
-      <div class="checkmark">
+      <div v-if="currentStep > 2" class="checkmark">
         <img class="icon" alt="checkmark" src="@/assets/images/checkmark.svg" />
       </div>
     </div>
@@ -24,6 +24,12 @@
 <script>
 export default {
   name: 'FormSteps',
+  props: {
+    currentStep: {
+      type: Number,
+      required: true,
+    },
+  },
 }
 </script>
 
@@ -34,6 +40,7 @@ export default {
   background-color: $white;
   height: 15rem;
   width: 15rem;
+  border: 1px solid $soft-gray;
 }
 
 .header {
@@ -43,7 +50,7 @@ export default {
   font-style: normal;
   letter-spacing: normal;
   line-height: 1.14;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: bold;
   height: 3rem;
   display: flex;

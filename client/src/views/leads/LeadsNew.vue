@@ -3,10 +3,10 @@
     <NavBar />
     <div class="page-content">
       <div class="steps-pane">
-        <FormSteps />
+        <FormSteps :currentStep="currentStep" />
       </div>
-      <div class="forms-pane">
-        forms
+      <div class="form-pane">
+        <Form :currentStep="currentStep" @clicked-next="showForm2" />
       </div>
     </div>
   </div>
@@ -14,10 +14,24 @@
 
 <script>
 import FormSteps from '@/components/leads-new/FormSteps'
+import Form from '@/components/leads-new/Form'
+
+// import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'LeadsNew',
-  components: { FormSteps },
+  components: { FormSteps, Form },
+  data() {
+    return {
+      accounts: null,
+      currentStep: 1,
+    }
+  },
+  methods: {
+    showForm2() {
+      this.currentStep = 2
+    },
+  },
 }
 </script>
 
@@ -45,11 +59,7 @@ export default {
   align-items: center;
 }
 
-.forms-pane {
+.form-pane {
   width: 75vw;
-}
-
-div {
-  border: 1px dashed black;
 }
 </style>
