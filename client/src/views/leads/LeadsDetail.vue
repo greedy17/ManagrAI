@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-show">
+  <div class="leads-detail">
     <NavBar />
     <div class="page-content">
       <div class="left-pane">
@@ -30,10 +30,10 @@
 
 <script>
 import { getSerializedLead } from '@/db.js'
-import ToolBar from '@/components/lead-show/ToolBar'
-import LeadBanner from '@/components/lead-show/LeadBanner'
+import ToolBar from '@/components/leads-detail/ToolBar'
+import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
-import PinnedNotes from '@/components/lead-show/PinnedNotes'
+import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
 
@@ -84,7 +84,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-.lead-show {
+.leads-detail {
   height: inherit;
   display: flex;
   flex-flow: column;
