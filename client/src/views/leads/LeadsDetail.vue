@@ -6,7 +6,7 @@
         <ToolBar class="toolbar" :lead="lead" />
       </div>
       <div class="center-pane">
-        <LeadBanner :lead="lead" @clicked-release="deleteLead" />
+        <LeadBanner :lead="lead" @clicked-release="releaseLead" />
         <div class="container">
           <LeadActions :lead="lead" />
         </div>
@@ -56,11 +56,11 @@ export default {
     this.lead = getSerializedLead(this.id)
   },
   methods: {
-    deleteLead() {
+    releaseLead() {
       Lead.api
-        .delete(this.lead.id)
+        .unclaim(this.lead.id)
         .then(() => {
-          let message = `<h2>Success!</h2><p>Lead deleted.</p>`
+          let message = `<h2>Success!</h2><p>Lead released.</p>`
           this.$Alert.alert({
             type: 'success',
             message,

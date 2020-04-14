@@ -1,7 +1,7 @@
 import { API_BASE, apiClient, apiErrorHandler } from '@/services/api'
 
 // API Endpoints
-const GENERATE_DELETE_ENDPOINT = uid => `${API_BASE}leads/${uid}/`
+const GENERATE_UNCLAIM_ENDPOINT = uid => `${API_BASE}leads/${uid}/un-claim/`
 
 export default class LeadAPI {
   /**
@@ -22,10 +22,10 @@ export default class LeadAPI {
     return new LeadAPI(cls)
   }
 
-  delete(uid) {
+  unclaim(uid) {
     const promise = apiClient()
-      .delete(GENERATE_DELETE_ENDPOINT(uid))
-      .catch(apiErrorHandler({ apiName: 'LeadAPI.delete' }))
+      .delete(GENERATE_UNCLAIM_ENDPOINT(uid))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.unclaim' }))
     return promise
   }
 }
