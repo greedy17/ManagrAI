@@ -1,6 +1,7 @@
 import axios from 'axios'
 import CSRF from '@/services/csrf'
 import Auth from '@/services/auth'
+import API_BASE from './base'
 
 /**
  *   Get the axios API client.
@@ -13,7 +14,7 @@ import Auth from '@/services/auth'
 export function apiClient() {
   const { location } = window
   return axios.create({
-    baseURL: `${location.protocol}//${location.host}`,
+    baseURL: `${location.protocol}//${location.host}` + API_BASE,
     headers: {
       ...CSRF.getHeaders(),
       ...Auth.getHeaders(),

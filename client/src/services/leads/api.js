@@ -1,7 +1,7 @@
-import { API_BASE, apiClient, apiErrorHandler } from '@/services/api'
+import { apiClient, apiErrorHandler } from '@/services/api'
 
 // API Endpoints
-const GENERATE_UNCLAIM_ENDPOINT = uid => `${API_BASE}leads/${uid}/un-claim/`
+const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
 
 export default class LeadAPI {
   /**
