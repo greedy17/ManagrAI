@@ -16,8 +16,8 @@ export default {
   },
   methods: {
     handleClick() {
-      // NOTE: currently only for Leads link
-      if (this.to === 'LeadsIndex' && !this.isCurrentRoute) {
+      // NOTE(Bruno 4-15-20): Reports is not built and so is made inactive
+      if (!this.isCurrentRoute && this.to !== 'Reports') {
         this.$router.push({ name: this.to })
       }
     },
@@ -27,9 +27,7 @@ export default {
       return this.$route.name === this.to
     },
     activeStyles() {
-      return this.isCurrentRoute
-        ? { borderBottom: '2px solid #2F9E54' }
-        : { borderBottom: '2px solid #ffffff' }
+      return { borderBottom: this.isCurrentRoute ? '2px solid #2F9E54' : '2px solid #ffffff' }
     },
   },
 }

@@ -7,7 +7,7 @@
     </div>
     <div v-if="userIsLoggedIn" class="links">
       <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
-      <NavLink icon="prospect" :to="'Prospects'">Prospect</NavLink>
+      <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
       <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
     </div>
     <img
