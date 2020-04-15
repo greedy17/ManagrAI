@@ -6,7 +6,7 @@
         <ToolBar />
       </div>
       <div class="lists-pane">
-        ListsContainer -- coming soon!
+        <AccountsContainer :accounts="accounts" />
       </div>
     </div>
   </div>
@@ -14,6 +14,8 @@
 
 <script>
 import ToolBar from '@/components/prospect/ToolBar'
+import AccountsContainer from '@/components/prospect/AccountsContainer'
+import { getSerializedAccounts } from '@/db.js'
 
 // import CollectionManager from '@/services/collectionManager'
 
@@ -21,12 +23,15 @@ export default {
   name: 'Prospect',
   components: {
     ToolBar,
+    AccountsContainer,
   },
   data() {
     return {
       accounts: null,
-      currentStep: 1,
     }
+  },
+  created() {
+    this.accounts = getSerializedAccounts()
   },
 }
 </script>
@@ -43,6 +48,7 @@ export default {
 
 .page-content {
   padding-top: 2%;
+  padding-bottom: 2%;
   flex-grow: 1;
   display: flex;
   flex-flow: row;
