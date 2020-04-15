@@ -34,6 +34,17 @@ export default {
   width: 15rem;
 }
 
+.toolbar,
+.toolbar > * {
+  font-family: $base-font-family, $backup-base-font-family;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  line-height: 1.14;
+  color: $main-font-gray;
+  font-size: 0.9rem;
+}
+
 button.new-lead {
   @include primary-button();
   height: 2.5rem;
