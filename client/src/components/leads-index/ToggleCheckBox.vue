@@ -1,6 +1,6 @@
 <template>
   <label class="toggle">
-    <input type="checkbox" class="toggle" v-model="donationCart.tipEveryTime" />
+    <input type="checkbox" class="toggle" :checked="checked" @click="emitToggle" />
     <div>
       <div></div>
     </div>
@@ -10,6 +10,21 @@
 <script>
 export default {
   name: 'ToggleCheckBox',
+  props: {
+    checked: {
+      required: true,
+      type: Boolean,
+    },
+    eventToEmit: {
+      required: true,
+      type: String,
+    },
+  },
+  methods: {
+    emitToggle() {
+      this.$emit(this.eventToEmit)
+    },
+  },
 }
 </script>
 
@@ -18,10 +33,10 @@ export default {
 
 label.toggle {
   cursor: pointer;
-  height: 3rem;
-  width: 3rem;
-  background-color: red;
+  height: auto;
+  width: auto;
 }
+
 input[type='checkbox'].toggle {
   display: none;
 }
@@ -36,12 +51,14 @@ input[type='checkbox'].toggle + div {
   transition-property: background-color, box-shadow;
   box-shadow: inset 0 0 0 0px rgba(0, 0, 0, 0.4);
 }
+
 // Checked Track (Green)
 input[type='checkbox'].toggle:checked + div {
   width: 40px;
   background-position: 0 0;
   background-color: $dark-green;
 }
+
 // Normal Knob
 input[type='checkbox'].toggle + div > div {
   float: left;
@@ -59,7 +76,8 @@ input[type='checkbox'].toggle + div > div {
   margin-top: 1px;
   margin-left: 1px;
 }
-// Checked Knob (Blue Style)
+
+// Checked Knob (Green Style)
 input[type='checkbox'].toggle:checked + div > div {
   transform: translate3d(20px, 0, 0);
   transform: translate3d(20px, 0, 0);

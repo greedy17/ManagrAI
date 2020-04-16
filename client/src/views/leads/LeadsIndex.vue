@@ -3,8 +3,16 @@
     <NavBar />
     <div class="page-content">
       <div class="toolbar-pane">
-        <button @click="toggleView">Toggle</button>
-        <!-- <ToggleCheckBox /> -->
+        <div class="view-toggle-container">
+          <span :class="{ bold: view === FORECAST }">Forecast</span>
+          <ToggleCheckBox
+            :checked="view === LISTS"
+            @toggle-view="toggleView"
+            :eventToEmit="'toggle-view'"
+          />
+          <span :class="{ bold: view === LISTS }">Lists</span>
+        </div>
+
         <ListsToolBar v-if="view === LISTS" class="toolbar" />
         <ForecastToolBar v-else class="toolbar" />
       </div>
@@ -20,9 +28,7 @@
 import ListsToolBar from '@/components/leads-index/ListsToolBar'
 import ForecastToolBar from '@/components/leads-index/ForecastToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
-
-// NOTE(Bruno 4-16-20): ToggleCheckBox is a WIP and is to replace the toggle button in the template
-// import ToggleCheckBox from '@/components/leads-index/ToggleCheckBox'
+import ToggleCheckBox from '@/components/leads-index/ToggleCheckBox'
 
 import { getSerializedLists } from '@/db.js'
 
@@ -34,7 +40,7 @@ export default {
   components: {
     ListsToolBar,
     ForecastToolBar,
-    // ToggleCheckBox,
+    ToggleCheckBox,
     ListsContainer,
   },
   data() {
@@ -87,7 +93,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
 
 .leads-index {
   min-height: 100vh;
@@ -113,12 +118,24 @@ export default {
   .toolbar {
     margin-left: auto;
   }
+}
 
-  button {
-    // NOTE(Bruno 4-16-20): This button's styling is temporary.
-    @include primary-button();
-    width: 78%;
-    margin: 0 0 1rem auto;
+.view-toggle-container {
+  font-family: $base-font-family, $backup-base-font-family;
+  font-size: 0.825rem;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  width: 78%;
+  margin: 0 0 1rem auto;
+
+  span {
+    margin: 0 1rem;
+  }
+
+  .bold {
+    font-weight: bold;
   }
 }
 
