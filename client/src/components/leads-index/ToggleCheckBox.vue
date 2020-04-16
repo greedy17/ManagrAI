@@ -31,6 +31,8 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+$active-color: $dark-green;
+
 label.toggle {
   cursor: pointer;
   height: auto;
@@ -56,7 +58,7 @@ input[type='checkbox'].toggle + div {
 input[type='checkbox'].toggle:checked + div {
   width: 40px;
   background-position: 0 0;
-  background-color: $dark-green;
+  background-color: $active-color;
 }
 
 // Normal Knob
