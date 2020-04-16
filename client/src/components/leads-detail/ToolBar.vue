@@ -91,9 +91,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .toolbar {
-  background-color: white;
+  background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
 
   width: 100%;
@@ -101,7 +102,7 @@ export default {
   flex-flow: column;
 
   .section-shadow {
-    box-shadow: 0 1px 0 0 #ececee;
+    box-shadow: 0 1px 0 0 $soft-gray;
   }
 }
 
@@ -120,11 +121,11 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 34px;
-  padding: 0 12px;
+  height: 2.125rem;
+  padding: 0 0.75rem;
 
   .icon {
-    height: 20px;
+    height: 1.25rem;
     opacity: 0.4;
   }
 
@@ -149,11 +150,11 @@ export default {
 }
 
 .lead-lists {
-  padding: 20px 20px 10px 20px;
+  padding: 1.25rem 1.25rem 0.625rem 1.25rem;
   border-bottom: 5px solid $coral;
 
   .header {
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
   }
 
   .container {
@@ -161,14 +162,14 @@ export default {
     flex-flow: column;
 
     .list {
-      margin-bottom: 10px;
-      height: 28px;
+      margin-bottom: 0.625rem;
+      height: 1.75rem;
     }
   }
 }
 
 .account-link {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -179,7 +180,7 @@ export default {
 }
 
 .amount {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -189,13 +190,13 @@ export default {
 }
 
 .section-shadow {
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .contacts {
   .header {
-    padding-left: 20px;
-    height: 54px;
+    padding-left: 1.25rem;
+    height: 3.375rem;
     display: flex;
     flex-flow: row;
     align-items: center;
@@ -208,14 +209,14 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 48px;
-    padding-left: 20px;
+    height: 3rem;
+    padding-left: 1.25rem;
     font-size: 14px;
 
     img {
-      height: 20px;
+      height: 1.25rem;
       border-radius: 50%;
-      margin-right: 15px;
+      margin-right: 1rem;
     }
 
     .phone {
@@ -223,13 +224,14 @@ export default {
     }
 
     .email {
-      margin: 0 10px;
+      margin: 0 0.625rem;
     }
 
     .button {
-      height: 30px;
-      width: 30px;
-      background-color: #efeff5;
+      @include pointer-on-hover();
+      height: 1.875rem;
+      width: 1.875rem;
+      background-color: $soft-gray;
       border-radius: 5px;
       display: flex;
       flex-flow: row;
@@ -237,20 +239,16 @@ export default {
       justify-content: center;
 
       .icon {
-        height: 16px;
+        height: 1rem;
         margin: auto;
       }
 
       .email {
-        margin-left: 10px;
+        margin-left: 0.625rem;
       }
 
       .phone {
         margin-left: auto;
-      }
-
-      &:hover {
-        cursor: pointer;
       }
     }
   }
@@ -258,8 +256,8 @@ export default {
 
 .files {
   .header {
-    padding-left: 20px;
-    height: 54px;
+    padding-left: 1.25rem;
+    height: 3.375rem;
     display: flex;
     flex-flow: row;
     align-items: center;
@@ -272,18 +270,15 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 48px;
-    padding-left: 20px;
+    height: 3rem;
+    padding-left: 1.25rem;
     font-size: 14px;
 
     .icon {
-      height: 20px;
+      height: 1.25rem;
       opacity: 0.6;
-      margin-right: 15px;
+      margin-right: 1rem;
     }
   }
 }
-// div {
-//   border: 1px dashed black;
-// }
 </style>

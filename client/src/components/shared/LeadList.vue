@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-list" :style="computedStyles">
+  <div class="lead-list" :class="{ dark: dark }">
     <span class="list-name" @click="handleNameClick">
       {{ listName }}
     </span>
@@ -37,37 +37,27 @@ export default {
       this.$emit('deleted-lead-list', leadListID)
     },
   },
-  computed: {
-    computedStyles() {
-      if (this.dark) {
-        return {
-          'background-color': '#efeff5',
-        }
-      } else {
-        return {
-          'background-color': '#ffffff',
-        }
-      }
-    },
-  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .lead-list {
+  @include disable-text-select();
   display: flex;
   align-items: center;
-  padding: 0 8px;
-  width: 142px;
-  height: 20px;
+  padding: 0 0.5rem;
+  width: 9rem;
+  height: 1.25rem;
   border-radius: 5px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
+  background-color: $white;
 }
 
 .list-name {
+  @include pointer-on-hover();
   width: 90%;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
@@ -78,18 +68,15 @@ export default {
   letter-spacing: normal;
   color: $dark-gray-blue;
   text-decoration: underline;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .remove-list-icon {
+  @include pointer-on-hover();
   height: 55%;
   margin-left: auto;
+}
 
-  &:hover {
-    cursor: pointer;
-  }
+.dark {
+  background-color: $soft-gray;
 }
 </style>

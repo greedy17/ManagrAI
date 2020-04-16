@@ -19,6 +19,8 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/inputs';
 
 .reminder-action {
   width: 100%;
@@ -41,68 +43,17 @@ export default {
 }
 
 input {
-  height: 40px;
-  border-radius: 4px;
-  background-color: $off-white;
-  border: none;
-  box-sizing: border-box;
-  padding: 3%;
-
-  &:focus {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: #ffffff;
-  }
-
-  &::placeholder {
-    opacity: 0.5;
-    font-family: $base-font-family, $backup-base-font-family;
-    font-size: 14px;
-    font-weight: normal;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: #444444;
-  }
+  @include input-field();
+  height: 2.5rem;
 }
 
 textarea {
+  @include input-field();
   resize: none;
   height: 94%;
-  flex-grow: 1; //
+  flex-grow: 1;
   margin: 2% 0;
-  box-sizing: border-box;
-  padding: 3%;
-  border-radius: 4px;
-  border: none;
-  background-color: $off-white;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: #444444;
-
-  &:focus {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: #ffffff;
-  }
-
-  &::placeholder {
-    opacity: 0.5;
-    font-family: $base-font-family, $backup-base-font-family;
-    font-size: 14px;
-    font-weight: normal;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: #444444;
-  }
 }
 
 .save-button-container {
@@ -111,24 +62,7 @@ textarea {
 }
 
 .save-button {
+  @include primary-button();
   margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 15px;
-  border-radius: 5px;
-  background-color: $dark-green;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

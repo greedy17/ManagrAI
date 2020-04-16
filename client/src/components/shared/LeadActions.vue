@@ -54,9 +54,9 @@ export default {
   computed: {
     height() {
       if (this.tabs[this.activeTab] === 'email') {
-        return { height: '441px' }
+        return { height: '28rem' }
       } else {
-        return { height: '325px' }
+        return { height: '21rem' }
       }
     },
   },
@@ -64,22 +64,24 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .actions {
-  min-width: 765px;
+  min-width: 48rem;
   width: 100%;
-  min-height: 325px;
+  min-height: 21rem;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
 }
 
 .actions-tab-headers {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .action-tab-content {

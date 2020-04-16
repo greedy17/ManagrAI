@@ -11,19 +11,23 @@
 export default {
   name: 'NavLink',
   props: {
-    active: Boolean,
+    to: { type: String, required: true },
     icon: String,
   },
   methods: {
     handleClick() {
-      if (this.icon === 'leads') {
-        this.$router.push('/leads')
+      // NOTE: currently only for Leads link
+      if (this.to === 'LeadsIndex' && !this.isCurrentRoute) {
+        this.$router.push({ name: this.to })
       }
     },
   },
   computed: {
+    isCurrentRoute() {
+      return this.$route.name === this.to
+    },
     activeStyles() {
-      return this.active
+      return this.isCurrentRoute
         ? { borderBottom: '2px solid #2F9E54' }
         : { borderBottom: '2px solid #ffffff' }
     },
@@ -33,23 +37,23 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .nav-link {
-  height: 63px;
-  width: 57px;
+  @include disable-text-select();
+  @include pointer-on-hover();
+  height: 4rem;
+  width: 3.6rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
   align-items: center;
   margin: 0 3%;
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .icon {
-  height: 24px;
-  width: 24px;
+  height: 1.5rem;
+  width: 1.5rem;
 }
 
 .content {

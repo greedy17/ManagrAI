@@ -57,16 +57,18 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .forecast-dropdown {
-  width: 100px;
-  height: 20px;
+  width: 6.25rem;
+  height: 1.25rem;
   background-color: rgba(0, 0, 0, 0); // rgb irrelevant, this is for the alpha / transparency
 
   select {
+    @include pointer-on-hover();
     width: 96%;
     height: 100%;
-    padding: 2px 15px;
+    padding: 0.125rem 1rem;
 
     font-family: $base-font-family, $backup-base-font-family;
     font-stretch: normal;
@@ -75,10 +77,6 @@ export default {
     letter-spacing: normal;
 
     border: unset;
-
-    &:hover {
-      cursor: pointer;
-    }
 
     &:focus {
       outline: none;

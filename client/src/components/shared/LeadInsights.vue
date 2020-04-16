@@ -3,7 +3,7 @@
     <div class="insights-header">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
-        <router-link :to="{ name: 'LeadShow', params: { id: lead.id } }" v-if="showLink">
+        <router-link :to="{ name: 'LeadsDetail', params: { id: lead.id } }" v-if="showLink">
           <span class="insights-header-link">See Lead Detail</span>
         </router-link>
       </div>
@@ -88,23 +88,24 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .insights {
-  width: 255px;
-  height: 325px;
+  width: 16rem;
+  height: 21rem;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
 }
 
 .insights-header {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insights-header-title {
@@ -128,6 +129,7 @@ export default {
 }
 
 .insights-header-link {
+  @include pointer-on-hover();
   text-transform: uppercase;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
@@ -139,11 +141,10 @@ export default {
   color: $dark-green;
 
   &:hover {
-    cursor: pointer;
     border-radius: 5px;
-    padding: 4px 6px;
+    padding: 0.25rem 0.375rem;
     background-color: $dark-green;
-    color: #ffffff;
+    color: $white;
   }
 }
 
@@ -151,8 +152,8 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 48px;
-  box-shadow: 0 1px 0 0 #ececee;
+  height: 3rem;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insight-info {
@@ -169,8 +170,8 @@ export default {
 }
 
 .insight-icon {
-  height: 20px;
-  width: 20px;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .insight-top {

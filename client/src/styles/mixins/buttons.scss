@@ -1,0 +1,45 @@
+@import '../variables';
+@import './utils';
+
+@mixin base-button() {
+  @include disable-text-select();
+  @include pointer-on-hover();
+  @include disabled-button-styles();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-family: $base-font-family, $backup-base-font-family;
+  font-size: 0.875rem;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.14;
+  letter-spacing: normal;
+  text-indent: none;
+  border-style: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+@mixin primary-button() {
+  @include base-button();
+  background-color: $dark-green;
+  color: $white;
+}
+
+@mixin secondary-button() {
+  @include base-button();
+  background-color: $silver;
+  color: $main-font-gray;
+}
+
+@mixin disabled-button-styles() {
+  &:disabled {
+    background-color: $light-gray-blue;
+    color: $dark-gray-blue;
+  }
+}

@@ -38,9 +38,12 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .action-tab-header {
-  width: 91px;
+  @include disable-text-select();
+  @include pointer-on-hover();
+  width: 5.7rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-stretch: normal;
@@ -51,9 +54,5 @@ export default {
   align-items: center;
   justify-content: center;
   text-transform: capitalize;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

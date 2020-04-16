@@ -79,22 +79,25 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .lead {
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 }
 
 .lead-header {
+  @include disable-text-select();
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 49px;
+  height: 3rem;
 }
 
 .lead-name {
+  @include pointer-on-hover();
   width: 15%;
   padding-left: 1%;
-  height: 16px;
+  height: 1rem;
   font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
@@ -103,10 +106,6 @@ export default {
   line-height: 1.14;
   letter-spacing: normal;
   color: $main-font-gray;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .lead-rank {
@@ -120,7 +119,7 @@ export default {
   font-style: normal;
   line-height: normal;
   letter-spacing: 0.5px;
-  color: #444444;
+  color: $base-gray;
 }
 
 .lead-description,
@@ -142,7 +141,7 @@ export default {
 
 .lead-amount {
   width: 7.5%;
-  padding-left: 10px;
+  padding-left: 0.625rem;
 }
 
 .lead-last-update {
@@ -165,15 +164,12 @@ export default {
 }
 
 .add-list-icon {
-  background-color: #eff0f5;
+  @include pointer-on-hover();
+  background-color: $soft-gray;
   border-radius: 5px;
-  height: 15px;
-  width: 15px;
+  height: 1rem;
+  width: 1rem;
   margin-left: auto;
   margin-right: 15%;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

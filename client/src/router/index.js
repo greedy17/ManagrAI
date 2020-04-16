@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Login from '@/views/Login'
-import Invite from '@/views/Invite'
-import Activation from '@/views/Activation'
-import LeadsIndex from '@/views/LeadsIndex'
-import LeadShow from '@/views/LeadShow'
+import Login from '@/views/auth/Login'
+import Invite from '@/views/auth/Invite'
+import Activation from '@/views/auth/Activation'
+import LeadsIndex from '@/views/leads/LeadsIndex'
+import LeadsDetail from '@/views/leads/LeadsDetail'
+import LeadsNew from '@/views/leads/LeadsNew'
 
 //TODO(Bruno 4-8-20): lazy-load views
 
@@ -38,9 +39,14 @@ export default new Router({
       component: LeadsIndex,
     },
     {
+      path: '/leads/new',
+      name: 'LeadsNew',
+      component: LeadsNew,
+    },
+    {
       path: '/leads/:id',
-      name: 'LeadShow',
-      component: LeadShow,
+      name: 'LeadsDetail',
+      component: LeadsDetail,
       props: true,
     },
   ],

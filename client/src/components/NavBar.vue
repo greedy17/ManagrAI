@@ -6,10 +6,10 @@
       </span>
     </div>
     <div v-if="userIsLoggedIn" class="links">
-      <NavLink icon="leads" :active="this.$route.path === '/leads'">Leads</NavLink>
-      <NavLink icon="prospect">Prospect</NavLink>
-      <NavLink icon="forecast">Forecast</NavLink>
-      <NavLink icon="reports">Reports</NavLink>
+      <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+      <NavLink icon="prospect" :to="'Prospects'">Prospect</NavLink>
+      <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
+      <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
     </div>
     <img
       v-if="userIsLoggedIn"
@@ -39,30 +39,32 @@ export default {
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 nav {
-  height: 63px;
+  height: 4rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $white;
 }
 
 .logo {
-  margin-left: 25px;
+  @include disable-text-select();
+  margin-left: 1.5rem;
   display: flex;
   align-items: center;
 
   .image {
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .name {
     display: flex;
     align-items: center;
     font-family: $logo-font-family;
-    font-size: 36px;
+    font-size: 2.25rem;
     font-weight: 500;
     font-stretch: normal;
     font-style: normal;

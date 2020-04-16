@@ -15,7 +15,6 @@
             Fields may not be blank.
           </div>
           <div v-else-if="success !== null && !success">Invalid email and/or password.</div>
-          <div v-else class="hidden">Placeholder</div>
         </div>
         <input v-model="email" type="text" placeholder="email" />
         <input v-model="password" type="password" placeholder="password" />
@@ -99,6 +98,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
 
 .login {
   height: inherit;
@@ -108,7 +108,6 @@ export default {
 }
 
 .page-content {
-  overflow-x: scroll;
   flex-grow: 1;
   display: flex;
   flex-flow: row;
@@ -121,15 +120,11 @@ h2 {
   text-align: center;
 }
 
-.hidden {
-  visibility: hidden;
-}
-
 form {
-  margin-top: 50px;
-  width: 500px;
-  height: 300px;
-  background-color: white;
+  margin-top: 3.125rem;
+  width: 31.25rem;
+  height: 18.75rem;
+  background-color: $white;
   border-radius: 5px;
   display: flex;
   flex-flow: column;
@@ -138,29 +133,16 @@ form {
 
 input {
   @include input-field();
-  height: 40px;
-  width: 250px;
+  height: 2.5rem;
+  width: 15.65rem;
   display: block;
-  margin: 10px 0;
+  margin: 0.625rem 0;
 }
 
 button {
-  margin-top: 20px;
-  height: 30px;
-  width: 150px;
-  border-radius: 5px;
-  background-color: $dark-green;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
+  @include primary-button();
+  margin-top: 1.25rem;
+  height: 1.875rem;
+  width: 9.375rem;
 }
 </style>

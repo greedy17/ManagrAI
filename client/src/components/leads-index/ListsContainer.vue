@@ -17,8 +17,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .lists-container {
-  background-color: white;
+  background-color: $white;
   padding-top: 1vh;
   padding-bottom: 1vh;
 }
