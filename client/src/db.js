@@ -26,9 +26,16 @@ const lists = [
   },
 ]
 
+const accounts = [
+  { id: 1, name: 'Spot & Tango' },
+  { id: 2, name: 'Canary' },
+  { id: 3, name: 'EdSights' },
+]
+
 const leads = [
   {
     id: 1,
+    account: 1,
     name: 'Samsung',
     amount: 100000,
     rank: 4,
@@ -43,6 +50,7 @@ const leads = [
   },
   {
     id: 2,
+    account: 1,
     name: 'Tesla',
     amount: 100000,
     rank: 3,
@@ -57,6 +65,7 @@ const leads = [
   },
   {
     id: 3,
+    account: 1,
     name: 'Boston University',
     amount: 100000,
     rank: 3,
@@ -71,6 +80,7 @@ const leads = [
   },
   {
     id: 4,
+    account: 2,
     name: 'Georgia Pacific',
     amount: 100000,
     rank: 4,
@@ -85,6 +95,7 @@ const leads = [
   },
   {
     id: 5,
+    account: 2,
     name: 'Delta Airlines',
     amount: 50000,
     rank: 4,
@@ -99,6 +110,7 @@ const leads = [
   },
   {
     id: 6,
+    account: 2,
     name: 'Emory University',
     amount: 100000,
     rank: 3,
@@ -113,6 +125,7 @@ const leads = [
   },
   {
     id: 7,
+    account: 2,
     name: 'Salesforce',
     amount: 50000,
     rank: 5,
@@ -127,6 +140,7 @@ const leads = [
   },
   {
     id: 8,
+    account: 2,
     name: 'Oracle',
     amount: 100000,
     rank: 5,
@@ -141,6 +155,7 @@ const leads = [
   },
   {
     id: 9,
+    account: 3,
     name: 'Amazon Web Services',
     amount: 5000,
     rank: 5,
@@ -155,6 +170,7 @@ const leads = [
   },
   {
     id: 10,
+    account: 3,
     name: 'LinkedIn',
     amount: 100000,
     rank: 5,
@@ -169,6 +185,7 @@ const leads = [
   },
   {
     id: 11,
+    account: 3,
     name: 'Slack',
     amount: 50000,
     rank: 5,
@@ -183,6 +200,7 @@ const leads = [
   },
   {
     id: 12,
+    account: 3,
     name: 'Tableau',
     amount: 100000,
     rank: 5,
@@ -197,6 +215,7 @@ const leads = [
   },
   {
     id: 13,
+    account: 3,
     name: 'Zoom',
     amount: 100000,
     rank: 5,
@@ -211,6 +230,7 @@ const leads = [
   },
   {
     id: 14,
+    account: 3,
     name: 'Uber',
     amount: 50000,
     rank: 4,
@@ -225,6 +245,7 @@ const leads = [
   },
   {
     id: 15,
+    account: 3,
     name: "Mike's Pastry",
     amount: 100000,
     rank: 5,
@@ -385,7 +406,9 @@ const contacts = [
 function serializeLead(lead, includeLists) {
   // lead has notes and contacts
   let leadCopy = JSON.parse(JSON.stringify(lead))
-  let leadContacts = contacts.filter(contact => contact.leadId === leadCopy.id)
+  let numContacts = Math.floor(Math.random() * 3) + 1
+  let leadContacts = contacts.slice(0, numContacts)
+
   let copyOfLeadContacts = JSON.parse(JSON.stringify(leadContacts))
   let leadNotes = notes.filter(note => note.leadId === leadCopy.id)
   let copyOfLeadNotes = JSON.parse(JSON.stringify(leadNotes))
@@ -428,4 +451,17 @@ export function getSerializedLead(id) {
   let intId = parseInt(id, 10)
   let lead = leads.find(lead => lead.id === intId)
   return lead ? serializeLead(lead, true) : null
+}
+
+function serializeAccount(account) {
+  // account has leads, lead has notes and contacts
+  let copy = JSON.parse(JSON.stringify(account))
+  let relatedLeads = leads.filter(lead => lead.account === account.id)
+  let serializedLeads = relatedLeads.map(serializeLead)
+  copy.leads = serializedLeads
+  return copy
+}
+
+export function getSerializedAccounts() {
+  return accounts.map(serializeAccount)
 }

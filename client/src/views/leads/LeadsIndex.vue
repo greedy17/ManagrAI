@@ -45,6 +45,7 @@ export default {
 }
 
 .page-content {
+  padding-top: 2%;
   flex-grow: 1;
   display: flex;
   flex-flow: row;
@@ -52,7 +53,7 @@ export default {
 
 .toolbar-pane {
   width: 17%;
-  padding: 2% 1% 1% 1%;
+  padding: 0% 1% 1% 1%;
   display: flex;
   flex-flow: column;
   background-color: $off-white;
@@ -64,7 +65,7 @@ export default {
 
 .lists-container-pane {
   width: 83%;
-  padding: 2% 2% 1% 1%;
+  padding: 0 2% 1% 1%;
   background-color: $off-white;
 }
 </style>
