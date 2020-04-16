@@ -7,7 +7,7 @@
 
 <script>
 export default {
-  name: 'ContactCheckBox',
+  name: 'CheckBox',
   props: {
     checked: {
       type: Boolean,
