@@ -61,7 +61,7 @@ const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
 const listEnums = ['Growth Accounts', 'Q2 Buyers']
 
 export default {
-  name: 'ToolBar',
+  name: 'ListsToolBar',
   components: {
     LeadRank,
     LeadList,
