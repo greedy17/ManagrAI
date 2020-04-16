@@ -3,7 +3,7 @@
     <div class="header section-shadow">
       KPIs
     </div>
-    <div class="filter">
+    <!-- <div class="filter">
       <span class="title">Filter by Rep</span>
       <div class="reps-container">
         <span
@@ -16,11 +16,14 @@
           {{ rep.name }}</span
         >
       </div>
-    </div>
+    </div> -->
+    <FilterByRep :reps="reps" :activeReps="activeReps" @toggle-rep-in-filter="toggleRepInFilter" />
   </div>
 </template>
 
 <script>
+import FilterByRep from '@/components/shared/FilterByRep'
+
 const exampleReps = [
   { id: 1, name: 'Marcy Ewald' },
   { id: 2, name: 'Pari Baker' },
@@ -29,6 +32,7 @@ const exampleReps = [
 
 export default {
   name: 'KPIs',
+  components: { FilterByRep },
   data() {
     return {
       reps: exampleReps,

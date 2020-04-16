@@ -4,6 +4,7 @@
     <div class="page-content">
       <div class="toolbar-pane">
         <button @click="toggleView">Toggle</button>
+        <!-- <ToggleCheckBox /> -->
         <ListsToolBar v-if="view === LISTS" class="toolbar" />
         <ForecastToolBar v-else class="toolbar" />
       </div>
@@ -20,6 +21,9 @@ import ListsToolBar from '@/components/leads-index/ListsToolBar'
 import ForecastToolBar from '@/components/leads-index/ForecastToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 
+// NOTE(Bruno 4-16-20): ToggleCheckBox is a WIP and is to replace the toggle button in the template
+// import ToggleCheckBox from '@/components/leads-index/ToggleCheckBox'
+
 import { getSerializedLists } from '@/db.js'
 
 const LISTS = 'LISTS'
@@ -30,6 +34,7 @@ export default {
   components: {
     ListsToolBar,
     ForecastToolBar,
+    // ToggleCheckBox,
     ListsContainer,
   },
   data() {

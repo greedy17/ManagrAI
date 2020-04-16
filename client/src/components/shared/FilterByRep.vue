@@ -16,29 +16,21 @@
 </template>
 
 <script>
-const exampleReps = [
-  { id: 1, name: 'Marcy Ewald' },
-  { id: 2, name: 'Pari Baker' },
-  { id: 3, name: 'Bruno Garcia Gonzalez' },
-]
-
 export default {
   name: 'FilterByRep',
-  data() {
-    return {
-      reps: exampleReps,
-      activeReps: {}, // for the filter
-    }
+  props: {
+    reps: {
+      required: true,
+      type: Array,
+    },
+    activeReps: {
+      required: true,
+      type: Object,
+    },
   },
   methods: {
     toggleRepInFilter(repID) {
-      // depending on state of this.activeReps --> add or make false at that key
-      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
-      if (!this.activeReps[repID]) {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: true })
-      } else {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: false })
-      }
+      this.$emit('toggle-rep-in-filter', repID)
     },
   },
 }
@@ -55,10 +47,6 @@ export default {
   margin-bottom: 1rem;
   display: flex;
   flex-flow: column;
-}
-
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .reps-container {
