@@ -1,5 +1,5 @@
 <template>
-  <div class="nav-link" :style="activeStyles" @click="handleClick">
+  <div class="nav-link" :class="{ active: isCurrentRoute }" @click="handleClick">
     <img alt="icon" :src="require(`@/assets/images/${icon}.svg`)" class="icon" />
     <span class="content">
       <slot />
@@ -26,9 +26,6 @@ export default {
     isCurrentRoute() {
       return this.$route.name === this.to
     },
-    activeStyles() {
-      return { borderBottom: this.isCurrentRoute ? '2px solid #2F9E54' : '2px solid #ffffff' }
-    },
   },
 }
 </script>
@@ -47,6 +44,11 @@ export default {
   justify-content: center;
   align-items: center;
   margin: 0 3%;
+  border-bottom: 2px solid rgba($color: $dark-green, $alpha: 0);
+}
+
+.active {
+  border-bottom: 2px solid $dark-green;
 }
 
 .icon {
