@@ -3,10 +3,24 @@
     <div class="header section-shadow">
       KPIs
     </div>
+    <div class="single-statistic section-shadow">
+      <span class="title">Total Closed Value</span>
+      <span class="statistic"> {{ totalClosedValue }}</span>
+    </div>
+    <div class="single-statistic section-shadow">
+      <span class="title">Average Contract Value</span>
+      <span class="statistic"> {{ averageContractValue }}</span>
+    </div>
+    <div class="statistics-container section-shadow">container</div>
+    <div class="single-statistic section-shadow">
+      <span class="title">Forecast</span>
+      <span class="statistic"> {{ computedForecast }}</span>
+    </div>
   </div>
 </template>
 
 <script>
+import currencyFormatter from '@/services/currencyFormatter'
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
 const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
 const exampleReps = [
@@ -24,6 +38,17 @@ export default {
       forecastEnums,
       reps: exampleReps,
     }
+  },
+  computed: {
+    totalClosedValue() {
+      return currencyFormatter.format(33000)
+    },
+    averageContractValue() {
+      return currencyFormatter.format(12000)
+    },
+    computedForecast() {
+      return currencyFormatter.format(747000)
+    },
   },
 }
 </script>
@@ -56,56 +81,28 @@ export default {
   font-size: 14px;
 }
 
-.header,
-.sort {
+.header {
   display: flex;
   flex-flow: column;
   justify-content: center;
   height: 3rem;
-}
-
-.header {
   padding-left: 7%;
   font-weight: bold;
 }
 
-.sort {
-  padding-left: 10%;
-  font-weight: normal;
-}
-
-.sort-header {
+.single-statistic {
   display: flex;
-  flex-flow: row;
+  flex-flow: column;
   align-items: center;
-
-  .icon {
-    margin: 0 10% 0 auto;
+  justify-content: center;
+  height: 4rem;
+  .statistic {
+    color: rgba($color: $main-font-gray, $alpha: 0.5);
+    margin-top: 0.5rem;
   }
 }
 
-.filter {
-  .filter-header {
-    height: 3rem;
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    padding-left: 10%;
-    font-weight: normal;
-  }
-
-  .filter-options {
-    padding-left: 14%;
-    margin-bottom: 1.25rem;
-    color: rgba($color: $main-font-gray, $alpha: 0.4);
-
-    .option {
-      height: 1.75rem;
-    }
-  }
-}
-
-.list {
-  margin-bottom: 0.875rem;
+.statistics-container {
+  height: 10rem;
 }
 </style>
