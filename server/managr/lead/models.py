@@ -60,7 +60,7 @@ class LeadQuerySet(models.QuerySet):
 
 
 class Lead(TimeStampModel):
-    """ 
+    """
         Leads are collections of Accounts with forecasting, status and Notes attached
         Currently we are setting on_delete to null and allowing null values.
         However we may choose to use PROTECT and require that leads are transferred before
@@ -110,7 +110,7 @@ class List(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     last_updated_at = models.DateTimeField(auto_now=True)
-    leads = models.ManyToManyField('api.Account', blank=True)
+    leads = models.ManyToManyField('Lead', blank=True)
     organization = models.ForeignKey(
         'api.Organization', blank=False, null=True, on_delete=models.SET_NULL)
 
@@ -133,6 +133,8 @@ class Note(TimeStampModel):
     last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
+    updated_by = models.ForeignKey(
+        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
         'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
 
@@ -146,7 +148,7 @@ class Forecast(TimeStampModel):
 
 
 class ActivityLog(TimeStampModel):
-    """ 
+    """
         This contains a log of all activity taken on a LEAD and is created when an activity occurs
     """
     activity = models.CharField(
@@ -157,7 +159,7 @@ class ActivityLog(TimeStampModel):
     lead = models.ForeignKey(
         'Lead', null=True, on_delete=models.SET_NULL)
     meta = models.CharField(
-        max_length=255, help_text="Extra details about activity")
+        max_length=255, help_text="Extra details about activity", blank=True)
 
 
 class Reminder(TimeStampModel):

@@ -62,6 +62,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # restricted fields array to delete them if they are in
         restricted_fields = ('created_by',
                              'account', 'claimed_by',)
+
         # create new dict to not affect request data
         data = dict(request.data)
         for field in restricted_fields:
@@ -74,9 +75,13 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # check account to be sure it is in org
         accounts_in_user_org = [
             str(acc.id) for acc in user.organization.accounts.all()]
-        account_for = request.data.get('account')
-        if account_for not in accounts_in_user_org:
-            raise PermissionDenied({'detail': 'Account Not In Organization'})
+        # if lead account is being updated make sure the account it is added to is in the Users org
+        account_for = request.data.get('account', None)
+
+        if account_for:
+            if account_for not in accounts_in_user_org:
+                raise PermissionDenied(
+                    {'detail': 'Account Not In Organization'})
         serializer = self.serializer_class(self.get_object(),
                                            data=data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -103,3 +108,117 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.save()
         # register an action
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = ListSerializer
+
+    def get_queryset(self):
+        # TODO: - set manager
+        return List.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        """ manually set org and created_by """
+        user = request.user
+
+        data = dict(request.data)
+        # make sure the user that created the lead is in the created_by field
+
+        data['created_by'] = user.id
+        data['organization'] = user.organization.id
+        serializer = self.serializer_class(
+            data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+
+        data = dict(request.data)
+        # do not allow users to change the created_by or organization info if added
+        if 'created_by' in data.keys():
+            del data['created_by']
+        if 'organization' in data.keys():
+            del data['organization']
+         # do not allow updating on lists here as it may require the whole list to be sent back
+        if 'leads' in data.keys():
+            del data['leads']
+
+        serializer = self.serializer_class(self.get_object(),
+                                           data=data, context={'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    @action(methods=['POST'], permission_classes=(IsSalesPerson, ), detail=True, url_path="add-to-list")
+    def add_to_list(self, request, *args, **kwargs):
+        """ End point to allow addition of leads to list after created """
+        l = self.get_object()
+        # TODO: Check if lead is in org
+        new_leads = request.data.get('leads', [])
+        for lead in new_leads:
+            l.leads.add(lead)
+            l.save()
+
+        serializer = self.serializer_class(self.get_object())
+        return Response(serializer.data)
+
+    @action(methods=['delete'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
+    def remove_from_list(self, request, *args, **kwargs):
+        """ End point to allow addition of leads to list after created """
+        l = self.get_object()
+        # TODO: Check if lead is in org
+        remove_leads = request.data.get('leads', [])
+        for lead in remove_leads:
+            l.leads.remove(lead)
+            l.save()
+
+        serializer = self.serializer_class(self.get_object())
+        return Response(serializer.data)
+
+
+class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = NoteSerializer
+
+    def get_queryset(self):
+        # TODO: create manager
+        return Note.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        """ manually set org and created_by """
+        user = request.user
+
+        data = dict(request.data)
+        # make sure the user that created the lead is in the created_by field
+
+        data['created_by'] = user.id
+        notes_created = list()
+        for lead in request.data.get('created_for', []):
+            # decision here to create a new note for each lead to make them individually editable
+            # TODO: check lead in org
+            d = {'title': data['note']['title'],
+                 'content': data['note']['content'], 'created_for': lead, 'created_by': user.id}
+            serializer = self.serializer_class(
+                data=d, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            notes_created.append(serializer.data)
+        return Response({'detail': notes_created})
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        data = dict(request.data)
+        # cannot update created by
+        # cannot update created for
+        d = {'title': data['note']['title'],
+             'content': data['note']['content'], 'updated_by': user.id}
+        serializer = self.serializer_class(self.get_object(),
+                                           data=d, context={'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        # TODO :- add activity log here
+        return Response(serializer.data)

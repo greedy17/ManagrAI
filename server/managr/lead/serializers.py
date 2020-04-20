@@ -36,7 +36,7 @@ class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rank', 'status',
-                  'account', 'account_ref', 'created_by', 'created_by_ref', 'linked_contacts', 'last_updated_at', 'contract', 'forecast', 'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref')
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref')
 
         read_only_fields = ('closing_amount', 'contract',
                             )

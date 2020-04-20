@@ -49,6 +49,16 @@ def lead_permissions(self, request, view, obj):
         return request.user == obj.claimed_by
 
 
+def list_permissions(self, request, view, obj):
+    if obj.organization != request.user.organization:
+        return False
+    else:
+        if obj.created_by != request.user:
+            return False
+        else:
+            return True
+
+
 class CanEditResourceOrReadOnly(permissions.BasePermission):
     """ 
         Most resources allow read access to all but write access to only an owner
