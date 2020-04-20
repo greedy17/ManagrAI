@@ -51,7 +51,7 @@ ACTIVITY_CHOICES = (
 class LeadQuerySet(models.QuerySet):
 
     def for_user(self, user):
-        if not user.is_superuser:
+        if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
             return self.filter(account__organization=user.organization)
@@ -105,6 +105,18 @@ class Lead(TimeStampModel):
         return False
 
 
+class ListQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(created_by__organization=user.organization)
+        else:
+            return None
+
+
 class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     created_by = models.ForeignKey(
@@ -113,6 +125,8 @@ class List(TimeStampModel):
     leads = models.ManyToManyField('Lead', blank=True)
     organization = models.ForeignKey(
         'api.Organization', blank=False, null=True, on_delete=models.SET_NULL)
+
+    objects = ListQuerySet.as_manager()
 
 
 class File(TimeStampModel):
@@ -127,6 +141,17 @@ class File(TimeStampModel):
         'Lead', null=True, on_delete=models.SET_NULL)
 
 
+class NoteQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(created_by__organization=user.organization)
+        else:
+            return None
+
+
 class Note(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     content = models.CharField(max_length=255, blank=False, null=False)
@@ -137,6 +162,8 @@ class Note(TimeStampModel):
         "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
         'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
+
+    objects = NoteQuerySet.as_manager()
 
 
 class Forecast(TimeStampModel):

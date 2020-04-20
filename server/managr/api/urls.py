@@ -25,6 +25,7 @@ router.register(r'lists/remove-from-list',
                 lead_views.ListViewSet, 'lists-remove')
 router.register(r'lists', lead_views.ListViewSet, 'lists')
 router.register(r'notes', lead_views.NoteViewSet, 'notes')
+router.register(r'forecasts', lead_views.ForecastViewSet, 'forecast')
 
 
 urlpatterns = [

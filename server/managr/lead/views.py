@@ -117,7 +117,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
     def get_queryset(self):
         # TODO: - set manager
-        return List.objects.all()
+        return List.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
         """ manually set org and created_by """
@@ -186,7 +186,7 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
     def get_queryset(self):
         # TODO: create manager
-        return Note.objects.all()
+        return Note.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
         """ manually set org and created_by """
@@ -222,3 +222,12 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         self.perform_update(serializer)
         # TODO :- add activity log here
         return Response(serializer.data)
+
+
+class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = ForecastSerializer
+
+    def get_queryset(self):
+        return Forecast.objects.all()
