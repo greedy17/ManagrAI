@@ -35,6 +35,21 @@
           <span :style="{ fontWeight: 'bold' }">{{ email }}</span
           >.
         </p>
+        <!-- NOTE(Bruno 4-20-20): below code is temporary, for testing on staging -->
+        <div
+          :style="{
+            wordBreak: 'all',
+            padding: '0 1rem',
+            display: 'flex',
+            flexFlow: 'column',
+            alignItems: 'center',
+            opacity: '0.4',
+          }"
+        >
+          <div>(For Testing/Staging) Link:</div>
+          {{ link }}
+        </div>
+        <!-- end of temp code -->
         <button @click="resetData">Send Another</button>
       </div>
     </div>
@@ -51,6 +66,7 @@ const initialData = {
   isFormValid: null,
   errors: {},
   success: null,
+  link: '', // NOTE(Bruno 4-20-20): temproary, for staging purposes
 }
 
 export default {
@@ -79,7 +95,8 @@ export default {
       let invitePromise = User.api.invite(this.email, this.type, organization)
 
       invitePromise
-        .then(() => {
+        .then(response => {
+          this.link = response.data.activation_link // NOTE(Bruno 4-20-20): this line is temproary, for staging purposes
           this.success = true
         })
         .catch(error => {
