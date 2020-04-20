@@ -20,6 +20,7 @@ export default {
 @import '@/styles/variables';
 
 .lists-container {
+  border: 1px solid $soft-gray;
   background-color: $white;
   padding-top: 1vh;
   padding-bottom: 1vh;
