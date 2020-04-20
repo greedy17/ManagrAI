@@ -165,12 +165,11 @@ def get_account_status(request):
         user = User.objects.get(email=email)
 
     except User.DoesNotExist:
-        # to do change this back to 401_unauth to send same response and avoid fishing
-        return Response(status=status.HTTP_404_UNAUTHORIZED)
+        return Response(status=status.HTTP_404_NOT_FOUND)
     if user.state == STATE_ACTIVE:
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
