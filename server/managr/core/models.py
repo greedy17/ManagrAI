@@ -70,7 +70,7 @@ class User(AbstractUser, TimeStampModel):
     username = None
     email = models.EmailField(unique=True)
     organization = models.ForeignKey(
-        'api.Organization', related_name="users", on_delete=models.SET_NULL, null=True, blank=True)
+        'api.Organization', related_name="users", on_delete=models.SET_NULL, null=True)
     type = models.CharField(choices=ACCOUNT_TYPES,
                             max_length=255, default=ACCOUNT_TYPE_MANAGER)
     first_name = models.CharField(max_length=255, blank=True, null=False)
@@ -97,12 +97,6 @@ class User(AbstractUser, TimeStampModel):
         return f'{self.first_name} {self.last_name}'
 
     @property
-    def magic_link(self):
-        """Generate a magic link for the user."""
-        base_url = site_utils.get_site_url()
-        return f'{base_url}/magic-link/?uid={self.pk}&token={self.magic_token}'
-
-    @property
     def activation_link(self):
         """ Generate A Link for the User who has been invited to complete registration """
         base_url = site_utils.get_site_url()
@@ -116,7 +110,7 @@ class User(AbstractUser, TimeStampModel):
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
-        self.magic_token_expiration = timezone.now() + timedelta(days=90)
+        self.magic_token_expiration = timezone.now() + timedelta(days=30)
         self.save()
         return self.magic_token
 

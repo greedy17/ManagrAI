@@ -31,28 +31,31 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
+
 .pinned-notes {
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
   width: 100%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .header {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
   padding-left: 3%;
   font-weight: bold;
 }
@@ -60,26 +63,23 @@ export default {
 .note {
   display: flex;
   flex-flow: column;
-  padding: 20px 3%;
-  border-bottom: solid 1px #f2f2f3;
+  padding: 1.25rem 3%;
+  border-bottom: solid 1px $soft-gray;
 }
 
 .note-header {
   display: flex;
   flex-flow: row;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 
   .expand {
+    @include pointer-on-hover();
     margin-left: auto;
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 }
 
 .note-content {
-  color: rgba($color: #110f24, $alpha: 0.4);
+  color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 </style>

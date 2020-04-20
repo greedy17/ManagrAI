@@ -3,8 +3,8 @@
     <div class="insights-header">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
-        <router-link :to="{ name: 'lead-show', params: { id: lead.id } }" v-if="showLink">
-          <span class="insights-header-link">See All Detail</span>
+        <router-link :to="{ name: 'LeadsDetail', params: { id: lead.id } }" v-if="showLink">
+          <span class="insights-header-link">See Lead Detail</span>
         </router-link>
       </div>
     </div>
@@ -87,37 +87,38 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .insights {
-  width: 255px;
-  height: 325px;
+  width: 16rem;
+  height: 21rem;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px #f2f2f3;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   display: flex;
   flex-flow: column;
 }
 
 .insights-header {
-  height: 48px;
+  height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 #ececee;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insights-header-title {
   flex-grow: 1;
   padding: 5% 0 5% 7%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .insights-header-link-container {
@@ -128,22 +129,22 @@ export default {
 }
 
 .insights-header-link {
+  @include pointer-on-hover();
   text-transform: uppercase;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: #199e54;
+  color: $dark-green;
 
   &:hover {
-    cursor: pointer;
     border-radius: 5px;
-    padding: 4px 6px;
-    background-color: #199e54;
-    color: #ffffff;
+    padding: 0.25rem 0.375rem;
+    background-color: $dark-green;
+    color: $white;
   }
 }
 
@@ -151,8 +152,8 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 48px;
-  box-shadow: 0 1px 0 0 #ececee;
+  height: 3rem;
+  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insight-info {
@@ -169,30 +170,30 @@ export default {
 }
 
 .insight-icon {
-  height: 20px;
-  width: 20px;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .insight-top {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .insight-bottom {
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: rgba($color: #110f24, $alpha: 0.4);
+  color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 
 a {

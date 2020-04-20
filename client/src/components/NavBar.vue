@@ -1,18 +1,17 @@
 <template>
   <nav>
     <div class="logo">
-      <img class="image" src="@/assets/images/logo.png" alt="managr logo" />
       <span class="name">
         managr
       </span>
     </div>
-    <div class="links">
-      <NavLink icon="leads" :active="this.$route.path === '/leads'">Leads</NavLink>
-      <NavLink icon="prospect">Prospect</NavLink>
-      <NavLink icon="forecast">Forecast</NavLink>
-      <NavLink icon="reports">Reports</NavLink>
+    <div v-if="userIsLoggedIn" class="links">
+      <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+      <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
+      <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
     </div>
     <img
+      v-if="userIsLoggedIn"
       src="@/assets/images/screenshots/navbar-search-and-profile.png"
       alt="screenshot"
       class="navbar-search-and-profile"
@@ -28,38 +27,48 @@ export default {
   components: {
     NavLink,
   },
+  computed: {
+    userIsLoggedIn() {
+      return this.$store.getters.userIsLoggedIn
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 nav {
+  height: 4rem;
   display: flex;
+  flex-flow: row;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $white;
 }
 
 .logo {
-  margin-left: 35px;
+  @include disable-text-select();
+  margin-left: 1.5rem;
   display: flex;
   align-items: center;
 
   .image {
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .name {
-    width: 111px;
-    height: 35px;
-    font-family: Quicksand;
-    font-size: 24px;
+    display: flex;
+    align-items: center;
+    font-family: $logo-font-family;
+    font-size: 2.25rem;
     font-weight: 500;
     font-stretch: normal;
     font-style: normal;
     line-height: normal;
-    color: #199e54;
+    color: $dark-green;
   }
 }
 

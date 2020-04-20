@@ -1,12 +1,16 @@
-import store from '@/vuex/store';
+import store from '@/store'
 
 export default {
-  getHeaders() {
-    if (!store.state.authToken) {
-      return {};
-    }
-    return {
-      Authorization: `Token ${store.state.authToken}`,
-    };
-  },
-};
+  getHeaders,
+}
+
+function getHeaders() {
+  if (!store.state.token) {
+    return {}
+  }
+  return {
+    Authorization: `Token ${store.state.token}`,
+  }
+}
+
+//  NOTE(Bruno 4-8-20): login/logout functionality is within the UserAPI.

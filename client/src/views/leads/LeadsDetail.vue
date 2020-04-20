@@ -1,16 +1,12 @@
 <template>
-  <div class="lead-show">
+  <div class="leads-detail">
     <NavBar />
     <div class="page-content">
       <div class="left-pane">
-        <img
-          class="left-pane-screenshot"
-          src="@/assets/images/screenshots/lead-show-left.png"
-          alt="screenshot"
-        />
+        <ToolBar class="toolbar" :lead="lead" />
       </div>
       <div class="center-pane">
-        <LeadBanner :lead="lead" />
+        <LeadBanner :lead="lead" @clicked-release="releaseLead" />
         <div class="container">
           <LeadActions :lead="lead" />
         </div>
@@ -34,15 +30,18 @@
 
 <script>
 import { getSerializedLead } from '@/db.js'
-import LeadBanner from '@/components/lead-show/LeadBanner'
+import ToolBar from '@/components/leads-detail/ToolBar'
+import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
-import PinnedNotes from '@/components/lead-show/PinnedNotes'
+import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
+import Lead from '@/services/leads'
 
 export default {
-  name: 'LeadShow',
+  name: 'LeadsDetail',
   props: ['id'],
   components: {
+    ToolBar,
     LeadBanner,
     LeadActions,
     PinnedNotes,
@@ -56,15 +55,40 @@ export default {
   created() {
     this.lead = getSerializedLead(this.id)
   },
+  methods: {
+    releaseLead() {
+      Lead.api
+        .unclaim(this.lead.id)
+        .then(() => {
+          let message = `<h2>Success!</h2><p>Lead released.</p>`
+          this.$Alert.alert({
+            type: 'success',
+            message,
+            timeout: 6000,
+          })
+          this.$router.push({ name: 'LeadsIndex' })
+        })
+        .catch(() => {
+          let message = `<h2>Error...</h2><p>Please retry later.</p>`
+          this.$Alert.alert({
+            type: 'error',
+            message,
+            timeout: 6000,
+          })
+        })
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-.lead-show {
+@import '@/styles/variables';
+
+.leads-detail {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 .page-content {
@@ -75,24 +99,21 @@ export default {
 
 .left-pane {
   width: 21%;
-  min-width: 294.75px;
+  min-width: 18.45rem;
   padding-top: 2%;
   padding-right: 1%;
   display: flex;
   flex-flow: row;
-  // justify-content: center;
 
-  .left-pane-screenshot {
-    width: 243px;
-    height: 773px;
-    display: block;
+  .toolbar {
+    width: 15.2rem;
     margin-left: auto;
   }
 }
 
 .center-pane {
   width: 54%;
-  min-width: 795.5px;
+  min-width: 49.75rem;
   padding: 2% 1% 1% 1%;
 
   .container {
@@ -105,13 +126,12 @@ export default {
 
 .additional-information {
   width: 100%;
-  // border-top: solid 1px #f2f2f3;
   display: inline-block;
 }
 
 .right-pane {
   width: 25%;
-  min-width: 335.5px;
+  min-width: 21rem;
   box-sizing: border-box;
   padding: 2% 1% 1% 1%;
 }

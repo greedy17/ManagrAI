@@ -1,5 +1,6 @@
-import Pagination from './pagination'
-import { apiErrorHandler } from './apiErrors'
+import Pagination from '@/services/pagination'
+import { apiErrorHandler } from '@/services/api'
+
 /**
  * An abstraction that provides a simple interface for managing
  * paginated collections of entities from the API.
@@ -22,11 +23,13 @@ export default class CollectionManager {
       ModelClass,
     })
   }
+
   // Factory Function
   static create(opts = {}) {
     opts = opts || {}
     return new CollectionManager(opts)
   }
+
   /**
    * Update the collection.
    *
@@ -36,14 +39,15 @@ export default class CollectionManager {
    */
   update(data, append = false) {
     this.list = [...(append ? this.list : []), ...data.results]
-    this.pagination = {
+    this.pagination = Pagination.create({
       ...this.pagination,
       next: data.next,
       previous: data.previous,
       totalCount: data.count,
-    }
+    })
     return this
   }
+
   /**
    * Refresh the collection.
    */
@@ -63,19 +67,38 @@ export default class CollectionManager {
       this.refreshing = false
     }
   }
+
+  /**
+   * Advance to the next page and refresh the collection.
+   */
+  nextPage() {
+    this.pagination.setNextPage()
+    return this.refresh()
+  }
+
+  /**
+   * Go back to the previous page and refresh the collection.
+   */
+  prevPage() {
+    this.pagination.setPrevPage()
+    return this.refresh()
+  }
+
   /**
    * Get the next page for a collection and add this page
    * to the collection.
    */
   async addNextPage() {
-    if (this.pagination.next === null || this.refreshing || this.loadingNextPage) {
+    if (this.pagination.next === null) {
       return
     }
+
     this.loadingNextPage = true
     this.pagination = {
       ...this.pagination,
       page: this.pagination.page + 1,
     }
+
     try {
       const response = await this.ModelClass.api.list({
         pagination: this.pagination,

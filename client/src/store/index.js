@@ -13,9 +13,26 @@ const state = {
 }
 
 const mutations = {
+  UPDATE_USER: (state, payload) => {
+    state.user = payload
+  },
+  UPDATE_USERTOKEN: (state, payload) => {
+    state.token = payload
+  },
+  // Log out the user by resetting the state to defaults
+  LOGOUT_USER(state) {
+    state.token = null
+    state.user = null
+  },
 }
 
 const actions = {
+  updateUser({ commit }, payload) {
+    commit('UPDATE_USER', payload)
+  },
+  updateUserToken({ commit }, payload) {
+    commit('UPDATE_USERTOKEN', payload)
+  },
 }
 
 const plugins = [
@@ -24,7 +41,11 @@ const plugins = [
   }),
 ]
 
-const getters = {}
+const getters = {
+  userIsLoggedIn: state => {
+    return !!(state.token && state.user)
+  },
+}
 
 export default new Vuex.Store({
   state,

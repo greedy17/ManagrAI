@@ -36,7 +36,7 @@ export default {
     },
     listHeaderBorder() {
       return this.showLeads
-        ? { borderWidth: '2px', borderStyle: 'solid', borderColor: '#fafafa' }
+        ? { borderWidth: '2px', borderStyle: 'solid', borderColor: '#fafafa' } //$off-white
         : { borderWidth: '0 0 2px 0', borderStyle: 'solid', borderColor: '#fafafa' }
     },
   },
@@ -44,32 +44,31 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .list-header {
+  @include disable-text-select();
+  @include pointer-on-hover();
   display: flex;
   flex-flow: row;
   align-items: center;
   margin: 1vh 1%;
   padding-left: 1%;
-  height: 49px;
-  font-family: 'Lato', sans-serif;
+  height: 3rem;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
-
-  &:hover {
-    cursor: pointer;
-  }
+  color: $main-font-gray;
 }
 
 .icon {
-  height: 26px;
-  width: 26px;
+  height: 1.625rem;
+  width: 1.625rem;
   display: block;
 }
 
@@ -77,7 +76,7 @@ export default {
   font-weight: bold;
   align-self: center;
   width: 25%;
-  margin-left: 11px;
+  margin-left: 0.75rem;
 }
 
 .list-length {

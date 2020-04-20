@@ -37,11 +37,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .action-tab-header {
-  width: 91px;
-  font-family: Lato;
+  @include disable-text-select();
+  @include pointer-on-hover();
+  width: 5.7rem;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-stretch: normal;
   font-style: normal;
@@ -51,9 +54,5 @@ export default {
   align-items: center;
   justify-content: center;
   text-transform: capitalize;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

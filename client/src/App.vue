@@ -21,19 +21,17 @@ export default {
 </script>
 
 <style lang="scss">
+@import '@/styles/variables';
+
 body {
-  margin: 0px;
+  overflow-y: scroll;
+  overflow-x: auto;
+  margin: 0;
   height: 100vh;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 #app {
   height: inherit;
 }
-
-/* for development purposes */
-// div {
-//   border-style: dashed;
-//   border-width: 1px;
-// }
 </style>

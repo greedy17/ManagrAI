@@ -165,7 +165,7 @@ def get_account_status(request):
         user = User.objects.get(email=email)
 
     except User.DoesNotExist:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(status=status.HTTP_404_UNAUTHORIZED)
     if user.state == STATE_ACTIVE:
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
@@ -191,6 +191,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
+        # TODO: PB 04/12/20 currently we are returning the link for dev purposes (so that we can test the auth flow) this will be removed when we add a mail service to send the link
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)

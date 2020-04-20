@@ -4,12 +4,12 @@ module.exports = {
   devServer: {
     proxy: {
       '/api/': {
-        target: (process.env.DEV_SERVER_BACKEND || '{staging_full_url}') + '/api/',
+        target: (process.env.VUE_APP_DEV_SERVER_BACKEND || '{staging_full_url}') + '/api/',
         changeOrigin: true,
         pathRewrite: {
-          '^/api': ''
-        }
-      }
-    }
-  }
-};
+          '^/api': '',
+        },
+      },
+    },
+  },
+}

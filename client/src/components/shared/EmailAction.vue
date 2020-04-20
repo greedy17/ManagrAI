@@ -60,7 +60,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import '@/styles/variables';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/inputs';
+@import '@/styles/mixins/utils';
 
 .email-action {
   width: 100%;
@@ -88,29 +91,29 @@ export default {
 }
 
 .contact-img {
-  height: 24px;
-  width: 24px;
+  height: 1.5rem;
+  width: 1.5rem;
   border-radius: 50%;
 }
 
 .contact-name {
   margin-left: auto;
   width: 25%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .contact-email-container {
   width: 50%;
-  height: 24px;
-  padding: 2px;
-  background-color: #efeff5;
+  height: 1.5rem;
+  padding: 0.125rem;
+  background-color: $soft-gray;
   border-radius: 5px;
   margin-left: auto;
   display: flex;
@@ -119,21 +122,21 @@ export default {
 }
 
 .email-icon {
-  height: 16px;
-  width: 16px;
-  margin-left: 5px;
+  height: 1rem;
+  width: 1rem;
+  margin-left: 0.375rem;
 }
 
 .contact-email {
-  margin-left: 5px;
-  font-family: Lato;
+  margin-left: 0.375rem;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 10px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .email-template-tools {
@@ -146,39 +149,36 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  padding: 2px;
+  padding: 0.125rem;
   margin-bottom: 2%;
 }
 
 .template-variable {
+  @include pointer-on-hover();
   border-radius: 100px;
-  background-color: #d7d7dd;
+  background-color: $theme-gray;
   margin-right: auto;
-  width: 95px;
+  width: 6rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 10px;
   font-weight: bold;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.6;
   letter-spacing: normal;
-  height: 24px;
-  color: rgba($color: #110f24, $alpha: 0.5);
-
-  &:hover {
-    cursor: pointer;
-  }
+  height: 1.5rem;
+  color: rgba($color: $main-font-gray, $alpha: 0.5);
 }
 
 .example {
   margin-right: unset;
-  padding: 2px 0;
+  padding: 0.125rem 0;
   display: inline-block;
-  height: 16px;
-  width: 70px;
+  height: 1rem;
+  width: 4.5rem;
   text-align: center;
   vertical-align: center;
 }
@@ -186,48 +186,45 @@ export default {
 .template-selector-container {
   display: flex;
   flex-flow: row;
-  height: 24px;
+  height: 1.5rem;
   align-items: center;
 }
 
 .template-selector-label {
   width: 25%;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.45;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .template-selector-dropdown {
+  @include pointer-on-hover();
   width: 50%;
-  height: 24px;
-  padding: 2px;
-  background-color: #efeff5;
+  height: 1.5rem;
+  padding: 0.125rem;
+  background-color: $soft-gray;
   border-radius: 5px;
   margin-right: auto;
   display: flex;
   flex-flow: row;
   align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .selected-template-name {
   margin-left: 5%;
-  font-family: Lato;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.14;
   letter-spacing: normal;
-  color: #110f24;
+  color: $main-font-gray;
 }
 
 .dropdown-arrow-icon {
@@ -236,54 +233,31 @@ export default {
 }
 
 input {
-  height: 40px;
-  border-radius: 4px;
-  background-color: #fafafa;
-  border: none;
-  box-sizing: border-box;
-  padding: 3%;
+  @include input-field();
+  height: 2.5rem;
   margin-top: 2%;
-
-  &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
-    outline: none;
-    background-color: #ffffff;
-  }
-
-  &::placeholder {
-    opacity: 0.5;
-    font-family: 'Lato', sans-serif;
-    font-size: 14px;
-    font-weight: normal;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: #444444;
-  }
 }
 
 .email-content {
   margin: 1% 0 2% 0;
-  // height: 30%;
   flex-grow: 1;
   border-radius: 4px;
-  border: solid 1px #ececee;
-  background-color: #ffffff;
+  border: solid 1px $soft-gray;
+  background-color: $white;
   padding: 1vh;
-  font-family: 'Lato', sans-serif;
+  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: rgba($color: #444444, $alpha: 0.5);
+  color: rgba($color: $base-gray, $alpha: 0.5);
 
   &:focus {
-    box-shadow: 0 0 10px rgba($color: #199e54, $alpha: 0.5);
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
-    background-color: #ffffff;
+    background-color: $white;
   }
 }
 
@@ -293,24 +267,7 @@ input {
 }
 
 .send-button {
+  @include primary-button();
   margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 15px;
-  border-radius: 5px;
-  background-color: #199e54;
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
-  font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: 1.14;
-  letter-spacing: normal;
-  color: #ffffff;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 </style>

@@ -3,12 +3,7 @@
     <NavBar />
     <div class="page-content">
       <div class="toolbar-pane">
-        <!-- <ToolBar /> -->
-        <img
-          class="left-pane-screenshot"
-          src="@/assets/images/screenshots/leads-index-left.png"
-          alt="screenshot"
-        />
+        <ToolBar class="toolbar" />
       </div>
       <div class="lists-container-pane">
         <ListsContainer :lists="lists" />
@@ -18,13 +13,14 @@
 </template>
 
 <script>
-// import ToolBar from '@/components/leads-index/ToolBar'
+import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import { getSerializedLists } from '@/db.js'
 
 export default {
+  name: 'LeadsIndex',
   components: {
-    // ToolBar,
+    ToolBar,
     ListsContainer,
   },
   data() {
@@ -39,14 +35,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+
 .leads-index {
-  height: inherit;
+  min-height: 100vh;
   display: flex;
   flex-flow: column;
-  background-color: #fafafa;
+  background-color: $off-white;
 }
 
 .page-content {
+  padding-top: 2%;
   flex-grow: 1;
   display: flex;
   flex-flow: row;
@@ -54,23 +53,19 @@ export default {
 
 .toolbar-pane {
   width: 17%;
-  padding: 1%;
-  background-color: #fafafa;
-  /* screenshot -related */
+  padding: 0% 1% 1% 1%;
   display: flex;
-  flex-flow: row;
-  justify-content: center;
-  .left-pane-screenshot {
-    width: 217px;
-    height: 781px;
-    display: block;
+  flex-flow: column;
+  background-color: $off-white;
+
+  .toolbar {
     margin-left: auto;
   }
 }
 
 .lists-container-pane {
   width: 83%;
-  padding: 1% 2% 1% 1%;
-  background-color: #fafafa;
+  padding: 0 2% 1% 1%;
+  background-color: $off-white;
 }
 </style>
