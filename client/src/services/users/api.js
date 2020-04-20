@@ -1,10 +1,10 @@
-import { API_BASE, apiClient, apiErrorHandler } from '@/services/api'
+import { apiClient, apiErrorHandler } from '@/services/api'
 import store from '@/store'
 
 // API Endpoints
-const LOGIN_ENDPOINT = `${API_BASE}login/`
-const INVITE_ENDPOINT = `${API_BASE}users/invite/`
-const GENERATE_ACTIVATE_ENDPOINT = uid => `${API_BASE}users/${uid}/activate/`
+const LOGIN_ENDPOINT = '/login/'
+const INVITE_ENDPOINT = '/users/invite/'
+const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 
 export default class UserAPI {
   /**
