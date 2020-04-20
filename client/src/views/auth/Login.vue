@@ -67,7 +67,11 @@ export default {
           delete userData.token
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
-          this.$router.push({ name: 'LeadsIndex' })
+          if (this.$route.query.redirect) {
+            this.$router.push(this.$route.query.redirect)
+          } else {
+            this.$router.push({ name: 'LeadsIndex' })
+          }
           this.success = true
         })
         .catch(() => {
