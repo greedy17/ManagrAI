@@ -46,6 +46,12 @@ ACTIVITY_CHOICES = (
     (ACTIVITY_NOTE_ADDED, 'Note Added'), (ACTIVITY_NOTE_DELETED,
                                           'Note Deleted'), (ACTIVITY_NOTE_UPDATED, 'Note Updated')
 )
+# WILL RESULT IN A SNOOZE FOR A CERTAIN TIME BEFORE IT REMINDS AGAIN
+REMINDER_ACTION_SNOOZE = 'SNOOZE'
+REMINDER_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
+REMINDER_ACTION_CHOICES = (
+    (REMINDER_ACTION_SNOOZE, 'Snooze'), (REMINDER_ACTION_VIEWED, 'Viewed')
+)
 
 
 class LeadQuerySet(models.QuerySet):
@@ -220,11 +226,18 @@ class ActivityLog(TimeStampModel):
 
 
 class Reminder(TimeStampModel):
-    reminder = models.CharField(max_length=255, blank=True, null=False)
+    """ 
+        Reminders are like notes they are created with a date time, a title and content 
+        Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
+
+    """
+    title = models.CharField(max_length=255, blank=True, null=False)
+    content = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
     datetime_reminded = models.DateTimeField()
-    viewed = models.BooleanField(default=False)
-    # add viewed_at
+    action_taken = models.CharField(
+        max_length=255, blank=False, null=True, choices=REMINDER_ACTION_CHOICES)
+    action_taken_at = models.DateTimeField(null=True)
 
     class Meta:
         ordering = ['-datetime_created']
