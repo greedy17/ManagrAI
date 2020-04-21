@@ -35,9 +35,9 @@ export default {
       return this.list.leads.length
     },
     listHeaderBorder() {
-      return this.showLeads
-        ? { borderWidth: '2px', borderStyle: 'solid', borderColor: '#fafafa' } //$off-white
-        : { borderWidth: '0 0 2px 0', borderStyle: 'solid', borderColor: '#fafafa' }
+      return {
+        border: this.showLeads ? '2px solid #fafafa' : '2px solid white', // $off-white || $white
+      }
     },
   },
 }

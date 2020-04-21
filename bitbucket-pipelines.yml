@@ -76,4 +76,4 @@ definitions:
         # Update the POSTGRES_USER variable to what is specified in your .env file.
         POSTGRES_DB: test_db
         POSTGRES_USER: managr
-        POSTGRES_PASSWORD: test
+        POSTGRES_PASSWORD: manager
