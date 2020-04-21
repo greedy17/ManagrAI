@@ -1,6 +1,6 @@
 <template>
   <div class="insights">
-    <div class="insights-header">
+    <div class="insights-header section-shadow">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
         <router-link :to="{ name: 'LeadsDetail', params: { id: lead.id } }" v-if="showLink">
@@ -8,7 +8,7 @@
         </router-link>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
       </div>
@@ -21,7 +21,7 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/email.svg" alt="email icon" />
       </div>
@@ -34,7 +34,7 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/message.svg" alt="message icon" />
       </div>
@@ -47,7 +47,7 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/contact.svg" alt="contact icon" />
       </div>
@@ -60,7 +60,7 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/calendar.svg" alt="calendar icon" />
       </div>
@@ -105,7 +105,6 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insights-header-title {
@@ -153,7 +152,6 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insight-info {

@@ -13,7 +13,7 @@
     </div>
     <div class="statistics-container section-shadow">
       <span class="title">Statistics</span>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
         </div>
@@ -26,7 +26,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/email.svg" alt="icon" />
         </div>
@@ -39,7 +39,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/message.svg" alt="icon" />
         </div>
@@ -52,7 +52,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
         </div>
@@ -65,7 +65,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/calendar.svg" alt="icon" />
         </div>
@@ -203,7 +203,6 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
-  box-shadow: 0 1px 0 0 $soft-gray;
 
   .icon-container {
     width: 30%;
