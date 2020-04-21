@@ -26,6 +26,15 @@ class Organization(TimeStampModel):
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
 
+    @property
+    def action_choices(self):
+        """ show action_choices created from action_choice model for org """
+        from managr.lead.models import ActionChoice
+        from managr.lead.serializers import ActionChoiceSerializer
+        serializer = ActionChoiceSerializer(
+            ActionChoice.objects.filter(organization=self.id), many=True)
+        return serializer.data
+
     def deactivate_all_users(self):
         """ helper method to deactivate all users if their org is deactivated """
         users = User.objects.filter(organization=self)

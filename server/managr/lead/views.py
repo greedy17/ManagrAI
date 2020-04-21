@@ -121,21 +121,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # register an action
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=['POST'], permission_classes=(IsSalesPerson, CanEditResourceOrReadOnly,), detail=True, url_path="add-action")
-    def add_action(self, request, *args, **kwargs):
-        """ actions can only be added through this endpoint, they can be edited/deleted on the actions viewset on the lead they currently have claimed"""
-        lead = self.get_object()
-        # expects the action choice id to verify it is one the user can add
-        action_choice = ActionChoice.objects.get(
-            pk=request.data.get('action_type', None))
-        data = {"action_type": action_choice.id, "action_detail": request.data.get(
-            'action_detail', ''), "lead": lead.id}
-
-        serializer = ActionSerializer(data=data, context={"request", request})
-        serializer.is_valid(raise_exception=True)
-        a = Action.objects.create(**serializer.validated_data)
-        return Response(serializer.data)
-
 
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
@@ -301,6 +286,23 @@ class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Upd
 
     def create(self, request, *args, **kwargs):
         """ expects array of multiple leads to apply action to -- design decision to create separate actions per lead """
+        action_data = request.data.get('action', None)
+        if not action_data:
+            raise ValidationError(detail={'detail': 'Action data Required'})
+
+        leads = request.data.get('leads', None)
+        if not leads:
+            raise ValidationError(detail={'detail': 'Leads Required'})
+        created = list()
+        for l in leads:
+            d = {"action_type": action_data['action_type'],
+                 "action_detail": action_data['action_detail'], "lead": l}
+            serializer = self.serializer_class(
+                data=d, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            created.append(serializer.data)
+        return Response({"created": created})
 
     def update(self, request, *args, **kwargs):
         data = dict(request.data)

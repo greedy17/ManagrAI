@@ -18,7 +18,6 @@ router.register(r'organizations',
 router.register(r'accounts', api_views.AccountViewSet, 'accounts')
 router.register(r'contacts', api_views.ContactViewSet, 'contacts')
 router.register(r'leads/claim', lead_views.LeadViewSet, 'leads-claim')
-router.register(r'leads/add-action', lead_views.LeadViewSet, 'leads-action')
 router.register(r'leads/un-claim', lead_views.LeadViewSet, 'leads-un-claim')
 router.register(r'leads', lead_views.LeadViewSet, 'leads')
 router.register(r'lists/add-to-list', lead_views.ListViewSet, 'lists-add')
