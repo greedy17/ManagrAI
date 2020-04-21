@@ -134,7 +134,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         serializer = ActionSerializer(data=data, context={"request", request})
         serializer.is_valid(raise_exception=True)
         a = Action.objects.create(**serializer.validated_data)
-        print(a)
         return Response(serializer.data)
 
 
@@ -292,7 +291,7 @@ class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
         return Response(serializer.data)
 
 
-class ActionViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = ActionSerializer
@@ -300,8 +299,10 @@ class ActionViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.Des
     def get_queryset(self):
         return Action.objects.for_user(self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        """ expects array of multiple leads to apply action to -- design decision to create separate actions per lead """
+
     def update(self, request, *args, **kwargs):
-        # make sure org is not changed
         data = dict(request.data)
         serializer = self.serializer_class(self.get_object(), data=data, context={
                                            'request': request}, partial=True)
