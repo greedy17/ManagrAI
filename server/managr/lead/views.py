@@ -21,15 +21,17 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
-from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder
+from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, LEAD_STATUS_CLOSED
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
+from .filters import LeadFilterSet
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (CanEditResourceOrReadOnly, )
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
+    filter_class = LeadFilterSet
 
     def get_queryset(self):
         return Lead.objects.for_user(self.request.user)
@@ -59,6 +61,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     def update(self, request, *args, **kwargs):
         """ cant update account, cant update created_by  """
         user = request.user
+        current_lead = self.get_object()
         # restricted fields array to delete them if they are in
         restricted_fields = ('created_by',
                              'account', 'claimed_by',)
@@ -68,6 +71,13 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
+        # TODO:- make sure closing amount is not allowed unless lead is being closed or is already closed
+        status_update = request.data.get('state', None)
+        if current_lead.status != LEAD_STATUS_CLOSED and (not status_update or status_update != LEAD_STATUS_CLOSED):
+            if 'closing_amount' in request.data.keys():
+                del data['closing_amount']
+            if 'contract' in request.data.keys():
+                del data['contract']
         # make sure the user that created the lead is not updated as well
 
         data['last_updated_by'] = user.id
@@ -82,7 +92,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
             if account_for not in accounts_in_user_org:
                 raise PermissionDenied(
                     {'detail': 'Account Not In Organization'})
-        serializer = self.serializer_class(self.get_object(),
+        serializer = self.serializer_class(current_lead,
                                            data=data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -104,6 +114,8 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.claimed_by = None
         lead.status = None
         # delete lead forecast
+        if lead.forecast:
+            Forecast.objects.get(lead=lead).delete()
         lead.amount = 0
         lead.save()
         # register an action
@@ -228,6 +240,7 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = ForecastSerializer
+    # TODO :- log activity
 
     def get_queryset(self):
-        return Forecast.objects.all()
+        return Forecast.objects.for_user(self.request.user)

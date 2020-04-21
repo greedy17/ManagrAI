@@ -27,7 +27,6 @@ class IsSalesPerson(permissions.BasePermission):
 
 
 def lead_permissions(self, request, view, obj):
-
     if not obj.account in request.user.organization.accounts.all():
         # check to make sure user is part of org and account is in org
         raise PermissionDenied()

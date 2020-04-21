@@ -2,7 +2,7 @@ from django.db import models
 from managr.core.models import UserManager, TimeStampModel
 from managr.core.models import STATE_ACTIVE
 
-LEAD_RANK_CHOCIES = [(i, i) for i in range(1, 6)]
+LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 FILE_TYPE_OTHER = 'OTHER'
 FILE_TYPE_CONTRACT = 'CONTRACT'
@@ -74,7 +74,7 @@ class Lead(TimeStampModel):
         help_text="This field is set at close and non-editable", default=0)
     primary_description = models.CharField(max_length=150)
     secondary_description = models.CharField(max_length=150, blank=True)
-    rank = models.IntegerField(choices=LEAD_RANK_CHOCIES)
+    rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
     account = models.ForeignKey('api.Account', related_name="leads",
                                 on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(
@@ -128,6 +128,9 @@ class List(TimeStampModel):
 
     objects = ListQuerySet.as_manager()
 
+    class Meta:
+        ordering = ['-datetime_created']
+
 
 class File(TimeStampModel):
     name = models.CharField(max_length=255, blank=False, null=False)
@@ -139,6 +142,9 @@ class File(TimeStampModel):
         "core.User", null=True, on_delete=models.SET_NULL)
     uploaded_to = models.ForeignKey(
         'Lead', null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ['-datetime_created']
 
 
 class NoteQuerySet(models.QuerySet):
@@ -165,6 +171,21 @@ class Note(TimeStampModel):
 
     objects = NoteQuerySet.as_manager()
 
+    class Meta:
+        ordering = ['-datetime_created']
+
+
+class ForecastQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(lead__account__organization=user.organization)
+        else:
+            return None
+
 
 class Forecast(TimeStampModel):
     """ only one forecast per lead is allowed """
@@ -172,6 +193,12 @@ class Forecast(TimeStampModel):
     lead = models.OneToOneField('Lead', null=True, on_delete=models.CASCADE)
     forecast = models.CharField(
         choices=FORECAST_CHOICES, default=FORECAST_NA, max_length=255, null=True)
+
+    objects = ForecastQuerySet.as_manager()
+    # created by and updated by not used here since they can be taken from logs
+
+    class Meta:
+        ordering = ['-datetime_created']
 
 
 class ActivityLog(TimeStampModel):
@@ -188,9 +215,16 @@ class ActivityLog(TimeStampModel):
     meta = models.CharField(
         max_length=255, help_text="Extra details about activity", blank=True)
 
+    class Meta:
+        ordering = ['-datetime_created']
+
 
 class Reminder(TimeStampModel):
     reminder = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
     datetime_reminded = models.DateTimeField()
     viewed = models.BooleanField(default=False)
+    # add viewed_at
+
+    class Meta:
+        ordering = ['-datetime_created']
