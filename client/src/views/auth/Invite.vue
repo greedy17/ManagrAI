@@ -96,7 +96,7 @@ export default {
 
       invitePromise
         .then(response => {
-          this.link = response.data.activation_link // NOTE(Bruno 4-20-20): this line is temproary, for staging purposes
+          this.link = response.data.activation_link // NOTE(Bruno 4-20-20): this line is temporary, for staging purposes
           this.success = true
         })
         .catch(error => {
