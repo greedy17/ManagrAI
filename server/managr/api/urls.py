@@ -18,6 +18,7 @@ router.register(r'organizations',
 router.register(r'accounts', api_views.AccountViewSet, 'accounts')
 router.register(r'contacts', api_views.ContactViewSet, 'contacts')
 router.register(r'leads/claim', lead_views.LeadViewSet, 'leads-claim')
+router.register(r'leads/add-action', lead_views.LeadViewSet, 'leads-action')
 router.register(r'leads/un-claim', lead_views.LeadViewSet, 'leads-un-claim')
 router.register(r'leads', lead_views.LeadViewSet, 'leads')
 router.register(r'lists/add-to-list', lead_views.ListViewSet, 'lists-add')
@@ -26,7 +27,9 @@ router.register(r'lists/remove-from-list',
 router.register(r'lists', lead_views.ListViewSet, 'lists')
 router.register(r'notes', lead_views.NoteViewSet, 'notes')
 router.register(r'forecasts', lead_views.ForecastViewSet, 'forecast')
-
+router.register(r'actionchoices',
+                lead_views.ActionChoiceViewSet, 'actionchoices')
+router.register(r'actions', lead_views.ActionViewSet, 'actions')
 
 urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view()),

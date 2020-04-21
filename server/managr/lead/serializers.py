@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder
+from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder, ActionChoice, Action
 from managr.api.serializers import AccountRefSerializer
 from managr.core.models import User
 
@@ -59,6 +59,18 @@ class ActivityLogSerializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 
+class ActionChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionChoice
+        fields = ('__all__')
+
+
+class ActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Action
+        fields = ('__all__')
+
+
 class LeadSerializer(serializers.ModelSerializer):
 
     account_ref = AccountRefSerializer(
@@ -68,10 +80,12 @@ class LeadSerializer(serializers.ModelSerializer):
     last_updated_by_ref = UserRefSerializer(
         source='last_updated_by', read_only=True)
     forecast_ref = ForecastSerializer(source='forecast', read_only=True)
+    actions_ref = ActionSerializer(source='actions', read_only=True, many=True)
 
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
-                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref')
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref', 'actions', 'actions_ref',)
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
-        read_only_fields = ('closing_amount', 'contract', 'forecast',)
+        read_only_fields = ('closing_amount', 'contract',
+                            'forecast', 'actions',)

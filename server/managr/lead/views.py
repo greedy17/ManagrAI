@@ -21,8 +21,8 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
-from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer
+from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
+from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer, ActionChoiceSerializer, ActionSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet
 
@@ -87,7 +87,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
             str(acc.id) for acc in user.organization.accounts.all()]
         # if lead account is being updated make sure the account it is added to is in the Users org
         account_for = request.data.get('account', None)
-
+        # TODO:- remove this as query set should take care of this
         if account_for:
             if account_for not in accounts_in_user_org:
                 raise PermissionDenied(
@@ -120,6 +120,22 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.save()
         # register an action
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['POST'], permission_classes=(IsSalesPerson, CanEditResourceOrReadOnly,), detail=True, url_path="add-action")
+    def add_action(self, request, *args, **kwargs):
+        """ actions can only be added through this endpoint, they can be edited/deleted on the actions viewset on the lead they currently have claimed"""
+        lead = self.get_object()
+        # expects the action choice id to verify it is one the user can add
+        action_choice = ActionChoice.objects.get(
+            pk=request.data.get('action_type', None))
+        data = {"action_type": action_choice.id, "action_detail": request.data.get(
+            'action_detail', ''), "lead": lead.id}
+
+        serializer = ActionSerializer(data=data, context={"request", request})
+        serializer.is_valid(raise_exception=True)
+        a = Action.objects.create(**serializer.validated_data)
+        print(a)
+        return Response(serializer.data)
 
 
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -243,3 +259,52 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+
+class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsOrganizationManager, )
+    serializer_class = ActionChoiceSerializer
+
+    def get_queryset(self):
+        return ActionChoice.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = dict(request.data)
+        data['organization'] = user.organization.id
+        serializer = self.serializer_class(
+            data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        # make sure org is not changed
+        data = dict(request.data)
+        if 'organization' in data.keys():
+            del data['organization']
+
+        serializer = self.serializer_class(self.get_object(), data=data, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+class ActionViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = ActionSerializer
+
+    def get_queryset(self):
+        return Action.objects.for_user(self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        # make sure org is not changed
+        data = dict(request.data)
+        serializer = self.serializer_class(self.get_object(), data=data, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
