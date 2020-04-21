@@ -25,6 +25,7 @@ from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Ac
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer, ActionChoiceSerializer, ActionSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet
+from managr.api.models import Contact, Account
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -48,15 +49,26 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # set its status to claimed by assigning it to the user that created the lead
         data['claimed_by'] = user.id
         # check account to be sure it is in org
-        accounts_in_user_org = [
-            str(acc.id) for acc in user.organization.accounts.all()]
-        account_for = request.data.get('account')
-        if account_for not in accounts_in_user_org:
-            raise PermissionDenied({'detail': 'Account Not In Organization'})
+        account_for = request.data.get('account', None)
+        if not account_for:
+            raise ValidationError(
+                detail={'detail': 'Account is a required field'})
+        account = Account.objects.get(pk=account_for)
+        # if there are contacts to be added first check that contacts exist or create them
+        contacts = data.pop('linked_contacts', [])
+        contact_list = list()
+        for contact in contacts:
+            c, created = Contact.objects.for_user(request.user).get_or_create(
+                email=contact['email'], defaults={'account': account})
+            print(c, created)
+            contact_list.append(c.id)
+
         serializer = self.serializer_class(
             data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        # get the newly created object and
+        serializer.instance.linked_contacts.add(*contact_list)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):

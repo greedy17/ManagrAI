@@ -58,10 +58,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
     permission_classes = (IsSalesPerson,)
 
     def get_queryset(self):
-        if self.request.user.organization:
-            return Account.objects.filter(organization=self.request.user.organization.id)
-        else:
-            return None
+        return Account.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -97,29 +94,11 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     """ All memebers of the organization can add, create and update contacts """
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ContactSerializer
     permissions_class = (IsSalesPerson,)
 
     def get_queryset(self):
-        if self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
-            return Contact.objects.filter(account__organization=self.request.user.organization.id)
-        else:
-            return None
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(
-            data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        contact = Contact.objects.get(pk=kwargs['pk'])
-        serializer = self.serializer_class(contact,
-                                           data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data)
+        return Contact.objects.for_user(self.request.user)

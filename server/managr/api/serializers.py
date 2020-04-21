@@ -74,14 +74,6 @@ class AccountSerializer(serializers.ModelSerializer):
 
 class ContactSerializer(serializers.ModelSerializer):
 
-    def to_internal_value(self, data):
-        """ Backend Setting organization by default """
-        internal_data = super().to_internal_value(data)
-        internal_data.update(
-            {'organization': self.context['request'].user.organization})
-
-        return internal_data
-
     def validate_account(self, value):
         accounts = Account.objects.filter(
             organization=self.context['request'].user.organization)
@@ -92,10 +84,9 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = ('id', 'full_name', 'first_name', 'last_name', 'email',
-                  'phone_number_1', 'phone_number_2', 'account', 'organization',)
+                  'phone_number_1', 'phone_number_2', 'account',)
         extra_kwargs = {
             'email': {'required': True},
             'phone_number_1': {'required': True},
             'account': {'required': True}
         }
-        read_only_fields = ('organization',)
