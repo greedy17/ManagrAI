@@ -138,6 +138,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
 
 .invite {
   height: inherit;
@@ -154,7 +155,8 @@ export default {
 }
 
 h2 {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
+  font-weight: bold;
   color: $main-font-gray;
   text-align: center;
 }

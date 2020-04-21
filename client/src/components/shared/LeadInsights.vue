@@ -108,15 +108,12 @@ export default {
 }
 
 .insights-header-title {
+  @include base-font-styles();
   flex-grow: 1;
   padding: 5% 0 5% 7%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
@@ -129,12 +126,10 @@ export default {
 
 .insights-header-link {
   @include pointer-on-hover();
+  @include base-font-styles();
   text-transform: uppercase;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
   color: $dark-green;
@@ -173,24 +168,16 @@ export default {
 }
 
 .insight-top {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
 .insight-bottom {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 

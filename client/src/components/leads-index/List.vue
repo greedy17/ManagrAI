@@ -50,19 +50,15 @@ export default {
 .list-header {
   @include disable-text-select();
   @include pointer-on-hover();
+  @include base-font-styles();
   display: flex;
   flex-flow: row;
   align-items: center;
   margin: 1vh 1%;
   padding-left: 1%;
   height: 3rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
