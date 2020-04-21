@@ -82,7 +82,7 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   width: 78%;
   height: auto;

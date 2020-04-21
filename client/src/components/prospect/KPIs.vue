@@ -44,10 +44,10 @@ export default {
 @import '@/styles/mixins/utils';
 
 .kpis {
+  @include standard-border();
   background-color: $white;
   height: 15rem;
   width: 15rem;
-  border: 1px solid $soft-gray;
   display: flex;
   flex-flow: column;
 }

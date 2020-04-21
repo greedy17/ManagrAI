@@ -129,6 +129,7 @@ export default {
 .banner-button {
   @include disable-text-select();
   @include pointer-on-hover();
+  @include standard-border();
   margin: 0 4% 0 auto;
   display: flex;
   flex-flow: row;
@@ -137,7 +138,6 @@ export default {
   width: 5rem;
   height: 1.8rem;
   border-radius: 5px;
-  border: 1px solid $mid-gray;
   background-color: $soft-gray;
   font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;

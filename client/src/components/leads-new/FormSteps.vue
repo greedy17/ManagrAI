@@ -35,12 +35,13 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .form-steps {
+  @include standard-border();
   background-color: $white;
   height: 15rem;
   width: 15rem;
-  border: 1px solid $soft-gray;
 }
 
 .header {

@@ -109,19 +109,19 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
 
 .step-1,
 .step-2 {
+  @include standard-border();
   background-color: $white;
   height: auto;
-
   width: 45rem;
   display: flex;
   flex-flow: column;
   align-items: center;
   box-sizing: border-box;
   padding: 2rem 0;
-  border: 1px solid $soft-gray;
 }
 
 .step-2 {
