@@ -88,10 +88,6 @@ export default {
   height: auto;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,

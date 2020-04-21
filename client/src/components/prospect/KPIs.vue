@@ -68,8 +68,4 @@ export default {
   margin-bottom: 1rem;
   padding-left: 1rem;
 }
-
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
-}
 </style>

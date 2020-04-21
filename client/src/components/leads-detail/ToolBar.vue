@@ -100,10 +100,6 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
@@ -187,10 +183,6 @@ export default {
   justify-content: center;
 
   font-size: 18px;
-}
-
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .contacts {
