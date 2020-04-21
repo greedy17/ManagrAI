@@ -28,6 +28,7 @@ from .filters import LeadFilterSet
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    """ Viewset for leads Permissions are set on the Permissions.py"""
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
@@ -71,7 +72,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
-        # TODO:- make sure closing amount is not allowed unless lead is being closed or is already closed
         status_update = request.data.get('state', None)
         if current_lead.status != LEAD_STATUS_CLOSED and (not status_update or status_update != LEAD_STATUS_CLOSED):
             if 'closing_amount' in request.data.keys():
@@ -124,11 +124,10 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsSalesPerson, )
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly)
     serializer_class = ListSerializer
 
     def get_queryset(self):
-        # TODO: - set manager
         return List.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -179,7 +178,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
     @action(methods=['delete'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
     def remove_from_list(self, request, *args, **kwargs):
-        """ End point to allow addition of leads to list after created """
+        """ End point to allow removal of leads to list after created """
         l = self.get_object()
         # TODO: Check if lead is in org
         remove_leads = request.data.get('leads', [])
@@ -192,12 +191,12 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
 
 class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    """ Any one in org can create/edit/delete Notes on leads """
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = NoteSerializer
 
     def get_queryset(self):
-        # TODO: create manager
         return Note.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):

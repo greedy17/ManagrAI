@@ -3,7 +3,7 @@ from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
-from managr.lead.models import Lead
+from managr.lead.models import Lead, List
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -75,7 +75,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
         elif isinstance(obj, Lead):
             """ if obj is Lead check claimed_by unless it is being claimed or unclaimed"""
             return lead_permissions(self, request, view, obj)
-
+        elif isinstance(obj, List):
+            return list_permissions(self, request, view, obj)
         else:
             return False
 
