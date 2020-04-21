@@ -1,7 +1,7 @@
 <template>
   <div class="list">
     <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
-      <img class="icon" src="@/assets/images/toc.svg" alt="content icon" />
+      <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ list.title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>

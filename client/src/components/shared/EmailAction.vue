@@ -6,7 +6,7 @@
           <img class="contact-img" src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="contact-name">Sara Smith</span>
           <div class="contact-email-container">
-            <img class="email-icon" src="@/assets/images/email.svg" alt="email icon" />
+            <img class="email-icon" src="@/assets/images/email.svg" alt="icon" />
             <span class="contact-email">sara@samsung.com</span>
           </div>
         </div>
@@ -14,7 +14,7 @@
           <img class="contact-img" src="@/assets/images/jake-murray.png" alt="contact image" />
           <span class="contact-name">Jake Murray</span>
           <div class="contact-email-container">
-            <img class="email-icon" src="@/assets/images/email.svg" alt="email icon" />
+            <img class="email-icon" src="@/assets/images/email.svg" alt="icon" />
             <span class="contact-email">jake@samsungmedia.com</span>
           </div>
         </div>
@@ -29,11 +29,7 @@
           <span class="template-selector-label">Email Template:</span>
           <div class="template-selector-dropdown">
             <span class="selected-template-name">Template 1</span>
-            <img
-              class="dropdown-arrow-icon"
-              src="@/assets/images/dropdown-arrow.svg"
-              alt="dropdownn arrow icon"
-            />
+            <img class="dropdown-arrow-icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
           </div>
         </div>
       </div>

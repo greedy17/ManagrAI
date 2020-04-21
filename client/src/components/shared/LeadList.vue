@@ -6,7 +6,7 @@
     <img
       class="remove-list-icon"
       src="@/assets/images/remove.svg"
-      alt="remove icon"
+      alt="icon"
       @click="handleIconClick"
     />
   </div>

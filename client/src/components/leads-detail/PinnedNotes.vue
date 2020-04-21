@@ -6,7 +6,7 @@
     <div class="note section-shadow">
       <div class="note-header">
         <span>Primary Note</span>
-        <img class="expand" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="expand" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
       <div class="note-content">
         Lorem Ipsum is simply dummy text of the printing and typesetting industry.
@@ -15,7 +15,7 @@
     <div class="note section-shadow">
       <div class="note-header">
         <span>Secondary Note</span>
-        <img class="expand" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="expand" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
       <div class="note-content">
         Lorem Ipsum is simply dummy text of the printing and typesetting industry.

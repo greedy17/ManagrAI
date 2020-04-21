@@ -31,7 +31,7 @@
       </div>
       <div class="form-field">
         <label @click="addAnotherContactForm" class="add-another-button">
-          <img class="icon" src="@/assets/images/add.svg" alt="add" />
+          <img class="icon" src="@/assets/images/add.svg" alt="icon" />
           Add Another
         </label>
       </div>

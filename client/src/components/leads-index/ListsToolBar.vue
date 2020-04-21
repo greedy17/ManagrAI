@@ -6,13 +6,13 @@
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Update Date</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Amount</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="filter section-shadow">

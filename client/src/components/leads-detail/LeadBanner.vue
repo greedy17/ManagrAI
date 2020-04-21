@@ -15,11 +15,11 @@
     </div>
     <div class="banner-buttons">
       <div class="banner-button">
-        <img class="button-icon" src="@/assets/images/undo.svg" alt="reset icon" />
+        <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
       <div class="banner-button" @click="emitClickedReleased">
-        <img class="button-icon" src="@/assets/images/remove.svg" alt="release icon" />
+        <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
     </div>

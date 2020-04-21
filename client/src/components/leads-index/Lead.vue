@@ -13,7 +13,7 @@
         <LeadList class="lead-list" :listName="'Q2 Buyers'" />
       </div>
       <span class="lead-add-list">
-        <img class="add-list-icon" src="@/assets/images/add.svg" alt="add icon" />
+        <img class="add-list-icon" src="@/assets/images/add.svg" alt="icon" />
       </span>
     </div>
     <LeadDetails :lead="lead" v-if="showDetails" />

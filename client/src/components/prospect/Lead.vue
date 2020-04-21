@@ -8,7 +8,7 @@
       </div>
       <div class="contacts-container">
         <div v-for="contact in lead.contacts" :key="contact.id" class="contact">
-          <img class="image" src="@/assets/images/sara-smith.png" alt="contact" />
+          <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
           <span>{{ contact.name }} </span>
         </div>
       </div>
