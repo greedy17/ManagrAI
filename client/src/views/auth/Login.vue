@@ -2,9 +2,10 @@
   <div class="login">
     <NavBar />
     <div class="page-content">
-      <form @submit.prevent="handleLogin">
+      <form @submit.prevent="handleSubmit">
         <h2>Login</h2>
         <div class="errors">
+          <!-- client side validations -->
           <div
             v-if="
               isFormValid !== null &&
@@ -12,13 +13,29 @@
                 (errors.emailIsBlank || errors.passwordIsBlank)
             "
           >
-            Fields may not be blank.
+            {{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.
           </div>
-          <div v-else-if="success !== null && !success">Invalid email and/or password.</div>
+          <!-- server side validations -->
+          <div v-else-if="success !== null && !success && errors[500]">
+            Something went wrong, please retry later.
+          </div>
+          <div v-else-if="success !== null && !success && errors.invalidEmail">
+            Invalid or not-activated email.
+          </div>
+          <div v-else-if="success !== null && !success && errors.invalidPassword">
+            Incorrect password.
+          </div>
         </div>
-        <input v-model="email" type="text" placeholder="email" />
-        <input v-model="password" type="password" placeholder="password" />
-        <button type="submit">Login</button>
+        <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
+        <input
+          :class="{ hidden: currentStep < 2 }"
+          v-model="password"
+          type="password"
+          placeholder="password"
+        />
+        <button type="submit">
+          {{ currentStep === 1 ? 'Next' : 'Login' }}
+        </button>
       </form>
     </div>
   </div>
@@ -32,22 +49,65 @@ export default {
   components: {},
   data() {
     return {
-      email: '',
-      password: '',
+      currentStep: 1,
+      email: '', // step 1
+      password: '', // step 2
       isFormValid: null, // client side validations
       success: null, //server side validations
       errors: {},
     }
   },
   methods: {
-    handleLogin() {
+    handleSubmit() {
+      if (this.currentStep === 1) {
+        this.checkAccountStatus()
+      } else {
+        this.handleLoginAttempt()
+      }
+    },
+    checkAccountStatus() {
       // reset component data when submission begins, in case of prior request
       this.isFormValid = null
       this.success = null
       this.errors = {}
 
       // check form data for this request
-      let validationResults = this.clientSideValidations()
+      let validationResults = this.emailClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      let checkStatusPromise = User.api.checkStatus(this.email)
+
+      checkStatusPromise
+        .then(() => {
+          this.currentStep = 2
+          let loginForm = document.querySelector('form')
+          // setTimeout(..., 0) is used to focus once JS Stack is clear -- for some reason this is needed, even though the
+          // element is already on the DOM by this point (it is always present, see template)
+          setTimeout(() => loginForm[1].focus(), 0)
+        })
+        .catch(error => {
+          if (error.response.status >= 500) {
+            this.errors[500] = true
+            this.success = false
+          } else if (error.response.status >= 400) {
+            // handle invalid or inactive email
+            this.errors.invalidEmail = true
+            this.success = false
+          }
+        })
+    },
+    handleLoginAttempt() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data for this request
+      let validationResults = this.passwordClientSideValidations()
       this.isFormValid = validationResults[0]
       this.errors = validationResults[1]
       if (!this.isFormValid) {
@@ -58,10 +118,7 @@ export default {
 
       loginPromise
         .then(response => {
-          // TODO(Bruno 4-9-20):
-          // there are checks that must take place before deciding
-          // if this person can be logged in
-          // the following is temporary code
+          // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
           let token = response.data.token
           let userData = response.data
           delete userData.token
@@ -74,16 +131,30 @@ export default {
           }
           this.success = true
         })
-        .catch(() => {
-          this.success = false
+        .catch(error => {
+          if (error.response.status >= 500) {
+            this.errors[500] = true
+            this.success = false
+          } else if (error.response.status >= 400) {
+            // handle invalid password
+            this.errors.invalidPassword = true
+            this.success = false
+          }
         })
     },
-    clientSideValidations() {
+    emailClientSideValidations() {
       let formErrors = {
         emailIsBlank: this.emailIsBlank,
+      }
+      let isFormValid = !this.emailIsBlank
+
+      return [isFormValid, formErrors]
+    },
+    passwordClientSideValidations() {
+      let formErrors = {
         passwordIsBlank: this.passwordIsBlank,
       }
-      let isFormValid = !this.emailIsBlank && !this.passwordIsBlank
+      let isFormValid = !this.passwordIsBlank
 
       return [isFormValid, formErrors]
     },
@@ -141,6 +212,10 @@ input {
   width: 15.65rem;
   display: block;
   margin: 0.625rem 0;
+
+  &:disabled {
+    border: 2px solid $dark-green;
+  }
 }
 
 button {
@@ -148,5 +223,9 @@ button {
   margin-top: 1.25rem;
   height: 1.875rem;
   width: 9.375rem;
+}
+
+.hidden {
+  display: none;
 }
 </style>
