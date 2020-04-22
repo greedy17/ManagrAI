@@ -2,7 +2,7 @@
   <div class="lead">
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.name }} </span>
-      <span class="lead-rank"> {{ lead.rank }} </span>
+      <span class="lead-rating"> {{ lead.rating }} </span>
       <span class="lead-description"> {{ leadDescription }} </span>
       <span class="lead-amount"> {{ leadAmount }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
@@ -108,7 +108,7 @@ export default {
   color: $main-font-gray;
 }
 
-.lead-rank {
+.lead-rating {
   width: 4%;
   text-align: center;
   opacity: 0.5;

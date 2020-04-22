@@ -38,7 +38,7 @@ const leads = [
     account: 1,
     name: 'Samsung',
     amount: 100000,
-    rank: 4,
+    rating: 4,
     primaryNote: 'On competitor',
     secondaryNote: 'Up for renewal in Jan',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -53,7 +53,7 @@ const leads = [
     account: 1,
     name: 'Tesla',
     amount: 100000,
-    rank: 3,
+    rating: 3,
     primaryNote: 'New director of marketing',
     secondaryNote: 'has budget',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -68,7 +68,7 @@ const leads = [
     account: 1,
     name: 'Boston University',
     amount: 100000,
-    rank: 3,
+    rating: 3,
     primaryNote: 'Using competitor',
     secondaryNote: 'up for renewal in March',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -83,7 +83,7 @@ const leads = [
     account: 2,
     name: 'Georgia Pacific',
     amount: 100000,
-    rank: 4,
+    rating: 4,
     primaryNote: 'Was interested last year',
     secondaryNote: 'Q2 is when they buy',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -98,7 +98,7 @@ const leads = [
     account: 2,
     name: 'Delta Airlines',
     amount: 50000,
-    rank: 4,
+    rating: 4,
     primaryNote: 'May not need but have a lot of money',
     secondaryNote: null,
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -113,7 +113,7 @@ const leads = [
     account: 2,
     name: 'Emory University',
     amount: 100000,
-    rank: 3,
+    rating: 3,
     primaryNote: 'Launched a sales team for MBA program!',
     secondaryNote: null,
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -128,7 +128,7 @@ const leads = [
     account: 2,
     name: 'Salesforce',
     amount: 50000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -143,7 +143,7 @@ const leads = [
     account: 2,
     name: 'Oracle',
     amount: 100000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -158,7 +158,7 @@ const leads = [
     account: 3,
     name: 'Amazon Web Services',
     amount: 5000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'On competitor',
     secondaryNote: 'Up for renewal in Jan',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -173,7 +173,7 @@ const leads = [
     account: 3,
     name: 'LinkedIn',
     amount: 100000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'New director of marketing',
     secondaryNote: 'has budget',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -188,7 +188,7 @@ const leads = [
     account: 3,
     name: 'Slack',
     amount: 50000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'Using competitor',
     secondaryNote: 'up for renewal in March',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -203,7 +203,7 @@ const leads = [
     account: 3,
     name: 'Tableau',
     amount: 100000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'Was interested last year',
     secondaryNote: 'Q2 is when they buy',
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -218,7 +218,7 @@ const leads = [
     account: 3,
     name: 'Zoom',
     amount: 100000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'May not need but have a lot of money',
     secondaryNote: null,
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -233,7 +233,7 @@ const leads = [
     account: 3,
     name: 'Uber',
     amount: 50000,
-    rank: 4,
+    rating: 4,
     primaryNote: 'Launched a sales team for MBA program!',
     secondaryNote: null,
     // computed value: description, by concatenating primaryNote + secondaryNote
@@ -248,7 +248,7 @@ const leads = [
     account: 3,
     name: "Mike's Pastry",
     amount: 100000,
-    rank: 5,
+    rating: 5,
     primaryNote: 'Competitor, tricky..',
     secondaryNote: 'could be good for their new ES team',
     // computed value: description, by concatenating primaryNote + secondaryNote

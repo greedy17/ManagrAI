@@ -16,13 +16,13 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Rank</div>
+      <div class="filter-header">Rating</div>
       <div class="filter-options">
-        <LeadRank class="option" :rank="5" />
-        <LeadRank class="option" :rank="4" />
-        <LeadRank class="option" :rank="3" />
-        <LeadRank class="option" :rank="2" />
-        <LeadRank class="option" :rank="1" />
+        <LeadRating class="option" :rating="5" />
+        <LeadRating class="option" :rating="4" />
+        <LeadRating class="option" :rating="3" />
+        <LeadRating class="option" :rating="2" />
+        <LeadRating class="option" :rating="1" />
       </div>
     </div>
     <div class="filter section-shadow">
@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import LeadRank from '@/components/shared/LeadRank'
+import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
@@ -63,7 +63,7 @@ const listEnums = ['Growth Accounts', 'Q2 Buyers']
 export default {
   name: 'ListsToolBar',
   components: {
-    LeadRank,
+    LeadRating,
     LeadList,
   },
   data() {

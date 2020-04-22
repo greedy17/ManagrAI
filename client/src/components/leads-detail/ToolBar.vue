@@ -7,8 +7,8 @@
     <div class="lead-name">
       <h2>{{ lead.name }}</h2>
     </div>
-    <div class="rank">
-      <LeadRank :label="true" :rank="lead.rank" />
+    <div class="rating">
+      <LeadRating :label="true" :rating="lead.rating" />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import LeadRank from '@/components/shared/LeadRank'
+import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 import currencyFormatter from '@/services/currencyFormatter'
 const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
@@ -69,7 +69,7 @@ const exampleContacts = [
 export default {
   name: 'ToolBar',
   components: {
-    LeadRank,
+    LeadRating,
     LeadList,
   },
   props: {
@@ -139,7 +139,7 @@ export default {
   text-align: center;
 }
 
-.rank {
+.rating {
   display: flex;
   flex-flow: row;
   justify-content: center;
