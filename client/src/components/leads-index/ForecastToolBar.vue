@@ -13,7 +13,7 @@
     </div>
     <div class="statistics-container section-shadow">
       <span class="title">Statistics</span>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
         </div>
@@ -26,7 +26,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/email.svg" alt="icon" />
         </div>
@@ -39,7 +39,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/message.svg" alt="icon" />
         </div>
@@ -52,7 +52,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
         </div>
@@ -65,7 +65,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/calendar.svg" alt="icon" />
         </div>
@@ -147,24 +147,17 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.875rem;
@@ -207,7 +200,6 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
-  box-shadow: 0 1px 0 0 $soft-gray;
 
   .icon-container {
     width: 30%;
@@ -227,24 +219,16 @@ export default {
     flex-grow: 1;
 
     .top {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: $main-font-gray;
     }
 
     .bottom {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: rgba($color: $main-font-gray, $alpha: 0.4);
     }
   }

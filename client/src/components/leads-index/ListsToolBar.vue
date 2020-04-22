@@ -6,13 +6,13 @@
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Update Date</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Amount</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="filter section-shadow">
@@ -82,24 +82,17 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 14px;

@@ -66,16 +66,11 @@ export default {
 
   select {
     @include pointer-on-hover();
+    @include base-font-styles();
     width: 96%;
     height: 100%;
     padding: 0.125rem 1rem;
-
-    font-family: $base-font-family, $backup-base-font-family;
-    font-stretch: normal;
-    font-style: normal;
     line-height: 1.6;
-    letter-spacing: normal;
-
     border: unset;
 
     &:focus {

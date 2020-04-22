@@ -15,11 +15,11 @@
     </div>
     <div class="banner-buttons">
       <div class="banner-button">
-        <img class="button-icon" src="@/assets/images/undo.svg" alt="reset icon" />
+        <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
       <div class="banner-button" @click="emitClickedReleased">
-        <img class="button-icon" src="@/assets/images/remove.svg" alt="release icon" />
+        <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
     </div>
@@ -73,13 +73,10 @@ export default {
   align-items: center;
 
   .forecast-label {
-    font-family: $base-font-family, $backup-base-font-family;
+    @include base-font-styles();
     font-size: 12px;
     font-weight: bold;
-    font-stretch: normal;
-    font-style: normal;
     line-height: 2.25;
-    letter-spacing: normal;
     color: $main-font-gray;
   }
 
@@ -97,25 +94,18 @@ export default {
 }
 
 .days-in-status-label {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 12px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.71;
-  letter-spacing: normal;
   color: $main-font-gray;
   margin-right: 5%;
 }
 
 .days-in-status {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 12px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 2.25;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
@@ -129,6 +119,8 @@ export default {
 .banner-button {
   @include disable-text-select();
   @include pointer-on-hover();
+  @include standard-border();
+  @include base-font-styles();
   margin: 0 4% 0 auto;
   display: flex;
   flex-flow: row;
@@ -137,15 +129,10 @@ export default {
   width: 5rem;
   height: 1.8rem;
   border-radius: 5px;
-  border: 1px solid $mid-gray;
   background-color: $soft-gray;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 
   .button-icon {

@@ -6,7 +6,7 @@
           <img class="contact-img" src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="contact-name">Sara Smith</span>
           <div class="contact-phone-number-container">
-            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
+            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="icon" />
             <span class="contact-phone-number">555-555-5555</span>
           </div>
         </div>
@@ -14,7 +14,7 @@
           <img class="contact-img" src="@/assets/images/jake-murray.png" alt="contact image" />
           <span class="contact-name">Jake Murray</span>
           <div class="contact-phone-number-container">
-            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
+            <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="icon" />
             <span class="contact-phone-number">555-555-5555</span>
           </div>
         </div>
@@ -89,15 +89,11 @@ export default {
 }
 
 .contact-name {
+  @include base-font-styles();
   margin-left: auto;
   width: 25%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
@@ -121,14 +117,11 @@ export default {
 }
 
 .contact-phone-number {
+  @include base-font-styles();
   margin-left: 0.375rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 

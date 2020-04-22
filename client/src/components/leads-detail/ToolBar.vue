@@ -1,8 +1,8 @@
 <template>
   <div class="toolbar">
     <div class="top-menu">
-      <img class="edit icon" src="@/assets/images/pencil.svg" alt="edit icon" />
-      <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="more icon" />
+      <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
+      <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div>
     <div class="lead-name">
       <h2>{{ lead.name }}</h2>
@@ -35,10 +35,10 @@
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="name">{{ contact.name }}</span>
           <div class="phone button">
-            <img class="icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
+            <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
           </div>
           <div class="email button">
-            <img class="icon" src="@/assets/images/email.svg" alt="telephone icon" />
+            <img class="icon" src="@/assets/images/email.svg" alt="icon" />
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@
       </div>
       <div class="files-container">
         <div class="file section-shadow" v-for="file in exampleFiles" :key="file">
-          <img class="icon" src="@/assets/images/document.svg" alt="file icon" />
+          <img class="icon" src="@/assets/images/document.svg" alt="icon" />
           {{ file }}
         </div>
       </div>
@@ -100,18 +100,11 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 14px;
@@ -187,10 +180,6 @@ export default {
   justify-content: center;
 
   font-size: 18px;
-}
-
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .contacts {

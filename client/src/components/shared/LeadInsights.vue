@@ -1,6 +1,6 @@
 <template>
   <div class="insights">
-    <div class="insights-header">
+    <div class="insights-header section-shadow">
       <span class="insights-header-title">Insights</span>
       <div class="insights-header-link-container">
         <router-link :to="{ name: 'LeadsDetail', params: { id: lead.id } }" v-if="showLink">
@@ -8,9 +8,9 @@
         </router-link>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
+        <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -21,9 +21,9 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/email.svg" alt="email icon" />
+        <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -34,9 +34,9 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/message.svg" alt="message icon" />
+        <img class="insight-icon" src="@/assets/images/message.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -47,9 +47,9 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/contact.svg" alt="contact icon" />
+        <img class="insight-icon" src="@/assets/images/contact.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -60,9 +60,9 @@
         </span>
       </div>
     </div>
-    <div class="insight-container">
+    <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/calendar.svg" alt="calendar icon" />
+        <img class="insight-icon" src="@/assets/images/calendar.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
@@ -105,19 +105,15 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insights-header-title {
+  @include base-font-styles();
   flex-grow: 1;
   padding: 5% 0 5% 7%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
@@ -130,12 +126,10 @@ export default {
 
 .insights-header-link {
   @include pointer-on-hover();
+  @include base-font-styles();
   text-transform: uppercase;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
   color: $dark-green;
@@ -153,7 +147,6 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .insight-info {
@@ -175,24 +168,16 @@ export default {
 }
 
 .insight-top {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
 .insight-bottom {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 14px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: rgba($color: $main-font-gray, $alpha: 0.4);
 }
 

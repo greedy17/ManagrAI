@@ -18,9 +18,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .lists-container {
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   padding-top: 1vh;
   padding-bottom: 1vh;
