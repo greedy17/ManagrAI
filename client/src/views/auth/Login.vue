@@ -29,6 +29,7 @@
         <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
         <input
           :class="{ hidden: currentStep < 2 }"
+          ref="passwordInput"
           v-model="password"
           type="password"
           placeholder="password"
@@ -84,10 +85,9 @@ export default {
       checkStatusPromise
         .then(() => {
           this.currentStep = 2
-          let loginForm = document.querySelector('form')
           // setTimeout(..., 0) is used to focus once JS Stack is clear -- for some reason this is needed, even though the
-          // element is already on the DOM by this point (it is always present, see template)
-          setTimeout(() => loginForm[1].focus(), 0)
+          // element is already on the DOM by this point (it is always present, see template).
+          setTimeout(() => this.$refs.passwordInput.focus(), 0)
         })
         .catch(error => {
           if (error.response.status >= 500) {
