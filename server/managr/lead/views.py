@@ -51,7 +51,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         accounts_in_user_org = [
             str(acc.id) for acc in user.organization.accounts.all()]
         account_for = request.data.get('account')
-        if account_for not in accounts_in_user_org:
+        if not user.organization.accounts.filter(pk=account_for).exists():
             raise PermissionDenied({'detail': 'Account Not In Organization'})
         serializer = self.serializer_class(
             data=data, context={'request': request})
@@ -187,7 +187,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
             l.save()
 
         serializer = self.serializer_class(self.get_object())
-        return Response(serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
