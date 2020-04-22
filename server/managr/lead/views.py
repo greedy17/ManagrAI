@@ -53,7 +53,12 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         if not account_for:
             raise ValidationError(
                 detail={'detail': 'Account is a required field'})
-        account = Account.objects.get(pk=account_for)
+        # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
+        try:
+            account = Account.objects.for_user(
+                request.user).get(pk=account_for)
+        except Account.DoesNotExist:
+            raise PermissionDenied()
         # if there are contacts to be added first check that contacts exist or create them
         contacts = data.pop('linked_contacts', [])
         contact_list = list()
