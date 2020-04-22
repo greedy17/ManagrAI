@@ -57,13 +57,9 @@ export default {
 }
 
 .content {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 11px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   text-align: center;
   color: $main-font-gray;
 }

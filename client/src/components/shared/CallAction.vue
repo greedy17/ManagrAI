@@ -89,15 +89,11 @@ export default {
 }
 
 .contact-name {
+  @include base-font-styles();
   margin-left: auto;
   width: 25%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
@@ -121,14 +117,11 @@ export default {
 }
 
 .contact-phone-number {
+  @include base-font-styles();
   margin-left: 0.375rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 

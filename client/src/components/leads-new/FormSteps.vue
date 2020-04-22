@@ -45,11 +45,8 @@ export default {
 }
 
 .header {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   color: $main-font-gray;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
   line-height: 1.14;
   font-size: 1rem;
   font-weight: bold;

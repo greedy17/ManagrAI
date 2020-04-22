@@ -43,13 +43,10 @@ export default {
 .action-tab-header {
   @include disable-text-select();
   @include pointer-on-hover();
+  @include base-font-styles();
   width: 5.7rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 2;
-  letter-spacing: normal;
   display: flex;
   align-items: center;
   justify-content: center;

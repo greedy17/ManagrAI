@@ -157,10 +157,7 @@ export default {
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.875rem;
@@ -222,24 +219,16 @@ export default {
     flex-grow: 1;
 
     .top {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: $main-font-gray;
     }
 
     .bottom {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: rgba($color: $main-font-gray, $alpha: 0.4);
     }
   }

@@ -104,10 +104,7 @@ export default {
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 14px;

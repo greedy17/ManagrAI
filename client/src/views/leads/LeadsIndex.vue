@@ -93,6 +93,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .leads-index {
   min-height: 100vh;
@@ -121,7 +122,7 @@ export default {
 }
 
 .view-toggle-container {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 0.825rem;
   display: flex;
   flex-flow: row;

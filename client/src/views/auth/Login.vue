@@ -174,6 +174,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
 
 .login {
   height: inherit;
@@ -190,17 +191,18 @@ export default {
 }
 
 h2 {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
+  font-weight: bold;
   color: $main-font-gray;
   text-align: center;
 }
 
 form {
+  @include standard-border();
   margin-top: 3.125rem;
   width: 31.25rem;
   height: 18.75rem;
   background-color: $white;
-  border-radius: 5px;
   display: flex;
   flex-flow: column;
   align-items: center;

@@ -95,29 +95,23 @@ export default {
 
 .lead-name {
   @include pointer-on-hover();
+  @include base-font-styles();
   width: 15%;
   padding-left: 1%;
   height: 1rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
 .lead-rank {
+  @include base-font-styles();
   width: 4%;
   text-align: center;
   opacity: 0.5;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 12px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: normal;
   letter-spacing: 0.5px;
   color: $base-gray;
 }
@@ -125,13 +119,9 @@ export default {
 .lead-description,
 .lead-amount,
 .lead-last-update {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   font-size: 11px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
