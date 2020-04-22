@@ -94,9 +94,10 @@ export default {
 @import '@/styles/mixins/utils';
 
 .toolbar {
+  @include standard-border();
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-
+  height: 50rem;
   width: 100%;
   display: flex;
   flex-flow: column;
