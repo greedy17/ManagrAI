@@ -4,7 +4,7 @@
       <span class="lead-name" @click="toggleDetails"> {{ lead.name }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
       <span class="lead-description"> {{ leadDescription }} </span>
-      <span class="lead-amount"> {{ leadAmount }} </span>
+      <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown :forecast="lead.forecast" />
       <LeadStatusDropdown :status="lead.status" />
@@ -22,7 +22,6 @@
 
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
-import currencyFormatter from '@/services/currencyFormatter'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
@@ -69,9 +68,6 @@ export default {
     },
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
-    },
-    leadAmount() {
-      return currencyFormatter.format(this.lead.amount)
     },
   },
 }

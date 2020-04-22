@@ -5,15 +5,15 @@
     </div>
     <div class="single-statistic section-shadow">
       <span class="title">Total Closed Value</span>
-      <span class="statistic"> {{ totalClosedValue }}</span>
+      <span class="statistic"> {{ 33000 | currency }}</span>
     </div>
     <div class="single-statistic section-shadow">
       <span class="title">Average Contract Value</span>
-      <span class="statistic"> {{ averageContractValue }}</span>
+      <span class="statistic"> {{ 12000 | currency }}</span>
     </div>
     <div class="single-statistic section-shadow">
       <span class="title">Forecast</span>
-      <span class="statistic"> {{ computedForecast }}</span>
+      <span class="statistic"> {{ 747000 | currency }}</span>
     </div>
     <div class="statistics-container section-shadow">
       <span class="title">Statistics</span>
@@ -95,7 +95,6 @@
 
 <script>
 import FilterByRep from '@/components/shared/FilterByRep'
-import currencyFormatter from '@/services/currencyFormatter'
 
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
 const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
@@ -125,17 +124,6 @@ export default {
       } else {
         this.activeReps = Object.assign({}, this.activeReps, { [repID]: false })
       }
-    },
-  },
-  computed: {
-    totalClosedValue() {
-      return currencyFormatter.format(33000)
-    },
-    averageContractValue() {
-      return currencyFormatter.format(12000)
-    },
-    computedForecast() {
-      return currencyFormatter.format(747000)
     },
   },
 }

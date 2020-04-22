@@ -24,7 +24,7 @@
     </div>
     <!--- focus --- -->
     <div class="account-link">Account</div>
-    <div class="amount section-shadow">Amount: {{ formattedAmount }}</div>
+    <div class="amount section-shadow">Amount: {{ lead.amount | currency }}</div>
     <!--- focus --- -->
     <div class="contacts">
       <div class="header section-shadow">
@@ -60,12 +60,13 @@
 <script>
 import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
-import currencyFormatter from '@/services/currencyFormatter'
+
 const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
 const exampleContacts = [
   { id: 1, name: 'Sara Smith' },
   { id: 2, name: 'Jake Murray' },
 ]
+
 export default {
   name: 'ToolBar',
   components: {
@@ -80,11 +81,6 @@ export default {
   },
   data() {
     return { exampleFiles, exampleContacts }
-  },
-  computed: {
-    formattedAmount() {
-      return currencyFormatter.format(this.lead.amount)
-    },
   },
 }
 </script>
