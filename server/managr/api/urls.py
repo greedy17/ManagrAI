@@ -26,13 +26,10 @@ router.register(r'lists/remove-from-list',
 router.register(r'lists', lead_views.ListViewSet, 'lists')
 router.register(r'notes', lead_views.NoteViewSet, 'notes')
 router.register(r'forecasts', lead_views.ForecastViewSet, 'forecast')
-<<<<<<< HEAD
 router.register(r'reminders', lead_views.ReminderViewSet, 'reminders')
-=======
 router.register(r'actionchoices',
                 lead_views.ActionChoiceViewSet, 'actionchoices')
 router.register(r'actions', lead_views.ActionViewSet, 'actions')
->>>>>>> feature/actions
 
 urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view()),
