@@ -59,7 +59,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Ready',
     lastUpdateDate: '3/2/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 1,
     // related value: lead has many notes
   },
@@ -74,7 +74,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Ready',
     lastUpdateDate: '3/3/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 3,
     // related value: lead has many notes
   },
@@ -149,7 +149,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Trial',
     lastUpdateDate: '3/8/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 1,
     // related value: lead has many notes
   },
@@ -179,7 +179,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Ready',
     lastUpdateDate: '3/10/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 2,
     // related value: lead has many notes
   },
@@ -194,7 +194,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Demo',
     lastUpdateDate: '3/11/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 3,
     // related value: lead has many notes
   },
@@ -209,7 +209,7 @@ const leads = [
     // computed value: description, by concatenating primaryNote + secondaryNote
     status: 'Ready',
     lastUpdateDate: '3/12/20',
-    forecast: 'NA',
+    forecast: 'Unforecasted',
     listId: 3,
     // related value: lead has many notes
   },
