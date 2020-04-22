@@ -11,6 +11,10 @@
       <span class="title">Average Contract Value</span>
       <span class="statistic"> {{ averageContractValue }}</span>
     </div>
+    <div class="single-statistic section-shadow">
+      <span class="title">Forecast</span>
+      <span class="statistic"> {{ computedForecast }}</span>
+    </div>
     <div class="statistics-container section-shadow">
       <span class="title">Statistics</span>
       <div class="graphic-statistic section-shadow">
@@ -78,10 +82,6 @@
           </span>
         </div>
       </div>
-    </div>
-    <div class="single-statistic section-shadow">
-      <span class="title">Forecast</span>
-      <span class="statistic"> {{ computedForecast }}</span>
     </div>
     <div class="filter-container">
       <FilterByRep
