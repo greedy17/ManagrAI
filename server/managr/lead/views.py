@@ -60,9 +60,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for contact in contacts:
             c, created = Contact.objects.for_user(request.user).get_or_create(
                 email=contact['email'], defaults={'account': account})
-            print(c, created)
             contact_list.append(c.id)
-
         serializer = self.serializer_class(
             data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -94,16 +92,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
         data['last_updated_by'] = user.id
         # set its status to claimed by assigning it to the user that created the lead
-        # check account to be sure it is in org
-        accounts_in_user_org = [
-            str(acc.id) for acc in user.organization.accounts.all()]
-        # if lead account is being updated make sure the account it is added to is in the Users org
-        account_for = request.data.get('account', None)
-        # TODO:- remove this as query set should take care of this
-        if account_for:
-            if account_for not in accounts_in_user_org:
-                raise PermissionDenied(
-                    {'detail': 'Account Not In Organization'})
         serializer = self.serializer_class(current_lead,
                                            data=data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -199,7 +187,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
             l.save()
 
         serializer = self.serializer_class(self.get_object())
-        return Response(serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
