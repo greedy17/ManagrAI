@@ -270,3 +270,49 @@ class Notification(TimeStampModel):
                              help_text="a title for the notification")
     action_taken = models.CharField(
         choices=NOTIFICATION_ACTION_CHOICES, max_length=255, null=True, help_text="a notification can either be viewed or snoozed")
+
+
+class ActionChoiceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(organization=user.organization.id)
+        else:
+            return None
+
+
+class ActionChoice(TimeStampModel):
+    title = models.CharField(max_length=255, blank=True, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+    organization = models.ForeignKey(
+        'api.Organization', on_delete=models.CASCADE)
+
+    objects = ActionChoiceQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['title']
+
+
+class ActionQuerySet(models.QuerySet):
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(action_type__organization=user.organization)
+        else:
+            return None
+
+
+class Action(TimeStampModel):
+    action_type = models.ForeignKey(
+        'ActionChoice', on_delete=models.PROTECT, null=True, blank=False)
+    action_detail = models.CharField(max_length=255, blank=True, null=False)
+    lead = models.ForeignKey(
+        'Lead', on_delete=models.CASCADE, null=True, blank=False, related_name="actions")
+    last_updated_at = models.DateTimeField(auto_now=True)
+    objects = ActionQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['-datetime_created']
