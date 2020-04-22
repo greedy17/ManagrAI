@@ -130,7 +130,7 @@ class List(TimeStampModel):
     last_updated_at = models.DateTimeField(auto_now=True)
     leads = models.ManyToManyField('Lead', blank=True)
     organization = models.ForeignKey(
-        'api.Organization', blank=False, null=True, on_delete=models.SET_NULL)
+        'api.Organization', blank=False, null=True, on_delete=models.SET_NULL, related_name="lists")
 
     objects = ListQuerySet.as_manager()
 
@@ -145,9 +145,9 @@ class File(TimeStampModel):
     type = models.CharField(
         max_length=255, choices=FILE_TYPE_CHOICES, default=FILE_TYPE_OTHER)
     uploaded_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded")
     uploaded_to = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL)
+        'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
 
     class Meta:
         ordering = ['-datetime_created']
@@ -169,9 +169,9 @@ class Note(TimeStampModel):
     content = models.CharField(max_length=255, blank=False, null=False)
     last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
     updated_by = models.ForeignKey(
-        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
+        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL, lead_name="updated_notes")
     created_for = models.ForeignKey(
         'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
 
@@ -257,7 +257,7 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        'api.Organization', on_delete=models.CASCADE)
+        'api.Organization', on_delete=models.CASCADE, related_name="action_choices")
 
     objects = ActionChoiceQuerySet.as_manager()
 
