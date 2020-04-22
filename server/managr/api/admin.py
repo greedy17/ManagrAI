@@ -15,11 +15,6 @@ class CustomAccount(admin.ModelAdmin):
     list_display = ('name', 'url',)
 
 
-class CustomLead(admin.ModelAdmin):
-    model = Account
-    list_display = ('account', 'organization',)
-
-
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 

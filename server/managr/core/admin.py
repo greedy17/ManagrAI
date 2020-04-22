@@ -12,7 +12,6 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': (
             'password',
             'last_login',
-            'is_staff',
             'first_name',
             'last_name',
             'email',
@@ -27,14 +26,12 @@ class CustomUserAdmin(UserAdmin):
     )
 
     list_display = (
-        'is_active',
         'email',
         'first_name',
         'last_name'
     )
 
     list_display_links = (
-        'is_active',
         'email',
         'first_name',
         'last_name',

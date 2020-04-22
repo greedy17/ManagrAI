@@ -57,6 +57,7 @@ class UserManager(BaseUserManager):
         """Create a superuser with the given email and password."""
         extra_fields['is_staff'] = True
         extra_fields['is_superuser'] = True
+        extra_fields['state'] = STATE_ACTIVE
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -84,9 +85,10 @@ class User(AbstractUser, TimeStampModel):
         help_text=('The magic token is a randomly-generated uuid that can be '
                    'used to identify the user in a non-password based login flow. ')
     )
+    # may need to make this a property as it keeps re-running a migration
     magic_token_expiration = models.DateTimeField(
         help_text='The datetime when the magic token is expired.',
-        default=timezone.now()+timedelta(days=30)
+        null=True
     )
 
     objects = UserManager()
@@ -103,6 +105,9 @@ class User(AbstractUser, TimeStampModel):
 
     @property
     def magic_token_expired(self):
+        if not self.magic_token_expiration:
+            self.magic_token_expiration = timezone.now()+timedelta(days=30)
+
         now = timezone.now()
         return now > self.magic_token_expiration
 

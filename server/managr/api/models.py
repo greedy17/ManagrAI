@@ -1,5 +1,7 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
+
+
 # Create your models here.
 
 
@@ -12,8 +14,6 @@ ACCOUNT_TYPES = (
 STATE_ACTIVE = 'ACTIVE'
 STATE_INACTIVE = 'INACTIVE'
 STATE_CHOCIES = ((STATE_ACTIVE, 'Active'), (STATE_INACTIVE, 'Inactive'))
-
-LEAD_RANK_CHOCIES = [(i, i) for i in range(5)]
 
 
 class Organization(TimeStampModel):

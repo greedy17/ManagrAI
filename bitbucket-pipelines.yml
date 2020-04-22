@@ -53,7 +53,7 @@ pipelines:
   # Insert other test or build pipelines here as appropriate.
   # NOTE: If this is not a Vue app, then disable the 'vueAppBuild' and 'e2eTests' steps in the pipelines below.
   pull-requests:
-    "**":
+    '**':
       - parallel:
           - step: *vueAppBuild
           - step: *e2eTests
