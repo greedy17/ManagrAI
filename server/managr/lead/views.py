@@ -258,6 +258,46 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     def get_queryset(self):
         return Reminder.objects.for_user(self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        """ can create multiple leads """
+        user = request.user
+        # check if lead is in users lead list
+        leads = request.data.get('leads', [])
+        created = list()
+        if len(leads) < 1:
+            raise ValidationError({'detail': 'lead or leads required'})
+        for lead in leads:
+            try:
+                Lead.objects.for_user(
+                    request.user).get(pk=lead)
+            except Lead.DoesNotExist:
+                raise PermissionDenied()
+            data = request.data.get('reminders', None)
+            data['lead'] = lead
+            data['created_by'] = user.id
+
+            serializer = self.serializer_class(
+                data=data, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            created.append(serializer.data)
+            return Response(data=created, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        """ can create multiple leads """
+        user = request.user
+        # remove any lead info
+        data = dict(request.data.get('reminders'))
+        data.pop('lead', None)
+        data.pop('created_by', None)
+        data['updated_by'] = user
+        reminder = self.get_object()
+        serializer = self.serializer_class(reminder,
+                                           data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 
 class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)

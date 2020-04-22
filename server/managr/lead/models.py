@@ -237,8 +237,8 @@ class ReminderQuerySet(models.QuerySet):
 
 
 class Reminder(TimeStampModel):
-    """ 
-        Reminders are like notes they are created with a date time, a title and content 
+    """
+        Reminders are like notes they are created with a date time, a title and content
         Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
 
     """
@@ -246,20 +246,27 @@ class Reminder(TimeStampModel):
     content = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
     completed = models.BooleanField(default=False)
+    # TODO: - will build this out on a separate branch
     notification = models.ForeignKey(
         'Notification', on_delete=models.CASCADE, related_name="reminders", null=True)
     lead = models.ForeignKey(
         'Lead', on_delete=models.CASCADE, related_name="reminders", null=True)
     objects = ReminderQuerySet.as_manager()
+    created_by = models.ForeignKey(
+        'core.User', on_delete=models.CASCADE, null=True)
+
+    last_updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ['-datetime_created']
 
 
 class Notification(TimeStampModel):
-    """ 
+    """
         There are various types of notifications (that are not going to be built until V2) in order to handle all notification in one central location we are creating a quick version here
-        One of those notifications is a reminder, in order to be reminded of a reminder it must have a notification attached to it. 
+        One of those notifications is a reminder, in order to be reminded of a reminder it must have a notification attached to it.
 
     """
     notify_at = models.DateTimeField(null=True, help_text="Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time\
