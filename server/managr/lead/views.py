@@ -243,3 +243,12 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+
+class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = ReminderSerializer
+
+    def get_queryset(self):
+        return Reminder.objects.for_user(self.request.user)
