@@ -171,7 +171,7 @@ class Note(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
     updated_by = models.ForeignKey(
-        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL, lead_name="updated_notes")
+        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
         'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
 

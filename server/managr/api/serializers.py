@@ -2,11 +2,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Organization, Account, Contact
 
+
 from rest_framework import (
     status, filters, permissions
 )
-
-
 from rest_framework.response import Response
 
 
@@ -17,8 +16,9 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            '__all__'
+            'name', 'state', 'action_choices',
         )
+        read_only_fields = ('action_choices',)
 
 
 class AccountRefSerializer(serializers.ModelSerializer):
@@ -33,13 +33,6 @@ class AccountRefSerializer(serializers.ModelSerializer):
 class OrganizationSerializer(serializers.ModelSerializer):
     """ Only Super Users can create, edit and delete Organizations """
 
-    def create(self, validated_data):
-        # only superusers can create new organizations
-        if not self.context['request'].user.is_superuser:
-            raise ValidationError(detail="Not Authorized")
-
-        return Organization.objects.create(**validated_data)
-
     accounts_ref = AccountRefSerializer(
         many=True, source='accounts', read_only=True)
 
@@ -48,7 +41,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'state', 'accounts', 'accounts_ref', 'action_choices',
         )
-        read_only_fields = ('accounts', )
+        read_only_fields = ('accounts', 'action_choices', )
 
 
 class AccountSerializer(serializers.ModelSerializer):

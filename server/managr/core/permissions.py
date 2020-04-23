@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
 from managr.lead.models import Lead, List
+from managr.api.models import Organization
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -19,6 +20,7 @@ class IsOrganizationManager(permissions.BasePermission):
 
 class IsSalesPerson(permissions.BasePermission):
     def has_permission(self, request, view):
+
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError('Authentication Required.')
@@ -60,6 +62,10 @@ def list_permissions(self, request, view, obj):
             return True
 
 
+def org_permissions(self, request, view, obj):
+    return IsOrganizationManager()
+
+
 class CanEditResourceOrReadOnly(permissions.BasePermission):
     """ 
         Most resources allow read access to all but write access to only an owner
@@ -79,6 +85,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
             return lead_permissions(self, request, view, obj)
         elif isinstance(obj, List):
             return list_permissions(self, request, view, obj)
+        elif isinstance(obj, Organization):
+            return org_permissions(self, request, view, obj)
         else:
             return False
 
@@ -87,3 +95,16 @@ class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return user.is_superuser
+
+
+class SuperUserCreateOnly(permissions.BasePermission):
+    """ only super_user can create organization 
+        OrgMangers can edit org 
+        all else can view own org
+    """
+
+    def has_permission(self, request, view):
+        if view.action == 'create':
+            return request.user.is_superuser
+        else:
+            return True
