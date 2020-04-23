@@ -32,15 +32,15 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .contact-information {
+  @include base-font-styles();
   display: flex;
   flex-flow: column;
   box-sizing: border-box;
   padding-left: 0.5rem;
   margin-bottom: 1rem;
-
-  font-family: $base-font-family, $backup-base-font-family;
 }
 
 .container {

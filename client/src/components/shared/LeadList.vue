@@ -58,14 +58,11 @@ export default {
 
 .list-name {
   @include pointer-on-hover();
+  @include base-font-styles();
   width: 90%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
   font-weight: bold;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $dark-gray-blue;
   text-decoration: underline;
 }

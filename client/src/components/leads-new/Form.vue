@@ -136,7 +136,7 @@ export default {
   margin-bottom: 1rem;
 
   label {
-    font-family: $base-font-family, $backup-base-font-family;
+    @include base-font-styles();
     color: $main-font-gray;
     font-weight: bold;
     margin-bottom: 1rem;

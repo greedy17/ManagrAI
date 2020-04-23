@@ -1,15 +1,13 @@
 @import '../variables';
+@import './utils';
 
 @mixin input-field() {
+  @include base-font-styles();
   border-radius: 4px;
   background-color: $off-white;
   border: none;
   box-sizing: border-box;
   padding: 3%;
-  font-family: $base-font-family, $backup-base-font-family;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.29;
   letter-spacing: 0.5px;
   color: $base-gray;
@@ -21,12 +19,9 @@
   }
 
   &::placeholder {
+    @include base-font-styles();
     opacity: 0.5;
-    font-family: $base-font-family, $backup-base-font-family;
     font-size: 14px;
-    font-weight: normal;
-    font-stretch: normal;
-    font-style: normal;
     line-height: 1.29;
     letter-spacing: 0.5px;
     color: $base-gray;

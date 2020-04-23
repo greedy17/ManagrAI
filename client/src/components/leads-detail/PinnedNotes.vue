@@ -35,18 +35,15 @@ export default {
 @import '@/styles/mixins/utils';
 
 .pinned-notes {
+  @include base-font-styles();
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px $soft-gray;
   background-color: $white;
   display: flex;
   flex-flow: column;
   width: 100%;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 14px;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 

@@ -29,6 +29,7 @@
         <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
         <input
           :class="{ hidden: currentStep < 2 }"
+          ref="passwordInput"
           v-model="password"
           type="password"
           placeholder="password"
@@ -84,10 +85,9 @@ export default {
       checkStatusPromise
         .then(() => {
           this.currentStep = 2
-          let loginForm = document.querySelector('form')
           // setTimeout(..., 0) is used to focus once JS Stack is clear -- for some reason this is needed, even though the
-          // element is already on the DOM by this point (it is always present, see template)
-          setTimeout(() => loginForm[1].focus(), 0)
+          // element is already on the DOM by this point (it is always present, see template).
+          setTimeout(() => this.$refs.passwordInput.focus(), 0)
         })
         .catch(error => {
           if (error.response.status >= 500) {
@@ -174,6 +174,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
 
 .login {
   height: inherit;
@@ -190,17 +191,18 @@ export default {
 }
 
 h2 {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
+  font-weight: bold;
   color: $main-font-gray;
   text-align: center;
 }
 
 form {
+  @include standard-border();
   margin-top: 3.125rem;
   width: 31.25rem;
   height: 18.75rem;
   background-color: $white;
-  border-radius: 5px;
   display: flex;
   flex-flow: column;
   align-items: center;

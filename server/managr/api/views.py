@@ -30,7 +30,7 @@ from managr.core.permissions import (
 class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = OrganizationSerializer
-    permissions_class = (IsSuperUser | IsOrganizationManager,)
+    permissions_classes = (IsSuperUser | IsOrganizationManager,)
 
     def get_queryset(self):
         if self.request.user.is_superuser:

@@ -17,3 +17,11 @@
 @mixin standard-border() {
     border: 1px solid $soft-gray;
 }
+
+@mixin base-font-styles() {
+    font-family: $base-font-family, $backup-base-font-family;
+    font-weight: normal;
+    font-stretch: normal;
+    font-style: normal;
+    letter-spacing: normal;
+}

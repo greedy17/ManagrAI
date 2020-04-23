@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     # Local
     'managr.core',
     'managr.api',
+    'managr.lead',
     # Django
     'django.contrib.admin',
     'django.contrib.auth',
