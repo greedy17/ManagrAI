@@ -8,6 +8,15 @@ from .models import Lead
 
 
 class LeadFilterSet(FilterSet):
+    on_list = django_filters.CharFilter(method="list_count")
+
     class Meta:
         model = Lead
-        fields = ['rating', ]
+        fields = ['rating', 'on_list']
+
+    def list_count(self, queryset, name, value):
+        """ filter leads by list count """
+        if value.strip().lower() == 'true':
+            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0)
+        else:
+            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1)

@@ -128,7 +128,7 @@ class List(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     last_updated_at = models.DateTimeField(auto_now=True)
-    leads = models.ManyToManyField('Lead', blank=True)
+    leads = models.ManyToManyField('Lead', blank=True, related_name="lists")
     organization = models.ForeignKey(
         'api.Organization', blank=False, null=True, on_delete=models.SET_NULL, related_name="lists")
 

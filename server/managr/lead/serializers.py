@@ -30,9 +30,19 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class ListSerializer(serializers.ModelSerializer):
+    """ 
+        In order to offer leads of a list as a paginated result set for the frontend
+        we have decided to return only minimal list info and have the frontend then retrieve leads specific to a list
+        as per our discussion with William and Bruno
+    """
+    lead_count = serializers.SerializerMethodField()
+
     class Meta:
         model = List
-        fields = ('__all__')
+        fields = ('id', 'title', 'lead_count',)
+
+    def get_lead_count(self, obj):
+        return obj.leads.count()
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -85,7 +95,7 @@ class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
-                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref', 'actions', 'actions_ref',)
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref', 'actions', 'actions_ref', 'lists',)
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
         read_only_fields = ('closing_amount', 'contract',
                             'forecast', 'actions',)
