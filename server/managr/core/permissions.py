@@ -30,7 +30,7 @@ class IsSalesPerson(permissions.BasePermission):
 
 def lead_permissions(self, request, view, obj):
     # currently checking organization.accounts.all() but have changed this to use a quersyset on a seperate branch
-    if request.user.organization.accounts.filter(pk=obj.account.id).exists():
+    if not request.user.organization.accounts.filter(pk=obj.account_id).exists():
         # check to make sure user is part of org and account is in org
         raise PermissionDenied()
     if view.action == 'un_claim':

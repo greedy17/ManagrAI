@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Organization, Account, Contact
+from managr.lead.models import ActionChoice
 
 
 from rest_framework import (
@@ -9,16 +10,25 @@ from rest_framework import (
 from rest_framework.response import Response
 
 
+class ActionChoiceRefSerializer(serializers.ModelSerializer):
+    """
+        Read Only Ref Serializer for ActionChoices Tied to an Organization
+    """
+    class Meta:
+        model = ActionChoice
+        fields = ('title', 'description',)
+
+
 class OrganizationRefSerializer(serializers.ModelSerializer):
-    """ Read Only Serializer for ref of the organization used for UserSerializer
+    """ 
+        Read Only Serializer for ref of the organization used for UserSerializer
     """
 
     class Meta:
         model = Organization
         fields = (
-            'name', 'state', 'action_choices',
+            'id', 'name', 'state',
         )
-        read_only_fields = ('action_choices',)
 
 
 class AccountRefSerializer(serializers.ModelSerializer):
@@ -27,7 +37,7 @@ class AccountRefSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Account
-        fields = ('__all__')
+        fields = ('id', 'name', 'organization',)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -35,11 +45,13 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     accounts_ref = AccountRefSerializer(
         many=True, source='accounts', read_only=True)
+    action_choices_ref = ActionChoiceRefSerializer(
+        source="action_choices", many=True, read_only=True)
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'name', 'state', 'accounts', 'accounts_ref', 'action_choices',
+            'id', 'name', 'state', 'accounts', 'accounts_ref', 'action_choices', 'action_choices_ref',
         )
         read_only_fields = ('accounts', 'action_choices', )
 

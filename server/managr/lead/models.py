@@ -60,7 +60,7 @@ class LeadQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(account__organization=user.organization)
+            return self.filter(account__organization=user.organization_id)
         else:
             return None
 
@@ -118,7 +118,7 @@ class ListQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(created_by__organization=user.organization)
+            return self.filter(created_by__organization=user.organization_id)
         else:
             return None
 
@@ -159,7 +159,7 @@ class NoteQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(created_by__organization=user.organization)
+            return self.filter(created_by__organization=user.organization_id)
         else:
             return None
 
@@ -188,7 +188,7 @@ class ForecastQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(lead__account__organization=user.organization)
+            return self.filter(lead__account__organization=user.organization_id)
         else:
             return None
 
@@ -248,7 +248,7 @@ class ActionChoiceQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(organization=user.organization.id)
+            return self.filter(organization=user.organization_id)
         else:
             return None
 
@@ -271,7 +271,7 @@ class ActionQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(action_type__organization=user.organization)
+            return self.filter(action_type__organization=user.organization_id)
         else:
             return None
 

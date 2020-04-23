@@ -21,7 +21,7 @@ class OrganizationQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(id=user.organization.id)
+            return self.filter(pk=user.organization_id)
         else:
             return None
 
@@ -35,6 +35,8 @@ class Organization(TimeStampModel):
     name = models.CharField(max_length=255, null=True)
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
+
+    objects = OrganizationQuerySet.as_manager()
 
     @property
     def deactivate_all_users(self):
