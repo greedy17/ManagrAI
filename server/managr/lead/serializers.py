@@ -29,6 +29,17 @@ class NoteSerializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 
+class LeadListRefSerializer(serializers.ModelSerializer):
+    # will be changing Lists to LeadLists to make it clearer that we are referring to a lead list model
+    """ 
+        Read Only Ref Serializer for Leads since we are not returning the list of leads in the LeadList Serializer 
+
+    """
+    class Meta:
+        model = Lead
+        fields = ('__all__')
+
+
 class ListSerializer(serializers.ModelSerializer):
     """ 
         In order to offer leads of a list as a paginated result set for the frontend
@@ -39,7 +50,12 @@ class ListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = List
-        fields = ('id', 'title', 'lead_count',)
+        fields = ('id', 'title', 'lead_count', 'leads',
+                  'created_by',)
+        extra_kwargs = {
+            'leads': {'write_only': True},
+            'created_by': {'write_only': True}
+        }
 
     def get_lead_count(self, obj):
         return obj.leads.count()
