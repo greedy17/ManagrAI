@@ -21,10 +21,12 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
-from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer
+from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
+from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
+    ReminderSerializer, ActionChoiceSerializer, ActionSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet
+from managr.api.models import Contact, Account
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -48,15 +50,29 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # set its status to claimed by assigning it to the user that created the lead
         data['claimed_by'] = user.id
         # check account to be sure it is in org
-        accounts_in_user_org = [
-            str(acc.id) for acc in user.organization.accounts.all()]
-        account_for = request.data.get('account')
-        if account_for not in accounts_in_user_org:
-            raise PermissionDenied({'detail': 'Account Not In Organization'})
+        account_for = request.data.get('account', None)
+        if not account_for:
+            raise ValidationError(
+                detail={'detail': 'Account is a required field'})
+        # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
+        try:
+            account = Account.objects.for_user(
+                request.user).get(pk=account_for)
+        except Account.DoesNotExist:
+            raise PermissionDenied()
+        # if there are contacts to be added first check that contacts exist or create them
+        contacts = data.pop('linked_contacts', [])
+        contact_list = list()
+        for contact in contacts:
+            c, created = Contact.objects.for_user(request.user).get_or_create(
+                email=contact['email'], defaults={'account': account})
+            contact_list.append(c.id)
         serializer = self.serializer_class(
             data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        # get the newly created object and
+        serializer.instance.linked_contacts.add(*contact_list)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -82,16 +98,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
         data['last_updated_by'] = user.id
         # set its status to claimed by assigning it to the user that created the lead
-        # check account to be sure it is in org
-        accounts_in_user_org = [
-            str(acc.id) for acc in user.organization.accounts.all()]
-        # if lead account is being updated make sure the account it is added to is in the Users org
-        account_for = request.data.get('account', None)
-
-        if account_for:
-            if account_for not in accounts_in_user_org:
-                raise PermissionDenied(
-                    {'detail': 'Account Not In Organization'})
         serializer = self.serializer_class(current_lead,
                                            data=data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -114,8 +120,11 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.claimed_by = None
         lead.status = None
         # delete lead forecast
-        if lead.forecast:
-            Forecast.objects.get(lead=lead).delete()
+        try:
+            if lead.forecast:
+                Forecast.objects.get(lead=lead).delete()
+        except Forecast.DoesNotExist:
+            pass
         lead.amount = 0
         lead.save()
         # register an action
@@ -138,7 +147,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # make sure the user that created the lead is in the created_by field
 
         data['created_by'] = user.id
-        data['organization'] = user.organization.id
+        data['organization'] = user.organization_id
         serializer = self.serializer_class(
             data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -187,7 +196,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
             l.save()
 
         serializer = self.serializer_class(self.get_object())
-        return Response(serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):

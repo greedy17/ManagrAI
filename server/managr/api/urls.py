@@ -26,7 +26,9 @@ router.register(r'lists/remove-from-list',
 router.register(r'lists', lead_views.ListViewSet, 'lists')
 router.register(r'notes', lead_views.NoteViewSet, 'notes')
 router.register(r'forecasts', lead_views.ForecastViewSet, 'forecast')
-
+router.register(r'actionchoices',
+                lead_views.ActionChoiceViewSet, 'actionchoices')
+router.register(r'actions', lead_views.ActionViewSet, 'actions')
 
 router.register(r'actionchoices',
                 lead_views.ActionChoiceViewSet, 'actionchoices')
@@ -39,5 +41,3 @@ urlpatterns = [
 
 ]
 urlpatterns += router.urls
-
-print(urlpatterns)

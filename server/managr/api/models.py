@@ -16,6 +16,16 @@ STATE_INACTIVE = 'INACTIVE'
 STATE_CHOCIES = ((STATE_ACTIVE, 'Active'), (STATE_INACTIVE, 'Inactive'))
 
 
+class OrganizationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(pk=user.organization_id)
+        else:
+            return None
+
+
 class Organization(TimeStampModel):
     """ 
         Main Organization Model, Users are attached to this model 
@@ -26,6 +36,9 @@ class Organization(TimeStampModel):
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
 
+    objects = OrganizationQuerySet.as_manager()
+
+    @property
     def deactivate_all_users(self):
         """ helper method to deactivate all users if their org is deactivated """
         users = User.objects.filter(organization=self)
@@ -38,6 +51,17 @@ class Organization(TimeStampModel):
 
     class Meta:
         ordering = ['-datetime_created']
+
+
+class AccountQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(organization=user.organization)
+        else:
+            return None
 
 
 class Account(TimeStampModel):
@@ -53,12 +77,23 @@ class Account(TimeStampModel):
         'Organization', related_name="accounts", blank=False, null=True, on_delete=models.CASCADE)
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
+    objects = AccountQuerySet.as_manager()
 
     def __str__(self):
         return f'{self.name} {self.organization}'
 
     class Meta:
         ordering = ['-datetime_created']
+
+
+class ContactQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(account__organization=user.organization)
+        else:
+            return None
 
 
 class Contact(TimeStampModel):
@@ -73,14 +108,15 @@ class Contact(TimeStampModel):
     phone_number_2 = models.CharField(max_length=255)
     account = models.ForeignKey(
         'Account', related_name="contacts", blank=False, null=True, on_delete=models.CASCADE)
-    organization = models.ForeignKey(
-        'Organization', related_name="contacts", blank=False, null=False, on_delete=models.CASCADE)
+    objects = ContactQuerySet.as_manager()
 
     class Meta:
         ordering = ['first_name']
+        # unique hash so only one contact with the same email can be created per account
+        unique_together = ('email', 'account',)
 
     def __str__(self):
-        return f'{self.full_name} {self.account} {self.organization}'
+        return f'{self.full_name} {self.account}'
 
     @property
     def full_name(self):

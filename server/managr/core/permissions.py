@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
 from managr.lead.models import Lead, List
+from managr.api.models import Organization
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -19,6 +20,7 @@ class IsOrganizationManager(permissions.BasePermission):
 
 class IsSalesPerson(permissions.BasePermission):
     def has_permission(self, request, view):
+
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError('Authentication Required.')
@@ -27,7 +29,8 @@ class IsSalesPerson(permissions.BasePermission):
 
 
 def lead_permissions(self, request, view, obj):
-    if not obj.account in request.user.organization.accounts.all():
+    # currently checking organization.accounts.all() but have changed this to use a quersyset on a seperate branch
+    if not request.user.organization.accounts.filter(pk=obj.account_id).exists():
         # check to make sure user is part of org and account is in org
         raise PermissionDenied()
     if view.action == 'un_claim':
@@ -49,6 +52,7 @@ def lead_permissions(self, request, view, obj):
 
 
 def list_permissions(self, request, view, obj):
+    # permissions for LeadsLists
     if obj.organization != request.user.organization:
         return False
     else:
@@ -56,6 +60,10 @@ def list_permissions(self, request, view, obj):
             return False
         else:
             return True
+
+
+def org_permissions(self, request, view, obj):
+    return IsOrganizationManager()
 
 
 class CanEditResourceOrReadOnly(permissions.BasePermission):
@@ -77,6 +85,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
             return lead_permissions(self, request, view, obj)
         elif isinstance(obj, List):
             return list_permissions(self, request, view, obj)
+        elif isinstance(obj, Organization):
+            return org_permissions(self, request, view, obj)
         else:
             return False
 
@@ -85,3 +95,16 @@ class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return user.is_superuser
+
+
+class SuperUserCreateOnly(permissions.BasePermission):
+    """ only super_user can create organization 
+        OrgMangers can edit org 
+        all else can view own org
+    """
+
+    def has_permission(self, request, view):
+        if view.action == 'create':
+            return request.user.is_superuser
+        else:
+            return True
