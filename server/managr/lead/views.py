@@ -22,7 +22,8 @@ from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
 from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, ReminderSerializer, ActionChoiceSerializer, ActionSerializer
+from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
+    ReminderSerializer, ActionChoiceSerializer, ActionSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet
 from managr.api.models import Contact, Account
@@ -119,8 +120,11 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.claimed_by = None
         lead.status = None
         # delete lead forecast
-        if lead.forecast:
-            Forecast.objects.get(lead=lead).delete()
+        try:
+            if lead.forecast:
+                Forecast.objects.get(lead=lead).delete()
+        except Forecast.DoesNotExist:
+            pass
         lead.amount = 0
         lead.save()
         # register an action
@@ -143,7 +147,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # make sure the user that created the lead is in the created_by field
 
         data['created_by'] = user.id
-        data['organization'] = user.organization.id
+        data['organization'] = user.organization_id
         serializer = self.serializer_class(
             data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)

@@ -24,30 +24,16 @@ from .serializers import OrganizationSerializer, AccountSerializer, ContactSeria
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
 from managr.core.permissions import (
-    IsOrganizationManager, IsSuperUser, IsSalesPerson)
+    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, SuperUserCreateOnly,)
 
 
 class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = OrganizationSerializer
-    permissions_classes = (IsSuperUser | IsOrganizationManager,)
+    permission_classes = (SuperUserCreateOnly, CanEditResourceOrReadOnly,)
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return Organization.objects.all()
-        elif self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.organization:
-            return Organization.objects.filter(pk=self.request.user.organization.id)
-        else:
-            return None
-
-    def destroy(self, request, *args, **kwargs):
-        """ Only Super Users can delete Organizations """
-        user = request.user
-        if user.is_superuser:
-            Organization.objects.get(pk=kwargs['pk']).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
+        return Organization.objects.for_user(self.request.user)
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):
