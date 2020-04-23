@@ -86,15 +86,14 @@ class Lead(TimeStampModel):
         'api.Contact', related_name='leads', blank=True)
     # last_updated will also be updated when an action is taken
     last_updated_at = models.DateTimeField(auto_now=True)
-    contract = models.CharField(
-        max_length=500, blank=True, help_text="This field will be populated from either an upload of a document or selecting an existing document")
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
-        "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL)
+        "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL, help_text="Leads can only be closed by their claimed_by rep")
     last_updated_by = models.ForeignKey(
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL)
-    # will also need actions_allowed
+    contract = models.ForeignKey(
+        'File', on_delete=models.SET_NULL, related_name="contract", null=True)
     objects = LeadQuerySet.as_manager()
 
     class Meta:
@@ -134,6 +133,17 @@ class List(TimeStampModel):
         ordering = ['-datetime_created']
 
 
+class FileQuerySet(models.QuerySet):
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(uploaded_by__organization=user.organization_id)
+        else:
+            return None
+
+
 class File(TimeStampModel):
     doc_type = models.CharField(
         max_length=255, choices=lead_constants.FILE_TYPE_CHOICES, default=lead_constants.FILE_TYPE_OTHER)
@@ -143,6 +153,8 @@ class File(TimeStampModel):
         'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
     file = models.FileField(
         upload_to=datetime_appended_filepath, max_length=255, null=True)
+
+    objects = FileQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']

@@ -20,13 +20,14 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
-    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,)
+    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
 from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet
 from managr.api.models import Contact, Account
+from managr.lead import constants as lead_constants
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -88,12 +89,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
-        status_update = request.data.get('state', None)
-        if current_lead.status != LEAD_STATUS_CLOSED and (not status_update or status_update != LEAD_STATUS_CLOSED):
-            if 'closing_amount' in request.data.keys():
-                del data['closing_amount']
-            if 'contract' in request.data.keys():
-                del data['contract']
         # make sure the user that created the lead is not updated as well
 
         data['last_updated_by'] = user.id
@@ -129,6 +124,32 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         lead.save()
         # register an action
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['POST'], permission_classes=(IsSalesPerson,), detail=True, url_path="close")
+    def close_lead(self, request, *args, **kwargs):
+        # TODO - add CanEditResourceOrReadOnly to ensure person closing is person claiming
+        # TODO - make sure only one doc_type contract exists maybe using a clean
+        """ special endpoint to close a lead, requires a contract and a closing amount 
+            file must already exist and is expected to be identified by an ID
+        """
+        try:
+            closing_amount = request.data.get('closing_amount')
+            contract = request.data.get('contract')
+        except KeyError:
+            raise ValidationError({
+                'detail': 'Closing Amount and Contract Required'})
+        lead = self.get_object()
+        try:
+            contract = File.objects.get(pk=contract)
+        except File.DoesNotExist:
+            raise ValidationError({'detail': 'File Not Found'})
+        contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
+        contract.save()
+        lead.status = LEAD_STATUS_CLOSED
+        lead.closing_amount = closing_amount
+        lead.contract = contract
+        lead.save()
+        return Response()
 
 
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -371,9 +392,21 @@ class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Upd
 class FileViewSet(mixins.CreateModelMixin,
                   mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
-    queryset = File.objects.all()
+    """ 
+        files can currently not be deleted
+
+    """
     serializer_class = FileSerializer
     permission_classes = (IsSalesPerson,)
+
+    def get_queryset(self):
+        return File.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        data = dict(request.data)
+        data['uploaded_by'] = request.user_id
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)

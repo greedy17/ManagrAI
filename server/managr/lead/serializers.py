@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder, ActionChoice, Action
 from managr.api.serializers import AccountRefSerializer
 from managr.core.models import User
+from managr.lead import constants as lead_constants
 
 from rest_framework import (
     status, filters, permissions
@@ -31,8 +32,8 @@ class NoteSerializer(serializers.ModelSerializer):
 
 class LeadListRefSerializer(serializers.ModelSerializer):
     # will be changing Lists to LeadLists to make it clearer that we are referring to a lead list model
-    """ 
-        Read Only Ref Serializer for Leads since we are not returning the list of leads in the LeadList Serializer 
+    """
+        Read Only Ref Serializer for Leads since we are not returning the list of leads in the LeadList Serializer
 
     """
     class Meta:
@@ -41,7 +42,7 @@ class LeadListRefSerializer(serializers.ModelSerializer):
 
 
 class ListSerializer(serializers.ModelSerializer):
-    """ 
+    """
         In order to offer leads of a list as a paginated result set for the frontend
         we have decided to return only minimal list info and have the frontend then retrieve leads specific to a list
         as per our discussion with William and Bruno
@@ -62,9 +63,29 @@ class ListSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
+
+    def to_internal_value(self, data):
+
+        internal_data = super().to_internal_value(data)
+        doc_type = internal_data.get('doc_type', None)
+        if doc_type == lead_constants.FILE_TYPE_CONTRACT:
+            # check to see if the lead is closed  or closing
+
+            lead = internal_data.get('lead', None)
+            if not lead:
+                raise serializers.ValidationError(
+                    {'detail': 'Lead Required'})
+            lead_status = lead.status
+            if not lead_status == lead_constants.LEAD_STATUS_CLOSED:
+
+                raise serializers.ValidationError(
+                    {'non_field_errors': 'Lead Not Closed'})
+
+            return internal_data
+
     class Meta:
         model = File
-        fields = ('__all__')
+        fields = ('id', 'doc_type', 'uploaded_by', 'lead', 'file')
 
 
 class ForecastSerializer(serializers.ModelSerializer):
@@ -98,6 +119,10 @@ class ActionSerializer(serializers.ModelSerializer):
 
 
 class LeadSerializer(serializers.ModelSerializer):
+    def validate_status(self, value):
+        if value == lead_constants.LEAD_STATUS_CLOSED:
+            raise serializers.ValidationError(
+                {'detail': 'Cannot Close Lead by Update'})
 
     account_ref = AccountRefSerializer(
         source='account', read_only=True)
@@ -111,7 +136,8 @@ class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
-                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by', 'last_updated_by_ref', 'actions', 'actions_ref', 'lists',)
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at', 'contract',  'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'last_updated_by',
+                  'last_updated_by_ref', 'actions', 'actions_ref', 'lists', 'files',)
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
         read_only_fields = ('closing_amount', 'contract',
-                            'forecast', 'actions',)
+                            'forecast', 'actions', 'files',)
