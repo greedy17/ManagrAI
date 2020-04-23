@@ -4,7 +4,8 @@ import 'babel-polyfill'
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import AlertAlert from 'vue-alert-alert'
+// import AlertAlert from 'vue-alert-alert'
+import AlertAlert from '@/services/alertAlert'
 
 import App from './App'
 import router from './router'
