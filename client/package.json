@@ -19,7 +19,6 @@
     "lodash.isplainobject": "^4.0.6",
     "randomcolor": "^0.5.3",
     "vue": "^2.5.22",
-    "vue-alert-alert": "^1.0.1",
     "vue-router": "^3.0.2",
     "vue-scrollto": "^2.17.1",
     "vue-template-compiler": "^2.6.10",

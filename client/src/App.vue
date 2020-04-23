@@ -24,6 +24,10 @@ export default {
       VueScrollTo.scrollTo('#app', 200)
     },
   },
+  // NOTE(Bruno 4-23-20): for testing purposes
+  created() {
+    window.alert = this.$Alert.alert
+  },
 }
 </script>
 
