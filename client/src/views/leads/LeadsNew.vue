@@ -1,13 +1,10 @@
 <template>
   <div class="leads-new">
-    <NavBar />
-    <div class="page-content">
-      <div class="steps-pane">
-        <FormSteps :currentStep="currentStep" />
-      </div>
-      <div class="form-pane">
-        <Form :currentStep="currentStep" @clicked-next="showForm2" />
-      </div>
+    <div class="steps-pane">
+      <FormSteps :currentStep="currentStep" />
+    </div>
+    <div class="form-pane">
+      <Form :currentStep="currentStep" @clicked-next="showForm2" />
     </div>
   </div>
 </template>
@@ -39,17 +36,9 @@ export default {
 @import '@/styles/variables';
 
 .leads-new {
-  min-height: 100vh;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  padding-top: 2%;
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
+  padding-top: 2%;
 }
 
 .steps-pane {

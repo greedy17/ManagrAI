@@ -1,29 +1,26 @@
 <template>
   <div class="leads-detail">
-    <NavBar />
-    <div class="page-content">
-      <div class="left-pane">
-        <ToolBar class="toolbar" :lead="lead" />
+    <div class="left-pane">
+      <ToolBar class="toolbar" :lead="lead" />
+    </div>
+    <div class="center-pane">
+      <LeadBanner :lead="lead" @clicked-release="releaseLead" />
+      <div class="container">
+        <LeadActions :lead="lead" />
       </div>
-      <div class="center-pane">
-        <LeadBanner :lead="lead" @clicked-release="releaseLead" />
-        <div class="container">
-          <LeadActions :lead="lead" />
-        </div>
-        <div class="container">
-          <PinnedNotes />
-        </div>
-        <div class="container">
-          <img
-            class="additional-information"
-            src="@/assets/images/screenshots/AdditionalInformation.png"
-            alt="screenshot"
-          />
-        </div>
+      <div class="container">
+        <PinnedNotes />
       </div>
-      <div class="right-pane">
-        <LeadInsights :lead="lead" />
+      <div class="container">
+        <img
+          class="additional-information"
+          src="@/assets/images/screenshots/AdditionalInformation.png"
+          alt="screenshot"
+        />
       </div>
+    </div>
+    <div class="right-pane">
+      <LeadInsights :lead="lead" />
     </div>
   </div>
 </template>
@@ -85,14 +82,6 @@ export default {
 @import '@/styles/variables';
 
 .leads-detail {
-  height: inherit;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
 }

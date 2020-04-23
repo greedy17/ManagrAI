@@ -1,44 +1,39 @@
 <template>
   <div class="login">
-    <NavBar />
-    <div class="page-content">
-      <form @submit.prevent="handleSubmit">
-        <h2>Login</h2>
-        <div class="errors">
-          <!-- client side validations -->
-          <div
-            v-if="
-              isFormValid !== null &&
-                !isFormValid &&
-                (errors.emailIsBlank || errors.passwordIsBlank)
-            "
-          >
-            {{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.
-          </div>
-          <!-- server side validations -->
-          <div v-else-if="success !== null && !success && errors[500]">
-            Something went wrong, please retry later.
-          </div>
-          <div v-else-if="success !== null && !success && errors.invalidEmail">
-            Invalid or not-activated email.
-          </div>
-          <div v-else-if="success !== null && !success && errors.invalidPassword">
-            Incorrect password.
-          </div>
+    <form @submit.prevent="handleSubmit">
+      <h2>Login</h2>
+      <div class="errors">
+        <!-- client side validations -->
+        <div
+          v-if="
+            isFormValid !== null && !isFormValid && (errors.emailIsBlank || errors.passwordIsBlank)
+          "
+        >
+          {{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.
         </div>
-        <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
-        <input
-          :class="{ hidden: currentStep < 2 }"
-          ref="passwordInput"
-          v-model="password"
-          type="password"
-          placeholder="password"
-        />
-        <button type="submit">
-          {{ currentStep === 1 ? 'Next' : 'Login' }}
-        </button>
-      </form>
-    </div>
+        <!-- server side validations -->
+        <div v-else-if="success !== null && !success && errors[500]">
+          Something went wrong, please retry later.
+        </div>
+        <div v-else-if="success !== null && !success && errors.invalidEmail">
+          Invalid or not-activated email.
+        </div>
+        <div v-else-if="success !== null && !success && errors.invalidPassword">
+          Incorrect password.
+        </div>
+      </div>
+      <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
+      <input
+        :class="{ hidden: currentStep < 2 }"
+        ref="passwordInput"
+        v-model="password"
+        type="password"
+        placeholder="password"
+      />
+      <button type="submit">
+        {{ currentStep === 1 ? 'Next' : 'Login' }}
+      </button>
+    </form>
   </div>
 </template>
 
@@ -177,14 +172,6 @@ export default {
 @import '@/styles/mixins/utils';
 
 .login {
-  height: inherit;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
   justify-content: center;

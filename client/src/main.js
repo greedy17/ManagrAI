@@ -11,7 +11,6 @@ import router from './router'
 import store from './store'
 
 // global components
-import NavBar from '@/components/NavBar'
 import LoadingSVG from '@/components/LoadingSVG'
 
 // filters
@@ -22,7 +21,6 @@ Vue.config.productionTip = false
 Vue.use(Vuex)
 Vue.use(AlertAlert)
 
-Vue.component('NavBar', NavBar)
 Vue.component('LoadingSVG', LoadingSVG)
 
 Vue.filter('currency', currencyFilter)
