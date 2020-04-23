@@ -243,3 +243,82 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+
+class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsOrganizationManager, )
+    serializer_class = ActionChoiceSerializer
+
+    def get_queryset(self):
+        return ActionChoice.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = dict(request.data)
+        data['organization'] = user.organization.id
+        serializer = self.serializer_class(
+            data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        # make sure org is not changed
+        data = dict(request.data)
+        if 'organization' in data.keys():
+            del data['organization']
+
+        serializer = self.serializer_class(self.get_object(), data=data, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = ActionSerializer
+
+    def get_queryset(self):
+        return Action.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """ expects array of multiple leads to apply action to -- design decision to create separate actions per lead """
+        action_data = request.data.get('action', None)
+        if not action_data:
+            raise ValidationError(detail={'detail': 'Action data Required'})
+
+        leads = request.data.get('leads', None)
+        if not leads:
+            raise ValidationError(detail={'detail': 'Leads Required'})
+        created = list()
+        for l in leads:
+            d = {"action_type": action_data['action_type'],
+                 "action_detail": action_data['action_detail'], "lead": l}
+            serializer = self.serializer_class(
+                data=d, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            created.append(serializer.data)
+        return Response({"created": created})
+
+    def update(self, request, *args, **kwargs):
+        data = dict(request.data)
+        serializer = self.serializer_class(self.get_object(), data=data, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+class FileViewSet(mixins.CreateModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
+                  viewsets.GenericViewSet):
+    queryset = File.objects.all()
+    serializer_class = FileSerializer
+    permission_classes = (IsSalesPerson,)

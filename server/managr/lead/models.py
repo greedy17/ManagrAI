@@ -1,15 +1,12 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
 from managr.core.models import STATE_ACTIVE
-
+from managr.lead import constants as lead_constants
+from managr.utils.misc import datetime_appended_filepath
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
-FILE_TYPE_OTHER = 'OTHER'
-FILE_TYPE_CONTRACT = 'CONTRACT'
-FILE_TYPE_CHOICES = (
-    (FILE_TYPE_OTHER, 'Other'),
-    (FILE_TYPE_CONTRACT, 'Contract')
-)
+
+
 LEAD_STATE_CLAIMED = 'CLAIMED'
 LEAD_STATE_UNCLAIMED = 'UNCLAIMED'
 LEAD_STATE_CHOICES = ((LEAD_STATE_CLAIMED, 'Claimed'),
@@ -133,15 +130,14 @@ class List(TimeStampModel):
 
 
 class File(TimeStampModel):
-    name = models.CharField(max_length=255, blank=False, null=False)
-    link = models.CharField(max_length=500, blank=False, null=False)
-    last_update_at = models.DateTimeField(auto_now=True)
-    type = models.CharField(
-        max_length=255, choices=FILE_TYPE_CHOICES, default=FILE_TYPE_OTHER)
+    doc_type = models.CharField(
+        max_length=255, choices=lead_constants.FILE_TYPE_CHOICES, default=lead_constants.FILE_TYPE_OTHER)
     uploaded_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
-    uploaded_to = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL)
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded")
+    lead = models.ForeignKey(
+        'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
+    file = models.FileField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True)
 
     class Meta:
         ordering = ['-datetime_created']

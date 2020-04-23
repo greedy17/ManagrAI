@@ -28,6 +28,10 @@ router.register(r'notes', lead_views.NoteViewSet, 'notes')
 router.register(r'forecasts', lead_views.ForecastViewSet, 'forecast')
 
 
+router.register(r'actionchoices',
+                lead_views.ActionChoiceViewSet, 'actionchoices')
+router.register(r'actions', lead_views.ActionViewSet, 'actions')
+router.register(r'files', lead_views.FileViewSet, 'files')
 urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view()),
     url(r'account-status/', core_views.get_account_status,
@@ -35,4 +39,5 @@ urlpatterns = [
 
 ]
 urlpatterns += router.urls
+
 print(urlpatterns)
