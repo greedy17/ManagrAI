@@ -81,7 +81,7 @@ class FileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'non_field_errors': 'Lead Not Closed'})
 
-            return internal_data
+        return internal_data
 
     class Meta:
         model = File

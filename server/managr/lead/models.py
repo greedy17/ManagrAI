@@ -1,6 +1,5 @@
 from django.db import models
-from managr.core.models import UserManager, TimeStampModel
-from managr.core.models import STATE_ACTIVE
+from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.lead import constants as lead_constants
 from managr.utils.misc import datetime_appended_filepath
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
@@ -95,6 +94,13 @@ class Lead(TimeStampModel):
     contract = models.ForeignKey(
         'File', on_delete=models.SET_NULL, related_name="contract", null=True)
     objects = LeadQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        """ unset other files that are set as contract """
+        if self.contract:
+            File.objects.filter(doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id).exclude(
+                pk=self.contract.id).update(doc_type="OTHER")
+        return super(Lead, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['-datetime_created']
