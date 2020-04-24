@@ -4,13 +4,14 @@
     <div class="page-content">
       <div class="toolbar-pane">
         <div class="view-toggle-container">
-          <span :class="{ bold: view === FORECAST }">Forecast</span>
+          <span class="left" :class="{ bold: view === FORECAST }">Forecast</span>
           <ToggleCheckBox
+            class="checkbox"
             :checked="view === LISTS"
             @toggle-view="toggleView"
             :eventToEmit="'toggle-view'"
           />
-          <span :class="{ bold: view === LISTS }">Lists</span>
+          <span class="right" :class="{ bold: view === LISTS }">Lists</span>
         </div>
 
         <ListsToolBar v-if="view === LISTS" class="toolbar" />
@@ -131,8 +132,18 @@ export default {
   width: 78%;
   margin: 0 0 1rem auto;
 
-  span {
-    margin: 0 1rem;
+  .left,
+  .right {
+    width: 4rem;
+    margin: 0 auto;
+  }
+
+  .left {
+    text-align: right;
+  }
+
+  .checkbox {
+    margin: 0 auto;
   }
 
   .bold {

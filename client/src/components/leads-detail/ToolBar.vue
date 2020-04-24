@@ -7,8 +7,8 @@
     <div class="lead-name">
       <h2>{{ lead.name }}</h2>
     </div>
-    <div class="rank">
-      <LeadRank :label="true" :rank="lead.rank" />
+    <div class="rating">
+      <LeadRating :label="true" :rating="lead.rating" />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
@@ -24,7 +24,7 @@
     </div>
     <!--- focus --- -->
     <div class="account-link">Account</div>
-    <div class="amount section-shadow">Amount: {{ formattedAmount }}</div>
+    <div class="amount section-shadow">Amount: {{ lead.amount | currency }}</div>
     <!--- focus --- -->
     <div class="contacts">
       <div class="header section-shadow">
@@ -58,18 +58,19 @@
 </template>
 
 <script>
-import LeadRank from '@/components/shared/LeadRank'
+import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
-import currencyFormatter from '@/services/currencyFormatter'
+
 const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
 const exampleContacts = [
   { id: 1, name: 'Sara Smith' },
   { id: 2, name: 'Jake Murray' },
 ]
+
 export default {
   name: 'ToolBar',
   components: {
-    LeadRank,
+    LeadRating,
     LeadList,
   },
   props: {
@@ -81,11 +82,6 @@ export default {
   data() {
     return { exampleFiles, exampleContacts }
   },
-  computed: {
-    formattedAmount() {
-      return currencyFormatter.format(this.lead.amount)
-    },
-  },
 }
 </script>
 
@@ -94,9 +90,10 @@ export default {
 @import '@/styles/mixins/utils';
 
 .toolbar {
+  @include standard-border();
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-
+  height: 50rem;
   width: 100%;
   display: flex;
   flex-flow: column;
@@ -136,7 +133,7 @@ export default {
   text-align: center;
 }
 
-.rank {
+.rating {
   display: flex;
   flex-flow: row;
   justify-content: center;
