@@ -1,5 +1,5 @@
 <template>
-  <div class="aa-container">
+  <div class="aa-container" :style="{ top: `${top}px` }">
     <transition-group name="fade" tag="div">
       <alert-alert-item
         v-for="alert in alerts"
@@ -19,6 +19,15 @@ import AlertAlertItem from './AlertAlertItem.vue'
 
 export default {
   name: 'AlertAlert',
+  components: {
+    AlertAlertItem,
+  },
+  props: {
+    top: {
+      required: true,
+      type: Number,
+    },
+  },
   data() {
     return {
       alert: Alert.create({
@@ -33,21 +42,17 @@ export default {
       removeAlert(alert)
     },
   },
-  components: {
-    AlertAlertItem,
-  },
 }
 </script>
 
 <style scoped>
-/*
- * Fixed container for alerts
- */
 .aa-container {
-  position: fixed;
-  top: 12px;
-  right: 12px;
+  width: 100vw;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
   z-index: 1001;
+  position: fixed;
 }
 
 /*

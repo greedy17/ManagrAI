@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <NavBar />
+    <NavBar ref="navbarComponent" />
+    <alert-alert :top="alertTop" />
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
     <div class="page-content">
@@ -13,10 +14,17 @@
 import VueScrollTo from 'vue-scrollto'
 import NavBar from '@/components/NavBar'
 
+const oneRem = parseInt(window.getComputedStyle(document.querySelector('html')).fontSize)
+
 export default {
   name: 'app',
   components: {
     NavBar,
+  },
+  data() {
+    return {
+      alertTop: oneRem * 0.5,
+    }
   },
   watch: {
     // When route changes, scroll to the top
@@ -24,9 +32,26 @@ export default {
       VueScrollTo.scrollTo('#app', 200)
     },
   },
-  // NOTE(Bruno 4-23-20): for testing purposes
-  created() {
-    window.alert = this.$Alert.alert
+  mounted() {
+    window.alert = this.$Alert.alert // NOTE(Bruno 4-23-20): this line is for testing purposes & should be removed
+    document.addEventListener('scroll', this.setAlertTop)
+    if (!this.setAlertTop()) {
+      this.alertTop = oneRem * 0.5
+    }
+  },
+  methods: {
+    setAlertTop() {
+      let nav = this.$refs.navbarComponent.$refs.nav
+      let navRect = nav.getBoundingClientRect()
+      let calculation = navRect.height + navRect.top
+      let calculationIsValid = navRect.height >= calculation && calculation >= 0
+
+      if (calculationIsValid) {
+        this.alertTop = calculation + oneRem * 0.5
+      }
+
+      return calculationIsValid
+    },
   },
 }
 </script>

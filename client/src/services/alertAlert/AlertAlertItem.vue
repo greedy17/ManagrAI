@@ -14,39 +14,42 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
+
 .aa-notification {
-  width: 300px;
-  min-height: 40px;
+  @include pointer-on-hover();
+  width: 96vw;
+  min-height: 1.5rem;
   padding: 12px;
-  margin-bottom: 12px;
-  background-color: white;
-  border-left: 4px solid rgb(100, 100, 100);
+  margin-bottom: 0.5rem;
   border-radius: 3px;
-  cursor: pointer;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 
   transition: all 200ms ease-in-out;
 }
 
-.aa-notification:hover {
-  transform: scale(1.06);
-  box-shadow: 3px 3px 4px rgba(0, 0, 0, 0.6);
-}
-
 .aa-notification.info {
-  border-left-color: rgb(100, 100, 200);
+  background-color: rgba($color: $dark-gray-blue, $alpha: 0.9);
+  border: 1px solid rgba($color: $dark-gray-blue, $alpha: 1.2);
+  color: $white;
 }
 
 .aa-notification.success {
-  border-left-color: rgb(100, 180, 100);
+  background-color: rgba($color: $lime-green, $alpha: 0.9);
+  border: 1px solid rgba($color: $lime-green, $alpha: 1.2);
+  color: $main-font-gray;
 }
 
 .aa-notification.warning {
-  border-left-color: rgb(230, 215, 100);
+  background-color: rgba($color: $yellow, $alpha: 0.9);
+  border: 1px solid rgba($color: $yellow, $alpha: 1.2);
+  color: $main-font-gray;
 }
 
 .aa-notification.error {
-  border-left-color: rgb(230, 100, 100);
+  background-color: rgba($color: $coral, $alpha: 0.9);
+  border: 1px solid rgba($color: $coral, $alpha: 1.2);
+  color: $main-font-gray;
 }
 </style>

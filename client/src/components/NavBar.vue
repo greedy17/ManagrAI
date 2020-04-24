@@ -1,5 +1,5 @@
 <template>
-  <nav>
+  <nav ref="nav">
     <div class="logo">
       <span class="name">
         managr
