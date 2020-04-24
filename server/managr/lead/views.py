@@ -128,7 +128,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     @action(methods=['POST'], permission_classes=(IsSalesPerson,), detail=True, url_path="close")
     def close_lead(self, request, *args, **kwargs):
         # TODO - add CanEditResourceOrReadOnly to ensure person closing is person claiming
-        # TODO - make sure only one doc_type contract exists maybe using a clean
         """ special endpoint to close a lead, requires a contract and a closing amount 
             file must already exist and is expected to be identified by an ID
         """
@@ -392,20 +391,23 @@ class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Upd
 class FileViewSet(mixins.CreateModelMixin,
                   mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
-                  viewsets.GenericViewSet):
+                  viewsets.GenericViewSet,
+                  mixins.DestroyModelMixin):
     """ 
         files can currently not be deleted
 
     """
     serializer_class = FileSerializer
-    permission_classes = (IsSalesPerson,)
+    permission_classes = (IsSuperUser | IsSalesPerson,)
 
     def get_queryset(self):
         return File.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        data = dict(request.data)
-        data['uploaded_by'] = request.user_id
+        data = request.data
+        lead = data['lead']
+
+        data['uploaded_by'] = request.user.id
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
