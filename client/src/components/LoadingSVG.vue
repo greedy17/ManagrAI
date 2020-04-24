@@ -111,6 +111,4 @@ export default {
     transform: translateX(-50%);
   }
 }
-
-.
 </style>
