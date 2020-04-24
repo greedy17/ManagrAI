@@ -1,10 +1,8 @@
 <template>
-  <div
-    class="aa-notification"
-    :class="alert.type"
-    @click="$emit('remove', alert)"
-    v-html="alert.message"
-  ></div>
+  <div class="aa-notification" :class="alert.type" @click="$emit('remove', alert)">
+    <div class="content" v-html="alert.message" />
+    <img class="icon" alt="icon" src="@/assets/images/remove.svg" />
+  </div>
 </template>
 
 <script>
@@ -25,8 +23,9 @@ export default {
   padding: 12px;
   margin-bottom: 0.5rem;
   border-radius: 3px;
-
   transition: all 200ms ease-in-out;
+  display: flex;
+  flex-flow: row;
 }
 
 .aa-notification.info {
@@ -51,5 +50,10 @@ export default {
   background-color: rgba($color: $coral, $alpha: 0.9);
   border: 1px solid rgba($color: $coral, $alpha: 1.2);
   color: $main-font-gray;
+}
+
+.icon {
+  margin-left: auto;
+  height: 1.2rem;
 }
 </style>
