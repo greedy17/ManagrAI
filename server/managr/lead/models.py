@@ -47,10 +47,10 @@ ACTIVITY_CHOICES = (
                                           'Note Deleted'), (ACTIVITY_NOTE_UPDATED, 'Note Updated')
 )
 # WILL RESULT IN A SNOOZE FOR A CERTAIN TIME BEFORE IT REMINDS AGAIN
-REMINDER_ACTION_SNOOZE = 'SNOOZE'
-REMINDER_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
-REMINDER_ACTION_CHOICES = (
-    (REMINDER_ACTION_SNOOZE, 'Snooze'), (REMINDER_ACTION_VIEWED, 'Viewed')
+NOTIFICATION_ACTION_SNOOZE = 'SNOOZE'
+NOTIFICATION_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
+NOTIFICATION_ACTION_CHOICES = (
+    (NOTIFICATION_ACTION_SNOOZE, 'Snooze'), (NOTIFICATION_ACTION_VIEWED, 'Viewed')
 )
 
 
@@ -128,9 +128,8 @@ class List(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     last_updated_at = models.DateTimeField(auto_now=True)
-    leads = models.ManyToManyField('Lead', blank=True)
-    organization = models.ForeignKey(
-        'api.Organization', blank=False, null=True, on_delete=models.SET_NULL, related_name="lists")
+    leads = models.ManyToManyField('Lead', blank=True, related_name="lists")
+    # TODO: Will remove this on separate branch
 
     objects = ListQuerySet.as_manager()
 
@@ -225,22 +224,58 @@ class ActivityLog(TimeStampModel):
         ordering = ['-datetime_created']
 
 
+class ReminderQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(lead__account__organization=user.organization)
+        else:
+            return None
+
+
 class Reminder(TimeStampModel):
-    """ 
-        Reminders are like notes they are created with a date time, a title and content 
+    """
+        Reminders are like notes they are created with a date time, a title and content
         Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
 
     """
     title = models.CharField(max_length=255, blank=True, null=False)
     content = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
-    datetime_reminded = models.DateTimeField()
-    action_taken = models.CharField(
-        max_length=255, blank=False, null=True, choices=REMINDER_ACTION_CHOICES)
-    action_taken_at = models.DateTimeField(null=True)
+    completed = models.BooleanField(default=False)
+    # TODO: - will build this out on a separate branch
+    notification = models.ForeignKey(
+        'Notification', on_delete=models.CASCADE, related_name="reminders", null=True)
+    lead = models.ForeignKey(
+        'Lead', on_delete=models.CASCADE, related_name="reminders", null=True)
+    objects = ReminderQuerySet.as_manager()
+    created_by = models.ForeignKey(
+        'core.User', on_delete=models.CASCADE, null=True)
+
+    last_updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ['-datetime_created']
+
+
+class Notification(TimeStampModel):
+    """
+        There are various types of notifications (that are not going to be built until V2) in order to handle all notification in one central location we are creating a quick version here
+        One of those notifications is a reminder, in order to be reminded of a reminder it must have a notification attached to it.
+
+    """
+    notify_at = models.DateTimeField(null=True, help_text="Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time\
+                                        if it is an email it can be the time the email is received ")
+    notified_at = models.DateTimeField(null=True,
+                                       help_text="date time when the notification was executed")
+    title = models.CharField(max_length=255, null=True,
+                             help_text="a title for the notification")
+    action_taken = models.CharField(
+        choices=NOTIFICATION_ACTION_CHOICES, max_length=255, null=True, help_text="a notification can either be viewed or snoozed")
 
 
 class ActionChoiceQuerySet(models.QuerySet):
