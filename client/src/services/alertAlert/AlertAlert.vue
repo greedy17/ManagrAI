@@ -14,32 +14,45 @@
 
 <script>
 import store, { removeAlert } from './store'
-import Alert from './alerts'
 import AlertAlertItem from './AlertAlertItem.vue'
+
+const oneRem = parseInt(window.getComputedStyle(document.querySelector('html')).fontSize)
 
 export default {
   name: 'AlertAlert',
   components: {
     AlertAlertItem,
   },
-  props: {
-    top: {
-      required: true,
-      type: Number,
-    },
-  },
   data() {
     return {
-      alert: Alert.create({
-        type: 'info',
-        message: 'test',
-      }),
+      top: oneRem * 0.5,
       alerts: store.alerts,
+    }
+  },
+  mounted() {
+    window.alert = this.$Alert.alert // NOTE(Bruno 4-23-20): this line is for testing purposes & should be removed
+    // NOTE (Bruno 4-23-20): this listener is never removed because it only needs to be removed on tab close, which happens automatically
+    document.addEventListener('scroll', this.setTop)
+    if (!this.setTop()) {
+      this.top = oneRem * 0.5
     }
   },
   methods: {
     handleRemove(alert) {
       removeAlert(alert)
+    },
+    setTop() {
+      // NOTE (Bruno 4-23-20): querySelector is used to gather DOM data, not manipulate it
+      let nav = document.querySelector('#nav')
+      let navRect = nav.getBoundingClientRect()
+      let calculation = navRect.height + navRect.top
+      let calculationIsValid = navRect.height >= calculation && calculation >= 0
+
+      if (calculationIsValid) {
+        this.top = calculation + oneRem * 0.5
+      }
+
+      return calculationIsValid
     },
   },
 }
