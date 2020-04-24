@@ -30,7 +30,6 @@ export default {
     }
   },
   mounted() {
-    window.alert = this.$Alert.alert // NOTE(Bruno 4-23-20): this line is for testing purposes & should be removed
     // NOTE (Bruno 4-23-20): this listener is never removed because it only needs to be removed on tab close, which happens automatically
     document.addEventListener('scroll', this.setTop)
     if (!this.setTop()) {

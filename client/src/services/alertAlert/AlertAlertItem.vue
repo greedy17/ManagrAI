@@ -20,7 +20,7 @@ export default {
   @include pointer-on-hover();
   width: 96vw;
   min-height: 1.5rem;
-  padding: 12px;
+  padding: 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 3px;
   transition: all 200ms ease-in-out;
@@ -52,8 +52,12 @@ export default {
   color: $main-font-gray;
 }
 
+.content {
+  flex-grow: 1;
+}
+
 .icon {
-  margin-left: auto;
+  margin-left: 0.75rem;
   height: 1.2rem;
 }
 </style>
