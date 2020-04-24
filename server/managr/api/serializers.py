@@ -1,23 +1,33 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Organization, Account, Contact
+from managr.lead.models import ActionChoice
+
 
 from rest_framework import (
     status, filters, permissions
 )
-
-
 from rest_framework.response import Response
 
 
+class ActionChoiceRefSerializer(serializers.ModelSerializer):
+    """
+        Read Only Ref Serializer for ActionChoices Tied to an Organization
+    """
+    class Meta:
+        model = ActionChoice
+        fields = ('title', 'description',)
+
+
 class OrganizationRefSerializer(serializers.ModelSerializer):
-    """ Read Only Serializer for ref of the organization used for UserSerializer
+    """ 
+        Read Only Serializer for ref of the organization used for UserSerializer
     """
 
     class Meta:
         model = Organization
         fields = (
-            '__all__'
+            'id', 'name', 'state',
         )
 
 
@@ -27,28 +37,23 @@ class AccountRefSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Account
-        fields = ('__all__')
+        fields = ('id', 'name', 'organization',)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
     """ Only Super Users can create, edit and delete Organizations """
 
-    def create(self, validated_data):
-        # only superusers can create new organizations
-        if not self.context['request'].user.is_superuser:
-            raise ValidationError(detail="Not Authorized")
-
-        return Organization.objects.create(**validated_data)
-
     accounts_ref = AccountRefSerializer(
         many=True, source='accounts', read_only=True)
+    action_choices_ref = ActionChoiceRefSerializer(
+        source="action_choices", many=True, read_only=True)
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'name', 'state', 'accounts', 'accounts_ref'
+            'id', 'name', 'state', 'accounts', 'accounts_ref', 'action_choices', 'action_choices_ref',
         )
-        read_only_fields = ('accounts', )
+        read_only_fields = ('accounts', 'action_choices', )
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -74,14 +79,6 @@ class AccountSerializer(serializers.ModelSerializer):
 
 class ContactSerializer(serializers.ModelSerializer):
 
-    def to_internal_value(self, data):
-        """ Backend Setting organization by default """
-        internal_data = super().to_internal_value(data)
-        internal_data.update(
-            {'organization': self.context['request'].user.organization})
-
-        return internal_data
-
     def validate_account(self, value):
         accounts = Account.objects.filter(
             organization=self.context['request'].user.organization)
@@ -92,10 +89,9 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = ('id', 'full_name', 'first_name', 'last_name', 'email',
-                  'phone_number_1', 'phone_number_2', 'account', 'organization',)
+                  'phone_number_1', 'phone_number_2', 'account',)
         extra_kwargs = {
             'email': {'required': True},
             'phone_number_1': {'required': True},
             'account': {'required': True}
         }
-        read_only_fields = ('organization',)

@@ -46,6 +46,12 @@ ACTIVITY_CHOICES = (
     (ACTIVITY_NOTE_ADDED, 'Note Added'), (ACTIVITY_NOTE_DELETED,
                                           'Note Deleted'), (ACTIVITY_NOTE_UPDATED, 'Note Updated')
 )
+# WILL RESULT IN A SNOOZE FOR A CERTAIN TIME BEFORE IT REMINDS AGAIN
+REMINDER_ACTION_SNOOZE = 'SNOOZE'
+REMINDER_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
+REMINDER_ACTION_CHOICES = (
+    (REMINDER_ACTION_SNOOZE, 'Snooze'), (REMINDER_ACTION_VIEWED, 'Viewed')
+)
 
 
 class LeadQuerySet(models.QuerySet):
@@ -54,7 +60,7 @@ class LeadQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(account__organization=user.organization)
+            return self.filter(account__organization=user.organization_id)
         else:
             return None
 
@@ -112,7 +118,7 @@ class ListQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(created_by__organization=user.organization)
+            return self.filter(created_by__organization=user.organization_id)
         else:
             return None
 
@@ -124,7 +130,7 @@ class List(TimeStampModel):
     last_updated_at = models.DateTimeField(auto_now=True)
     leads = models.ManyToManyField('Lead', blank=True)
     organization = models.ForeignKey(
-        'api.Organization', blank=False, null=True, on_delete=models.SET_NULL)
+        'api.Organization', blank=False, null=True, on_delete=models.SET_NULL, related_name="lists")
 
     objects = ListQuerySet.as_manager()
 
@@ -139,9 +145,9 @@ class File(TimeStampModel):
     type = models.CharField(
         max_length=255, choices=FILE_TYPE_CHOICES, default=FILE_TYPE_OTHER)
     uploaded_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded")
     uploaded_to = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL)
+        'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
 
     class Meta:
         ordering = ['-datetime_created']
@@ -153,7 +159,7 @@ class NoteQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(created_by__organization=user.organization)
+            return self.filter(created_by__organization=user.organization_id)
         else:
             return None
 
@@ -163,7 +169,7 @@ class Note(TimeStampModel):
     content = models.CharField(max_length=255, blank=False, null=False)
     last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
     updated_by = models.ForeignKey(
         "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
@@ -182,7 +188,7 @@ class ForecastQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.state == STATE_ACTIVE:
-            return self.filter(lead__account__organization=user.organization)
+            return self.filter(lead__account__organization=user.organization_id)
         else:
             return None
 
@@ -220,11 +226,64 @@ class ActivityLog(TimeStampModel):
 
 
 class Reminder(TimeStampModel):
-    reminder = models.CharField(max_length=255, blank=True, null=False)
+    """ 
+        Reminders are like notes they are created with a date time, a title and content 
+        Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
+
+    """
+    title = models.CharField(max_length=255, blank=True, null=False)
+    content = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
     datetime_reminded = models.DateTimeField()
-    viewed = models.BooleanField(default=False)
-    # add viewed_at
+    action_taken = models.CharField(
+        max_length=255, blank=False, null=True, choices=REMINDER_ACTION_CHOICES)
+    action_taken_at = models.DateTimeField(null=True)
+
+    class Meta:
+        ordering = ['-datetime_created']
+
+
+class ActionChoiceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(organization=user.organization_id)
+        else:
+            return None
+
+
+class ActionChoice(TimeStampModel):
+    title = models.CharField(max_length=255, blank=True, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+    organization = models.ForeignKey(
+        'api.Organization', on_delete=models.CASCADE, related_name="action_choices")
+
+    objects = ActionChoiceQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['title']
+
+
+class ActionQuerySet(models.QuerySet):
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(action_type__organization=user.organization_id)
+        else:
+            return None
+
+
+class Action(TimeStampModel):
+    action_type = models.ForeignKey(
+        'ActionChoice', on_delete=models.PROTECT, null=True, blank=False)
+    action_detail = models.CharField(max_length=255, blank=True, null=False)
+    lead = models.ForeignKey(
+        'Lead', on_delete=models.CASCADE, null=True, blank=False, related_name="actions")
+    last_updated_at = models.DateTimeField(auto_now=True)
+    objects = ActionQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']
