@@ -55,11 +55,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='files_uploaded', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
-            model_name='list',
-            name='organization',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lists', to='api.Organization'),
-        ),
-        migrations.AlterField(
             model_name='note',
             name='created_by',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_notes', to=settings.AUTH_USER_MODEL),
