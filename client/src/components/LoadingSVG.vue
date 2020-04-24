@@ -2,7 +2,7 @@
   <div class="svg-container">
     <svg
       class="svg"
-      :style="{ stroke: randomThemeColor }"
+      :style="{ stroke: color }"
       width="200"
       height="200"
       viewBox="0 0 45 45"
@@ -82,13 +82,12 @@ const LIME_GREEN = '#78c142' // $lime-green
 const YELLOW = '#fab900' // $yellow
 const CORAL = '#fa646a' // $coral
 const themeColors = [DARK_GREEN, LIME_GREEN, YELLOW, CORAL]
+const color = themeColors[Math.floor(Math.random() * themeColors.length)]
 
 export default {
   name: 'LoadingSVG',
-  computed: {
-    randomThemeColor() {
-      return themeColors[Math.floor(Math.random() * themeColors.length)]
-    },
+  data() {
+    return { color }
   },
 }
 </script>
@@ -112,4 +111,6 @@ export default {
     transform: translateX(-50%);
   }
 }
+
+.
 </style>
