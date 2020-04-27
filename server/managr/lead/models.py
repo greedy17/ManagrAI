@@ -83,8 +83,6 @@ class Lead(TimeStampModel):
         "core.User", related_name="created_leads", null=True, on_delete=models.SET_NULL)
     linked_contacts = models.ManyToManyField(
         'api.Contact', related_name='leads', blank=True)
-    # last_updated will also be updated when an action is taken
-    last_updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
@@ -129,7 +127,6 @@ class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
-    last_updated_at = models.DateTimeField(auto_now=True)
     leads = models.ManyToManyField('Lead', blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
@@ -178,7 +175,6 @@ class NoteQuerySet(models.QuerySet):
 class Note(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     content = models.CharField(max_length=255, blank=False, null=False)
-    last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
     updated_by = models.ForeignKey(
@@ -206,7 +202,6 @@ class ForecastQuerySet(models.QuerySet):
 
 class Forecast(TimeStampModel):
     """ only one forecast per lead is allowed """
-    last_updated_at = models.DateTimeField(auto_now=True)
     lead = models.OneToOneField('Lead', null=True, on_delete=models.CASCADE)
     forecast = models.CharField(
         choices=FORECAST_CHOICES, default=FORECAST_NA, max_length=255, null=True)
@@ -224,7 +219,6 @@ class ActivityLog(TimeStampModel):
     """
     activity = models.CharField(
         max_length=255, choices=ACTIVITY_CHOICES, help_text="records any actions taken on a lead")
-    last_updated_at = models.DateTimeField(auto_now=True)
     action_taken_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     lead = models.ForeignKey(
@@ -266,7 +260,6 @@ class Reminder(TimeStampModel):
     created_by = models.ForeignKey(
         'core.User', on_delete=models.CASCADE, null=True)
 
-    last_updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
 
@@ -329,7 +322,6 @@ class Action(TimeStampModel):
     action_detail = models.CharField(max_length=255, blank=True, null=False)
     lead = models.ForeignKey(
         'Lead', on_delete=models.CASCADE, null=True, blank=False, related_name="actions")
-    last_updated_at = models.DateTimeField(auto_now=True)
     objects = ActionQuerySet.as_manager()
 
     class Meta:
