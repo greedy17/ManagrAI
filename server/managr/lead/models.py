@@ -91,8 +91,6 @@ class Lead(TimeStampModel):
         "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL, help_text="Leads can only be closed by their claimed_by rep")
     last_updated_by = models.ForeignKey(
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL)
-    contract = models.ForeignKey(
-        'File', on_delete=models.SET_NULL, related_name="contract", null=True)
     objects = LeadQuerySet.as_manager()
 
     class Meta:
@@ -108,9 +106,10 @@ class Lead(TimeStampModel):
     @property
     def contract_file(self):
         """ property to define contract file if a lead is not closed it has not contract """
-        if self.status == LEAD_STATUS_CLOSED:
+        if self.status == lead_constants.LEAD_STATUS_CLOSED:
             try:
-                File.objects.get(doc_type=lead_constants.FILE_TYPE_CONTRACT)
+                return File.objects.get(doc_type=lead_constants.FILE_TYPE_CONTRACT).id
+
             except File.DoesNotExist:
                 return None
         return None
