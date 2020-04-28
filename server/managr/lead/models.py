@@ -95,13 +95,6 @@ class Lead(TimeStampModel):
         'File', on_delete=models.SET_NULL, related_name="contract", null=True)
     objects = LeadQuerySet.as_manager()
 
-    def save(self, *args, **kwargs):
-        """ unset other files that are set as contract """
-        if self.contract:
-            File.objects.filter(doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id).exclude(
-                pk=self.contract.id).update(doc_type="OTHER")
-        return super(Lead, self).save(*args, **kwargs)
-
     class Meta:
         ordering = ['-datetime_created']
 
@@ -111,6 +104,16 @@ class Lead(TimeStampModel):
         if self.claimed_by:
             return True
         return False
+
+    @property
+    def contract_file(self):
+        """ property to define contract file if a lead is not closed it has not contract """
+        if self.status == LEAD_STATUS_CLOSED:
+            try:
+                File.objects.get(doc_type=lead_constants.FILE_TYPE_CONTRACT)
+            except File.DoesNotExist:
+                return None
+        return None
 
 
 class ListQuerySet(models.QuerySet):
@@ -154,11 +157,18 @@ class File(TimeStampModel):
     uploaded_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded")
     lead = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
+        'Lead', null=True, on_delete=models.CASCADE, related_name="files")
     file = models.FileField(
         upload_to=datetime_appended_filepath, max_length=255, null=True)
 
     objects = FileQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        """ unset other files that are set as contract """
+        if self.doc_type == lead_constants.FILE_TYPE_CONTRACT:
+            File.objects.filter(doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.lead.id).exclude(
+                pk=self.id).update(doc_type="OTHER")
+        return super(File, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['-datetime_created']

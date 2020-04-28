@@ -146,7 +146,6 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         contract.save()
         lead.status = LEAD_STATUS_CLOSED
         lead.closing_amount = closing_amount
-        lead.contract = contract
         lead.save()
         return Response()
 
@@ -405,10 +404,8 @@ class FileViewSet(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        lead = data['lead']
-
-        data['uploaded_by'] = request.user.id
-        serializer = self.serializer_class(data=data)
+        serializer = self.serializer_class(
+            data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)

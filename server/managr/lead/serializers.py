@@ -65,8 +65,8 @@ class ListSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
-
         internal_data = super().to_internal_value(data)
+        internal_data.update({'uploaded_by': self.context['request'].user})
         doc_type = internal_data.get('doc_type', None)
         if doc_type == lead_constants.FILE_TYPE_CONTRACT:
             # check to see if the lead is closed  or closing
