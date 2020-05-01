@@ -1,15 +1,11 @@
 from django.db import models
-from managr.core.models import UserManager, TimeStampModel
-from managr.core.models import STATE_ACTIVE
-
+from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
+from managr.lead import constants as lead_constants
+from managr.utils.misc import datetime_appended_filepath
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
-FILE_TYPE_OTHER = 'OTHER'
-FILE_TYPE_CONTRACT = 'CONTRACT'
-FILE_TYPE_CHOICES = (
-    (FILE_TYPE_OTHER, 'Other'),
-    (FILE_TYPE_CONTRACT, 'Contract')
-)
+
+
 LEAD_STATE_CLAIMED = 'CLAIMED'
 LEAD_STATE_UNCLAIMED = 'UNCLAIMED'
 LEAD_STATE_CHOICES = ((LEAD_STATE_CLAIMED, 'Claimed'),
@@ -89,15 +85,12 @@ class Lead(TimeStampModel):
         'api.Contact', related_name='leads', blank=True)
     # last_updated will also be updated when an action is taken
     last_updated_at = models.DateTimeField(auto_now=True)
-    contract = models.CharField(
-        max_length=500, blank=True, help_text="This field will be populated from either an upload of a document or selecting an existing document")
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
-        "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL)
+        "core.User", related_name="claimed_leads", null=True, on_delete=models.SET_NULL, help_text="Leads can only be closed by their claimed_by rep")
     last_updated_by = models.ForeignKey(
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL)
-    # will also need actions_allowed
     objects = LeadQuerySet.as_manager()
 
     class Meta:
@@ -109,6 +102,17 @@ class Lead(TimeStampModel):
         if self.claimed_by:
             return True
         return False
+
+    @property
+    def contract_file(self):
+        """ property to define contract file if a lead is not closed it has not contract """
+        if self.status == lead_constants.LEAD_STATUS_CLOSED:
+            try:
+                return File.objects.get(doc_type=lead_constants.FILE_TYPE_CONTRACT).id
+
+            except File.DoesNotExist:
+                return None
+        return None
 
 
 class ListQuerySet(models.QuerySet):
@@ -129,24 +133,41 @@ class List(TimeStampModel):
         "core.User", null=True, on_delete=models.SET_NULL)
     last_updated_at = models.DateTimeField(auto_now=True)
     leads = models.ManyToManyField('Lead', blank=True, related_name="lists")
-    # TODO: Will remove this on separate branch
-
     objects = ListQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']
 
 
+class FileQuerySet(models.QuerySet):
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.state == STATE_ACTIVE:
+            return self.filter(uploaded_by__organization=user.organization_id)
+        else:
+            return None
+
+
 class File(TimeStampModel):
-    name = models.CharField(max_length=255, blank=False, null=False)
-    link = models.CharField(max_length=500, blank=False, null=False)
-    last_update_at = models.DateTimeField(auto_now=True)
-    type = models.CharField(
-        max_length=255, choices=FILE_TYPE_CHOICES, default=FILE_TYPE_OTHER)
+    doc_type = models.CharField(
+        max_length=255, choices=lead_constants.FILE_TYPE_CHOICES, default=lead_constants.FILE_TYPE_OTHER)
     uploaded_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded")
-    uploaded_to = models.ForeignKey(
-        'Lead', null=True, on_delete=models.SET_NULL, related_name="files")
+    lead = models.ForeignKey(
+        'Lead', null=True, on_delete=models.CASCADE, related_name="files")
+    file = models.FileField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True)
+
+    objects = FileQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        """ unset other files that are set as contract """
+        if self.doc_type == lead_constants.FILE_TYPE_CONTRACT:
+            File.objects.filter(doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.lead.id).exclude(
+                pk=self.id).update(doc_type="OTHER")
+        return super(File, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['-datetime_created']

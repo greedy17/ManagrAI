@@ -204,7 +204,7 @@ if USE_AWS_STORAGE:
     AWS_LOCATION = os.environ.get('AWS_LOCATION', '')
 
     MEDIAFILES_LOCATION = AWS_LOCATION + '/media'
-    DEFAULT_FILE_STORAGE = 'managr.core.handlers.MediaStorage'
+    DEFAULT_FILE_STORAGE = 'managr.core.handlers.PrivateMediaStorage'
 
 # Maximum size, in bytes, of a request before it will be streamed to the
 # file system instead of into memory.
