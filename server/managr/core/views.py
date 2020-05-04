@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.db import transaction
 from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
     authentication,
@@ -78,7 +79,7 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
     def get_queryset(self):
         if self.request.user.is_superuser:
             return User.objects.all()
-        elif self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.state == STATE_ACTIVE:
+        elif self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.is_active:
             return User.objects.filter(organization=self.request.user.organization)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -104,23 +105,6 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
 
         return Response(response_data)
 
-    @action(methods=['get'], permission_classes=[IsSuperUser], detail=True, url_path='get_token')
-    def magic_token(self, request, *args, **kwargs):
-        """
-        this is a helper method to get the token for postman requests testing the user activation
-        it is currently only open to Super Users but will also allow self in the future
-        """
-        user = request.user
-        res = {}
-        if(user.is_superuser):
-            try:
-                user = User.objects.get(pk=kwargs['pk'])
-                res['magic_token'] = user.magic_token
-            except User.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-
-        return Response(res)
-
     @action(methods=['post'], permission_classes=[permissions.AllowAny], detail=True, url_path='activate')
     def activate(self, request, *args, **kwargs):
         # users should only be able to activate if they are in an invited state
@@ -133,10 +117,10 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
                 ]
             })
         try:
-            user = User.objects.get(pk=kwargs['pk'])
-            if str(user.magic_token) == str(magic_token) and not user.magic_token_expired and user.state == STATE_INVITED:
+            user = self.get_object()
+            if str(user.magic_token) == str(magic_token) and not user.magic_token_expired and user.is_invited:
                 user.set_password(password)
-                user.state = STATE_ACTIVE
+                user.is_active = True
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
                 user.save()
@@ -157,6 +141,24 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateM
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+class ActivationLinkView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, format=None, **kwargs):
+        user = None
+
+        try:
+            user = User.objects.get(email=kwargs['email'])
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if user and user.is_active:
+            return Response(data={'activation_link': user.activation_link}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def get_account_status(request):
@@ -166,7 +168,7 @@ def get_account_status(request):
 
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    if user.state == STATE_ACTIVE:
+    if user.is_active:
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)

@@ -55,7 +55,7 @@ class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(account__organization=user.organization_id)
         else:
             return None
@@ -119,7 +119,7 @@ class ListQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(created_by__organization=user.organization_id)
         else:
             return None
@@ -141,7 +141,7 @@ class FileQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(uploaded_by__organization=user.organization_id)
         else:
             return None
@@ -175,7 +175,7 @@ class NoteQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(created_by__organization=user.organization_id)
         else:
             return None
@@ -203,7 +203,7 @@ class ForecastQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(lead__account__organization=user.organization_id)
         else:
             return None
@@ -244,7 +244,7 @@ class ReminderQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(lead__account__organization=user.organization)
         else:
             return None
@@ -296,7 +296,7 @@ class ActionChoiceQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(organization=user.organization_id)
         else:
             return None
@@ -319,7 +319,7 @@ class ActionQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(action_type__organization=user.organization_id)
         else:
             return None
