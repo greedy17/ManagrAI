@@ -1,26 +1,23 @@
 <template>
   <div class="leads-index">
-    <NavBar />
-    <div class="page-content">
-      <div class="toolbar-pane">
-        <div class="view-toggle-container">
-          <span class="left" :class="{ bold: view === FORECAST }">Forecast</span>
-          <ToggleCheckBox
-            class="checkbox"
-            :checked="view === LISTS"
-            @toggle-view="toggleView"
-            :eventToEmit="'toggle-view'"
-          />
-          <span class="right" :class="{ bold: view === LISTS }">Lists</span>
-        </div>
+    <div class="toolbar-pane">
+      <div class="view-toggle-container">
+        <span class="left" :class="{ bold: view === FORECAST }">Forecast</span>
+        <ToggleCheckBox
+          class="checkbox"
+          :checked="view === LISTS"
+          @toggle-view="toggleView"
+          :eventToEmit="'toggle-view'"
+        />
+        <span class="right" :class="{ bold: view === LISTS }">Lists</span>
+      </div>
 
-        <ListsToolBar v-if="view === LISTS" class="toolbar" />
-        <ForecastToolBar v-else class="toolbar" />
-      </div>
-      <div class="lists-container-pane">
-        <ListsContainer v-if="view === LISTS" :lists="lists" />
-        <ListsContainer v-else :lists="forecastLists" />
-      </div>
+      <ListsToolBar v-if="view === LISTS" class="toolbar" />
+      <ForecastToolBar v-else class="toolbar" />
+    </div>
+    <div class="lists-container-pane">
+      <ListsContainer v-if="view === LISTS" :lists="lists" />
+      <ListsContainer v-else :lists="forecastLists" />
     </div>
   </div>
 </template>
@@ -97,17 +94,9 @@ export default {
 @import '@/styles/mixins/utils';
 
 .leads-index {
-  min-height: 100vh;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  padding-top: 2%;
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
+  padding-top: 2%;
 }
 
 .toolbar-pane {

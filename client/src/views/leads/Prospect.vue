@@ -1,13 +1,10 @@
 <template>
   <div class="prospect">
-    <NavBar />
-    <div class="page-content">
-      <div class="toolbar-pane">
-        <ToolBar />
-      </div>
-      <div class="lists-pane">
-        <AccountsContainer :accounts="accounts" />
-      </div>
+    <div class="toolbar-pane">
+      <ToolBar />
+    </div>
+    <div class="lists-pane">
+      <AccountsContainer :accounts="accounts" />
     </div>
   </div>
 </template>
@@ -40,18 +37,10 @@ export default {
 @import '@/styles/variables';
 
 .prospect {
-  min-height: 100vh;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  padding-top: 2%;
-  padding-bottom: 2%;
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
+  padding-top: 2%;
+  padding-bottom: 2%;
 }
 
 .toolbar-pane {

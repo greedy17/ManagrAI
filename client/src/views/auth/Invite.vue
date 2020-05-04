@@ -1,57 +1,54 @@
 <template>
   <div class="invite">
-    <NavBar />
-    <div class="page-content">
-      <form v-if="!success" @submit.prevent="handleInvite">
-        <h2>Invite</h2>
-        <div class="errors">
-          <!-- client side validations -->
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
-            Fields may not be blank.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch">
-            Fields must match.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
-            Must be a valid email address.
-          </div>
-          <!-- server side validations -->
-          <div v-if="success !== null && !success && errors[500]">
-            Something went wrong. Please try again later.
-          </div>
-          <div v-if="success !== null && !success && errors[400]">
-            The provided email is associated with an existing account.
-          </div>
+    <form v-if="!success" @submit.prevent="handleInvite">
+      <h2>Invite</h2>
+      <div class="errors">
+        <!-- client side validations -->
+        <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
+          Fields may not be blank.
         </div>
-        <!-- type="text" instead of type="email" so we can control UI when invalid -->
-        <input v-model="email" type="text" placeholder="email" />
-        <input v-model="emailConfirmation" type="text" placeholder="confirm email" />
-        <button type="submit">Invite</button>
-      </form>
-      <div v-else class="success-prompt">
-        <h2>Success</h2>
-        <p>
-          An invitation will be sent to:
-          <span :style="{ fontWeight: 'bold' }">{{ email }}</span
-          >.
-        </p>
-        <!-- NOTE(Bruno 4-20-20): below code is temporary, for testing on staging -->
-        <div
-          :style="{
-            wordBreak: 'all',
-            padding: '0 1rem',
-            display: 'flex',
-            flexFlow: 'column',
-            alignItems: 'center',
-            opacity: '0.4',
-          }"
-        >
-          <div>(For Testing/Staging) Link:</div>
-          {{ link }}
+        <div v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch">
+          Fields must match.
         </div>
-        <!-- end of temp code -->
-        <button @click="resetData">Send Another</button>
+        <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
+          Must be a valid email address.
+        </div>
+        <!-- server side validations -->
+        <div v-if="success !== null && !success && errors[500]">
+          Something went wrong. Please try again later.
+        </div>
+        <div v-if="success !== null && !success && errors[400]">
+          The provided email is associated with an existing account.
+        </div>
       </div>
+      <!-- type="text" instead of type="email" so we can control UI when invalid -->
+      <input v-model="email" type="text" placeholder="email" />
+      <input v-model="emailConfirmation" type="text" placeholder="confirm email" />
+      <button type="submit">Invite</button>
+    </form>
+    <div v-else class="success-prompt">
+      <h2>Success</h2>
+      <p>
+        An invitation will be sent to:
+        <span :style="{ fontWeight: 'bold' }">{{ email }}</span
+        >.
+      </p>
+      <!-- NOTE(Bruno 4-20-20): below code is temporary, for testing on staging -->
+      <div
+        :style="{
+          wordBreak: 'all',
+          padding: '0 1rem',
+          display: 'flex',
+          flexFlow: 'column',
+          alignItems: 'center',
+          opacity: '0.4',
+        }"
+      >
+        <div>(For Testing/Staging) Link:</div>
+        {{ link }}
+      </div>
+      <!-- end of temp code -->
+      <button @click="resetData">Send Another</button>
     </div>
   </div>
 </template>
@@ -149,14 +146,6 @@ export default {
 @import '@/styles/mixins/utils';
 
 .invite {
-  height: inherit;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
   justify-content: center;

@@ -30,7 +30,9 @@ export default class UserAPI {
     const data = { email, password }
     const promise = apiClient()
       .post(LOGIN_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'UserAPI.login' }))
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
+      )
     return promise
   }
 
@@ -43,7 +45,13 @@ export default class UserAPI {
     const data = { email, type, organization }
     const promise = apiClient()
       .post(INVITE_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'UserAPI.invite' }))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.invite',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
     return promise
   }
 
@@ -51,7 +59,13 @@ export default class UserAPI {
     const data = { token, password }
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
-      .catch(apiErrorHandler({ apiName: 'UserAPI.activate' }))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
     return promise
   }
 
@@ -59,7 +73,13 @@ export default class UserAPI {
     const data = { email }
     const promise = apiClient()
       .post(CHECK_STATUS_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'UserAPI.checkStatus' }))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.checkStatus',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
     return promise
   }
 }
