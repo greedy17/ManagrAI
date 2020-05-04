@@ -1,6 +1,6 @@
 <template>
   <div class="actions" :style="height">
-    <div class="actions-tab-headers">
+    <div class="actions-tab-headers section-shadow">
       <ActionTabHeader
         v-for="(tab, index) in tabs"
         :key="tab"
@@ -81,7 +81,6 @@ export default {
   height: 3rem;
   display: flex;
   flex-flow: row;
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 
 .action-tab-content {

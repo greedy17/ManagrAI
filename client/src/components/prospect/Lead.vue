@@ -8,7 +8,7 @@
       </div>
       <div class="contacts-container">
         <div v-for="contact in lead.contacts" :key="contact.id" class="contact">
-          <img class="image" src="@/assets/images/sara-smith.png" alt="contact" />
+          <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
           <span>{{ contact.name }} </span>
         </div>
       </div>
@@ -75,10 +75,7 @@ export default {
 
 .lead,
 .lead > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.9rem;
@@ -95,29 +92,22 @@ export default {
 
 .lead-name {
   @include pointer-on-hover();
+  @include base-font-styles();
   width: 20%;
   padding-left: 1%;
   height: 1rem;
-  font-family: $base-font-family, $backup-base-font-family;
   font-weight: bold;
   font-size: 14px;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.14;
-  letter-spacing: normal;
   color: $main-font-gray;
 }
 
 .lead-description {
+  @include base-font-styles();
   display: flex;
   flex-flow: column;
-  font-family: $base-font-family, $backup-base-font-family;
   font-size: 11px;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
   line-height: 1.45;
-  letter-spacing: normal;
   color: $main-font-gray;
   width: 20%;
 }

@@ -9,7 +9,13 @@ import AlertAlert from 'vue-alert-alert'
 import App from './App'
 import router from './router'
 import store from './store'
+
+// global components
 import NavBar from '@/components/NavBar'
+import LoadingSVG from '@/components/LoadingSVG'
+
+// filters
+import currencyFilter from '@/services/currency'
 
 Vue.config.productionTip = false
 
@@ -17,6 +23,9 @@ Vue.use(Vuex)
 Vue.use(AlertAlert)
 
 Vue.component('NavBar', NavBar)
+Vue.component('LoadingSVG', LoadingSVG)
+
+Vue.filter('currency', currencyFilter)
 
 /* eslint-disable no-new */
 new Vue({

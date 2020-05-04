@@ -1,19 +1,19 @@
 <template>
   <div class="contact-information">
     <div class="container">
-      <img class="image" src="@/assets/images/sara-smith.png" alt="contact" />
+      <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
       <span>{{ contact.fullName }}</span>
     </div>
     <div class="container background-color">
-      <img class="icon" src="@/assets/images/contact.svg" alt="title" />
+      <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
       <span>{{ contact.title }}</span>
     </div>
     <div class="container background-color">
-      <img class="icon" src="@/assets/images/telephone.svg" alt="telephone icon" />
+      <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
       <span class="contact-phone-number">{{ contact.phone }}</span>
     </div>
     <div class="container background-color">
-      <img class="icon" src="@/assets/images/email.svg" alt="email icon" />
+      <img class="icon" src="@/assets/images/email.svg" alt="icon" />
       <span class="contact-email">{{ contact.email }}</span>
     </div>
   </div>
@@ -32,15 +32,15 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .contact-information {
+  @include base-font-styles();
   display: flex;
   flex-flow: column;
   box-sizing: border-box;
   padding-left: 0.5rem;
   margin-bottom: 1rem;
-
-  font-family: $base-font-family, $backup-base-font-family;
 }
 
 .container {

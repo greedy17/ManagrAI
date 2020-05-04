@@ -5,6 +5,7 @@ import store from '@/store'
 const LOGIN_ENDPOINT = '/login/'
 const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
+const CHECK_STATUS_ENDPOINT = '/account-status/'
 
 export default class UserAPI {
   /**
@@ -51,6 +52,14 @@ export default class UserAPI {
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
       .catch(apiErrorHandler({ apiName: 'UserAPI.activate' }))
+    return promise
+  }
+
+  checkStatus(email) {
+    const data = { email }
+    const promise = apiClient()
+      .post(CHECK_STATUS_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'UserAPI.checkStatus' }))
     return promise
   }
 }

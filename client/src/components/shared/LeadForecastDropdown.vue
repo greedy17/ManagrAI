@@ -9,7 +9,7 @@
 </template>
 
 <script>
-const enums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
+const enums = ['50/50', 'Strong', 'Verbal', 'Future', 'Unforecasted']
 
 export default {
   name: 'LeadForecastDropdown',
@@ -60,22 +60,17 @@ export default {
 @import '@/styles/mixins/utils';
 
 .forecast-dropdown {
-  width: 6.25rem;
+  width: 8rem;
   height: 1.25rem;
   background-color: rgba(0, 0, 0, 0); // rgb irrelevant, this is for the alpha / transparency
 
   select {
     @include pointer-on-hover();
+    @include base-font-styles();
     width: 96%;
     height: 100%;
     padding: 0.125rem 1rem;
-
-    font-family: $base-font-family, $backup-base-font-family;
-    font-stretch: normal;
-    font-style: normal;
     line-height: 1.6;
-    letter-spacing: normal;
-
     border: unset;
 
     &:focus {

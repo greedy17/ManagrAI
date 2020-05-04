@@ -50,12 +50,12 @@ export default {
 }
 
 .reps-container {
+  @include standard-border();
   flex-grow: 1;
   display: flex;
   flex-flow: column;
   box-sizing: border-box;
   height: auto;
-  border: 1px solid $soft-gray;
   margin-left: 1rem;
   margin-top: 0.5rem;
   padding-top: 0.2rem;

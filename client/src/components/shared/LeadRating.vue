@@ -1,18 +1,18 @@
 <template>
-  <div class="rank">
-    <span v-if="label" class="label">Rank</span>
+  <div class="rating">
+    <span v-if="label" class="label">Rating</span>
     <span v-for="n in 5" :key="n" class="icon-container">
-      <img v-if="n <= rank" src="@/assets/images/star.svg" alt="star icon" />
-      <img v-else src="@/assets/images/star_outline.svg" alt="star outline icon" />
+      <img v-if="n <= rating" src="@/assets/images/star.svg" alt="star filled" />
+      <img v-else src="@/assets/images/star_outline.svg" alt="star outline" />
     </span>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'LeadRank',
+  name: 'LeadRating',
   props: {
-    rank: {
+    rating: {
       type: Number,
       required: true,
     },
@@ -24,7 +24,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.rank {
+.rating {
   opacity: 0.4;
   display: flex;
   flex-flow: row;

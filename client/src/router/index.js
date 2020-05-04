@@ -1,5 +1,11 @@
+// modules
 import Vue from 'vue'
 import Router from 'vue-router'
+
+// auth
+import Auth from '@/services/auth'
+
+// views
 import Login from '@/views/auth/Login'
 import Invite from '@/views/auth/Invite'
 import Activation from '@/views/auth/Activation'
@@ -17,7 +23,7 @@ export default new Router({
   routes: [
     {
       path: '/',
-      redirect: '/leads',
+      beforeEnter: Auth.homepageRedirect,
     },
     {
       path: '/login',
@@ -28,6 +34,7 @@ export default new Router({
       path: '/invite',
       name: 'Invite',
       component: Invite,
+      beforeEnter: Auth.requireAuth,
     },
     {
       path: '/activation/:uid/:token',
@@ -38,22 +45,26 @@ export default new Router({
       path: '/leads',
       name: 'LeadsIndex',
       component: LeadsIndex,
+      beforeEnter: Auth.requireAuth,
     },
     {
       path: '/leads/new',
       name: 'LeadsNew',
       component: LeadsNew,
+      beforeEnter: Auth.requireAuth,
     },
     {
       path: '/leads/:id',
       name: 'LeadsDetail',
       component: LeadsDetail,
       props: true,
+      beforeEnter: Auth.requireAuth,
     },
     {
       path: '/prospect',
       name: 'Prospect',
       component: Prospect,
+      beforeEnter: Auth.requireAuth,
     },
   ],
 })

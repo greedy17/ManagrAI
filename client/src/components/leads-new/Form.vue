@@ -31,7 +31,7 @@
       </div>
       <div class="form-field">
         <label @click="addAnotherContactForm" class="add-another-button">
-          <img class="icon" src="@/assets/images/add.svg" alt="add" />
+          <img class="icon" src="@/assets/images/add.svg" alt="icon" />
           Add Another
         </label>
       </div>
@@ -109,19 +109,19 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
 
 .step-1,
 .step-2 {
+  @include standard-border();
   background-color: $white;
   height: auto;
-
   width: 45rem;
   display: flex;
   flex-flow: column;
   align-items: center;
   box-sizing: border-box;
   padding: 2rem 0;
-  border: 1px solid $soft-gray;
 }
 
 .step-2 {
@@ -136,7 +136,7 @@ export default {
   margin-bottom: 1rem;
 
   label {
-    font-family: $base-font-family, $backup-base-font-family;
+    @include base-font-styles();
     color: $main-font-gray;
     font-weight: bold;
     margin-bottom: 1rem;

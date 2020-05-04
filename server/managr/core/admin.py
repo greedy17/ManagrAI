@@ -15,13 +15,16 @@ class CustomUserAdmin(UserAdmin):
             'first_name',
             'last_name',
             'email',
+            'state',
+            'magic_token_expiration',
+            'organization'
         )}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'organization',),
+            'fields': ('email', 'password1', 'password2',),
         }),
     )
 

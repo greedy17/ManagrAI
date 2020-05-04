@@ -35,20 +35,18 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 .form-steps {
+  @include standard-border();
   background-color: $white;
   height: 15rem;
   width: 15rem;
-  border: 1px solid $soft-gray;
 }
 
 .header {
-  font-family: $base-font-family, $backup-base-font-family;
+  @include base-font-styles();
   color: $main-font-gray;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
   line-height: 1.14;
   font-size: 1rem;
   font-weight: bold;
@@ -84,9 +82,5 @@ export default {
       width: 1.5rem;
     }
   }
-}
-
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
 }
 </style>

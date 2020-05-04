@@ -5,15 +5,19 @@
     </div>
     <div class="single-statistic section-shadow">
       <span class="title">Total Closed Value</span>
-      <span class="statistic"> {{ totalClosedValue }}</span>
+      <span class="statistic"> {{ 33000 | currency }}</span>
     </div>
     <div class="single-statistic section-shadow">
       <span class="title">Average Contract Value</span>
-      <span class="statistic"> {{ averageContractValue }}</span>
+      <span class="statistic"> {{ 12000 | currency }}</span>
+    </div>
+    <div class="single-statistic section-shadow">
+      <span class="title">Forecast</span>
+      <span class="statistic"> {{ 747000 | currency }}</span>
     </div>
     <div class="statistics-container section-shadow">
       <span class="title">Statistics</span>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
         </div>
@@ -26,7 +30,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/email.svg" alt="icon" />
         </div>
@@ -39,7 +43,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/message.svg" alt="icon" />
         </div>
@@ -52,7 +56,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
         </div>
@@ -65,7 +69,7 @@
           </span>
         </div>
       </div>
-      <div class="graphic-statistic">
+      <div class="graphic-statistic section-shadow">
         <div class="icon-container">
           <img class="icon" src="@/assets/images/calendar.svg" alt="icon" />
         </div>
@@ -79,10 +83,6 @@
         </div>
       </div>
     </div>
-    <div class="single-statistic section-shadow">
-      <span class="title">Forecast</span>
-      <span class="statistic"> {{ computedForecast }}</span>
-    </div>
     <div class="filter-container">
       <FilterByRep
         :reps="reps"
@@ -95,7 +95,6 @@
 
 <script>
 import FilterByRep from '@/components/shared/FilterByRep'
-import currencyFormatter from '@/services/currencyFormatter'
 
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
 const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
@@ -127,17 +126,6 @@ export default {
       }
     },
   },
-  computed: {
-    totalClosedValue() {
-      return currencyFormatter.format(33000)
-    },
-    averageContractValue() {
-      return currencyFormatter.format(12000)
-    },
-    computedForecast() {
-      return currencyFormatter.format(747000)
-    },
-  },
 }
 </script>
 
@@ -147,24 +135,17 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.875rem;
@@ -207,7 +188,6 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
-  box-shadow: 0 1px 0 0 $soft-gray;
 
   .icon-container {
     width: 30%;
@@ -227,24 +207,16 @@ export default {
     flex-grow: 1;
 
     .top {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: $main-font-gray;
     }
 
     .bottom {
-      font-family: $base-font-family, $backup-base-font-family;
+      @include base-font-styles();
       font-size: 0.875rem;
-      font-weight: normal;
-      font-stretch: normal;
-      font-style: normal;
       line-height: 1.14;
-      letter-spacing: normal;
       color: rgba($color: $main-font-gray, $alpha: 0.4);
     }
   }

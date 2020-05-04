@@ -31,8 +31,8 @@ router.register(r'actionchoices',
                 lead_views.ActionChoiceViewSet, 'actionchoices')
 router.register(r'actions', lead_views.ActionViewSet, 'actions')
 
-router.register(r'actionchoices',
-                lead_views.ActionChoiceViewSet, 'actionchoices')
+router.register(r'action-choices',
+                lead_views.ActionChoiceViewSet, 'action-choices')
 router.register(r'actions', lead_views.ActionViewSet, 'actions')
 router.register(r'files', lead_views.FileViewSet, 'files')
 urlpatterns = [

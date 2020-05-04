@@ -6,23 +6,23 @@
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Update Date</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="sort section-shadow">
       <div class="sort-header">
         <span class="content">Amount</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="dropdown icon" />
+        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Rank</div>
+      <div class="filter-header">Rating</div>
       <div class="filter-options">
-        <LeadRank class="option" :rank="5" />
-        <LeadRank class="option" :rank="4" />
-        <LeadRank class="option" :rank="3" />
-        <LeadRank class="option" :rank="2" />
-        <LeadRank class="option" :rank="1" />
+        <LeadRating class="option" :rating="5" />
+        <LeadRating class="option" :rating="4" />
+        <LeadRating class="option" :rating="3" />
+        <LeadRating class="option" :rating="2" />
+        <LeadRating class="option" :rating="1" />
       </div>
     </div>
     <div class="filter section-shadow">
@@ -53,17 +53,17 @@
 </template>
 
 <script>
-import LeadRank from '@/components/shared/LeadRank'
+import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
-const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
+const forecastEnums = ['50/50', 'Strong', 'Verbal', 'Future', 'Unforecasted']
 const listEnums = ['Growth Accounts', 'Q2 Buyers']
 
 export default {
   name: 'ListsToolBar',
   components: {
-    LeadRank,
+    LeadRating,
     LeadList,
   },
   data() {
@@ -82,24 +82,17 @@ export default {
 
 .toolbar {
   @include disable-text-select();
-  border: 1px solid $soft-gray;
+  @include standard-border();
   background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
   flex-flow: column;
-
-  .section-shadow {
-    box-shadow: 0 1px 0 0 $soft-gray;
-  }
 }
 
 .toolbar,
 .toolbar > * {
-  font-family: $base-font-family, $backup-base-font-family;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
+  @include base-font-styles();
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 14px;
