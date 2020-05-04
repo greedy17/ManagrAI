@@ -286,6 +286,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         created = list()
         if len(leads) < 1:
             raise ValidationError({'detail': 'lead or leads required'})
+        # TODO: change this to create a list of items not created if a user does not exist instead
         for lead in leads:
             try:
                 Lead.objects.for_user(
@@ -317,6 +318,16 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+    @action(methods=['POST'], detail=True, url_path="mark-as-viewed")
+    def mark_as_viewed(self, request, args, **kwargs):
+        self.get_object().mark_as_viewed()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['POST'], detail=True, url_path="mark-as-completed")
+    def mark_as_completed(self, request, args, **kwargs):
+        self.get_object().mark_as_completed()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):

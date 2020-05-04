@@ -95,9 +95,12 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 
 class ReminderSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Reminder
-        fields = ('__all__')
+        fields = ('id', 'title', 'content', 'datetime_for',
+                  'completed', 'lead', 'created_by', 'updated_by', 'viewed',)
+        read_only_fields = ('viewed', 'completed',)
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):

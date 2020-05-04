@@ -266,21 +266,35 @@ class Reminder(TimeStampModel):
     content = models.CharField(max_length=255, blank=True, null=False)
     datetime_for = models.DateTimeField()
     completed = models.BooleanField(default=False)
-    # TODO: - will build this out on a separate branch
+    # TODO: - will build this out on a separate branch pb
     notification = models.ForeignKey(
         'Notification', on_delete=models.CASCADE, related_name="reminders", null=True)
     lead = models.ForeignKey(
         'Lead', on_delete=models.CASCADE, related_name="reminders", null=True)
-    objects = ReminderQuerySet.as_manager()
+
     created_by = models.ForeignKey(
         'core.User', on_delete=models.CASCADE, null=True)
-
-    last_updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
+    # this is a temporary field for a reminder the view status will be handled by notifications in V2
+    viewed = models.BooleanField(default=False)
+    last_updated_at = models.DateTimeField(auto_now=True)
+    objects = ReminderQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']
+
+    def mark_as_viewed(self, request):
+        u = request.user
+        self.updated_by = u
+        self.viewed = True
+        self.save()
+
+    def mark_as_completes(self, request):
+        u = request.user
+        self.updated_by = u
+        self.completed = True
+        self.save()
 
 
 class Notification(TimeStampModel):
