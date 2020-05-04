@@ -4,7 +4,7 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead
+from .models import Lead, Forecast
 
 
 class LeadFilterSet(FilterSet):
@@ -25,8 +25,10 @@ class LeadFilterSet(FilterSet):
     def list_count(self, queryset, name, value):
         """ filter leads by list count """
         if value:
+            # if true on_list=True return leads with a list count of greater than 0 (non inclusive)
             return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0)
         else:
+            # if false on_list=False return leads with a list count of less than 1 (non inclusive)
             return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1)
 
     def claim_status(self, queryset, name, value):
@@ -42,3 +44,12 @@ class LeadFilterSet(FilterSet):
             return queryset.filter(lists=value)
         else:
             return queryset.all()
+
+
+class ForecastFilterSet(FilterSet):
+    by_user = django_filters.CharFilter(
+        field_name="lead", lookup_expr="claimed_by")
+
+    class Meta:
+        model = Forecast
+        fields = ['by_user', 'lead']
