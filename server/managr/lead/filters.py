@@ -37,8 +37,10 @@ class LeadFilterSet(FilterSet):
             return queryset.filter(claimed_by__isnull=False)
         return queryset.filter(claimed_by__isnull=True)
 
-    def retrieve_users_in_list(self, queryset, name, value):
-        """ Lists will not return leads by default """
+    def retrieve_leads_in_list(self, queryset, name, value):
+        """ Lists will not return leads by default, this filter
+            retrieves leads in a list (to provide pagination)
+        """
 
         if value:
             return queryset.filter(lists=value)
@@ -47,9 +49,16 @@ class LeadFilterSet(FilterSet):
 
 
 class ForecastFilterSet(FilterSet):
-    by_user = django_filters.CharFilter(
-        field_name="lead", lookup_expr="claimed_by")
+    by_user = django_filters.CharFilter(method="forecasts_by_user")
 
     class Meta:
         model = Forecast
-        fields = ['by_user', 'lead']
+        fields = ['by_user']
+
+    def forecasts_by_user(self, queryset, name, value):
+        """ provide a user or a list of users """
+        if value:
+            value = value.strip()
+            user_list = value.split(',')
+            if self.request.user.organization.users.filter(id__in=user_list).exists():
+                return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')
