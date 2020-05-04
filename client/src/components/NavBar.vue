@@ -36,7 +36,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
