@@ -6,11 +6,11 @@
     </div>
     <div class="container background-color">
       <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
-      <span>{{ contact.title }}</span>
+      <span>{{ contact.title || 'N/A' }}</span>
     </div>
     <div class="container background-color">
       <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
-      <span class="contact-phone-number">{{ contact.phone }}</span>
+      <span class="contact-phone-number">{{ contact.phoneNumber1 || 'N/A' }}</span>
     </div>
     <div class="container background-color">
       <img class="icon" src="@/assets/images/email.svg" alt="icon" />

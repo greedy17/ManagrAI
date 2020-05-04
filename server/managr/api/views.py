@@ -21,6 +21,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .models import Organization, Account, Contact
 from .serializers import OrganizationSerializer, AccountSerializer, ContactSerializer
+from .filters import ContactFilterSet
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
 from managr.core.permissions import (
@@ -85,6 +86,7 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ContactSerializer
     permissions_class = (IsSalesPerson,)
+    filter_class = ContactFilterSet
 
     def get_queryset(self):
         return Contact.objects.for_user(self.request.user)

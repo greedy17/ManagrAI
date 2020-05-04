@@ -13,14 +13,11 @@
 import FormSteps from '@/components/leads-new/FormSteps'
 import Form from '@/components/leads-new/Form'
 
-// import CollectionManager from '@/services/collectionManager'
-
 export default {
   name: 'LeadsNew',
   components: { FormSteps, Form },
   data() {
     return {
-      accounts: null,
       currentStep: 1,
     }
   },
