@@ -2,14 +2,14 @@
   <div class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
-        <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
+        <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
           class="checkbox"
-          :checked="isCurrentRoute"
+          :checked="!isCurrentRoute"
           @toggle-view="toggleView"
           :eventToEmit="'toggle-view'"
         />
-        <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
+        <span class="right" :class="{ bold: !isCurrentRoute }">Lists</span>
       </div>
       <ToolBar class="toolbar" />
     </div>
@@ -20,14 +20,14 @@
 </template>
 
 <script>
-import ToolBar from '@/components/leads-index/ToolBar'
+import ToolBar from '@/components/forecast/ToolBar'
 import ListsContainer from '@/components/shared/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import { getSerializedLists } from '@/db.js'
 
 export default {
-  name: 'LeadsIndex',
+  name: 'Forecast',
   components: {
     ToolBar,
     ToggleCheckBox,
@@ -36,20 +36,40 @@ export default {
   data() {
     return {
       lists: null,
-      forecastLists: null,
     }
   },
   created() {
     this.lists = getSerializedLists()
+    this.lists = this.generateForecastLists()
   },
   methods: {
     toggleView() {
-      this.$router.push({ name: 'Forecast' })
+      this.$router.push({ name: 'LeadsIndex' })
+    },
+    generateForecastLists() {
+      //NOTE(Bruno 4-16-20): this is a very brute force / not optimal algorithm  ~ O(n^2).
+      // When we have a backend maybe we can serialize there or we can think this over
+      let bucketsObj = {}
+      for (let i = 0; i < this.lists.length; ++i) {
+        let currentList = this.lists[i]
+        for (let j = 0; j < currentList.leads.length; ++j) {
+          let currentLead = currentList.leads[j]
+          if (bucketsObj[currentLead.forecast]) {
+            bucketsObj[currentLead.forecast].push(currentLead)
+          } else {
+            bucketsObj[currentLead.forecast] = [currentLead]
+          }
+        }
+      }
+      return Object.keys(bucketsObj).map(bucketKey => ({
+        title: bucketKey,
+        leads: bucketsObj[bucketKey],
+      }))
     },
   },
   computed: {
     isCurrentRoute() {
-      return this.$route.name == 'LeadsIndex'
+      return this.$route.name == 'Forecast'
     },
   },
 }
