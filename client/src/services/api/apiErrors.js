@@ -25,8 +25,8 @@ function toMessageString(data) {
  **/
 export function apiErrorHandler({
   apiName = '',
-  enable400Alert = false,
-  enable500Alert = false,
+  enable400Alert = true,
+  enable500Alert = true,
   rethrowErrors = true,
 } = {}) {
   return error => {

@@ -16,8 +16,6 @@
 import store, { removeAlert } from './store'
 import AlertAlertItem from './AlertAlertItem.vue'
 
-const oneRem = parseInt(window.getComputedStyle(document.querySelector('html')).fontSize)
-
 export default {
   name: 'AlertAlert',
   components: {
@@ -25,7 +23,7 @@ export default {
   },
   data() {
     return {
-      top: oneRem * 0.5,
+      top: this.oneRem * 0.5,
       alerts: store.alerts,
     }
   },
@@ -33,7 +31,7 @@ export default {
     // NOTE (Bruno 4-23-20): this listener is never removed because it only needs to be removed on tab close, which happens automatically
     document.addEventListener('scroll', this.setTop)
     if (!this.setTop()) {
-      this.top = oneRem * 0.5
+      this.top = this.oneRem * 0.5
     }
   },
   methods: {
@@ -48,10 +46,15 @@ export default {
       let calculationIsValid = navRect.height >= calculation && calculation >= 0
 
       if (calculationIsValid) {
-        this.top = calculation + oneRem * 0.5
+        this.top = calculation + this.oneRem * 0.5
       }
 
       return calculationIsValid
+    },
+  },
+  computed: {
+    oneRem() {
+      return parseInt(window.getComputedStyle(document.querySelector('html')).fontSize)
     },
   },
 }
