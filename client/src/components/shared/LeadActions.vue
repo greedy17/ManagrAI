@@ -13,10 +13,11 @@
     </div>
     <div class="action-tab-content">
       <CallAction v-if="activeTab === 0" />
-      <EmailAction v-if="activeTab === 1" />
-      <ReminderAction v-if="activeTab === 2" />
+      <TextAction v-if="activeTab === 1" />
+      <EmailAction v-if="activeTab === 2" />
       <ActionAction v-if="activeTab === 3" />
-      <NoteAction v-if="activeTab === 4" />
+      <ReminderAction v-if="activeTab === 4" />
+      <NoteAction v-if="activeTab === 5" />
     </div>
   </div>
 </template>
@@ -24,6 +25,7 @@
 <script>
 import ActionTabHeader from '@/components/shared/ActionTabHeader'
 import CallAction from '@/components/shared/CallAction'
+import TextAction from '@/components/shared/TextAction'
 import EmailAction from '@/components/shared/EmailAction'
 import ReminderAction from '@/components/shared/ReminderAction'
 import ActionAction from '@/components/shared/ActionAction'
@@ -35,6 +37,7 @@ export default {
   components: {
     ActionTabHeader,
     CallAction,
+    TextAction,
     EmailAction,
     ReminderAction,
     ActionAction,
@@ -43,7 +46,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['call', 'email', 'reminder', 'action', 'note'],
+      tabs: ['call', 'text', 'email', 'action', 'reminder', 'note'],
     }
   },
   methods: {
