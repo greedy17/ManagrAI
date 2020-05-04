@@ -22,10 +22,8 @@
         />
       </div>
     </div>
-    <!--- focus --- -->
     <div class="account-link">Account</div>
     <div class="amount section-shadow">Amount: {{ lead.amount | currency }}</div>
-    <!--- focus --- -->
     <div class="contacts">
       <div class="header section-shadow">
         <span>Contacts</span>
@@ -36,6 +34,9 @@
           <span class="name">{{ contact.name }}</span>
           <div class="phone button">
             <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+          </div>
+          <div class="text button">
+            <img class="icon" src="@/assets/images/sms.svg" alt="icon" />
           </div>
           <div class="email button">
             <img class="icon" src="@/assets/images/email.svg" alt="icon" />
@@ -209,14 +210,18 @@ export default {
       margin-left: auto;
     }
 
+    .text {
+      margin-left: 0.5rem;
+    }
+
     .email {
-      margin: 0 0.625rem;
+      margin: 0 0.5rem;
     }
 
     .button {
       @include pointer-on-hover();
-      height: 1.875rem;
-      width: 1.875rem;
+      height: 1.5rem;
+      width: 1.5rem;
       background-color: $soft-gray;
       border-radius: 5px;
       display: flex;
@@ -227,14 +232,6 @@ export default {
       .icon {
         height: 1rem;
         margin: auto;
-      }
-
-      .email {
-        margin-left: 0.625rem;
-      }
-
-      .phone {
-        margin-left: auto;
       }
     }
   }
