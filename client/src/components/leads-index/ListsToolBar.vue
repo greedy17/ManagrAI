@@ -3,18 +3,6 @@
     <div class="header section-shadow">
       Sort + Filter
     </div>
-    <div class="sort section-shadow">
-      <div class="sort-header">
-        <span class="content">Update Date</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
-      </div>
-    </div>
-    <div class="sort section-shadow">
-      <div class="sort-header">
-        <span class="content">Amount</span>
-        <img class="icon" src="@/assets/images/dropdown-arrow.svg" alt="icon" />
-      </div>
-    </div>
     <div class="filter section-shadow">
       <div class="filter-header">Rating</div>
       <div class="filter-options">
@@ -31,18 +19,6 @@
         <div class="option" v-for="status in statusEnums" :key="status">{{ status }}</div>
       </div>
     </div>
-    <div class="filter section-shadow">
-      <div class="filter-header">List</div>
-      <div class="filter-options">
-        <LeadList
-          class="option list"
-          :dark="true"
-          v-for="list in listEnums"
-          :key="list"
-          :listName="list"
-        />
-      </div>
-    </div>
     <div class="filter">
       <div class="filter-header">Forecast</div>
       <div class="filter-options">
@@ -54,7 +30,6 @@
 
 <script>
 import LeadRating from '@/components/shared/LeadRating'
-import LeadList from '@/components/shared/LeadList'
 
 const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
 const forecastEnums = ['50/50', 'Strong', 'Verbal', 'Future', 'Unforecasted']
@@ -64,7 +39,6 @@ export default {
   name: 'ListsToolBar',
   components: {
     LeadRating,
-    LeadList,
   },
   data() {
     return {
