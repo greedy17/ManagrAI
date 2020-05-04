@@ -320,13 +320,13 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         return Response(serializer.data)
 
     @action(methods=['POST'], detail=True, url_path="mark-as-viewed")
-    def mark_as_viewed(self, request, args, **kwargs):
-        self.get_object().mark_as_viewed()
+    def mark_as_viewed(self, request, *args, **kwargs):
+        self.get_object().mark_as_viewed(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST'], detail=True, url_path="mark-as-completed")
-    def mark_as_completed(self, request, args, **kwargs):
-        self.get_object().mark_as_completed()
+    def mark_as_completed(self, request, *args, **kwargs):
+        self.get_object().mark_as_completed(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

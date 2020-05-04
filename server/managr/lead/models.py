@@ -282,7 +282,7 @@ class Reminder(TimeStampModel):
     objects = ReminderQuerySet.as_manager()
 
     class Meta:
-        ordering = ['-datetime_created']
+        ordering = ['-datetime_for']
 
     def mark_as_viewed(self, request):
         u = request.user
