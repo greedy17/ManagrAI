@@ -7,7 +7,7 @@
     <div class="center-pane">
       <LeadBanner
         :lead="lead"
-        @clicked-release="releaseLead"
+        @lead-released="releaseLead"
         @updated-forecast="updateForecast"
         @updated-status="updateStatus"
       />
@@ -81,7 +81,7 @@ export default {
       Lead.api
         .unclaim(this.lead.id)
         .then(() => {
-          let message = `<h2>Success!</h2><p>Lead released.</p>`
+          let message = `<div>Success! Lead released.</div>`
           this.$Alert.alert({
             type: 'success',
             message,

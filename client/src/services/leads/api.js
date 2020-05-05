@@ -26,7 +26,7 @@ export default class LeadAPI {
 
   unclaim(uid) {
     const promise = apiClient()
-      .delete(GENERATE_UNCLAIM_ENDPOINT(uid))
+      .post(GENERATE_UNCLAIM_ENDPOINT(uid))
       .catch(apiErrorHandler({ apiName: 'LeadAPI.unclaim' }))
     return promise
   }

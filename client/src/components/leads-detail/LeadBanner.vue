@@ -19,7 +19,7 @@
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div class="banner-button" @click="emitClickedReleased">
+      <div class="banner-button" @click="emitReleased">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
@@ -42,8 +42,8 @@ export default {
     LeadStatusDropdown,
   },
   methods: {
-    emitClickedReleased() {
-      this.$emit('clicked-release')
+    emitReleased() {
+      this.$emit('lead-released')
     },
     emitUpdatedForecast(value) {
       this.$emit('updated-forecast', value)
