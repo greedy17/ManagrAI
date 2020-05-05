@@ -8,7 +8,7 @@
       <h2>{{ lead.title }}</h2>
     </div>
     <div class="rating">
-      <LeadRating :label="true" :rating="lead.rating" />
+      <LeadRating :label="true" :rating="lead.rating" @updated-rating="emitUpdatedRating" />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
@@ -86,6 +86,9 @@ export default {
   methods: {
     goToAccount() {
       alert("This should route to account's page")
+    },
+    emitUpdatedRating(rating) {
+      this.$emit('updated-rating', rating)
     },
   },
 }

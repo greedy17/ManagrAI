@@ -2,7 +2,7 @@
   <LoadingSVG v-if="loading" />
   <div v-else class="leads-detail">
     <div class="left-pane">
-      <ToolBar class="toolbar" :lead="lead" />
+      <ToolBar class="toolbar" :lead="lead" @updated-rating="updateRating" />
     </div>
     <div class="center-pane">
       <LeadBanner
@@ -62,6 +62,12 @@ export default {
     })
   },
   methods: {
+    updateRating(rating) {
+      let patchData = { rating }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
     updateForecast(value) {
       alert('selected' + value + '(sever-side WIP)')
     },
