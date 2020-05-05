@@ -2,7 +2,12 @@
   <LoadingSVG v-if="loading" />
   <div v-else class="leads-detail">
     <div class="left-pane">
-      <ToolBar class="toolbar" :lead="lead" @updated-rating="updateRating" />
+      <ToolBar
+        class="toolbar"
+        :lead="lead"
+        @updated-rating="updateRating"
+        @updated-amount="updateAmount"
+      />
     </div>
     <div class="center-pane">
       <LeadBanner
@@ -82,6 +87,12 @@ export default {
     },
     updateRating(rating) {
       let patchData = { rating }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateAmount(amount) {
+      let patchData = { amount }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
       })
