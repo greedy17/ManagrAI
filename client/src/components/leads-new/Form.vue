@@ -128,11 +128,13 @@ export default {
       this.contacts.refresh()
       this.$emit('clicked-next')
     },
-    handleCheckboxClick({ status, contactID }) {
+    handleCheckboxClick({ status, contactID, email }) {
       // depending on payload status add or remove that key
       // plainObject is used instead of an array because of O(1) lookup for <ContactCheckBox />
       if (status) {
-        this.contactsToInclude = Object.assign({}, this.contactsToInclude, { [contactID]: true })
+        this.contactsToInclude = Object.assign({}, this.contactsToInclude, {
+          [contactID]: { email },
+        })
       } else {
         let contactsToInclude = Object.assign({}, this.contactsToInclude)
         delete contactsToInclude[contactID]
@@ -167,9 +169,9 @@ export default {
       }
 
       this.loading = true
-      // if it gets this far and any of the sub-forms are completed, need to create contact(s)
-      let contactCreatePromises = []
 
+      // if it gets this far and any of the sub-forms are completed, need to create contact(s)
+      let contacts = []
       for (let i = 0; i < this.addContactFormCount; ++i) {
         let n = i + 1
         let currentForm = this.addContactForms[n]
@@ -179,27 +181,24 @@ export default {
           // NOTE( Bruno 5-4-20):
           //       client-side form includes one phone number, so that is being sent as phoneNumber1
           //       server-side does not yet include contact.position, so that is not being sent for now
-          let promise = Contact.api.create(
-            currentForm.firstName,
-            currentForm.lastName,
-            currentForm.email,
-            currentForm.phone,
-            this.selectedAccount,
-          )
-          contactCreatePromises.push(promise)
+          let contactData = {
+            first_name: currentForm.firstName,
+            last_name: currentForm.lastName,
+            email: currentForm.email,
+            phone_number_1: currentForm.phone,
+            account: this.selectedAccount,
+          }
+          contacts.push(contactData)
         }
       }
-      let contacts = []
-      await Promise.all(contactCreatePromises).then(responses => {
-        contacts = responses.map(r => r.data.id)
+      contacts = [
+        ...contacts,
+        ...Object.keys(this.contactsToInclude).map(contactID => this.contactsToInclude[contactID]),
+      ]
+
+      Lead.api.create(this.leadTitle, this.selectedAccount, contacts).then(response => {
+        this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
       })
-      contacts = [...contacts, ...Object.keys(this.contactsToInclude)]
-      Lead.api
-        .create(this.leadTitle, this.selectedAccount, contacts)
-        .then(response => {
-          this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
-        })
-        .catch(alert)
     },
     stepOneClientSideValidations() {
       let formErrors = {

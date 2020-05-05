@@ -37,7 +37,7 @@ export default class LeadAPI {
       account,
       notes: [],
       lists: [],
-      contacts,
+      linked_contacts: contacts,
     }
     const promise = apiClient()
       .post(LEADS_ENDPOINT, data)
