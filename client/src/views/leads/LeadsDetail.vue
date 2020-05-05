@@ -16,7 +16,12 @@
         <LeadActions :lead="lead" />
       </div>
       <div class="container">
-        <PinnedNotes />
+        <PinnedNotes
+          :primaryDescription="lead.primaryDescription"
+          :secondaryDescription="lead.secondaryDescription"
+          @updated-primary-description="updatePrimaryDescription"
+          @updated-secondary-description="updateSecondaryDescription"
+        />
       </div>
       <div class="container">
         <img
@@ -63,6 +68,18 @@ export default {
     })
   },
   methods: {
+    updatePrimaryDescription(description) {
+      let patchData = { primary_description: description }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateSecondaryDescription(description) {
+      let patchData = { secondary_description: description }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
     updateRating(rating) {
       let patchData = { rating }
       Lead.api.update(this.lead.id, patchData).then(lead => {
