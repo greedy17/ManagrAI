@@ -1,10 +1,16 @@
 <template>
-  <div class="leads-detail">
+  <LoadingSVG v-if="loading" />
+  <div v-else class="leads-detail">
     <div class="left-pane">
       <ToolBar class="toolbar" :lead="lead" />
     </div>
     <div class="center-pane">
-      <LeadBanner :lead="lead" @clicked-release="releaseLead" />
+      <LeadBanner
+        :lead="lead"
+        @clicked-release="releaseLead"
+        @updated-forecast="updateForecast"
+        @updated-status="updateStatus"
+      />
       <div class="container">
         <LeadActions :lead="lead" />
       </div>
@@ -26,7 +32,6 @@
 </template>
 
 <script>
-import { getSerializedLead } from '@/db.js'
 import ToolBar from '@/components/leads-detail/ToolBar'
 import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
@@ -46,13 +51,26 @@ export default {
   },
   data() {
     return {
-      lead: {},
+      loading: true,
+      lead: null,
     }
   },
   created() {
-    this.lead = getSerializedLead(this.id)
+    Lead.api.retrieve(this.id).then(lead => {
+      this.lead = lead
+      this.loading = false
+    })
   },
   methods: {
+    updateForecast(value) {
+      alert('selected' + value + '(sever-side WIP)')
+    },
+    updateStatus(value) {
+      let patchData = { status: value.toUpperCase() }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
     releaseLead() {
       Lead.api
         .unclaim(this.lead.id)

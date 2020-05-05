@@ -5,7 +5,7 @@
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div>
     <div class="lead-name">
-      <h2>{{ lead.name }}</h2>
+      <h2>{{ lead.title }}</h2>
     </div>
     <div class="rating">
       <LeadRating :label="true" :rating="lead.rating" />
@@ -22,7 +22,7 @@
         />
       </div>
     </div>
-    <div class="account-link">Account</div>
+    <div class="account-link" @click="goToAccount">Account</div>
     <div class="amount section-shadow">Amount: {{ lead.amount | currency }}</div>
     <div class="contacts">
       <div class="header section-shadow">
@@ -82,6 +82,11 @@ export default {
   },
   data() {
     return { exampleFiles, exampleContacts }
+  },
+  methods: {
+    goToAccount() {
+      alert("This should route to account's page")
+    },
   },
 }
 </script>
@@ -160,14 +165,19 @@ export default {
 }
 
 .account-link {
+  @include pointer-on-hover();
+  @include disable-text-select();
   height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
   justify-content: center;
-
   color: $dark-green;
   text-decoration: underline;
+
+  &:hover {
+    font-weight: bold;
+  }
 }
 
 .amount {

@@ -1,6 +1,7 @@
 <template>
   <div class="forecast-dropdown">
     <select @change="onChange" :style="computedStyles">
+      <option disabled :selected="forecast == null" value="">---</option>
       <option :selected="option === forecast" v-for="option in enums" :key="option" :value="option">
         {{ option }}
       </option>
@@ -15,7 +16,6 @@ export default {
   name: 'LeadForecastDropdown',
   props: {
     forecast: {
-      type: String,
       required: true,
     },
     transparent: {

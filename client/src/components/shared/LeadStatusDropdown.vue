@@ -1,6 +1,7 @@
 <template>
   <div class="status-dropdown">
     <select @change="onChange" :style="computedStyles">
+      <option disabled :selected="status == null" value="">---</option>
       <option :selected="option === status" v-for="option in enums" :key="option" :value="option">
         {{ option }}
       </option>
@@ -16,7 +17,6 @@ export default {
   name: 'LeadStatusDropdown',
   props: {
     status: {
-      type: String,
       required: true,
     },
   },

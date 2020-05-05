@@ -6,9 +6,10 @@
         class="forecast-dropdown"
         :forecast="lead.forecast"
         :transparent="true"
+        @updated-forecast="emitUpdatedForecast"
       />
     </div>
-    <LeadStatusDropdown :status="lead.status" />
+    <LeadStatusDropdown :status="lead.status" @updated-status="emitUpdatedStatus" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Days In Status</span>
       <span class="days-in-status">7 Days</span>
@@ -43,6 +44,12 @@ export default {
   methods: {
     emitClickedReleased() {
       this.$emit('clicked-release')
+    },
+    emitUpdatedForecast(value) {
+      this.$emit('updated-forecast', value)
+    },
+    emitUpdatedStatus(value) {
+      this.$emit('updated-status', value)
     },
   },
   computed: {
