@@ -25,7 +25,7 @@ from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Ac
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet
+from .filters import LeadFilterSet, ForecastFilterSet
 from managr.api.models import Contact, Account
 from managr.lead import constants as lead_constants
 
@@ -264,6 +264,7 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = ForecastSerializer
+    filter_class = ForecastFilterSet
     # TODO :- log activity
 
     def get_queryset(self):
