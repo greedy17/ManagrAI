@@ -7,6 +7,7 @@
     <div class="center-pane">
       <LeadBanner
         :lead="lead"
+        @lead-reset="resetLead"
         @lead-released="releaseLead"
         @updated-forecast="updateForecast"
         @updated-status="updateStatus"
@@ -75,6 +76,23 @@ export default {
       let patchData = { status: value.toUpperCase() }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
+      })
+    },
+    resetLead() {
+      let patchData = {
+        status: null,
+        amount: 0,
+        rating: 1,
+        forecast: null,
+      }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+        let message = `<div>Success! Lead reset.</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 4000,
+        })
       })
     },
     releaseLead() {

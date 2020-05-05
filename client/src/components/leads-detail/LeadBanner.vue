@@ -15,7 +15,7 @@
       <span class="days-in-status">7 Days</span>
     </div>
     <div class="banner-buttons">
-      <div class="banner-button">
+      <div class="banner-button" @click="emitReset">
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
@@ -42,6 +42,9 @@ export default {
     LeadStatusDropdown,
   },
   methods: {
+    emitReset() {
+      this.$emit('lead-reset')
+    },
     emitReleased() {
       this.$emit('lead-released')
     },
