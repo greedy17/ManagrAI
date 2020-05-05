@@ -1,5 +1,6 @@
 <template>
-  <div class="leads-index">
+  <LoadingSVG v-if="loading" />
+  <div v-else class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
@@ -14,7 +15,7 @@
       <ToolBar class="toolbar" />
     </div>
     <div class="lists-container-pane">
-      <ListsContainer :lists="lists" />
+      <ListsContainer :lists="lists" :leadsWithoutList="leadsWithoutList" />
     </div>
   </div>
 </template>
@@ -24,7 +25,9 @@ import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/shared/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
-import { getSerializedLists } from '@/db.js'
+import Lead from '@/services/leads'
+import CollectionManager from '@/services/collectionManager'
+// import List from '@/services/lists'
 
 export default {
   name: 'LeadsIndex',
@@ -35,12 +38,23 @@ export default {
   },
   data() {
     return {
+      loading: true,
       lists: null,
-      forecastLists: null,
+      leadsWithoutList: null,
     }
   },
   created() {
-    this.lists = getSerializedLists()
+    CollectionManager.create({
+      ModelClass: Lead,
+      filters: {
+        onList: 'False',
+      },
+    })
+      .refresh()
+      .then(collection => {
+        this.leadsWithoutList = collection.list
+        this.loading = false
+      })
   },
   methods: {
     toggleView() {
