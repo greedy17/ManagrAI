@@ -82,7 +82,6 @@ export default {
       let patchData = {
         status: null,
         amount: 0,
-        rating: 1,
         forecast: null,
       }
       Lead.api.update(this.lead.id, patchData).then(lead => {
