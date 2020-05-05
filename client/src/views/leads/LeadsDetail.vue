@@ -78,25 +78,15 @@ export default {
       })
     },
     releaseLead() {
-      Lead.api
-        .unclaim(this.lead.id)
-        .then(() => {
-          let message = `<div>Success! Lead released.</div>`
-          this.$Alert.alert({
-            type: 'success',
-            message,
-            timeout: 6000,
-          })
-          this.$router.push({ name: 'LeadsIndex' })
+      Lead.api.unclaim(this.lead.id).then(() => {
+        let message = `<div>Success! Lead released.</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 6000,
         })
-        .catch(() => {
-          let message = `<h2>Error...</h2><p>Please retry later.</p>`
-          this.$Alert.alert({
-            type: 'error',
-            message,
-            timeout: 6000,
-          })
-        })
+        this.$router.push({ name: 'LeadsIndex' })
+      })
     },
   },
 }

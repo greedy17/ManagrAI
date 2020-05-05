@@ -126,7 +126,6 @@ export default {
 .banner-button {
   @include disable-text-select();
   @include pointer-on-hover();
-  @include standard-border();
   @include base-font-styles();
   margin: 0 4% 0 auto;
   display: flex;
@@ -141,6 +140,7 @@ export default {
   font-weight: bold;
   line-height: 1.45;
   color: $main-font-gray;
+  border: 1px solid $gray;
 
   .button-icon {
     height: 1rem;
