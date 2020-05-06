@@ -123,6 +123,7 @@ class LeadSerializer(serializers.ModelSerializer):
         if value == lead_constants.LEAD_STATUS_CLOSED:
             raise serializers.ValidationError(
                 {'detail': 'Cannot Close Lead by Update'})
+        return value
 
     account_ref = AccountRefSerializer(
         source='account', read_only=True)
