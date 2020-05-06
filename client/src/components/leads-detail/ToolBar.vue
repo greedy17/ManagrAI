@@ -5,15 +5,17 @@
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div>
     <div class="lead-name">
-      <h2>{{ lead.name }}</h2>
+      <h2>{{ lead.title }}</h2>
     </div>
     <div class="rating">
-      <LeadRating :label="true" :rating="lead.rating" />
+      <LeadRating :label="true" :rating="lead.rating" @updated-rating="emitUpdatedRating" />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
       <div class="container">
+        <p v-if="!lead.lists.length">N/A</p>
         <LeadList
+          v-else
           class="list"
           v-for="list in lead.lists"
           :key="list.id"
@@ -22,8 +24,19 @@
         />
       </div>
     </div>
-    <div class="account-link">Account</div>
-    <div class="amount section-shadow">Amount: {{ lead.amount | currency }}</div>
+    <div class="account-link" @click="goToAccount">Account</div>
+    <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
+      Amount:
+      <span>{{ lead.amount | currency }}</span>
+    </div>
+    <div v-else class="amount-editable section-shadow">
+      Amount:
+      <form class="amount-form" @submit.prevent="updateAmount">
+        <input v-model="tempAmount" type="number" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
+        <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
+      </form>
+    </div>
     <div class="contacts">
       <div class="header section-shadow">
         <span>Contacts</span>
@@ -81,13 +94,38 @@ export default {
     },
   },
   data() {
-    return { exampleFiles, exampleContacts }
+    return {
+      exampleFiles,
+      exampleContacts,
+      editAmount: false,
+      tempAmount: this.lead.amount,
+    }
+  },
+  methods: {
+    goToAccount() {
+      alert("This should route to account's page")
+    },
+    emitUpdatedRating(rating) {
+      this.$emit('updated-rating', rating)
+    },
+    onEditAmount() {
+      this.editAmount = true
+    },
+    updateAmount() {
+      this.$emit('updated-amount', this.tempAmount)
+      this.editAmount = false
+    },
+    resetAmount() {
+      this.tempAmount = this.lead.amount
+      this.editAmount = false
+    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/inputs';
 @import '@/styles/mixins/utils';
 
 .toolbar {
@@ -152,6 +190,10 @@ export default {
     display: flex;
     flex-flow: column;
 
+    p {
+      margin-left: 1rem;
+    }
+
     .list {
       margin-bottom: 0.625rem;
       height: 1.75rem;
@@ -160,24 +202,74 @@ export default {
 }
 
 .account-link {
+  @include pointer-on-hover();
+  @include disable-text-select();
   height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
   justify-content: center;
-
   color: $dark-green;
   text-decoration: underline;
+
+  &:hover {
+    font-weight: bold;
+  }
 }
 
 .amount {
+  @include pointer-on-hover();
   height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
   justify-content: center;
+  font-size: 1.125rem;
 
-  font-size: 18px;
+  span {
+    margin-left: 0.5rem;
+  }
+}
+
+.amount-editable {
+  @include pointer-on-hover();
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  font-size: 1.125rem;
+
+  span {
+    margin-left: 0.5rem;
+  }
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 6rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
 }
 
 .contacts {

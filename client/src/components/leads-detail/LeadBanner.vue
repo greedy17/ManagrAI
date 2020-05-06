@@ -6,19 +6,20 @@
         class="forecast-dropdown"
         :forecast="lead.forecast"
         :transparent="true"
+        @updated-forecast="emitUpdatedForecast"
       />
     </div>
-    <LeadStatusDropdown :status="lead.status" />
+    <LeadStatusDropdown :status="lead.status" @updated-status="emitUpdatedStatus" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Days In Status</span>
       <span class="days-in-status">7 Days</span>
     </div>
     <div class="banner-buttons">
-      <div class="banner-button">
+      <div class="banner-button" @click="emitReset">
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div class="banner-button" @click="emitClickedReleased">
+      <div class="banner-button" @click="emitReleased">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
@@ -41,8 +42,17 @@ export default {
     LeadStatusDropdown,
   },
   methods: {
-    emitClickedReleased() {
-      this.$emit('clicked-release')
+    emitReset() {
+      this.$emit('lead-reset')
+    },
+    emitReleased() {
+      this.$emit('lead-released')
+    },
+    emitUpdatedForecast(value) {
+      this.$emit('updated-forecast', value)
+    },
+    emitUpdatedStatus(value) {
+      this.$emit('updated-status', value)
     },
   },
   computed: {
@@ -119,7 +129,6 @@ export default {
 .banner-button {
   @include disable-text-select();
   @include pointer-on-hover();
-  @include standard-border();
   @include base-font-styles();
   margin: 0 4% 0 auto;
   display: flex;
@@ -134,6 +143,7 @@ export default {
   font-weight: bold;
   line-height: 1.45;
   color: $main-font-gray;
+  border: 1px solid $gray;
 
   .button-icon {
     height: 1rem;

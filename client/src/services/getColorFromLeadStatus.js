@@ -4,6 +4,8 @@ const statusToPrimaryColor = {
   demo: '#88C9F9',
   waiting: '#9596B4',
   customer: '#2F9E54',
+  lost: '#9596B4',
+  null: '#9596B4',
 }
 
 const statusToSecondaryColor = {
@@ -12,10 +14,13 @@ const statusToSecondaryColor = {
   demo: '#E8F4FE',
   waiting: '#EFEFF5',
   customer: '#D1ECDD',
+  lost: '#EFEFF5',
+  null: '#EFEFF5',
 }
 
+// must account for null status (as is the case on Lead creation)
 function statusSlugger(status) {
-  return status.toLowerCase()
+  return status ? status.toLowerCase() : null
 }
 
 export function getStatusPrimaryColor(status) {
