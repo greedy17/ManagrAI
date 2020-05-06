@@ -48,4 +48,12 @@ export default class ListAPI {
       )
     return promise
   }
+
+  create(title) {
+    let data = { title }
+    const promise = apiClient()
+      .post(LISTS_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'ListAPI.create' }))
+    return promise
+  }
 }

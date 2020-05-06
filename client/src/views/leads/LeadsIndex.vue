@@ -19,6 +19,7 @@
         :lists="lists.list"
         :leadsWithoutList="leadsWithoutList"
         :allLeads="allLeads"
+        @list-created="addListToCollection"
       />
     </div>
   </div>
@@ -66,6 +67,9 @@ export default {
   methods: {
     toggleView() {
       this.$router.push({ name: 'Forecast' })
+    },
+    addListToCollection(list) {
+      this.lists.list.unshift(list)
     },
   },
   computed: {

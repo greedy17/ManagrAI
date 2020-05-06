@@ -3,12 +3,14 @@
     <List v-for="list in lists" :key="list.id" :list="list" />
     <CustomList :collection="leadsWithoutList" :title="'No List'" />
     <CustomList :collection="allLeads" :title="'All Leads'" />
+    <CreateList @list-created="emitListCreated" />
   </div>
 </template>
 
 <script>
 import List from '@/components/leads-index/List'
 import CustomList from '@/components/leads-index/CustomList'
+import CreateList from '@/components/leads-index/CreateList'
 
 export default {
   name: 'ListsContainer',
@@ -27,6 +29,12 @@ export default {
   components: {
     List,
     CustomList,
+    CreateList,
+  },
+  methods: {
+    emitListCreated(list) {
+      this.$emit('list-created', list)
+    },
   },
 }
 </script>
