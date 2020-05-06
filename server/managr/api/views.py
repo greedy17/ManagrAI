@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.db import transaction
+from django.db import IntegrityError
 from rest_framework.authtoken.models import Token
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
@@ -20,6 +21,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .models import Organization, Account, Contact
+from managr.lead.models import Lead
 from .serializers import OrganizationSerializer, AccountSerializer, ContactSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
@@ -88,3 +90,39 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
 
     def get_queryset(self):
         return Contact.objects.for_user(self.request.user)
+
+    @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="link-to-leads")
+    def add_to_lead(self, request, *args, **kwargs):
+        """ special endpoint to add a contact to a lead or leads, takes a list of contact ids and lead ids"""
+        u = request.user
+        d = request.data
+        contacts = d['contacts']
+        contacts_added = list()
+        leads = d['leads']
+        for lead in leads:
+            for contact in contacts:
+                l = Lead.objects.get(pk=lead)
+                try:
+                    l.linked_contacts.add(contact)
+                    l.save()
+                    contacts_added.append(contact)
+                except IntegrityError:
+                    pass
+
+        return Response(data={'linked_contacts_added': contacts_added})
+
+    @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="remove-from-lead")
+    def remove_from_lead(self, request, *args, **kwargs):
+        """ special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
+        d = request.data
+        contacts = d['contacts']
+        contacts_removed = list()
+        l = d['lead']
+
+        for contact in contacts:
+            lead = Lead.objects.get(pk=l)
+            lead.linked_contacts.remove(contact)
+            lead.save()
+            contacts_removed.append(contact)
+
+        return Response(data={'removed_contacts': contacts_removed})

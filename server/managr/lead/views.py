@@ -82,7 +82,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         current_lead = self.get_object()
         # restricted fields array to delete them if they are in
         restricted_fields = ('created_by',
-                             'account', 'claimed_by',)
+                             'account', 'claimed_by', 'contacts',)
 
         # create new dict to not affect request data
         data = dict(request.data)
