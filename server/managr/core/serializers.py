@@ -10,6 +10,34 @@ from managr.api.serializers import OrganizationRefSerializer, AccountRefSerializ
 from managr.api.models import Account
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """ UserSerializer to update user fields, only managers with admin access and superusers can update email """
+
+    organization_ref = OrganizationRefSerializer(
+        many=False, source='organization', read_only=True)
+    accounts_ref = AccountRefSerializer(
+        many=True, source='organization.accounts', read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'organization',
+            'organization_ref',
+            'accounts_ref',
+            'type',
+            'is_active',
+            'is_invited',
+
+
+        )
+    read_only_fields = ('email', 'organization', 'type',
+                        'is_active', 'is_invited',)
+
+
 class UserLoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(allow_blank=False, required=True)
     password = serializers.CharField(allow_blank=False, required=True)
@@ -65,29 +93,3 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             'organization': {'required': True},
         }
         read_only_fields = ('organization_ref',)
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """ UserSerializer to update user fields, only managers with admin access and superusers can update email """
-
-    organization_ref = OrganizationRefSerializer(
-        many=False, source='organization', read_only=True)
-    accounts_ref = AccountRefSerializer(
-        many=True, source='organization.accounts', read_only=True)
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'email',
-            'first_name',
-            'last_name',
-            'organization',
-            'organization_ref',
-            'accounts_ref',
-            'type',
-            'state',
-
-
-        )
-    read_only_fields = ('email', 'organization', 'type', 'state',)

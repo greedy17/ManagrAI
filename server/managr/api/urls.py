@@ -10,6 +10,14 @@ app_name = 'api'
 
 router = routers.SimpleRouter()
 
+urlpatterns = [
+    path(r'login/', core_views.UserLoginView.as_view()),
+    path('users/activation_link/<email>/',
+         core_views.ActivationLinkView.as_view(), name="get_activation_link"),
+    url(r'account-status/', core_views.get_account_status,
+        name='get_account_status')
+
+]
 
 router.register(r'users/invite', core_views.UserInvitationView, 'invite-user')
 router.register(r'users', core_views.UserViewSet, 'users')
@@ -35,10 +43,6 @@ router.register(r'action-choices',
                 lead_views.ActionChoiceViewSet, 'action-choices')
 router.register(r'actions', lead_views.ActionViewSet, 'actions')
 router.register(r'files', lead_views.FileViewSet, 'files')
-urlpatterns = [
-    path(r'login/', core_views.UserLoginView.as_view()),
-    url(r'account-status/', core_views.get_account_status,
-        name='get_account_status')
 
-]
+
 urlpatterns += router.urls

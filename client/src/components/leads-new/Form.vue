@@ -42,10 +42,10 @@
       </div>
       <div class="form-field">
         <AddContact
-          v-for="n in addContactFormCount"
-          :key="n"
-          :form="addContactForms[n]"
-          :error="errors.addContactForms && errors.addContactForms[n]"
+          v-for="(contactForm, idx) in addContactForms"
+          :key="idx"
+          :form="contactForm"
+          :error="errors.addContactForms && errors.addContactForms[idx]"
         />
       </div>
       <div class="form-field">
@@ -88,16 +88,15 @@ export default {
       selectedAccount: null,
       contacts: CollectionManager.create({ ModelClass: Contact }),
       contactsToInclude: {},
-      addContactFormCount: 1,
-      addContactForms: {
-        1: {
+      addContactForms: [
+        {
           firstName: '',
           lastName: '',
           title: '',
           email: '',
           phone: '',
         },
-      },
+      ],
       isFormValid: null, // client side validations
       success: null, //server side validations
       errors: {},
@@ -142,7 +141,6 @@ export default {
       }
     },
     addAnotherContactForm() {
-      let newFormsCount = this.addContactFormCount + 1
       let blankForm = {
         firstName: '',
         lastName: '',
@@ -150,9 +148,7 @@ export default {
         email: '',
         phone: '',
       }
-      let newForms = Object.assign({}, this.addContactForms, { [newFormsCount]: blankForm })
-      this.addContactForms = newForms
-      this.addContactFormCount = newFormsCount
+      this.addContactForms.push(blankForm)
     },
     async createLead() {
       // reset component data when submission begins, in case of prior request
@@ -172,9 +168,8 @@ export default {
 
       // if it gets this far and any of the sub-forms are completed, need to create contact(s)
       let contacts = []
-      for (let i = 0; i < this.addContactFormCount; ++i) {
-        let n = i + 1
-        let currentForm = this.addContactForms[n]
+      for (let i = 0; i < this.addContactForms.length; ++i) {
+        let currentForm = this.addContactForms[i]
         let isValid = this.isContactFormValid(currentForm)
         // if isValid and any field has length, then form is completely filled
         if (isValid && currentForm.firstName.length) {
@@ -191,10 +186,7 @@ export default {
           contacts.push(contactData)
         }
       }
-      contacts = [
-        ...contacts,
-        ...Object.keys(this.contactsToInclude).map(contactID => this.contactsToInclude[contactID]),
-      ]
+      contacts = [...contacts, ...Object.values(this.contactsToInclude)]
 
       Lead.api.create(this.leadTitle, this.selectedAccount, contacts).then(response => {
         this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
@@ -214,12 +206,11 @@ export default {
       let formErrors = { addContactForms: {} }
       let areFormsValid = true
 
-      for (let i = 0; i < this.addContactFormCount; ++i) {
-        let n = i + 1
-        let currentForm = this.addContactForms[n]
+      for (let i = 0; i < this.addContactForms.length; ++i) {
+        let currentForm = this.addContactForms[i]
         let isValid = this.isContactFormValid(currentForm)
         if (!isValid) {
-          formErrors.addContactForms[n] = true
+          formErrors.addContactForms[i] = true
           areFormsValid = false
         }
       }

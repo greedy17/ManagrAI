@@ -55,7 +55,7 @@ class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(account__organization=user.organization_id)
         else:
             return None
@@ -83,8 +83,6 @@ class Lead(TimeStampModel):
         "core.User", related_name="created_leads", null=True, on_delete=models.SET_NULL)
     linked_contacts = models.ManyToManyField(
         'api.Contact', related_name='leads', blank=True)
-    # last_updated will also be updated when an action is taken
-    last_updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
@@ -121,7 +119,7 @@ class ListQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(created_by__organization=user.organization_id)
         else:
             return None
@@ -131,7 +129,6 @@ class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
-    last_updated_at = models.DateTimeField(auto_now=True)
     leads = models.ManyToManyField('Lead', blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
@@ -144,7 +141,7 @@ class FileQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(uploaded_by__organization=user.organization_id)
         else:
             return None
@@ -178,7 +175,7 @@ class NoteQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(created_by__organization=user.organization_id)
         else:
             return None
@@ -187,7 +184,6 @@ class NoteQuerySet(models.QuerySet):
 class Note(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
     content = models.CharField(max_length=255, blank=False, null=False)
-    last_updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
     updated_by = models.ForeignKey(
@@ -207,7 +203,7 @@ class ForecastQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(lead__account__organization=user.organization_id)
         else:
             return None
@@ -215,7 +211,6 @@ class ForecastQuerySet(models.QuerySet):
 
 class Forecast(TimeStampModel):
     """ only one forecast per lead is allowed """
-    last_updated_at = models.DateTimeField(auto_now=True)
     lead = models.OneToOneField('Lead', null=True, on_delete=models.CASCADE)
     forecast = models.CharField(
         choices=FORECAST_CHOICES, default=FORECAST_NA, max_length=255, null=True)
@@ -233,7 +228,6 @@ class ActivityLog(TimeStampModel):
     """
     activity = models.CharField(
         max_length=255, choices=ACTIVITY_CHOICES, help_text="records any actions taken on a lead")
-    last_updated_at = models.DateTimeField(auto_now=True)
     action_taken_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL)
     lead = models.ForeignKey(
@@ -250,7 +244,7 @@ class ReminderQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(lead__account__organization=user.organization)
         else:
             return None
@@ -275,7 +269,6 @@ class Reminder(TimeStampModel):
     created_by = models.ForeignKey(
         'core.User', on_delete=models.CASCADE, null=True)
 
-    last_updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
 
@@ -303,7 +296,7 @@ class ActionChoiceQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(organization=user.organization_id)
         else:
             return None
@@ -326,7 +319,7 @@ class ActionQuerySet(models.QuerySet):
 
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(action_type__organization=user.organization_id)
         else:
             return None
@@ -338,7 +331,6 @@ class Action(TimeStampModel):
     action_detail = models.CharField(max_length=255, blank=True, null=False)
     lead = models.ForeignKey(
         'Lead', on_delete=models.CASCADE, null=True, blank=False, related_name="actions")
-    last_updated_at = models.DateTimeField(auto_now=True)
     objects = ActionQuerySet.as_manager()
 
     class Meta:
