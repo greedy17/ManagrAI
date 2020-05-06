@@ -105,7 +105,7 @@ class Contact(TimeStampModel):
     last_name = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     phone_number_1 = models.CharField(max_length=255)
-    phone_number_2 = models.CharField(max_length=255)
+    phone_number_2 = models.CharField(max_length=255, blank=True)
     account = models.ForeignKey(
         'Account', related_name="contacts", blank=False, null=True, on_delete=models.CASCADE)
     objects = ContactQuerySet.as_manager()

@@ -74,7 +74,7 @@ class Lead(TimeStampModel):
         help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0)
-    primary_description = models.CharField(max_length=150)
+    primary_description = models.CharField(max_length=150, blank=True)
     secondary_description = models.CharField(max_length=150, blank=True)
     rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
     account = models.ForeignKey('api.Account', related_name="leads",

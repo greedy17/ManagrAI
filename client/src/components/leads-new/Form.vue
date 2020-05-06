@@ -1,14 +1,26 @@
 <template>
   <div class="form">
     <div class="step-1">
+      <div class="errors">
+        <!-- client side validations -->
+        <div v-if="isFormValid !== null && !isFormValid && errors.leadTitleIsBlank">
+          Lead Title may not be blank.
+        </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.accountNotSelected">
+          Account must be selected.
+        </div>
+      </div>
       <div class="form-field">
         <label>Lead Title</label>
-        <input class="input" tabindex="1" type="text" placeholder="Title" />
+        <input v-model="leadTitle" class="input" tabindex="1" type="text" placeholder="Title" />
       </div>
       <div class="form-field">
         <label>Account Relationship</label>
-        <select tabindex="2">
-          <option value="">Once the AccountsAPI works, this dropdown will be populated</option>
+        <select tabindex="2" @change="onSelectAccount" :disabled="currentStep > 1">
+          <option disabled :selected="selectedAccount == null" value="">Select Account</option>
+          <option v-for="account in accounts.list" :key="account.id" :value="account.id">{{
+            account.name
+          }}</option>
         </select>
       </div>
       <div v-if="currentStep < 2" class="button-container">
@@ -18,8 +30,10 @@
     <div v-if="currentStep > 1" class="step-2">
       <div class="form-field">
         <label>Contacts</label>
+        <p v-if="!contacts.list.length">No contacts available.</p>
         <ContactCheckBox
-          v-for="contact in accountContacts"
+          v-else
+          v-for="contact in contacts.list"
           :key="contact.id"
           :contact="contact"
           :checked="!!contactsToInclude[contact.id]"
@@ -27,7 +41,12 @@
         />
       </div>
       <div class="form-field">
-        <AddContact v-for="n in addContactSubForms" :key="n" />
+        <AddContact
+          v-for="(contactForm, idx) in addContactForms"
+          :key="idx"
+          :form="contactForm"
+          :error="errors.addContactForms && errors.addContactForms[idx]"
+        />
       </div>
       <div class="form-field">
         <label @click="addAnotherContactForm" class="add-another-button">
@@ -45,23 +64,10 @@
 <script>
 import ContactCheckBox from '@/components/leads-new/ContactCheckBox'
 import AddContact from '@/components/leads-new/AddContact'
-
-let exampleContacts = [
-  {
-    id: 1,
-    fullName: 'Sara Smith',
-    title: 'COO',
-    phone: '123-456-7890',
-    email: 'sara@samsung.com',
-  },
-  {
-    id: 2,
-    fullName: 'Jake Murray',
-    title: 'CFO',
-    phone: '123-456-7899',
-    email: 'jake@samsung.com',
-  },
-]
+import Lead from '@/services/leads'
+import Account from '@/services/accounts'
+import Contact from '@/services/contacts'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'Form',
@@ -77,29 +83,165 @@ export default {
   },
   data() {
     return {
-      accountContacts: exampleContacts,
+      leadTitle: '',
+      accounts: CollectionManager.create({ ModelClass: Account }),
+      selectedAccount: null,
+      contacts: CollectionManager.create({ ModelClass: Contact }),
       contactsToInclude: {},
-      addContactSubForms: 1,
+      addContactForms: [
+        {
+          firstName: '',
+          lastName: '',
+          title: '',
+          email: '',
+          phone: '',
+        },
+      ],
+      isFormValid: null, // client side validations
+      success: null, //server side validations
+      errors: {},
     }
   },
+  created() {
+    this.accounts.refresh()
+  },
   methods: {
+    onSelectAccount({ target: { value } }) {
+      this.selectedAccount = value
+    },
     showStepTwo() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data
+      let validationResults = this.stepOneClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      this.contacts.filters.account = this.selectedAccount
+      this.contacts.refresh()
       this.$emit('clicked-next')
     },
-    handleCheckboxClick({ status, contactID }) {
+    handleCheckboxClick({ status, contactID, email }) {
       // depending on payload status add or remove that key
       // plainObject is used instead of an array because of O(1) lookup for <ContactCheckBox />
       if (status) {
-        this.contactsToInclude = Object.assign({}, this.contactsToInclude, { [contactID]: true })
+        this.contactsToInclude = Object.assign({}, this.contactsToInclude, {
+          [contactID]: { email },
+        })
       } else {
-        this.contactsToInclude = Object.assign({}, this.contactsToInclude, { [contactID]: false })
+        let contactsToInclude = Object.assign({}, this.contactsToInclude)
+        delete contactsToInclude[contactID]
+        this.contactsToInclude = contactsToInclude
       }
     },
     addAnotherContactForm() {
-      this.addContactSubForms += 1
+      let blankForm = {
+        firstName: '',
+        lastName: '',
+        title: '',
+        email: '',
+        phone: '',
+      }
+      this.addContactForms.push(blankForm)
     },
-    createLead() {
-      alert('Once we have the newly created Lead, we can route the user to its page')
+    async createLead() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data
+      let validationResults = this.stepTwoClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      this.loading = true
+
+      // if it gets this far and any of the sub-forms are completed, need to create contact(s)
+      let contacts = []
+      for (let i = 0; i < this.addContactForms.length; ++i) {
+        let currentForm = this.addContactForms[i]
+        let isValid = this.isContactFormValid(currentForm)
+        // if isValid and any field has length, then form is completely filled
+        if (isValid && currentForm.firstName.length) {
+          // NOTE( Bruno 5-4-20):
+          //       client-side form includes one phone number, so that is being sent as phoneNumber1
+          //       server-side does not yet include contact.position, so that is not being sent for now
+          let contactData = {
+            first_name: currentForm.firstName,
+            last_name: currentForm.lastName,
+            email: currentForm.email,
+            phone_number_1: currentForm.phone,
+            account: this.selectedAccount,
+          }
+          contacts.push(contactData)
+        }
+      }
+      contacts = [...contacts, ...Object.values(this.contactsToInclude)]
+
+      Lead.api.create(this.leadTitle, this.selectedAccount, contacts).then(response => {
+        this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
+      })
+    },
+    stepOneClientSideValidations() {
+      let formErrors = {
+        leadTitleIsBlank: this.leadTitleIsBlank,
+        accountNotSelected: this.accountNotSelected,
+      }
+      let isFormValid = !this.leadTitleIsBlank && !this.accountNotSelected
+
+      return [isFormValid, formErrors]
+    },
+    stepTwoClientSideValidations() {
+      // if any "Add Contact" field is filled in a sub-form, then all fields must be filled for that sub-form
+      let formErrors = { addContactForms: {} }
+      let areFormsValid = true
+
+      for (let i = 0; i < this.addContactForms.length; ++i) {
+        let currentForm = this.addContactForms[i]
+        let isValid = this.isContactFormValid(currentForm)
+        if (!isValid) {
+          formErrors.addContactForms[i] = true
+          areFormsValid = false
+        }
+      }
+
+      return [areFormsValid, formErrors]
+    },
+    isContactFormValid(formData) {
+      // Must be entirely blank or fully completed
+      let userInputPresent =
+        formData.firstName.length ||
+        formData.lastName.length ||
+        formData.email.length ||
+        formData.title.length ||
+        formData.phone.length
+
+      let anyFieldBlank =
+        !formData.firstName.length ||
+        !formData.lastName.length ||
+        !formData.email.length ||
+        !formData.title.length ||
+        !formData.phone.length
+
+      return !userInputPresent || (userInputPresent && !anyFieldBlank)
+    },
+  },
+  computed: {
+    leadTitleIsBlank() {
+      return !this.leadTitle.length
+    },
+    accountNotSelected() {
+      return !this.selectedAccount
     },
   },
 }
@@ -176,5 +318,9 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+}
+
+.errors {
+  color: $coral;
 }
 </style>
