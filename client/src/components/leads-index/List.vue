@@ -8,6 +8,9 @@
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="trueList.refreshing" />
       <Lead v-else v-for="lead in trueList.list" :key="lead.id" :lead="lead" />
+      <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
+        Load More
+      </button>
     </div>
   </div>
 </template>
@@ -48,6 +51,9 @@ export default {
       }
       this.showLeads = !this.showLeads
     },
+    loadMore() {
+      alert('WIP')
+    },
   },
   computed: {
     numOfLeads() {
@@ -58,12 +64,16 @@ export default {
         border: this.showLeads ? '2px solid #fafafa' : '2px solid white', // $off-white || $white
       }
     },
+    moreToLoad() {
+      return !!this.trueList.pagination.next
+    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .list-header {
@@ -104,5 +114,10 @@ export default {
   margin-left: 1%;
   margin-right: 1%;
   padding-top: 0.5rem;
+}
+
+.load-more-button {
+  @include primary-button();
+  margin: 0.5rem auto;
 }
 </style>
