@@ -52,9 +52,11 @@ export default {
   props: {
     primaryDescription: {
       required: true,
+      type: String,
     },
     secondaryDescription: {
       required: true,
+      type: String,
     },
   },
   data() {
