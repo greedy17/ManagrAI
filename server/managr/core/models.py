@@ -51,13 +51,14 @@ class UserManager(BaseUserManager):
         """Create and save a regular User with the given email and password."""
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('is_active', False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
         """Create a superuser with the given email and password."""
         extra_fields['is_staff'] = True
         extra_fields['is_superuser'] = True
-        extra_fields['state'] = STATE_ACTIVE
+        extra_fields['is_active'] = True
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -77,15 +78,14 @@ class User(AbstractUser, TimeStampModel):
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(
         max_length=255, blank=True, null=False, default='')
-    state = models.CharField(max_length=255, choices=STATE_CHOCIES,
-                             default=STATE_INVITED, null=False, blank=False)
+    is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
         help_text=('The magic token is a randomly-generated uuid that can be '
                    'used to identify the user in a non-password based login flow. ')
     )
-    # may need to make this a property as it keeps re-running a migration
+    # may need to make this a property as it keeps re-running a migration   is_invited = models.BooleanField(max_length=255, default=False)
     magic_token_expiration = models.DateTimeField(
         help_text='The datetime when the magic token is expired.',
         null=True

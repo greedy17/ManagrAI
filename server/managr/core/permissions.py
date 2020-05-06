@@ -15,7 +15,7 @@ class IsOrganizationManager(permissions.BasePermission):
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError('Authentication Required.')
-        return user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.state == STATE_ACTIVE
+        return user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.is_active
 
 
 class IsSalesPerson(permissions.BasePermission):
@@ -25,7 +25,7 @@ class IsSalesPerson(permissions.BasePermission):
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError('Authentication Required.')
 
-        return user.organization and user.state == STATE_ACTIVE
+        return user.organization and user.is_active
 
 
 def lead_permissions(self, request, view, obj):
