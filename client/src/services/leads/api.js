@@ -31,6 +31,7 @@ export default class LeadAPI {
       pageSize: ApiFilter.create({ key: 'page_size' }),
 
       onList: ApiFilter.create({ key: 'on_list' }),
+      byList: ApiFilter.create({ key: 'by_list' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
