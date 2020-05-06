@@ -67,6 +67,14 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         for contact in contacts:
             c, created = Contact.objects.for_user(request.user).get_or_create(
                 email=contact['email'], defaults={'account': account})
+            if created:
+                c.first_name = (contact.get('first_name', c.first_name))
+                c.last_name = (contact.get('last_name', c.last_name))
+                c.phone_number_1 = (contact.get(
+                    'phone_number_1', c.phone_number_1))
+                c.phone_number_2 = (contact.get(
+                    'phone_number_2', c.phone_number_2))
+                c.save()
             contact_list.append(c.id)
         serializer = self.serializer_class(
             data=data, context={'request': request})
