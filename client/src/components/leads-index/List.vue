@@ -6,18 +6,22 @@
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <Lead v-for="lead in list.leads" :key="lead.id" :lead="lead" />
+      <ComponentLoadingSVG v-if="trueList.refreshing" />
+      <Lead v-else v-for="lead in trueList.list" :key="lead.id" :lead="lead" />
     </div>
   </div>
 </template>
 
 <script>
+import LeadModel from '@/services/leads'
+import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
 
 export default {
   name: 'List',
   props: {
     list: {
+      // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
       type: Object,
       required: true,
     },
@@ -28,10 +32,20 @@ export default {
   data() {
     return {
       showLeads: false,
+      madeInitialRetrieval: false,
+      trueList: CollectionManager.create({
+        ModelClass: LeadModel,
+        filters: { byList: this.list.id },
+      }),
     }
   },
   methods: {
     toggleLeads() {
+      if (!this.madeInitialRetrieval) {
+        this.trueList.refresh().then(() => {
+          this.madeInitialRetrieval = true
+        })
+      }
       this.showLeads = !this.showLeads
     },
   },
