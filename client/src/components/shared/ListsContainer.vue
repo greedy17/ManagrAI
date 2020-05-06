@@ -1,20 +1,32 @@
 <template>
   <div class="lists-container">
     <List v-for="list in lists" :key="list.id" :list="list" />
-    <NoList :leads="leadsWithoutList" />
+    <CustomList :collection="leadsWithoutList" :title="'No List'" />
+    <CustomList :collection="allLeads" :title="'All Leads'" />
   </div>
 </template>
 
 <script>
 import List from '@/components/leads-index/List'
-import NoList from '@/components/leads-index/NoList'
+import CustomList from '@/components/leads-index/CustomList'
 
 export default {
   name: 'ListsContainer',
-  props: ['lists', 'leadsWithoutList'],
+  props: {
+    lists: {
+      type: Array,
+      required: true,
+    },
+    leadsWithoutList: {
+      type: Object,
+    },
+    allLeads: {
+      type: Object,
+    },
+  },
   components: {
     List,
-    NoList,
+    CustomList,
   },
 }
 </script>

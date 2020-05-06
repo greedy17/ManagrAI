@@ -16,7 +16,12 @@ import Lead from '@/components/leads-index/Lead'
 
 export default {
   name: 'List',
-  props: ['list'],
+  props: {
+    list: {
+      type: Object,
+      required: true,
+    },
+  },
   components: {
     Lead,
   },
@@ -32,7 +37,7 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.leads.length
+      return this.list.leadCount
     },
     listHeaderBorder() {
       return {
@@ -84,5 +89,6 @@ export default {
 .list-leads {
   margin-left: 1%;
   margin-right: 1%;
+  padding-top: 0.5rem;
 }
 </style>

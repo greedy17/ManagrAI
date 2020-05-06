@@ -4,9 +4,11 @@ import ListAPI from './api'
 export default class List {
   static api = ListAPI.create(List)
 
-  constructor({ id = '' } = {}) {
+  constructor({ id = '', title = '', leadCount = null } = {}) {
     Object.assign(this, {
       id,
+      title,
+      leadCount,
     })
   }
 

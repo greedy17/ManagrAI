@@ -15,7 +15,11 @@
       <ToolBar class="toolbar" />
     </div>
     <div class="lists-container-pane">
-      <ListsContainer :lists="lists" :leadsWithoutList="leadsWithoutList" />
+      <ListsContainer
+        :lists="lists.list"
+        :leadsWithoutList="leadsWithoutList"
+        :allLeads="allLeads"
+      />
     </div>
   </div>
 </template>
@@ -26,8 +30,8 @@ import ListsContainer from '@/components/shared/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Lead from '@/services/leads'
+import List from '@/services/lists'
 import CollectionManager from '@/services/collectionManager'
-// import List from '@/services/lists'
 
 export default {
   name: 'LeadsIndex',
@@ -39,22 +43,25 @@ export default {
   data() {
     return {
       loading: true,
-      lists: null,
-      leadsWithoutList: null,
+      lists: CollectionManager.create({
+        ModelClass: List,
+      }),
+      leadsWithoutList: CollectionManager.create({
+        ModelClass: Lead,
+        filters: {
+          onList: 'False',
+        },
+      }),
+      allLeads: CollectionManager.create({
+        ModelClass: Lead,
+      }),
     }
   },
   created() {
-    CollectionManager.create({
-      ModelClass: Lead,
-      filters: {
-        onList: 'False',
-      },
+    let promises = [this.lists.refresh(), this.leadsWithoutList.refresh(), this.allLeads.refresh()]
+    Promise.all(promises).then(() => {
+      this.loading = false
     })
-      .refresh()
-      .then(collection => {
-        this.leadsWithoutList = collection.list
-        this.loading = false
-      })
   },
   methods: {
     toggleView() {

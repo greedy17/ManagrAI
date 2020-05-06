@@ -2,11 +2,11 @@
   <div class="list">
     <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title">No List</span>
+      <span class="list-title">{{ title }}</span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <Lead v-for="lead in leads" :key="lead.id" :lead="lead" />
+      <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
     </div>
   </div>
 </template>
@@ -15,8 +15,17 @@
 import Lead from '@/components/leads-index/Lead'
 
 export default {
-  name: 'NoList',
-  props: ['leads'],
+  name: 'CustomList', // such as NoList and AllLeads
+  props: {
+    collection: {
+      type: Object,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+  },
   components: {
     Lead,
   },
@@ -32,7 +41,7 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.leads.length
+      return this.collection.pagination.totalCount
     },
     listHeaderBorder() {
       return {
@@ -84,5 +93,6 @@ export default {
 .list-leads {
   margin-left: 1%;
   margin-right: 1%;
+  padding-top: 0.5rem;
 }
 </style>
