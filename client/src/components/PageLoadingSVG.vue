@@ -85,7 +85,7 @@ const themeColors = [DARK_GREEN, LIME_GREEN, YELLOW, CORAL]
 const color = themeColors[Math.floor(Math.random() * themeColors.length)]
 
 export default {
-  name: 'LoadingSVG',
+  name: 'PageLoadingSVG',
   data() {
     return { color }
   },

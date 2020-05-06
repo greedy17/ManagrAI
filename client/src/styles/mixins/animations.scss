@@ -1,0 +1,12 @@
+// "Extreme Pulse" - Scale the item from 0% to 100% and back
+//                   again over the course of 1.4 seconds.
+@keyframes extreme-pulse {
+    0%, 80%, 100% { 
+    transform: scale(0);
+    } 40% { 
+    transform: scale(1.0);
+    }      
+}
+@mixin extreme-pulse-animation () {
+animation: extreme-pulse 1.4s infinite ease-in-out both;
+}

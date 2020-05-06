@@ -1,5 +1,5 @@
 <template>
-  <LoadingSVG v-if="loading" />
+  <PageLoadingSVG v-if="loading" />
   <div v-else class="leads-detail">
     <div class="left-pane">
       <ToolBar
