@@ -32,6 +32,19 @@
       </div>
       <div class="graphic-statistic section-shadow">
         <div class="icon-container">
+          <img class="icon" src="@/assets/images/sms.svg" alt="icon" />
+        </div>
+        <div class="information">
+          <span class="top">
+            19 texts
+          </span>
+          <span class="bottom">
+            Yesterday
+          </span>
+        </div>
+      </div>
+      <div class="graphic-statistic section-shadow">
+        <div class="icon-container">
           <img class="icon" src="@/assets/images/email.svg" alt="icon" />
         </div>
         <div class="information">

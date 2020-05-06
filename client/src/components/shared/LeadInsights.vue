@@ -23,6 +23,19 @@
     </div>
     <div class="insight-container section-shadow">
       <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/sms.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          4 Texts
+        </span>
+        <span class="insight-bottom">
+          1/14/20
+        </span>
+      </div>
+    </div>
+    <div class="insight-container section-shadow">
+      <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
       </div>
       <div class="insight-info">
@@ -92,7 +105,7 @@ export default {
 
 .insights {
   width: 16rem;
-  height: 21rem;
+  height: auto;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px $soft-gray;
   background-color: $white;
