@@ -16,7 +16,7 @@ class LeadFilterSet(FilterSet):
     """
     on_list = django_filters.BooleanFilter(method="list_count")
     is_claimed = django_filters.BooleanFilter(method="claim_status")
-    by_list = django_filters.CharFilter(method="retrieve_users_in_list")
+    by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
 
     class Meta:
         model = Lead
