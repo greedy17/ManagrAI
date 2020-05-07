@@ -24,7 +24,6 @@ export default {
   name: 'List',
   props: {
     list: {
-      // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
       type: Object,
       required: true,
     },
@@ -57,7 +56,7 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.leadCount
+      return this.list.list.length
     },
     listHeaderBorder() {
       return {
