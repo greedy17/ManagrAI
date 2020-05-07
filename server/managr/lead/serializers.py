@@ -5,6 +5,7 @@ from managr.api.serializers import AccountRefSerializer
 from managr.core.models import User
 from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator
+from collections import OrderedDict
 
 from rest_framework import (
     status, filters, permissions
@@ -28,7 +29,7 @@ class UserRefSerializer(serializers.ModelSerializer):
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ('id', 'title', 'content',)
+        fields = ('__all__')
 
 
 class LeadListRefSerializer(serializers.ModelSerializer):
