@@ -95,9 +95,12 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 
 class ReminderSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Reminder
-        fields = ('__all__')
+        fields = ('id', 'title', 'content', 'datetime_for',
+                  'completed', 'lead', 'created_by', 'updated_by', 'viewed',)
+        read_only_fields = ('viewed', 'completed',)
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):
@@ -123,6 +126,7 @@ class LeadSerializer(serializers.ModelSerializer):
         if value == lead_constants.LEAD_STATUS_CLOSED:
             raise serializers.ValidationError(
                 {'detail': 'Cannot Close Lead by Update'})
+        return value
 
     account_ref = AccountRefSerializer(
         source='account', read_only=True)
@@ -137,7 +141,7 @@ class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
-                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'last_updated_at',
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts',
                         'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'contract', 'last_updated_by',
                   'last_updated_by_ref', 'actions', 'actions_ref', 'lists', 'files',)
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts

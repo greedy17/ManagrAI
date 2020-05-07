@@ -4,16 +4,64 @@ import LeadAPI from './api'
 export default class Lead {
   static api = LeadAPI.create(Lead)
 
-  constructor(lead) {
-    lead = lead || {}
-
-    // TODO(Bruno 4-9-20): fill out constructor based on this app's user properties
-    // const {
-    //   id = '',
-    // } = lead
-    // Object.assign(this, {
-    //   id,
-    // })
+  constructor({
+    id = '',
+    title = '',
+    amount = null,
+    closingAmount = null,
+    contract = null,
+    primaryDescription = '',
+    secondaryDescription = '',
+    rating = null,
+    account = null,
+    accountRef = null,
+    createdBy = null,
+    createdByRef = null,
+    datetimeCreated = null,
+    files = null,
+    linkedContacts = null,
+    lastUpdatedAt = null,
+    lastUpdatedBy = null,
+    lastUpdatedByRef = null,
+    status = null,
+    forecast = null,
+    forecastRef = null,
+    claimedBy = null,
+    claimedByRef = null,
+    actions = null,
+    actionsRef = null,
+    lists = null,
+    notes = null,
+  } = {}) {
+    Object.assign(this, {
+      id,
+      title,
+      amount,
+      closingAmount,
+      contract,
+      primaryDescription,
+      secondaryDescription,
+      rating,
+      account,
+      accountRef,
+      createdBy,
+      createdByRef,
+      datetimeCreated,
+      files,
+      linkedContacts,
+      lastUpdatedAt,
+      lastUpdatedBy,
+      lastUpdatedByRef,
+      status,
+      forecast,
+      forecastRef,
+      claimedBy,
+      claimedByRef,
+      actions,
+      actionsRef,
+      lists,
+      notes,
+    })
   }
 
   static create(opts) {

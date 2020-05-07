@@ -15,7 +15,8 @@ class CustomUserAdmin(UserAdmin):
             'first_name',
             'last_name',
             'email',
-            'state',
+            'is_active',
+            'is_invited',
             'magic_token_expiration',
             'organization'
         )}),

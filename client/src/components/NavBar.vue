@@ -7,6 +7,7 @@
     </div>
     <div v-if="userIsLoggedIn" class="links">
       <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+      <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
       <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
       <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
     </div>
@@ -36,7 +37,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
