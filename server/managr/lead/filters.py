@@ -53,12 +53,13 @@ class ForecastFilterSet(FilterSet):
 
     class Meta:
         model = Forecast
-        fields = ['by_user']
+        fields = ['by_user', 'forecast']
 
     def forecasts_by_user(self, queryset, name, value):
         """ provide a user or a list of users """
+        # TODO:- check to see if user exists
         if value:
             value = value.strip()
             user_list = value.split(',')
             if self.request.user.organization.users.filter(id__in=user_list).exists():
-                return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')
+                return queryset.filter(lead__claimed_by__in=user_list).order_by('forecast')
