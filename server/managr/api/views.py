@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.db import transaction
 from django.db import IntegrityError
 from rest_framework.authtoken.models import Token
+from django.core.exceptions import ValidationError as V
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
     authentication,
@@ -98,18 +99,28 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
         """ special endpoint to add a contact to a lead or leads, takes a list of contact ids and lead ids"""
         u = request.user
         d = request.data
-        contacts = d['contacts']
+        contacts = d.get('contacts', [])
         contacts_added = list()
-        leads = d['leads']
-        for lead in leads:
+        leads = d.get('leads', [])
+        for (index, lead)in enumerate(leads):
             for contact in contacts:
-                l = Lead.objects.get(pk=lead)
                 try:
-                    l.linked_contacts.add(contact)
-                    l.save()
-                    contacts_added.append(contact)
-                except IntegrityError:
+                    l = Lead.objects.get(pk=lead)
+                except (V, Lead.DoesNotExist, ValueError,):
+                    # if any exceptions of the 3 above occur remove the lead from the list and continue
+                    # with the rest
+                    del leads[index]
+                    l = None
                     pass
+                if l:
+                    try:
+                        l.linked_contacts.add(contact)
+                        l.save()
+                        contacts_added.append(contact)
+                    except IntegrityError:
+                        # passing the integrity error, it is triggered if a contact already exists on a user
+                        # it means that a contact is already added to this user
+                        pass
 
         return Response(data={'linked_contacts_added': contacts_added})
 
@@ -117,14 +128,19 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
     def remove_from_lead(self, request, *args, **kwargs):
         """ special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
         d = request.data
-        contacts = d['contacts']
+        contacts = d.get('contacts', [])
         contacts_removed = list()
-        l = d['lead']
+        l = d.get('lead', None)
+        if not l:
+            raise ValidationError(
+                {'detail': 'a lead is required for this operation'})
 
         for contact in contacts:
             lead = Lead.objects.get(pk=l)
-            lead.linked_contacts.remove(contact)
-            lead.save()
-            contacts_removed.append(contact)
+            if lead.linked_contacts.filter(pk=contact).exists():
+                lead.linked_contacts.remove(contact)
+            # if a contact does not exist no error is thrown it will continue as though it removed a contact
+                lead.save()
+                contacts_removed.append(contact)
 
         return Response(data={'removed_contacts': contacts_removed})
