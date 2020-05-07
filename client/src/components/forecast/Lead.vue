@@ -10,8 +10,8 @@
       </span>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <LeadForecastDropdown :forecast="leadForecast" />
-      <LeadStatusDropdown :status="lead.status" />
+      <LeadForecastDropdown :forecast="forecast.forecast" @updated-forecast="updateForecast" />
+      <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
       <div class="lead-lists">
         <LeadList class="lead-list" :listName="'Growth Accounts'" />
         <LeadList class="lead-list" :listName="'Q2 Buyers'" />
@@ -30,6 +30,8 @@ import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import LeadList from '@/components/shared/LeadList'
+import Lead from '@/services/leads'
+import Forecast from '@/services/forecasts'
 
 export default {
   name: 'Lead',
@@ -38,8 +40,8 @@ export default {
       type: Object,
       required: true,
     },
-    leadForecast: {
-      type: String,
+    forecast: {
+      type: Object,
       required: true,
     },
   },
@@ -57,6 +59,30 @@ export default {
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails
+    },
+    updateStatus(value) {
+      let patchData = { status: value }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead.status = lead.status
+      })
+    },
+    updateForecast(value) {
+      if (this.forecast && this.forecast.id) {
+        // since forecast exists, patch forecast
+        let patchData = {
+          lead: this.lead.id,
+          forecast: value,
+        }
+        Forecast.api.update(this.forecast.id, patchData).then(() => {
+          this.$emit('delete-lead', this.lead.id)
+        })
+      } else {
+        // since currently null, create forecast
+        Forecast.api.create(this.lead.id, value).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      }
     },
   },
   computed: {
