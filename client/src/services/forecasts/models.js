@@ -4,9 +4,19 @@ import ForecastAPI from './api'
 export default class Forecast {
   static api = ForecastAPI.create(Forecast)
 
-  constructor({ id = '' } = {}) {
+  constructor({
+    id = '',
+    datetimeCreated = null,
+    forecast = null,
+    lastEdited = null,
+    lead = null,
+  } = {}) {
     Object.assign(this, {
       id,
+      datetimeCreated,
+      forecast,
+      lastEdited,
+      lead,
     })
   }
 

@@ -4,7 +4,7 @@
       <span class="forecast-label">Forecast</span>
       <LeadForecastDropdown
         class="forecast-dropdown"
-        :forecast="lead.forecast"
+        :forecast="lead.forecast && lead.forecastRef.forecast"
         :transparent="true"
         @updated-forecast="emitUpdatedForecast"
       />

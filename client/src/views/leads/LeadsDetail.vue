@@ -49,6 +49,7 @@ import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
+import Forecast from '@/services/forecasts'
 
 export default {
   name: 'LeadsDetail',
@@ -98,10 +99,26 @@ export default {
       })
     },
     updateForecast(value) {
-      alert('selected' + value + '(sever-side WIP)')
+      if (this.lead.forecast) {
+        // since forecast exists, patch forecast
+        let patchData = {
+          lead: this.lead.id,
+          forecast: value,
+        }
+        Forecast.api.update(this.lead.forecastRef.id, patchData).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      } else {
+        // since currently null, create forecast
+        Forecast.api.create(this.lead.id, value).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      }
     },
     updateStatus(value) {
-      let patchData = { status: value.toUpperCase() }
+      let patchData = { status: value }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
       })

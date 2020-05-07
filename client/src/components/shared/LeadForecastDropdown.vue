@@ -1,16 +1,21 @@
 <template>
   <div class="forecast-dropdown">
     <select @change="onChange" :style="computedStyles">
-      <option disabled :selected="forecast == null" value="">---</option>
-      <option :selected="option === forecast" v-for="option in enums" :key="option" :value="option">
+      <option
+        :selected="option.toUpperCase() === forecast"
+        v-for="option in enums"
+        :key="option"
+        :value="option"
+      >
         {{ option }}
       </option>
+      <option disabled :selected="forecast == null" value="">Unforecasted</option>
     </select>
   </div>
 </template>
 
 <script>
-const enums = ['50/50', 'Strong', 'Verbal', 'Future', 'Unforecasted']
+const enums = ['50/50', 'Strong', 'Verbal', 'Future']
 
 export default {
   name: 'LeadForecastDropdown',
@@ -30,7 +35,7 @@ export default {
   },
   methods: {
     onChange(e) {
-      this.$emit('updated-forecast', e.target.value)
+      this.$emit('updated-forecast', e.target.value.toUpperCase())
     },
   },
   computed: {

@@ -32,7 +32,7 @@ export default {
   },
   methods: {
     onChange(e) {
-      this.$emit('updated-status', e.target.value)
+      this.$emit('updated-status', e.target.value.toUpperCase())
     },
   },
   computed: {

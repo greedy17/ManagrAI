@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const FORECASTS_ENDPOINT = '/forecasts/'
+const GENERATE_FORECAST_ENDPOINT = uid => `/forecasts/${uid}/`
 
 export default class ForecastAPI {
   /**
@@ -45,9 +46,26 @@ export default class ForecastAPI {
       })
       .catch(
         apiErrorHandler({
-          apiName: 'ForecastAPI.list error',
+          apiName: 'ForecastAPI.list',
         }),
       )
+    return promise
+  }
+
+  create(lead, forecast) {
+    let data = { lead, forecast }
+    const promise = apiClient()
+      .post(FORECASTS_ENDPOINT, data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'ForecastAPI.create' }))
+    return promise
+  }
+
+  update(id, data) {
+    const promise = apiClient()
+      .patch(GENERATE_FORECAST_ENDPOINT(id), data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'ForecastAPI.update' }))
     return promise
   }
 }
