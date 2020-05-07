@@ -19,9 +19,13 @@
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div class="banner-button" @click="emitReleased">
+      <div v-if="lead.claimedBy" class="banner-button" @click="emitReleased">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
+      </div>
+      <div v-else class="banner-button" @click="emitClaimed">
+        <img class="button-icon" src="@/assets/images/claimed.svg" alt="icon" />
+        <span class="button-content">Claim</span>
       </div>
     </div>
   </div>
@@ -47,6 +51,9 @@ export default {
     },
     emitReleased() {
       this.$emit('lead-released')
+    },
+    emitClaimed() {
+      this.$emit('lead-claimed')
     },
     emitUpdatedForecast(value) {
       this.$emit('updated-forecast', value)

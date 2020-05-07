@@ -3,6 +3,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 // API Endpoints
 const LEADS_ENDPOINT = '/leads/'
 const GENERATE_LEAD_ENDPOINT = uid => `/leads/${uid}/`
+const GENERATE_CLAIM_ENDPOINT = uid => `/leads/${uid}/claim/`
 const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
 
 export default class LeadAPI {
@@ -51,6 +52,13 @@ export default class LeadAPI {
           apiName: 'LeadAPI.list error',
         }),
       )
+    return promise
+  }
+
+  claim(uid) {
+    const promise = apiClient()
+      .post(GENERATE_CLAIM_ENDPOINT(uid))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.claim' }))
     return promise
   }
 

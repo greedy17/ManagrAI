@@ -14,6 +14,7 @@
         :lead="lead"
         @lead-reset="resetLead"
         @lead-released="releaseLead"
+        @lead-claimed="claimLead"
         @updated-forecast="updateForecast"
         @updated-status="updateStatus"
       />
@@ -139,13 +140,24 @@ export default {
         })
       })
     },
+    claimLead() {
+      Lead.api.claim(this.lead.id).then(() => {
+        this.lead.claimedBy = this.$store.state.user.id
+        let message = `<div>Lead claimed!</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 2000,
+        })
+      })
+    },
     releaseLead() {
       Lead.api.unclaim(this.lead.id).then(() => {
         let message = `<div>Success! Lead released.</div>`
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 6000,
+          timeout: 4000,
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
