@@ -2,6 +2,7 @@ from django.db import models
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.lead import constants as lead_constants
 from managr.utils.misc import datetime_appended_filepath
+from django.contrib.postgres.fields import JSONField
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 
@@ -170,7 +171,7 @@ class File(TimeStampModel):
         ordering = ['-datetime_created']
 
 
-class NoteQuerySet(models.QuerySet):
+class BaseNoteQuerySet(models.QuerySet):
 
     def for_user(self, user):
         if user.is_superuser:
@@ -181,20 +182,73 @@ class NoteQuerySet(models.QuerySet):
             return None
 
 
-class Note(TimeStampModel):
+class BaseNote(TimeStampModel):
+    """ 
+        This is a Base model for all note style models 
+        Reminders, Notes and CallNotes all inherit from this base model 
+        Notes does not override or add any extra fields, however the other two do.
+        Note all models inherit the parent queryset manager
+    """
     title = models.CharField(max_length=255, blank=False, null=False)
     content = models.CharField(max_length=255, blank=False, null=False)
     created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL, related_name="created_notes")
+        "core.User", null=True, on_delete=models.SET_NULL, related_name='created_%(app_label)s_%(class)s')
     updated_by = models.ForeignKey(
-        "core.User", null=True, related_name="updated_notes", on_delete=models.SET_NULL)
+        "core.User", null=True, related_name="updated_%(app_label)s_%(class)s", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
-        'Lead', related_name='notes', null=True, on_delete=models.SET_NULL)
+        'Lead', related_name='%(app_label)s_%(class)ss', null=True, on_delete=models.SET_NULL)
 
-    objects = NoteQuerySet.as_manager()
+    objects = BaseNoteQuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+        ordering = ['-datetime_created']
+
+
+class Note(BaseNote):
 
     class Meta:
         ordering = ['-datetime_created']
+
+
+class Reminder(BaseNote):
+    """
+        Reminders are like notes they are created with a date time, a title and content
+        Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
+
+    """
+    datetime_for = models.DateTimeField()
+    completed = models.BooleanField(default=False)
+    # TODO: - will build this out on a separate branch pb
+    notification = models.ForeignKey(
+        'Notification', on_delete=models.CASCADE, related_name="reminders", null=True)
+    # this is a temporary field for a reminder the view status will be handled by notifications in V2
+    viewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-datetime_for']
+
+    def mark_as_viewed(self, user):
+        self.updated_by = user
+        self.viewed = True
+        self.save()
+
+    def mark_as_completed(self, user):
+        self.updated_by = user
+        self.completed = True
+        self.save()
+
+
+class CallNote(BaseNote):
+    """ this class (distinct from the call class) is also inherited from the base note class 
+        It will contain data that refers to a call (like call notes)
+    """
+    # TODO: Ask marcy about who the participants are, if they are only internal we can use a UserModel FK
+    # otherwise we should just save a json.string
+    # participants = models.
+
+    call_date = models.DateField(help_text="The date the call occured")
 
 
 class ForecastQuerySet(models.QuerySet):
@@ -237,55 +291,6 @@ class ActivityLog(TimeStampModel):
 
     class Meta:
         ordering = ['-datetime_created']
-
-
-class ReminderQuerySet(models.QuerySet):
-
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(lead__account__organization=user.organization)
-        else:
-            return None
-
-
-class Reminder(TimeStampModel):
-    """
-        Reminders are like notes they are created with a date time, a title and content
-        Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
-
-    """
-    title = models.CharField(max_length=255, blank=True, null=False)
-    content = models.CharField(max_length=255, blank=True, null=False)
-    datetime_for = models.DateTimeField()
-    completed = models.BooleanField(default=False)
-    # TODO: - will build this out on a separate branch pb
-    notification = models.ForeignKey(
-        'Notification', on_delete=models.CASCADE, related_name="reminders", null=True)
-    lead = models.ForeignKey(
-        'Lead', on_delete=models.CASCADE, related_name="reminders", null=True)
-
-    created_by = models.ForeignKey(
-        'core.User', on_delete=models.CASCADE, null=True)
-    updated_by = models.ForeignKey(
-        'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
-    # this is a temporary field for a reminder the view status will be handled by notifications in V2
-    viewed = models.BooleanField(default=False)
-    objects = ReminderQuerySet.as_manager()
-
-    class Meta:
-        ordering = ['-datetime_for']
-
-    def mark_as_viewed(self, user):
-        self.updated_by = user
-        self.viewed = True
-        self.save()
-
-    def mark_as_completed(self, user):
-        self.updated_by = user
-        self.completed = True
-        self.save()
 
 
 class Notification(TimeStampModel):

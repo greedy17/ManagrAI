@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder, ActionChoice, Action
+from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder, ActionChoice, Action, CallNote
 from managr.api.serializers import AccountRefSerializer
 from managr.core.models import User
 from managr.lead import constants as lead_constants
+from django.core.paginator import Paginator
+from collections import OrderedDict
 
 from rest_framework import (
     status, filters, permissions
@@ -99,8 +101,14 @@ class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
         fields = ('id', 'title', 'content', 'datetime_for',
-                  'completed', 'lead', 'created_by', 'updated_by', 'viewed',)
+                  'completed', 'created_for', 'created_by', 'updated_by', 'viewed',)
         read_only_fields = ('viewed', 'completed',)
+
+
+class CallNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallNote
+        fields = ('__all__')
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):
@@ -142,8 +150,8 @@ class LeadSerializer(serializers.ModelSerializer):
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
                   'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts',
-                        'datetime_created', 'notes', 'claimed_by', 'claimed_by_ref', 'contract', 'last_updated_by',
-                  'last_updated_by_ref', 'actions', 'actions_ref', 'lists', 'files',)
+                        'datetime_created',  'claimed_by', 'claimed_by_ref', 'contract', 'last_updated_by',
+                  'last_updated_by_ref', 'actions', 'actions_ref', 'files',)
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
         read_only_fields = ('closing_amount',
                             'forecast', 'actions', 'files',)

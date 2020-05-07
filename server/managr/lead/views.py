@@ -21,9 +21,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
-from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
+from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
-    ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer
+    ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet, ForecastFilterSet
 from managr.api.models import Contact, Account
@@ -279,6 +279,35 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         return Forecast.objects.for_user(self.request.user)
 
 
+class CallNoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = CallNoteSerializer
+
+    def get_queryset(self):
+        return CallNote.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        u = request.user
+        d = request.data
+        d['created_by'] = u.id
+        serializer = self.serializer_class(
+            data=d, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        u = request.user
+        d = request.data
+        d['updated_by'] = u.id
+        serializer = self.serializer_class(self.get_object(), data=d, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
 class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
@@ -291,10 +320,11 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         """ can create multiple leads """
         user = request.user
         # check if lead is in users lead list
-        leads = request.data.get('leads', [])
+        leads = request.data.get('created_for', [])
         created = list()
         if len(leads) < 1:
-            raise ValidationError({'detail': 'lead or leads required'})
+            raise ValidationError(
+                {'detail': 'lead or leads required in created_for'})
         # TODO: change this to create a list of items not created if a user does not exist instead
         for lead in leads:
             try:
@@ -303,7 +333,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
             except Lead.DoesNotExist:
                 raise PermissionDenied()
             data = request.data.get('reminders', None)
-            data['lead'] = lead
+            data['created_for'] = lead
             data['created_by'] = user.id
 
             serializer = self.serializer_class(
@@ -318,7 +348,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         user = request.user
         # remove any lead info
         data = dict(request.data.get('reminders'))
-        data.pop('lead', None)
+        data.pop('created_for', None)
         data.pop('created_by', None)
         data['updated_by'] = user
         reminder = self.get_object()
