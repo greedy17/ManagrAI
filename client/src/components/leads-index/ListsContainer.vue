@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import List from '@/components/leads-index/List'
+import List from '@/components/shared/List'
 import CustomList from '@/components/leads-index/CustomList'
 import CreateList from '@/components/leads-index/CreateList'
 

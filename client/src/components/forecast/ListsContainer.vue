@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import List from '@/components/leads-index/List'
+import List from '@/components/shared/List'
 
 export default {
   name: 'ListsContainer',

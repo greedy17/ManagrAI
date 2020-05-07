@@ -36,13 +36,13 @@ export default class ForecastAPI {
 
     const promise = apiClient()
       .get(FORECASTS_ENDPOINT, options)
-      //   .then(response => response.data)
-      //   .then(data => {
-      //     return {
-      //       ...data,
-      //       results: data.results.map(this.cls.fromAPI),
-      //     }
-      //   })
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+          results: data.results.map(this.cls.fromAPI),
+        }
+      })
       .catch(
         apiErrorHandler({
           apiName: 'ForecastAPI.list error',

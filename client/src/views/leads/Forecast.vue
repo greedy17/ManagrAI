@@ -38,18 +38,14 @@ export default {
   },
   data() {
     return {
-      lists: null,
+      lists: [],
     }
   },
   created() {
     // this.lists = getSerializedLists()
     // this.lists = this.generateForecastLists()
     let userID = this.$store.state.user.id
-    CollectionManager.create({ ModelClass: Forecast, filters: { byUser: userID } })
-      .refresh()
-      .then(response => {
-        console.log(response)
-      })
+    CollectionManager.create({ ModelClass: Forecast, filters: { byUser: userID } }).refresh()
   },
   methods: {
     toggleView() {
