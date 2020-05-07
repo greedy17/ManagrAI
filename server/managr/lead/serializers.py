@@ -62,6 +62,16 @@ class ListSerializer(serializers.ModelSerializer):
         return obj.leads.count()
 
 
+class LeadRefSerializer(serializers.ModelSerializer):
+
+    """ serializer for forecast """
+
+    class Meta:
+        model = Lead
+        fields = ('id', 'rating', 'amount', 'lists',
+                  'primary_description', 'secondary_description', 'status',)
+
+
 class FileSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
@@ -85,13 +95,28 @@ class FileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('id', 'doc_type', 'uploaded_by', 'lead', 'file')
+        fields = ('id', 'doc_type', 'uploaded_by',
+                  'lead',  'file', )
 
 
 class ForecastSerializer(serializers.ModelSerializer):
+    lead_ref = LeadRefSerializer(source='lead', read_only=True)
+    #lead_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Forecast
-        fields = ('__all__')
+        fields = ('id', 'datetime_created', 'last_edited',
+                  'forecast', 'lead', 'lead_ref', )
+
+#    def get_lead_count(self, instance):
+#        # TODO: Make this more efficient (try aggregating results rather than count) PB 05/06/20
+#        # TODO: add error handling if user is not real/id is not valid PB 05/06/20
+#        request = self.context.get('request')
+#        user_query = request.GET.get('by_user', None)
+#        if user_query:
+#            user_list = user_query.split(',')
+#            return Forecast.objects.filter(forecast=instance.forecast, lead__claimed_by__in=user_list).count()
+#        return Forecast.objects.filter(forecast=instance.forecast).count()
 
 
 class ReminderSerializer(serializers.ModelSerializer):
