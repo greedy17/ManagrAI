@@ -272,7 +272,6 @@ class Reminder(TimeStampModel):
         'core.User', related_name="updated_reminders", on_delete=models.CASCADE, null=True)
     # this is a temporary field for a reminder the view status will be handled by notifications in V2
     viewed = models.BooleanField(default=False)
-    last_updated_at = models.DateTimeField(auto_now=True)
     objects = ReminderQuerySet.as_manager()
 
     class Meta:
