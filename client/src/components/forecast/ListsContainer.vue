@@ -1,10 +1,10 @@
 <template>
   <div class="lists-container">
-    <List :key="lists['50/50'].title" :list="lists['50/50']" />
-    <List :key="lists['STRONG'].title" :list="lists['STRONG']" />
-    <List :key="lists['VERBAL'].title" :list="lists['VERBAL']" />
-    <List :key="lists['FUTURE'].title" :list="lists['FUTURE']" />
-    <List :key="lists['UNFORECASTED'].title" :list="lists['UNFORECASTED']" />
+    <List :key="1" :title="'50/50'" :list="lists['50/50']" />
+    <List :key="2" :title="'Strong'" :list="lists['STRONG']" />
+    <List :key="3" :title="'Verbal'" :list="lists['VERBAL']" />
+    <List :key="4" :title="'Future'" :list="lists['FUTURE']" />
+    <List :key="5" :title="'Unforecasted'" :list="lists['UNFORECASTED']" />
   </div>
 </template>
 

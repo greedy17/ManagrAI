@@ -38,30 +38,41 @@ export default {
   data() {
     return {
       loading: true,
-      lists: null,
+      lists: {
+        '50/50': CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { byUser: this.userID, forecast: '50/50' },
+        }),
+        STRONG: CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { byUser: this.userID, forecast: 'STRONG' },
+        }),
+        VERBAL: CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { byUser: this.userID, forecast: 'VERBAL' },
+        }),
+        FUTURE: CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { byUser: this.userID, forecast: 'FUTURE' },
+        }),
+        UNFORECASTED: CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { byUser: this.userID, forecast: '50/50' },
+        }),
+      },
     }
   },
   created() {
-    let userID = this.$store.state.user.id
-    CollectionManager.create({ ModelClass: Forecast, filters: { byUser: userID } })
-      .refresh()
-      .then(({ list }) => {
-        let forecastBuckets = {
-          '50/50': { title: '50/50', list: [] },
-          STRONG: { title: 'Strong', list: [] },
-          VERBAL: { title: 'Verbal', list: [] },
-          FUTURE: { title: 'Future', list: [] },
-          UNFORECASTED: { title: 'Unforecasted', list: [] },
-        }
-
-        for (let i = 0; i < list.length; ++i) {
-          let currentForecast = list[i]
-          forecastBuckets[currentForecast.forecast].list.push(currentForecast)
-        }
-
-        this.lists = forecastBuckets
-        this.loading = false
-      })
+    let lists = [
+      this.lists['50/50'].refresh(),
+      this.lists['STRONG'].refresh(),
+      this.lists['VERBAL'].refresh(),
+      this.lists['FUTURE'].refresh(),
+      this.lists['UNFORECASTED'].refresh(),
+    ]
+    Promise.all(lists).then(responses => {
+      this.loading = false
+    })
   },
   methods: {
     toggleView() {
@@ -92,6 +103,9 @@ export default {
   computed: {
     isCurrentRoute() {
       return this.$route.name == 'Forecast'
+    },
+    userID() {
+      return this.$store.state.user.id
     },
   },
 }

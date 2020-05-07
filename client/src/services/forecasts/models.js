@@ -10,6 +10,7 @@ export default class Forecast {
     forecast = null,
     lastEdited = null,
     lead = null,
+    leadRef = null,
   } = {}) {
     Object.assign(this, {
       id,
@@ -17,6 +18,7 @@ export default class Forecast {
       forecast,
       lastEdited,
       lead,
+      leadRef,
     })
   }
 

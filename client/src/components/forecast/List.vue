@@ -2,13 +2,17 @@
   <div class="list">
     <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title"> {{ list.title }} </span>
+      <span class="list-title"> {{ title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <ComponentLoadingSVG v-if="trueList.refreshing" />
-      <Lead v-else v-for="lead in trueList.list" :key="lead.id" :lead="lead" />
-      <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
+      <Lead
+        v-for="forecast in list.list"
+        :key="forecast.id"
+        :lead="forecast.leadRef"
+        :leadForecast="forecast.forecast"
+      />
+      <button v-if="moreToLoad" class="load-more-button" @click="loadMore">
         Load More
       </button>
     </div>
@@ -16,15 +20,17 @@
 </template>
 
 <script>
-import LeadModel from '@/services/leads'
-import CollectionManager from '@/services/collectionManager'
-import Lead from '@/components/leads-index/Lead'
+import Lead from '@/components/forecast/Lead'
 
 export default {
   name: 'List',
   props: {
     list: {
       type: Object,
+      required: true,
+    },
+    title: {
+      type: String,
       required: true,
     },
   },
@@ -34,20 +40,10 @@ export default {
   data() {
     return {
       showLeads: false,
-      madeInitialRetrieval: false,
-      trueList: CollectionManager.create({
-        ModelClass: LeadModel,
-        filters: { byList: this.list.id },
-      }),
     }
   },
   methods: {
     toggleLeads() {
-      if (!this.madeInitialRetrieval) {
-        this.trueList.refresh().then(() => {
-          this.madeInitialRetrieval = true
-        })
-      }
       this.showLeads = !this.showLeads
     },
     loadMore() {
@@ -56,7 +52,7 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.list.length
+      return this.list.pagination.totalCount
     },
     listHeaderBorder() {
       return {
@@ -64,7 +60,7 @@ export default {
       }
     },
     moreToLoad() {
-      return !!this.trueList.pagination.next
+      return !!this.list.pagination.next
     },
   },
 }

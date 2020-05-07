@@ -30,6 +30,7 @@ export default class ForecastAPI {
       pageSize: ApiFilter.create({ key: 'page_size' }),
 
       byUser: ApiFilter.create({ key: 'by_user' }),
+      forecast: ApiFilter.create({ key: 'forecast' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
