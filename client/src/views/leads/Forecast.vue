@@ -70,7 +70,7 @@ export default {
       this.lists['FUTURE'].refresh(),
       this.lists['UNFORECASTED'].refresh(),
     ]
-    Promise.all(lists).then(responses => {
+    Promise.all(lists).then(() => {
       this.loading = false
     })
   },
@@ -78,27 +78,6 @@ export default {
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },
-
-    // generateForecastLists() {
-    //   //NOTE(Bruno 4-16-20): this is a very brute force / not optimal algorithm  ~ O(n^2).
-    //   // When we have a backend maybe we can serialize there or we can think this over
-    //   let bucketsObj = {}
-    //   for (let i = 0; i < this.lists.length; ++i) {
-    //     let currentList = this.lists[i]
-    //     for (let j = 0; j < currentList.leads.length; ++j) {
-    //       let currentLead = currentList.leads[j]
-    //       if (bucketsObj[currentLead.forecast]) {
-    //         bucketsObj[currentLead.forecast].push(currentLead)
-    //       } else {
-    //         bucketsObj[currentLead.forecast] = [currentLead]
-    //       }
-    //     }
-    //   }
-    //   return Object.keys(bucketsObj).map(bucketKey => ({
-    //     title: bucketKey,
-    //     leads: bucketsObj[bucketKey],
-    //   }))
-    // },
   },
   computed: {
     isCurrentRoute() {
