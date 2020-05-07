@@ -4,7 +4,7 @@
       <option disabled :selected="status == null" value="">---</option>
       <option
         :selected="option.toUpperCase() === status"
-        v-for="option in enums"
+        v-for="option in statusEnums"
         :key="option"
         :value="option"
       >
@@ -16,7 +16,7 @@
 
 <script>
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
-const enums = ['Ready', 'Trial', 'Demo', 'Waiting', 'Lost']
+import { statusEnums } from '@/services/leads/enumerables'
 
 export default {
   name: 'LeadStatusDropdown',
@@ -27,7 +27,7 @@ export default {
   },
   data() {
     return {
-      enums,
+      statusEnums,
     }
   },
   methods: {
