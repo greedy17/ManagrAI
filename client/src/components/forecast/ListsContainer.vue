@@ -1,6 +1,10 @@
 <template>
   <div class="lists-container">
-    <List v-for="list in lists" :key="list.id" :list="list" />
+    <List :key="list.title" :list="list" />
+    <List :key="list.title" :list="list" />
+    <List :key="list.title" :list="list" />
+    <List :key="list.title" :list="list" />
+    <List :key="list.title" :list="list" />
   </div>
 </template>
 
@@ -11,7 +15,7 @@ export default {
   name: 'ListsContainer',
   props: {
     lists: {
-      type: Array,
+      type: Object,
       required: true,
     },
   },

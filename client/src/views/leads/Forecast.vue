@@ -1,5 +1,6 @@
 <template>
-  <div class="leads-index">
+  <PageLoadingSVG v-if="loading" />
+  <div v-else class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
@@ -27,8 +28,6 @@ import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
 
-// import { getSerializedLists } from '@/db.js'
-
 export default {
   name: 'Forecast',
   components: {
@@ -38,19 +37,37 @@ export default {
   },
   data() {
     return {
-      lists: [],
+      loading: true,
+      lists: null,
     }
   },
   created() {
-    // this.lists = getSerializedLists()
-    // this.lists = this.generateForecastLists()
     let userID = this.$store.state.user.id
-    CollectionManager.create({ ModelClass: Forecast, filters: { byUser: userID } }).refresh()
+    CollectionManager.create({ ModelClass: Forecast, filters: { byUser: userID } })
+      .refresh()
+      .then(({ list }) => {
+        let forecastBuckets = {
+          '50/50': { title: '50/50', list: [] },
+          STRONG: { title: 'Strong', list: [] },
+          VERBAL: { title: 'Verbal', list: [] },
+          FUTURE: { title: 'Future', list: [] },
+          UNFORECASTED: { title: 'Unforecasted', list: [] },
+        }
+
+        for (let i = 0; i < list.length; ++i) {
+          let currentForecast = list[i]
+          forecastBuckets[currentForecast.forecast].list.push(currentForecast)
+        }
+
+        this.lists = forecastBuckets
+        this.loading = false
+      })
   },
   methods: {
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },
+
     // generateForecastLists() {
     //   //NOTE(Bruno 4-16-20): this is a very brute force / not optimal algorithm  ~ O(n^2).
     //   // When we have a backend maybe we can serialize there or we can think this over
