@@ -79,10 +79,10 @@
       </div>
       <div class="insight-info">
         <span class="insight-top">
-          0 Demos
+          17 Actions
         </span>
         <span class="insight-bottom">
-          N/A
+          3 mins ago
         </span>
       </div>
     </div>
