@@ -1,37 +1,34 @@
 <template>
-  <div class="invite">
-    <NavBar />
-    <div class="page-content">
-      <form v-if="!success" @submit.prevent="handleActivation">
-        <h2>Activate Account</h2>
-        <div class="errors">
-          <!-- client side validations -->
-          <div v-if="isFormValid !== null && !isFormValid && errors.passwordIsBlank">
-            Fields may not be blank.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.passwordsDontMatch">
-            Fields must match.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.passwordTooShort">
-            Password must be 10 characters or longer.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.passwordEntirelyNumeric">
-            Password may not be entirely numeric.
-          </div>
-          <!-- server side validations -->
-          <div v-if="success !== null && !success && (errors[500] || errors[404] || errors[400])">
-            Something went wrong. Please check your URL and/or request a new link.
-          </div>
+  <div class="activation">
+    <form v-if="!success" @submit.prevent="handleActivation">
+      <h2>Activate Account</h2>
+      <div class="errors">
+        <!-- client side validations -->
+        <div v-if="isFormValid !== null && !isFormValid && errors.passwordIsBlank">
+          Fields may not be blank.
         </div>
-        <input v-model="password" type="password" placeholder="password" />
-        <input v-model="passwordConfirmation" type="password" placeholder="confirm password" />
-        <button type="submit">Activate</button>
-      </form>
-      <div v-else class="success-prompt">
-        <h2>Activation Successful</h2>
-        <p>Please proceed to login screen.</p>
-        <button @click="goToLogin">Proceed</button>
+        <div v-if="isFormValid !== null && !isFormValid && errors.passwordsDontMatch">
+          Fields must match.
+        </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.passwordTooShort">
+          Password must be 10 characters or longer.
+        </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.passwordEntirelyNumeric">
+          Password may not be entirely numeric.
+        </div>
+        <!-- server side validations -->
+        <div v-if="success !== null && !success && (errors[500] || errors[404] || errors[400])">
+          Something went wrong. Please check your URL and/or request a new link.
+        </div>
       </div>
+      <input v-model="password" type="password" placeholder="password" />
+      <input v-model="passwordConfirmation" type="password" placeholder="confirm password" />
+      <button type="submit">Activate</button>
+    </form>
+    <div v-else class="success-prompt">
+      <h2>Activation Successful</h2>
+      <p>Please proceed to login screen.</p>
+      <button @click="goToLogin">Proceed</button>
     </div>
   </div>
 </template>
@@ -140,15 +137,7 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.invite {
-  height: inherit;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  flex-grow: 1;
+.activation {
   display: flex;
   flex-flow: row;
   justify-content: center;

@@ -4,7 +4,7 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead
+from .models import Lead, Forecast
 
 
 class LeadFilterSet(FilterSet):
@@ -16,7 +16,7 @@ class LeadFilterSet(FilterSet):
     """
     on_list = django_filters.BooleanFilter(method="list_count")
     is_claimed = django_filters.BooleanFilter(method="claim_status")
-    by_list = django_filters.CharFilter(method="retrieve_users_in_list")
+    by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
 
     class Meta:
         model = Lead
@@ -25,8 +25,10 @@ class LeadFilterSet(FilterSet):
     def list_count(self, queryset, name, value):
         """ filter leads by list count """
         if value:
+            # if true on_list=True return leads with a list count of greater than 0 (non inclusive)
             return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0)
         else:
+            # if false on_list=False return leads with a list count of less than 1 (non inclusive)
             return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1)
 
     def claim_status(self, queryset, name, value):
@@ -35,10 +37,28 @@ class LeadFilterSet(FilterSet):
             return queryset.filter(claimed_by__isnull=False)
         return queryset.filter(claimed_by__isnull=True)
 
-    def retrieve_users_in_list(self, queryset, name, value):
-        """ Lists will not return leads by default """
+    def retrieve_leads_in_list(self, queryset, name, value):
+        """ Lists will not return leads by default, this filter
+            retrieves leads in a list (to provide pagination)
+        """
 
         if value:
             return queryset.filter(lists=value)
         else:
             return queryset.all()
+
+
+class ForecastFilterSet(FilterSet):
+    by_user = django_filters.CharFilter(method="forecasts_by_user")
+
+    class Meta:
+        model = Forecast
+        fields = ['by_user']
+
+    def forecasts_by_user(self, queryset, name, value):
+        """ provide a user or a list of users """
+        if value:
+            value = value.strip()
+            user_list = value.split(',')
+            if self.request.user.organization.users.filter(id__in=user_list).exists():
+                return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')

@@ -7,13 +7,13 @@ import Vue from 'vue'
  **/
 function toMessageString(data) {
   if (typeof data === 'string' || typeof data === 'number') {
-    return `<h2>${String(data)}</h2>`
+    return `<div>${String(data)}</div>`
   } else if (data instanceof Array) {
-    return '<h2>' + data.map(i => String(i)).join(', ') + '</h2>'
+    return '<div>' + data.map(i => String(i)).join(', ') + '</div>'
   } else if (data instanceof Object) {
     let message = ''
     for (var key in data) {
-      message += '<h2>' + toMessageString(data[key]) + '</h2>'
+      message += '<div>' + toMessageString(data[key]) + '</div>'
     }
     return message
   }
@@ -39,12 +39,12 @@ export function apiErrorHandler({
     if (response.status >= 400 && response.status < 500) {
       // Handle 4xx errors (probably bad user input)
       const { data } = response
-      let message = '<h2>Error...</h2>'
+      let message = '<div>Error...</div>'
       // Handle common error structures
       if (data.detail) {
-        message += `<h2>${data.detail}</h2>`
+        message += `<div>${data.detail}</div>`
       } else if (data.non_field_errors) {
-        message += `<h2>${data.non_field_errors}</h2>`
+        message += `<div>${data.non_field_errors}</div>`
       } else {
         message = toMessageString(data)
       }
@@ -67,7 +67,7 @@ export function apiErrorHandler({
       // Generic handling for other errors (ex: 500 errors)
       Vue.prototype.$Alert.alert({
         type: 'error',
-        message: '<h2>Error...</h2>' + '<h2>Something went wrong! Please try again later.</h2>',
+        message: '<div>Error...</div>' + '<div>Something went wrong! Please try again later.</div>',
         timeout: 6000,
       })
     }

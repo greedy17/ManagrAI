@@ -20,7 +20,7 @@ class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(pk=user.organization_id)
         else:
             return None
@@ -58,7 +58,7 @@ class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(organization=user.organization)
         else:
             return None
@@ -90,7 +90,7 @@ class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.organization and user.state == STATE_ACTIVE:
+        elif user.organization and user.is_active:
             return self.filter(account__organization=user.organization)
         else:
             return None
@@ -105,7 +105,7 @@ class Contact(TimeStampModel):
     last_name = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     phone_number_1 = models.CharField(max_length=255)
-    phone_number_2 = models.CharField(max_length=255)
+    phone_number_2 = models.CharField(max_length=255, blank=True)
     account = models.ForeignKey(
         'Account', related_name="contacts", blank=False, null=True, on_delete=models.CASCADE)
     objects = ContactQuerySet.as_manager()

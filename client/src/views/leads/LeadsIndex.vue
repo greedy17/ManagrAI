@@ -1,54 +1,40 @@
 <template>
   <div class="leads-index">
-    <NavBar />
-    <div class="page-content">
-      <div class="toolbar-pane">
-        <div class="view-toggle-container">
-          <span class="left" :class="{ bold: view === FORECAST }">Forecast</span>
-          <ToggleCheckBox
-            class="checkbox"
-            :checked="view === LISTS"
-            @toggle-view="toggleView"
-            :eventToEmit="'toggle-view'"
-          />
-          <span class="right" :class="{ bold: view === LISTS }">Lists</span>
-        </div>
-
-        <ListsToolBar v-if="view === LISTS" class="toolbar" />
-        <ForecastToolBar v-else class="toolbar" />
+    <div class="toolbar-pane">
+      <div class="view-toggle-container">
+        <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
+        <ToggleCheckBox
+          class="checkbox"
+          :checked="isCurrentRoute"
+          @toggle-view="toggleView"
+          :eventToEmit="'toggle-view'"
+        />
+        <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <div class="lists-container-pane">
-        <ListsContainer v-if="view === LISTS" :lists="lists" />
-        <ListsContainer v-else :lists="forecastLists" />
-      </div>
+      <ToolBar class="toolbar" />
+    </div>
+    <div class="lists-container-pane">
+      <ListsContainer :lists="lists" />
     </div>
   </div>
 </template>
 
 <script>
-import ListsToolBar from '@/components/leads-index/ListsToolBar'
-import ForecastToolBar from '@/components/leads-index/ForecastToolBar'
-import ListsContainer from '@/components/leads-index/ListsContainer'
-import ToggleCheckBox from '@/components/leads-index/ToggleCheckBox'
+import ToolBar from '@/components/leads-index/ToolBar'
+import ListsContainer from '@/components/shared/ListsContainer'
+import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import { getSerializedLists } from '@/db.js'
-
-const LISTS = 'LISTS'
-const FORECAST = 'FORECAST'
 
 export default {
   name: 'LeadsIndex',
   components: {
-    ListsToolBar,
-    ForecastToolBar,
+    ToolBar,
     ToggleCheckBox,
     ListsContainer,
   },
   data() {
     return {
-      LISTS,
-      FORECAST,
-      view: LISTS,
       lists: null,
       forecastLists: null,
     }
@@ -58,35 +44,12 @@ export default {
   },
   methods: {
     toggleView() {
-      if (this.view === LISTS) {
-        this.view = FORECAST
-      } else {
-        this.view = LISTS
-      }
-      //NOTE(Bruno 4-16-20): writing this here for now, when we get data from the API this is worth revisitng.
-      if (this.forecastLists === null) {
-        this.forecastLists = this.generateForecastLists()
-      }
+      this.$router.push({ name: 'Forecast' })
     },
-    generateForecastLists() {
-      //NOTE(Bruno 4-16-20): this is a very brute force / not optimal algorithm  ~ O(n^2).
-      // When we have a backend maybe we can serialize there or we can think this over
-      let bucketsObj = {}
-      for (let i = 0; i < this.lists.length; ++i) {
-        let currentList = this.lists[i]
-        for (let j = 0; j < currentList.leads.length; ++j) {
-          let currentLead = currentList.leads[j]
-          if (bucketsObj[currentLead.forecast]) {
-            bucketsObj[currentLead.forecast].push(currentLead)
-          } else {
-            bucketsObj[currentLead.forecast] = [currentLead]
-          }
-        }
-      }
-      return Object.keys(bucketsObj).map(bucketKey => ({
-        title: bucketKey,
-        leads: bucketsObj[bucketKey],
-      }))
+  },
+  computed: {
+    isCurrentRoute() {
+      return this.$route.name == 'LeadsIndex'
     },
   },
 }
@@ -97,17 +60,9 @@ export default {
 @import '@/styles/mixins/utils';
 
 .leads-index {
-  min-height: 100vh;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  padding-top: 2%;
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
+  padding-top: 2%;
 }
 
 .toolbar-pane {

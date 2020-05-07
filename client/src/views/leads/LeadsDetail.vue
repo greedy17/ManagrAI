@@ -1,35 +1,48 @@
 <template>
-  <div class="leads-detail">
-    <NavBar />
-    <div class="page-content">
-      <div class="left-pane">
-        <ToolBar class="toolbar" :lead="lead" />
+  <LoadingSVG v-if="loading" />
+  <div v-else class="leads-detail">
+    <div class="left-pane">
+      <ToolBar
+        class="toolbar"
+        :lead="lead"
+        @updated-rating="updateRating"
+        @updated-amount="updateAmount"
+      />
+    </div>
+    <div class="center-pane">
+      <LeadBanner
+        :lead="lead"
+        @lead-reset="resetLead"
+        @lead-released="releaseLead"
+        @updated-forecast="updateForecast"
+        @updated-status="updateStatus"
+      />
+      <div class="container">
+        <LeadActions :lead="lead" />
       </div>
-      <div class="center-pane">
-        <LeadBanner :lead="lead" @clicked-release="releaseLead" />
-        <div class="container">
-          <LeadActions :lead="lead" />
-        </div>
-        <div class="container">
-          <PinnedNotes />
-        </div>
-        <div class="container">
-          <img
-            class="additional-information"
-            src="@/assets/images/screenshots/AdditionalInformation.png"
-            alt="screenshot"
-          />
-        </div>
+      <div class="container">
+        <PinnedNotes
+          :primaryDescription="lead.primaryDescription"
+          :secondaryDescription="lead.secondaryDescription"
+          @updated-primary-description="updatePrimaryDescription"
+          @updated-secondary-description="updateSecondaryDescription"
+        />
       </div>
-      <div class="right-pane">
-        <LeadInsights :lead="lead" />
+      <div class="container">
+        <img
+          class="additional-information"
+          src="@/assets/images/screenshots/AdditionalInformation.png"
+          alt="screenshot"
+        />
       </div>
+    </div>
+    <div class="right-pane">
+      <LeadInsights :lead="lead" />
     </div>
   </div>
 </template>
 
 <script>
-import { getSerializedLead } from '@/db.js'
 import ToolBar from '@/components/leads-detail/ToolBar'
 import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
@@ -49,33 +62,76 @@ export default {
   },
   data() {
     return {
-      lead: {},
+      loading: true,
+      lead: null,
     }
   },
   created() {
-    this.lead = getSerializedLead(this.id)
+    Lead.api.retrieve(this.id).then(lead => {
+      this.lead = lead
+      this.loading = false
+    })
   },
   methods: {
+    updatePrimaryDescription(description) {
+      let patchData = { primary_description: description }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateSecondaryDescription(description) {
+      let patchData = { secondary_description: description }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateRating(rating) {
+      let patchData = { rating }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateAmount(amount) {
+      let patchData = { amount }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateForecast(value) {
+      alert('selected' + value + '(sever-side WIP)')
+    },
+    updateStatus(value) {
+      let patchData = { status: value.toUpperCase() }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    resetLead() {
+      let patchData = {
+        status: null,
+        amount: 0,
+        forecast: null,
+      }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+        let message = `<div>Success! Lead reset.</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 4000,
+        })
+      })
+    },
     releaseLead() {
-      Lead.api
-        .unclaim(this.lead.id)
-        .then(() => {
-          let message = `<h2>Success!</h2><p>Lead released.</p>`
-          this.$Alert.alert({
-            type: 'success',
-            message,
-            timeout: 6000,
-          })
-          this.$router.push({ name: 'LeadsIndex' })
+      Lead.api.unclaim(this.lead.id).then(() => {
+        let message = `<div>Success! Lead released.</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 6000,
         })
-        .catch(() => {
-          let message = `<h2>Error...</h2><p>Please retry later.</p>`
-          this.$Alert.alert({
-            type: 'error',
-            message,
-            timeout: 6000,
-          })
-        })
+        this.$router.push({ name: 'LeadsIndex' })
+      })
     },
   },
 }
@@ -85,14 +141,6 @@ export default {
 @import '@/styles/variables';
 
 .leads-detail {
-  height: inherit;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-}
-
-.page-content {
-  flex-grow: 1;
   display: flex;
   flex-flow: row;
 }

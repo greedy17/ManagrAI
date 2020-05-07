@@ -1,7 +1,13 @@
 <template>
   <div class="status-dropdown">
     <select @change="onChange" :style="computedStyles">
-      <option :selected="option === status" v-for="option in enums" :key="option" :value="option">
+      <option disabled :selected="status == null" value="">---</option>
+      <option
+        :selected="option.toUpperCase() === status"
+        v-for="option in enums"
+        :key="option"
+        :value="option"
+      >
         {{ option }}
       </option>
     </select>
@@ -10,13 +16,12 @@
 
 <script>
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
-const enums = ['Ready', 'Trial', 'Demo', 'Waiting', 'Closed', 'Lost']
+const enums = ['Ready', 'Trial', 'Demo', 'Waiting', 'Lost']
 
 export default {
   name: 'LeadStatusDropdown',
   props: {
     status: {
-      type: String,
       required: true,
     },
   },

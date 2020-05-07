@@ -29,6 +29,7 @@ export default {
       let payload = {
         status, // checked vs not checked Boolean
         contactID: this.contact.id,
+        email: this.contact.email,
       }
       this.$emit('checkbox-clicked', payload)
     },

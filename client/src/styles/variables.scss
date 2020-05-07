@@ -1,4 +1,4 @@
-@import './font';
+@import './fonts';
 
 // --------- THEME COLORS ---------
 $dark-green: #199e54; // rgb(25, 158, 84)
@@ -25,9 +25,9 @@ $black: black;
 
 // --------- FONTS ---------
 $base-font-color: $main-font-gray;
-$base-font-family: Lato;
+$base-font-family: Lato-Regular;
 $backup-base-font-family: sans-serif;
-$logo-font-family: Quicksand;
+$logo-font-family: Quicksand-Regular;
 
 
 // --------- SIZES ---------

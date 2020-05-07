@@ -1,13 +1,47 @@
 <template>
   <div class="add-contact">
     <label>Add Contact</label>
-    <div class="form-field">
-      <input v-model="name" class="first input" tabindex="0" type="text" placeholder="Name" />
-      <input v-model="title" class="second input" tabindex="0" type="text" placeholder="Title" />
+    <div class="errors" v-if="error">
+      Must be blank or fully completed.
     </div>
     <div class="form-field">
-      <input v-model="email" class="first input" tabindex="0" type="text" placeholder="Email" />
-      <input v-model="phone" class="second input" tabindex="0" type="text" placeholder="Phone" />
+      <input
+        v-model="form.firstName"
+        class="name input"
+        tabindex="0"
+        type="text"
+        placeholder="First Name"
+      />
+      <input
+        v-model="form.lastName"
+        class="name input"
+        tabindex="0"
+        type="text"
+        placeholder="Last Name"
+      />
+      <input
+        v-model="form.title"
+        class="second input"
+        tabindex="0"
+        type="text"
+        placeholder="Title"
+      />
+    </div>
+    <div class="form-field">
+      <input
+        v-model="form.email"
+        class="first input"
+        tabindex="0"
+        type="text"
+        placeholder="Email"
+      />
+      <input
+        v-model="form.phone"
+        class="second input"
+        tabindex="0"
+        type="number"
+        placeholder="Phone"
+      />
     </div>
   </div>
 </template>
@@ -15,13 +49,15 @@
 <script>
 export default {
   name: 'AddContact',
-  data() {
-    return {
-      name: '',
-      title: '',
-      email: '',
-      phone: '',
-    }
+  props: {
+    form: {
+      required: true,
+      type: Object,
+    },
+    error: {
+      required: false,
+      type: Boolean,
+    },
   },
 }
 </script>
@@ -49,6 +85,11 @@ label {
   display: flex;
   flex-flow: row;
 
+  .name {
+    width: 35%;
+    margin-right: 3%;
+  }
+
   .first {
     width: 60%;
     margin-right: 5%;
@@ -57,5 +98,9 @@ label {
   .second {
     flex-grow: 1;
   }
+}
+
+.errors {
+  color: $coral;
 }
 </style>

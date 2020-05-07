@@ -13,6 +13,7 @@ import LeadsIndex from '@/views/leads/LeadsIndex'
 import LeadsDetail from '@/views/leads/LeadsDetail'
 import LeadsNew from '@/views/leads/LeadsNew'
 import Prospect from '@/views/leads/Prospect'
+import Forecast from '@/views/leads/Forecast'
 
 //TODO(Bruno 4-8-20): lazy-load views
 
@@ -64,6 +65,12 @@ export default new Router({
       path: '/prospect',
       name: 'Prospect',
       component: Prospect,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/forecast',
+      name: 'Forecast',
+      component: Forecast,
       beforeEnter: Auth.requireAuth,
     },
   ],
