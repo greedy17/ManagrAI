@@ -27,7 +27,7 @@
 
 <script>
 import ToolBar from '@/components/leads-index/ToolBar'
-import ListsContainer from '@/components/shared/ListsContainer'
+import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Lead from '@/services/leads'
