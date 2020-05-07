@@ -13,7 +13,7 @@
     <div class="lead-lists">
       <div class="header">Lists</div>
       <div class="container">
-        <p v-if="!lead.lists.length">N/A</p>
+        <p v-if="!lead.lists">N/A</p>
         <LeadList
           v-else
           class="list"
