@@ -1,15 +1,15 @@
 <template>
   <div class="lists-container">
-    <List :key="list.title" :list="list" />
-    <List :key="list.title" :list="list" />
-    <List :key="list.title" :list="list" />
-    <List :key="list.title" :list="list" />
-    <List :key="list.title" :list="list" />
+    <List :key="lists['50/50'].title" :list="lists['50/50']" />
+    <List :key="lists['STRONG'].title" :list="lists['STRONG']" />
+    <List :key="lists['VERBAL'].title" :list="lists['VERBAL']" />
+    <List :key="lists['FUTURE'].title" :list="lists['FUTURE']" />
+    <List :key="lists['UNFORECASTED'].title" :list="lists['UNFORECASTED']" />
   </div>
 </template>
 
 <script>
-import List from '@/components/shared/List'
+import List from '@/components/forecast/List'
 
 export default {
   name: 'ListsContainer',
