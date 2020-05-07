@@ -21,9 +21,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
-from .models import Lead, Note, ActivityLog,  List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
+from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
-    ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer
+    ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet, ForecastFilterSet
 from managr.api.models import Contact, Account
@@ -135,7 +135,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
     @action(methods=['POST'], permission_classes=(IsSalesPerson,), detail=True, url_path="close")
     def close_lead(self, request, *args, **kwargs):
-        # TODO - add CanEditResourceOrReadOnly to ensure person closing is person claiming
+        # TODO - add CanEditResourceOrReadOnly to ensure person closing is person claiming 05/02/20
         """ special endpoint to close a lead, requires a contract and a closing amount 
             file must already exist and is expected to be identified by an ID
         """
@@ -200,7 +200,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     def add_to_list(self, request, *args, **kwargs):
         """ End point to allow addition of leads to list after created """
         l = self.get_object()
-        # TODO: Check if lead is in org
+        # TODO: Check if lead is in org 05/02/20
         new_leads = request.data.get('leads', [])
         for lead in new_leads:
             l.leads.add(lead)
@@ -213,7 +213,7 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     def remove_from_list(self, request, *args, **kwargs):
         """ End point to allow removal of leads to list after created """
         l = self.get_object()
-        # TODO: Check if lead is in org
+        # TODO: Check if lead is in org 05/02/20
         remove_leads = request.data.get('leads', [])
         for lead in remove_leads:
             l.leads.remove(lead)
@@ -243,7 +243,7 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         notes_created = list()
         for lead in request.data.get('created_for', []):
             # decision here to create a new note for each lead to make them individually editable
-            # TODO: check lead in org
+            # TODO: check lead in org 05/02/20 PB
             d = {'title': data['note']['title'],
                  'content': data['note']['content'], 'created_for': lead, 'created_by': user.id}
             serializer = self.serializer_class(
@@ -264,7 +264,7 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
                                            data=d, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        # TODO :- add activity log here
+        # TODO :- add activity log here 05/02/20 PB
         return Response(serializer.data)
 
 
@@ -273,10 +273,39 @@ class ForecastViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     permission_classes = (IsSalesPerson, )
     serializer_class = ForecastSerializer
     filter_class = ForecastFilterSet
-    # TODO :- log activity
+    # TODO :- log activity 05/02/20 PB
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+
+class CallNoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, )
+    serializer_class = CallNoteSerializer
+
+    def get_queryset(self):
+        return CallNote.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        u = request.user
+        d = request.data
+        d['created_by'] = u.id
+        serializer = self.serializer_class(
+            data=d, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        u = request.user
+        d = request.data
+        d['updated_by'] = u.id
+        serializer = self.serializer_class(self.get_object(), data=d, context={
+                                           'request': request}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -291,10 +320,12 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         """ can create multiple leads """
         user = request.user
         # check if lead is in users lead list
-        leads = request.data.get('leads', [])
+        leads = request.data.get('created_for', [])
         created = list()
         if len(leads) < 1:
-            raise ValidationError({'detail': 'lead or leads required'})
+            raise ValidationError(
+                {'detail': 'lead or leads required in created_for'})
+        # TODO: change this to create a list of items not created if a user does not exist instead
         for lead in leads:
             try:
                 Lead.objects.for_user(
@@ -302,7 +333,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
             except Lead.DoesNotExist:
                 raise PermissionDenied()
             data = request.data.get('reminders', None)
-            data['lead'] = lead
+            data['created_for'] = lead
             data['created_by'] = user.id
 
             serializer = self.serializer_class(
@@ -317,7 +348,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         user = request.user
         # remove any lead info
         data = dict(request.data.get('reminders'))
-        data.pop('lead', None)
+        data.pop('created_for', None)
         data.pop('created_by', None)
         data['updated_by'] = user
         reminder = self.get_object()
@@ -326,6 +357,18 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+    @action(methods=['POST'], detail=True, url_path="mark-as-viewed")
+    def mark_as_viewed(self, request, *args, **kwargs):
+        u = request.user
+        self.get_object().mark_as_viewed(u)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['POST'], detail=True, url_path="mark-as-completed")
+    def mark_as_completed(self, request, *args, **kwargs):
+        u = request.user
+        self.get_object().mark_as_completed(u)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
