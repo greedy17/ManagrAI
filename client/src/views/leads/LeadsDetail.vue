@@ -72,6 +72,14 @@ export default {
     Lead.api.retrieve(this.id).then(lead => {
       this.lead = lead
       this.loading = false
+
+      if (this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id) {
+        let message = `<div>This lead is owned by: ${this.lead.claimedByRef.fullName}</div>`
+        this.$Alert.alert({
+          type: 'banner',
+          message,
+        })
+      }
     })
   },
   methods: {
