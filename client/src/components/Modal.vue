@@ -6,7 +6,9 @@
       :style="{ height: `${height}vh`, width: `${width}vw` }"
       @click="stopPropagation"
     >
-      <slot />
+      <div class="content">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -78,6 +80,17 @@ export default {
   @include standard-border();
   z-index: 1001;
   background: $white;
+  display: flex;
+  flex-flow: column;
+  box-sizing: border-box;
+}
+
+.content {
+  margin: 1rem;
+  height: inherit;
+  // width: inherit;
+  border: 1px dashed black;
+  overflow-y: auto;
 }
 
 .box-shadow {
