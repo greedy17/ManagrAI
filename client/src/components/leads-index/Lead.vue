@@ -11,7 +11,7 @@
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
-        :forecast="lead.forecastRef.forecast"
+        :forecast="lead.forecastRef && lead.forecastRef.forecast"
         @updated-forecast="updateForecast"
       />
       <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
