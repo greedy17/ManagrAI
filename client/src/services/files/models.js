@@ -4,14 +4,12 @@ import FileAPI from './api'
 export default class File {
   static api = FileAPI.create(File)
 
-  //   constructor({ id = '' } = {}) {
-  //     Object.assign(this, {
-  //       id,
-  //     })
-  //   }
-  constructor(file) {
-    console.log('file', file)
+  constructor({ id = '' } = {}) {
+    Object.assign(this, {
+      id,
+    })
   }
+
   static create(opts) {
     return new File(opts)
   }
