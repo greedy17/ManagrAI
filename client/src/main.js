@@ -13,6 +13,7 @@ import store from './store'
 // global components
 import PageLoadingSVG from '@/components/PageLoadingSVG'
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
+import Modal from '@/components/Modal'
 
 // filters
 import currencyFilter from '@/services/currency'
@@ -24,6 +25,7 @@ Vue.use(AlertAlert)
 
 Vue.component('PageLoadingSVG', PageLoadingSVG)
 Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
+Vue.component('Modal', Modal)
 
 Vue.filter('currency', currencyFilter)
 
