@@ -111,9 +111,9 @@ export default {
     // this.fetchContacts()
   },
   methods: {
+    // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend in a coming sprint.
+    // Instead we may serialize contacts-data within LeadAPI.retrieve
     // fetchContacts() {
-    //   // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend.
-    //   // Instead we may serialize contacts-data within LeadAPI.retrieve
     //   let promises = []
     //   for (let i = 0; i < this.lead.linkedContacts.length; ++i) {
     //     let contactID = this.lead.linkedContacts[i]
