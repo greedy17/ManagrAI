@@ -86,6 +86,7 @@ export default {
           return Lead.api.close(this.lead.id, this.amount, response.data.id)
         })
         .then(() => {
+          this.$parent.emitCloseModal()
           this.$Alert.alert({
             type: 'success',
             timeout: 4000,
