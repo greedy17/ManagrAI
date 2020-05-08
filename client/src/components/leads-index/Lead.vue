@@ -74,7 +74,11 @@ export default {
           this.lead.status = lead.status
         })
       } else {
-        this.modal.isOpen = true
+        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
+        // this.modal.isOpen = true
+        alert(
+          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
+        )
       }
     },
     updateForecast(value) {

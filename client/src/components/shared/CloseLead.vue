@@ -80,14 +80,17 @@ export default {
       }
 
       // proceed to close the lead, first uploading the contract
-      // NOTE (Bruno 4-7-20): Server-side bug: can't close unless contract exists, can't create contract unless lead is closed.
       File.api
-        .create(this.file, 'CONTRACT', this.lead.id)
+        .create(this.file, this.lead.id)
         .then(response => {
-          return Lead.api.close(this.lead.id, this.amount, response.id)
+          return Lead.api.close(this.lead.id, this.amount, response.data.id)
         })
         .then(() => {
-          this.$Alert.alert()
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 4000,
+            message: 'Success! Lead closed!',
+          })
         })
     },
     clientSideValidations() {

@@ -49,10 +49,10 @@ export default class FileAPI {
     return promise
   }
 
-  create(file, type, leadID) {
+  create(file, leadID) {
     let data = new FormData()
     data.append('file', file)
-    data.append('doc_type', type)
+    // data.append('doc_type', type)
     data.append('lead', leadID)
 
     const promise = apiClient()

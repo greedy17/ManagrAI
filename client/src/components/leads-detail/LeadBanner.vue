@@ -64,7 +64,7 @@ export default {
   },
   computed: {
     bannerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status)
+      return getStatusSecondaryColor(this.lead.status && this.lead.status.toLowerCase())
     },
   },
 }
