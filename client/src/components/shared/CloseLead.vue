@@ -1,19 +1,24 @@
 <template>
   <div class="close-lead">
     <h1><span class="emoji">🎉</span>Congrats on the Deal! - Go Ring the Bell!</h1>
-    <form>
+    <!-- client side validations -->
+    <div class="errors" v-if="isFormValid !== null && !isFormValid">
+      No field may be blank.
+    </div>
+    <!-- form -->
+    <form @submit.prevent="closeLead">
       <div class="form-field">
         <label>Final Contract Amount</label>
         <div class="flex-container bordered">
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <input type="number" placeholder="Final Dollar Amount" />
+          <input v-model="amount" type="number" placeholder="Final Dollar Amount" />
         </div>
       </div>
       <div class="form-field">
         <label>Final Contract</label>
         <div class="flex-container">
           <input ref="upload" type="file" :style="{ display: 'none' }" @change="onFileChosen" />
-          <button class="upload-button" @click.prevent="chooseFile">
+          <button type="button" class="upload-button" @click.prevent="chooseFile">
             <img class="icon" alt="icon" src="@/assets/images/add.svg" />
             Choose File
           </button>
@@ -22,7 +27,7 @@
       </div>
       <div class="form-field">
         <label>Close Note</label>
-        <textarea class="bordered" placeholder="Input note" />
+        <textarea v-model="note" class="bordered" placeholder="Input note" />
       </div>
       <div class="cta-container">
         <button type="submit" class="cta">Close Lead</button>
@@ -32,6 +37,9 @@
 </template>
 
 <script>
+import File from '@/services/files'
+import Lead from '@/services/leads'
+
 export default {
   name: 'CloseLead',
   props: {
@@ -42,8 +50,12 @@ export default {
   },
   data() {
     return {
-      amount: 0,
+      amount: '',
       file: null,
+      note: '',
+      errors: {},
+      isFormValid: null,
+      success: null,
     }
   },
   methods: {
@@ -52,6 +64,52 @@ export default {
     },
     onFileChosen(e) {
       this.file = e.target.files[0]
+    },
+    closeLead() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data for this request
+      let validationResults = this.clientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      // proceed to close the lead, first uploading the contract
+      // NOTE (Bruno 4-7-20): Server-side bug: can't close unless contract exists, can't create contract unless lead is closed.
+      File.api
+        .create(this.file, 'CONTRACT', this.lead.id)
+        .then(response => {
+          return Lead.api.close(this.lead.id, this.amount, response.id)
+        })
+        .then(() => {
+          this.$Alert.alert()
+        })
+    },
+    clientSideValidations() {
+      let formErrors = {
+        amountIsBlank: this.amountIsBlank,
+        noteIsBlank: this.noteIsBlank,
+        noFileChosen: this.noFileChosen,
+      }
+      let isFormValid = !this.amountIsBlank && !this.noteIsBlank && !this.noFileChosen
+
+      return [isFormValid, formErrors]
+    },
+  },
+  computed: {
+    amountIsBlank() {
+      return !this.amount.length
+    },
+    noteIsBlank() {
+      return !this.note.length
+    },
+    noFileChosen() {
+      return this.file === null
     },
   },
 }
@@ -81,6 +139,10 @@ h1 {
   margin-right: 1rem;
 }
 
+.errors {
+  color: $coral;
+}
+
 form {
   margin-top: 2rem;
   width: 50%;
@@ -105,6 +167,10 @@ textarea {
   resize: none;
   height: 6rem;
   margin-top: 0.5rem;
+
+  &:focus {
+    box-shadow: 0 0 0 rgba($color: $dark-green, $alpha: 0.5);
+  }
 }
 
 .bordered {
@@ -128,8 +194,6 @@ textarea {
 
     &:focus {
       box-shadow: 0 0 0 rgba($color: $dark-green, $alpha: 0.5);
-      outline: none;
-      background-color: $white;
     }
   }
 }

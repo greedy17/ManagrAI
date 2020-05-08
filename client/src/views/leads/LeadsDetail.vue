@@ -1,6 +1,9 @@
 <template>
   <PageLoadingSVG v-if="loading" />
   <div v-else class="leads-detail">
+    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+      <CloseLead :lead="lead" />
+    </Modal>
     <div class="left-pane">
       <ToolBar
         class="toolbar"
@@ -51,6 +54,7 @@ import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
+import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'LeadsDetail',
@@ -61,11 +65,15 @@ export default {
     LeadActions,
     PinnedNotes,
     LeadInsights,
+    CloseLead,
   },
   data() {
     return {
       loading: true,
       lead: null,
+      modal: {
+        isOpen: false,
+      },
     }
   },
   created() {
@@ -127,10 +135,14 @@ export default {
       }
     },
     updateStatus(value) {
-      let patchData = { status: value }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead = lead
-      })
+      if (value != 'CLOSED') {
+        let patchData = { status: value }
+        Lead.api.update(this.lead.id, patchData).then(lead => {
+          this.lead = lead
+        })
+      } else {
+        this.modal.isOpen = true
+      }
     },
     resetLead() {
       let patchData = {
@@ -169,6 +181,9 @@ export default {
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
+    },
+    closeModal() {
+      this.modal.isOpen = false
     },
   },
 }

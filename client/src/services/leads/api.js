@@ -5,6 +5,7 @@ const LEADS_ENDPOINT = '/leads/'
 const GENERATE_LEAD_ENDPOINT = uid => `/leads/${uid}/`
 const GENERATE_CLAIM_ENDPOINT = uid => `/leads/${uid}/claim/`
 const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
+const GENERATE_CLOSE_ENDPOINT = uid => `/leads/${uid}/close/`
 
 export default class LeadAPI {
   /**
@@ -97,6 +98,18 @@ export default class LeadAPI {
       .patch(GENERATE_LEAD_ENDPOINT(id), data)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'LeadAPI.update' }))
+    return promise
+  }
+
+  close(id, amount, contractID) {
+    let data = {
+      closing_amount: amount,
+      contract: contractID,
+    }
+    const promise = apiClient()
+      .post(GENERATE_CLOSE_ENDPOINT(id), data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.close' }))
     return promise
   }
 }
