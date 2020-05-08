@@ -15,15 +15,15 @@
       <span class="days-in-status">7 Days</span>
     </div>
     <div class="banner-buttons">
-      <div class="banner-button" @click="emitReset">
+      <div v-if="isOwnedByUser" class="banner-button" @click="emitReset">
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div v-if="lead.claimedBy" class="banner-button" @click="emitReleased">
+      <div v-if="isOwnedByUser" class="banner-button" @click="emitRelease">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
-      <div v-else class="banner-button" @click="emitClaimed">
+      <div v-if="!isOwnedByUser && !isOwnedByAnother" class="banner-button" @click="emitClaim">
         <img class="button-icon" src="@/assets/images/claimed.svg" alt="icon" />
         <span class="button-content">Claim</span>
       </div>
@@ -49,10 +49,10 @@ export default {
     emitReset() {
       this.$emit('lead-reset')
     },
-    emitReleased() {
+    emitRelease() {
       this.$emit('lead-released')
     },
-    emitClaimed() {
+    emitClaim() {
       this.$emit('lead-claimed')
     },
     emitUpdatedForecast(value) {
@@ -65,6 +65,12 @@ export default {
   computed: {
     bannerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status && this.lead.status.toLowerCase())
+    },
+    isOwnedByUser() {
+      return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id
+    },
+    isOwnedByAnother() {
+      return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id
     },
   },
 }
