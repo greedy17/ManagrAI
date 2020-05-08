@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import LeadRating from '@/components/shared/LeadRating'
+import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 // import Contact from '@/services/contacts'
 

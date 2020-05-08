@@ -33,6 +33,7 @@ export default class LeadAPI {
 
       onList: ApiFilter.create({ key: 'on_list' }),
       byList: ApiFilter.create({ key: 'by_list' }),
+      rating: ApiFilter.create({ key: 'rating' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
