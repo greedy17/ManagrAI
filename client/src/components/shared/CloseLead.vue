@@ -1,0 +1,169 @@
+<template>
+  <div class="close-lead">
+    <h1><span class="emoji">🎉</span>Congrats on the Deal! - Go Ring the Bell!</h1>
+    <form>
+      <div class="form-field">
+        <label>Final Contract Amount</label>
+        <div class="flex-container bordered">
+          <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
+          <input type="number" placeholder="Final Dollar Amount" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Final Contract</label>
+        <div class="flex-container">
+          <input ref="upload" type="file" :style="{ display: 'none' }" @change="onFileChosen" />
+          <button class="upload-button" @click.prevent="chooseFile">
+            <img class="icon" alt="icon" src="@/assets/images/add.svg" />
+            Choose File
+          </button>
+          <span v-if="file" class="file-name">{{ file.name }}</span>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Close Note</label>
+        <textarea class="bordered" placeholder="Input note" />
+      </div>
+      <div class="cta-container">
+        <button type="submit" class="cta">Close Lead</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'CloseLead',
+  props: {
+    lead: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      amount: 0,
+      file: null,
+    }
+  },
+  methods: {
+    chooseFile() {
+      this.$refs.upload.click()
+    },
+    onFileChosen(e) {
+      this.file = e.target.files[0]
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
+
+.close-lead {
+  @include base-font-styles();
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+
+h1 {
+  width: 96%;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+}
+
+.emoji {
+  margin-right: 1rem;
+}
+
+form {
+  margin-top: 2rem;
+  width: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
+}
+
+.form-field {
+  display: flex;
+  flex-flow: column;
+  margin-top: 1rem;
+}
+
+label {
+  font-size: 1.2rem;
+}
+
+textarea {
+  @include input-field();
+  background-color: $white;
+  resize: none;
+  height: 6rem;
+  margin-top: 0.5rem;
+}
+
+.bordered {
+  @include standard-border();
+}
+
+.flex-container {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  background-color: $white;
+  width: auto;
+
+  input {
+    @include input-field();
+    flex-grow: 1;
+    background-color: $white;
+    height: 2rem;
+    width: 20rem;
+
+    &:focus {
+      box-shadow: 0 0 0 rgba($color: $dark-green, $alpha: 0.5);
+      outline: none;
+      background-color: $white;
+    }
+  }
+}
+
+.icon {
+  margin-left: 1rem;
+  margin-right: 0.5rem;
+}
+
+.upload-button {
+  @include secondary-button();
+  margin-right: 2rem;
+  font-size: 0.8rem;
+
+  .icon {
+    height: 1rem;
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+}
+
+.file-name {
+  font-weight: bold;
+  opacity: 0.4;
+}
+
+.cta-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-flow: row;
+}
+
+.cta {
+  @include primary-button();
+  margin-left: auto;
+}
+</style>

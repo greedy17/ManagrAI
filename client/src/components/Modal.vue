@@ -36,15 +36,14 @@ export default {
     }
   },
   mounted() {
-    window.addEventListener('scroll', this.noScroll)
+    document.body.style.overflowY = 'hidden'
+    document.body.style.overflowX = 'hidden'
   },
   beforeDestroy() {
-    window.removeEventListener('scroll', this.noScroll)
+    document.body.style.overflowY = 'scroll'
+    document.body.style.overflowX = 'auto'
   },
   methods: {
-    noScroll() {
-      window.scrollTo(0, this.currentY)
-    },
     emitCloseModal() {
       this.$emit('close-modal')
     },
