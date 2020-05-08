@@ -1,5 +1,8 @@
 <template>
   <div class="lead">
+    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+      <CloseLead :lead="lead" />
+    </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
@@ -32,6 +35,7 @@ import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import LeadList from '@/components/shared/LeadList'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
+import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'Lead',
@@ -50,10 +54,14 @@ export default {
     LeadForecastDropdown,
     LeadStatusDropdown,
     LeadList,
+    CloseLead,
   },
   data() {
     return {
       showDetails: false,
+      modal: {
+        isOpen: false,
+      },
     }
   },
   methods: {
@@ -61,10 +69,14 @@ export default {
       this.showDetails = !this.showDetails
     },
     updateStatus(value) {
-      let patchData = { status: value }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead.status = lead.status
-      })
+      if (value != 'CLOSED') {
+        let patchData = { status: value }
+        Lead.api.update(this.lead.id, patchData).then(lead => {
+          this.lead.status = lead.status
+        })
+      } else {
+        this.modal.isOpen = true
+      }
     },
     updateForecast(value) {
       if (this.forecast && this.forecast.id) {
@@ -83,6 +95,9 @@ export default {
           this.lead.forecast = response.id
         })
       }
+    },
+    closeModal() {
+      this.modal.isOpen = false
     },
   },
   computed: {
