@@ -1,4 +1,5 @@
 import django_filters
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django_filters.rest_framework import FilterSet
 from django_filters import OrderingFilter
 from itertools import chain
@@ -60,5 +61,13 @@ class ForecastFilterSet(FilterSet):
         if value:
             value = value.strip()
             user_list = value.split(',')
-            if self.request.user.organization.users.filter(id__in=user_list).exists():
-                return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')
+            try:
+                if self.request.user.organization.users.filter(id__in=user_list).exists():
+                    return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')
+                else:
+                    # if there is a user that does not exist or a problem with the query silently fail
+                    # return None
+                    return queryset.none()
+            except DjangoValidationError:
+                # if a malformed User Id is sent fail silently and return None
+                return queryset.none()
