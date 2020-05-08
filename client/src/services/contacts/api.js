@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const CONTACTS_ENDPOINT = '/contacts/'
+const GENERATE_CONTACT_ENDPOINT = uid => `/contacts/${uid}/`
 
 export default class ContactAPI {
   /**
@@ -65,4 +66,12 @@ export default class ContactAPI {
       .catch(apiErrorHandler({ apiName: 'ContactAPI.create' }))
     return promise
   }
+
+  // retrieve(id) {
+  //   const promise = apiClient()
+  //     .get(GENERATE_CONTACT_ENDPOINT(id))
+  //     .then(response => this.cls.fromAPI(response.data))
+  //     .catch(apiErrorHandler({ apiName: 'ContactAPI.retrieve' }))
+  //   return promise
+  // }
 }

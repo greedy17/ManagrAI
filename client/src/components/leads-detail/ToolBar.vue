@@ -41,7 +41,10 @@
       <div class="header section-shadow">
         <span>Contacts</span>
       </div>
-      <div class="contacts-container">
+      <div v-if="contactsLoading" class="contacts-loading contacts-container section-shadow">
+        <ComponentLoadingSVG />
+      </div>
+      <div v-else class="contacts-container">
         <div class="contact section-shadow" v-for="contact in exampleContacts" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="name">{{ contact.name }}</span>
@@ -74,6 +77,7 @@
 <script>
 import LeadRating from '@/components/shared/LeadRating'
 import LeadList from '@/components/shared/LeadList'
+// import Contact from '@/services/contacts'
 
 const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
 const exampleContacts = [
@@ -99,9 +103,28 @@ export default {
       exampleContacts,
       editAmount: false,
       tempAmount: this.lead.amount,
+      contacts: null,
+      contactsLoading: false, // start @ true once things built out, if going the ContactAPI.retrieve route
     }
   },
+  created() {
+    // this.fetchContacts()
+  },
   methods: {
+    // fetchContacts() {
+    //   // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend.
+    //   // Instead we may serialize contacts-data within LeadAPI.retrieve
+    //   let promises = []
+    //   for (let i = 0; i < this.lead.linkedContacts.length; ++i) {
+    //     let contactID = this.lead.linkedContacts[i]
+    //     let promise = Contact.api.retrieve(contactID)
+    //     promises.push(promise)
+    //   }
+    //   Promise.all(promises).then(() => {
+    //     // this.contacts needs to be populated by the responses' data
+    //     this.contactsLoading = false
+    //   })
+    // },
     goToAccount() {
       alert("This should route to account's page")
     },
@@ -327,6 +350,14 @@ export default {
       }
     }
   }
+}
+
+.contacts-loading {
+  height: 3rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .files {
