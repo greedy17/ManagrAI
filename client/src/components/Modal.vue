@@ -88,8 +88,6 @@ export default {
 .content {
   margin: 1rem;
   height: inherit;
-  // width: inherit;
-  border: 1px dashed black;
   overflow-y: auto;
 }
 
