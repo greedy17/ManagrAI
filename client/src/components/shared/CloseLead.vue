@@ -83,9 +83,13 @@ export default {
       File.api
         .create(this.file, this.lead.id)
         .then(response => {
+          alert(
+            'NOTE: server-side bug: something to do with if a lead has multiple files attached to it. This seems to cause the server-side to crash, on all processes after a lead has multiple files, any time the process has file information serialized into the response (it seems).\nIF this happens, to fix it and continue testing you should enter Django shell_plus and clear the files table.',
+          )
           return Lead.api.close(this.lead.id, this.amount, response.data.id)
         })
         .then(() => {
+          this.lead.status = 'CLOSED'
           this.$parent.emitCloseModal()
           this.$Alert.alert({
             type: 'success',
