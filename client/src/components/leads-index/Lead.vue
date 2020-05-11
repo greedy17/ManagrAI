@@ -1,5 +1,8 @@
 <template>
   <div class="lead">
+    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+      <CloseLead :lead="lead" />
+    </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
@@ -11,7 +14,7 @@
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
-        :forecast="lead.forecastRef.forecast"
+        :forecast="lead.forecastRef && lead.forecastRef.forecast"
         @updated-forecast="updateForecast"
       />
       <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
@@ -35,6 +38,7 @@ import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import LeadList from '@/components/shared/LeadList'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
+import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'Lead',
@@ -49,10 +53,14 @@ export default {
     LeadForecastDropdown,
     LeadStatusDropdown,
     LeadList,
+    CloseLead,
   },
   data() {
     return {
       showDetails: false,
+      modal: {
+        isOpen: false,
+      },
     }
   },
   methods: {
@@ -60,10 +68,24 @@ export default {
       this.showDetails = !this.showDetails
     },
     updateStatus(value) {
-      let patchData = { status: value }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead.status = lead.status
-      })
+      if (this.lead.status == 'CLOSED') {
+        this.$Alert.alert({
+          type: 'warning',
+          timeout: 4000,
+          message: 'Lead already closed!',
+        })
+      } else if (value != 'CLOSED') {
+        let patchData = { status: value }
+        Lead.api.update(this.lead.id, patchData).then(lead => {
+          this.lead.status = lead.status
+        })
+      } else {
+        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
+        // this.modal.isOpen = true
+        alert(
+          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
+        )
+      }
     },
     updateForecast(value) {
       if (this.lead.forecast) {
@@ -83,6 +105,9 @@ export default {
           this.lead.forecastRef = forecast
         })
       }
+    },
+    closeModal() {
+      this.modal.isOpen = false
     },
   },
   computed: {

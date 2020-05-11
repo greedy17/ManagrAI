@@ -3,7 +3,9 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 // API Endpoints
 const LEADS_ENDPOINT = '/leads/'
 const GENERATE_LEAD_ENDPOINT = uid => `/leads/${uid}/`
+const GENERATE_CLAIM_ENDPOINT = uid => `/leads/${uid}/claim/`
 const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
+const GENERATE_CLOSE_ENDPOINT = uid => `/leads/${uid}/close/`
 
 export default class LeadAPI {
   /**
@@ -32,6 +34,7 @@ export default class LeadAPI {
 
       onList: ApiFilter.create({ key: 'on_list' }),
       byList: ApiFilter.create({ key: 'by_list' }),
+      rating: ApiFilter.create({ key: 'rating' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -51,6 +54,13 @@ export default class LeadAPI {
           apiName: 'LeadAPI.list error',
         }),
       )
+    return promise
+  }
+
+  claim(uid) {
+    const promise = apiClient()
+      .post(GENERATE_CLAIM_ENDPOINT(uid))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.claim' }))
     return promise
   }
 
@@ -88,6 +98,18 @@ export default class LeadAPI {
       .patch(GENERATE_LEAD_ENDPOINT(id), data)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'LeadAPI.update' }))
+    return promise
+  }
+
+  close(id, amount, contractID) {
+    let data = {
+      closing_amount: amount,
+      contract: contractID,
+    }
+    const promise = apiClient()
+      .post(GENERATE_CLOSE_ENDPOINT(id), data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.close' }))
     return promise
   }
 }

@@ -1,0 +1,96 @@
+<template>
+  <div class="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
+    <div
+      class="modal"
+      :class="{ 'box-shadow': !dimmed }"
+      :style="{ height: `${height}vh`, width: `${width}vw` }"
+      @click="stopPropagation"
+    >
+      <div class="content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Modal',
+  props: {
+    dimmed: {
+      type: Boolean,
+      default: false,
+    },
+    height: {
+      type: Number,
+      default: 80,
+    },
+    width: {
+      type: Number,
+      default: 60,
+    },
+  },
+  data() {
+    return {
+      currentY: window.scrollY,
+    }
+  },
+  mounted() {
+    document.body.style.overflowY = 'hidden'
+    document.body.style.overflowX = 'hidden'
+  },
+  beforeDestroy() {
+    document.body.style.overflowY = 'scroll'
+    document.body.style.overflowX = 'auto'
+  },
+  methods: {
+    emitCloseModal() {
+      this.$emit('close-modal')
+    },
+    stopPropagation(e) {
+      e.stopPropagation()
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
+
+.container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dimmed {
+  background-color: rgba($color: $black, $alpha: 0.5);
+}
+
+.modal {
+  @include standard-border();
+  z-index: 1001;
+  background: $white;
+  display: flex;
+  flex-flow: column;
+  box-sizing: border-box;
+}
+
+.content {
+  margin: 1rem;
+  height: inherit;
+  overflow-y: auto;
+}
+
+.box-shadow {
+  box-shadow: 0 4px 16px 0 rgba($color: $black, $alpha: 0.3);
+}
+</style>

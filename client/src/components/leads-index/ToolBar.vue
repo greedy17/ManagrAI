@@ -6,11 +6,36 @@
     <div class="filter section-shadow">
       <div class="filter-header">Rating</div>
       <div class="filter-options">
-        <LeadRating class="option" :rating="5" />
-        <LeadRating class="option" :rating="4" />
-        <LeadRating class="option" :rating="3" />
-        <LeadRating class="option" :rating="2" />
-        <LeadRating class="option" :rating="1" />
+        <LeadRating
+          class="option"
+          :rating="5"
+          :isActive="5 === currentRatingFilter"
+          @updated-rating-filter="emitUpdatedRatingFilter"
+        />
+        <LeadRating
+          class="option"
+          :rating="4"
+          :isActive="4 === currentRatingFilter"
+          @updated-rating-filter="emitUpdatedRatingFilter"
+        />
+        <LeadRating
+          class="option"
+          :rating="3"
+          :isActive="3 === currentRatingFilter"
+          @updated-rating-filter="emitUpdatedRatingFilter"
+        />
+        <LeadRating
+          class="option"
+          :rating="2"
+          :isActive="2 === currentRatingFilter"
+          @updated-rating-filter="emitUpdatedRatingFilter"
+        />
+        <LeadRating
+          class="option"
+          :rating="1"
+          :isActive="1 === currentRatingFilter"
+          @updated-rating-filter="emitUpdatedRatingFilter"
+        />
       </div>
     </div>
     <div class="filter section-shadow">
@@ -30,7 +55,7 @@
 
 <script>
 import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
-import LeadRating from '@/components/shared/LeadRating'
+import LeadRating from '@/components/leads-index/LeadRating'
 
 const listEnums = ['Growth Accounts', 'Q2 Buyers']
 
@@ -39,12 +64,22 @@ export default {
   components: {
     LeadRating,
   },
+  props: {
+    currentRatingFilter: {
+      required: true,
+    },
+  },
   data() {
     return {
       statusEnums,
       forecastEnums,
       listEnums,
     }
+  },
+  methods: {
+    emitUpdatedRatingFilter(rating) {
+      this.$emit('updated-rating-filter', rating)
+    },
   },
 }
 </script>

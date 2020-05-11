@@ -40,6 +40,12 @@ export default {
   color: $main-font-gray;
 }
 
+.aa-notification.banner {
+  background-color: rgba($color: $dark-green, $alpha: 0.4);
+  border: 1px solid rgba($color: $dark-green, $alpha: 1);
+  color: $main-font-gray;
+}
+
 .aa-notification.warning {
   background-color: rgba($color: $yellow, $alpha: 0.9);
   border: 1px solid rgba($color: $yellow, $alpha: 1.2);
