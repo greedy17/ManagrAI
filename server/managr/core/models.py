@@ -6,7 +6,8 @@ from django.contrib.auth import login
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from managr.utils import sites as site_utils
-
+from managr.core import constants as core_consts
+from managr.core.integrations import gen_auth_url
 
 ACCOUNT_TYPE_LIMITED = 'LIMITED'
 ACCOUNT_TYPE_MANAGER = 'MANAGER'
@@ -111,6 +112,18 @@ class User(AbstractUser, TimeStampModel):
         now = timezone.now()
         return now > self.magic_token_expiration
 
+    @property
+    def email_auth_link(self):
+        """ 
+        This property sets the user specific url for authorizing the users email to give Nylas access
+        """
+
+        if self.magic_token_expired:
+            self.regen_magic_token()
+        # return f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.AUTH_PARAMS}?login_hint={self.email}&client_id={core_consts.NYLAS_CLIENT_ID}&response_type=code&redirect_uri={base_url}&scopes=email.read_only&state={self.magic_token}'
+        return gen_auth_url(core_consts.EMAIL_AUTH_CALLBACK_URL,
+                            email=self.email, magic_token=str(self.magic_token))
+
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
@@ -138,3 +151,29 @@ class User(AbstractUser, TimeStampModel):
 
     class Meta:
         ordering = ['email']
+
+
+class EmailAuthAccount(TimeStampModel):
+    """ creates a model out of the nylas response """
+    access_token = models.CharField(max_length=255, null=True)
+    account_id = models.CharField(max_length=255, null=True)
+    email_address = models.CharField(max_length=255, null=True)
+    provider = models.CharField(max_length=255, null=True)
+    sync_state = models.CharField(max_length=255, null=True)
+    name = models.CharField(max_length=255, null=True)
+    linked_at = models.DateTimeField(null=True)
+    user = models.OneToOneField(
+        'User', on_delete=models.CASCADE, related_name="email_auth_account")
+
+    def __str__(self):
+        return f'{self.email_address}'
+
+    def revoke(self):
+        """ method to revoke access if account is changed, user is removed"""
+        return self
+
+    class Meta:
+        ordering = ['email_address']
+
+    def save(self, *args, **kwargs):
+        return super(EmailAuthAccount, self).save(*args, **kwargs)

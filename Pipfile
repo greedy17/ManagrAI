@@ -28,6 +28,8 @@ pytz = "==2017.*"
 requests = "==2.*"
 rollbar = "==0.*"
 whitenoise = "==3.*"
+flask = "*"
+nylas = "*"
 
 [requires]
 python_version = "3.7"

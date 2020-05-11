@@ -14,6 +14,10 @@ urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view()),
     path('users/activation_link/<email>/',
          core_views.ActivationLinkView.as_view(), name="get_activation_link"),
+    url(r'users/email-auth-link/', core_views.get_email_authorization_link,
+        name="get_email_auth_link"),
+    url(r'users/email-auth-token/', core_views.email_auth_token,
+        name="get_email_auth_token"),
     url(r'account-status/', core_views.get_account_status,
         name='get_account_status')
 
