@@ -18,8 +18,12 @@ urlpatterns = [
         name="get_email_auth_link"),
     url(r'users/email-auth-token/', core_views.email_auth_token,
         name="get_email_auth_token"),
+    url(r'users/revoke-email-auth',
+        core_views.revoke_access_token, name="revoke_email_auth"),
+
     url(r'account-status/', core_views.get_account_status,
-        name='get_account_status')
+        name='get_account_status'),
+
 
 ]
 

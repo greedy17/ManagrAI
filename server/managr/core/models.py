@@ -1,13 +1,15 @@
 import uuid
 from datetime import datetime, timedelta
-from django.db import models
+import pytz
+from django.db import models, IntegrityError
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth import login
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from managr.utils import sites as site_utils
 from managr.core import constants as core_consts
-from managr.core.integrations import gen_auth_url
+from managr.core.integrations import gen_auth_url, revoke_access_token
 
 ACCOUNT_TYPE_LIMITED = 'LIMITED'
 ACCOUNT_TYPE_MANAGER = 'MANAGER'
@@ -159,7 +161,8 @@ class EmailAuthAccount(TimeStampModel):
     account_id = models.CharField(max_length=255, null=True)
     email_address = models.CharField(max_length=255, null=True)
     provider = models.CharField(max_length=255, null=True)
-    sync_state = models.CharField(max_length=255, null=True)
+    sync_state = models.CharField(
+        max_length=255, null=True, help_text="sync state is managed by web_hook after it is set for the first time")
     name = models.CharField(max_length=255, null=True)
     linked_at = models.DateTimeField(null=True)
     user = models.OneToOneField(
@@ -170,10 +173,17 @@ class EmailAuthAccount(TimeStampModel):
 
     def revoke(self):
         """ method to revoke access if account is changed, user is removed"""
-        return self
+        revoke_access_token(self.access_token)
+        return self.delete()
 
     class Meta:
         ordering = ['email_address']
 
     def save(self, *args, **kwargs):
-        return super(EmailAuthAccount, self).save(*args, **kwargs)
+        utc_time = datetime.utcfromtimestamp(self.linked_at)
+        self.linked_at = utc_time.replace(tzinfo=pytz.utc)
+        try:
+            return super(EmailAuthAccount, self).save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError({'non_form_errors': {
+                                  'access_token': 'This User already has an access Token please revoke the access token first'}})

@@ -4,7 +4,7 @@ import requests
 from django.db import transaction
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from managr.core.integrations import get_email_auth_token
+from managr.core.integrations import get_access_token, get_account_details
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
     authentication,
@@ -24,7 +24,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED
+from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount
 from .serializers import UserSerializer, UserLoginSerializer,  UserInvitationSerializer
 from .permissions import (IsOrganizationManager, IsSuperUser)
 
@@ -181,6 +181,20 @@ def get_email_authorization_link(request):
 @permission_classes([permissions.IsAuthenticated, ])
 def email_auth_token(request):
     u = request.user
+    # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
+    # they charge if we have duplicates and there isn't a way to get a list of them
+    try:
+        u.email_auth_account.revoke()
+    except EmailAuthAccount.DoesNotExist:
+        # pass here since user does not already have a token to revoke
+        pass
+    except requests.exceptions.HTTPError as e:
+        if 401 in e.args:
+            # delete the record so we can create a new link
+            u.email_auth_account.delete()
+            # we have out of sync data, pass
+            # we have a cron job running every 24 hours to remove all old tokens which are not in sync
+            pass
     magic_token = request.data.get('magic_token', None)
     code = request.data.get('code', None)
     if not magic_token or not code:
@@ -196,13 +210,54 @@ def email_auth_token(request):
             # returns nylas object that has account and token needed to populate model
             # note nylas error on sdk when code is invalid does not return a proper error,
             # we may need to catch the error as an exception or not use the api sdk
-            print(get_email_auth_token(code))
+            try:
+                access_token = get_access_token(code)
+                account = get_account_details(access_token)
+                EmailAuthAccount.objects.create(access_token=access_token, account_id=account['account_id'], email_address=account['email_address'],
+                                                provider=account['provider'], sync_state=account['sync_state'],
+                                                name=account['name'], linked_at=account['linked_at'], user=request.user
+                                                )
+            except requests.exceptions.HTTPError as e:
+                if 400 in e.args:
+                    raise ValidationError(
+                        {'non_field_errors': {'code': 'Code invalid or expired please try again'}})
+
         else:
             raise ValidationError(
                 {'detail': {'code': 'code is a required field'}})
     else:
         return Response(data={'non_field_errors': 'Token Invalid or Expired, please request a new one'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_access_token(request):
+    """ endpoint to revoke access for a token 
+        currently users can only revoke their own access
+        if an account needs to revoke someone elses they may
+        email the superuser, when we create a list of admins
+        for each org they will have access to delete their user's tokens
+        alternatively they can set a user to is_active=false and this will 
+        call the revoke endpoint for the user in an org
+    """
+    if(request.user.email_auth_account.access_token):
+        try:
+            request.user.email_auth_account.revoke()
+        except EmailAuthAccount.DoesNotExist:
+            # pass here since user does not already have a token to revoke
+            pass
+        except requests.exceptions.HTTPError as e:
+            if 401 in e.args:
+                # delete the record so we can create a new link
+                request.user.email_auth_account.delete()
+                # we have out of sync data, pass
+                # we have a cron job running every 24 hours to remove all old tokens which are not in sync
+                pass
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        raise ValidationError(
+            {'non_form_errors': {'no_token': 'user has not authorized nylas'}})
 
 
 @api_view(['POST'])
