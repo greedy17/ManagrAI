@@ -2,8 +2,8 @@
   <div class="forecast-dropdown">
     <select @change="onChange" :style="computedStyles">
       <option
+        v-for="option in selectableOptions"
         :selected="option.toUpperCase() === forecast"
-        v-for="option in enums"
         :key="option"
         :value="option"
       >
@@ -15,7 +15,7 @@
 </template>
 
 <script>
-const enums = ['50/50', 'Strong', 'Verbal', 'Future']
+import { forecastEnums } from '@/services/leads/enumerables'
 
 export default {
   name: 'LeadForecastDropdown',
@@ -28,17 +28,16 @@ export default {
       default: false,
     },
   },
-  data() {
-    return {
-      enums,
-    }
-  },
   methods: {
     onChange(e) {
       this.$emit('updated-forecast', e.target.value.toUpperCase())
     },
   },
   computed: {
+    selectableOptions() {
+      // all options are selectable except 'Unforecasted'. A lead is only 'Unforecasted' on creation.
+      return forecastEnums.filter(option => option != 'Unforecasted')
+    },
     computedStyles() {
       if (this.transparent) {
         return {

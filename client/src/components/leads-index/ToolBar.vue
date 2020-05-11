@@ -29,10 +29,9 @@
 </template>
 
 <script>
+import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/shared/LeadRating'
 
-const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
-const forecastEnums = ['50/50', 'Strong', 'Verbal', 'Future', 'Unforecasted']
 const listEnums = ['Growth Accounts', 'Q2 Buyers']
 
 export default {

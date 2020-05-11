@@ -9,8 +9,9 @@
       <Lead
         v-for="forecast in list.list"
         :key="forecast.id"
+        :forecast="forecast"
         :lead="forecast.leadRef"
-        :leadForecast="forecast.forecast"
+        @delete-lead="deleteLead"
       />
       <button v-if="moreToLoad" class="load-more-button" @click="loadMore">
         Load More
@@ -45,6 +46,12 @@ export default {
   methods: {
     toggleLeads() {
       this.showLeads = !this.showLeads
+    },
+    deleteLead(id) {
+      // NOTE (Bruno 5-7-20): this is incomplete, as just deleting a Lead from a ForecastList is not enough,
+      // it should also be added to another ForecastList, and that list's leadCount should also be updated
+      this.list.list = this.list.list.filter(forecast => forecast.lead !== id)
+      this.list.pagination.totalCount -= 1
     },
     loadMore() {
       alert('WIP')
