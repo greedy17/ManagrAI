@@ -13,6 +13,7 @@
 </template>
 
 <script>
+import throttle from 'lodash.throttle'
 import store, { removeAlert } from './store'
 import AlertAlertItem from './AlertAlertItem.vue'
 
@@ -29,7 +30,7 @@ export default {
   },
   mounted() {
     // NOTE (Bruno 4-23-20): this listener is never removed because it only needs to be removed on tab close, which happens automatically
-    document.addEventListener('scroll', this.setTop)
+    document.addEventListener('scroll', throttle(this.setTop, 30))
     this.setTop()
   },
   methods: {

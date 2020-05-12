@@ -109,8 +109,6 @@
 <script>
 import FilterByRep from '@/components/shared/FilterByRep'
 
-const statusEnums = ['Ready', 'Trial', 'Demo', 'Waiting']
-const forecastEnums = ['50/50', 'NA', 'Strong', 'Future', 'Verbal']
 const exampleReps = [
   { id: 1, name: 'Marcy Ewald' },
   { id: 2, name: 'Pari Baker' },
@@ -122,8 +120,6 @@ export default {
   components: { FilterByRep },
   data() {
     return {
-      statusEnums,
-      forecastEnums,
       reps: exampleReps,
       activeReps: {}, // for reps filter
     }

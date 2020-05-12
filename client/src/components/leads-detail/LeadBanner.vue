@@ -4,7 +4,7 @@
       <span class="forecast-label">Forecast</span>
       <LeadForecastDropdown
         class="forecast-dropdown"
-        :forecast="lead.forecast"
+        :forecast="lead.forecast && lead.forecastRef.forecast"
         :transparent="true"
         @updated-forecast="emitUpdatedForecast"
       />
@@ -15,13 +15,17 @@
       <span class="days-in-status">7 Days</span>
     </div>
     <div class="banner-buttons">
-      <div class="banner-button" @click="emitReset">
+      <div v-if="isOwnedByUser" class="banner-button" @click="emitReset">
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div class="banner-button" @click="emitReleased">
+      <div v-if="isOwnedByUser" class="banner-button" @click="emitRelease">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
+      </div>
+      <div v-if="!isOwnedByUser && !isOwnedByAnother" class="banner-button" @click="emitClaim">
+        <img class="button-icon" src="@/assets/images/claimed.svg" alt="icon" />
+        <span class="button-content">Claim</span>
       </div>
     </div>
   </div>
@@ -45,8 +49,11 @@ export default {
     emitReset() {
       this.$emit('lead-reset')
     },
-    emitReleased() {
+    emitRelease() {
       this.$emit('lead-released')
+    },
+    emitClaim() {
+      this.$emit('lead-claimed')
     },
     emitUpdatedForecast(value) {
       this.$emit('updated-forecast', value)
@@ -57,7 +64,13 @@ export default {
   },
   computed: {
     bannerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status)
+      return getStatusSecondaryColor(this.lead.status && this.lead.status.toLowerCase())
+    },
+    isOwnedByUser() {
+      return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id
+    },
+    isOwnedByAnother() {
+      return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id
     },
   },
 }

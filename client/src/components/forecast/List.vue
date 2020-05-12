@@ -2,13 +2,18 @@
   <div class="list">
     <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title"> {{ list.title }} </span>
+      <span class="list-title"> {{ title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <ComponentLoadingSVG v-if="trueList.refreshing" />
-      <Lead v-else v-for="lead in trueList.list" :key="lead.id" :lead="lead" />
-      <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
+      <Lead
+        v-for="forecast in list.list"
+        :key="forecast.id"
+        :forecast="forecast"
+        :lead="forecast.leadRef"
+        @delete-lead="deleteLead"
+      />
+      <button v-if="moreToLoad" class="load-more-button" @click="loadMore">
         Load More
       </button>
     </div>
@@ -16,16 +21,17 @@
 </template>
 
 <script>
-import LeadModel from '@/services/leads'
-import CollectionManager from '@/services/collectionManager'
-import Lead from '@/components/leads-index/Lead'
+import Lead from '@/components/forecast/Lead'
 
 export default {
   name: 'List',
   props: {
     list: {
-      // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
       type: Object,
+      required: true,
+    },
+    title: {
+      type: String,
       required: true,
     },
   },
@@ -35,21 +41,17 @@ export default {
   data() {
     return {
       showLeads: false,
-      madeInitialRetrieval: false,
-      trueList: CollectionManager.create({
-        ModelClass: LeadModel,
-        filters: { byList: this.list.id },
-      }),
     }
   },
   methods: {
     toggleLeads() {
-      if (!this.madeInitialRetrieval) {
-        this.trueList.refresh().then(() => {
-          this.madeInitialRetrieval = true
-        })
-      }
       this.showLeads = !this.showLeads
+    },
+    deleteLead(id) {
+      // NOTE (Bruno 5-7-20): this is incomplete, as just deleting a Lead from a ForecastList is not enough,
+      // it should also be added to another ForecastList, and that list's leadCount should also be updated
+      this.list.list = this.list.list.filter(forecast => forecast.lead !== id)
+      this.list.pagination.totalCount -= 1
     },
     loadMore() {
       alert('WIP')
@@ -57,10 +59,10 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.leadCount
+      return this.list.pagination.totalCount
     },
     moreToLoad() {
-      return !!this.trueList.pagination.next
+      return !!this.list.pagination.next
     },
   },
 }

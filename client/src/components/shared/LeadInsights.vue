@@ -62,27 +62,14 @@
     </div>
     <div class="insight-container section-shadow">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/contact.svg" alt="icon" />
-      </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          03/01/20
-        </span>
-        <span class="insight-bottom">
-          Contact Update
-        </span>
-      </div>
-    </div>
-    <div class="insight-container section-shadow">
-      <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/calendar.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
-          0 Demos
+          17 Actions
         </span>
         <span class="insight-bottom">
-          N/A
+          3 mins ago
         </span>
       </div>
     </div>

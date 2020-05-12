@@ -3,7 +3,7 @@ const statusToPrimaryColor = {
   trial: '#9596B3',
   demo: '#88C9F9',
   waiting: '#9596B4',
-  customer: '#2F9E54',
+  closed: '#2F9E54',
   lost: '#9596B4',
   null: '#9596B4',
 }
@@ -13,7 +13,7 @@ const statusToSecondaryColor = {
   trial: '#EFF0F5',
   demo: '#E8F4FE',
   waiting: '#EFEFF5',
-  customer: '#D1ECDD',
+  closed: '#D1ECDD',
   lost: '#EFEFF5',
   null: '#EFEFF5',
 }

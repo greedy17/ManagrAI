@@ -12,7 +12,11 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar class="toolbar" />
+      <ToolBar
+        class="toolbar"
+        @updated-rating-filter="updateRatingFilter"
+        :currentRatingFilter="ratingFilter"
+      />
     </div>
     <div class="lists-container-pane">
       <ListsContainer
@@ -27,7 +31,7 @@
 
 <script>
 import ToolBar from '@/components/leads-index/ToolBar'
-import ListsContainer from '@/components/shared/ListsContainer'
+import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Lead from '@/services/leads'
@@ -44,6 +48,7 @@ export default {
   data() {
     return {
       loading: true,
+      ratingFilter: null,
       lists: CollectionManager.create({
         ModelClass: List,
       }),
@@ -59,17 +64,45 @@ export default {
     }
   },
   created() {
-    let promises = [this.lists.refresh(), this.leadsWithoutList.refresh(), this.allLeads.refresh()]
-    Promise.all(promises).then(() => {
-      this.loading = false
-    })
+    this.refreshCollections()
   },
   methods: {
+    refreshCollections() {
+      this.applyFiltersToCollections()
+      let promises = [
+        this.lists.refresh(),
+        this.leadsWithoutList.refresh(),
+        this.allLeads.refresh(),
+      ]
+      Promise.all(promises).then(() => {
+        this.loading = false
+      })
+    },
+    applyFiltersToCollections() {
+      // apply lead-rating filter
+      // this.lists.filters.rating = this.ratingFilter // filter structure pending (server-side WIP)
+      this.leadsWithoutList.filters.rating = this.ratingFilter
+      this.allLeads.filters.rating = this.ratingFilter
+      // apply lead-status filter
+      // ...
+      // apply lead-forecast filter
+      // ...
+    },
     toggleView() {
       this.$router.push({ name: 'Forecast' })
     },
     addListToCollection(list) {
       this.lists.list.unshift(list)
+    },
+    updateRatingFilter(rating) {
+      // if the current filter option was clicked, then remove the ratingFiler
+      if (this.ratingFilter == rating) {
+        this.ratingFilter = null
+      } else {
+        this.ratingFilter = rating
+      }
+      this.loading = true
+      this.refreshCollections()
     },
   },
   computed: {
