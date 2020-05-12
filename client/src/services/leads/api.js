@@ -39,7 +39,7 @@ export default class LeadAPI {
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
     }
-    debugger
+
     options.params.order_by = '-rating'
     const promise = apiClient()
       .get(LEADS_ENDPOINT, options)

@@ -6,14 +6,34 @@ import isPlainObject from 'lodash.isplainobject'
  * @author  William Huster <william@aspire.is>
  */
 
+/**
+ * @module       utils
+ * @description  ThinkNimble's commonly-used utility functions.
+ *
+ * @author  William Huster <william@thinknimble.com>
+ */
+
 const Utils = {
   toSnakeCase,
   toCamelCase,
   objectToCamelCase,
   objectToSnakeCase,
+  isObject,
+  isDefined,
+  formatNumberAsUSD,
+  formatDateShort,
+  textToKabobCase,
+  getSubdomain,
 }
 
 export default Utils
+
+/**
+ * True/False, the given value is defined.
+ **/
+export function isDefined(value) {
+  return typeof value !== 'undefined'
+}
 
 /**
  * toSnakeCase
@@ -62,17 +82,31 @@ export function toCamelCase(value) {
 }
 
 /**
+ * Check a value whether it is an Object
+ */
+
+export function isObject(value) {
+  return value !== null && value instanceof Object && !Array.isArray(value)
+}
+
+/**
  * Transform the string-based keys of a JavaScript object to `camelCase` style notation.
  * This is useful for translating the style of object keys after making an API call to
  * the Python-based API, which uses `snake_case` style notation by default.
+ * Note support for arrays, if an array is an array of objects it will convert the keys to CC otherwise it will just return the array
  */
 export function objectToCamelCase(value) {
-  if (isPlainObject(value)) {
+  if (isObject(value)) {
     return Object.keys(value).reduce((acc, snakeKey) => {
       const camelKey = toCamelCase(snakeKey)
-      acc[camelKey] = isPlainObject(value[snakeKey])
-        ? objectToCamelCase(value[snakeKey])
-        : value[snakeKey]
+
+      if (isObject(value[snakeKey])) {
+        acc[camelKey] = objectToCamelCase(value[snakeKey])
+      } else if (Array.isArray(value[snakeKey])) {
+        acc[camelKey] = value[snakeKey].map(i => (isObject(i) ? objectToCamelCase(i) : i))
+      } else {
+        acc[camelKey] = value[snakeKey]
+      }
       return acc
     }, {})
   }
@@ -82,15 +116,106 @@ export function objectToCamelCase(value) {
  * Transform the string-based keys of a JavaScript object to `snake_case` style notation.
  * This is useful for translating the `camelCase` style of JavaScript keys BEFORE posting
  * the data to the Python-based API, which uses `snake_case` style notation by default.
+ * Note support for arrays, if an array is an array of objects it will convert the keys to CC otherwise it will just return the array
  */
 export function objectToSnakeCase(value) {
-  if (isPlainObject(value)) {
+  if (isObject(value)) {
     return Object.keys(value).reduce((acc, camelKey) => {
       const snakeKey = toSnakeCase(camelKey)
-      acc[snakeKey] = isPlainObject(value[camelKey])
-        ? objectToSnakeCase(value[camelKey])
-        : value[camelKey]
+      if (isObject(value[camelKey])) {
+        acc[snakeKey] = objectToSnakeCase(value[camelKey])
+      } else if (Array.isArray(value[camelKey])) {
+        acc[snakeKey] = value[camelKey].map(i => (isObject(i) ? objectToSnakeCase(i) : i))
+      } else {
+        acc[snakeKey] = value[camelKey]
+      }
       return acc
     }, {})
   }
+}
+
+/**
+ *@function       debounce
+ *@description    delay calling of callback function on set time
+ *@params         callback <Function> : a function is being returned; time <Number> : delay time in milliseconds
+ *@returns        {Function}
+ */
+
+export function debounce(callback, time) {
+  let timer = null
+  return function(...args) {
+    const onComplete = () => {
+      callback.apply(this, args)
+      timer = null
+    }
+
+    if (timer) {
+      clearTimeout(timer)
+    }
+
+    timer = setTimeout(onComplete, time)
+  }
+}
+
+/**
+ * Returns a alphabetically sorted array of Objects, sorted by a 'property' (String) and excluding a specified 'exception' (String)
+ */
+export function sortAlphabetically(arr, property, exception = null) {
+  arr.sort(function(a, b) {
+    if (a[property] !== exception && b[property] !== exception) {
+      var textA = a[property].toUpperCase()
+      var textB = b[property].toUpperCase()
+      return textA < textB ? -1 : textA > textB ? 1 : 0
+    }
+  })
+  return arr
+}
+
+/**
+ * @function    getSubdomain
+ * parses subdomain from window.location.hostname
+ */
+export function getSubdomain() {
+  let hostnameArr = window.location.hostname.split('.')
+  return hostnameArr.length === 3 ? hostnameArr[0] : 'n/a'
+}
+
+/**
+ * @function    textToKabobCase
+ * Takes a string of text (e.g. 'Financial Health') and turns it into its kabob-case counterpart (e.g. 'financial-health')
+ * @param   {String}  text  - custom string that functions as action being tracked
+ **/
+export function textToKabobCase(text) {
+  return text.toLowerCase().replace(' ', '-')
+}
+
+/**
+ * Format a number as US Dollars
+ *
+ * @param {String, Number} value - The value to format as US Dollars
+ */
+export function formatNumberAsUSD(value) {
+  // Ignore falsey values, except zero, because zero dollars is OK!
+  if (value !== 0 && !value) return ''
+  return Number(value).toLocaleString('en', {
+    style: 'currency',
+    currency: 'USD',
+  })
+}
+
+/**
+ * Format a Date string or object.
+ *
+ * Returns 'N/A' if a falsey value is given.
+ *
+ * @param {String, Date} value - The date string or object to format.
+ */
+export function formatDateShort(value) {
+  if (!value) return 'N/A'
+  const date = new Date(value)
+  return date.toLocaleDateString(['en-US'], {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  })
 }

@@ -101,6 +101,7 @@ class Contact(TimeStampModel):
         Contacts are the point of contacts that belong to an account, they must be unique (by email) and can only belong to one account
         If we have multiple organizations per account then that will also be unique and added here
     """
+    title = models.CharField(max_length=255, blank=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.CharField(max_length=255)

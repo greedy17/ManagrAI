@@ -88,7 +88,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ('id', 'full_name', 'first_name', 'last_name', 'email',
+        fields = ('id', 'title', 'full_name', 'first_name', 'last_name', 'email',
                   'phone_number_1', 'phone_number_2', 'account',)
         extra_kwargs = {
             'email': {'required': True},
