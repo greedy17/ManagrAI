@@ -11,7 +11,8 @@ import router from './router'
 import store from './store'
 
 // global components
-import LoadingSVG from '@/components/LoadingSVG'
+import PageLoadingSVG from '@/components/PageLoadingSVG'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 
 // filters
 import currencyFilter from '@/services/currency'
@@ -21,7 +22,8 @@ Vue.config.productionTip = false
 Vue.use(Vuex)
 Vue.use(AlertAlert)
 
-Vue.component('LoadingSVG', LoadingSVG)
+Vue.component('PageLoadingSVG', PageLoadingSVG)
+Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 
 Vue.filter('currency', currencyFilter)
 

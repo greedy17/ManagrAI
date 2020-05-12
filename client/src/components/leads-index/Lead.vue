@@ -1,9 +1,13 @@
 <template>
   <div class="lead">
     <div class="lead-header" v-bind:style="headerBackgroundColor">
-      <span class="lead-name" @click="toggleDetails"> {{ lead.name }} </span>
+      <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
-      <span class="lead-description"> {{ leadDescription }} </span>
+      <span class="lead-description">
+        {{
+          lead.primaryDescription || lead.secondaryDescription ? leadDescription : 'No Descriptions'
+        }}
+      </span>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown :forecast="lead.forecast" />
@@ -48,16 +52,16 @@ export default {
   },
   computed: {
     leadDescription() {
-      let { primaryNote, secondaryNote } = this.lead
+      let { primaryDescription, secondaryDescription } = this.lead
       let description = ''
-      if (primaryNote) {
-        description += primaryNote
+      if (primaryDescription) {
+        description += primaryDescription
       }
-      if (secondaryNote) {
-        if (primaryNote) {
-          description += ' + ' + secondaryNote
+      if (secondaryDescription) {
+        if (primaryDescription) {
+          description += ' + ' + secondaryDescription
         } else {
-          description += secondaryNote
+          description += secondaryDescription
         }
       }
       let sliced = description.slice(0, 50)

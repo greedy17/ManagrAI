@@ -30,9 +30,7 @@ export default {
   mounted() {
     // NOTE (Bruno 4-23-20): this listener is never removed because it only needs to be removed on tab close, which happens automatically
     document.addEventListener('scroll', this.setTop)
-    if (!this.setTop()) {
-      this.top = this.oneRem * 0.5
-    }
+    this.setTop()
   },
   methods: {
     handleRemove(alert) {
@@ -44,9 +42,9 @@ export default {
       let navRect = nav.getBoundingClientRect()
       let calculation = navRect.height + navRect.top
       let calculationIsValid = navRect.height >= calculation && calculation >= 0
-
-      if (calculationIsValid) {
-        this.top = calculation + this.oneRem * 0.5
+      let margin = this.oneRem * 0.5
+      if (calculationIsValid && calculation + margin !== this.top) {
+        this.top = calculation + margin
       }
 
       return calculationIsValid

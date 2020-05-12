@@ -1,5 +1,6 @@
 <template>
-  <div class="leads-index">
+  <PageLoadingSVG v-if="loading" />
+  <div v-else class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
@@ -14,7 +15,12 @@
       <ToolBar class="toolbar" />
     </div>
     <div class="lists-container-pane">
-      <ListsContainer :lists="lists" />
+      <ListsContainer
+        :lists="lists.list"
+        :leadsWithoutList="leadsWithoutList"
+        :allLeads="allLeads"
+        @list-created="addListToCollection"
+      />
     </div>
   </div>
 </template>
@@ -24,7 +30,9 @@ import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/shared/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
-import { getSerializedLists } from '@/db.js'
+import Lead from '@/services/leads'
+import List from '@/services/lists'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'LeadsIndex',
@@ -35,16 +43,33 @@ export default {
   },
   data() {
     return {
-      lists: null,
-      forecastLists: null,
+      loading: true,
+      lists: CollectionManager.create({
+        ModelClass: List,
+      }),
+      leadsWithoutList: CollectionManager.create({
+        ModelClass: Lead,
+        filters: {
+          onList: 'False',
+        },
+      }),
+      allLeads: CollectionManager.create({
+        ModelClass: Lead,
+      }),
     }
   },
   created() {
-    this.lists = getSerializedLists()
+    let promises = [this.lists.refresh(), this.leadsWithoutList.refresh(), this.allLeads.refresh()]
+    Promise.all(promises).then(() => {
+      this.loading = false
+    })
   },
   methods: {
     toggleView() {
       this.$router.push({ name: 'Forecast' })
+    },
+    addListToCollection(list) {
+      this.lists.list.unshift(list)
     },
   },
   computed: {
