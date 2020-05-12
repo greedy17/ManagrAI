@@ -5,6 +5,20 @@ from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
 from .models import Lead, Forecast
+from django_filters import OrderingFilter
+
+
+class LeadRatingOrderFiltering(OrderingFilter):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('order_by', None)
+        if ordering is not None:
+            if ordering.startswith('-'):
+                ordering.strip('-')
+                queryset = queryset.order_by(ordering)
+            else:
+                queryset = queryset.order_by(ordering)
+
+        return queryset
 
 
 class LeadFilterSet(FilterSet):

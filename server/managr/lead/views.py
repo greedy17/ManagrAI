@@ -25,9 +25,10 @@ from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Rem
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet, ForecastFilterSet
+from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering
 from managr.api.models import Contact, Account
 from managr.lead import constants as lead_constants
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -36,6 +37,8 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
     filter_class = LeadFilterSet
+    filter_backends = (DjangoFilterBackend, LeadRatingOrderFiltering,)
+    ordering = ('rating',)
 
     def get_queryset(self):
         return Lead.objects.for_user(self.request.user)
@@ -161,6 +164,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly)
+
     serializer_class = ListSerializer
 
     def get_queryset(self):
