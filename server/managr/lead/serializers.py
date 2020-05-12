@@ -70,7 +70,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lead
-        fields = ('id', 'rating', 'amount', 'lists',
+        fields = ('id', 'rating', 'amount', 'lists', 'title',
                   'primary_description', 'secondary_description', 'status',)
 
 
