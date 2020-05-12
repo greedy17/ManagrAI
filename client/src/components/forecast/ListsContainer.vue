@@ -1,15 +1,25 @@
 <template>
   <div class="lists-container">
-    <List :key="1" :title="'50/50'" :list="lists['50/50']" />
-    <List :key="2" :title="'Strong'" :list="lists['STRONG']" />
-    <List :key="3" :title="'Verbal'" :list="lists['VERBAL']" />
-    <List :key="4" :title="'Future'" :list="lists['FUTURE']" />
-    <List :key="5" :title="'Unforecasted'" :list="lists['UNFORECASTED']" />
+    <List
+      v-for="(forecast, index) in FORECASTS"
+      :key="index"
+      :title="capitalizeWord(forecast)"
+      :list="lists[forecast]"
+    />
   </div>
 </template>
 
 <script>
 import List from '@/components/forecast/List'
+import { capitalizeWord } from '@/services/utils'
+
+const FIFTY_FIFTY = '50/50'
+const STRONG = 'STRONG'
+const VERBAL = 'VERBAL'
+const FUTURE = 'FUTURE'
+const UNFORECASTED = 'UNFORECASTED'
+
+const FORECASTS = [FIFTY_FIFTY, STRONG, VERBAL, FUTURE, UNFORECASTED]
 
 export default {
   name: 'ListsContainer',
@@ -21,6 +31,14 @@ export default {
   },
   components: {
     List,
+  },
+  data() {
+    return {
+      FORECASTS,
+    }
+  },
+  methods: {
+    capitalizeWord,
   },
 }
 </script>
