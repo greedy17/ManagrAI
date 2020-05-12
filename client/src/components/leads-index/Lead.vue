@@ -6,11 +6,17 @@
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
-      <span class="lead-description">
-        {{
-          lead.primaryDescription || lead.secondaryDescription ? leadDescription : 'No Descriptions'
-        }}
-      </span>
+      <div v-if="lead.primaryDescription || lead.secondaryDescription" class="lead-description">
+        <div class="primary">
+          {{ lead.primaryDescription || '-Primary Not Set-' }}
+        </div>
+        <div class="secondary">
+          {{ lead.secondaryDescription || '-Secondary Not Set-' }}
+        </div>
+      </div>
+      <div v-else class="lead-description">
+        No Descriptions
+      </div>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
@@ -105,25 +111,6 @@ export default {
     },
   },
   computed: {
-    leadDescription() {
-      let { primaryDescription, secondaryDescription } = this.lead
-      let description = ''
-      if (primaryDescription) {
-        description += primaryDescription
-      }
-      if (secondaryDescription) {
-        if (primaryDescription) {
-          description += ' + ' + secondaryDescription
-        } else {
-          description += secondaryDescription
-        }
-      }
-      let sliced = description.slice(0, 50)
-      if (sliced.length > description.length) {
-        sliced += '...'
-      }
-      return sliced
-    },
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
     },
@@ -181,6 +168,14 @@ export default {
 
 .lead-description {
   width: 12.5%;
+
+  .primary,
+  .secondary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 25ch; // this will look for the unicode position of a char and elipse after that char
+  }
 }
 
 .lead-amount {
