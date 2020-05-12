@@ -68,13 +68,7 @@ export default {
       this.showDetails = !this.showDetails
     },
     updateStatus(value) {
-      if (this.lead.status == 'CLOSED') {
-        this.$Alert.alert({
-          type: 'warning',
-          timeout: 4000,
-          message: 'Lead already closed!',
-        })
-      } else if (value != 'CLOSED') {
+      if (value != 'CLOSED') {
         let patchData = { status: value }
         Lead.api.update(this.lead.id, patchData).then(lead => {
           this.lead.status = lead.status

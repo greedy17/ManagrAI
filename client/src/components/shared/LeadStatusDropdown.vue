@@ -1,6 +1,6 @@
 <template>
   <div class="status-dropdown">
-    <select @change="onChange" :style="computedStyles">
+    <select @change="onChange" :style="computedStyles" :disabled="status === 'CLOSED'">
       <option disabled :selected="status == null" value="">---</option>
       <option
         :selected="option.toUpperCase() === status"
