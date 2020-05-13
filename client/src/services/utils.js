@@ -18,13 +18,13 @@ const Utils = {
   toCamelCase,
   objectToCamelCase,
   objectToSnakeCase,
-
   isDefined,
   formatNumberAsUSD,
   formatDateShort,
   textToKabobCase,
   getSubdomain,
   removeDuplicates,
+  capitalizeWord,
 }
 
 export default Utils
@@ -72,9 +72,18 @@ export function toCamelCase(value) {
         return word
       }
       // If it is not the first word only upper case the first char and lowercase the rest.
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      return capitalizeWord(word)
     })
     .join('')
+}
+
+/**
+ * Transform a string value from any style notation to `capitalize` notation.
+ *
+ * @param {String} word - The string value to transform.
+ */
+export function capitalizeWord(word) {
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
 }
 
 /**

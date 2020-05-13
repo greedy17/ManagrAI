@@ -19,6 +19,7 @@
     "lodash.isplainobject": "^4.0.6",
     "luxon": "^1.24.1",
     "moment": "^2.25.3",
+    "lodash.throttle": "^4.1.1",
     "randomcolor": "^0.5.3",
     "vue": "^2.5.22",
     "vue-datetime": "^1.0.0-beta.13",

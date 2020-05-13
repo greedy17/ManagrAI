@@ -1,6 +1,6 @@
 <template>
   <div class="list">
-    <div class="list-header" @click="toggleLeads" :style="listHeaderBorder">
+    <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title">{{ title }}</span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
@@ -54,11 +54,6 @@ export default {
     numOfLeads() {
       return this.collection.pagination.totalCount
     },
-    listHeaderBorder() {
-      return {
-        border: this.showLeads ? '2px solid #fafafa' : '2px solid white', // $off-white || $white
-      }
-    },
     moreToLoad() {
       return !!this.collection.pagination.next
     },
@@ -84,6 +79,14 @@ export default {
   font-size: 14px;
   line-height: 1.14;
   color: $main-font-gray;
+}
+
+.open {
+  border: 2px solid $off-white;
+}
+
+.closed {
+  border: 2px solid $white;
 }
 
 .icon {
