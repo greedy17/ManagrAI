@@ -32,13 +32,13 @@
           @updated-secondary-description="updateSecondaryDescription"
         />
       </div>
-      <div class="container">
+      <!--       <div class="container">
         <img
           class="additional-information"
           src="@/assets/images/screenshots/AdditionalInformation.png"
           alt="screenshot"
         />
-      </div>
+      </div> -->
     </div>
     <div class="right-pane">
       <LeadInsights :lead="lead" />

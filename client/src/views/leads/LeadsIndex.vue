@@ -20,10 +20,21 @@
     </div>
     <div class="lists-container-pane">
       <ListsContainer
-        :lists="lists.list"
-        :leadsWithoutList="leadsWithoutList"
-        :allLeads="allLeads"
+        title="My Lists"
+        :leads="myLeads.list"
+        :lists="myLists.list"
         @list-created="addListToCollection"
+        @toggle-onlist="applyMyLeadsOnListFilter"
+        :showCreateNew="true"
+        :loading="myLists.refreshing || myLeads.refreshing"
+      />
+      <ListsContainer
+        title="Other Lists"
+        :lists="lists.list"
+        :leads="leads.list"
+        @list-created="addListToCollection"
+        @toggle-onlist="applyLeadsOnListFilter"
+        :loading="leads.refreshing || lists.refreshing"
       />
     </div>
   </div>
@@ -49,30 +60,62 @@ export default {
     return {
       loading: true,
       ratingFilter: null,
-      lists: CollectionManager.create({
+      myLists: CollectionManager.create({
         ModelClass: List,
-      }),
-      leadsWithoutList: CollectionManager.create({
-        ModelClass: Lead,
         filters: {
-          onList: 'False',
+          byUser: this.$store.state.user.id,
         },
       }),
-      allLeads: CollectionManager.create({
+      lists: CollectionManager.create({
+        ModelClass: List,
+        filters: {
+          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
+          byUser: `-${this.$store.state.user.id}`,
+        },
+      }),
+      myLeads: CollectionManager.create({
         ModelClass: Lead,
+        filters: {
+          byUser: this.$store.state.user.id,
+          onList: true,
+        },
+      }),
+      leads: CollectionManager.create({
+        ModelClass: Lead,
+        filters: {
+          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
+          byUser: `-${this.$store.state.user.id}`,
+          onList: true,
+        },
       }),
     }
   },
   created() {
     this.refreshCollections()
   },
+  computed: {
+    isCurrentRoute() {
+      return this.$route.name == 'LeadsIndex'
+    },
+    isLoading() {
+      return (
+        this.lists.refreshing ||
+        this.myLists.refreshing ||
+        this.leads.refreshing ||
+        this.myLeads.refreshing
+      )
+    },
+  },
   methods: {
     refreshCollections() {
       this.applyFiltersToCollections()
       let promises = [
         this.lists.refresh(),
-        this.leadsWithoutList.refresh(),
-        this.allLeads.refresh(),
+        this.myLists.refresh(),
+        this.leads.refresh(),
+        this.myLeads.refresh(),
+        //this.leadsWithoutList.refresh(),
+        //this.allLeads.refresh(),
       ]
       Promise.all(promises).then(() => {
         this.loading = false
@@ -81,8 +124,8 @@ export default {
     applyFiltersToCollections() {
       // apply lead-rating filter
       // this.lists.filters.rating = this.ratingFilter // filter structure pending (server-side WIP)
-      this.leadsWithoutList.filters.rating = this.ratingFilter
-      this.allLeads.filters.rating = this.ratingFilter
+      //this.leadsWithoutList.filters.rating = this.ratingFilter
+      //this.allLeads.filters.rating = this.ratingFilter
       // apply lead-status filter
       // ...
       // apply lead-forecast filter
@@ -94,6 +137,14 @@ export default {
     addListToCollection(list) {
       this.lists.list.unshift(list)
     },
+    async applyMyLeadsOnListFilter(val) {
+      this.myLeads.filters['onList'] = val
+      await this.myLeads.refresh()
+    },
+    async applyLeadsOnListFilter(val) {
+      this.leads.filters['onList'] = val
+      await this.leads.refresh()
+    },
     updateRatingFilter(rating) {
       // if the current filter option was clicked, then remove the ratingFiler
       if (this.ratingFilter == rating) {
@@ -103,11 +154,6 @@ export default {
       }
       this.loading = true
       this.refreshCollections()
-    },
-  },
-  computed: {
-    isCurrentRoute() {
-      return this.$route.name == 'LeadsIndex'
     },
   },
 }

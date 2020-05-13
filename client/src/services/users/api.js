@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler } from '@/services/api'
+import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 import store from '@/store'
 
 // API Endpoints
@@ -6,8 +6,12 @@ const LOGIN_ENDPOINT = '/login/'
 const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
+const USERS_ENDPOINT = '/users/'
 
 export default class UserAPI {
+  get client() {
+    return apiClient()
+  }
   /**
    * Instantiate a new `UserAPI`
    *
@@ -24,6 +28,26 @@ export default class UserAPI {
    **/
   static create(cls) {
     return new UserAPI(cls)
+  }
+  async list({ pagination, filters }) {
+    const url = USERS_ENDPOINT
+    const filtersMap = {
+      page: ApiFilter.create({ key: 'page' }),
+      pageSize: ApiFilter.create({ key: 'page_size' }),
+      active: ApiFilter.create({ key: 'active' }),
+    }
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+    }
+    try {
+      const res = await this.client.get(url, options)
+      return {
+        ...res.data,
+        results: res.data.results.map(this.cls.fromAPI),
+      }
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.list' })
+    }
   }
 
   login(email, password) {

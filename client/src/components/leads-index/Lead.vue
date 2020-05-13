@@ -18,14 +18,26 @@
         @updated-forecast="updateForecast"
       />
       <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
-      <div class="lead-lists">
+      <!--       <div class="lead-lists">
         <LeadList class="lead-list" :listName="'Growth Accounts'" />
         <LeadList class="lead-list" :listName="'Q2 Buyers'" />
-      </div>
+      </div> -->
+
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="icon" />
       </span>
+      <div class="button-container">
+        <button v-if="!!lead.claimedBy" @click="routeToRepPage">
+          <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
+          <span> Claimed</span>
+        </button>
+        <button v-else @click="claimLead">
+          <img class="icon" alt="icon" src="@/assets/images/add.svg" />
+          <span>Claim</span>
+        </button>
+      </div>
     </div>
+
     <LeadDetails :lead="lead" v-if="showDetails" />
   </div>
 </template>
@@ -64,6 +76,14 @@ export default {
     }
   },
   methods: {
+    routeToRepPage() {
+      alert('Clicking a rep name should route to the RepDetail')
+    },
+    claimLead() {
+      alert(
+        'Clicking claim should claim the lead and not change the page (so that many leads can be claimed in succession)',
+      )
+    },
     toggleDetails() {
       this.showDetails = !this.showDetails
     },
@@ -140,6 +160,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/buttons';
 
 .lead {
   margin-bottom: 0.625rem;
@@ -221,5 +242,23 @@ export default {
   width: 1rem;
   margin-left: auto;
   margin-right: 15%;
+}
+.button-container {
+  width: 15%;
+  margin-left: auto;
+  margin-right: 5rem;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  button {
+    @include secondary-button();
+    padding-right: 0.7rem;
+    padding-left: 0.5rem;
+    width: auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+  }
 }
 </style>

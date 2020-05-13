@@ -5,7 +5,7 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead, Forecast
+from .models import Lead, Forecast, List
 from django_filters import OrderingFilter
 
 
@@ -34,11 +34,40 @@ class LeadFilterSet(FilterSet):
     by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
     status = django_filters.CharFilter(method="by_status")
     forecast = django_filters.CharFilter(method="by_forecast")
+    by_user = django_filters.CharFilter(method="leads_by_user")
+    by_account = django_filters.CharFilter(method="list_leads_by_account")
 
     class Meta:
         model = Lead
         fields = ['rating', 'on_list', 'is_claimed',
-                  'by_list', ]
+                  'by_list', 'by_user', 'by_account']
+
+    def leads_by_user(self, queryset, name, value):
+        u = self.request.user
+        if value:
+            value = value.strip()
+            user_list = value.split(',')
+            exclude_list = list()
+            include_list = list()
+            for user in user_list:
+                # check if user is in org
+                if u.organization.users.filter(id=user).exists():
+                    if user.startswith('-'):
+                        exclude_list.append(user)
+                    else:
+                        include_list.append(user)
+            if len(include_list) < 1:
+                # When looking for all leads other than the negated id and there are no other
+                # positive searches then assume that we want all leads not assigned to that
+                # particular user and include null values as well
+                include_null = True
+                include_list.extend(
+                    u.organization.users.exclude(id__in=exclude_list))
+
+                return queryset.filter(Q(claimed_by__in=include_list) | Q(claimed_by__isnull=include_null)).exclude(claimed_by_id__in=exclude_list).order_by('created_by')
+            else:
+                return queryset.filter(claimed_by__in=include_list).exclude(claimed_by_id__in=exclude_list).order_by('created_by')
+        return queryset
 
     def by_status(self, qs, name, value):
         """ allows list of statuses"""
@@ -85,6 +114,21 @@ class LeadFilterSet(FilterSet):
         else:
             return queryset.all()
 
+    def list_leads_by_account(self, queryset, name, value):
+        u = self.request.user
+        if value:
+            value = value.strip()
+            account_list = value.split(',')
+            for acc in account_list:
+                # check if account is in org
+                if u.organization.accounts.filter(id=acc).exists():
+                    pass
+                else:
+                    account_list.remove(acc)
+
+            return queryset.filter(account__in=account_list).order_by('account')
+        return queryset
+
 
 class ForecastFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="forecasts_by_user")
@@ -95,7 +139,6 @@ class ForecastFilterSet(FilterSet):
 
     def forecasts_by_user(self, queryset, name, value):
         """ provide a user or a list of users """
-        # TODO:- check to see if user exists
         if value:
             value = value.strip()
             user_list = value.split(',')
@@ -109,3 +152,32 @@ class ForecastFilterSet(FilterSet):
             except DjangoValidationError:
                 # if a malformed User Id is sent fail silently and return None
                 return queryset.none()
+
+
+class ListFilterSet(FilterSet):
+    by_user = django_filters.CharFilter(method="lists_by_user")
+
+    class Meta:
+        model = List
+        fields = ['by_user']
+
+    def lists_by_user(self, queryset, name, value):
+        u = self.request.user
+        if value:
+            value = value.strip()
+            user_list = value.split(',')
+            exclude_list = list()
+            include_list = list()
+            for user in user_list:
+                # check if user is in org
+                if u.organization.users.filter(id=user).exists():
+                    if user.startswith('-'):
+                        exclude_list.append(user)
+                    else:
+                        include_list.append(user)
+                if len(include_list) < 1:
+                    include_list.extend(
+                        u.organization.users.exclude(id__in=exclude_list))
+
+            return queryset.filter(created_by_id__in=include_list).exclude(created_by_id__in=exclude_list).order_by('created_by')
+        return queryset

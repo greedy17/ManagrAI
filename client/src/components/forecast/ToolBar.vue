@@ -3,7 +3,7 @@
     <div class="header section-shadow">
       KPIs
     </div>
-    <div class="single-statistic section-shadow">
+    <!--     <div class="single-statistic section-shadow">
       <span class="title">Total Closed Value</span>
       <span class="statistic"> {{ 33000 | currency }}</span>
     </div>
@@ -11,7 +11,7 @@
       <span class="title">Average Contract Value</span>
       <span class="statistic"> {{ 12000 | currency }}</span>
     </div>
-    <div class="single-statistic section-shadow">
+       <div class="single-statistic section-shadow">
       <span class="title">Forecast</span>
       <span class="statistic"> {{ 747000 | currency }}</span>
     </div>
@@ -95,7 +95,7 @@
           </span>
         </div>
       </div>
-    </div>
+    </div> -->
     <div class="filter-container">
       <FilterByRep
         :reps="reps"

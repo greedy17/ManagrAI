@@ -44,12 +44,6 @@
         <div class="option" v-for="status in statusEnums" :key="status">{{ status }}</div>
       </div>
     </div>
-    <div class="filter">
-      <div class="filter-header">Forecast</div>
-      <div class="filter-options">
-        <div class="option" v-for="forecast in forecastEnums" :key="forecast">{{ forecast }}</div>
-      </div>
-    </div>
   </div>
 </template>
 

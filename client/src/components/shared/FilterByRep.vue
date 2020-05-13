@@ -4,18 +4,20 @@
     <div class="reps-container">
       <span
         class="rep"
-        v-for="rep in reps"
+        v-for="rep in users.list"
         @click="toggleRepInFilter(rep.id)"
         :key="rep.id"
         :class="{ active: activeReps[rep.id] }"
       >
-        {{ rep.name }}</span
+        {{ rep.firstName }}</span
       >
     </div>
   </div>
 </template>
 
 <script>
+import User from '@/services/users'
+import CollectionManager from '@/services/collectionManager'
 export default {
   name: 'FilterByRep',
   props: {
@@ -27,6 +29,19 @@ export default {
       required: true,
       type: Object,
     },
+  },
+  data() {
+    return {
+      users: CollectionManager.create({
+        ModelClass: User,
+        filters: {
+          active: true,
+        },
+      }),
+    }
+  },
+  async created() {
+    this.users.refresh()
   },
   methods: {
     toggleRepInFilter(repID) {

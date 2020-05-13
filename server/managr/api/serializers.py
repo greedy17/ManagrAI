@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Organization, Account, Contact
 from managr.lead.models import ActionChoice
 
-
+from djmoney.models.fields import MoneyField, Money
 from rest_framework import (
     status, filters, permissions
 )
@@ -51,7 +51,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'name', 'state', 'accounts', 'accounts_ref', 'action_choices', 'action_choices_ref',
+            'id', 'name', 'state', 'accounts', 'accounts_ref',
+            'action_choices', 'action_choices_ref', 'total_amount_closed_contracts', 'avg_amount_closed_contracts'
         )
         read_only_fields = ('accounts', 'action_choices', )
 
@@ -73,7 +74,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ('id', 'name', 'url', 'type', 'organization', 'state',)
+        fields = ('id', 'name', 'url', 'type',
+                  'organization', 'state', 'lead_count',)
         read_only_fields = ('state', 'organization',)
 
 

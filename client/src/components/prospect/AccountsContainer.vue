@@ -1,6 +1,11 @@
 <template>
   <div class="accounts-container">
-    <Account v-for="account in accounts" :key="account.id" :account="account" />
+    <div v-if="accounts.length > 0" class="accounts">
+      <Account v-for="account in accounts" :key="account.id" :account="account" />
+    </div>
+    <div v-else class="placeholder-message">
+      <h2>No Accounts</h2>
+    </div>
   </div>
 </template>
 
@@ -9,10 +14,18 @@ import Account from '@/components/prospect/Account'
 
 export default {
   name: 'AccountsContainer',
-  props: ['accounts'],
+  props: {
+    accounts: {
+      type: Array,
+      default: () => [],
+      required: true,
+    },
+  },
   components: {
     Account,
   },
+  methods: {},
+  computed: {},
 }
 </script>
 

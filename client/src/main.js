@@ -18,6 +18,8 @@ import Modal from '@/components/Modal'
 // filters
 import currencyFilter from '@/services/currency'
 
+import { Datetime } from 'vue-datetime'
+import 'vue-datetime/dist/vue-datetime.css'
 Vue.config.productionTip = false
 
 Vue.use(Vuex)
@@ -26,7 +28,7 @@ Vue.use(AlertAlert)
 Vue.component('PageLoadingSVG', PageLoadingSVG)
 Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)
-
+Vue.component('datetime', Datetime)
 Vue.filter('currency', currencyFilter)
 
 /* eslint-disable no-new */

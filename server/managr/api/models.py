@@ -1,7 +1,8 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
+from django.db.models import Sum, Avg
 
-
+from djmoney.models.fields import MoneyField, Money
 # Create your models here.
 
 
@@ -27,8 +28,8 @@ class OrganizationQuerySet(models.QuerySet):
 
 
 class Organization(TimeStampModel):
-    """ 
-        Main Organization Model, Users are attached to this model 
+    """
+        Main Organization Model, Users are attached to this model
         Users can either be limited, or Manager (possibly also have a main admin for the org)
     """
 
@@ -40,6 +41,7 @@ class Organization(TimeStampModel):
 
     @property
     def deactivate_all_users(self):
+        # TODO: When deleting an org also remember to revoke nylas tokens and request delete
         """ helper method to deactivate all users if their org is deactivated """
         users = User.objects.filter(organization=self)
         for u in users:
@@ -51,6 +53,16 @@ class Organization(TimeStampModel):
 
     class Meta:
         ordering = ['-datetime_created']
+
+    @property
+    def total_amount_closed_contracts(self):
+        total = Organization.objects.aggregate(
+            Sum('accounts__leads__closing_amount'))
+        return total
+
+    @property
+    def avg_amount_closed_contracts(self):
+        return Organization.objects.aggregate(Avg('accounts__leads__amount', output_field=MoneyField()))
 
 
 class AccountQuerySet(models.QuerySet):
@@ -65,7 +77,7 @@ class AccountQuerySet(models.QuerySet):
 
 
 class Account(TimeStampModel):
-    """ 
+    """
         Accounts are potential and exisiting clients that can be made into leads and added to lists
         Accounts are associated with organizations (question can an account exist in a different organization, or can an organization have a different version of an account)
     """
@@ -84,6 +96,10 @@ class Account(TimeStampModel):
 
     class Meta:
         ordering = ['-datetime_created']
+
+    @property
+    def lead_count(self):
+        return self.leads.count()
 
 
 class ContactQuerySet(models.QuerySet):

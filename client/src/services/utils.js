@@ -18,12 +18,13 @@ const Utils = {
   toCamelCase,
   objectToCamelCase,
   objectToSnakeCase,
-  isObject,
+
   isDefined,
   formatNumberAsUSD,
   formatDateShort,
   textToKabobCase,
   getSubdomain,
+  removeDuplicates,
 }
 
 export default Utils
@@ -35,11 +36,6 @@ export function isDefined(value) {
   return typeof value !== 'undefined'
 }
 
-/**
- * toSnakeCase
- * Transform a string value from `camelCase` style notation to `snake_case` notation.
- * This is useful for translating Python-serialized JSON objects to JavaScript objects.
- */
 export function toSnakeCase(value) {
   let upperChars = value.match(/([A-Z])/g)
 
@@ -82,31 +78,17 @@ export function toCamelCase(value) {
 }
 
 /**
- * Check a value whether it is an Object
- */
-
-export function isObject(value) {
-  return value !== null && value instanceof Object && !Array.isArray(value)
-}
-
-/**
  * Transform the string-based keys of a JavaScript object to `camelCase` style notation.
  * This is useful for translating the style of object keys after making an API call to
  * the Python-based API, which uses `snake_case` style notation by default.
- * Note support for arrays, if an array is an array of objects it will convert the keys to CC otherwise it will just return the array
  */
 export function objectToCamelCase(value) {
-  if (isObject(value)) {
+  if (isPlainObject(value)) {
     return Object.keys(value).reduce((acc, snakeKey) => {
       const camelKey = toCamelCase(snakeKey)
-
-      if (isObject(value[snakeKey])) {
-        acc[camelKey] = objectToCamelCase(value[snakeKey])
-      } else if (Array.isArray(value[snakeKey])) {
-        acc[camelKey] = value[snakeKey].map(i => (isObject(i) ? objectToCamelCase(i) : i))
-      } else {
-        acc[camelKey] = value[snakeKey]
-      }
+      acc[camelKey] = isPlainObject(value[snakeKey])
+        ? objectToCamelCase(value[snakeKey])
+        : value[snakeKey]
       return acc
     }, {})
   }
@@ -116,24 +98,18 @@ export function objectToCamelCase(value) {
  * Transform the string-based keys of a JavaScript object to `snake_case` style notation.
  * This is useful for translating the `camelCase` style of JavaScript keys BEFORE posting
  * the data to the Python-based API, which uses `snake_case` style notation by default.
- * Note support for arrays, if an array is an array of objects it will convert the keys to CC otherwise it will just return the array
  */
 export function objectToSnakeCase(value) {
-  if (isObject(value)) {
+  if (isPlainObject(value)) {
     return Object.keys(value).reduce((acc, camelKey) => {
       const snakeKey = toSnakeCase(camelKey)
-      if (isObject(value[camelKey])) {
-        acc[snakeKey] = objectToSnakeCase(value[camelKey])
-      } else if (Array.isArray(value[camelKey])) {
-        acc[snakeKey] = value[camelKey].map(i => (isObject(i) ? objectToSnakeCase(i) : i))
-      } else {
-        acc[snakeKey] = value[camelKey]
-      }
+      acc[snakeKey] = isPlainObject(value[camelKey])
+        ? objectToSnakeCase(value[camelKey])
+        : value[camelKey]
       return acc
     }, {})
   }
 }
-
 /**
  *@function       debounce
  *@description    delay calling of callback function on set time
@@ -143,6 +119,7 @@ export function objectToSnakeCase(value) {
 
 export function debounce(callback, time) {
   let timer = null
+
   return function(...args) {
     const onComplete = () => {
       callback.apply(this, args)
@@ -218,4 +195,22 @@ export function formatDateShort(value) {
     day: '2-digit',
     year: 'numeric',
   })
+}
+
+export function removeDuplicates(array) {
+  let errorFields = array.reduce((acc, curr) => {
+    if (acc.length <= 0) {
+      acc.push({ name: curr.name, message: curr.message })
+      return acc
+    } else {
+      let index = acc.findIndex(e => e.name === curr.name)
+      if (index >= 0) {
+        return acc
+      } else {
+        acc.push({ name: curr.name, errors: curr.message })
+        return acc
+      }
+    }
+  }, [])
+  return errorFields
 }

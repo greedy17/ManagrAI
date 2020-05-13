@@ -25,7 +25,7 @@ from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Rem
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering
+from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet
 from managr.api.models import Contact, Account
 from managr.lead import constants as lead_constants
 from django_filters.rest_framework import DjangoFilterBackend
@@ -164,7 +164,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly)
-
+    filter_class = (ListFilterSet)
     serializer_class = ListSerializer
 
     def get_queryset(self):
@@ -336,7 +336,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
                     request.user).get(pk=lead)
             except Lead.DoesNotExist:
                 raise PermissionDenied()
-            data = request.data.get('reminders', None)
+            data = request.data.get('reminder', None)
             data['created_for'] = lead
             data['created_by'] = user.id
 

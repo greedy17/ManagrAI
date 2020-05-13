@@ -3,6 +3,8 @@ from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.lead import constants as lead_constants
 from managr.utils.misc import datetime_appended_filepath
 from django.contrib.postgres.fields import JSONField
+from django.db.models import F, Q, Count
+from djmoney.models.fields import MoneyField
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 
@@ -73,10 +75,10 @@ class Lead(TimeStampModel):
 
     """
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.PositiveIntegerField(
-        help_text="This field is editable", default=0)
-    closing_amount = models.PositiveIntegerField(
-        help_text="This field is set at close and non-editable", default=0)
+    amount = MoneyField(max_digits=14, decimal_places=2,
+                        default_currency='USD', default=0)
+    closing_amount = MoneyField(max_digits=14, decimal_places=2,
+                                default_currency='USD', default=0)
     primary_description = models.CharField(max_length=150, blank=True)
     secondary_description = models.CharField(max_length=150, blank=True)
     rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
@@ -114,6 +116,11 @@ class Lead(TimeStampModel):
             except File.DoesNotExist:
                 return None
         return None
+
+    @property
+    def list_count(self):
+        """ property to define count of lists a lead is on """
+        return self.lists.count()
 
 
 class ListQuerySet(models.QuerySet):
@@ -185,9 +192,9 @@ class BaseNoteQuerySet(models.QuerySet):
 
 
 class BaseNote(TimeStampModel):
-    """ 
-        This is a Base model for all note style models 
-        Reminders, Notes and CallNotes all inherit from this base model 
+    """
+        This is a Base model for all note style models
+        Reminders, Notes and CallNotes all inherit from this base model
         Notes does not override or add any extra fields, however the other two do.
         Note all models inherit the parent queryset manager
     """
@@ -220,7 +227,7 @@ class Reminder(BaseNote):
         Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
 
     """
-    datetime_for = models.DateTimeField()
+    datetime_for = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False)
     # TODO: - will build this out on a separate branch pb
     notification = models.ForeignKey(
@@ -243,7 +250,7 @@ class Reminder(BaseNote):
 
 
 class CallNote(BaseNote):
-    """ this class (distinct from the call class) is also inherited from the base note class 
+    """ this class (distinct from the call class) is also inherited from the base note class
         It will contain data that refers to a call (like call notes)
     """
     # TODO: Ask marcy about who the participants are, if they are only internal we can use a UserModel FK

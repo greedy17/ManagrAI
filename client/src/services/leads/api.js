@@ -35,12 +35,14 @@ export default class LeadAPI {
       onList: ApiFilter.create({ key: 'on_list' }),
       byList: ApiFilter.create({ key: 'by_list' }),
       rating: ApiFilter.create({ key: 'rating' }),
+      byUser: ApiFilter.create({ key: 'by_user' }),
+      orderBy: ApiFilter.create({ key: 'order_by' }),
+      byAccount: ApiFilter.create({ key: 'by_account' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
     }
 
-    options.params.order_by = '-rating'
     const promise = apiClient()
       .get(LEADS_ENDPOINT, options)
       .then(response => response.data)

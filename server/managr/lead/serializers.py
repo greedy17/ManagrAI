@@ -7,6 +7,7 @@ from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator
 from collections import OrderedDict
 
+
 from rest_framework import (
     status, filters, permissions
 )
@@ -56,8 +57,7 @@ class ListSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'lead_count', 'leads',
                   'created_by',)
         extra_kwargs = {
-            'leads': {'write_only': True},
-            'created_by': {'write_only': True}
+
         }
 
     def get_lead_count(self, obj):
@@ -123,6 +123,20 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 class ReminderSerializer(serializers.ModelSerializer):
 
+    def to_internal_value(self, data):
+        """ sanitize datetime_for it is not a required field but if passed and is null or blank
+            pop it off so the serializer does not complain
+        """
+
+        datetime_for = data.get('datetime_for', None)
+        if datetime_for:
+            if (datetime_for == 'null' or datetime_for == ''):
+                data.pop('datetime_for', [])
+        else:
+            data.pop('datetime_for', [])
+
+        return super().to_internal_value(data)
+
     class Meta:
         model = Reminder
         fields = ('id', 'title', 'content', 'datetime_for',
@@ -171,14 +185,15 @@ class LeadSerializer(serializers.ModelSerializer):
     actions_ref = ActionSerializer(source='actions', read_only=True, many=True)
     contract = serializers.SerializerMethodField()
     linked_contacts_ref = ContactSerializer(
-        source='linked_contacts', many=True)
+        source='linked_contacts', many=True, read_only=True)
+    lists_ref = ListSerializer(source='lists', many=True, read_only=True)
 
     class Meta:
         model = Lead
         fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
                   'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref', 'linked_contacts', 'linked_contacts_ref',
                         'datetime_created',  'claimed_by', 'claimed_by_ref', 'contract', 'last_updated_by',
-                  'last_updated_by_ref', 'actions', 'actions_ref', 'files', 'lists', )
+                  'last_updated_by_ref', 'actions', 'actions_ref', 'files', 'lists', 'lists_ref')
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
         read_only_fields = ('closing_amount',
                             'forecast', 'actions', 'files',)

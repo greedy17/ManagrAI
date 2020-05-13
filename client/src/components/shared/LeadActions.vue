@@ -12,12 +12,16 @@
       </ActionTabHeader>
     </div>
     <div class="action-tab-content">
-      <CallAction v-if="activeTab === 0" />
+      <CallAction ref="call-note-action" @save-call-note="createCallNote" v-if="activeTab === 0" />
       <TextAction v-if="activeTab === 1" />
       <EmailAction v-if="activeTab === 2" />
       <ActionAction v-if="activeTab === 3" />
-      <ReminderAction v-if="activeTab === 4" />
-      <NoteAction v-if="activeTab === 5" />
+      <ReminderAction
+        ref="reminder-action"
+        @save-reminder="createReminder"
+        v-if="activeTab === 4"
+      />
+      <NoteAction ref="note-action" @save-note="createNote" v-if="activeTab === 5" />
     </div>
   </div>
 </template>
@@ -30,6 +34,9 @@ import EmailAction from '@/components/shared/EmailAction'
 import ReminderAction from '@/components/shared/ReminderAction'
 import ActionAction from '@/components/shared/ActionAction'
 import NoteAction from '@/components/shared/NoteAction'
+import Note from '@/services/notes'
+import Reminder from '@/services/reminders'
+import CallNote from '@/services/call-notes'
 
 export default {
   name: 'LeadActions',
@@ -47,11 +54,62 @@ export default {
     return {
       activeTab: 0,
       tabs: ['call', 'text', 'email', 'action', 'reminder', 'note'],
+      loading: false,
     }
   },
+
   methods: {
     updateActiveTab(index) {
       this.activeTab = index
+    },
+    async createNote(note) {
+      let d = { note }
+      d.created_for = [this.lead.id]
+      this.loading = true
+
+      try {
+        await Note.api.create(d)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: 'note created!',
+        })
+        this.$refs['note-action'].notesForm.resetForm()
+      } finally {
+        this.loading = false
+      }
+    },
+    async createReminder(reminder) {
+      let d = { reminder }
+      this.loading = true
+      d.created_for = [this.lead.id]
+      try {
+        await Reminder.api.create(d)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: 'reminder created!',
+        })
+        this.$refs['reminder-action'].remindersForm.resetForm()
+      } finally {
+        this.loading = false
+      }
+    },
+    async createCallNote(callNote) {
+      let d = { ...callNote }
+      d.created_for = this.lead.id
+      this.loading = true
+      try {
+        await CallNote.api.create(d)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: 'call note created!',
+        })
+        this.$refs['call-note-action'].callNotesForm.resetForm()
+      } finally {
+        this.loading = false
+      }
     },
   },
   computed: {

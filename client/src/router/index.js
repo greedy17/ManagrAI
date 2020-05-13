@@ -68,6 +68,13 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
     },
     {
+      path: '/organization',
+      name: 'Organization',
+      beforeEnter: Auth.requireAuth,
+      component: () =>
+        import(/* webpackChunkName: "organization" */ '../views/auth/Organization.vue'),
+    },
+    {
       path: '/forecast',
       name: 'Forecast',
       component: Forecast,
