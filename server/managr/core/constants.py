@@ -8,7 +8,9 @@ NYLAS_CLIENT_SECRET = "5jvvtb1zg8vuha4rxgqbqvfjj"
 EMAIL_AUTH_TOKEN_URI = "oauth/token"
 EMAIL_AUTH_TOKEN_REVOKE_URI = "oauth/revoke"
 EMAIL_ACCOUNT_URI = "account"
+SEND_EMAIL_URI = "send"
 SCOPE_EMAIL_READ_ONLY = "email.read_only"
+SCOPE_EMAIL_SEND = "email.send"
 
 
 def EMAIL_REVOKE_ALL_TOKENS_URI(account_id):

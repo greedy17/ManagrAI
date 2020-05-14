@@ -27,6 +27,9 @@ from rest_framework.response import Response
 from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount
 from .serializers import UserSerializer, UserLoginSerializer,  UserInvitationSerializer
 from .permissions import (IsOrganizationManager, IsSuperUser)
+from managr.api.models import Organization
+
+from .integrations import send_new_email
 
 
 def index(request):
@@ -233,12 +236,12 @@ def email_auth_token(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_access_token(request):
-    """ endpoint to revoke access for a token 
+    """ endpoint to revoke access for a token
         currently users can only revoke their own access
         if an account needs to revoke someone elses they may
         email the superuser, when we create a list of admins
         for each org they will have access to delete their user's tokens
-        alternatively they can set a user to is_active=false and this will 
+        alternatively they can set a user to is_active=false and this will
         call the revoke endpoint for the user in an org
     """
     if(request.user.email_auth_account.access_token):
@@ -280,13 +283,22 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
-        user = request.user
+        u = request.user
+
+        # temporarily hard coding an email to send invitations from will need to use super_user email
+        # or create a special email account in django for this
+        try:
+            ea = EmailAuthAccount.objects.get(
+                email_address='testing@thinknimble.com')
+        except EmailAuthAccount.DoesNotExist:
+            return Response(data={'non_form_errors': 'A user with an email testing@thinknimble.com, needs to be created as superuser'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.serializer_class(
             data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        if not user.is_superuser:
-            if str(user.organization.id) != str(request.data['organization']):
+        if not u.is_superuser:
+            if str(u.organization.id) != str(request.data['organization']):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_create(serializer)
@@ -294,7 +306,22 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
-        # TODO: PB 04/12/20 currently we are returning the link for dev purposes (so that we can test the auth flow) this will be removed when we add a mail service to send the link
+        # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
+
+        token = ea.access_token
+        sender = {'email': ea.email_address, 'name': 'Managr'}
+        recipient = [{
+            'email': response_data['email'], 'name': response_data['first_name']}]
+        message = {"subject": "Invitatin To Join",
+                   "body": 'Your Organization {} has invited you to join Managr, \
+                   Please click the following link to accept and activate your account \
+                       {}'.format(user.organization.name, user.activation_link)
+                   }
+        try:
+            send_new_email(token, sender, recipient, message)
+        except Exception as e:
+            """ this error is most likely foing to be an error on our set up rather than the user_token """
+            pass
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)
