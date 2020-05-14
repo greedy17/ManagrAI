@@ -28,8 +28,8 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class NoteSerializer(serializers.ModelSerializer):
-    created_by_ref = UserRefSerializer(source="created_by")
-    updated_by_ref = UserRefSerializer(source="updated_by")
+    created_by_ref = UserRefSerializer(source="created_by", read_only=True)
+    updated_by_ref = UserRefSerializer(source="updated_by", read_only=True)
 
     class Meta:
         model = Note
@@ -231,8 +231,7 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
     actions_ref = ActionSerializer(source='actions', read_only=True, many=True)
     contract = serializers.SerializerMethodField()
     linked_contacts_ref = ContactSerializer(
-        source='linked_contacts', many=True, read_only=True)
-    lists_ref = ListSerializer(source='lists', many=True, read_only=True)
+        source='linked_contacts', read_only=True, many=True)
 
     class Meta:
         model = Lead
