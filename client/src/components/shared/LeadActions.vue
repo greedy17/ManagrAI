@@ -11,7 +11,7 @@
         {{ tab }}
       </ActionTabHeader>
     </div>
-    <div class="action-tab-content">
+    <div v-if="state == editState" class="action-tab-content">
       <CallAction ref="call-note-action" @save-call-note="createCallNote" v-if="activeTab === 0" />
       <TextAction v-if="activeTab === 1" />
       <EmailAction v-if="activeTab === 2" />
@@ -22,6 +22,89 @@
         v-if="activeTab === 4"
       />
       <NoteAction ref="note-action" @save-note="createNote" v-if="activeTab === 5" />
+    </div>
+    <div v-if="state == viewState" class="action-tab-content">
+      <div class="list-items" v-if="activeTab === 0">
+        <div class="list-items__header">
+          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__title">Title</span>
+          <span class="list-items__header__content">Content</span>
+          <span class="list-items__header__call-date">Call Date</span>
+          <span class="list-items__header__created-by">Creator</span>
+          <span class="list-items__header__datetime-created">Created</span>
+        </div>
+        <template v-for="(item, i) in callNotes.list">
+          <div class="list-items__item" :key="item.id + '-' + i">
+            <span class="icon">
+              <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
+                <use xlink:href="/svg-repo.svg#remove" />
+              </svg>
+            </span>
+            <span class="list-items__item__title">{{ item.title }}</span>
+            <span class="list-items__item__content">{{ item.content }}</span>
+            <span class="list-items__item__call-date">{{
+              moment(item.callDate).format('MM/DD/YYYY')
+            }}</span>
+            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__datetime-created">{{
+              moment(item.datetimeCreated).format('MM/DD/YYYY')
+            }}</span>
+          </div>
+        </template>
+      </div>
+      <div class="list-items" v-if="activeTab === 4">
+        <div class="list-items__header">
+          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__title">Title</span>
+          <span class="list-items__header__content">Content</span>
+          <span class="list-items__header__datetimeFor">Reminder On</span>
+          <span class="list-items__header__created-by">Creator</span>
+          <span class="list-items__header__datetime-created">Created</span>
+        </div>
+        <template v-for="(item, i) in reminders.list">
+          <div class="list-items__item" :key="item.id + '-' + i">
+            <span class="icon">
+              <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
+                <use xlink:href="/svg-repo.svg#remove" />
+              </svg>
+            </span>
+            <span class="list-items__item__title">{{ item.title }}</span>
+            <span class="list-items__item__content">{{ item.content }}</span>
+            <span class="list-items__item__datetime-for">{{
+              moment(item.datetimeFor).format('MM/DD/YYYY')
+            }}</span>
+            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__datetime-created">{{
+              moment(item.datetimeCreated).format('MM/DD/YYYY')
+            }}</span>
+          </div>
+        </template>
+      </div>
+
+      <div class="list-items" v-if="activeTab === 5">
+        <div class="list-items__header">
+          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__title">Title</span>
+          <span class="list-items__header__content">Content</span>
+          <span class="list-items__header__created-by">Creator</span>
+          <span class="list-items__header__datetime-created">Created</span>
+        </div>
+        <template v-for="(item, i) in notes.list">
+          <div class="list-items__item" :key="item.id + '-' + i">
+            <span class="icon">
+              <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
+                <use xlink:href="/svg-repo.svg#remove" />
+              </svg>
+            </span>
+            <span class="list-items__item__title">{{ item.title }}</span>
+            <span class="list-items__item__content">{{ item.content }}</span>
+            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__datetime-created">{{
+              moment(item.datetimeCreated).format('MM/DD/YYYY')
+            }}</span>
+          </div>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -37,10 +120,13 @@ import NoteAction from '@/components/shared/NoteAction'
 import Note from '@/services/notes'
 import Reminder from '@/services/reminders'
 import CallNote from '@/services/call-notes'
-
+import CollectionManager from '@/services/collectionManager'
+import moment from 'moment'
+const EDIT_STATE = 'create'
+const VIEW_STATE = 'view'
 export default {
   name: 'LeadActions',
-  props: ['lead'],
+
   components: {
     ActionTabHeader,
     CallAction,
@@ -50,17 +136,69 @@ export default {
     ActionAction,
     NoteAction,
   },
+  props: {
+    lead: {
+      type: Object,
+      default: () => {},
+    },
+    state: {
+      type: String,
+      default: EDIT_STATE,
+    },
+  },
   data() {
     return {
       activeTab: 0,
       tabs: ['call', 'text', 'email', 'action', 'reminder', 'note'],
       loading: false,
+      editState: EDIT_STATE,
+      viewState: VIEW_STATE,
+      moment: moment,
+      notes: CollectionManager.create({
+        ModelClass: Note,
+        filters: {
+          byLead: this.lead.id,
+        },
+      }),
+      callNotes: CollectionManager.create({
+        ModelClass: CallNote,
+        filters: {
+          byLead: this.lead.id,
+        },
+      }),
+      reminders: CollectionManager.create({
+        ModelClass: Reminder,
+        filters: {
+          byLead: this.lead.id,
+        },
+      }),
     }
   },
-
+  async created() {
+    await this.listItems(this.tabs[this.activeTab])
+  },
   methods: {
-    updateActiveTab(index) {
-      this.activeTab = index
+    async listItems(tab) {
+      if (this.state == this.viewState) {
+        // only fetch lists if on view state
+        switch (tab.toLowerCase()) {
+          case 'note':
+            await this.notes.refresh()
+            break
+          case 'call':
+            await this.callNotes.refresh()
+            break
+          case 'reminder':
+            await this.reminders.refresh()
+            break
+        }
+      }
+    },
+    async updateActiveTab(index) {
+      if (this.tabs[index] !== this.tabs[this.activeTab]) {
+        await this.listItems(this.tabs[index])
+        this.activeTab = index
+      }
     },
     async createNote(note) {
       let d = { note }
@@ -139,15 +277,53 @@ export default {
 }
 
 .actions-tab-headers {
-  height: 3rem;
+  min-height: 3rem;
   display: flex;
   flex-flow: row;
 }
 
 .action-tab-content {
-  flex-grow: 1;
+  flex: 1 auto;
   padding: 2vh;
   display: flex;
   flex-flow: row;
+  overflow: scroll;
+}
+.list-items {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: scroll;
+}
+.icon {
+  height: 1.625rem;
+  width: 1.625rem;
+  display: block;
+}
+.svg {
+  fill: red;
+  width: 30px;
+  height: 30px;
+}
+.list-items__header {
+  font-weight: bold;
+}
+.list-items__item,
+.list-items__header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: solid rgba($color: $main-font-gray, $alpha: 0.1) 1px;
+  > * {
+    align-self: center;
+    margin-left: 0.75rem;
+    color: rgba($color: $main-font-gray, $alpha: 0.4);
+    flex: 1;
+  }
+  &__content {
+    color: rgba($color: $main-font-gray, $alpha: 1);
+    flex: 2;
+  }
 }
 </style>

@@ -17,15 +17,20 @@ export default class NoteAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
-      byUser: ApiFilter.create({ key: 'by_lead' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
     }
+
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
     }
+
     try {
       const res = await this.client.get(url, options)
 
-      return res
+      return {
+        ...res.data,
+        results: res.data.results.map(this.cls.fromAPI),
+      }
     } catch {
       apiErrorHandler({ apiName: 'NotesAPI.list' })
     }

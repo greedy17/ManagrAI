@@ -19,6 +19,8 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="call-action-right-pane">
       <div class="details-container">
         <FormField
           :errors="callNotesForm.fc['title'].errors"
@@ -53,10 +55,7 @@
             />
           </template>
         </FormField>
-      </div>
-    </div>
-    <div class="call-action-right-pane">
-      <div class="text-area-container">
+
         <FormField
           :errors="callNotesForm.fc['content'].errors"
           binding="content"
@@ -73,9 +72,9 @@
             />
           </template>
         </FormField>
-      </div>
-      <div class="save-button-container">
-        <span @click="emitSaveCallNote" class="save-button">Save</span>
+        <div class="save-button-container">
+          <span @click="emitSaveCallNote" class="save-button">Save</span>
+        </div>
       </div>
     </div>
   </div>
@@ -151,10 +150,13 @@ export default {
 
 /* left pane below */
 .call-action-left-pane {
+  flex: 1;
   width: 40%;
   padding-right: 3%;
   display: flex;
   flex-flow: column;
+  border-right: 1px lightblue solid;
+  padding: 1rem;
 }
 
 .contacts-container {
@@ -213,24 +215,24 @@ export default {
 }
 
 .details-container {
-  margin-top: 3%;
   display: flex;
   flex-flow: column;
 }
 
 /* right-pane below */
 .call-action-right-pane {
-  flex-grow: 1;
+  flex: 2;
   display: flex;
   flex-flow: column;
+  padding: 0 1rem;
 }
 
-.text-area-container {
+/* .text-area-container {
   height: 95%;
   display: flex;
   align-items: top;
   justify-content: center;
-}
+} */
 
 .save-button-container {
   display: flex;

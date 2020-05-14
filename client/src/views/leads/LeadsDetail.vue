@@ -8,6 +8,9 @@
       <ToolBar
         class="toolbar"
         :lead="lead"
+        :lists="lists"
+        :contacts="contacts"
+        :files="files"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
       />
@@ -21,7 +24,7 @@
         @updated-forecast="updateForecast"
         @updated-status="updateStatus"
       />
-      <div class="container">
+      <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
       </div>
       <div class="container">
@@ -32,13 +35,19 @@
           @updated-secondary-description="updateSecondaryDescription"
         />
       </div>
-      <!--       <div class="container">
+      <!--  Hiding this as it is still WIP as requested by marcy pb 05/15/20
+        
+        <div class="container">
         <img
           class="additional-information"
           src="@/assets/images/screenshots/AdditionalInformation.png"
           alt="screenshot"
         />
       </div> -->
+
+      <div class="container">
+        <LeadActions v-if="lead" :state="viewState" :lead="lead" />
+      </div>
     </div>
     <div class="right-pane">
       <LeadInsights :lead="lead" />
@@ -55,7 +64,13 @@ import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
 import CloseLead from '@/components/shared/CloseLead'
+import CollectionManager from '@/services/collectionManager'
+import List from '@/services/lists'
+import Contact from '@/services/contacts'
+import File from '@/services/files'
 
+const EDIT_STATE = 'create'
+const VIEW_STATE = 'view'
 export default {
   name: 'LeadsDetail',
   props: ['id'],
@@ -69,28 +84,52 @@ export default {
   },
   data() {
     return {
-      loading: true,
+      loading: false,
       lead: null,
       modal: {
         isOpen: false,
       },
+      editState: EDIT_STATE,
+      viewState: VIEW_STATE,
+      lists: CollectionManager.create({
+        ModelClass: List,
+        filters: {
+          byLead: this.id,
+        },
+      }),
+      contacts: CollectionManager.create({
+        ModelClass: Contact,
+        filters: {
+          byLead: this.id,
+        },
+      }),
+      files: CollectionManager.create({
+        ModelClass: File,
+        filters: {
+          byLead: this.id,
+        },
+      }),
     }
   },
-  created() {
-    Lead.api.retrieve(this.id).then(lead => {
-      this.lead = lead
+  async created() {
+    Promise.all([
+      this.retrieveLead(),
+      this.lists.refresh(),
+      this.contacts.refresh(),
+      this.files.refresh(),
+    ]).then(res => {
+      this.lead = res[0]
+      this.lists = res[1]
+      this.contacts = res[2]
+      this.files = res[3]
       this.loading = false
-
-      if (this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id) {
-        let message = `<div>This lead is owned by: ${this.lead.claimedByRef.fullName}</div>`
-        this.$Alert.alert({
-          type: 'banner',
-          message,
-        })
-      }
     })
   },
   methods: {
+    retrieveLead() {
+      this.loading = true
+      return Lead.api.retrieve(this.id)
+    },
     updatePrimaryDescription(description) {
       let patchData = { primary_description: description }
       Lead.api.update(this.lead.id, patchData).then(lead => {

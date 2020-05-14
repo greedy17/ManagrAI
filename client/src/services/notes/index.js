@@ -13,8 +13,22 @@ export default class Note {
     content = '',
     updatedBy = null,
     createdFor = null,
+    createdBy = null,
+    updatedByRef = null,
+    createdByRef = null,
   } = {}) {
-    Object.assign(this, { id, datetimeCreated, title, lastEdited, content, updatedBy, createdFor })
+    Object.assign(this, {
+      id,
+      datetimeCreated,
+      title,
+      lastEdited,
+      content,
+      updatedBy,
+      createdFor,
+      createdByRef,
+      createdBy,
+      updatedByRef,
+    })
   }
 
   static create(opts) {

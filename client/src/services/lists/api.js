@@ -30,6 +30,7 @@ export default class ListAPI {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       byUser: ApiFilter.create({ key: 'by_user' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

@@ -8,7 +8,9 @@
         </router-link>
       </div>
     </div>
-    <div class="insight-container section-shadow">
+    <!-- hiding these as they are still WIP --- as requested by Marcy pb 05/15/20 
+  
+     <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
       </div>
@@ -72,7 +74,7 @@
           3 mins ago
         </span>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

@@ -28,9 +28,13 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class NoteSerializer(serializers.ModelSerializer):
+    created_by_ref = UserRefSerializer(source="created_by")
+    updated_by_ref = UserRefSerializer(source="updated_by")
+
     class Meta:
         model = Note
-        fields = ('__all__')
+        fields = ('id', 'title', 'content', 'created_by', 'datetime_created',
+                  'updated_by', 'created_for', 'last_edited', 'created_by_ref', 'updated_by_ref',)
 
 
 class LeadListRefSerializer(serializers.ModelSerializer):
@@ -103,7 +107,7 @@ class FileSerializer(serializers.ModelSerializer):
 
 class ForecastSerializer(serializers.ModelSerializer):
     lead_ref = LeadRefSerializer(source='lead', read_only=True)
-    #lead_count = serializers.SerializerMethodField()
+    # lead_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Forecast
@@ -122,6 +126,8 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 
 class ReminderSerializer(serializers.ModelSerializer):
+    created_by_ref = UserRefSerializer(source="created_by")
+    updated_by_ref = UserRefSerializer(source="updated_by")
 
     def to_internal_value(self, data):
         """ sanitize datetime_for it is not a required field but if passed and is null or blank
@@ -139,15 +145,20 @@ class ReminderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reminder
-        fields = ('id', 'title', 'content', 'datetime_for',
-                  'completed', 'created_for', 'created_by', 'updated_by', 'viewed',)
+        fields = ('id', 'title', 'content', 'datetime_for', 'datetime_created',
+                  'completed', 'created_for', 'created_by', 'updated_by',
+                  'viewed', 'last_edited', 'updated_by_ref', 'created_by_ref', )
         read_only_fields = ('viewed', 'completed',)
 
 
 class CallNoteSerializer(serializers.ModelSerializer):
+    created_by_ref = UserRefSerializer(source="created_by")
+    updated_by_ref = UserRefSerializer(source="updated_by")
+
     class Meta:
         model = CallNote
-        fields = ('__all__')
+        fields = ('id', 'title', 'content',
+                  'created_for', 'created_by', 'updated_by',  'last_edited', 'updated_by_ref', 'created_by_ref', 'call_date')
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):

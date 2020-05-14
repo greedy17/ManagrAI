@@ -1,9 +1,10 @@
 <template>
   <div class="toolbar">
-    <div class="top-menu">
+    <!-- Hidding WIP as Marcy requested PB 05/15/2020    
+   <div class="top-menu">
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
-    </div>
+    </div> -->
     <div class="lead-name">
       <h2>{{ lead.title }}</h2>
     </div>
@@ -17,14 +18,14 @@
         <LeadList
           v-else
           class="list"
-          v-for="list in lead.lists"
+          v-for="list in lists.list"
           :key="list.id"
           :listName="list.title"
           :dark="true"
         />
       </div>
     </div>
-    <div class="account-link" @click="goToAccount">Account</div>
+    <div class="account-link" @click="goToAccount">{{ lead.accountRef.name }}</div>
     <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
@@ -45,9 +46,9 @@
         <ComponentLoadingSVG />
       </div>
       <div v-else class="contacts-container">
-        <div class="contact section-shadow" v-for="contact in exampleContacts" :key="contact.id">
+        <div class="contact section-shadow" v-for="contact in contacts.list" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
-          <span class="name">{{ contact.name }}</span>
+          <span class="name">{{ contact.fullName }}</span>
           <div class="phone button">
             <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
           </div>
@@ -65,10 +66,13 @@
         <span>Files</span>
       </div>
       <div class="files-container">
-        <div class="file section-shadow" v-for="file in exampleFiles" :key="file">
-          <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-          {{ file }}
-        </div>
+        <template v-if="files.lists > 0">
+          <div class="file section-shadow" v-for="file in files.lists" :key="file">
+            <img class="icon" src="@/assets/images/document.svg" alt="icon" />
+            {{ file }}
+          </div>
+        </template>
+        <span class="no-items-message">No Files</span>
       </div>
     </div>
   </div>
@@ -77,13 +81,9 @@
 <script>
 import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
-// import Contact from '@/services/contacts'
+import CollectionManager from '@/services/collectionManager'
 
-const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
-const exampleContacts = [
-  { id: 1, name: 'Sara Smith' },
-  { id: 2, name: 'Jake Murray' },
-]
+// import Contact from '@/services/contacts'
 
 export default {
   name: 'ToolBar',
@@ -96,20 +96,29 @@ export default {
       type: Object,
       required: true,
     },
+    lists: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
+    contacts: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
+    files: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
   },
   data() {
     return {
-      exampleFiles,
-      exampleContacts,
       editAmount: false,
       tempAmount: this.lead.amount,
-      contacts: null,
-      contactsLoading: false, // start @ true once things built out, if going the ContactAPI.retrieve route
+
+      contactsLoading: false,
+      // start @ true once things built out, if going the ContactAPI.retrieve route
     }
   },
-  created() {
-    // this.fetchContacts()
-  },
+
   methods: {
     // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend in a coming sprint.
     // Instead we may serialize contacts-data within LeadAPI.retrieve
@@ -386,5 +395,11 @@ export default {
       margin-right: 1rem;
     }
   }
+}
+.no-items-message {
+  font-weight: bold;
+  align-self: center;
+  width: 25%;
+  margin: 1rem 0.75rem;
 }
 </style>

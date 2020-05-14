@@ -97,11 +97,7 @@
       </div>
     </div> -->
     <div class="filter-container">
-      <FilterByRep
-        :reps="reps"
-        :activeReps="activeReps"
-        @toggle-rep-in-filter="toggleRepInFilter"
-      />
+      <FilterByRep :activeReps="activeReps" @toggle-rep-in-filter="toggleRepInFilter" />
     </div>
   </div>
 </template>
@@ -109,18 +105,11 @@
 <script>
 import FilterByRep from '@/components/shared/FilterByRep'
 
-const exampleReps = [
-  { id: 1, name: 'Marcy Ewald' },
-  { id: 2, name: 'Pari Baker' },
-  { id: 3, name: 'Bruno Garcia Gonzalez' },
-]
-
 export default {
   name: 'ForecastToolBar',
   components: { FilterByRep },
   data() {
     return {
-      reps: exampleReps,
       activeReps: {}, // for reps filter
     }
   },

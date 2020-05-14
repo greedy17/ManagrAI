@@ -7,23 +7,25 @@ export default class CallNote {
 
   constructor({
     id = null,
-    datetimeCreated = null,
-    lastEdited = null,
     title = '',
     content = '',
     updatedBy = null,
+    lastEdited = null,
     createdFor = null,
+    updatedByRef = null,
+    createdByRef = null,
     callDate = null,
   } = {}) {
     Object.assign(this, {
       id,
-      datetimeCreated,
       title,
-      lastEdited,
       content,
       updatedBy,
       createdFor,
       callDate,
+      lastEdited,
+      updatedByRef,
+      createdByRef,
     })
   }
 

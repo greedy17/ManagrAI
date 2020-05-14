@@ -25,7 +25,7 @@ from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Rem
 from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet
+from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet, NoteFilterSet, FileFilterSet, CallNoteFilterSet
 from managr.api.models import Contact, Account
 from managr.lead import constants as lead_constants
 from django_filters.rest_framework import DjangoFilterBackend
@@ -232,6 +232,7 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = NoteSerializer
+    filter_class = (NoteFilterSet)
 
     def get_queryset(self):
         return Note.objects.for_user(self.request.user)
@@ -287,6 +288,7 @@ class CallNoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = CallNoteSerializer
+    filter_class = (CallNoteFilterSet)
 
     def get_queryset(self):
         return CallNote.objects.for_user(self.request.user)
@@ -454,6 +456,7 @@ class FileViewSet(mixins.CreateModelMixin,
     """
     serializer_class = FileSerializer
     permission_classes = (IsSuperUser | IsSalesPerson,)
+    filter_class = (FileFilterSet)
 
     def get_queryset(self):
         return File.objects.for_user(self.request.user)

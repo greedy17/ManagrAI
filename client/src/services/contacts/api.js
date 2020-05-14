@@ -30,6 +30,7 @@ export default class ContactAPI {
       pageSize: ApiFilter.create({ key: 'page_size' }),
       // Account
       account: ApiFilter.create({ key: 'account' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

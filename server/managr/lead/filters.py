@@ -5,7 +5,7 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead, Forecast, List
+from .models import Lead, Forecast, List, Note, File, CallNote
 from django_filters import OrderingFilter
 
 
@@ -156,6 +156,7 @@ class ForecastFilterSet(FilterSet):
 
 class ListFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="lists_by_user")
+    by_lead = django_filters.CharFilter(field_name="leads")
 
     class Meta:
         model = List
@@ -181,3 +182,31 @@ class ListFilterSet(FilterSet):
 
             return queryset.filter(created_by_id__in=include_list).exclude(created_by_id__in=exclude_list).order_by('created_by')
         return queryset
+
+
+class NoteFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(field_name="created_for")
+
+    class Meta:
+        model = Note
+        fields = ['by_lead']
+
+
+class CallNoteFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(field_name="created_for")
+
+    class Meta:
+        model = CallNote
+        fields = ['by_lead']
+
+
+class FileFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(method="files_by_lead")
+
+    class Meta:
+        model = File
+        fields = ['by_lead', 'lead']
+
+    def files_by_lead(self, queryset, name, value):
+        if value:
+            return queryset.filter(lead=value)

@@ -35,7 +35,7 @@
           <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
         </template>
         <template v-else>
-          <span class="placeholder-message">No Lists to show here</span>
+          <span class="no-items-message">No Lists to show here</span>
         </template>
       </div>
       <div v-if="!listView">
@@ -45,7 +45,7 @@
             <Lead v-for="lead in leads" :key="lead.id" :lead="lead" />
           </template>
           <template v-else>
-            <span class="placeholder-message">No Leads to show here</span>
+            <span class="no-items-message">No Leads to show here</span>
           </template>
         </template>
       </div>
@@ -227,7 +227,7 @@ export default {
   color: $main-font-gray;
 }
 
-.placeholder-message {
+.no-items-message {
   font-weight: bold;
   align-self: center;
   width: 25%;

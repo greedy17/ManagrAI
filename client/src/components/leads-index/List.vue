@@ -4,13 +4,18 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ list.title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
-      <img
-        v-if="isOwner"
-        class="icon"
-        @click.stop="$emit('delete-list', list.id)"
-        src="@/assets/images/toc.svg"
-        alt="icon"
-      />
+      <span class="icon">
+        <svg
+          width="50px"
+          height="50px"
+          class="icon"
+          viewBox="0 0 30 30"
+          v-if="isOwner"
+          @click.stop="$emit('delete-list', list.id)"
+        >
+          <use xlink:href="/svg-repo.svg#remove" />
+        </svg>
+      </span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="trueList.refreshing" />

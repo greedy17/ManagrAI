@@ -16,6 +16,8 @@ export default class Reminder {
     completed = false,
     viewed = false,
     datetimeFor = null,
+    createdByRef = null,
+    updatedByRef = null,
   } = {}) {
     Object.assign(this, {
       id,
@@ -28,6 +30,8 @@ export default class Reminder {
       completed,
       viewed,
       datetimeFor,
+      createdByRef,
+      updatedByRef,
     })
   }
 

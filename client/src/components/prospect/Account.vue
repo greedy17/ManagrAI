@@ -13,7 +13,7 @@
       <div v-if="accLeads.pagination.totalCount > 0" class="accLeads">
         <Lead v-for="lead in accLeads.list" :key="lead.id" :lead="lead" />
       </div>
-      <div v-else class="placeholder-message">
+      <div v-else class="no-items-message">
         No Leads for this account
       </div>
     </div>
@@ -115,5 +115,12 @@ export default {
 .leads-container {
   margin-left: 2%;
   margin-right: 1%;
+}
+
+.no-items-message {
+  font-weight: bold;
+  align-self: center;
+  width: 25%;
+  margin-left: 0.75rem;
 }
 </style>

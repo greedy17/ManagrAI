@@ -31,11 +31,12 @@ class UserSerializer(serializers.ModelSerializer):
             'type',
             'is_active',
             'is_invited',
+            'full_name',
 
 
         )
     read_only_fields = ('email', 'organization', 'type',
-                        'is_active', 'is_invited',)
+                        'is_active', 'is_invited', 'full_name',)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
