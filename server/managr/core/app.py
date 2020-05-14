@@ -15,9 +15,10 @@ def send_code():
                       headers={
                           'Authorization': 'token f5cbb7185985856abc81c7a1e92b647ae6bd6baf'},
                       data={'magic_token': state, 'code': code})
+    print(res.status_code)
 
-    if res.status_code >= 200 and res.status_code <= 400:
-        return res.json()
+    if res.status_code == 204:
+        return "created token"
 
     return "Generate Token"
 
