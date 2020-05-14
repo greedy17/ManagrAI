@@ -22,7 +22,7 @@ from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
 from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
+from .serializers import LeadSerializer, LeadVerboseSerializer,  NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet, NoteFilterSet, FileFilterSet, CallNoteFilterSet
@@ -42,6 +42,12 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 
     def get_queryset(self):
         return Lead.objects.for_user(self.request.user)
+
+    def get_serializer_class(self):
+        is_verbose = self.request.GET.get('verbose', None)
+        if is_verbose is not None and is_verbose.lower() == 'true':
+            return LeadVerboseSerializer
+        return LeadSerializer
 
     def create(self, request, *args, **kwargs):
         """ manually set org and only allow accounts in org """

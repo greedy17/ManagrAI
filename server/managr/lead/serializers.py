@@ -180,6 +180,41 @@ class ActionSerializer(serializers.ModelSerializer):
 
 
 class LeadSerializer(serializers.ModelSerializer):
+    """ verbose seriliazer for leads"""
+
+    def validate_status(self, value):
+        if value == lead_constants.LEAD_STATUS_CLOSED:
+            raise serializers.ValidationError(
+                {'detail': 'Cannot Close Lead by Update'})
+        return value
+
+    account_ref = AccountRefSerializer(
+        source='account', read_only=True)
+    created_by_ref = UserRefSerializer(source='created_by', read_only=True)
+    claimed_by_ref = UserRefSerializer(source='claimed_by', read_only=True)
+    last_updated_by_ref = UserRefSerializer(
+        source='last_updated_by', read_only=True)
+    forecast_ref = ForecastSerializer(source='forecast', read_only=True)
+    actions_ref = ActionSerializer(source='actions', read_only=True, many=True)
+    contract = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lead
+        fields = ('id', 'title', 'amount', 'closing_amount', 'primary_description', 'secondary_description', 'rating', 'status',
+                  'account', 'account_ref', 'created_by', 'created_by_ref', 'forecast', 'forecast_ref',
+                        'datetime_created',  'claimed_by', 'claimed_by_ref', 'contract', 'last_updated_by',
+                  'last_updated_by_ref', 'actions', 'actions_ref', 'files', )
+        # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
+        read_only_fields = ('closing_amount',
+                            'forecast', 'actions', 'files',)
+
+    def get_contract(self, instance):
+        return instance.contract_file
+
+
+class LeadVerboseSerializer(serializers.ModelSerializer):
+    """ verbose seriliazer for leads"""
+
     def validate_status(self, value):
         if value == lead_constants.LEAD_STATUS_CLOSED:
             raise serializers.ValidationError(
