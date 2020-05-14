@@ -13,9 +13,12 @@ def revoke_extra_access_tokens():
         EmailAuthAccount regardless of sync status
     """
     for row in EmailAuthAccount.objects.all():
+        print('tokens removed')
         try:
             revoke_all_access_tokens(
                 row.account_id, keep_token=row.access_token)
+            row.delete()
+
         except requests.exceptions.HTTPError as e:
             if 404 in e.args:
                 # delete the record so we can create a new link
@@ -23,3 +26,6 @@ def revoke_extra_access_tokens():
                 # we have out of sync data, pass
                 # we have a cron job running every 24 hours to remove all old tokens which are not in sync
                 pass
+            else:
+                """ most likely an error with our account or their server will just log this when the logger is set up"""
+                continue

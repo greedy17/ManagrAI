@@ -36,7 +36,8 @@ def get_access_token(code):
     elif res.status_code == 400:
         raise HTTPError(res.status_code)
     else:
-        raise HTTPError()
+        """ most likely an error with our account or their server """
+        raise HTTPError(res.status_code)
 
 
 def get_account_details(token):
@@ -61,8 +62,10 @@ def revoke_access_token(token):
     if res.status_code == 200:
         return res.json()
     elif res.status_code == 401:
+        """ access token was not verified (aka does not exist) and we have a sync mismatch"""
         raise HTTPError(res.status_code)
     else:
+        """ most likely an error with our account or their server """
         raise HTTPError()
 
 
@@ -85,7 +88,9 @@ def revoke_all_access_tokens(account_id, keep_token=''):
     if res.status_code == 200:
         return res.json()
     elif res.status_code == 404:
+        """ the user has no tokens to revoke """
         raise HTTPError(res.status_code)
     else:
+        """ most likely an error with our account or their server """
         raise HTTPError()
     return

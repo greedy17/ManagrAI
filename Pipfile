@@ -30,6 +30,7 @@ rollbar = "==0.*"
 whitenoise = "==3.*"
 flask = "*"
 nylas = "*"
+django-kronos = "*"
 
 [requires]
 python_version = "3.7"
