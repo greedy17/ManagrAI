@@ -32,8 +32,6 @@
             :key="list.id"
             :list="list"
           />
-          <!-- <CustomList v-if="leadsWithoutList" :collection="leadsWithoutList" :title="'No List'" />
-      <CustomList v-if="allLeads" :collection="allLeads" :title="'All Leads'" /> -->
           <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
         </template>
         <template v-else>
