@@ -1,10 +1,15 @@
 <template>
-  <div class="prospect">
+  <div class="organization">
     <div class="toolbar-pane">
-      <ToolBar @selected-tab="setSelectedTab" />
+      <ToolBar :tabs="organizationViewTabs" @selected-tab="setSelectedTab" />
     </div>
     <div class="lists-pane">
-      <OrganizationContainer :activeTab="selectedTab" />
+      <OrganizationContainer
+        v-if="selectedTab"
+        :tabs="organizationViewTabs"
+        :data="organization"
+        :activeTab="selectedTab"
+      />
     </div>
   </div>
 </template>
@@ -12,25 +17,41 @@
 <script>
 import ToolBar from '@/components/organization/Toolbar'
 import OrganizationContainer from '@/components/organization/OrganizationContainer'
+import Organization from '@/services/organizations'
+import CollectionManager from '@/services/collectionManager'
 import { getSerializedAccounts } from '@/db.js'
 
+const DETAILS_TAB = 'details'
+const ACCOUNTS_TAB = 'accounts'
+const TABS = [DETAILS_TAB, ACCOUNTS_TAB]
 // import CollectionManager from '@/services/collectionManager'
 
 export default {
-  name: 'Prospect',
+  name: 'Organization',
   components: {
     ToolBar,
     OrganizationContainer,
   },
   data() {
     return {
+      organizationViewTabs: TABS,
       accounts: null,
       selectedTab: '',
+      organization: CollectionManager.create({
+        ModelClass: Organization,
+      }),
     }
   },
   methods: {
-    setSelectedTab(tab) {
-      this.selectedTab = tab
+    async setSelectedTab(tab) {
+      if (this.selectedTab != tab) {
+        switch (tab.toLowerCase()) {
+          case DETAILS_TAB:
+            await this.organization.refresh()
+
+            this.selectedTab = tab
+        }
+      }
     },
   },
   created() {
@@ -42,7 +63,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-.prospect {
+.organization {
   display: flex;
   flex-flow: row;
   padding-top: 2%;

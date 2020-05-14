@@ -12,7 +12,9 @@ export default class ListAPI {
   constructor(cls) {
     this.cls = cls
   }
-
+  get client() {
+    return apiClient()
+  }
   /**
    * Factory method to create a new instance of `UserAPI`.
    *
@@ -56,5 +58,13 @@ export default class ListAPI {
       .post(LISTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ListAPI.create' }))
     return promise
+  }
+  async deleteList(listId) {
+    const url = `${LISTS_ENDPOINT}/${listId}`
+    try {
+      await this.client.delete(url)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.create' })
+    }
   }
 }

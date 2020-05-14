@@ -1,33 +1,14 @@
-import OrganizationAPI from '@/services/reminders/api'
+import OrganizationAPI from '@/services/organizations/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 
 export default class Organization {
   static readOnlyFields = ['id']
   static api = OrganizationAPI.create(Organization)
 
-  constructor({
-    id = null,
-    datetimeCreated = null,
-    lastEdited = null,
-    title = '',
-    content = '',
-    updatedBy = null,
-    createdFor = null,
-    completed = false,
-    viewed = false,
-    datetimeFor = null,
-  } = {}) {
+  constructor({ id = null, name = null } = {}) {
     Object.assign(this, {
       id,
-      datetimeCreated,
-      title,
-      lastEdited,
-      content,
-      updatedBy,
-      createdFor,
-      completed,
-      viewed,
-      datetimeFor,
+      name,
     })
   }
 

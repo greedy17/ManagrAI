@@ -4,6 +4,13 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ list.title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <img
+        v-if="isOwner"
+        class="icon"
+        @click.stop="$emit('delete-list', list.id)"
+        src="@/assets/images/toc.svg"
+        alt="icon"
+      />
     </div>
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="trueList.refreshing" />
@@ -27,6 +34,11 @@ export default {
       // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
       type: Object,
       required: true,
+    },
+    isOwner: {
+      // determines if CRUD is available
+      type: Boolean,
+      default: false,
     },
   },
   components: {

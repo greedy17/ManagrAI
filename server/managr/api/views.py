@@ -23,7 +23,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .models import Organization, Account, Contact
 from managr.lead.models import Lead
-from .serializers import OrganizationSerializer, AccountSerializer, ContactSerializer
+from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer
 from .filters import ContactFilterSet
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
@@ -33,11 +33,16 @@ from managr.core.permissions import (
 
 class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    serializer_class = OrganizationSerializer
     permission_classes = (SuperUserCreateOnly, CanEditResourceOrReadOnly,)
 
     def get_queryset(self):
         return Organization.objects.for_user(self.request.user)
+
+    def get_serializer_class(self):
+        is_verbose = self.request.GET.get('verbose', None)
+        if is_verbose is not None and is_verbose.lower() == 'true':
+            return OrganizationVerboseSerializer
+        return OrganizationSerializer
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):

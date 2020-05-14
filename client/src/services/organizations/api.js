@@ -23,7 +23,11 @@ export default class OrganizationAPI {
     }
     try {
       const res = await this.client.get(url, options)
-      return res
+
+      return {
+        ...res.data,
+        results: res.data.results.map(this.cls.fromAPI),
+      }
     } catch {
       apiErrorHandler({ apiName: 'Organization.list' })
     }

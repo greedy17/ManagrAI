@@ -2,7 +2,7 @@
   <div class="toolbar">
     <div class="actions-tab-headers section-shadow">
       <ActionTabHeader
-        v-for="(tab, index) in optionTabs"
+        v-for="(tab, index) in tabs"
         :key="tab"
         :active="index === activeTab"
         :index="index"
@@ -22,17 +22,27 @@ export default {
   components: {
     ActionTabHeader,
   },
+  props: {
+    tabs: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
-      optionTabs: ['Details', 'Resources'],
+      optionTabs: ['Details', 'Accounts', 'Reps', 'ActionTypes'],
       activeTab: 0,
     }
   },
   watch: {
-    activeTab(cur, pre) {
-      if (cur != pre) {
-        this.$emit('selected-tab', this.optionTabs[this.activeTab])
-      }
+    activeTab: {
+      immediate: true,
+      handler(curr, prev) {
+        if (curr != prev) {
+          console.log(curr)
+          this.$emit('selected-tab', this.tabs[this.activeTab])
+        }
+      },
     },
   },
   methods: {

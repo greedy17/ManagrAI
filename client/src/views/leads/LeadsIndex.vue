@@ -27,6 +27,8 @@
         @toggle-onlist="applyMyLeadsOnListFilter"
         :showCreateNew="true"
         :loading="myLists.refreshing || myLeads.refreshing"
+        @delete-list="deleteList"
+        :isOwner="true"
       />
       <ListsContainer
         title="Other Lists"
@@ -107,6 +109,12 @@ export default {
     },
   },
   methods: {
+    async deleteList(listInfo) {
+      this.myLists.refreshing = true
+
+      await List.api.deleteList(listInfo.id)
+      this.myLists.refresh()
+    },
     refreshCollections() {
       this.applyFiltersToCollections()
       let promises = [

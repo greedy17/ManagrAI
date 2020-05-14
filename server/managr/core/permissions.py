@@ -53,7 +53,7 @@ def lead_permissions(self, request, view, obj):
 
 def list_permissions(self, request, view, obj):
     # permissions for LeadsLists
-    if obj.organization != request.user.organization:
+    if obj.created_by.organization_id != request.user.organization_id:
         return False
     else:
         if obj.created_by != request.user:

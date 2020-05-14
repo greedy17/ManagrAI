@@ -1,6 +1,5 @@
 <template>
   <div class="lists-container">
-    <PageLoadingSVG v-if="loading" />
     <span class="container-header" v-if="title">{{ title.toUpperCase() }}</span>
     <div class="actions-tab-headers section-shadow">
       <ActionTabHeader
@@ -26,7 +25,13 @@
       </div>
       <div v-if="listView">
         <template v-if="lists.length > 0">
-          <List v-for="list in lists" :key="list.id" :list="list" />
+          <List
+            :isOwner="isOwner"
+            @delete-list="emitDeleteList($event, index)"
+            v-for="(list, index) in lists"
+            :key="list.id"
+            :list="list"
+          />
           <!-- <CustomList v-if="leadsWithoutList" :collection="leadsWithoutList" :title="'No List'" />
       <CustomList v-if="allLeads" :collection="allLeads" :title="'All Leads'" /> -->
           <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
@@ -36,11 +41,14 @@
         </template>
       </div>
       <div v-if="!listView">
-        <template v-if="leads.length > 0">
-          <Lead v-for="lead in leads" :key="lead.id" :lead="lead" />
-        </template>
+        <ComponentLoadingSVG v-if="loading" />
         <template v-else>
-          <span class="placeholder-message">No Leads to show here</span>
+          <template v-if="leads.length > 0">
+            <Lead v-for="lead in leads" :key="lead.id" :lead="lead" />
+          </template>
+          <template v-else>
+            <span class="placeholder-message">No Leads to show here</span>
+          </template>
         </template>
       </div>
     </div>
@@ -114,9 +122,17 @@ export default {
       type: Boolean,
       default: false,
     },
+    isOwner: {
+      // determines if CRUD is available
+      type: Boolean,
+      default: false,
+    },
   },
 
   methods: {
+    emitDeleteList(listId, i) {
+      this.$emit('delete-list', { id: listId, index: i })
+    },
     emitListCreated(list) {
       this.$emit('list-created', list)
     },

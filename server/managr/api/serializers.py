@@ -40,8 +40,8 @@ class AccountRefSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'organization',)
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
-    """ Only Super Users can create, edit and delete Organizations """
+class OrganizationVerboseSerializer(serializers.ModelSerializer):
+    """ Special Serializer that is called when the flag ---verbose=true is sent """
 
     accounts_ref = AccountRefSerializer(
         many=True, source='accounts', read_only=True)
@@ -55,6 +55,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'action_choices', 'action_choices_ref', 'total_amount_closed_contracts', 'avg_amount_closed_contracts'
         )
         read_only_fields = ('accounts', 'action_choices', )
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    """ Only Super Users can create, edit and delete Organizations """
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'name', 'state', 'total_amount_closed_contracts', 'avg_amount_closed_contracts'
+        )
 
 
 class AccountSerializer(serializers.ModelSerializer):
