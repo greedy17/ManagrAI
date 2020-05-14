@@ -1,6 +1,9 @@
 <template>
-  <LoadingSVG v-if="loading" />
+  <PageLoadingSVG v-if="loading" />
   <div v-else class="leads-detail">
+    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+      <CloseLead :lead="lead" />
+    </Modal>
     <div class="left-pane">
       <ToolBar
         class="toolbar"
@@ -14,6 +17,7 @@
         :lead="lead"
         @lead-reset="resetLead"
         @lead-released="releaseLead"
+        @lead-claimed="claimLead"
         @updated-forecast="updateForecast"
         @updated-status="updateStatus"
       />
@@ -49,6 +53,8 @@ import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
+import Forecast from '@/services/forecasts'
+import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'LeadsDetail',
@@ -59,17 +65,29 @@ export default {
     LeadActions,
     PinnedNotes,
     LeadInsights,
+    CloseLead,
   },
   data() {
     return {
       loading: true,
       lead: null,
+      modal: {
+        isOpen: false,
+      },
     }
   },
   created() {
     Lead.api.retrieve(this.id).then(lead => {
       this.lead = lead
       this.loading = false
+
+      if (this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id) {
+        let message = `<div>This lead is owned by: ${this.lead.claimedByRef.fullName}</div>`
+        this.$Alert.alert({
+          type: 'banner',
+          message,
+        })
+      }
     })
   },
   methods: {
@@ -98,13 +116,33 @@ export default {
       })
     },
     updateForecast(value) {
-      alert('selected' + value + '(sever-side WIP)')
+      if (this.lead.forecast) {
+        // since forecast exists, patch forecast
+        let patchData = {
+          lead: this.lead.id,
+          forecast: value,
+        }
+        Forecast.api.update(this.lead.forecastRef.id, patchData).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      } else {
+        // since currently null, create forecast
+        Forecast.api.create(this.lead.id, value).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      }
     },
     updateStatus(value) {
-      let patchData = { status: value.toUpperCase() }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead = lead
-      })
+      if (value != 'CLOSED') {
+        let patchData = { status: value }
+        Lead.api.update(this.lead.id, patchData).then(lead => {
+          this.lead = lead
+        })
+      } else {
+        this.modal.isOpen = true
+      }
     },
     resetLead() {
       let patchData = {
@@ -122,16 +160,30 @@ export default {
         })
       })
     },
+    claimLead() {
+      Lead.api.claim(this.lead.id).then(() => {
+        this.lead.claimedBy = this.$store.state.user.id
+        let message = `<div>Lead claimed!</div>`
+        this.$Alert.alert({
+          type: 'success',
+          message,
+          timeout: 2000,
+        })
+      })
+    },
     releaseLead() {
       Lead.api.unclaim(this.lead.id).then(() => {
         let message = `<div>Success! Lead released.</div>`
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 6000,
+          timeout: 4000,
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
+    },
+    closeModal() {
+      this.modal.isOpen = false
     },
   },
 }

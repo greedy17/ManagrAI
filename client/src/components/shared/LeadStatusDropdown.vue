@@ -1,10 +1,10 @@
 <template>
   <div class="status-dropdown">
-    <select @change="onChange" :style="computedStyles">
+    <select @change="onChange" :style="computedStyles" :disabled="status === 'CLOSED'">
       <option disabled :selected="status == null" value="">---</option>
       <option
         :selected="option.toUpperCase() === status"
-        v-for="option in enums"
+        v-for="option in statusEnums"
         :key="option"
         :value="option"
       >
@@ -16,7 +16,7 @@
 
 <script>
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
-const enums = ['Ready', 'Trial', 'Demo', 'Waiting', 'Lost']
+import { statusEnums } from '@/services/leads/enumerables'
 
 export default {
   name: 'LeadStatusDropdown',
@@ -27,12 +27,12 @@ export default {
   },
   data() {
     return {
-      enums,
+      statusEnums,
     }
   },
   methods: {
     onChange(e) {
-      this.$emit('updated-status', e.target.value)
+      this.$emit('updated-status', e.target.value.toUpperCase())
     },
   },
   computed: {

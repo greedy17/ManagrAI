@@ -1,6 +1,6 @@
 <template>
   <div class="account">
-    <div class="header" @click="toggleLeads" :style="headerBorder">
+    <div class="header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="account-title"> {{ account.name }} </span>
       <span class="leads-count"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
@@ -34,11 +34,6 @@ export default {
     numOfLeads() {
       return this.account.leads.length
     },
-    headerBorder() {
-      return {
-        border: this.showLeads ? '2px solid #fafafa' : '2px solid white', // $off-white || $white
-      }
-    },
   },
 }
 </script>
@@ -60,6 +55,14 @@ export default {
   font-size: 14px;
   line-height: 1.14;
   color: $main-font-gray;
+}
+
+.open {
+  border: 2px solid $off-white;
+}
+
+.closed {
+  border: 2px solid $white;
 }
 
 .icon {

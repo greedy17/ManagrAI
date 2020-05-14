@@ -19,10 +19,7 @@
       </div>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <LeadForecastDropdown
-        :forecast="lead.forecastRef && lead.forecastRef.forecast"
-        @updated-forecast="updateForecast"
-      />
+      <LeadForecastDropdown :forecast="forecast.forecast" @updated-forecast="updateForecast" />
       <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
       <div class="lead-lists">
         <LeadList class="lead-list" :listName="'Growth Accounts'" />
@@ -50,6 +47,10 @@ export default {
   name: 'Lead',
   props: {
     lead: {
+      type: Object,
+      required: true,
+    },
+    forecast: {
       type: Object,
       required: true,
     },
@@ -88,21 +89,20 @@ export default {
       }
     },
     updateForecast(value) {
-      if (this.lead.forecast) {
+      if (this.forecast && this.forecast.id) {
         // since forecast exists, patch forecast
         let patchData = {
           lead: this.lead.id,
           forecast: value,
         }
-        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
+        Forecast.api.update(this.forecast.id, patchData).then(() => {
+          this.$emit('delete-lead', this.lead.id)
         })
       } else {
         // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
+        Forecast.api.create(this.lead.id, value).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
         })
       }
     },

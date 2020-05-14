@@ -1,4 +1,5 @@
 import django_filters
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django_filters.rest_framework import FilterSet
 from django_filters import OrderingFilter
 from itertools import chain
@@ -17,10 +18,33 @@ class LeadFilterSet(FilterSet):
     on_list = django_filters.BooleanFilter(method="list_count")
     is_claimed = django_filters.BooleanFilter(method="claim_status")
     by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
+    status = django_filters.CharFilter(method="by_status")
+    forecast = django_filters.CharFilter(method="by_forecast")
 
     class Meta:
         model = Lead
-        fields = ['rating', 'on_list', 'is_claimed', 'by_list']
+        fields = ['rating', 'on_list', 'is_claimed',
+                  'by_list', ]
+
+    def by_status(self, qs, name, value):
+        """ allows list of statuses"""
+        if value:
+
+            v = value.strip('')
+            v = v.split(',')
+
+            return qs.filter(status__in=v)
+        return qs
+
+    def by_forecast(self, qs, name, value):
+        """ allows list of forecasts """
+
+        if value:
+            v = value.strip('')
+            v = v.split(',')
+
+            return qs.filter(forecast__forecast__in=v)
+        return qs
 
     def list_count(self, queryset, name, value):
         """ filter leads by list count """
@@ -53,12 +77,21 @@ class ForecastFilterSet(FilterSet):
 
     class Meta:
         model = Forecast
-        fields = ['by_user']
+        fields = ['by_user', 'forecast']
 
     def forecasts_by_user(self, queryset, name, value):
         """ provide a user or a list of users """
+        # TODO:- check to see if user exists
         if value:
             value = value.strip()
             user_list = value.split(',')
-            if self.request.user.organization.users.filter(id__in=user_list).exists():
-                return queryset.filter(lead__claimed_by__in=user_list).order_by('lead__claimed_by')
+            try:
+                if self.request.user.organization.users.filter(id__in=user_list).exists():
+                    return queryset.filter(lead__claimed_by__in=user_list).order_by('forecast')
+                else:
+                    # if there is a user that does not exist or a problem with the query silently fail
+                    # return None
+                    return queryset.none()
+            except DjangoValidationError:
+                # if a malformed User Id is sent fail silently and return None
+                return queryset.none()
