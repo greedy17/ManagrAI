@@ -144,7 +144,7 @@ export default {
       this.$router.push({ name: 'Forecast' })
     },
     addListToCollection(list) {
-      this.lists.list.unshift(list)
+      this.myLists.list.unshift(list)
     },
     async applyMyLeadsOnListFilter(val) {
       this.myLeads.filters['onList'] = val
