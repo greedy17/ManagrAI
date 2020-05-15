@@ -36,6 +36,7 @@ class LeadFilterSet(FilterSet):
     forecast = django_filters.CharFilter(method="by_forecast")
     by_user = django_filters.CharFilter(method="leads_by_user")
     by_account = django_filters.CharFilter(method="list_leads_by_account")
+    by_rating = django_filters.CharFilter(method="leads_by_rating")
 
     class Meta:
         model = Lead

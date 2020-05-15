@@ -119,7 +119,7 @@ class Contact(TimeStampModel):
     """
     title = models.CharField(max_length=255, blank=True)
     first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255)
     phone_number_1 = models.CharField(max_length=255)
     phone_number_2 = models.CharField(max_length=255, blank=True)

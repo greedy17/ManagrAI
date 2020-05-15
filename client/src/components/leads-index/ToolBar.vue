@@ -7,34 +7,11 @@
       <div class="filter-header">Rating</div>
       <div class="filter-options">
         <LeadRating
+          v-for="(n, i) in 5"
+          :key="'rating' + '-' + i"
           class="option"
-          :rating="5"
-          :isActive="5 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="4"
-          :isActive="4 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="3"
-          :isActive="3 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="2"
-          :isActive="2 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="1"
-          :isActive="1 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
+          :rating="n"
+          @update-rating-filter="emitUpdateFilter({ key: 'rating', value: $event })"
         />
       </div>
     </div>
@@ -51,8 +28,6 @@
 import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
 
-const listEnums = ['Growth Accounts', 'Q2 Buyers']
-
 export default {
   name: 'ListsToolBar',
   components: {
@@ -67,12 +42,11 @@ export default {
     return {
       statusEnums,
       forecastEnums,
-      listEnums,
     }
   },
   methods: {
-    emitUpdatedRatingFilter(rating) {
-      this.$emit('updated-rating-filter', rating)
+    emitUpdateFilter(item) {
+      this.$emit('update-filter', item)
     },
   },
 }

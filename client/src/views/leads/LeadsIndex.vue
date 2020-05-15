@@ -12,16 +12,12 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar
-        class="toolbar"
-        @updated-rating-filter="updateRatingFilter"
-        :currentRatingFilter="ratingFilter"
-      />
+      <ToolBar class="toolbar" @update-filter="updateFilters" :currentRatingFilter="ratingFilter" />
     </div>
     <div class="lists-container-pane">
       <ListsContainer
         title="My Lists"
-        :leads="myLeads.list"
+        :leads="myLeads"
         :lists="myLists.list"
         @list-created="addListToCollection"
         @toggle-onlist="applyMyLeadsOnListFilter"
@@ -33,7 +29,7 @@
       <ListsContainer
         title="Other Lists"
         :lists="lists.list"
-        :leads="leads.list"
+        :leads="leads"
         @list-created="addListToCollection"
         @toggle-onlist="applyLeadsOnListFilter"
         :loading="leads.refreshing || lists.refreshing"
@@ -99,6 +95,10 @@ export default {
     isCurrentRoute() {
       return this.$route.name == 'LeadsIndex'
     },
+    currentFilters() {
+      // all filters should be the same across the collections
+      return this.lists.filters
+    },
     isLoading() {
       return (
         this.lists.refreshing ||
@@ -113,10 +113,10 @@ export default {
       this.myLists.refreshing = true
 
       await List.api.deleteList(listInfo.id)
-      this.myLists.refresh()
+      // nested component wont react to splice
+      this.$set(this.myLists, 'lists', this.myLists.list.splice(listInfo.index, 1))
     },
     refreshCollections() {
-      this.applyFiltersToCollections()
       let promises = [
         this.lists.refresh(),
         this.myLists.refresh(),
@@ -128,16 +128,6 @@ export default {
       Promise.all(promises).then(() => {
         this.loading = false
       })
-    },
-    applyFiltersToCollections() {
-      // apply lead-rating filter
-      // this.lists.filters.rating = this.ratingFilter // filter structure pending (server-side WIP)
-      //this.leadsWithoutList.filters.rating = this.ratingFilter
-      //this.allLeads.filters.rating = this.ratingFilter
-      // apply lead-status filter
-      // ...
-      // apply lead-forecast filter
-      // ...
     },
     toggleView() {
       this.$router.push({ name: 'Forecast' })
@@ -153,14 +143,23 @@ export default {
       this.leads.filters['onList'] = val
       await this.leads.refresh()
     },
-    updateRatingFilter(rating) {
-      // if the current filter option was clicked, then remove the ratingFiler
-      if (this.ratingFilter == rating) {
-        this.ratingFilter = null
-      } else {
-        this.ratingFilter = rating
+    updateFilters(filter) {
+      if (this.lists.filters[filter.key] == filter.value) {
+        filter.value = null
       }
-      this.loading = true
+      // only update if there is a change
+      // all collections should have the same filters so only
+      // need one source of truth
+      // if a collection does not have a filter
+      // in its API filter class it will be removed on the request
+      // components wont react to changes in obj[key] value
+      // alt could have created a new list and set it to that
+      //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
+      this.$set(this.lists.filters, filter.key, filter.value)
+      this.$set(this.myLists.filters, filter.key, filter.value)
+      this.$set(this.leads.filters, filter.key, filter.value)
+      this.$set(this.myLeads.filters, filter.key, filter.value)
+
       this.refreshCollections()
     },
   },

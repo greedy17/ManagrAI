@@ -37,7 +37,7 @@
           <div class="list-items__item" :key="item.id + '-' + i">
             <span class="icon">
               <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
-                <use xlink:href="/svg-repo.svg#remove" />
+                <use xlink:href="@/assets/images/svg-repo.svg#remove" />
               </svg>
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
@@ -65,7 +65,7 @@
           <div class="list-items__item" :key="item.id + '-' + i">
             <span class="icon">
               <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
-                <use xlink:href="/svg-repo.svg#remove" />
+                <use xlink:href="@/assets/images/svg-repo.svg#remove" />
               </svg>
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
@@ -93,7 +93,7 @@
           <div class="list-items__item" :key="item.id + '-' + i">
             <span class="icon">
               <svg class="svg" viewBox="0 0 30 30" @click.stop="$emit('delete-list', list.id)">
-                <use xlink:href="/svg-repo.svg#remove" />
+                <use xlink:href="@/assets/images/svg-repo.svg#remove" />
               </svg>
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>

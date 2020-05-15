@@ -48,7 +48,9 @@
       <div v-else class="contacts-container">
         <div class="contact section-shadow" v-for="contact in contacts.list" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
-          <span class="name">{{ contact.fullName }}</span>
+          <span class="name">{{
+            contact.fullName.length > 0 ? contact.fullName : contact.email
+          }}</span>
           <div class="phone button">
             <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
           </div>

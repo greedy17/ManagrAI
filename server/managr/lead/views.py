@@ -71,6 +71,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         except Account.DoesNotExist:
             raise PermissionDenied()
         # if there are contacts to be added first check that contacts exist or create them
+        # TODO: PB 05/15/20 fix issue where This get_or_create allows creating a user with a blank first_name and number
         contacts = data.pop('linked_contacts', [])
         contact_list = list()
         for contact in contacts:

@@ -17,12 +17,11 @@ export default {
     },
     isActive: {
       type: Boolean,
-      required: true,
     },
   },
   methods: {
     onRatingClick(rating) {
-      this.$emit('updated-rating-filter', rating)
+      this.$emit('update-rating-filter', rating)
     },
   },
 }

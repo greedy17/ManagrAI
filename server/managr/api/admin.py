@@ -15,6 +15,17 @@ class CustomAccount(admin.ModelAdmin):
     list_display = ('name', 'url',)
 
 
+class CustomContact(admin.ModelAdmin):
+    model = Contact
+    fieldsets = (
+        (None, {
+            "fields": (
+                'first_name', 'last_name', 'email', 'phone_number_1', 'phone_number_2', 'account'
+            ),
+        }),
+    )
+
+
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 

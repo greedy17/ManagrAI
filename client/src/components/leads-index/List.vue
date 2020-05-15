@@ -13,7 +13,7 @@
           v-if="isOwner"
           @click.stop="$emit('delete-list', list.id)"
         >
-          <use xlink:href="/svg-repo.svg#remove" />
+          <use xlink:href="@/assets/images/svg-repo.svg#remove" />
         </svg>
       </span>
     </div>
@@ -45,9 +45,22 @@ export default {
       type: Boolean,
       default: false,
     },
+    leadFilters: {
+      type: Object,
+      default: () => {},
+    },
   },
   components: {
     Lead,
+  },
+  watch: {
+    leadFilters: {
+      deep: true,
+      async handler() {
+        this.madeInitialRetrieval = false
+        this.showLeads = false
+      },
+    },
   },
   data() {
     return {
@@ -55,13 +68,16 @@ export default {
       madeInitialRetrieval: false,
       trueList: CollectionManager.create({
         ModelClass: LeadModel,
-        filters: { byList: this.list.id },
+        filters: { byList: this.list.id, ...this.leadFilters },
       }),
     }
   },
   methods: {
     toggleLeads() {
       if (!this.madeInitialRetrieval) {
+        // do not filter by user on lists
+        this.trueList.filters = { byList: this.list.id, ...this.leadFilters }
+        delete this.trueList.filters.byUser
         this.trueList.refresh().then(() => {
           this.madeInitialRetrieval = true
         })

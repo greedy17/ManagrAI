@@ -31,6 +31,7 @@
             v-for="(list, index) in lists"
             :key="list.id"
             :list="list"
+            :leadFilters="leads.filters"
           />
           <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
         </template>
@@ -41,8 +42,8 @@
       <div v-if="!listView">
         <ComponentLoadingSVG v-if="loading" />
         <template v-else>
-          <template v-if="leads.length > 0">
-            <Lead v-for="lead in leads" :key="lead.id" :lead="lead" />
+          <template v-if="leads.list.length > 0">
+            <Lead v-for="lead in leads.list" :key="lead.id" :lead="lead" />
           </template>
           <template v-else>
             <span class="no-items-message">No Leads to show here</span>
@@ -105,14 +106,6 @@ export default {
     },
 
     leads: {
-      type: Array,
-      default: () => [],
-    },
-    leadsWithoutList: {
-      type: Object,
-      default: () => {},
-    },
-    allLeads: {
       type: Object,
       default: () => {},
     },
