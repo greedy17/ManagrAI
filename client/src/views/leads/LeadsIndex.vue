@@ -24,6 +24,7 @@
         :showCreateNew="true"
         :loading="myLists.refreshing || myLeads.refreshing"
         @delete-list="deleteList"
+        @remove-from-list="removeFromList"
         :isOwner="true"
       />
       <ListsContainer
@@ -109,6 +110,16 @@ export default {
     },
   },
   methods: {
+    async removeFromList(info) {
+      // an object containing the lead as an array, listId, leadindex
+      try {
+        await List.api.removeFromList(info.leads, info.listId)
+
+        this.myLists.refreshing = true
+      } finally {
+        this.myLists.refreshing = false
+      }
+    },
     async deleteList(listInfo) {
       this.myLists.refreshing = true
 

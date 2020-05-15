@@ -13,6 +13,7 @@ from rest_framework import (
     views,
     viewsets,
 )
+from django.db import IntegrityError
 from rest_framework import (
     viewsets, mixins, generics, status, filters, permissions
 )
@@ -214,13 +215,17 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # TODO: Check if lead is in org 05/02/20
         new_leads = request.data.get('leads', [])
         for lead in new_leads:
-            l.leads.add(lead)
-            l.save()
+            try:
+                l.leads.add(lead)
+                l.save()
+            except IntegrityError:
+                # lead already on list so just skip
+                pass
 
         serializer = self.serializer_class(self.get_object())
         return Response(serializer.data)
 
-    @action(methods=['delete'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
+    @action(methods=['post'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
     def remove_from_list(self, request, *args, **kwargs):
         """ End point to allow removal of leads to list after created """
         l = self.get_object()

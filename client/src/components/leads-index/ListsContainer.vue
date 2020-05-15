@@ -28,6 +28,7 @@
           <List
             :isOwner="isOwner"
             @delete-list="emitDeleteList($event, index)"
+            @remove-from-list="$emit('remove-from-list', $event)"
             v-for="(list, index) in lists"
             :key="list.id"
             :list="list"

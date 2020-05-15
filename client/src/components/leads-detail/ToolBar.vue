@@ -14,13 +14,34 @@
     <div class="lead-lists">
       <div class="header">Lists</div>
       <div class="container">
-        <p v-if="!lead.lists">N/A</p>
+        <button @click="openListsModal">Add to A List</button>
+        <Modal v-if="listModal.isOpen" dimmed :width="20">
+          <div class="list-modal-container">
+            <h3>My Lists</h3>
+            <div :key="i" v-for="(list, i) in myLists.list" class="list-items">
+              <span class="list-items__item__select"
+                ><Checkbox
+                  v-if="!~lists.list.findIndex(lId => lId.id == list.id)"
+                  name="lists"
+                  @checkbox-clicked="addToPendingList(list.id)"
+                  :checked="!!addToList.find(mI => mI == list.id)"
+                />{{ lists.list.findIndex(lId => lId.id == list.id) }}</span
+              >
+              <span class="list-items__item">{{ list.title }}</span>
+            </div>
+            <button @click="addLeadsToList">Save</button>
+            <button @click="listModal.isOpen = false">Cancel</button>
+          </div>
+        </Modal>
+        <p v-if="lists.pagination.totalCount <= 0">N/A</p>
         <LeadList
+          @remove-lead="removeLeadFromList($event, i)"
           v-else
           class="list"
-          v-for="list in lists.list"
+          v-for="(list, i) in lists.list"
           :key="list.id"
           :listName="list.title"
+          :listId="list.id"
           :dark="true"
         />
       </div>
@@ -84,6 +105,8 @@
 import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 import CollectionManager from '@/services/collectionManager'
+import List from '@/services/lists'
+import Checkbox from '@/components/leads-new/CheckBox'
 
 // import Contact from '@/services/contacts'
 
@@ -92,6 +115,7 @@ export default {
   components: {
     LeadRating,
     LeadList,
+    Checkbox,
   },
   props: {
     lead: {
@@ -102,6 +126,7 @@ export default {
       type: Object,
       default: () => CollectionManager.create(),
     },
+
     contacts: {
       type: Object,
       default: () => CollectionManager.create(),
@@ -113,6 +138,17 @@ export default {
   },
   data() {
     return {
+      //leads to add to a list
+      addToList: [],
+      listModal: {
+        isOpen: false,
+      },
+      myLists: CollectionManager.create({
+        ModelClass: List,
+        filters: {
+          byUser: this.$store.state.user.id,
+        },
+      }),
       editAmount: false,
       tempAmount: this.lead.amount,
 
@@ -122,6 +158,31 @@ export default {
   },
 
   methods: {
+    async removeLeadFromList(listId, listIndex) {
+      await List.api.removeFromList([this.lead.id], listId)
+      this.lists.list.splice(listIndex, 1)
+    },
+    async addLeadsToList() {
+      // make backend endpoint for this to be easier
+      let promises = this.addToList.map(l => List.api.addToList([this.lead.id], l))
+      try {
+        await Promise.all(promises)
+      } finally {
+        this.listModal.isOpen = false
+      }
+    },
+    addToPendingList(id) {
+      let index = this.addToList.findIndex(i => i == id)
+      if (index > -1) {
+        this.addToList.splice(index, 1)
+      } else {
+        this.addToList.push(id)
+      }
+    },
+    async openListsModal() {
+      await this.myLists.refresh()
+      this.listModal.isOpen = true
+    },
     // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend in a coming sprint.
     // Instead we may serialize contacts-data within LeadAPI.retrieve
     // fetchContacts() {
@@ -223,13 +284,15 @@ export default {
   .container {
     display: flex;
     flex-flow: column;
+    max-height: 10rem;
+    overflow-y: scroll;
 
     p {
       margin-left: 1rem;
     }
 
     .list {
-      margin-bottom: 0.625rem;
+      margin: 0.625rem;
       height: 1.75rem;
     }
   }
@@ -403,5 +466,18 @@ export default {
   align-self: center;
   width: 25%;
   margin: 1rem 0.75rem;
+}
+.list-items {
+  display: flex;
+  padding: 1rem;
+  border-bottom: 1px solid $mid-gray;
+  &__item {
+    flex: 2;
+    margin: 0.5rem;
+
+    &__select {
+      flex: 0.5;
+    }
+  }
 }
 </style>

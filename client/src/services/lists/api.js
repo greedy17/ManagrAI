@@ -68,4 +68,22 @@ export default class ListAPI {
       apiErrorHandler({ apiName: 'ListAPI.create' })
     }
   }
+  async removeFromList(leads, listId) {
+    // array of leads to remove
+    const url = `${LISTS_ENDPOINT}${listId}/remove-from-list/`
+    try {
+      await this.client.post(url, { leads })
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.removeFromList' })
+    }
+  }
+  async addToList(leads, listId) {
+    // array of leads to add
+    const url = `${LISTS_ENDPOINT}${listId}/add-to-list/`
+    try {
+      await this.client.post(url, { leads })
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.removeFromList' })
+    }
+  }
 }

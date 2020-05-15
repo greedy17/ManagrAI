@@ -13,6 +13,7 @@
 </template>
 
 <script>
+import { debounce } from '@/services/utils'
 export default {
   name: 'LeadRating',
   props: {
@@ -28,8 +29,11 @@ export default {
       type: Boolean,
     },
   },
+  created() {},
   data() {
-    return {}
+    return {
+      ratingChange: '',
+    }
   },
   methods: {
     onRatingClick(rating) {
