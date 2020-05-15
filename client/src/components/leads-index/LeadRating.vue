@@ -13,7 +13,6 @@
 </template>
 
 <script>
-import { debounce } from '@/services/utils'
 export default {
   name: 'LeadRating',
   props: {
