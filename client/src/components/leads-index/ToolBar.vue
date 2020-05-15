@@ -11,7 +11,7 @@
           :key="'rating' + '-' + i"
           class="option"
           :selected="currentFilters.byRating ? currentFilters.byRating : null"
-          :rating="n"
+          :rating="5 - n"
           @update-rating-filter="emitUpdateFilter({ key: 'byRating', value: $event })"
         />
       </div>

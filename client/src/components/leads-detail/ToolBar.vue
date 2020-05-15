@@ -9,7 +9,12 @@
       <h2>{{ lead.title }}</h2>
     </div>
     <div class="rating">
-      <LeadRating :label="true" :rating="lead.rating" @updated-rating="emitUpdatedRating" />
+      <LeadRating
+        :label="true"
+        :rating="lead.rating"
+        @close-modal="listModal.isOpen = false"
+        @updated-rating="emitUpdatedRating"
+      />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
@@ -89,13 +94,13 @@
         <span>Files</span>
       </div>
       <div class="files-container">
-        <template v-if="files.lists > 0">
+        <template v-if="files.list.length > 0">
           <div class="file section-shadow" v-for="file in files.lists" :key="file">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
             {{ file }}
           </div>
         </template>
-        <span class="no-items-message">No Files</span>
+        <span v-else class="no-items-message">No Files</span>
       </div>
     </div>
   </div>

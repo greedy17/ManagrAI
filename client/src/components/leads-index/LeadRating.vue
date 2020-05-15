@@ -2,7 +2,7 @@
   <div class="rating" :class="{ active: selected == rating }" @click="onRatingClick(rating)">
     <span v-for="n in 5" :key="n" class="icon-container">
       <span class="icon">
-        <svg class="svg" :class="{ fill: n <= rating }" viewBox="0 0 30 30">
+        <svg class="svg" :class="{ fill: n <= rating + 1 }" viewBox="0 0 30 30">
           <use xlink:href="@/assets/images/svg-repo.svg#star" />
         </svg>
       </span>
@@ -70,7 +70,6 @@ export default {
   height: 20px;
 }
 .svg {
-  fill: transparent;
 }
 
 .svg.fill {
