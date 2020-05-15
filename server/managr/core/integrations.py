@@ -115,7 +115,6 @@ def send_new_email(auth, sender, receipient, message):
     if res.status_code == 200:
         return res.json()
     elif res.status_code == 401:
-        """ the user has no tokens to revoke """
         raise HTTPError(res.status_code)
     elif res.status_code == 400:
         """ message error format """
