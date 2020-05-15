@@ -8,10 +8,10 @@
       <div class="filter-options">
         <LeadRating
           v-for="(n, i) in 5"
-          :key="'rating' + '-' + i"
+          :key="'rating' + '-' + (5 - i)"
           class="option"
           :selected="currentFilters.byRating ? currentFilters.byRating : null"
-          :rating="5 - n"
+          :rating="6 - n"
           @update-rating-filter="emitUpdateFilter({ key: 'byRating', value: $event })"
         />
       </div>
