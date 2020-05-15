@@ -10,15 +10,28 @@
           v-for="(n, i) in 5"
           :key="'rating' + '-' + i"
           class="option"
+          :selected="currentFilters.byRating ? currentFilters.byRating : null"
           :rating="n"
-          @update-rating-filter="emitUpdateFilter({ key: 'rating', value: $event })"
+          @update-rating-filter="emitUpdateFilter({ key: 'byRating', value: $event })"
         />
       </div>
     </div>
     <div class="filter section-shadow">
       <div class="filter-header">Status</div>
       <div class="filter-options">
-        <div class="option" v-for="status in statusEnums" :key="status">{{ status }}</div>
+        <div
+          class="option"
+          @click="emitUpdateFilter({ key: 'byStatus', value: status })"
+          v-for="status in statusEnums"
+          :key="status"
+          :class="{
+            active: currentFilters.byStatus
+              ? currentFilters.byStatus.toLowerCase() == status.toLowerCase()
+              : false,
+          }"
+        >
+          {{ status }}
+        </div>
       </div>
     </div>
   </div>
@@ -34,8 +47,8 @@ export default {
     LeadRating,
   },
   props: {
-    currentRatingFilter: {
-      required: true,
+    currentFilters: {
+      type: Object,
     },
   },
   data() {
@@ -119,11 +132,17 @@ export default {
 
     .option {
       height: 1.75rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      max-width: 6rem;
     }
   }
 }
 
 .list {
   margin-bottom: 0.875rem;
+}
+.active {
+  color: rgba($color: $dark-green, $alpha: 1);
 }
 </style>

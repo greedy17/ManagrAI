@@ -32,7 +32,7 @@ class LeadFilterSet(FilterSet):
     on_list = django_filters.BooleanFilter(method="list_count")
     is_claimed = django_filters.BooleanFilter(method="claim_status")
     by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
-    status = django_filters.CharFilter(method="by_status")
+    by_status = django_filters.CharFilter(method="leads_by_status")
     forecast = django_filters.CharFilter(method="by_forecast")
     by_user = django_filters.CharFilter(method="leads_by_user")
     by_account = django_filters.CharFilter(method="list_leads_by_account")
@@ -70,14 +70,22 @@ class LeadFilterSet(FilterSet):
                 return queryset.filter(claimed_by__in=include_list).exclude(claimed_by_id__in=exclude_list).order_by('created_by')
         return queryset
 
-    def by_status(self, qs, name, value):
+    def leads_by_status(self, qs, name, value):
         """ allows list of statuses"""
         if value:
 
             v = value.strip('')
+            v = value.upper()
             v = v.split(',')
 
             return qs.filter(status__in=v)
+        return qs
+
+    def leads_by_rating(self, qs, name, value):
+        if value:
+            v = value.strip('')
+            v = v.split(',')
+            return qs.filter(rating__in=v)
         return qs
 
     def by_forecast(self, qs, name, value):

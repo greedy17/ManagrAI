@@ -12,7 +12,7 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar class="toolbar" @update-filter="updateFilters" :currentRatingFilter="ratingFilter" />
+      <ToolBar class="toolbar" @update-filter="updateFilters" :currentFilters="currentFilters" />
     </div>
     <div class="lists-container-pane">
       <ListsContainer
