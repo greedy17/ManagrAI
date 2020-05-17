@@ -2,7 +2,6 @@ from django.db import models
 from managr.core.models import UserManager, TimeStampModel
 from django.db.models import Sum, Avg
 
-from djmoney.models.fields import MoneyField, Money
 # Create your models here.
 
 
@@ -62,7 +61,7 @@ class Organization(TimeStampModel):
 
     @property
     def avg_amount_closed_contracts(self):
-        return Organization.objects.aggregate(Avg('accounts__leads__amount', output_field=MoneyField()))
+        return Organization.objects.aggregate(Avg('accounts__leads__amount'))
 
 
 class AccountQuerySet(models.QuerySet):

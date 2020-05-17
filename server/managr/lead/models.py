@@ -4,7 +4,6 @@ from managr.lead import constants as lead_constants
 from managr.utils.misc import datetime_appended_filepath
 from django.contrib.postgres.fields import JSONField
 from django.db.models import F, Q, Count
-from djmoney.models.fields import MoneyField
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 
@@ -75,10 +74,10 @@ class Lead(TimeStampModel):
 
     """
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = MoneyField(max_digits=14, decimal_places=2,
-                        default_currency='USD', default=0)
-    closing_amount = MoneyField(max_digits=14, decimal_places=2,
-                                default_currency='USD', default=0)
+    amount = models.PositiveIntegerField(
+        help_text="This field is editable", default=0)
+    closing_amount = models.PositiveIntegerField(
+        help_text="This field is set at close and non-editable", default=0)
     primary_description = models.CharField(max_length=150, blank=True)
     secondary_description = models.CharField(max_length=150, blank=True)
     rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
