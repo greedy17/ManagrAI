@@ -23,14 +23,17 @@
         <Modal v-if="listModal.isOpen" dimmed :width="20">
           <div class="list-modal-container">
             <h3>My Lists</h3>
-            <div :key="i" v-for="(list, i) in myLists.list" class="list-items">
-              <span class="list-items__item__select"
-                ><Checkbox
-                  v-if="!~lists.list.findIndex(lId => lId.id == list.id)"
+            <div :key="i" v-for="(list, i) in usersLists" class="list-items">
+              <span class="list-items__item__select">
+                <!-- findIndex returns the index or -1 in JS 0 is false therefore -1 is not false 
+                  the bitwise NOT of -1 is 0 therefore -1 becomes false everything else becomes true
+                -->
+                <Checkbox
+                  v-if="!~allLists.findIndex(lId => lId.id == list.id)"
                   name="lists"
                   @checkbox-clicked="addToPendingList(list.id)"
-                  :checked="!!addToList.find(mI => mI == list.id)"
-                />{{ lists.list.findIndex(lId => lId.id == list.id) }}</span
+                  :checked="!!addToList.find(mL => mL == list.id)"
+                />{{ allLists.findIndex(l => lId.id == list.id) }}</span
               >
               <span class="list-items__item">{{ list.title }}</span>
             </div>
@@ -43,7 +46,7 @@
           @remove-lead="removeLeadFromList($event, i)"
           v-else
           class="list"
-          v-for="(list, i) in lists.list"
+          v-for="(list, i) in allLists"
           :key="list.id"
           :listName="list.title"
           :listId="list.id"
@@ -160,6 +163,14 @@ export default {
     }
   },
 
+  computed: {
+    usersLists() {
+      return this.myLists.list
+    },
+    allLists() {
+      return this.lists.list
+    },
+  },
   methods: {
     async removeLeadFromList(listId, listIndex) {
       await List.api.removeFromList([this.lead.id], listId)
