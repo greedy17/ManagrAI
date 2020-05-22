@@ -81,9 +81,8 @@ export default {
       }),
       leads: CollectionManager.create({
         ModelClass: Lead,
+        // show all leads on a list
         filters: {
-          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
-          byUser: `-${this.$store.state.user.id}`,
           onList: true,
         },
       }),

@@ -48,26 +48,9 @@ class LeadFilterSet(FilterSet):
         if value:
             value = value.strip()
             user_list = value.split(',')
-            exclude_list = list()
-            include_list = list()
-            for user in user_list:
-                # check if user is in org
-                if u.organization.users.filter(id=user).exists():
-                    if user.startswith('-'):
-                        exclude_list.append(user)
-                    else:
-                        include_list.append(user)
-            if len(include_list) < 1:
-                # When looking for all leads other than the negated id and there are no other
-                # positive searches then assume that we want all leads not assigned to that
-                # particular user and include null values as well
-                include_null = True
-                include_list.extend(
-                    u.organization.users.exclude(id__in=exclude_list))
-
-                return queryset.filter(Q(claimed_by__in=include_list) | Q(claimed_by__isnull=include_null)).exclude(claimed_by_id__in=exclude_list).order_by('created_by')
-            else:
-                return queryset.filter(claimed_by__in=include_list).exclude(claimed_by_id__in=exclude_list).order_by('created_by')
+            users_in_org = u.organization.users.filter(
+                id__in=user_list).values('id', flat=True)
+            return queryset.filter(claimed_by__in=users_in_org)
         return queryset
 
     def leads_by_status(self, qs, name, value):
@@ -176,20 +159,9 @@ class ListFilterSet(FilterSet):
         if value:
             value = value.strip()
             user_list = value.split(',')
-            exclude_list = list()
-            include_list = list()
-            for user in user_list:
-                # check if user is in org
-                if u.organization.users.filter(id=user).exists():
-                    if user.startswith('-'):
-                        exclude_list.append(user)
-                    else:
-                        include_list.append(user)
-                if len(include_list) < 1:
-                    include_list.extend(
-                        u.organization.users.exclude(id__in=exclude_list))
-
-            return queryset.filter(created_by_id__in=include_list).exclude(created_by_id__in=exclude_list).order_by('created_by')
+            users_in_org = u.organization.users.filter(
+                id__in=user_list).values('id', flat=True)
+            return queryset.filter(created_by_id__in=users_in_org)
         return queryset
 
 
