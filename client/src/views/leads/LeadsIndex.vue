@@ -28,7 +28,7 @@
         :isOwner="true"
       />
       <ListsContainer
-        title="Other Lists"
+        title="All Lists"
         :lists="lists.list"
         :leads="leads"
         @list-created="addListToCollection"
@@ -68,8 +68,7 @@ export default {
       lists: CollectionManager.create({
         ModelClass: List,
         filters: {
-          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
-          byUser: `-${this.$store.state.user.id}`,
+          byUser: `${this.$store.state.user.id}`,
         },
       }),
       myLeads: CollectionManager.create({
@@ -112,9 +111,8 @@ export default {
     async removeFromList(info) {
       // an object containing the lead as an array, listId, leadindex
       try {
-        await List.api.removeFromList(info.leads, info.listId)
-
         this.myLists.refreshing = true
+        await List.api.removeFromList(info.leads, info.listId)
       } finally {
         this.myLists.refreshing = false
       }

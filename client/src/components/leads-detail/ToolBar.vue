@@ -113,8 +113,6 @@ import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Checkbox from '@/components/leads-new/CheckBox'
 
-// import Contact from '@/services/contacts'
-
 export default {
   name: 'ToolBar',
   components: {
