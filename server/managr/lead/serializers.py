@@ -171,7 +171,7 @@ class LeadSerializer(serializers.ModelSerializer):
     actions_ref = ActionSerializer(source='actions', read_only=True, many=True)
     contract = serializers.SerializerMethodField()
     linked_contacts_ref = ContactSerializer(
-        source='linked_contacts', many=True)
+        source='linked_contacts', read_only=True, many=True)
 
     class Meta:
         model = Lead
