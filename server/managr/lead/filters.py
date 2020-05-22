@@ -49,7 +49,7 @@ class LeadFilterSet(FilterSet):
             value = value.strip()
             user_list = value.split(',')
             users_in_org = u.organization.users.filter(
-                id__in=user_list).values('id', flat=True)
+                id__in=user_list).values_list('id', flat=True)
             return queryset.filter(claimed_by__in=users_in_org)
         return queryset
 
@@ -160,7 +160,7 @@ class ListFilterSet(FilterSet):
             value = value.strip()
             user_list = value.split(',')
             users_in_org = u.organization.users.filter(
-                id__in=user_list).values('id', flat=True)
+                id__in=user_list).values_list('id', flat=True)
             return queryset.filter(created_by_id__in=users_in_org)
         return queryset
 
