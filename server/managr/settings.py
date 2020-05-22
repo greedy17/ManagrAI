@@ -201,6 +201,7 @@ if USE_AWS_STORAGE:
     AWS_STORAGE_BUCKET_NAME = _env_get_required('AWS_STORAGE_BUCKET_NAME')
     AWS_SECRET_ACCESS_KEY = _env_get_required('AWS_SECRET_ACCESS_KEY')
     AWS_S3_CUSTOM_DOMAIN = AWS_STORAGE_BUCKET_NAME + ".s3.amazonaws.com"
+    # change this to check for env
     AWS_LOCATION = os.environ.get('AWS_LOCATION', '')
 
     MEDIAFILES_LOCATION = AWS_LOCATION + '/media'

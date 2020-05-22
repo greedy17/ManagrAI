@@ -1,0 +1,126 @@
+
+import requests
+from urllib.parse import urlencode
+from requests.exceptions import HTTPError
+from managr.core import constants as core_consts
+import base64
+import json
+SCOPES = (core_consts.SCOPE_EMAIL_READ_ONLY, core_consts.SCOPE_EMAIL_SEND)
+
+
+def gen_auth_url(callback_url, email, magic_token, scopes=(', ').join(SCOPES)):
+
+    query = dict(redirect_uri=callback_url, response_type='code',
+                 login_hint=email, state=magic_token, scopes=scopes, client_id=core_consts.NYLAS_CLIENT_ID)
+    params = urlencode(query)
+    return f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_AUTH_URI}?{params}'
+
+
+def get_access_token(code):
+    """ gets access token from code """
+    base64_secret = base64.b64encode(
+        core_consts.NYLAS_CLIENT_SECRET.encode('ascii')).decode('utf-8')
+    headers = dict(Authorization=f'Basic {base64_secret}')
+    data = dict(client_id=core_consts.NYLAS_CLIENT_ID,
+                client_secret=core_consts.NYLAS_CLIENT_SECRET, grant_type="authorization_code", code=code)
+    """ 
+        Nylas returns a 400 error with a text that is all html
+        Usually this means the code is already in use (aka failed authentication flow and we cannot get the token anymore)
+        Or it is expired/invalid 
+    """
+
+    res = requests.post(
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_AUTH_TOKEN_URI}', data=data, headers=headers)
+    if res.status_code == 200:
+        return res.json()['access_token']
+    elif res.status_code == 400:
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError(res.status_code)
+
+
+def get_account_details(token):
+    """ gets account details from token to store in db """
+    headers = dict(Authorization=f'Bearer {token}')
+    res = requests.get(
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}', headers=headers)
+    return res.json()
+
+
+def revoke_access_token(token):
+    """ function to revoke access token 
+        mostly used for billing if a user changes smtp or is removed
+    """
+    headers = dict(Authorization=f'Bearer {token}')
+    res = requests.post(
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_AUTH_TOKEN_REVOKE_URI}', headers=headers)
+
+    # returns {success:True} on success
+    # if a 401 error is thrown then we have incorrect token stored
+    # we return the 401 error and revoke all access tokens when a new one is created
+    if res.status_code == 200:
+        return res.json()
+    elif res.status_code == 401:
+        """ access token was not verified (aka does not exist) and we have a sync mismatch"""
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError()
+
+
+def revoke_all_access_tokens(account_id, keep_token=''):
+    """ 
+        This function will remove all access tokens for accounts that have more than one 
+        we will be calling this in case of a 401 on revoke (meaning we have out of sync data)
+        and every 24 hours with a cron job
+        manager will be charged for duplicates    
+    """
+    password = ''
+    auth_string = f'{core_consts.NYLAS_CLIENT_SECRET}:{password}'
+    base64_secret = base64.b64encode(
+        auth_string.encode('ascii')).decode('utf-8')
+    headers = dict(Authorization=f'Basic {base64_secret}')
+    data = dict(keep_access_token=keep_token)
+
+    res = requests.post(
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_REVOKE_ALL_TOKENS_URI(account_id)}', headers=headers, data=data)
+    if res.status_code == 200:
+        return res.json()
+    elif res.status_code == 404:
+        """ the user has no tokens to revoke """
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError()
+    return
+
+
+def send_new_email(auth, sender, receipient, message):
+    """ Use Nylas to send emails, pass in the user from which it will send
+        simple version
+    """
+    token = auth
+    from_info = [sender]  # {'name':'','email':''}
+    to_info = receipient
+    subject = message.get('subject', None)
+    body = message.get('body', None)
+    headers = dict(Authorization=(f'Bearer {token}'))
+    data = json.dumps({'from': from_info, 'to': to_info,
+                       "subject": subject, "body": body})
+
+    res = requests.post(
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.SEND_EMAIL_URI}', data=data, headers=headers)
+
+    if res.status_code == 200:
+        return res.json()
+    elif res.status_code == 401:
+        raise HTTPError(res.status_code)
+    elif res.status_code == 400:
+        """ message error format """
+
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError(res.status_code)
+    return
