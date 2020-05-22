@@ -57,7 +57,10 @@ class Organization(TimeStampModel):
     def total_amount_closed_contracts(self):
         total = Organization.objects.aggregate(
             Sum('accounts__leads__closing_amount'))
-        return total
+        if total:
+            return total
+        else:
+            return 0
 
     @property
     def avg_amount_closed_contracts(self):
