@@ -28,9 +28,7 @@ pytz = "==2017.*"
 requests = "==2.*"
 rollbar = "==0.*"
 whitenoise = "==3.*"
-flask = "*"
-nylas = "*"
-django-kronos = "*"
+django-kronos = "==1.*"
 
 [requires]
 python_version = "3.7"
