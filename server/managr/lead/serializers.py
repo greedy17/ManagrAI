@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Lead, Note, ActivityLog, List, File, Forecast, Reminder, ActionChoice, Action, CallNote
-from managr.api.serializers import AccountRefSerializer, ContactSerializer
+from managr.organization.serializers import AccountRefSerializer, ContactSerializer
 from managr.core.models import User
 from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator

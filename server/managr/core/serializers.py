@@ -6,8 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
 from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount
-from managr.api.serializers import OrganizationRefSerializer, AccountRefSerializer
-from managr.api.models import Account
+from managr.organization.serializers import OrganizationRefSerializer, AccountRefSerializer
+from managr.organization.models import Account
 
 
 class EmailAuthAccountSerializer(serializers.ModelSerializer):
@@ -39,6 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
             'type',
             'is_active',
             'is_invited',
+            'is_serviceaccount',
+            'is_staff',
             'full_name',
             'email_auth_account',
             'email_auth_account_ref',
@@ -46,7 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         )
     read_only_fields = ('email', 'organization', 'type',
-                        'is_active', 'is_invited', 'full_name', 'email_auth_account',)
+                        'is_active', 'is_invited', 'full_name', 'email_auth_account', 'is_serviceaccount')
 
 
 class UserLoginSerializer(serializers.ModelSerializer):

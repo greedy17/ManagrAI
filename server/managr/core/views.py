@@ -27,7 +27,7 @@ from rest_framework.response import Response
 from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount
 from .serializers import UserSerializer, UserLoginSerializer,  UserInvitationSerializer
 from .permissions import (IsOrganizationManager, IsSuperUser)
-from managr.api.models import Organization
+from managr.organization.models import Organization
 
 from .integrations import send_new_email
 
@@ -285,43 +285,48 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         u = request.user
 
-        # temporarily hard coding an email to send invitations from will need to use super_user email
-        # or create a special email account in django for this
-        try:
-            ea = EmailAuthAccount.objects.get(
-                email_address='testing@thinknimble.com')
-        except EmailAuthAccount.DoesNotExist:
-            return Response(data={'non_form_errors': 'A user with an email testing@thinknimble.com, needs to be created as superuser'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # in order to invite a user django needs a user to be registered as a service account
+        # use server/manage.py createserviceaccount and supply an email
+        # for now we will only need one email (ex no-reply@) but in the future we will have more
+        # therefore selecting the first email that is of type service_account
 
-        serializer = self.serializer_class(
-            data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        try:
+
+            ea = EmailAuthAccount.objects.filter(
+                user__is_serviceaccount=True).first()
+        except EmailAuthAccount.DoesNotExist:
+            # currently passing if there is an error, when we are ready we will require this
+            pass
+
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data['organization']):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
 
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
         # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
+        if ea:
 
-        token = ea.access_token
-        sender = {'email': ea.email_address, 'name': 'Managr'}
-        recipient = [{
-            'email': response_data['email'], 'name': response_data['first_name']}]
-        message = {"subject": "Invitatin To Join",
-                   "body": 'Your Organization {} has invited you to join Managr, \
+            token = ea.access_token
+            sender = {'email': ea.email_address, 'name': 'Managr'}
+            recipient = [{
+                'email': response_data['email'], 'name': response_data['first_name']}]
+            message = {"subject": "Invitatin To Join",
+                       "body": 'Your Organization {} has invited you to join Managr, \
                    Please click the following link to accept and activate your account \
                        {}'.format(user.organization.name, user.activation_link)
-                   }
-        try:
-            send_new_email(token, sender, recipient, message)
-        except Exception as e:
-            """ this error is most likely foing to be an error on our set up rather than the user_token """
-            pass
+                       }
+            try:
+                send_new_email(token, sender, recipient, message)
+            except Exception as e:
+                """ this error is most likely foing to be an error on our set up rather than the user_token """
+                pass
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)

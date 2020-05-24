@@ -1,5 +1,6 @@
 
 
+
 NYLAS_API_BASE_URL = "https://api.nylas.com"
 EMAIL_AUTH_CALLBACK_URL = "http://localhost:5000/api/connect-email"
 EMAIL_AUTH_URI = "oauth/authorize"

@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
 from managr.lead.models import Lead, List
-from managr.api.models import Organization
+from managr.organization.models import Organization
 
 
 class IsOrganizationManager(permissions.BasePermission):

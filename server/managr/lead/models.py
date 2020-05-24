@@ -81,12 +81,12 @@ class Lead(TimeStampModel):
     primary_description = models.CharField(max_length=150, blank=True)
     secondary_description = models.CharField(max_length=150, blank=True)
     rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
-    account = models.ForeignKey('api.Account', related_name="leads",
+    account = models.ForeignKey('organization.Account', related_name="leads",
                                 on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(
         "core.User", related_name="created_leads", null=True, on_delete=models.SET_NULL)
     linked_contacts = models.ManyToManyField(
-        'api.Contact', related_name='leads', blank=True)
+        'organization.Contact', related_name='leads', blank=True)
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
@@ -331,7 +331,7 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        'api.Organization', on_delete=models.CASCADE, related_name="action_choices")
+        'organization.Organization', on_delete=models.CASCADE, related_name="action_choices")
 
     objects = ActionChoiceQuerySet.as_manager()
 
