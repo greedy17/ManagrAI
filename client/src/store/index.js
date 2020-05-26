@@ -33,6 +33,9 @@ const actions = {
   updateUserToken({ commit }, payload) {
     commit('UPDATE_USERTOKEN', payload)
   },
+  logoutUser({ commit }) {
+    commit('LOGOUT_USER')
+  },
 }
 
 const plugins = [

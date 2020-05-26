@@ -2,8 +2,8 @@
   <div class="list">
     <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title"> {{ list.title }} </span>
-      <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="list-title">{{ list.title }}</span>
+      <span class="list-length">{{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
       <span class="icon">
         <svg
           width="50px"
@@ -41,7 +41,7 @@
       </template>
 
       <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
-        Load More
+        >Load More
       </button>
     </div>
   </div>

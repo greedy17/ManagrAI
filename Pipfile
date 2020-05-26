@@ -30,11 +30,11 @@ rollbar = "==0.*"
 whitenoise = "==3.*"
 django-kronos = "==1.*"
 django-money = "*"
+pylint-django = "*"
 
 [requires]
 python_version = "3.7"
 
 [dev-packages]
-"pep8" = "*"
-pylint = "*"
+pycodestyle = "*"
 "autopep8" = "*"

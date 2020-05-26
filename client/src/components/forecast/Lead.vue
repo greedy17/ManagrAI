@@ -77,7 +77,7 @@ export default {
     updateStatus(value) {
       if (value != 'CLOSED') {
         let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
+        Lead.api.update(this.lead.id, patchData).then((lead) => {
           this.lead.status = lead.status
         })
       } else {
@@ -100,7 +100,7 @@ export default {
         })
       } else {
         // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(response => {
+        Forecast.api.create(this.lead.id, value).then((response) => {
           this.lead.forecastRef = response
           this.lead.forecast = response.id
         })

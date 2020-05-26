@@ -57,7 +57,7 @@ export default {
         })
       } else if (value != 'CLOSED') {
         let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
+        Lead.api.update(this.lead.id, patchData).then((lead) => {
           this.lead.status = lead.status
         })
       } else {
@@ -75,13 +75,13 @@ export default {
           lead: this.lead.id,
           forecast: value,
         }
-        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
+        Forecast.api.update(this.lead.forecast, patchData).then((forecast) => {
           this.lead.forecast = forecast.id
           this.lead.forecastRef = forecast
         })
       } else {
         // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(forecast => {
+        Forecast.api.create(this.lead.id, value).then((forecast) => {
           this.lead.forecast = forecast.id
           this.lead.forecastRef = forecast
         })

@@ -28,7 +28,7 @@ export default {
         return
       }
 
-      List.api.create(this.title).then(response => {
+      List.api.create(this.title).then((response) => {
         this.resetForm()
         this.$refs.input.blur()
         this.$emit('list-created', response.data)

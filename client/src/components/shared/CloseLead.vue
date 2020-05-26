@@ -84,21 +84,21 @@ export default {
         'NOTE: client-side code for finishing this process does exist and works, but there is a server-side bug and so this process is being cut off for server-safety:\n\n Something to do with if a lead has multiple files attached to it. This seems to cause the server-side to crash, on all processes after a lead has multiple files, any time the process has file information serialized into the response (it seems).\n\n IF this happens, to fix it and continue testing you should enter Django shell_plus and clear the files table.',
       )
       return null
-
-      File.api
-        .create(this.file, this.lead.id)
-        .then(response => {
-          return Lead.api.close(this.lead.id, this.amount, response.data.id)
-        })
-        .then(() => {
-          this.lead.status = 'CLOSED'
-          this.$parent.emitCloseModal()
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 4000,
-            message: 'Success! Lead closed!',
-          })
-        })
+      // NRS 5.26.20 - Commenting out this code for now so we don't get the unreachable code prettier error.
+      // File.api
+      //   .create(this.file, this.lead.id)
+      //   .then(response => {
+      //     return Lead.api.close(this.lead.id, this.amount, response.data.id)
+      //   })
+      //   .then(() => {
+      //     this.lead.status = 'CLOSED'
+      //     this.$parent.emitCloseModal()
+      //     this.$Alert.alert({
+      //       type: 'success',
+      //       timeout: 4000,
+      //       message: 'Success! Lead closed!',
+      //     })
+      //   })
     },
     clientSideValidations() {
       let formErrors = {

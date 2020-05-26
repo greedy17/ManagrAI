@@ -4,21 +4,15 @@
       <CloseLead :lead="lead" />
     </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
-      <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
-      <span class="lead-rating"> {{ lead.rating }} </span>
+      <span class="lead-name" @click="toggleDetails">{{ lead.title }}</span>
+      <span class="lead-rating">{{ lead.rating }}</span>
       <div v-if="lead.primaryDescription || lead.secondaryDescription" class="lead-description">
-        <div class="primary">
-          {{ lead.primaryDescription || '-Primary Not Set-' }}
-        </div>
-        <div class="secondary">
-          {{ lead.secondaryDescription || '-Secondary Not Set-' }}
-        </div>
+        <div class="primary">{{ lead.primaryDescription || '-Primary Not Set-' }}</div>
+        <div class="secondary">{{ lead.secondaryDescription || '-Secondary Not Set-' }}</div>
       </div>
-      <div v-else class="lead-description">
-        No Descriptions
-      </div>
-      <span class="lead-amount"> {{ lead.amount | currency }} </span>
-      <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
+      <div v-else class="lead-description">No Descriptions</div>
+      <span class="lead-amount">{{ lead.amount | currency }}</span>
+      <span class="lead-last-update">{{ lead.lastUpdateDate }}</span>
       <LeadForecastDropdown
         :forecast="lead.forecastRef && lead.forecastRef.forecast"
         @updated-forecast="updateForecast"
@@ -27,7 +21,7 @@
       <!--       <div class="lead-lists">
         <LeadList class="lead-list" :listName="'Growth Accounts'" />
         <LeadList class="lead-list" :listName="'Q2 Buyers'" />
-      </div> -->
+      </div>-->
 
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="icon" />
@@ -35,7 +29,7 @@
       <div class="button-container">
         <button v-if="!!lead.claimedBy" @click="routeToRepPage">
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span> Claimed</span>
+          <span>Claimed</span>
         </button>
         <button v-else @click="claimLead">
           <img class="icon" alt="icon" src="@/assets/images/add.svg" />
@@ -53,7 +47,6 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import LeadList from '@/components/shared/LeadList'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
 import CloseLead from '@/components/shared/CloseLead'
@@ -70,7 +63,6 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
-    LeadList,
     CloseLead,
   },
   data() {

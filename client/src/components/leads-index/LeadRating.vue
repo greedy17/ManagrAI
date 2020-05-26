@@ -69,8 +69,6 @@ export default {
   width: 20px;
   height: 20px;
 }
-.svg {
-}
 
 .svg.fill {
   fill: rgba($color: $dark-green, $alpha: 1);

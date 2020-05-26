@@ -45,7 +45,6 @@ class UserManager(BaseUserManager):
         All emails are lowercased automatically.
         """
         email = self.normalize_email(email).lower()
-        print(extra_fields)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -101,7 +100,8 @@ class User(AbstractUser, TimeStampModel):
         help_text=('The magic token is a randomly-generated uuid that can be '
                    'used to identify the user in a non-password based login flow. ')
     )
-    # may need to make this a property as it keeps re-running a migration   is_invited = models.BooleanField(max_length=255, default=False)
+    # may need to make this a property as it keeps re-running a migration
+    # is_invited = models.BooleanField(max_length=255, default=False)
     magic_token_expiration = models.DateTimeField(
         help_text='The datetime when the magic token is expired.',
         null=True
@@ -122,7 +122,7 @@ class User(AbstractUser, TimeStampModel):
     @property
     def magic_token_expired(self):
         if not self.magic_token_expiration:
-            self.magic_token_expiration = timezone.now()+timedelta(days=30)
+            self.magic_token_expiration = timezone.now() + timedelta(days=30)
 
         now = timezone.now()
         return now > self.magic_token_expiration
@@ -135,7 +135,8 @@ class User(AbstractUser, TimeStampModel):
 
         if self.magic_token_expired:
             self.regen_magic_token()
-        # return f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.AUTH_PARAMS}?login_hint={self.email}&client_id={core_consts.NYLAS_CLIENT_ID}&response_type=code&redirect_uri={base_url}&scopes=email.read_only&state={self.magic_token}'
+        # return
+        # f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.AUTH_PARAMS}?login_hint={self.email}&client_id={core_consts.NYLAS_CLIENT_ID}&response_type=code&redirect_uri={base_url}&scopes=email.read_only&state={self.magic_token}'
         return gen_auth_url(core_consts.EMAIL_AUTH_CALLBACK_URL,
                             email=self.email, magic_token=str(self.magic_token))
 
@@ -198,5 +199,6 @@ class EmailAuthAccount(TimeStampModel):
         try:
             return super(EmailAuthAccount, self).save(*args, **kwargs)
         except IntegrityError:
-            raise ValidationError({'non_form_errors': {
-                                  'access_token': 'This User already has an access Token please revoke the access token first'}})
+            raise ValidationError(
+                {'non_form_errors': {'access_token': 'This User already has an access Token \
+                    please revoke the access token first'}})

@@ -84,7 +84,7 @@ export default {
           // element is already on the DOM by this point (it is always present, see template).
           setTimeout(() => this.$refs.passwordInput.focus(), 0)
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false
@@ -112,7 +112,7 @@ export default {
       let loginPromise = User.api.login(this.email, this.password)
 
       loginPromise
-        .then(response => {
+        .then((response) => {
           // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
           let token = response.data.token
           let userData = response.data
@@ -126,7 +126,7 @@ export default {
           }
           this.success = true
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false

@@ -8,9 +8,8 @@
         :active="index === activeTab"
         :index="index"
         @update-active-tab="updateActiveTab"
+        >{{ tab }}</ActionTabHeader
       >
-        {{ tab }}
-      </ActionTabHeader>
     </div>
     <div class="tab-content">
       <div v-if="!listView" class="view-toggle-container">

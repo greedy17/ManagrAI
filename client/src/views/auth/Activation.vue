@@ -70,7 +70,7 @@ export default {
         .then(() => {
           this.success = true
         })
-        .catch(error => {
+        .catch((error) => {
           // NOTE: all form field-error validations are completed client side
           this.success = false
           let { status } = error.response
