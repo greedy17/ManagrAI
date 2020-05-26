@@ -29,6 +29,7 @@ requests = "==2.*"
 rollbar = "==0.*"
 whitenoise = "==3.*"
 django-kronos = "==1.*"
+django-money = "*"
 
 [requires]
 python_version = "3.7"
