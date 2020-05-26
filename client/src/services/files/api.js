@@ -22,32 +22,33 @@ export default class FileAPI {
     return new FileAPI(cls)
   }
 
-  // list({ pagination, filters }) {
-  //   const filtersMap = {
-  //     // Pagination
-  //     page: ApiFilter.create({ key: 'page' }),
-  //     pageSize: ApiFilter.create({ key: 'page_size' }),
-  //   }
-  //   const options = {
-  //     params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
-  //   }
+  list({ pagination, filters }) {
+    const filtersMap = {
+      // Pagination
+      page: ApiFilter.create({ key: 'page' }),
+      pageSize: ApiFilter.create({ key: 'page_size' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
+    }
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+    }
 
-  //   const promise = apiClient()
-  //     .get(FILES_ENDPOINT, options)
-  //     .then(response => response.data)
-  //     .then(data => {
-  //       return {
-  //         ...data,
-  //         results: data.results.map(this.cls.fromAPI),
-  //       }
-  //     })
-  //     .catch(
-  //       apiErrorHandler({
-  //         apiName: 'FileAPI.list',
-  //       }),
-  //     )
-  //   return promise
-  // }
+    const promise = apiClient()
+      .get(FILES_ENDPOINT, options)
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+          results: data.results.map(this.cls.fromAPI),
+        }
+      })
+      .catch(
+        apiErrorHandler({
+          apiName: 'FileAPI.list',
+        }),
+      )
+    return promise
+  }
 
   create(file, leadID) {
     let data = new FormData()

@@ -19,25 +19,111 @@
           </div>
         </div>
       </div>
-      <div class="details-container">
-        <input placeholder="Title" />
-        <input :placeholder="date" />
-      </div>
     </div>
     <div class="call-action-right-pane">
-      <div class="text-area-container">
-        <textarea placeholder="Detail" />
-      </div>
-      <div class="save-button-container">
-        <span class="save-button">Save</span>
+      <div class="details-container">
+        <FormField
+          :errors="callNotesForm.fc['title'].errors"
+          binding="title"
+          labelText="Call Note Title"
+        >
+          <template v-slot:input>
+            <input
+              id="title"
+              :name="callNotesForm.fc['title'].name"
+              class="call-note-title"
+              v-model="callNotesForm.fc['title'].value"
+              placeholder="Reminder Title"
+              @blur="callNotesForm.fc['title'].validate()"
+            />
+          </template>
+        </FormField>
+
+        <FormField
+          :errors="callNotesForm.fc['callDate'].errors"
+          binding="callDate"
+          labelText="Call Date"
+        >
+          <template v-slot:input>
+            <datetime
+              placeholder="Enter the date of the call"
+              :name="callNotesForm.fc['callDate'].name"
+              id="callDate"
+              v-model="callNotesForm.fc['callDate'].value"
+              @close="callNotesForm.fc['callDate'].validate()"
+              class="call-note-detail"
+            />
+          </template>
+        </FormField>
+
+        <FormField
+          :errors="callNotesForm.fc['content'].errors"
+          binding="content"
+          labelText="Content"
+        >
+          <template v-slot:input>
+            <textarea
+              id="content"
+              :name="callNotesForm.fc['content'].name"
+              class="details-container"
+              v-model="callNotesForm.fc['content'].value"
+              placeholder="Content"
+              @blur="callNotesForm.fc['content'].validate()"
+            />
+          </template>
+        </FormField>
+        <div class="save-button-container">
+          <span @click="emitSaveCallNote" class="save-button">Save</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import CallNote from '@/services/call-notes'
+import FormField from '@/components/forms/FormField'
+import { FormGroup } from '@/services/forms/index'
+import { required } from '@/services/forms/validators/index'
 export default {
   name: 'CallAction',
+  components: { FormField },
+  data() {
+    return {
+      callNote: new CallNote(),
+      callNotesForm: new FormGroup({
+        name: 'Call Note Form',
+        fields: [
+          {
+            name: 'title',
+            value: '',
+            validators: [required({ message: 'Please Enter a Title for Your Call Note' })],
+          },
+          {
+            name: 'callDate',
+            value: '',
+            validators: [required({ message: 'Please Enter a Date  for Your Call Note' })],
+          },
+          {
+            name: 'content',
+            value: '',
+            validators: [required({ message: 'Please Enter Some Content for Your Call Note' })],
+          },
+        ],
+      }),
+    }
+  },
+
+  methods: {
+    emitSaveCallNote() {
+      this.callNotesForm.validate()
+      if (!this.callNotesForm.valid) {
+        return
+      }
+
+      this.$emit('save-call-note', this.callNotesForm.Value)
+    },
+  },
   computed: {
     date() {
       let today = new Date()
@@ -64,10 +150,13 @@ export default {
 
 /* left pane below */
 .call-action-left-pane {
+  flex: 1;
   width: 40%;
   padding-right: 3%;
   display: flex;
   flex-flow: column;
+  border-right: 1px lightblue solid;
+  padding: 1rem;
 }
 
 .contacts-container {
@@ -126,38 +215,24 @@ export default {
 }
 
 .details-container {
-  margin-top: 3%;
   display: flex;
   flex-flow: column;
-}
-
-input {
-  @include input-field();
-  height: 2.5rem;
-  margin: 0.375rem 0;
 }
 
 /* right-pane below */
 .call-action-right-pane {
-  flex-grow: 1;
+  flex: 2;
   display: flex;
   flex-flow: column;
+  padding: 0 1rem;
 }
 
-.text-area-container {
+/* .text-area-container {
   height: 95%;
   display: flex;
   align-items: top;
   justify-content: center;
-}
-
-textarea {
-  @include input-field();
-  resize: none;
-  height: 94%;
-  width: 100%;
-  font-size: 14px;
-}
+} */
 
 .save-button-container {
   display: flex;

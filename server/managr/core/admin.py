@@ -18,6 +18,8 @@ class CustomUserAdmin(UserAdmin):
             'is_active',
             'is_invited',
             'magic_token_expiration',
+            'is_serviceaccount',
+            'is_staff',
             'organization'
         )}),
     )

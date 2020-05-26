@@ -65,6 +65,7 @@ export default {
   width: 100vw;
   height: 100vh;
   z-index: 1000;
+  max-height: 100vh !important;
   display: flex;
   flex-flow: column;
   align-items: center;

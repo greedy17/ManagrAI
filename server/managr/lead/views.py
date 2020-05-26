@@ -13,6 +13,7 @@ from rest_framework import (
     views,
     viewsets,
 )
+from django.db import IntegrityError
 from rest_framework import (
     viewsets, mixins, generics, status, filters, permissions
 )
@@ -22,12 +23,13 @@ from rest_framework.response import Response
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
 from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
+from .serializers import LeadSerializer, LeadVerboseSerializer,  NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
     ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet, ForecastFilterSet
-from managr.api.models import Contact, Account
+from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet, NoteFilterSet, FileFilterSet, CallNoteFilterSet
+from managr.organization.models import Contact, Account
 from managr.lead import constants as lead_constants
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -36,9 +38,17 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
     filter_class = LeadFilterSet
+    filter_backends = (DjangoFilterBackend, LeadRatingOrderFiltering,)
+    ordering = ('rating',)
 
     def get_queryset(self):
         return Lead.objects.for_user(self.request.user)
+
+    def get_serializer_class(self):
+        is_verbose = self.request.GET.get('verbose', None)
+        if is_verbose is not None and is_verbose.lower() == 'true':
+            return LeadVerboseSerializer
+        return LeadSerializer
 
     def create(self, request, *args, **kwargs):
         """ manually set org and only allow accounts in org """
@@ -62,6 +72,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         except Account.DoesNotExist:
             raise PermissionDenied()
         # if there are contacts to be added first check that contacts exist or create them
+        # TODO: PB 05/15/20 fix issue where This get_or_create allows creating a user with a blank first_name and number
         contacts = data.pop('linked_contacts', [])
         contact_list = list()
         for contact in contacts:
@@ -161,6 +172,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
 class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly)
+    filter_class = (ListFilterSet)
     serializer_class = ListSerializer
 
     def get_queryset(self):
@@ -203,13 +215,17 @@ class ListViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         # TODO: Check if lead is in org 05/02/20
         new_leads = request.data.get('leads', [])
         for lead in new_leads:
-            l.leads.add(lead)
-            l.save()
+            try:
+                l.leads.add(lead)
+                l.save()
+            except IntegrityError:
+                # lead already on list so just skip
+                pass
 
         serializer = self.serializer_class(self.get_object())
         return Response(serializer.data)
 
-    @action(methods=['delete'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
+    @action(methods=['post'], permission_classes=(IsSalesPerson, ), detail=True, url_path="remove-from-list")
     def remove_from_list(self, request, *args, **kwargs):
         """ End point to allow removal of leads to list after created """
         l = self.get_object()
@@ -228,6 +244,7 @@ class NoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = NoteSerializer
+    filter_class = (NoteFilterSet)
 
     def get_queryset(self):
         return Note.objects.for_user(self.request.user)
@@ -283,6 +300,7 @@ class CallNoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = CallNoteSerializer
+    filter_class = (CallNoteFilterSet)
 
     def get_queryset(self):
         return CallNote.objects.for_user(self.request.user)
@@ -332,7 +350,7 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
                     request.user).get(pk=lead)
             except Lead.DoesNotExist:
                 raise PermissionDenied()
-            data = request.data.get('reminders', None)
+            data = request.data.get('reminder', None)
             data['created_for'] = lead
             data['created_by'] = user.id
 
@@ -450,6 +468,7 @@ class FileViewSet(mixins.CreateModelMixin,
     """
     serializer_class = FileSerializer
     permission_classes = (IsSuperUser | IsSalesPerson,)
+    filter_class = (FileFilterSet)
 
     def get_queryset(self):
         return File.objects.for_user(self.request.user)

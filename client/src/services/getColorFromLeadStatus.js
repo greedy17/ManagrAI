@@ -5,6 +5,7 @@ const statusToPrimaryColor = {
   waiting: '#9596B4',
   closed: '#2F9E54',
   lost: '#9596B4',
+  booked: 'rgba(165, 55, 253, 1)',
   null: '#9596B4',
 }
 
@@ -15,6 +16,7 @@ const statusToSecondaryColor = {
   waiting: '#EFEFF5',
   closed: '#D1ECDD',
   lost: '#EFEFF5',
+  booked: 'rgba(165, 55, 253, 0.5)', // using rgba and changing opacity rather than color
   null: '#EFEFF5',
 }
 

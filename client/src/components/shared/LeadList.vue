@@ -20,6 +20,10 @@ export default {
       type: String,
       required: true,
     },
+    listId: {
+      type: String,
+      required: true,
+    },
     dark: {
       type: Boolean,
     },
@@ -33,8 +37,7 @@ export default {
       this.$emit('clicked-list-name', leadListID)
     },
     handleIconClick() {
-      let leadListID = null
-      this.$emit('deleted-lead-list', leadListID)
+      this.$emit('remove-lead', this.listId)
     },
   },
 }

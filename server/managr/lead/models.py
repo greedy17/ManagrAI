@@ -3,6 +3,7 @@ from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.lead import constants as lead_constants
 from managr.utils.misc import datetime_appended_filepath
 from django.contrib.postgres.fields import JSONField
+from django.db.models import F, Q, Count
 LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
 # Create your models here.
 
@@ -18,9 +19,11 @@ LEAD_STATUS_DEMO = 'DEMO'
 LEAD_STATUS_WAITING = 'WAITING'
 LEAD_STATUS_CLOSED = 'CLOSED'
 LEAD_STATUS_LOST = 'LOST'
+LEAD_STATUS_BOOKED = 'BOOKED'
 LEAD_STATUS_CHOICES = (
     (LEAD_STATUS_READY, 'Ready'), (LEAD_STATUS_TRIAL, 'Trial'), (LEAD_STATUS_DEMO,
-                                                                 'Demo'), (LEAD_STATUS_WAITING, 'Waiting'), (LEAD_STATUS_CLOSED, 'Closed'), (LEAD_STATUS_LOST, 'Lost'),
+                                                                 'Demo'), (LEAD_STATUS_WAITING, 'Waiting'), (LEAD_STATUS_CLOSED, 'Closed'),
+    (LEAD_STATUS_LOST, 'Lost'), (LEAD_STATUS_BOOKED, 'Booked')
 )
 FORECAST_FIFTY_FIFTY = '50/50'
 FORECAST_NA = 'NA'
@@ -78,12 +81,12 @@ class Lead(TimeStampModel):
     primary_description = models.CharField(max_length=150, blank=True)
     secondary_description = models.CharField(max_length=150, blank=True)
     rating = models.IntegerField(choices=LEAD_RATING_CHOCIES, default=1)
-    account = models.ForeignKey('api.Account', related_name="leads",
+    account = models.ForeignKey('organization.Account', related_name="leads",
                                 on_delete=models.CASCADE, blank=False, null=True)
     created_by = models.ForeignKey(
         "core.User", related_name="created_leads", null=True, on_delete=models.SET_NULL)
     linked_contacts = models.ManyToManyField(
-        'api.Contact', related_name='leads', blank=True)
+        'organization.Contact', related_name='leads', blank=True)
     status = models.CharField(
         max_length=255, choices=LEAD_STATUS_CHOICES, help_text="Status in the sale process", null=True)
     claimed_by = models.ForeignKey(
@@ -112,6 +115,11 @@ class Lead(TimeStampModel):
             except File.DoesNotExist:
                 return None
         return None
+
+    @property
+    def list_count(self):
+        """ property to define count of lists a lead is on """
+        return self.lists.count()
 
 
 class ListQuerySet(models.QuerySet):
@@ -183,9 +191,9 @@ class BaseNoteQuerySet(models.QuerySet):
 
 
 class BaseNote(TimeStampModel):
-    """ 
-        This is a Base model for all note style models 
-        Reminders, Notes and CallNotes all inherit from this base model 
+    """
+        This is a Base model for all note style models
+        Reminders, Notes and CallNotes all inherit from this base model
         Notes does not override or add any extra fields, however the other two do.
         Note all models inherit the parent queryset manager
     """
@@ -218,7 +226,7 @@ class Reminder(BaseNote):
         Reminders are not auto set to notify, in order to notify they will need to be attached to a notification
 
     """
-    datetime_for = models.DateTimeField()
+    datetime_for = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False)
     # TODO: - will build this out on a separate branch pb
     notification = models.ForeignKey(
@@ -241,7 +249,7 @@ class Reminder(BaseNote):
 
 
 class CallNote(BaseNote):
-    """ this class (distinct from the call class) is also inherited from the base note class 
+    """ this class (distinct from the call class) is also inherited from the base note class
         It will contain data that refers to a call (like call notes)
     """
     # TODO: Ask marcy about who the participants are, if they are only internal we can use a UserModel FK
@@ -323,7 +331,7 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        'api.Organization', on_delete=models.CASCADE, related_name="action_choices")
+        'organization.Organization', on_delete=models.CASCADE, related_name="action_choices")
 
     objects = ActionChoiceQuerySet.as_manager()
 

@@ -12,18 +12,28 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar
-        class="toolbar"
-        @updated-rating-filter="updateRatingFilter"
-        :currentRatingFilter="ratingFilter"
-      />
+      <ToolBar class="toolbar" @update-filter="updateFilters" :currentFilters="currentFilters" />
     </div>
     <div class="lists-container-pane">
       <ListsContainer
-        :lists="lists.list"
-        :leadsWithoutList="leadsWithoutList"
-        :allLeads="allLeads"
+        title="My Lists"
+        :leads="myLeads"
+        :lists="myLists.list"
         @list-created="addListToCollection"
+        @toggle-onlist="applyMyLeadsOnListFilter"
+        :showCreateNew="true"
+        :loading="myLists.refreshing || myLeads.refreshing"
+        @delete-list="deleteList"
+        @remove-from-list="removeFromList"
+        :isOwner="true"
+      />
+      <ListsContainer
+        title="All Lists"
+        :lists="lists.list"
+        :leads="leads"
+        @list-created="addListToCollection"
+        @toggle-onlist="applyLeadsOnListFilter"
+        :loading="leads.refreshing || lists.refreshing"
       />
     </div>
   </div>
@@ -49,65 +59,116 @@ export default {
     return {
       loading: true,
       ratingFilter: null,
-      lists: CollectionManager.create({
+      myLists: CollectionManager.create({
         ModelClass: List,
-      }),
-      leadsWithoutList: CollectionManager.create({
-        ModelClass: Lead,
         filters: {
-          onList: 'False',
+          byUser: this.$store.state.user.id,
         },
       }),
-      allLeads: CollectionManager.create({
+      lists: CollectionManager.create({
+        ModelClass: List,
+        filters: {
+          byUser: `${this.$store.state.user.id}`,
+        },
+      }),
+      myLeads: CollectionManager.create({
         ModelClass: Lead,
+        filters: {
+          byUser: this.$store.state.user.id,
+          onList: true,
+        },
+      }),
+      leads: CollectionManager.create({
+        ModelClass: Lead,
+        // show all leads on a list
+        filters: {
+          onList: true,
+        },
       }),
     }
   },
   created() {
     this.refreshCollections()
   },
+  computed: {
+    isCurrentRoute() {
+      return this.$route.name == 'LeadsIndex'
+    },
+    currentFilters() {
+      // all filters should be the same across the collections
+      return this.lists.filters
+    },
+    isLoading() {
+      return (
+        this.lists.refreshing ||
+        this.myLists.refreshing ||
+        this.leads.refreshing ||
+        this.myLeads.refreshing
+      )
+    },
+  },
   methods: {
+    async removeFromList(info) {
+      // an object containing the lead as an array, listId, leadindex
+      try {
+        this.myLists.refreshing = true
+        await List.api.removeFromList(info.leads, info.listId)
+      } finally {
+        this.myLists.refreshing = false
+      }
+    },
+    async deleteList(listInfo) {
+      this.myLists.refreshing = true
+
+      await List.api.deleteList(listInfo.id)
+      // nested component wont react to splice
+      this.$set(this.myLists, 'lists', this.myLists.list.splice(listInfo.index, 1))
+    },
     refreshCollections() {
-      this.applyFiltersToCollections()
       let promises = [
         this.lists.refresh(),
-        this.leadsWithoutList.refresh(),
-        this.allLeads.refresh(),
+        this.myLists.refresh(),
+        this.leads.refresh(),
+        this.myLeads.refresh(),
+        //this.leadsWithoutList.refresh(),
+        //this.allLeads.refresh(),
       ]
       Promise.all(promises).then(() => {
         this.loading = false
       })
     },
-    applyFiltersToCollections() {
-      // apply lead-rating filter
-      // this.lists.filters.rating = this.ratingFilter // filter structure pending (server-side WIP)
-      this.leadsWithoutList.filters.rating = this.ratingFilter
-      this.allLeads.filters.rating = this.ratingFilter
-      // apply lead-status filter
-      // ...
-      // apply lead-forecast filter
-      // ...
-    },
     toggleView() {
       this.$router.push({ name: 'Forecast' })
     },
     addListToCollection(list) {
-      this.lists.list.unshift(list)
+      this.myLists.list.unshift(list)
     },
-    updateRatingFilter(rating) {
-      // if the current filter option was clicked, then remove the ratingFiler
-      if (this.ratingFilter == rating) {
-        this.ratingFilter = null
-      } else {
-        this.ratingFilter = rating
+    async applyMyLeadsOnListFilter(val) {
+      this.myLeads.filters['onList'] = val
+      await this.myLeads.refresh()
+    },
+    async applyLeadsOnListFilter(val) {
+      this.leads.filters['onList'] = val
+      await this.leads.refresh()
+    },
+    updateFilters(filter) {
+      if (this.lists.filters[filter.key] == filter.value) {
+        filter.value = null
       }
-      this.loading = true
+      // only update if there is a change
+      // all collections should have the same filters so only
+      // need one source of truth
+      // if a collection does not have a filter
+      // in its API filter class it will be removed on the request
+      // components wont react to changes in obj[key] value
+      // alt could have created a new list and set it to that
+      //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
+      this.$set(this.lists.filters, filter.key, filter.value)
+      this.$set(this.myLists.filters, filter.key, filter.value)
+      this.$set(this.leads.filters, filter.key, filter.value)
+      this.$set(this.myLeads.filters, filter.key, filter.value)
+
       this.refreshCollections()
-    },
-  },
-  computed: {
-    isCurrentRoute() {
-      return this.$route.name == 'LeadsIndex'
     },
   },
 }

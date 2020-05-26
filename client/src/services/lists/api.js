@@ -12,7 +12,9 @@ export default class ListAPI {
   constructor(cls) {
     this.cls = cls
   }
-
+  get client() {
+    return apiClient()
+  }
   /**
    * Factory method to create a new instance of `UserAPI`.
    *
@@ -27,6 +29,8 @@ export default class ListAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      byUser: ApiFilter.create({ key: 'by_user' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -55,5 +59,31 @@ export default class ListAPI {
       .post(LISTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ListAPI.create' }))
     return promise
+  }
+  async deleteList(listId) {
+    const url = `${LISTS_ENDPOINT}/${listId}`
+    try {
+      await this.client.delete(url)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.create' })
+    }
+  }
+  async removeFromList(leads, listId) {
+    // array of leads to remove
+    const url = `${LISTS_ENDPOINT}${listId}/remove-from-list/`
+    try {
+      await this.client.post(url, { leads })
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.removeFromList' })
+    }
+  }
+  async addToList(leads, listId) {
+    // array of leads to add
+    const url = `${LISTS_ENDPOINT}${listId}/add-to-list/`
+    try {
+      await this.client.post(url, { leads })
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ListAPI.removeFromList' })
+    }
   }
 }

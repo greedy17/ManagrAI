@@ -3,39 +3,17 @@
     <div class="header section-shadow">
       KPIs
     </div>
-    <FilterByRep :reps="reps" :activeReps="activeReps" @toggle-rep-in-filter="toggleRepInFilter" />
   </div>
 </template>
 
 <script>
-import FilterByRep from '@/components/shared/FilterByRep'
-
-const exampleReps = [
-  { id: 1, name: 'Marcy Ewald' },
-  { id: 2, name: 'Pari Baker' },
-  { id: 3, name: 'Bruno Garcia Gonzalez' },
-]
-
 export default {
   name: 'KPIs',
-  components: { FilterByRep },
+  components: {},
   data() {
-    return {
-      reps: exampleReps,
-      activeReps: {}, // for the filter
-    }
+    return {}
   },
-  methods: {
-    toggleRepInFilter(repID) {
-      // depending on state of this.activeReps --> add or make false at that key
-      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
-      if (!this.activeReps[repID]) {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: true })
-      } else {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: false })
-      }
-    },
-  },
+  methods: {},
 }
 </script>
 
@@ -46,8 +24,7 @@ export default {
 .kpis {
   @include standard-border();
   background-color: $white;
-  height: 15rem;
-  width: 15rem;
+
   display: flex;
   flex-flow: column;
 }

@@ -45,6 +45,7 @@ class UserManager(BaseUserManager):
         All emails are lowercased automatically.
         """
         email = self.normalize_email(email).lower()
+        print(extra_fields)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -52,9 +53,10 @@ class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a regular User with the given email and password."""
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
-        extra_fields.setdefault('is_active', False)
+        extra_fields['is_staff'] = False
+        extra_fields['is_superuser'] = False
+        extra_fields['is_active'] = False
+        extra_fields['is_serviceaccount'] = False
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -62,6 +64,15 @@ class UserManager(BaseUserManager):
         extra_fields['is_staff'] = True
         extra_fields['is_superuser'] = True
         extra_fields['is_active'] = True
+        extra_fields['is_serviceaccount'] = False
+        return self._create_user(email, password, **extra_fields)
+
+    def create_serviceaccount(self, email, password, **extra_fields):
+        """ Create service accounts that will be used to send emails/notifications etc """
+        extra_fields['is_staff'] = True
+        extra_fields['is_superuser'] = False
+        extra_fields['is_active'] = True
+        extra_fields['is_serviceaccount'] = True
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -73,8 +84,10 @@ class User(AbstractUser, TimeStampModel):
     REQUIRED_FIELDS = []
     username = None
     email = models.EmailField(unique=True)
+    is_serviceaccount = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
     organization = models.ForeignKey(
-        'api.Organization', related_name="users", on_delete=models.SET_NULL, null=True)
+        'organization.Organization', related_name="users", on_delete=models.SET_NULL, null=True)
     type = models.CharField(choices=ACCOUNT_TYPES,
                             max_length=255, default=ACCOUNT_TYPE_MANAGER)
     first_name = models.CharField(max_length=255, blank=True, null=False)
@@ -116,7 +129,7 @@ class User(AbstractUser, TimeStampModel):
 
     @property
     def email_auth_link(self):
-        """ 
+        """
         This property sets the user specific url for authorizing the users email to give Nylas access
         """
 

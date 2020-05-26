@@ -7,47 +7,31 @@
       <div class="filter-header">Rating</div>
       <div class="filter-options">
         <LeadRating
+          v-for="(n, i) in 5"
+          :key="'rating' + '-' + (5 - i)"
           class="option"
-          :rating="5"
-          :isActive="5 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="4"
-          :isActive="4 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="3"
-          :isActive="3 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="2"
-          :isActive="2 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
-        />
-        <LeadRating
-          class="option"
-          :rating="1"
-          :isActive="1 === currentRatingFilter"
-          @updated-rating-filter="emitUpdatedRatingFilter"
+          :selected="currentFilters.byRating ? currentFilters.byRating : null"
+          :rating="6 - n"
+          @update-rating-filter="emitUpdateFilter({ key: 'byRating', value: $event })"
         />
       </div>
     </div>
     <div class="filter section-shadow">
       <div class="filter-header">Status</div>
       <div class="filter-options">
-        <div class="option" v-for="status in statusEnums" :key="status">{{ status }}</div>
-      </div>
-    </div>
-    <div class="filter">
-      <div class="filter-header">Forecast</div>
-      <div class="filter-options">
-        <div class="option" v-for="forecast in forecastEnums" :key="forecast">{{ forecast }}</div>
+        <div
+          class="option"
+          @click="emitUpdateFilter({ key: 'byStatus', value: status })"
+          v-for="status in statusEnums"
+          :key="status"
+          :class="{
+            active: currentFilters.byStatus
+              ? currentFilters.byStatus.toLowerCase() == status.toLowerCase()
+              : false,
+          }"
+        >
+          {{ status }}
+        </div>
       </div>
     </div>
   </div>
@@ -57,28 +41,25 @@
 import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
 
-const listEnums = ['Growth Accounts', 'Q2 Buyers']
-
 export default {
   name: 'ListsToolBar',
   components: {
     LeadRating,
   },
   props: {
-    currentRatingFilter: {
-      required: true,
+    currentFilters: {
+      type: Object,
     },
   },
   data() {
     return {
       statusEnums,
       forecastEnums,
-      listEnums,
     }
   },
   methods: {
-    emitUpdatedRatingFilter(rating) {
-      this.$emit('updated-rating-filter', rating)
+    emitUpdateFilter(item) {
+      this.$emit('update-filter', item)
     },
   },
 }
@@ -151,11 +132,17 @@ export default {
 
     .option {
       height: 1.75rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      max-width: 6rem;
     }
   }
 }
 
 .list {
   margin-bottom: 0.875rem;
+}
+.active {
+  color: rgba($color: $dark-green, $alpha: 1);
 }
 </style>

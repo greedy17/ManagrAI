@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'managr.core',
     'managr.api',
     'managr.lead',
+    'managr.organization',
     # Django
     'django.contrib.admin',
     'django.contrib.auth',
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'django_extensions',
+    'djmoney',
 ]
 
 MIDDLEWARE = [

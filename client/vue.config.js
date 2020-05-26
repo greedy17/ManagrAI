@@ -4,7 +4,8 @@ module.exports = {
   devServer: {
     proxy: {
       '/api/': {
-        target: (process.env.VUE_APP_DEV_SERVER_BACKEND || '{staging_full_url}') + '/api/',
+        target:
+          (process.env.VUE_APP_DEV_SERVER_BACKEND || 'mymanagrapp-staging.herokuapp.com') + '/api/',
         changeOrigin: true,
         pathRewrite: {
           '^/api': '',

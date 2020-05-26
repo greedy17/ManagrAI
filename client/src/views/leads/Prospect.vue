@@ -4,7 +4,7 @@
       <ToolBar />
     </div>
     <div class="lists-pane">
-      <AccountsContainer :accounts="accounts" />
+      <AccountsContainer :accounts="accounts.list" />
     </div>
   </div>
 </template>
@@ -12,7 +12,8 @@
 <script>
 import ToolBar from '@/components/prospect/ToolBar'
 import AccountsContainer from '@/components/prospect/AccountsContainer'
-import { getSerializedAccounts } from '@/db.js'
+import Account from '@/services/accounts'
+import CollectionManager from '@/services/collectionManager'
 
 // import CollectionManager from '@/services/collectionManager'
 
@@ -24,12 +25,18 @@ export default {
   },
   data() {
     return {
-      accounts: null,
+      accounts: CollectionManager.create({
+        ModelClass: Account,
+        filters: {
+          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
+        },
+      }),
     }
   },
-  created() {
-    this.accounts = getSerializedAccounts()
+  async created() {
+    await this.accounts.refresh()
   },
+  methods: {},
 }
 </script>
 

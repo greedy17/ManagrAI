@@ -34,7 +34,11 @@ export default class LeadAPI {
 
       onList: ApiFilter.create({ key: 'on_list' }),
       byList: ApiFilter.create({ key: 'by_list' }),
-      rating: ApiFilter.create({ key: 'rating' }),
+      byRating: ApiFilter.create({ key: 'by_rating' }),
+      byUser: ApiFilter.create({ key: 'by_user' }),
+      orderBy: ApiFilter.create({ key: 'order_by' }),
+      byAccount: ApiFilter.create({ key: 'by_account' }),
+      byStatus: ApiFilter.create({ key: 'by_status' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

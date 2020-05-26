@@ -1,30 +1,60 @@
 <template>
   <div class="toolbar">
-    <div class="top-menu">
+    <!-- Hidding WIP as Marcy requested PB 05/15/2020    
+   <div class="top-menu">
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
-    </div>
+    </div> -->
     <div class="lead-name">
       <h2>{{ lead.title }}</h2>
     </div>
     <div class="rating">
-      <LeadRating :label="true" :rating="lead.rating" @updated-rating="emitUpdatedRating" />
+      <LeadRating
+        :label="true"
+        :rating="lead.rating"
+        @close-modal="listModal.isOpen = false"
+        @updated-rating="emitUpdatedRating"
+      />
     </div>
     <div class="lead-lists">
       <div class="header">Lists</div>
       <div class="container">
-        <p v-if="!lead.lists">N/A</p>
+        <button @click="openListsModal">Add to A List</button>
+        <Modal v-if="listModal.isOpen" dimmed :width="20">
+          <div class="list-modal-container">
+            <h3>My Lists</h3>
+            <div :key="i" v-for="(list, i) in usersLists" class="list-items">
+              <span class="list-items__item__select">
+                <!-- findIndex returns the index or -1 in JS 0 is false therefore -1 is not false 
+                  the bitwise NOT of -1 is 0 therefore -1 becomes false everything else becomes true
+                -->
+                <Checkbox
+                  v-if="!~allLists.findIndex(lId => lId.id == list.id)"
+                  name="lists"
+                  @checkbox-clicked="addToPendingList(list.id)"
+                  :checked="!!addToList.find(mL => mL == list.id)"
+                />{{ allLists.findIndex(l => lId.id == list.id) }}</span
+              >
+              <span class="list-items__item">{{ list.title }}</span>
+            </div>
+            <button @click="addLeadsToList">Save</button>
+            <button @click="listModal.isOpen = false">Cancel</button>
+          </div>
+        </Modal>
+        <p v-if="lists.pagination.totalCount <= 0">N/A</p>
         <LeadList
+          @remove-lead="removeLeadFromList($event, i)"
           v-else
           class="list"
-          v-for="list in lead.lists"
+          v-for="(list, i) in allLists"
           :key="list.id"
           :listName="list.title"
+          :listId="list.id"
           :dark="true"
         />
       </div>
     </div>
-    <div class="account-link" @click="goToAccount">Account</div>
+    <div class="account-link" @click="goToAccount">{{ lead.accountRef.name }}</div>
     <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
@@ -45,9 +75,11 @@
         <ComponentLoadingSVG />
       </div>
       <div v-else class="contacts-container">
-        <div class="contact section-shadow" v-for="contact in exampleContacts" :key="contact.id">
+        <div class="contact section-shadow" v-for="contact in contacts.list" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
-          <span class="name">{{ contact.name }}</span>
+          <span class="name">{{
+            contact.fullName.length > 0 ? contact.fullName : contact.email
+          }}</span>
           <div class="phone button">
             <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
           </div>
@@ -65,10 +97,13 @@
         <span>Files</span>
       </div>
       <div class="files-container">
-        <div class="file section-shadow" v-for="file in exampleFiles" :key="file">
-          <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-          {{ file }}
-        </div>
+        <template v-if="files.list.length > 0">
+          <div class="file section-shadow" v-for="file in files.lists" :key="file">
+            <img class="icon" src="@/assets/images/document.svg" alt="icon" />
+            {{ file }}
+          </div>
+        </template>
+        <span v-else class="no-items-message">No Files</span>
       </div>
     </div>
   </div>
@@ -77,40 +112,91 @@
 <script>
 import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
-// import Contact from '@/services/contacts'
-
-const exampleFiles = ['Filename.pdf', 'filename2.pdf', 'filename3.jpeg']
-const exampleContacts = [
-  { id: 1, name: 'Sara Smith' },
-  { id: 2, name: 'Jake Murray' },
-]
+import CollectionManager from '@/services/collectionManager'
+import List from '@/services/lists'
+import Checkbox from '@/components/leads-new/CheckBox'
 
 export default {
   name: 'ToolBar',
   components: {
     LeadRating,
     LeadList,
+    Checkbox,
   },
   props: {
     lead: {
       type: Object,
       required: true,
     },
+    lists: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
+
+    contacts: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
+    files: {
+      type: Object,
+      default: () => CollectionManager.create(),
+    },
   },
   data() {
     return {
-      exampleFiles,
-      exampleContacts,
+      //leads to add to a list
+      addToList: [],
+      listModal: {
+        isOpen: false,
+      },
+      myLists: CollectionManager.create({
+        ModelClass: List,
+        filters: {
+          byUser: this.$store.state.user.id,
+        },
+      }),
       editAmount: false,
       tempAmount: this.lead.amount,
-      contacts: null,
-      contactsLoading: false, // start @ true once things built out, if going the ContactAPI.retrieve route
+
+      contactsLoading: false,
+      // start @ true once things built out, if going the ContactAPI.retrieve route
     }
   },
-  created() {
-    // this.fetchContacts()
+
+  computed: {
+    usersLists() {
+      return this.myLists.list
+    },
+    allLists() {
+      return this.lists.list
+    },
   },
   methods: {
+    async removeLeadFromList(listId, listIndex) {
+      await List.api.removeFromList([this.lead.id], listId)
+      this.lists.list.splice(listIndex, 1)
+    },
+    async addLeadsToList() {
+      // make backend endpoint for this to be easier
+      let promises = this.addToList.map(l => List.api.addToList([this.lead.id], l))
+      try {
+        await Promise.all(promises)
+      } finally {
+        this.listModal.isOpen = false
+      }
+    },
+    addToPendingList(id) {
+      let index = this.addToList.findIndex(i => i == id)
+      if (index > -1) {
+        this.addToList.splice(index, 1)
+      } else {
+        this.addToList.push(id)
+      }
+    },
+    async openListsModal() {
+      await this.myLists.refresh()
+      this.listModal.isOpen = true
+    },
     // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend in a coming sprint.
     // Instead we may serialize contacts-data within LeadAPI.retrieve
     // fetchContacts() {
@@ -212,13 +298,15 @@ export default {
   .container {
     display: flex;
     flex-flow: column;
+    max-height: 10rem;
+    overflow-y: scroll;
 
     p {
       margin-left: 1rem;
     }
 
     .list {
-      margin-bottom: 0.625rem;
+      margin: 0.625rem;
       height: 1.75rem;
     }
   }
@@ -384,6 +472,25 @@ export default {
       height: 1.25rem;
       opacity: 0.6;
       margin-right: 1rem;
+    }
+  }
+}
+.no-items-message {
+  font-weight: bold;
+  align-self: center;
+  width: 25%;
+  margin: 1rem 0.75rem;
+}
+.list-items {
+  display: flex;
+  padding: 1rem;
+  border-bottom: 1px solid $mid-gray;
+  &__item {
+    flex: 2;
+    margin: 0.5rem;
+
+    &__select {
+      flex: 0.5;
     }
   }
 }

@@ -11,6 +11,7 @@ export default class Account {
     type = null,
     state = null,
     organization = null,
+    leadCount = 0,
   } = {}) {
     Object.assign(this, {
       id,
@@ -19,6 +20,7 @@ export default class Account {
       type,
       state,
       organization,
+      leadCount,
     })
   }
 

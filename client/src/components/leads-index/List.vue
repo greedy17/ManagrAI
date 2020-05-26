@@ -4,10 +4,42 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ list.title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="icon">
+        <svg
+          width="50px"
+          height="50px"
+          class="icon"
+          viewBox="0 0 30 30"
+          v-if="isOwner"
+          @click.stop="$emit('delete-list', list.id)"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#remove" />
+        </svg>
+      </span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="trueList.refreshing" />
-      <Lead v-else v-for="lead in trueList.list" :key="lead.id" :lead="lead" />
+      <template v-else>
+        <div :key="i" class="list-leads__row" v-for="(lead, i) in trueList.list">
+          <span :key="'rm-' + lead.id" class="list-leads__row__action icon">
+            <svg
+              width="50px"
+              height="50px"
+              class="icon"
+              viewBox="0 0 30 30"
+              v-if="isOwner"
+              @click.stop="removeFromList([lead.id], list.id, i)"
+            >
+              <use xlink:href="@/assets/images/svg-repo.svg#remove" />
+            </svg>
+          </span>
+          <span class="list-leads__row__lead">
+            <Lead :key="lead.id" :lead="lead" />
+          </span>
+        </div>
+        <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
+      </template>
+
       <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
         Load More
       </button>
@@ -19,6 +51,7 @@
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
+import List from '@/services/lists'
 
 export default {
   name: 'List',
@@ -28,23 +61,56 @@ export default {
       type: Object,
       required: true,
     },
+    isOwner: {
+      // determines if CRUD is available
+      type: Boolean,
+      default: false,
+    },
+    leadFilters: {
+      type: Object,
+      default: () => {},
+    },
   },
   components: {
     Lead,
   },
+  watch: {
+    leadFilters: {
+      deep: true,
+      async handler() {
+        this.madeInitialRetrieval = false
+        this.showLeads = false
+      },
+    },
+  },
   data() {
     return {
+      loading: false,
       showLeads: false,
       madeInitialRetrieval: false,
       trueList: CollectionManager.create({
         ModelClass: LeadModel,
-        filters: { byList: this.list.id },
+        filters: { byList: this.list.id, ...this.leadFilters },
       }),
     }
   },
   methods: {
+    async removeFromList(leads, listId) {
+      try {
+        this.loading = true
+        await List.api.removeFromList(leads, listId)
+        this.trueList.refresh()
+
+        this.list.leadCount = this.list.leadCount - 1
+      } finally {
+        this.loading = false
+      }
+    },
     toggleLeads() {
       if (!this.madeInitialRetrieval) {
+        // do not filter by user on lists
+        this.trueList.filters = { byList: this.list.id, ...this.leadFilters }
+        delete this.trueList.filters.byUser
         this.trueList.refresh().then(() => {
           this.madeInitialRetrieval = true
         })
@@ -98,6 +164,7 @@ export default {
   height: 1.625rem;
   width: 1.625rem;
   display: block;
+  cursor: pointer;
 }
 
 .list-title {
@@ -117,10 +184,25 @@ export default {
   margin-left: 1%;
   margin-right: 1%;
   padding-top: 0.5rem;
+  &__row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    &__lead {
+      flex: 1;
+    }
+  }
 }
 
 .load-more-button {
   @include primary-button();
   margin: 0.5rem auto;
+}
+.no-items-message {
+  font-weight: bold;
+  align-self: center;
+  width: 25%;
+  margin-left: 0.75rem;
 }
 </style>

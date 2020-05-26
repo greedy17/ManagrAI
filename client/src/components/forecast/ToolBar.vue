@@ -3,7 +3,7 @@
     <div class="header section-shadow">
       KPIs
     </div>
-    <div class="single-statistic section-shadow">
+    <!--     <div class="single-statistic section-shadow">
       <span class="title">Total Closed Value</span>
       <span class="statistic"> {{ 33000 | currency }}</span>
     </div>
@@ -11,7 +11,7 @@
       <span class="title">Average Contract Value</span>
       <span class="statistic"> {{ 12000 | currency }}</span>
     </div>
-    <div class="single-statistic section-shadow">
+       <div class="single-statistic section-shadow">
       <span class="title">Forecast</span>
       <span class="statistic"> {{ 747000 | currency }}</span>
     </div>
@@ -95,13 +95,9 @@
           </span>
         </div>
       </div>
-    </div>
+    </div> -->
     <div class="filter-container">
-      <FilterByRep
-        :reps="reps"
-        :activeReps="activeReps"
-        @toggle-rep-in-filter="toggleRepInFilter"
-      />
+      <FilterByRep :activeReps="activeReps" @toggle-rep-in-filter="toggleRepInFilter" />
     </div>
   </div>
 </template>
@@ -109,18 +105,11 @@
 <script>
 import FilterByRep from '@/components/shared/FilterByRep'
 
-const exampleReps = [
-  { id: 1, name: 'Marcy Ewald' },
-  { id: 2, name: 'Pari Baker' },
-  { id: 3, name: 'Bruno Garcia Gonzalez' },
-]
-
 export default {
   name: 'ForecastToolBar',
   components: { FilterByRep },
   data() {
     return {
-      reps: exampleReps,
       activeReps: {}, // for reps filter
     }
   },

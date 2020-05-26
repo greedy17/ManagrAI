@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
 from managr.lead.models import Lead, List
-from managr.api.models import Organization
+from managr.organization.models import Organization
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -53,7 +53,7 @@ def lead_permissions(self, request, view, obj):
 
 def list_permissions(self, request, view, obj):
     # permissions for LeadsLists
-    if obj.organization != request.user.organization:
+    if obj.created_by.organization_id != request.user.organization_id:
         return False
     else:
         if obj.created_by != request.user:

@@ -4,29 +4,43 @@
     <div class="reps-container">
       <span
         class="rep"
-        v-for="rep in reps"
+        v-for="rep in users.list"
         @click="toggleRepInFilter(rep.id)"
         :key="rep.id"
         :class="{ active: activeReps[rep.id] }"
       >
-        {{ rep.name }}</span
+        {{ rep.fullName }}</span
       >
     </div>
   </div>
 </template>
 
 <script>
+// understanding reactivity pb 05/15/20
+//https://vuejs.org/v2/guide/list.html#Array-Change-Detection
+
+import User from '@/services/users'
+import CollectionManager from '@/services/collectionManager'
 export default {
   name: 'FilterByRep',
   props: {
-    reps: {
-      required: true,
-      type: Array,
-    },
     activeReps: {
       required: true,
       type: Object,
     },
+  },
+  data() {
+    return {
+      users: CollectionManager.create({
+        ModelClass: User,
+        filters: {
+          active: true,
+        },
+      }),
+    }
+  },
+  async created() {
+    this.users.refresh()
   },
   methods: {
     toggleRepInFilter(repID) {
