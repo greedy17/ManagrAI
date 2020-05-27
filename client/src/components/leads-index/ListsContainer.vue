@@ -34,11 +34,11 @@
             :list="list"
             :leadFilters="leads.filters"
           />
-          <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
         </template>
         <template v-else>
           <span class="no-items-message">No Lists to show here</span>
         </template>
+        <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
       </div>
       <div v-if="!listView">
         <ComponentLoadingSVG v-if="loading" />
