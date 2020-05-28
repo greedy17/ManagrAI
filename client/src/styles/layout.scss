@@ -1,0 +1,19 @@
+.page {
+  padding: 2rem;
+  display: flex;
+  &__left-nav-bar {
+    flex: 1;
+  }
+  &__main-content-area {
+    flex: 4;
+    padding: 0 2rem;
+  }
+}
+
+.flex-container {
+  display: flex;
+}
+
+.row {
+  width: 100%;
+}
