@@ -15,6 +15,7 @@ import LeadsNew from '@/views/leads/LeadsNew'
 import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
+import Settings from '@/views/settings/Settings'
 
 //TODO(Bruno 4-8-20): lazy-load views
 
@@ -78,6 +79,12 @@ export default new Router({
       path: '/nylas',
       name: 'Nylas',
       component: Nylas,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: Settings,
       beforeEnter: Auth.requireAuth,
     },
   ],

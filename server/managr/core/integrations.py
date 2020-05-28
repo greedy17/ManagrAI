@@ -64,7 +64,7 @@ def revoke_access_token(token):
     # if a 401 error is thrown then we have incorrect token stored
     # we return the 401 error and revoke all access tokens when a new one is created
     if res.status_code == 200:
-        return res.json()
+        return res
     elif res.status_code == 401:
         """ access token was not verified (aka does not exist) and we have a sync mismatch"""
         raise HTTPError(res.status_code)

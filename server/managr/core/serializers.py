@@ -40,6 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_serviceaccount',
             'is_staff',
             'full_name',
+            'email_auth_link',
             'email_auth_account',
             'email_auth_account_ref',
         )

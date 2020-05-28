@@ -3,6 +3,7 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
@@ -30,6 +31,7 @@ export default class UserAPI {
   static create(cls) {
     return new UserAPI(cls)
   }
+
   async list({ pagination, filters }) {
     const url = USERS_ENDPOINT
     const filtersMap = {
@@ -84,6 +86,7 @@ export default class UserAPI {
     const data = { token, password }
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
+      .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.activate',
@@ -108,16 +111,11 @@ export default class UserAPI {
     return promise
   }
 
-  getNylasEmailLink() {
-    const promise = apiClient()
-      .get(NYLAS_AUTH_EMAIL_LINK)
-      .catch(
-        apiErrorHandler({
-          apiName: 'UserAPI.getNylasEmailLink',
-          enable400Alert: false,
-          enable500Alert: false,
-        }),
-      )
-    return promise
+  getUser(userId) {
+    const url = GET_USER_ENDPOINT(userId)
+    return this.client
+      .get(url)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
   }
 }

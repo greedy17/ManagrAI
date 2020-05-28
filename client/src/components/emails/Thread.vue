@@ -43,11 +43,7 @@
           style="margin-left: 25px"
           v-if="index === 0"
         ></ThreadMessage>
-        <ThreadMessage
-          :message="message"
-          style="margin-left: 25px"
-          v-if="index > 0"
-        ></ThreadMessage>
+        <ThreadMessage :message="message" style="margin-left: 25px"></ThreadMessage>
       </div>
     </div>
   </div>
@@ -91,7 +87,6 @@ export default {
 
 .thread {
   padding: 10px 15px;
-  background-color: $silver;
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.9rem;

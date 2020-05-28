@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
+import User from '@/services/users/'
 
 Vue.use(Vuex)
 
@@ -35,6 +36,21 @@ const actions = {
   },
   logoutUser({ commit }) {
     commit('LOGOUT_USER')
+  },
+  refreshCurrentUser({ state, commit }) {
+    if (!state.token) {
+      return null
+    }
+    return User.api
+      .getUser(state.user.id)
+      .then(user => {
+        commit('UPDATE_USER', user)
+        return user
+      })
+      .catch(() => {
+        // do nothing for now
+        return null
+      })
   },
 }
 

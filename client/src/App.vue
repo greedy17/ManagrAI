@@ -13,6 +13,7 @@
 <script>
 import VueScrollTo from 'vue-scrollto'
 import NavBar from '@/components/NavBar'
+import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
   name: 'app',
@@ -25,11 +26,23 @@ export default {
       VueScrollTo.scrollTo('#app', 200)
     },
   },
+  created() {
+    if (this.userIsLoggedIn) {
+      this.refreshCurrentUser()
+    }
+  },
+  methods: {
+    ...mapActions(['refreshCurrentUser']),
+  },
+  computed: {
+    ...mapGetters(['userIsLoggedIn']),
+  },
 }
 </script>
 
 <style lang="scss">
 @import '@/styles/variables';
+@import '@/styles/mixins/utils';
 
 body {
   overflow-y: scroll;
@@ -40,6 +53,7 @@ body {
 }
 
 #app {
+  @include base-font-styles;
   height: inherit;
   display: flex;
   flex-flow: column;

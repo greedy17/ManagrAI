@@ -69,7 +69,6 @@ export default {
 
 .thread-message {
   padding: 10px 15px;
-  background-color: $silver;
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.9rem;

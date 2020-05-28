@@ -80,7 +80,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(response_data)
 
 
-class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
+class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.UpdateModelMixin):
 
     serializer_class = UserSerializer
 
@@ -308,6 +308,7 @@ def revoke_access_token(request):
     if request.user.email_auth_account.access_token:
         try:
             request.user.email_auth_account.revoke()
+            return Response(status=status.HTTP_200_OK)
         except EmailAuthAccount.DoesNotExist:
             # pass here since user does not already have a token to revoke
             pass

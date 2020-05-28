@@ -10,6 +10,7 @@
       <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
       <!-- Temporary logout button while this other button isn't working -->
       <NavLink icon="leads" to="Nylas">Nylas</NavLink>
+      <NavLink icon="leads" to="Settings">Settings</NavLink>
       <a style="padding-top: 20px;" @click="logOut">Log Out</a>
     </div>
     <img

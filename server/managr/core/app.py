@@ -1,7 +1,7 @@
 # this is a temp server file used to mimic redirect from front end until it is built
 # it is served by flask
 import requests
-from flask import Flask, request
+from flask import Flask, request, redirect
 
 app = Flask(__name__)
 
@@ -17,10 +17,9 @@ def send_code():
         headers={'Authorization': 'token 8c52f572023fa33c5dce80bf27ba996077c94332'},
         data={'magic_token': state, 'code': code},
     )
-    print(res.status_code)
 
     if res.status_code == 204:
-        return "created token"
+        return redirect("http://localhost:8080/settings", code=302)
 
     return "Generate Token"
 
