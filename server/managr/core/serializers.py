@@ -17,7 +17,8 @@ class EmailAuthAccountSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """ UserSerializer to update user fields, only managers with admin access and superusers can update email """
+    """ UserSerializer to update user fields, only managers with admin access and
+    superusers can update email """
 
     organization_ref = OrganizationRefSerializer(many=False, source='organization', read_only=True)
     accounts_ref = AccountRefSerializer(many=True, source='organization.accounts', read_only=True)
@@ -84,9 +85,8 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
 class UserInvitationSerializer(serializers.ModelSerializer):
     """
-        Serializer for Inviting users to the platform. 
+        Serializer for Inviting users to the platform.
         Only Managers can invite users, and only to their organization
-
     """
 
     organization_ref = OrganizationRefSerializer(many=False, source='organization', read_only=True)

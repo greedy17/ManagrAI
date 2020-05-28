@@ -14,6 +14,7 @@ router = routers.SimpleRouter()
 
 urlpatterns = [
     path(r'login/', core_views.UserLoginView.as_view()),
+    # NRS 5.28.2020 -- I think most of these can be moved to be detail views on the user
     path(
         'users/activation_link/<email>/',
         core_views.ActivationLinkView.as_view(),

@@ -7,10 +7,8 @@ from managr.core.models import EmailAuthAccount
 # Daily, at hour 0, minute 0 (12am)
 @kronos.register('0 0 * * *')
 def revoke_extra_access_tokens():
-    """ this will remove excess access tokens
-        managr will be charged for excess tokens as accounts
-        it will only keep access tokens we have stored in the
-        EmailAuthAccount regardless of sync status
+    """ this will remove excess access tokens managr will be charged for excess tokens as accounts
+    it will only keep access tokens we have stored in the EmailAuthAccount regardless of sync status
     """
     for row in EmailAuthAccount.objects.all():
         print('tokens removed')

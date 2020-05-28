@@ -1,10 +1,14 @@
 
-import requests
-from urllib.parse import urlencode
-from requests.exceptions import HTTPError
-from managr.core import constants as core_consts
 import base64
 import json
+import requests
+
+from requests.exceptions import HTTPError
+from rest_framework.exceptions import APIException
+from urllib.parse import urlencode
+
+from managr.core import constants as core_consts
+
 SCOPES = (core_consts.SCOPE_EMAIL_READ_ONLY, core_consts.SCOPE_EMAIL_SEND)
 
 
@@ -84,7 +88,9 @@ def revoke_all_access_tokens(account_id, keep_token=''):
     data = dict(keep_access_token=keep_token)
 
     res = requests.post(
-        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_REVOKE_ALL_TOKENS_URI(account_id)}', headers=headers, data=data)
+        f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_REVOKE_ALL_TOKENS_URI(account_id)}',
+        headers=headers, data=data
+    )
     if res.status_code == 200:
         return res.json()
     elif res.status_code == 404:
@@ -96,67 +102,63 @@ def revoke_all_access_tokens(account_id, keep_token=''):
     return
 
 
-def retrieve_user_threads(user, to_email):
-    """ Use Nylas to retrieve threads, pass in the user from which it will send
-        simple version
-    """
+def _generate_nylas_basic_auth_token(user):
+    ''' Function to generate the encoded basic auth token required by Nylas
+    Details here: https://docs.nylas.com/docs/using-access-tokens
+    '''
     password = ''
+    if user.email_auth_account is None or user.email_auth_account.access_token is None:
+        raise PermissionDenied(detail='User does not have a Nylas access token')
+
     access_token = user.email_auth_account.access_token
     auth_string = f'{access_token}:{password}'
     base64_secret = base64.b64encode(
         auth_string.encode('ascii')).decode('utf-8')
-    headers = dict(Authorization=(f'Basic {base64_secret}'))
+    return base64_secret
 
-    request_url = f'{core_consts.NYLAS_API_BASE_URL}/threads/?limit=10'
-    
-    if to_email:
-        request_url += f'&to={to_email}'
-    
-    print(request_url)
 
-    res = requests.get(
-        request_url, headers=headers)
-
-    if res.status_code == 200:
-        return res.json()
-    elif res.status_code == 401:
-        raise HTTPError(res.status_code)
-    elif res.status_code == 400:
-        """ message error format """
-
-        raise HTTPError(res.status_code)
+def _return_json_from_nylas_server(response):
+    ''' Function to generate a Json object from Nylas's server.
+    Returns either the JSON object or raises an error.
+    Eventually we can extend this to clean and serialize the data.'''
+    if response.status_code == 200:
+        return response.json()
+    elif response.status_code == 401:
+        raise APIException(detail='401 Unauthorized Response from Nylas server',
+                           code=response.status_code)
+    elif response.status_code == 400:
+        raise APIException(detail='400 Bad Request response from Nylas server',
+                           code=response.status_code)
     else:
-        """ most likely an error with our account or their server """
-        raise HTTPError(res.status_code)
-    return
+        print(response)
+        raise APIException(detail='Error from Nylas server',
+                           code=response.status_code)
+
+
+def retrieve_user_threads(user, to_email):
+    """ Use Nylas to retrieve threads for a specific user
+    """
+    request_url = f'{core_consts.NYLAS_API_BASE_URL}/threads/'
+    headers = dict(Authorization=(f'Basic {_generate_nylas_basic_auth_token(user)}'))
+    # TODO: Make pagination variable.
+    params = {'limit': 10}
+    if to_email:
+        params['to'] = to_email
+    response = requests.get(request_url, params=params, headers=headers)
+    json_response = _return_json_from_nylas_server(response)
+    return json_response
 
 
 def retrieve_messages(user, thread_id):
-    """ Use Nylas to retrieve threads, pass in the user from which it will send
-        simple version
+    """ Use Nylas to retrieve messages from specific threads ids.
     """
-    password = ''
-    access_token = user.email_auth_account.access_token
-    auth_string = f'{access_token}:{password}'
-    base64_secret = base64.b64encode(
-        auth_string.encode('ascii')).decode('utf-8')
-    headers = dict(Authorization=(f'Basic {base64_secret}'))
-
-    res = requests.get(
-        f'{core_consts.NYLAS_API_BASE_URL}/messages/?thread_id={thread_id}', headers=headers)
-
-    if res.status_code == 200:
-        return res.json()
-    elif res.status_code == 401:
-        raise HTTPError(res.status_code)
-    elif res.status_code == 400:
-        """ message error format """
-
-        raise HTTPError(res.status_code)
-    else:
-        """ most likely an error with our account or their server """
-        raise HTTPError(res.status_code)
-    return
+    request_url = f'{core_consts.NYLAS_API_BASE_URL}/messages/'
+    headers = dict(Authorization=(f'Basic {_generate_nylas_basic_auth_token(user)}'))
+    # TODO: Make pagination variable.
+    params = {'limit': 10, 'thread_id': thread_id}
+    response = requests.get(request_url, params=params, headers=headers)
+    json_response = _return_json_from_nylas_server(response)
+    return json_response
 
 
 def send_new_email(auth, sender, receipient, message):
@@ -172,18 +174,7 @@ def send_new_email(auth, sender, receipient, message):
     data = json.dumps({'from': from_info, 'to': to_info,
                        "subject": subject, "body": body})
 
-    res = requests.post(
+    response = requests.post(
         f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.SEND_EMAIL_URI}', data=data, headers=headers)
 
-    if res.status_code == 200:
-        return res.json()
-    elif res.status_code == 401:
-        raise HTTPError(res.status_code)
-    elif res.status_code == 400:
-        """ message error format """
-
-        raise HTTPError(res.status_code)
-    else:
-        """ most likely an error with our account or their server """
-        raise HTTPError(res.status_code)
-    return
+    return _return_json_from_nylas_server(response)
