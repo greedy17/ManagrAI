@@ -7,6 +7,7 @@ const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const USERS_ENDPOINT = '/users/'
+const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 
 export default class UserAPI {
   get client() {
@@ -100,6 +101,19 @@ export default class UserAPI {
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.checkStatus',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  getNylasEmailLink() {
+    const promise = apiClient()
+      .get(NYLAS_AUTH_EMAIL_LINK)
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.getNylasEmailLink',
           enable400Alert: false,
           enable500Alert: false,
         }),

@@ -96,6 +96,69 @@ def revoke_all_access_tokens(account_id, keep_token=''):
     return
 
 
+def retrieve_user_threads(user, to_email):
+    """ Use Nylas to retrieve threads, pass in the user from which it will send
+        simple version
+    """
+    password = ''
+    access_token = user.email_auth_account.access_token
+    auth_string = f'{access_token}:{password}'
+    base64_secret = base64.b64encode(
+        auth_string.encode('ascii')).decode('utf-8')
+    headers = dict(Authorization=(f'Basic {base64_secret}'))
+
+    request_url = f'{core_consts.NYLAS_API_BASE_URL}/threads/?limit=10'
+    
+    if to_email:
+        request_url += f'&to={to_email}'
+    
+    print(request_url)
+
+    res = requests.get(
+        request_url, headers=headers)
+
+    if res.status_code == 200:
+        return res.json()
+    elif res.status_code == 401:
+        raise HTTPError(res.status_code)
+    elif res.status_code == 400:
+        """ message error format """
+
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError(res.status_code)
+    return
+
+
+def retrieve_messages(user, thread_id):
+    """ Use Nylas to retrieve threads, pass in the user from which it will send
+        simple version
+    """
+    password = ''
+    access_token = user.email_auth_account.access_token
+    auth_string = f'{access_token}:{password}'
+    base64_secret = base64.b64encode(
+        auth_string.encode('ascii')).decode('utf-8')
+    headers = dict(Authorization=(f'Basic {base64_secret}'))
+
+    res = requests.get(
+        f'{core_consts.NYLAS_API_BASE_URL}/messages/?thread_id={thread_id}', headers=headers)
+
+    if res.status_code == 200:
+        return res.json()
+    elif res.status_code == 401:
+        raise HTTPError(res.status_code)
+    elif res.status_code == 400:
+        """ message error format """
+
+        raise HTTPError(res.status_code)
+    else:
+        """ most likely an error with our account or their server """
+        raise HTTPError(res.status_code)
+    return
+
+
 def send_new_email(auth, sender, receipient, message):
     """ Use Nylas to send emails, pass in the user from which it will send
         simple version

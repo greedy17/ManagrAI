@@ -13,18 +13,15 @@ from managr.organization.models import Account
 class EmailAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAuthAccount
-        fields = ('__all__')
+        fields = '__all__'
 
 
 class UserSerializer(serializers.ModelSerializer):
     """ UserSerializer to update user fields, only managers with admin access and superusers can update email """
 
-    organization_ref = OrganizationRefSerializer(
-        many=False, source='organization', read_only=True)
-    accounts_ref = AccountRefSerializer(
-        many=True, source='organization.accounts', read_only=True)
-    email_auth_account_ref = EmailAuthAccountSerializer(
-        source='email_auth_account', read_only=True)
+    organization_ref = OrganizationRefSerializer(many=False, source='organization', read_only=True)
+    accounts_ref = AccountRefSerializer(many=True, source='organization.accounts', read_only=True)
+    email_auth_account_ref = EmailAuthAccountSerializer(source='email_auth_account', read_only=True)
 
     class Meta:
         model = User
@@ -44,11 +41,17 @@ class UserSerializer(serializers.ModelSerializer):
             'full_name',
             'email_auth_account',
             'email_auth_account_ref',
-
-
         )
-    read_only_fields = ('email', 'organization', 'type',
-                        'is_active', 'is_invited', 'full_name', 'email_auth_account', 'is_serviceaccount')
+    read_only_fields = (
+        'email',
+        'organization',
+        'type',
+        'is_active',
+        'is_invited',
+        'full_name',
+        'email_auth_account',
+        'is_serviceaccount',
+    )
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -71,10 +74,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         """
         Log-in user and append authentication token to serialized response.
         """
-        login(
-            request, user,
-            backend='django.contrib.auth.backends.ModelBackend'
-        )
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         auth_token, token_created = Token.objects.get_or_create(user=user)
         serializer = UserSerializer(user, context={'request': request})
         response_data = serializer.data
@@ -88,8 +88,8 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         Only Managers can invite users, and only to their organization
 
     """
-    organization_ref = OrganizationRefSerializer(
-        many=False, source='organization', read_only=True)
+
+    organization_ref = OrganizationRefSerializer(many=False, source='organization', read_only=True)
 
     class Meta:
         model = User

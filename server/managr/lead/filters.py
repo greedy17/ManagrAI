@@ -29,6 +29,7 @@ class LeadFilterSet(FilterSet):
         is_claimed will return a list of claimed or unclaimed leads
 
     """
+
     on_list = django_filters.BooleanFilter(method="list_count")
     is_claimed = django_filters.BooleanFilter(method="claim_status")
     by_list = django_filters.CharFilter(method="retrieve_leads_in_list")
@@ -40,16 +41,16 @@ class LeadFilterSet(FilterSet):
 
     class Meta:
         model = Lead
-        fields = ['rating', 'on_list', 'is_claimed',
-                  'by_list', 'by_user', 'by_account']
+        fields = ['rating', 'on_list', 'is_claimed', 'by_list', 'by_user', 'by_account']
 
     def leads_by_user(self, queryset, name, value):
         u = self.request.user
         if value:
             value = value.strip()
             user_list = value.split(',')
-            users_in_org = u.organization.users.filter(
-                id__in=user_list).values_list('id', flat=True)
+            users_in_org = u.organization.users.filter(id__in=user_list).values_list(
+                'id', flat=True
+            )
             return queryset.filter(claimed_by__in=users_in_org)
         return queryset
 
@@ -159,8 +160,9 @@ class ListFilterSet(FilterSet):
         if value:
             value = value.strip()
             user_list = value.split(',')
-            users_in_org = u.organization.users.filter(
-                id__in=user_list).values_list('id', flat=True)
+            users_in_org = u.organization.users.filter(id__in=user_list).values_list(
+                'id', flat=True
+            )
             return queryset.filter(created_by_id__in=users_in_org)
         return queryset
 

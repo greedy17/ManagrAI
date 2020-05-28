@@ -2,6 +2,7 @@
 # it is served by flask
 import requests
 from flask import Flask, request
+
 app = Flask(__name__)
 
 
@@ -11,10 +12,11 @@ def send_code():
     # state is the magic token we passed to Nylas
     state = request.args.get('state', None)
     client = requests.Session()
-    res = client.post('http://localhost:8000/api/users/email-auth-token/',
-                      headers={
-                          'Authorization': 'token f5cbb7185985856abc81c7a1e92b647ae6bd6baf'},
-                      data={'magic_token': state, 'code': code})
+    res = client.post(
+        'http://localhost:8000/api/users/email-auth-token/',
+        headers={'Authorization': 'token 8c52f572023fa33c5dce80bf27ba996077c94332'},
+        data={'magic_token': state, 'code': code},
+    )
     print(res.status_code)
 
     if res.status_code == 204:

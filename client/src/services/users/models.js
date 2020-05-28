@@ -18,6 +18,8 @@ export default class User {
       state = null,
       type = null,
       fullName = null,
+      emailAuthAccount = '',
+      emailAuthAccountRef = {},
     } = user
     Object.assign(this, {
       id,
@@ -30,6 +32,8 @@ export default class User {
       state,
       type,
       fullName,
+      emailAuthAccount,
+      emailAuthAccountRef,
     })
   }
 
