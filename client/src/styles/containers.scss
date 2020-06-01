@@ -85,8 +85,6 @@
 }
 
 .actions {
-  &__container {
-  }
   &__container--header > * {
     font-weight: 1000;
   }
@@ -94,7 +92,7 @@
     @include standard-border();
     padding: 1.25rem;
   }
-  &__item-header {
+  &__row {
     display: flex;
     padding: 0.5rem;
   }

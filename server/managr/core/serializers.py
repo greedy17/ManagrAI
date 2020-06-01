@@ -107,3 +107,12 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             'organization': {'required': True},
         }
         read_only_fields = ('organization_ref',)
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    """
+        Serializer for verifying Emails to be sent
+    """
+    subject = serializers.EmailField(allow_blank=False, required=True)
+    recipient = serializers.CharField(allow_blank=False, required=True)
+    body = serializers.CharField(allow_blank=False, required=True)

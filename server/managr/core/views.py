@@ -30,7 +30,7 @@ from .serializers import UserSerializer, UserLoginSerializer, UserInvitationSeri
 from .permissions import IsOrganizationManager, IsSuperUser
 from managr.organization.models import Organization
 
-from .integrations import send_new_email, retrieve_user_threads, retrieve_messages
+from .integrations import send_new_email, send_new_email_legacy, retrieve_user_threads, retrieve_messages
 
 
 def index(request):
@@ -184,9 +184,35 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
         from the connected Nylas account.
         '''
         user = request.user
-        threadId = request.data.get('threadId', None)
-        messages = retrieve_messages(user, threadId)
+        thread_id = request.data.get('threadId', None)
+        messages = retrieve_messages(user, thread_id)
         return Response(messages)
+
+    @action(
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path='send-email',
+    )
+    def send_email(self, request, *args, **kwargs):
+        '''
+        Sends an email from the requesting user's email address
+        '''
+        user = request.user
+
+        sender = user
+        subject = request.data.get('subject')
+        body = request.data.get('body')
+        recipient_emails = request.data.get('to')
+        cc_emails = request.data.get('cc', None)
+        bcc_emails = request.data.get('bcc', None)
+        reply_to_message_id = request.data.get('reply_to_message_id', None)
+
+        send_new_email(sender, recipient_emails, subject=subject, body=body,
+                       cc_emails=cc_emails, bcc_emails=bcc_emails,
+                       reply_to_message_id=reply_to_message_id)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
@@ -353,7 +379,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         # therefore selecting the first email that is of type service_account
 
         try:
-
             ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
         except EmailAuthAccount.DoesNotExist:
             # currently passing if there is an error, when we are ready we will require this
@@ -372,7 +397,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         response_data = serializer.data
         # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
         if ea:
-
             token = ea.access_token
             sender = {'email': ea.email_address, 'name': 'Managr'}
             recipient = [{'email': response_data['email'], 'name': response_data['first_name']}]
@@ -385,7 +409,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 ),
             }
             try:
-                send_new_email(token, sender, recipient, message)
+                send_new_email_legacy(token, sender, recipient, message)
             except Exception as e:
                 """ this error is most likely going to be an error on our set
                 up rather than the user_token """

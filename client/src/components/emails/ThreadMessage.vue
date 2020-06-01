@@ -1,6 +1,6 @@
 <template>
   <div class="actions__item" style="width: 80%">
-    <div class="actions__item-header">
+    <div class="actions__row">
       <div class="actions__item-header-icon">
         <img
           alt="icon"

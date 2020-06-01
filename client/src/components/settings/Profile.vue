@@ -18,7 +18,7 @@
     <div class="box">
       <div class="actions__container">
         <div class="actions__item actions__container--header ">
-          <div class="actions__item-header">
+          <div class="actions__row">
             <div class="actions__item-header-icon"></div>
             <div class="actions__item-header-title">Additional Information</div>
             <div class="actions__item-header-date">Date</div>
