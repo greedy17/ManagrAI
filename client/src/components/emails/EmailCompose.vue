@@ -36,27 +36,23 @@
         [ - ]
       </span>
     </div>
-    <div class="email__row" v-if="showAddBox">
-      <div class="row">
-        <div class="email__row-title">
-          Email:
+    <div class="box" v-if="showAddBox" style="margin-bottom: .5rem; padding: 2.5rem">
+      <div class="flex-container">
+        <div class="email__row-title" style="margin-right: 2rem">
+          <span>Email:</span>
+          <input style="margin-top: .5rem" type="text" class="input" v-model="newContactEmail" />
         </div>
-        <input type="text" v-model="newContactEmail" />
-      </div>
-      <div class="row">
-        <div class="email__row-title">
-          Name:
+        <div class="email__row-title" style="margin-right: 2rem">
+          <span>Name:</span>
+          <input style="margin-top: .5rem" type="text" class="input" v-model="newContactName" />
         </div>
-        <input type="text" v-model="newContactName" />
       </div>
-      <div class="row">
-        <button
-          class="button"
-          @click="addEmail(generateContactObject(newContactName, newContactEmail))"
-        >
-          Add New Email
-        </button>
-      </div>
+      <button
+        class="button"
+        @click="addEmail(generateContactObject(newContactName, newContactEmail))"
+      >
+        Add New Email
+      </button>
     </div>
     <div>
       <div class="email__row-title" v-if="showSubject">
