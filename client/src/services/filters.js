@@ -8,10 +8,10 @@ function uppercase(value) {
 
 function momentDateTime(value) {
   if (!value) return ''
-  return moment(value).format('LLLL')
+  return moment.unix(value).format('LLLL')
 }
 
 function momentDateTimeShort(value) {
   if (!value) return ''
-  return moment(value).format('LLL')
+  return moment.unix(value).format('LLLL')
 }

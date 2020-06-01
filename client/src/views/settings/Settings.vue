@@ -21,23 +21,23 @@
         </div>
         <div
           class="toolbar__row"
-          @click="toggleActivePage('profile')"
-          :class="{ toolbar__active: profileActive }"
+          @click="toggleActivePage('emailTest')"
+          :class="{ toolbar__active: emailTestActive }"
         >
-          Profile
+          Email Test
         </div>
       </div>
     </div>
     <div class="page__main-content-area">
       <EmailIntegration v-if="emailIntegrationActive"></EmailIntegration>
       <EmailTemplates v-if="emailTemplatesActive"></EmailTemplates>
-      <Profile v-if="profileActive"></Profile>
+      <EmailTest v-if="emailTestActive"></EmailTest>
     </div>
   </div>
 </template>
 
 <script>
-import Profile from '@/components/settings/Profile'
+import EmailTest from '@/components/settings/EmailTest'
 import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
 
@@ -46,23 +46,23 @@ export default {
   components: {
     EmailIntegration,
     EmailTemplates,
-    Profile,
+    EmailTest,
   },
   data() {
     return {
-      emailIntegrationActive: true,
+      emailIntegrationActive: false,
       emailTemplatesActive: false,
-      profileActive: false,
+      emailTestActive: true,
     }
   },
   methods: {
     toggleActivePage(pageToActivate) {
       this.emailIntegrationActive = false
       this.emailTemplatesActive = false
-      this.profileActive = false
+      this.emailTestActive = false
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
-      if (pageToActivate === 'profile') this.profileActive = true
+      if (pageToActivate === 'emailTest') this.emailTestActive = true
     },
   },
 }

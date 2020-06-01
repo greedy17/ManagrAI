@@ -1,5 +1,5 @@
-@import '../variables';
-@import './utils';
+@import "../variables";
+@import "./utils";
 
 @mixin input-field() {
   @include base-font-styles();
@@ -26,4 +26,24 @@
     letter-spacing: 0.5px;
     color: $base-gray;
   }
+}
+
+.input {
+  @include input-field();
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.textarea {
+  @include input-field();
+
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.form-element {
+  width: 100%;
+  margin: 0.5rem 0;
 }

@@ -4,12 +4,11 @@
       <div class="box__tab-header">
         <div class="box__tab">Text</div>
         <div class="box__tab--active">Emails</div>
-        <div class="box__tab">Blah</div>
         <div class="box__tab">Notes</div>
         <div class="box__tab">Reminders</div>
       </div>
       <div class="box__content">
-        New Email Form goes Here
+        <EmailCompose />
       </div>
     </div>
     <button class="button" @click="refreshEmails">
@@ -25,25 +24,33 @@
             <div class="actions__item-header-action"></div>
           </div>
         </div>
-
-        <!-- EMAIL COMPONENT STARTS HERE -->
-        <Thread :thread="thread" v-for="thread in threads" :key="thread.id"></Thread>
+        <Thread
+          @emailSent="refreshEmails"
+          :thread="thread"
+          v-for="thread in threads"
+          :key="thread.id"
+        ></Thread>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import Nylas from '@/services/nylas'
 import Thread from '@/components/emails/Thread'
+import EmailCompose from '@/components/emails/EmailCompose'
 
 export default {
   name: 'Profile',
-  components: { Thread },
+  components: { Thread, EmailCompose },
   data() {
     return {
       threads: [],
     }
+  },
+  computed: {
+    ...mapState(['user']),
   },
   methods: {
     refreshEmails() {

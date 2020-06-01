@@ -22,6 +22,7 @@
     <div v-if="isExpanded">
       <ThreadMessage
         :message="message"
+        @emailSent="emailSent"
         v-for="(message, index) in messages"
         :key="message.id"
         v-if="index === 0"
@@ -29,6 +30,7 @@
       ></ThreadMessage>
       <ThreadMessage
         :message="message"
+        @emailSent="emailSent"
         v-for="(message, index) in messages"
         :key="message.id"
         v-if="index > 0"
@@ -67,6 +69,11 @@ export default {
     Nylas.getThreadMessages(this.thread.id).then(response => {
       this.messages = response.data
     })
+  },
+  methods: {
+    emailSent() {
+      this.$emit('emailSent')
+    },
   },
 }
 </script>
