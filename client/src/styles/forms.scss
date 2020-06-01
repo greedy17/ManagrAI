@@ -1,0 +1,12 @@
+@import "./mixins/utils";
+@import "./mixins/buttons";
+
+.button {
+  @include primary-button;
+  margin: 1rem 1rem 0 0;
+}
+
+.inactive-button {
+  @include secondary-button;
+  margin: 1rem 1rem 1rem 0;
+}

@@ -35,21 +35,6 @@
         </div>
       </div>
     </div>
-    <!-- <div class="box">
-      <div class="box__header">
-        <div class="box__title">Email Integration</div>
-      </div>
-      <div class="box__content"></div>
-    </div> -->
-    <button class="button" @click="refreshEmails">
-      Refresh Emails
-    </button>
-    <div class="box">
-      <div class="box__header">
-        <div class="box__title">Sample Emails</div>
-      </div>
-      <Thread :thread="thread" v-for="thread in threads" :key="thread.id" />
-    </div>
   </div>
 </template>
 
@@ -98,19 +83,10 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/mixins/buttons';
+@import '@/styles/forms';
 @import '@/styles/variables';
 @import '@/styles/containers';
 @import '@/styles/layout';
-
-.button {
-  @include primary-button;
-  margin: 1rem 1rem 0 0;
-}
-
-.inactive-button {
-  @include secondary-button;
-  margin: 1rem 1rem 1rem 0;
-}
 
 .disconnect {
   text-align: right;

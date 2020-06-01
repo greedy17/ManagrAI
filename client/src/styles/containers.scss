@@ -33,6 +33,22 @@
   &__content {
     padding: 1rem 1rem;
   }
+  &__tab-header {
+    display: flex;
+    padding: 1rem 0 0;
+    box-shadow: 0 1px 0 0 $soft-gray;
+  }
+  &__tab {
+    padding: 1rem 2rem;
+    border-bottom: none;
+    color: #bcbcc1;
+    font-weight: normal;
+  }
+  &__tab--active {
+    padding: 1rem 2rem;
+    color: #110f24;
+    border-bottom: 2px solid #2f9e54;
+  }
 }
 
 .toolbar {
@@ -65,5 +81,39 @@
   &__active {
     background-color: #e5f2ea;
     border-bottom: 4px #199e54 solid;
+  }
+}
+
+.actions {
+  &__container {
+  }
+  &__container--header > * {
+    font-weight: 1000;
+  }
+  &__item {
+    @include standard-border();
+    padding: 1.25rem;
+  }
+  &__item-header {
+    display: flex;
+    padding: 0.5rem;
+  }
+  &__item-header-icon {
+    flex: 1;
+  }
+  &__item-header-title {
+    flex: 8;
+  }
+  &__item-header-date {
+    flex: 3;
+  }
+  &__item-header-action {
+    flex: 1;
+  }
+  &__item-content {
+    padding: 1rem 0;
+  }
+  &__item-content--inactive {
+    display: none;
   }
 }

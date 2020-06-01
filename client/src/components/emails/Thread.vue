@@ -1,50 +1,39 @@
 <template>
-  <div class="thread">
-    <div class="row" v-if="!isExpanded">
-      <img
-        v-if="!isExpanded"
-        alt="icon"
-        :src="require(`@/assets/images/more_horizontal.svg`)"
-        class="icon"
-        @click="isExpanded = !isExpanded"
-      />
-      <div class="thread-subject-unexpanded">
-        <h3>{{ thread.subject }}</h3>
-      </div>
-      <div class="thread-snippet-unexpanded">
-        <span>
-          {{ thread.snippet }}
-        </span>
-      </div>
-      <div class="thread-emails-unexpanded">
-        <span
-          v-for="(participant, index) in thread.participants"
-          :key="index"
-          v-if="participant.name.length > 0"
-          class="thread-email"
-        >
-          {{ participant.name }}
-        </span>
-      </div>
-    </div>
-    <div v-if="isExpanded">
-      <div class="row">
+  <div class="actions__item">
+    <div class="actions__item-header">
+      <div class="actions__item-header-icon">
         <img
           alt="icon"
-          :src="require(`@/assets/images/dropdown-arrow.svg`)"
-          class="icon"
+          :src="require(`@/assets/images/email.svg`)"
           @click="isExpanded = !isExpanded"
+          :class="{ 'filter-green': isExpanded }"
+          class="icon"
         />
       </div>
-      <div class="row" v-for="(message, index) in messages" :key="message.id">
-        <ThreadMessage
-          :message="message"
-          :is-expanded="true"
-          style="margin-left: 25px"
-          v-if="index === 0"
-        ></ThreadMessage>
-        <ThreadMessage :message="message" style="margin-left: 25px"></ThreadMessage>
+      <div class="actions__item-header-title">{{ thread.subject }}</div>
+      <div class="actions__item-header-date">
+        {{ thread.last_message_timestamp | momentDateTimeShort }}
       </div>
+      <div class="actions__item-header-action"></div>
+    </div>
+    <div class="actions__item-header" v-if="!isExpanded">
+      <div class="actions__item-header-title">{{ thread.snippet }}</div>
+    </div>
+    <div v-if="isExpanded">
+      <ThreadMessage
+        :message="message"
+        v-for="(message, index) in messages"
+        :key="message.id"
+        v-if="index === 0"
+        :initiallyExpanded="true"
+      ></ThreadMessage>
+      <ThreadMessage
+        :message="message"
+        v-for="(message, index) in messages"
+        :key="message.id"
+        v-if="index > 0"
+        :initiallyExpanded="false"
+      ></ThreadMessage>
     </div>
   </div>
 </template>
@@ -61,7 +50,7 @@ export default {
       type: Object,
       required: true,
     },
-    isExpanded: {
+    initiallyExpanded: {
       type: Boolean,
       required: false,
       default: false,
@@ -69,10 +58,12 @@ export default {
   },
   data() {
     return {
+      isExpanded: false,
       messages: {},
     }
   },
   created() {
+    this.isExpanded = this.initiallyExpanded
     Nylas.getThreadMessages(this.thread.id).then(response => {
       this.messages = response.data
     })
@@ -81,45 +72,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables';
-@import '@/styles/mixins/buttons';
-@import '@/styles/mixins/utils';
-
-.thread {
-  padding: 10px 15px;
-  line-height: 1.14;
-  color: $main-font-gray;
-  font-size: 0.9rem;
-  @include base-font-styles();
-  margin-bottom: 0.625rem;
-}
-
-.thread-icon {
-  width: 10%;
-}
-
-.thread-subject-unexpanded {
-  padding: 0 5px;
-  width: 25%;
-}
-
-.thread-snippet-unexpanded {
-  width: 50%;
-}
-.thread-emails-unexpanded {
-  padding: 0 5px;
-  width: 35%;
-}
-
-.thread-email {
-  display: inline-block;
-  font-size: 0.8rem;
-  border: 1px solid $dark-gray-blue;
-  padding: 5px 7px;
-  margin: 2px 5px;
-}
-.row {
-  display: flex;
-  align-items: center;
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+.filter-green {
+  filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
 }
 </style>
