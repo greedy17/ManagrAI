@@ -6,6 +6,7 @@ import requests
 from requests.exceptions import HTTPError
 from rest_framework.exceptions import APIException
 from urllib.parse import urlencode
+from django.template import Context, Template
 
 from managr.core import constants as core_consts
 
@@ -167,10 +168,61 @@ def retrieve_messages(user, thread_id):
     return json_response
 
 
+def render_message(message, context_dict):
+    """
+    Render a message with a dictionary of context.
+    """
+    template = Template(message)
+    # Set auto-escaping to false, since resources may contain apostrophes, ampersands, etc
+    # NOTE: This means message should come from a trusted source; otherwise we are potentially
+    #       vulnerable to an HTML or JS injection
+    context = Context(context_dict, autoescape=False)
+    return template.render(context)
+
+
+def render_email(sender, recipient_emails, subject='(No Subject)',
+                 body='(This email has no content.)',
+                 cc_emails=[], bcc_emails=[],
+                 reply_to_message_id=None,
+                 variables=None,):
+    """ I separated this out so we can know that it's being used the same way in
+        both the preview_email and the send_email functions.
+    """
+    from_info = [{
+        "name": sender.full_name,
+        "email": sender.email
+    }]
+
+    email_info = {
+        'from': from_info,
+        'to': recipient_emails,
+    }
+    # If variables are passed in, render the email body using Django templating.
+
+    if variables:
+        email_info['body'] = render_message(body, variables)
+        email_info['subject'] = render_message(subject, variables)
+    else:
+        email_info['body'] = body
+        email_info['subject'] = subject
+
+    if reply_to_message_id:
+        email_info['reply_to_message_id'] = reply_to_message_id
+
+    if cc_emails:
+        email_info['cc'] = cc_emails
+
+    if bcc_emails:
+        email_info['bcc'] = bcc_emails
+
+    return email_info
+
+
 def send_new_email(sender, recipient_emails, subject='(No Subject)',
-                   body='(This email was left blank)',
+                   body='(This email has no content.)',
                    cc_emails=[], bcc_emails=[],
-                   reply_to_message_id=None,):
+                   reply_to_message_id=None,
+                   variables=None,):
     """ Use Nylas to send emails, pass in the user from which it will send
         simple version
 
@@ -186,36 +238,38 @@ def send_new_email(sender, recipient_emails, subject='(No Subject)',
         body: A string for the body of the email.
 
     """
-    from_info = [{
-        "name": sender.full_name,
-        "email": sender.email
-    }]
-
-    email_info = {
-        'from': from_info,
-        'to': recipient_emails,
-        'subject': subject,
-        'body': body
-    }
-    if reply_to_message_id:
-        email_info['reply_to_message_id'] = reply_to_message_id
-
-    if cc_emails:
-        email_info['cc'] = cc_emails
-
-    if bcc_emails:
-        email_info['bcc'] = bcc_emails
+    email_info = render_email(sender, recipient_emails, subject=subject, body=body,
+                              cc_emails=cc_emails, bcc_emails=bcc_emails,
+                              reply_to_message_id=reply_to_message_id, variables=variables)
 
     data = json.dumps(email_info)
     # Note: The documentation says that this endpoint requires a bearer token, but we
     # are using a basic auth token here. I think this may be a mistake in the documentation.
     # But, if this fails, this could be why.
     headers = _return_nylas_headers(sender)
+
     response = requests.post(
         f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.SEND_EMAIL_URI}',
         data=data, headers=headers)
 
     return _return_json_from_nylas_server(response)
+
+
+def generate_preview_email_data(sender, recipient_emails, subject='(No Subject)',
+                                body='(This email has no content.)',
+                                cc_emails=[], bcc_emails=[],
+                                reply_to_message_id=None,
+                                variables=None,):
+    email_info = render_email(sender, recipient_emails, subject=subject, body=body,
+                              cc_emails=cc_emails, bcc_emails=bcc_emails,
+                              reply_to_message_id=reply_to_message_id, variables=variables)
+
+    data = {
+        'subject': email_info['subject'],
+        'body': email_info['body']
+    }
+
+    return data
 
 
 def send_new_email_legacy(auth, sender, receipient, message):

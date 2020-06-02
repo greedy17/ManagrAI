@@ -30,10 +30,10 @@
       </div>
 
       <span v-if="!showAddBox" @click="showAddBox = !showAddBox">
-        [ + ]
+        &nbsp;[ + ]
       </span>
       <span v-if="showAddBox" @click="showAddBox = !showAddBox">
-        [ - ]
+        &nbsp;[ - ]
       </span>
     </div>
     <div class="box" v-if="showAddBox" style="margin-bottom: .5rem; padding: 2.5rem">
@@ -59,7 +59,7 @@
         Subject:
       </div>
       <div class="form-element" v-if="showSubject">
-        <input type="text" class="input" />
+        <input type="text" class="input" v-model="subject" />
       </div>
     </div>
     <div>
@@ -67,14 +67,43 @@
         <textarea class="textarea" rows="8" v-model="body"></textarea>
       </div>
     </div>
-
-    <button class="button" @click="sendEmail">Send Email</button>
+    <div class="row" v-if="emailTemplates.length > 0">
+      <div class="row" style="margin-bottom: .5rem">
+        Templates:
+      </div>
+      <select
+        class="input"
+        style="width: 50%"
+        v-model="activeTemplate"
+        @change="updateBodyWithTemplate"
+      >
+        <option :value="template" v-for="template in emailTemplates" :key="template.id">{{
+          template.name
+        }}</option>
+      </select>
+    </div>
+    <div class="flex-container" style="justify-content: space-between">
+      <button class="button" @click="previewEmail">Preview Email</button>
+      <button class="button" @click="sendEmail">Send Email</button>
+    </div>
+    <div class="box" v-if="previewActive">
+      <div class="box__header">
+        <div class="box__content">
+          <strong>{{ preview.subject }}</strong>
+        </div>
+      </div>
+      <div class="box__content">
+        {{ preview.body }}
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import Nylas from '@/services/nylas'
 import { mapState } from 'vuex'
+
+import Nylas from '@/services/nylas'
+import EmailTemplate from '@/services/email-templates'
 
 export default {
   name: 'EmailCompose',
@@ -95,6 +124,10 @@ export default {
   },
   data() {
     return {
+      activeTemplate: {},
+      emailTemplates: [],
+      preview: {},
+      previewActive: false,
       replyActive: true,
       replyAllActive: false,
       showAddBox: false,
@@ -106,6 +139,14 @@ export default {
       ccEmails: [],
       bccEmails: [],
       replyMessageId: '',
+      // NOTE: WHEN WE EVENTUALY MOVE THIS OVER TO ANOTHER COMPONENT, WE WILL HAVE TO FIGURE OUT
+      // HOW TO PASS IN THE VARIABLES. I'M GOING TO HOLD ON THIS UNTIL WE FIGURE OUT HOW TO INTEGRATE
+      // IT WITH THE LEAD PAGE.
+      variables: {
+        first_name: 'Neil',
+        last_name: 'Shah',
+        company: 'The Banana Republic',
+      },
     }
   },
   computed: {
@@ -115,6 +156,7 @@ export default {
     if (this.replyMessage && this.replyMessage.from) {
       this.updateToReply()
     }
+    this.getEmailTemplates()
   },
   methods: {
     toggleActiveTab(tabToActivate) {
@@ -159,6 +201,15 @@ export default {
         existingContact => existingContact.email !== contactObject.email,
       )
     },
+    updateBodyWithTemplate() {
+      this.subject = this.activeTemplate.subject
+      this.body = this.activeTemplate.bodyHtml
+    },
+    getEmailTemplates() {
+      EmailTemplate.api.list().then(data => {
+        this.emailTemplates = data.results
+      })
+    },
     sendEmail() {
       Nylas.sendEmail(
         this.toEmails,
@@ -167,6 +218,7 @@ export default {
         this.ccEmails,
         this.bccEmails,
         this.replyMessageId,
+        this.variables,
       )
         .then(() => {
           this.$Alert.alert({
@@ -178,6 +230,20 @@ export default {
         .then(() => {
           this.$emit('emailSent')
         })
+    },
+    previewEmail() {
+      this.previewActive = true
+      Nylas.previewEmail(
+        this.toEmails,
+        this.subject,
+        this.body,
+        this.ccEmails,
+        this.bccEmails,
+        this.replyMessageId,
+        this.variables,
+      ).then(response => {
+        this.preview = response.data
+      })
     },
   },
 }

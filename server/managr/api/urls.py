@@ -32,6 +32,7 @@ urlpatterns = [
 
 router.register(r'users/invite', core_views.UserInvitationView, 'invite-user')
 router.register(r'users', core_views.UserViewSet, 'users')
+router.register(r'email-templates', core_views.EmailTemplateViewset, 'email-templates')
 router.register(r'organizations', organization_views.OrganizationViewSet, 'organizations')
 router.register(r'accounts', organization_views.AccountViewSet, 'accounts')
 router.register(r'contacts', organization_views.ContactViewSet, 'contacts')

@@ -67,7 +67,7 @@ export function toCamelCase(value) {
 
   return value
     .split('_')
-    .map(function(word, index) {
+    .map(function (word, index) {
       // Do nothing with the first word
       if (index === 0) {
         return word
@@ -93,10 +93,10 @@ export function capitalizeWord(word) {
  * the Python-based API, which uses `snake_case` style notation by default.
  */
 export function objectToCamelCase(value) {
-  if (isPlainObject(value)) {
+  if (isObject(value)) {
     return Object.keys(value).reduce((acc, snakeKey) => {
       const camelKey = toCamelCase(snakeKey)
-      acc[camelKey] = isPlainObject(value[snakeKey])
+      acc[camelKey] = isObject(value[snakeKey])
         ? objectToCamelCase(value[snakeKey])
         : value[snakeKey]
       return acc
@@ -110,16 +110,25 @@ export function objectToCamelCase(value) {
  * the data to the Python-based API, which uses `snake_case` style notation by default.
  */
 export function objectToSnakeCase(value) {
-  if (isPlainObject(value)) {
+  if (isObject(value)) {
     return Object.keys(value).reduce((acc, camelKey) => {
       const snakeKey = toSnakeCase(camelKey)
-      acc[snakeKey] = isPlainObject(value[camelKey])
+      acc[snakeKey] = isObject(value[camelKey])
         ? objectToSnakeCase(value[camelKey])
         : value[camelKey]
       return acc
     }, {})
   }
 }
+
+/**
+ * Check a value whether it is an Object
+ */
+
+export function isObject(value) {
+  return value !== null && value instanceof Object && !Array.isArray(value)
+}
+
 /**
  *@function       debounce
  *@description    delay calling of callback function on set time
@@ -131,7 +140,7 @@ export function debounce(callback, time) {
   console.log(time)
   let timer = null
   debugger
-  return function(...args) {
+  return function (...args) {
     const onComplete = () => {
       console.log(this)
       callback.apply(this, args)
@@ -150,7 +159,7 @@ export function debounce(callback, time) {
  * Returns a alphabetically sorted array of Objects, sorted by a 'property' (String) and excluding a specified 'exception' (String)
  */
 export function sortAlphabetically(arr, property, exception = null) {
-  arr.sort(function(a, b) {
+  arr.sort(function (a, b) {
     if (a[property] !== exception && b[property] !== exception) {
       var textA = a[property].toUpperCase()
       var textB = b[property].toUpperCase()

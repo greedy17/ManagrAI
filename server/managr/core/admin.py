@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, EmailAuthAccount
+from .models import User, EmailAuthAccount, EmailTemplate
 
 
 class CustomUserAdmin(UserAdmin):
@@ -30,7 +30,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('email', 'password1', 'password2',),}),
+        (None, {'classes': ('wide',), 'fields': ('email', 'password1', 'password2',), }),
     )
 
     list_display = ('email', 'first_name', 'last_name')
@@ -52,3 +52,4 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EmailAuthAccount)
+admin.site.register(EmailTemplate)

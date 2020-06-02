@@ -14,7 +14,7 @@ def send_code():
     client = requests.Session()
     res = client.post(
         'http://localhost:8000/api/users/email-auth-token/',
-        headers={'Authorization': 'token 8c52f572023fa33c5dce80bf27ba996077c94332'},
+        headers={'Authorization': 'token b517988dd772b7d816a0f79bf89e3ec4c405c2d5'},
         data={'magic_token': state, 'code': code},
     )
 

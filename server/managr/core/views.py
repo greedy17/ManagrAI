@@ -25,12 +25,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount
-from .serializers import UserSerializer, UserLoginSerializer, UserInvitationSerializer
+from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount, EmailTemplate
+from .serializers import UserSerializer, UserLoginSerializer, UserInvitationSerializer, EmailTemplateSerializer
 from .permissions import IsOrganizationManager, IsSuperUser
 from managr.organization.models import Organization
 
-from .integrations import send_new_email, send_new_email_legacy, retrieve_user_threads, retrieve_messages
+from .integrations import send_new_email, send_new_email_legacy, retrieve_user_threads, retrieve_messages, generate_preview_email_data
 
 
 def index(request):
@@ -207,12 +207,42 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
         cc_emails = request.data.get('cc', None)
         bcc_emails = request.data.get('bcc', None)
         reply_to_message_id = request.data.get('reply_to_message_id', None)
+        variables = request.data.get('variables', None)
 
         send_new_email(sender, recipient_emails, subject=subject, body=body,
                        cc_emails=cc_emails, bcc_emails=bcc_emails,
-                       reply_to_message_id=reply_to_message_id)
+                       reply_to_message_id=reply_to_message_id, variables=variables)
 
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path='preview-email',
+    )
+    def preview_email(self, request, *args, **kwargs):
+        '''
+        Sends an email from the requesting user's email address
+        '''
+        user = request.user
+
+        sender = user
+        subject = request.data.get('subject')
+        body = request.data.get('body')
+        recipient_emails = request.data.get('to')
+        cc_emails = request.data.get('cc', None)
+        bcc_emails = request.data.get('bcc', None)
+        reply_to_message_id = request.data.get('reply_to_message_id', None)
+        variables = request.data.get('variables', None)
+
+        preview_data = generate_preview_email_data(
+            sender, recipient_emails, subject=subject, body=body,
+            cc_emails=cc_emails, bcc_emails=bcc_emails,
+            reply_to_message_id=reply_to_message_id, variables=variables
+        )
+
+        return Response(preview_data, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
@@ -417,3 +447,12 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         response_data['activation_link'] = user.activation_link
 
         return Response(response_data)
+
+
+class EmailTemplateViewset(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated, )
+    serializer_class = EmailTemplateSerializer
+
+    def get_queryset(self):
+        return EmailTemplate.objects.for_user(self.request.user)

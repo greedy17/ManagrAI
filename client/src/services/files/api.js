@@ -61,4 +61,15 @@ export default class FileAPI {
       .catch(apiErrorHandler({ apiName: 'FileAPI.create' }))
     return promise
   }
+  create(file, leadID) {
+    let data = new FormData()
+    data.append('file', file)
+    // data.append('doc_type', type)
+    data.append('lead', leadID)
+
+    const promise = apiClient()
+      .post(FILES_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'FileAPI.create' }))
+    return promise
+  }
 }

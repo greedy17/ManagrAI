@@ -11,6 +11,7 @@ from managr.utils import sites as site_utils
 from managr.core import constants as core_consts
 from managr.core.integrations import gen_auth_url, revoke_access_token
 
+
 ACCOUNT_TYPE_LIMITED = 'LIMITED'
 ACCOUNT_TYPE_MANAGER = 'MANAGER'
 ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, 'LIMITED'), (ACCOUNT_TYPE_MANAGER, 'MANAGER'))
@@ -206,3 +207,38 @@ class EmailAuthAccount(TimeStampModel):
                 }
             )
 
+
+class EmailTemplateQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            return self.filter(user=user)
+        else:
+            return None
+
+
+class EmailTemplate(TimeStampModel):
+    user = models.ForeignKey(
+        'core.User',
+        on_delete=models.CASCADE,
+        related_name='email_templates'
+    )
+    name = models.CharField(max_length=128)
+    subject = models.TextField()
+    body_html = models.TextField(
+        help_text='WARNING: This content is not auto-escaped. Generally take care not to '
+                  'render user-provided data to avoid a possible HTML-injection.'
+    )
+
+    objects = EmailTemplateQuerySet.as_manager()
+
+    def __str__(self):
+        return f'{self.user} - {self.name}'
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Email Templates'
+        unique_together = ['user', 'name']

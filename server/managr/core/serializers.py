@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
 from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount
+from .models import EmailTemplate
 from managr.organization.serializers import OrganizationRefSerializer, AccountRefSerializer
 from managr.organization.models import Account
 
@@ -14,6 +15,17 @@ class EmailAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAuthAccount
         fields = '__all__'
+
+
+class UserRefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,7 +83,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         """Emails are always stored and compared in lowercase."""
         return value.lower()
 
-    @staticmethod
+    @ staticmethod
     def login(user, request):
         """
         Log-in user and append authentication token to serialized response.
@@ -116,3 +128,24 @@ class EmailSerializer(serializers.ModelSerializer):
     subject = serializers.EmailField(allow_blank=False, required=True)
     recipient = serializers.CharField(allow_blank=False, required=True)
     body = serializers.CharField(allow_blank=False, required=True)
+
+
+class EmailTemplateSerializer(serializers.ModelSerializer):
+    """
+        Serializer for Email Templates
+    """
+    class Meta:
+        model = EmailTemplate
+        fields = (
+            'id',
+            'name',
+            'subject',
+            'body_html',
+        )
+
+    def create(self, validated_data):
+        # Add the requesting user as the template user.
+        user = self.context['request'].user
+        validated_data['user'] = user
+        request = super().create(validated_data)
+        return request

@@ -33,6 +33,10 @@
   &__content {
     padding: 1rem 1rem;
   }
+  &__bordered-content {
+    padding: 1rem 1rem;
+    box-shadow: 0 1px 0 0 #eeeeee;
+  }
   &__tab-header {
     display: flex;
     padding: 1rem 0 0;
