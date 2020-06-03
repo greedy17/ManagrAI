@@ -11,20 +11,28 @@
         <div class="box__title">New Email Template</div>
       </div>
       <div class="box__content">
-        <div class="form-element">
-          <div class="form-title">Template Name:</div>
-          <input type="text" class="input" v-model="newEmailTemplate.name" />
+        <div class="form">
+          <div class="form__element">
+            <div class="form__element-header">Template Name:</div>
+            <input type="text" class="form__input" v-model="newEmailTemplate.name" />
+          </div>
+          <div class="form__element">
+            <div class="form__element-header">Subject:</div>
+            <input type="text" class="form__input" v-model="newEmailTemplate.subject" />
+          </div>
+          <div class="form__element">
+            <div class="form__element-header">Email Body:</div>
+            <textarea
+              type="text"
+              rows="4"
+              class="form__textarea"
+              v-model="newEmailTemplate.bodyHtml"
+            />
+          </div>
+          <div class="form__element">
+            <button class="button" @click="addEmailTemplate">Add</button>
+          </div>
         </div>
-        <div class="form-element">
-          <div class="form-title">Subject:</div>
-          <input type="text" class="input" v-model="newEmailTemplate.subject" />
-        </div>
-        <div class="form-element">
-          <div class="form-title">Email Body:</div>
-          <textarea type="text" class="textarea" v-model="newEmailTemplate.bodyHtml" />
-        </div>
-
-        <button class="button" @click="addEmailTemplate">Add</button>
       </div>
     </div>
     <div class="box">
@@ -38,7 +46,7 @@
         <div class="template-name">Template Name: {{ template.name }}</div>
         <div class="template-subject">Subject: {{ template.subject }}</div>
         <div class="template-body">{{ template.bodyHtml }}</div>
-        <button class="button" @click="deleteEmailTemplate(template)">Delete</button>
+        <button class="delete-button" @click="deleteEmailTemplate(template)">Delete</button>
       </div>
     </div>
   </div>
@@ -94,6 +102,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/mixins/buttons';
 @import '@/styles/variables';
 @import '@/styles/layout';
 @import '@/styles/containers';
@@ -108,6 +117,9 @@ export default {
   font-weight: 800;
   margin-bottom: 0.5rem;
 }
-.template-body {
+
+.delete-button {
+  @include primary-button;
+  margin: 1rem 0 0 0;
 }
 </style>

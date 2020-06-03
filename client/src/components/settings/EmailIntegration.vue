@@ -5,7 +5,7 @@
         <div class="box__title">Email Integration</div>
       </div>
       <div class="box__content">
-        <div class="flex-container v-centered">
+        <div class="flexbox-container v-centered">
           <div>
             <a :href="user.emailAuthLink" style="text-decoration: none">
               <button
@@ -16,7 +16,8 @@
               </button>
             </a>
             <button
-              class="button"
+              class="primary-button"
+              style="margin-bottom: .1rem;"
               v-if="user.emailAuthAccount && user.emailAuthAccountRef.accessToken"
             >
               Connected
@@ -91,7 +92,7 @@ export default {
 .disconnect {
   text-align: right;
   font-size: 12px;
-  margin: 0 1rem 0 0;
+  margin: 0 0.5rem 0 0;
   color: $coral;
 }
 

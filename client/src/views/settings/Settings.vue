@@ -72,4 +72,5 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/layout';
 @import '@/styles/containers';
+@import '@/styles/sidebars';
 </style>

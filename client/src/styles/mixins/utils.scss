@@ -18,6 +18,8 @@
     border: 1px solid $soft-gray;
 }
 
+// NRS - We should eventually move these over into typography. Right now I left them here
+// so we don't break any other components
 @mixin base-font-styles() {
     font-family: $base-font-family, $backup-base-font-family;
     font-weight: normal;

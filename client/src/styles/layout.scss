@@ -23,10 +23,19 @@
   }
 }
 
-.flex-container {
-  display: flex;
-}
-
 .row {
   width: 100%;
+}
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.flexbox-container {
+  display: flex;
+  &__column {
+    flex: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }

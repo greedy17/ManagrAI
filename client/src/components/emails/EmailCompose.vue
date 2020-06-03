@@ -17,14 +17,14 @@
       </div>
     </div>
     <div class="email__row">
-      From:
+      <div class="form__element-header">From:</div>
       <div class="email__contact-tag">neil@thinknimble.com</div>
     </div>
     <div class="email__row" v-if="replyMessageId.length > 0">
       Replying to message {{ replyMessageId }}
     </div>
     <div class="email__row">
-      To:
+      <div class="form__element-header">To:</div>
       <div class="email__contact-tag" v-for="contactObject in toEmails" :key="contactObject.email">
         {{ contactObject.email }} <span @click="removeEmail(contactObject)">&nbsp;[X]</span>
       </div>
@@ -36,53 +36,45 @@
         &nbsp;[ - ]
       </span>
     </div>
-    <div class="box" v-if="showAddBox" style="margin-bottom: .5rem; padding: 2.5rem">
-      <div class="flex-container">
-        <div class="email__row-title" style="margin-right: 2rem">
-          <span>Email:</span>
-          <input style="margin-top: .5rem" type="text" class="input" v-model="newContactEmail" />
+    <div class="box" v-if="showAddBox">
+      <div class="box__content">
+        <div class="new-email-box">
+          <div class="form__element--inline">
+            <div class="form__element-header">Name</div>
+            <input class="form__input" type="text" v-model="newContactEmail" />
+          </div>
+          <div class="form__element--inline">
+            <div class="form__element-header">Email</div>
+            <input class="form__input" type="text" v-model="newContactName" />
+          </div>
         </div>
-        <div class="email__row-title" style="margin-right: 2rem">
-          <span>Name:</span>
-          <input style="margin-top: .5rem" type="text" class="input" v-model="newContactName" />
+        <div class="form__element--inline">
+          <button
+            class="button"
+            @click="addEmail(generateContactObject(newContactName, newContactEmail))"
+          >
+            Add New Email
+          </button>
         </div>
       </div>
-      <button
-        class="button"
-        @click="addEmail(generateContactObject(newContactName, newContactEmail))"
-      >
-        Add New Email
-      </button>
     </div>
-    <div>
-      <div class="email__row-title" v-if="showSubject">
-        Subject:
-      </div>
-      <div class="form-element" v-if="showSubject">
-        <input type="text" class="input" v-model="subject" />
-      </div>
+    <div class="form__element" v-if="showSubject">
+      <div class="form__element-header">Subject</div>
+      <input type="text" class="form__input" v-model="subject" />
     </div>
-    <div>
-      <div class="form-element">
-        <textarea class="textarea" rows="8" v-model="body"></textarea>
-      </div>
+    <div class="form__element">
+      <div class="form__element-header">Body</div>
+      <textarea class="form__textarea" rows="8" v-model="body"></textarea>
     </div>
-    <div class="row" v-if="emailTemplates.length > 0">
-      <div class="row" style="margin-bottom: .5rem">
-        Templates:
-      </div>
-      <select
-        class="input"
-        style="width: 50%"
-        v-model="activeTemplate"
-        @change="updateBodyWithTemplate"
-      >
+    <div class="form__element" v-if="emailTemplates.length > 0">
+      <div class="form__element-header">Templates</div>
+      <select class="form__select" v-model="activeTemplate" @change="updateBodyWithTemplate">
         <option :value="template" v-for="template in emailTemplates" :key="template.id">{{
           template.name
         }}</option>
       </select>
     </div>
-    <div class="flex-container" style="justify-content: space-between">
+    <div class="flexbox-container" style="margin-top: 1rem; justify-content: space-between">
       <button class="button" @click="previewEmail">Preview Email</button>
       <button class="button" @click="sendEmail">Send Email</button>
     </div>
@@ -253,8 +245,21 @@ export default {
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/forms';
+@import '@/styles/emails';
 @import '@/styles/mixins/inputs';
 .filter-green {
   filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
+}
+
+.new-email-box {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.add-new-contact-button {
+  @include primary-button;
+  padding: 0.5rem;
 }
 </style>

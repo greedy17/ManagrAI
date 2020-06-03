@@ -6,7 +6,7 @@
           <span class="toolbar__title">Side Nav Styles</span>
         </div>
       </div>
-      <button class="full-width-button">Full Width Button</button>
+      <button class="toolbar__button-fullwidth">Full Width Button</button>
 
       <div class="toolbar">
         <div class="toolbar__header">
@@ -470,29 +470,29 @@
               <div class="form__input-group">
                 <input
                   type="checkbox"
-                  id="element-1"
+                  id="checkbox-1"
                   name="checkbox-group"
                   class="form__checkbox"
                 />
-                <label for="element-1">This is Element 1</label>
+                <label for="checkbox-1">This is Element 1</label>
               </div>
               <div class="form__input-group">
                 <input
                   type="checkbox"
-                  id="element-2"
+                  id="checkbox-2"
                   name="checkbox-group"
                   class="form__checkbox"
                 />
-                <label for="element-2">This is Element 2</label>
+                <label for="checkbox-2">This is Element 2</label>
               </div>
               <div class="form__input-group">
                 <input
                   type="checkbox"
-                  id="element-3"
+                  id="checkbox-3"
                   name="checkbox-group"
                   class="form__checkbox"
                 />
-                <label for="element-3">This is Element 3</label>
+                <label for="checkbox-3">This is Element 3</label>
               </div>
               <div class="form__element-error">Error</div>
             </div>
@@ -558,6 +558,8 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/forms';

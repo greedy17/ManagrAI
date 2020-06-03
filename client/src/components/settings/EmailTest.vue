@@ -67,4 +67,6 @@ export default {
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/sidebars';
 </style>

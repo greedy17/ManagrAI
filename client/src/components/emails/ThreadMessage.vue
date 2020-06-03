@@ -1,5 +1,5 @@
 <template>
-  <div class="actions__item" style="width: 80%">
+  <div class="actions__item">
     <div class="actions__row">
       <div class="actions__item-header-icon">
         <img
@@ -15,11 +15,11 @@
         {{ message.subject }}<br /><em v-if="!isExpanded">{{ message.snippet }}</em>
       </div>
       <div class="actions__item-header-date" v-if="!isExpanded">
-        From:
+        From:<br />
         <div v-for="contact in message.from" class="email__contact-tag">{{ contact.email }}</div>
       </div>
       <div class="actions__item-header-date" v-if="!isExpanded">
-        To:
+        To:<br />
         <div v-for="contact in message.to" class="email__contact-tag">{{ contact.email }}</div>
       </div>
     </div>
@@ -88,6 +88,7 @@ export default {
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/forms';
+@import '@/styles/emails';
 .filter-green {
   filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
 }
