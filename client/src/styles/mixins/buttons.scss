@@ -1,5 +1,5 @@
-@import '../variables';
-@import './utils';
+@import "../variables";
+@import "./utils";
 
 @mixin base-button() {
   @include disable-text-select();

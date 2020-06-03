@@ -8,7 +8,8 @@
       <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
       <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
       <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
-      <NavLink icon="leads" to="Settings">Settings</NavLink>
+      <NavLink icon="toc" to="Settings">Settings</NavLink>
+      <NavLink icon="image" to="Styles">Styles</NavLink>
       <a style="padding-top: 20px;" @click="logOut">Log Out</a>
     </div>
     <img

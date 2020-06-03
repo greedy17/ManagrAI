@@ -1,17 +1,78 @@
 @import "./mixins/utils";
 @import "./mixins/buttons";
+@import "./mixins/inputs";
+@import "./variables";
 
+// TODO:COMBINE ALL THESE BUTTON CLASSES
 .button {
   @include primary-button;
-  margin: 1rem 1rem 0 0;
+  margin: 0.75rem;
 }
 
+// TODO:COMBINE ALL THESE BUTTON CLASSES
+.full-width-button {
+  @include primary-button;
+  width: 100%;
+  font-size: 1.2rem;
+  padding: 1rem;
+}
+
+// TODO:COMBINE ALL THESE BUTTON CLASSES
 .inactive-button {
   @include secondary-button;
-  margin: 1rem 1rem 1rem 0;
+  color: $gray;
+  margin: 0.75rem;
 }
 
+// TODO:COMBINE ALL THESE BUTTON CLASSES
 .secondary-button {
   @include secondary-button;
-  margin: 1rem 1rem 1rem 0;
+  margin: 0.75rem;
+}
+
+.form {
+  &__header {
+    margin-bottom: 0.5rem;
+  }
+  &__element {
+    margin: 0.5rem 0;
+  }
+  &__element-header {
+    font-size: 1rem;
+    font-weight: 1000;
+    margin-bottom: 0.5rem;
+  }
+  &__element-help {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500rem;
+  }
+  &__element-error {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-weight: 500rem;
+    color: #e57a7a;
+  }
+  &__input {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+  &__input-group {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  &__textarea {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+  &__select {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
 }

@@ -33,13 +33,14 @@
   &__content {
     padding: 1rem 1rem;
   }
+  // Dont know if we need this anymore
   &__bordered-content {
     padding: 1rem 1rem;
     box-shadow: 0 1px 0 0 #eeeeee;
   }
   &__tab-header {
     display: flex;
-    padding: 1rem 0 0;
+    padding: 0.25rem 0 0;
     box-shadow: 0 1px 0 0 $soft-gray;
   }
   &__tab {
@@ -52,6 +53,21 @@
     padding: 1rem 2rem;
     color: #110f24;
     border-bottom: 2px solid #2f9e54;
+  }
+  &__panel-row {
+    padding: 1rem 1rem;
+    box-shadow: 0 1px 0 0 #eeeeee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  &__panel-row-icon {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  &__panel-row-content {
+    flex: 4;
   }
 }
 
@@ -85,6 +101,92 @@
   &__active {
     background-color: #e5f2ea;
     border-bottom: 4px #199e54 solid;
+  }
+}
+
+.item-list {
+  @include standard-border();
+  background-color: $white;
+  margin: 1rem 0;
+  &__header {
+    padding: 1rem;
+    box-shadow: 0 1px 0 0 $soft-gray;
+  }
+  &__title {
+    @include base-font-styles();
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.188;
+    color: $main-font-gray;
+  }
+  &__item {
+    padding: 1.25rem;
+    box-shadow: 0 1px 0 0 #eeeeee;
+  }
+  &__row {
+    display: flex;
+    padding: 0.5rem;
+  }
+}
+
+.action-item {
+  &__header {
+    padding: 0.25rem 0 0.25rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  &__title {
+    font-weight: 700;
+  }
+  &__content {
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.action-callout {
+  display: flex;
+  padding: 1rem;
+  background-color: #e5f2ea;
+}
+
+.lead-row {
+  margin: 0.75rem 0;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 14px;
+  background-color: #e5f2ea;
+  &__title {
+    font-weight: 700;
+    flex: 4;
+  }
+  &__item--double {
+    flex: 4;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &__item {
+    flex: 2;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &__item--half {
+    flex: 1;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &--gray {
+    background-color: #efeff5;
+  }
+  &--red {
+    background-color: #ffd4d4;
+  }
+  &--list {
+    @include standard-border();
+    padding: 1.25rem;
+    background-color: $white;
   }
 }
 
@@ -153,4 +255,94 @@
   &__reply-expanded-row {
     padding: 0.5rem;
   }
+}
+
+.filter-box {
+  @include standard-border();
+  @include base-font-styles();
+  background-color: $white;
+  margin: 1rem 0;
+  &__header {
+    padding: 1rem;
+    box-shadow: 0 1px 0 0 $soft-gray;
+  }
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.188;
+    color: $main-font-gray;
+  }
+  &__section {
+    box-shadow: 0 1px 0 0 $soft-gray;
+    padding: 1rem;
+  }
+  &__section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &__section-title {
+    font-weight: 500;
+    color: $main-font-gray;
+  }
+  &__section-header-icon {
+    font-weight: 500;
+  }
+  &__section-row-icons {
+    padding: 1rem 1rem 0.25rem 1.5rem;
+    display: flex;
+    justify-content: space-around;
+  }
+  &__section-row-tags {
+    padding: 1rem 0.25rem 0.25rem 0.25rem;
+    color: #9f9cb7;
+    display: flex;
+    justify-content: left;
+  }
+  &__section-row {
+    padding: 1rem 1rem 0.25rem 1.5rem;
+    color: #9f9cb7;
+    display: flex;
+    justify-content: left;
+  }
+}
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.tag {
+  align-items: center;
+  background-color: whitesmoke;
+  border-radius: 4px;
+  color: #4a4a4a;
+  display: inline-flex;
+  font-size: 0.75rem;
+  height: 2em;
+  justify-content: center;
+  line-height: 1.5;
+  padding-left: 0.75em;
+  padding-right: 0.75em;
+  margin: 0.25rem;
+  white-space: nowrap;
+}
+
+.flexbox-container {
+  display: flex;
+  &__column {
+    flex: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+.content {
+  @include base-font-styles();
+  line-height: 1.5rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
 }

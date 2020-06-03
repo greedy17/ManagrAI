@@ -16,8 +16,7 @@ import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import Settings from '@/views/settings/Settings'
-
-//TODO(Bruno 4-8-20): lazy-load views
+import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
 
@@ -85,6 +84,12 @@ export default new Router({
       path: '/settings',
       name: 'Settings',
       component: Settings,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/styles',
+      name: 'Styles',
+      component: Styles,
       beforeEnter: Auth.requireAuth,
     },
   ],
