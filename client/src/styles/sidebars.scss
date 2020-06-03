@@ -1,0 +1,94 @@
+@import "./mixins/utils";
+@import "./mixins/buttons";
+@import "./variables";
+@import "./fonts";
+
+.filter-box {
+  @include standard-border();
+  @include base-font-styles();
+  background-color: $white;
+  margin: 1rem 0;
+  &__header {
+    padding: 1rem;
+    box-shadow: 0 1px 0 0 $soft-gray;
+  }
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.188;
+    color: $main-font-gray;
+  }
+  &__section {
+    box-shadow: 0 1px 0 0 $soft-gray;
+    padding: 1rem;
+  }
+  &__section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &__section-title {
+    font-weight: 500;
+    color: $main-font-gray;
+  }
+  &__section-header-icon {
+    font-weight: 500;
+  }
+  &__section-row-icons {
+    padding: 1rem 1rem 0.25rem 1.5rem;
+    display: flex;
+    justify-content: space-around;
+  }
+  &__section-row-tags {
+    padding: 1rem 0.25rem 0.25rem 0.25rem;
+    color: #9f9cb7;
+    display: flex;
+    justify-content: left;
+  }
+  &__section-row {
+    padding: 1rem 1rem 0.25rem 1.5rem;
+    color: #9f9cb7;
+    display: flex;
+    justify-content: left;
+  }
+}
+
+.toolbar {
+  @include standard-border();
+  background-color: $white;
+  margin: 1rem 0;
+  &__header {
+    padding: 1rem;
+    text-align: center;
+  }
+  &__title {
+    @include base-font-styles();
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.188;
+    color: $main-font-gray;
+    text-transform: uppercase;
+  }
+  &__row {
+    @include base-font-styles();
+    padding: 1.5rem 1rem;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.188;
+    color: $main-font-gray;
+    text-transform: uppercase;
+    text-align: left;
+    box-shadow: 0 1px 0 0 #eeeeee;
+  }
+  &__active {
+    background-color: #e5f2ea;
+    border-bottom: 4px #199e54 solid;
+  }
+  &__button-fullwidth {
+    @include primary-button();
+    width: 100%;
+    font-size: 1.25rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
