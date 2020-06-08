@@ -20,44 +20,24 @@
       <div class="form__element-header">From:</div>
       <div class="email__contact-tag">neil@thinknimble.com</div>
     </div>
-    <div class="email__row" v-if="replyMessageId.length > 0">
-      Replying to message {{ replyMessageId }}
-    </div>
-    <div class="email__row">
-      <div class="form__element-header">To:</div>
-      <div class="email__contact-tag" v-for="contactObject in toEmails" :key="contactObject.email">
-        {{ contactObject.email }} <span @click="removeEmail(contactObject)">&nbsp;[X]</span>
-      </div>
-
-      <span v-if="!showAddBox" @click="showAddBox = !showAddBox">
-        &nbsp;[ + ]
-      </span>
-      <span v-if="showAddBox" @click="showAddBox = !showAddBox">
-        &nbsp;[ - ]
-      </span>
-    </div>
-    <div class="box" v-if="showAddBox">
-      <div class="box__content">
-        <div class="new-email-box">
-          <div class="form__element--inline">
-            <div class="form__element-header">Name</div>
-            <input class="form__input" type="text" v-model="newContactEmail" />
-          </div>
-          <div class="form__element--inline">
-            <div class="form__element-header">Email</div>
-            <input class="form__input" type="text" v-model="newContactName" />
-          </div>
-        </div>
-        <div class="form__element--inline">
-          <button
-            class="button"
-            @click="addEmail(generateContactObject(newContactName, newContactEmail))"
-          >
-            Add New Email
-          </button>
-        </div>
-      </div>
-    </div>
+    <EmailList
+      :emails="toEmails"
+      label="To"
+      @add="addToEmail($event)"
+      @remove="removeToEmail($event)"
+    />
+    <EmailList
+      :emails="ccEmails"
+      label="CC"
+      @add="addCCEmail($event)"
+      @remove="removeCCEmail($event)"
+    />
+    <EmailList
+      :emails="bccEmails"
+      label="BCC"
+      @add="addBCCEmail($event)"
+      @remove="removeBCCEmail($event)"
+    />
     <div class="form__element" v-if="showSubject">
       <div class="form__element-header">Subject</div>
       <input type="text" class="form__input" v-model="subject" />
@@ -94,12 +74,14 @@
 <script>
 import { mapState } from 'vuex'
 
+import EmailList from '@/components/emails/EmailList'
+
 import Nylas from '@/services/nylas'
 import EmailTemplate from '@/services/email-templates'
 
 export default {
   name: 'EmailCompose',
-  components: {},
+  components: { EmailList },
   props: {
     showSubject: {
       type: Boolean,
@@ -122,7 +104,9 @@ export default {
       previewActive: false,
       replyActive: true,
       replyAllActive: false,
-      showAddBox: false,
+      showAddToBox: false,
+      showAddCCBox: false,
+      showAddBCCBox: false,
       newContactEmail: '',
       newContactName: '',
       subject: '',
@@ -146,6 +130,7 @@ export default {
   },
   created() {
     if (this.replyMessage && this.replyMessage.from) {
+      this.replyMessageId = this.replyMessage.id
       this.updateToReply()
     }
     this.getEmailTemplates()
@@ -165,11 +150,13 @@ export default {
     },
     updateToReply() {
       this.toEmails = this.replyMessage.from
+      this.ccEmails = this.replyMessage.cc
+      this.bccEmails = this.replyMessage.bcc
     },
     updateToReplyAll() {
       // We want the email to be "to" whoever sent it.
       let replyEmailTos = this.replyMessage.from
-      //   Add in the remaining "to"" emails (not including you) from the original message.
+      // Add in the remaining "to"" emails (not including you) from the original message.
       let otherToEmails = this.replyMessage.to.filter(
         contactObject => contactObject['email'] !== this.user.email,
       )
@@ -182,14 +169,49 @@ export default {
         email: email,
       }
     },
-    addEmail(contactObject) {
+    hideEmailBoxes() {
+      this.showAddToBox = false
+      this.showAddCCBox = false
+      this.showAddBCCBox = false
+    },
+    showEmailBox(boxToShow) {
+      this.showAddToBox = false
+      this.showAddCCBox = false
+      this.showAddBCCBox = false
+      if (boxToShow === 'to') this.showAddToBox = true
+      if (boxToShow === 'cc') this.showAddCCBox = true
+      if (boxToShow === 'bcc') this.showAddBCCBox = true
+    },
+    addToEmail(contactObject) {
       this.toEmails.push(contactObject)
       this.newContactEmail = ''
       this.newContactName = ''
-      this.showAddBox = false
+      this.showAddToBox = false
     },
-    removeEmail(contactObject) {
+    addCCEmail(contactObject) {
+      this.ccEmails.push(contactObject)
+      this.newContactEmail = ''
+      this.newContactName = ''
+      this.showAddCCBox = false
+    },
+    addBCCEmail(contactObject) {
+      this.bccEmails.push(contactObject)
+      this.newContactEmail = ''
+      this.newContactName = ''
+      this.showAddBCCBox = false
+    },
+    removeToEmail(contactObject) {
       this.toEmails = this.toEmails.filter(
+        existingContact => existingContact.email !== contactObject.email,
+      )
+    },
+    removeCCEmail(contactObject) {
+      this.ccEmails = this.ccEmails.filter(
+        existingContact => existingContact.email !== contactObject.email,
+      )
+    },
+    removeBCCEmail(contactObject) {
+      this.bccEmails = this.bccEmails.filter(
         existingContact => existingContact.email !== contactObject.email,
       )
     },
