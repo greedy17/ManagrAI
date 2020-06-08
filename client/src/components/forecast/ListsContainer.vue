@@ -4,7 +4,7 @@
       v-for="(forecast, index) in FORECASTS"
       :key="index"
       :title="capitalizeWord(forecast)"
-      :list="lists[forecast]"
+      :collection="lists[forecast]"
     />
   </div>
 </template>

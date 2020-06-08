@@ -1,6 +1,6 @@
 <template>
   <div class="forecast-dropdown">
-    <select @change="onChange" :style="computedStyles">
+    <select @change="onChange" :style="computedStyles" :disabled="disabled">
       <option
         v-for="option in selectableOptions"
         :selected="option.toUpperCase() === forecast"
@@ -27,6 +27,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
     onChange(e) {
@@ -36,7 +40,7 @@ export default {
   computed: {
     selectableOptions() {
       // all options are selectable except 'Unforecasted'. A lead is only 'Unforecasted' on creation.
-      return forecastEnums.filter((option) => option != 'Unforecasted')
+      return forecastEnums.filter(option => option != 'Unforecasted')
     },
     computedStyles() {
       if (this.transparent) {

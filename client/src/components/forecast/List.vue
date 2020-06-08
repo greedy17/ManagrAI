@@ -7,7 +7,7 @@
     </div>
     <div class="list-leads" v-if="showLeads">
       <Lead
-        v-for="forecast in list.list"
+        v-for="forecast in collection.list"
         :key="forecast.id"
         :forecast="forecast"
         :lead="forecast.leadRef"
@@ -26,7 +26,7 @@ import Lead from '@/components/forecast/Lead'
 export default {
   name: 'List',
   props: {
-    list: {
+    collection: {
       type: Object,
       required: true,
     },
@@ -45,13 +45,15 @@ export default {
   },
   methods: {
     toggleLeads() {
-      this.showLeads = !this.showLeads
+      if (this.numOfLeads > 0) {
+        this.showLeads = !this.showLeads
+      }
     },
     deleteLead(id) {
       // NOTE (Bruno 5-7-20): this is incomplete, as just deleting a Lead from a ForecastList is not enough,
       // it should also be added to another ForecastList, and that list's leadCount should also be updated
-      this.list.list = this.list.list.filter((forecast) => forecast.lead !== id)
-      this.list.pagination.totalCount -= 1
+      this.collection.list = this.collection.list.filter(forecast => forecast.lead !== id)
+      this.collection.pagination.totalCount -= 1
     },
     loadMore() {
       alert('WIP')
@@ -59,10 +61,10 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.pagination.totalCount
+      return this.collection.pagination.totalCount
     },
     moreToLoad() {
-      return !!this.list.pagination.next
+      return !!this.collection.pagination.next
     },
   },
 }

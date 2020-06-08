@@ -121,6 +121,9 @@ class Lead(TimeStampModel):
         """ property to define count of lists a lead is on """
         return self.lists.count()
 
+    def __str__(self):
+        return f'Lead \'{self.title}\' ({self.id})'
+
 
 class ListQuerySet(models.QuerySet):
 
