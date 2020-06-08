@@ -20,7 +20,7 @@
       <div class="actions__item-header-title">{{ thread.snippet }}</div>
     </div>
     <div v-if="isExpanded">
-      <div v-if="isLoading">
+      <div v-if="isLoading" style="padding: 5rem;">
         <ComponentLoadingSVG />
       </div>
       <div v-if="!isLoading">
@@ -74,7 +74,7 @@ export default {
   created() {
     this.isExpanded = this.initiallyExpanded
     if (this.initiallyExpanded) {
-      this.getThreadMessages()
+      this.getThreadMessages(this.thread.id)
     }
   },
   methods: {
@@ -82,7 +82,7 @@ export default {
       if (!this.isExpanded) {
         this.isExpanded = true
         this.isLoading = true
-        this.getThreadMessages()
+        this.getThreadMessages(this.thread.id)
       } else {
         this.isExpanded = false
       }

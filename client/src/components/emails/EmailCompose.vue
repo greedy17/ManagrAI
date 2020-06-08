@@ -46,6 +46,16 @@
       <div class="form__element-header">Body</div>
       <textarea class="form__textarea" rows="8" v-model="body"></textarea>
     </div>
+    <div class="form__element">
+      <div class="form__element-header">Attachments</div>
+      <ComponentLoadingSVG v-if="filesLoading" style="margin: 2rem auto" />
+      <div class="email__row" v-if="files.length > 0">
+        <span v-for="file in files" class="email__contact-tag" :key="file.id">
+          {{ file.filename }} <span @click="removeFiles(file.id)">[X]</span>
+        </span>
+      </div>
+      <input type="file" class="form__input" ref="myFileInput" @change="uploadFiles" />
+    </div>
     <div class="form__element" v-if="emailTemplates.length > 0">
       <div class="form__element-header">Templates</div>
       <select class="form__select" v-model="activeTemplate" @change="updateBodyWithTemplate">
@@ -75,13 +85,14 @@
 import { mapState } from 'vuex'
 
 import EmailList from '@/components/emails/EmailList'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 
 import Nylas from '@/services/nylas'
 import EmailTemplate from '@/services/email-templates'
 
 export default {
   name: 'EmailCompose',
-  components: { EmailList },
+  components: { EmailList, ComponentLoadingSVG },
   props: {
     showSubject: {
       type: Boolean,
@@ -109,7 +120,10 @@ export default {
       toEmails: [],
       ccEmails: [],
       bccEmails: [],
+      files: [],
+      filesLoading: false,
       replyMessageId: '',
+      uploadFile: {},
       // NOTE: WHEN WE EVENTUALY MOVE THIS OVER TO ANOTHER COMPONENT, WE WILL HAVE TO FIGURE OUT
       // HOW TO PASS IN THE VARIABLES. I'M GOING TO HOLD ON THIS UNTIL WE FIGURE OUT HOW TO INTEGRATE
       // IT WITH THE LEAD PAGE.
@@ -122,6 +136,12 @@ export default {
   },
   computed: {
     ...mapState(['user']),
+    fileIds() {
+      return this.files.map(fileObject => fileObject.id)
+    },
+    fileNames() {
+      return this.files.map(fileObject => fileObject.filename)
+    },
   },
   created() {
     if (this.replyMessage && this.replyMessage.from) {
@@ -131,6 +151,21 @@ export default {
     this.getEmailTemplates()
   },
   methods: {
+    uploadFiles(event) {
+      const file = event.target.files[0]
+      this.filesLoading = true
+      Nylas.attachFile(file)
+        .then(response => {
+          this.files.push(response.data[0])
+        })
+        .finally(() => {
+          this.filesLoading = false
+        })
+    },
+    removeFiles(fileId) {
+      const filteredFiles = this.files.filter(file => file.id !== fileId)
+      this.files = filteredFiles
+    },
     toggleActiveTab(tabToActivate) {
       if (tabToActivate === 'reply') {
         this.replyActive = true
@@ -209,6 +244,7 @@ export default {
         this.ccEmails,
         this.bccEmails,
         this.replyMessageId,
+        this.fileIds,
         this.variables,
       )
         .then(() => {

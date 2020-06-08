@@ -39,6 +39,17 @@
     <div style="width: 100%" v-if="isExpanded">
       <div style="width: 100%" v-html="message.body"></div>
     </div>
+    <!--TODO: BREAK THIS OUT INTO ITS OWN COMPONENT-->
+    <!-- ALSO, I WANT TO BE ABLE TO TOGGLE THIS ON AND OFF -->
+    <h4 class="is-title">Attachments</h4>
+    <div class="email__row">
+      <span v-for="file in message.files" class="email__contact-tag email__contact-tag--green">
+        <!-- TODO: Change this to a file-specific style -->
+        <a :href="`/api/get-file/${file.id}/`" target="_blank">
+          {{ file.filename }}
+        </a>
+      </span>
+    </div>
     <div style="width: 100%" v-if="isExpanded">
       <div class="box" v-if="isExpanded"></div>
       <EmailCompose
@@ -52,6 +63,7 @@
 
 <script>
 import EmailCompose from '@/components/emails/EmailCompose'
+import Nylas from '@/services/nylas'
 
 export default {
   name: 'message',
@@ -76,6 +88,17 @@ export default {
     this.isExpanded = this.initiallyExpanded
   },
   methods: {
+    downloadFile(file) {
+      Nylas.downloadFile(file.id).then(response => {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('target', '_blank')
+        link.setAttribute('download', file.filename) //or any other extension
+        document.body.appendChild(link)
+        link.click()
+      })
+    },
     emailSent() {
       this.$emit('emailSent')
     },
@@ -89,6 +112,7 @@ export default {
 @import '@/styles/containers';
 @import '@/styles/forms';
 @import '@/styles/emails';
+@import '@/styles/mixins/utils';
 .filter-green {
   filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
 }

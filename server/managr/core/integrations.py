@@ -3,6 +3,8 @@ import base64
 import json
 import requests
 
+from django.http import HttpResponse
+
 from requests.exceptions import HTTPError
 from rest_framework.exceptions import APIException
 from urllib.parse import urlencode
@@ -168,6 +170,42 @@ def retrieve_messages(user, thread_id):
     return json_response
 
 
+def return_file_id_from_nylas(user, file_object):
+    """ Use Nylas to generate a file_id for file attachment.
+    """
+    headers = _return_nylas_headers(user)
+    file_data = {'file': (file_object.name, file_object.file)}
+    response = requests.post(
+        f'{core_consts.NYLAS_API_BASE_URL}/files/',
+        files=file_data, headers=headers)
+    json_response = _return_json_from_nylas_server(response)
+    return json_response
+
+
+def download_file_from_nylas(user, file_id):
+    """ Use Nylas to download file based on file_id
+    """
+    # First generate the authorization required for both requests
+    headers = _return_nylas_headers(user)
+    # First we make a call to nylas to get the file metadata from the file_id
+    file_metadata_url = f'{core_consts.NYLAS_API_BASE_URL}/files/{file_id}/'
+    r = requests.get(file_metadata_url, headers=headers)
+
+    json_response = r.json()
+    file_name = json_response['filename']
+    content_type = json_response['content_type']
+
+    # Then we make a second call for the file itself.
+    file_request_url = f'{core_consts.NYLAS_API_BASE_URL}/files/{file_id}/download/'
+    file_response = requests.get(file_request_url, headers=headers)
+
+    response = HttpResponse(content_type=content_type)
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+    response.write(file_response.content)
+
+    return response
+
+
 def render_message(message, context_dict):
     """
     Render a message with a dictionary of context.
@@ -184,7 +222,7 @@ def render_email(sender, recipient_emails, subject='(No Subject)',
                  body='(This email has no content.)',
                  cc_emails=[], bcc_emails=[],
                  reply_to_message_id=None,
-                 variables=None,):
+                 file_ids=[], variables=None,):
     """ I separated this out so we can know that it's being used the same way in
         both the preview_email and the send_email functions.
     """
@@ -215,13 +253,17 @@ def render_email(sender, recipient_emails, subject='(No Subject)',
     if bcc_emails:
         email_info['bcc'] = bcc_emails
 
+    print(file_ids)
+    if len(file_ids) > 0:
+        email_info['file_ids'] = file_ids
+
     return email_info
 
 
 def send_new_email(sender, recipient_emails, subject='(No Subject)',
                    body='(This email has no content.)',
                    cc_emails=[], bcc_emails=[],
-                   reply_to_message_id=None,
+                   reply_to_message_id=None, file_ids=[],
                    variables=None,):
     """ Use Nylas to send emails, pass in the user from which it will send
         simple version
@@ -240,7 +282,7 @@ def send_new_email(sender, recipient_emails, subject='(No Subject)',
     """
     email_info = render_email(sender, recipient_emails, subject=subject, body=body,
                               cc_emails=cc_emails, bcc_emails=bcc_emails,
-                              reply_to_message_id=reply_to_message_id, variables=variables)
+                              reply_to_message_id=reply_to_message_id, file_ids=file_ids, variables=variables)
 
     data = json.dumps(email_info)
     # Note: The documentation says that this endpoint requires a bearer token, but we
@@ -259,10 +301,11 @@ def generate_preview_email_data(sender, recipient_emails, subject='(No Subject)'
                                 body='(This email has no content.)',
                                 cc_emails=[], bcc_emails=[],
                                 reply_to_message_id=None,
+                                file_ids=[],
                                 variables=None,):
     email_info = render_email(sender, recipient_emails, subject=subject, body=body,
                               cc_emails=cc_emails, bcc_emails=bcc_emails,
-                              reply_to_message_id=reply_to_message_id, variables=variables)
+                              reply_to_message_id=reply_to_message_id, file_ids=file_ids, variables=variables)
 
     data = {
         'subject': email_info['subject'],

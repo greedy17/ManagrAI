@@ -24,7 +24,9 @@
             <div class="actions__item-header-action"></div>
           </div>
         </div>
-        <ComponentLoadingSVG v-if="isLoading" />
+        <div v-if="isLoading" style="padding: 5rem;">
+          <ComponentLoadingSVG v-if="isLoading" />
+        </div>
         <Thread
           @email-sent="refreshEmails"
           :thread="thread"
