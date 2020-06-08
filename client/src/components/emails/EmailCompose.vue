@@ -104,11 +104,6 @@ export default {
       previewActive: false,
       replyActive: true,
       replyAllActive: false,
-      showAddToBox: false,
-      showAddCCBox: false,
-      showAddBCCBox: false,
-      newContactEmail: '',
-      newContactName: '',
       subject: '',
       body: '',
       toEmails: [],
@@ -150,8 +145,12 @@ export default {
     },
     updateToReply() {
       this.toEmails = this.replyMessage.from
-      this.ccEmails = this.replyMessage.cc
-      this.bccEmails = this.replyMessage.bcc
+      this.ccEmails = this.replyMessage.cc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+      this.bccEmails = this.replyMessage.bcc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
     },
     updateToReplyAll() {
       // We want the email to be "to" whoever sent it.
@@ -162,43 +161,21 @@ export default {
       )
       const combinedEmailList = replyEmailTos.concat(otherToEmails)
       this.toEmails = combinedEmailList
-    },
-    generateContactObject(name, email) {
-      return {
-        name: name,
-        email: email,
-      }
-    },
-    hideEmailBoxes() {
-      this.showAddToBox = false
-      this.showAddCCBox = false
-      this.showAddBCCBox = false
-    },
-    showEmailBox(boxToShow) {
-      this.showAddToBox = false
-      this.showAddCCBox = false
-      this.showAddBCCBox = false
-      if (boxToShow === 'to') this.showAddToBox = true
-      if (boxToShow === 'cc') this.showAddCCBox = true
-      if (boxToShow === 'bcc') this.showAddBCCBox = true
+      this.ccEmails = this.replyMessage.cc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+      this.bccEmails = this.replyMessage.bcc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
     },
     addToEmail(contactObject) {
       this.toEmails.push(contactObject)
-      this.newContactEmail = ''
-      this.newContactName = ''
-      this.showAddToBox = false
     },
     addCCEmail(contactObject) {
       this.ccEmails.push(contactObject)
-      this.newContactEmail = ''
-      this.newContactName = ''
-      this.showAddCCBox = false
     },
     addBCCEmail(contactObject) {
       this.bccEmails.push(contactObject)
-      this.newContactEmail = ''
-      this.newContactName = ''
-      this.showAddBCCBox = false
     },
     removeToEmail(contactObject) {
       this.toEmails = this.toEmails.filter(
