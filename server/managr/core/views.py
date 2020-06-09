@@ -6,6 +6,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from managr.core.integrations import get_access_token, get_account_details
 from django.template.exceptions import TemplateDoesNotExist
+from django.http import HttpResponse
+from django.views import View
+
+
 from rest_framework import (
     authentication,
     filters,
@@ -25,12 +29,18 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE, STATE_INVITED, EmailAuthAccount, EmailTemplate
-from .serializers import UserSerializer, UserLoginSerializer, UserInvitationSerializer, EmailTemplateSerializer
+from .models import (User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE,
+                     STATE_INVITED, EmailAuthAccount, EmailTemplate)
+from .serializers import (UserSerializer, UserLoginSerializer,
+                          UserInvitationSerializer, EmailTemplateSerializer)
 from .permissions import IsOrganizationManager, IsSuperUser
 from managr.organization.models import Organization
 
-from .integrations import send_new_email, send_new_email_legacy, retrieve_user_threads, retrieve_messages, generate_preview_email_data
+from .integrations import (
+    send_new_email, send_new_email_legacy,
+    retrieve_user_threads, retrieve_messages, generate_preview_email_data,
+    return_file_id_from_nylas, download_file_from_nylas
+)
 
 
 def index(request):
@@ -80,7 +90,8 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(response_data)
 
 
-class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.UpdateModelMixin):
+class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
+                  mixins.ListModelMixin, mixins.UpdateModelMixin):
 
     serializer_class = UserSerializer
 
@@ -201,6 +212,8 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
         '''
         user = request.user
 
+        # TODO: This is so clunky -- I should replace this with a class.
+
         sender = user
         subject = request.data.get('subject')
         body = request.data.get('body')
@@ -208,11 +221,12 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
         cc_emails = request.data.get('cc', None)
         bcc_emails = request.data.get('bcc', None)
         reply_to_message_id = request.data.get('reply_to_message_id', None)
+        file_ids = request.data.get('file_ids', None)
         variables = request.data.get('variables', None)
 
         send_new_email(sender, recipient_emails, subject=subject, body=body,
                        cc_emails=cc_emails, bcc_emails=bcc_emails,
-                       reply_to_message_id=reply_to_message_id, variables=variables)
+                       reply_to_message_id=reply_to_message_id, file_ids=file_ids, variables=variables)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -244,6 +258,23 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
         )
 
         return Response(preview_data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path='attach-file',
+    )
+    def attach_file(self, request, *args, **kwargs):
+        '''
+        Attaches a file and returns file_id
+        https://docs.nylas.com/reference#metadata
+        '''
+        user = request.user
+        file_object = request.FILES['file']
+        response = return_file_id_from_nylas(user=user, file_object=file_object)
+
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
@@ -283,6 +314,16 @@ def get_email_authorization_link(request):
     u = request.user
     return Response({'email_auth_link': u.email_auth_link})
     # generate link
+
+
+class GetFileView(View):
+
+    def get(self, request, file_id):
+        """ This endpoint returns a file from nylas using an nylas ID """
+        user = request.user
+        response = download_file_from_nylas(
+            user=user, file_id=file_id)
+        return response
 
 
 @api_view(['POST'])
@@ -450,7 +491,9 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         return Response(response_data)
 
 
-class EmailTemplateViewset(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class EmailTemplateViewset(viewsets.GenericViewSet, mixins.CreateModelMixin,
+                           mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, )
     serializer_class = EmailTemplateSerializer

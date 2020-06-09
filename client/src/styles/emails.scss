@@ -24,6 +24,10 @@
     white-space: nowrap;
     margin: 0 0.25rem;
   }
+  &__contact-tag--green {
+    background-color: $dark-green;
+    color: white;
+  }
   &__compose-subject {
     width: 100%;
   }

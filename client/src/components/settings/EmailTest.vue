@@ -24,8 +24,11 @@
             <div class="actions__item-header-action"></div>
           </div>
         </div>
+        <div v-if="isLoading" style="padding: 5rem;">
+          <ComponentLoadingSVG v-if="isLoading" />
+        </div>
         <Thread
-          @emailSent="refreshEmails"
+          @email-sent="refreshEmails"
           :thread="thread"
           v-for="thread in threads"
           :key="thread.id"
@@ -39,14 +42,16 @@
 import { mapState } from 'vuex'
 import Nylas from '@/services/nylas'
 import Thread from '@/components/emails/Thread'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import EmailCompose from '@/components/emails/EmailCompose'
 
 export default {
   name: 'Profile',
-  components: { Thread, EmailCompose },
+  components: { Thread, EmailCompose, ComponentLoadingSVG },
   data() {
     return {
       threads: [],
+      isLoading: false,
     }
   },
   computed: {
@@ -54,9 +59,14 @@ export default {
   },
   methods: {
     refreshEmails() {
-      Nylas.getUserThreads(this.filterBy).then(response => {
-        this.threads = response.data
-      })
+      this.isLoading = true
+      Nylas.getUserThreads(this.filterBy)
+        .then(response => {
+          this.threads = response.data
+        })
+        .finally(() => {
+          this.isLoading = false
+        })
     },
   },
 }

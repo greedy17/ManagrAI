@@ -5,6 +5,8 @@ const MESSAGES_ENDPOINT = '/users/thread-messages/'
 const SEND_EMAIL_ENDPOINT = '/users/send-email/'
 const PREVIEW_EMAIL_ENDPOINT = '/users/preview-email/'
 const REVOKE_TOKEN_ENDPOINT = '/users/revoke-email-auth/'
+const ATTACH_FILE_ENDPOINT = '/users/attach-file/'
+const DOWNLOAD_FILE_ENDPOINT = id => `/get-file/${id}/`
 
 export default {
   getUserThreads(toEmail = null) {
@@ -25,7 +27,38 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.getUserThreads' }))
     return promise
   },
-  sendEmail(to, subject, body, ccEmails = [], bccEmails = [], replyMessageId = '', variables = {}) {
+  downloadFile(fileId) {
+    const params = {
+      responseType: 'blob',
+    }
+    const promise = apiClient()
+      .get(DOWNLOAD_FILE_ENDPOINT(fileId), params)
+      .catch(apiErrorHandler({ apiName: 'NylasAPI.downloadFile' }))
+    return promise
+  },
+  attachFile(file) {
+    const headers = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+    var fileFormData = new FormData()
+    fileFormData.append('file', file)
+    const promise = apiClient()
+      .post(ATTACH_FILE_ENDPOINT, fileFormData, headers)
+      .catch(apiErrorHandler({ apiName: 'NylasAPI.attachFile' }))
+    return promise
+  },
+  sendEmail(
+    to,
+    subject,
+    body,
+    ccEmails = [],
+    bccEmails = [],
+    replyMessageId = '',
+    fileIds = [],
+    variables = {},
+  ) {
     /*
     Use Nylas to send emails from this user. 
     PARAMS:
@@ -49,6 +82,7 @@ export default {
       cc: ccEmails,
       bcc: bccEmails,
       reply_to_message_id: replyMessageId,
+      file_ids: fileIds,
       variables: variables,
     }
     const promise = apiClient()
@@ -63,6 +97,7 @@ export default {
     ccEmails = [],
     bccEmails = [],
     replyMessageId = '',
+    fileIds = [],
     variables = {},
   ) {
     /*
@@ -88,6 +123,7 @@ export default {
       cc: ccEmails,
       bcc: bccEmails,
       reply_to_message_id: replyMessageId,
+      file_ids: fileIds,
       variables: variables,
     }
     const promise = apiClient()

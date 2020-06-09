@@ -16,11 +16,15 @@
       </div>
       <div class="actions__item-header-date" v-if="!isExpanded">
         From:<br />
-        <div v-for="contact in message.from" class="email__contact-tag">{{ contact.email }}</div>
+        <div v-for="(contact, index) in message.from" class="email__contact-tag" :key="index">
+          {{ contact.email }}
+        </div>
       </div>
       <div class="actions__item-header-date" v-if="!isExpanded">
         To:<br />
-        <div v-for="contact in message.to" class="email__contact-tag">{{ contact.email }}</div>
+        <div v-for="(contact, index) in message.to" class="email__contact-tag" :key="index">
+          {{ contact.email }}
+        </div>
       </div>
     </div>
     <div class="email__row" v-if="isExpanded">
@@ -29,15 +33,34 @@
       </div>
       <div class="email__row">
         From:
-        <div v-for="contact in message.from" class="email__contact-tag">{{ contact.email }}</div>
+        <div v-for="(contact, index) in message.from" class="email__contact-tag" :key="index">
+          {{ contact.email }}
+        </div>
       </div>
       <div class="email__row">
         To:
-        <div v-for="contact in message.to" class="email__contact-tag">{{ contact.email }}</div>
+        <div v-for="(contact, index) in message.to" class="email__contact-tag" :key="index">
+          {{ contact.email }}
+        </div>
       </div>
     </div>
     <div style="width: 100%" v-if="isExpanded">
       <div style="width: 100%" v-html="message.body"></div>
+    </div>
+    <!--TODO: BREAK THIS OUT INTO ITS OWN COMPONENT-->
+    <!-- ALSO, I WANT TO BE ABLE TO TOGGLE THIS ON AND OFF -->
+    <h4 class="is-title">Attachments</h4>
+    <div class="email__row">
+      <span
+        v-for="file in message.files"
+        class="email__contact-tag email__contact-tag--green"
+        :key="file.id"
+      >
+        <!-- TODO: Change this to a file-specific style -->
+        <a :href="`/api/get-file/${file.id}/`" target="_blank">
+          {{ file.filename }}
+        </a>
+      </span>
     </div>
     <div style="width: 100%" v-if="isExpanded">
       <div class="box" v-if="isExpanded"></div>
@@ -76,6 +99,18 @@ export default {
     this.isExpanded = this.initiallyExpanded
   },
   methods: {
+    // downloadFile(file) {
+    // TODO: We are no longer using this hacky mess, but I'm keeping it here just in case.
+    //   Nylas.downloadFile(file.id).then(response => {
+    //     const url = window.URL.createObjectURL(new Blob([response.data]))
+    //     const link = document.createElement('a')
+    //     link.href = url
+    //     link.setAttribute('target', '_blank')
+    //     link.setAttribute('download', file.filename) //or any other extension
+    //     document.body.appendChild(link)
+    //     link.click()
+    //   })
+    // },
     emailSent() {
       this.$emit('emailSent')
     },
@@ -89,6 +124,7 @@ export default {
 @import '@/styles/containers';
 @import '@/styles/forms';
 @import '@/styles/emails';
+@import '@/styles/mixins/utils';
 .filter-green {
   filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
 }
