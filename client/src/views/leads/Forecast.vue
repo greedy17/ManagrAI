@@ -1,6 +1,5 @@
 <template>
-  <PageLoadingSVG v-if="loading" />
-  <div v-else class="leads-index">
+  <div class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
@@ -19,7 +18,8 @@
       />
     </div>
     <div class="lists-container-pane">
-      <ListsContainer :lists="lists" />
+      <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
+      <ListsContainer v-else :lists="lists" />
     </div>
   </div>
 </template>
