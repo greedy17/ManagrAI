@@ -1,11 +1,11 @@
 <template>
-  <PageLoadingSVG v-if="loading" />
-  <div v-else class="prospect">
+  <div class="prospect">
     <div class="toolbar-pane">
       <ToolBar :repFilterState="repFilterState" @toggle-active-rep="toggleActiveRep" />
     </div>
     <div class="lists-pane">
-      <AccountsContainer :accounts="accountsWithLeads" />
+      <AccountsContainer v-if="!loading" :accounts="accountsWithLeads" />
+      <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
     </div>
   </div>
 </template>
