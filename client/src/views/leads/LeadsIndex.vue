@@ -1,6 +1,5 @@
 <template>
-  <PageLoadingSVG v-if="loading" />
-  <div v-else class="leads-index">
+  <div class="leads-index">
     <div class="toolbar-pane">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
@@ -16,16 +15,17 @@
     </div>
     <div class="lists-container-pane">
       <ListsContainer
+        v-if="!loading"
         :leads="myLeads"
         :lists="myLists.list"
         @list-created="addListToCollection"
         @toggle-onlist="applyMyLeadsOnListFilter"
         :showCreateNew="true"
-        :loading="myLists.refreshing || myLeads.refreshing"
         @delete-list="deleteList"
         @remove-from-list="removeFromList"
         :isOwner="true"
       />
+      <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
     </div>
   </div>
 </template>
@@ -48,7 +48,6 @@ export default {
   },
   data() {
     return {
-      loading: true,
       ratingFilter: null,
       myLists: CollectionManager.create({
         ModelClass: List,
@@ -76,7 +75,7 @@ export default {
       // all filters should be the same across the collections
       return this.myLists.filters
     },
-    isLoading() {
+    loading() {
       return this.myLists.refreshing || this.myLeads.refreshing
     },
   },
@@ -98,10 +97,8 @@ export default {
       this.$set(this.myLists, 'lists', this.myLists.list.splice(listInfo.index, 1))
     },
     refreshCollections() {
-      let promises = [this.myLists.refresh(), this.myLeads.refresh()]
-      Promise.all(promises).then(() => {
-        this.loading = false
-      })
+      this.myLists.refresh()
+      this.myLeads.refresh()
     },
     toggleView() {
       this.$router.push({ name: 'Forecast' })
