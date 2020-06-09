@@ -4,6 +4,7 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="list-value">{{ totalValue | currency }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <Lead
@@ -63,6 +64,9 @@ export default {
     numOfLeads() {
       return this.collection.pagination.totalCount
     },
+    totalValue() {
+      return this.collection.list.reduce((sum, e) => e.leadRef.amount + sum, 0)
+    },
     moreToLoad() {
       return !!this.collection.pagination.next
     },
@@ -106,15 +110,14 @@ export default {
 
 .list-title {
   font-weight: bold;
-  align-self: center;
-  width: 25%;
+  width: 20rem;
+  max-width: 20rem;
   margin-left: 0.75rem;
 }
 
 .list-length {
-  align-self: center;
-  margin-left: 20%;
-  margin-right: auto;
+  align-self: left;
+  width: 25rem;
 }
 
 .list-leads {

@@ -92,9 +92,6 @@ export default {
     activeReps() {
       return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
     },
-    isRepFilterActive() {
-      return !!this.activeReps.length
-    },
   },
 }
 </script>

@@ -19,10 +19,7 @@
       />
     </div>
     <div class="lists-container-pane">
-      <ListsContainer v-if="isRepFilterActive" :lists="lists" />
-      <div v-else>
-        No representative selected. Please select at least one via the side bar.
-      </div>
+      <ListsContainer :lists="lists" />
     </div>
   </div>
 </template>
@@ -124,9 +121,6 @@ export default {
     },
     activeReps() {
       return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
-    },
-    isRepFilterActive() {
-      return !!this.activeReps.length
     },
   },
 }
