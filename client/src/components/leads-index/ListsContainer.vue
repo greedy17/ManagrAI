@@ -197,6 +197,7 @@ export default {
   display: flex;
   flex-flow: row;
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .action-tab-content {

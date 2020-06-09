@@ -16,7 +16,6 @@
     </div>
     <div class="lists-container-pane">
       <ListsContainer
-        title="My Lists"
         :leads="myLeads"
         :lists="myLists.list"
         @list-created="addListToCollection"
@@ -26,14 +25,6 @@
         @delete-list="deleteList"
         @remove-from-list="removeFromList"
         :isOwner="true"
-      />
-      <ListsContainer
-        title="All Lists"
-        :lists="lists.list"
-        :leads="leads"
-        @list-created="addListToCollection"
-        @toggle-onlist="applyLeadsOnListFilter"
-        :loading="leads.refreshing || lists.refreshing"
       />
     </div>
   </div>
@@ -65,23 +56,10 @@ export default {
           byUser: this.$store.state.user.id,
         },
       }),
-      lists: CollectionManager.create({
-        ModelClass: List,
-        filters: {
-          byUser: `${this.$store.state.user.id}`,
-        },
-      }),
       myLeads: CollectionManager.create({
         ModelClass: Lead,
         filters: {
           byUser: this.$store.state.user.id,
-          onList: true,
-        },
-      }),
-      leads: CollectionManager.create({
-        ModelClass: Lead,
-        // show all leads on a list
-        filters: {
           onList: true,
         },
       }),
@@ -96,15 +74,10 @@ export default {
     },
     currentFilters() {
       // all filters should be the same across the collections
-      return this.lists.filters
+      return this.myLists.filters
     },
     isLoading() {
-      return (
-        this.lists.refreshing ||
-        this.myLists.refreshing ||
-        this.leads.refreshing ||
-        this.myLeads.refreshing
-      )
+      return this.myLists.refreshing || this.myLeads.refreshing
     },
   },
   methods: {
@@ -125,14 +98,7 @@ export default {
       this.$set(this.myLists, 'lists', this.myLists.list.splice(listInfo.index, 1))
     },
     refreshCollections() {
-      let promises = [
-        this.lists.refresh(),
-        this.myLists.refresh(),
-        this.leads.refresh(),
-        this.myLeads.refresh(),
-        //this.leadsWithoutList.refresh(),
-        //this.allLeads.refresh(),
-      ]
+      let promises = [this.myLists.refresh(), this.myLeads.refresh()]
       Promise.all(promises).then(() => {
         this.loading = false
       })
@@ -147,12 +113,8 @@ export default {
       this.myLeads.filters['onList'] = val
       await this.myLeads.refresh()
     },
-    async applyLeadsOnListFilter(val) {
-      this.leads.filters['onList'] = val
-      await this.leads.refresh()
-    },
     updateFilters(filter) {
-      if (this.lists.filters[filter.key] == filter.value) {
+      if (this.myLists.filters[filter.key] == filter.value) {
         filter.value = null
       }
       // only update if there is a change
@@ -163,9 +125,8 @@ export default {
       // components wont react to changes in obj[key] value
       // alt could have created a new list and set it to that
       //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
-      this.$set(this.lists.filters, filter.key, filter.value)
+
       this.$set(this.myLists.filters, filter.key, filter.value)
-      this.$set(this.leads.filters, filter.key, filter.value)
       this.$set(this.myLeads.filters, filter.key, filter.value)
 
       this.refreshCollections()
