@@ -1,6 +1,6 @@
 <template>
-  <div class="actions" :style="height">
-    <div class="actions-tab-headers section-shadow">
+  <div class="box">
+    <div class="box__tab-header">
       <ActionTabHeader
         v-for="(tab, index) in tabs"
         :key="tab"
@@ -11,19 +11,17 @@
         {{ tab }}
       </ActionTabHeader>
     </div>
-    <div v-if="state == editState" class="action-tab-content">
-      <CallAction ref="call-note-action" @save-call-note="createCallNote" v-if="activeTab === 0" />
+
+    <div v-if="state == editState" class="box__content">
+      <CallAction :lead="lead" v-if="activeTab === 0" />
+      <!-- NOTE: TEXTACTION WILL BE DISABLED FOR THE DEMO -->
       <TextAction v-if="activeTab === 1" />
-      <EmailAction v-if="activeTab === 2" />
-      <ActionAction v-if="activeTab === 3" />
-      <ReminderAction
-        ref="reminder-action"
-        @save-reminder="createReminder"
-        v-if="activeTab === 4"
-      />
-      <NoteAction ref="note-action" @save-note="createNote" v-if="activeTab === 5" />
+      <EmailAction :lead="lead" v-if="activeTab === 2" />
+      <ActionAction :lead="lead" v-if="activeTab === 3" />
+      <ReminderAction :lead="lead" v-if="activeTab === 4" />
+      <NoteAction :lead="lead" v-if="activeTab === 5" />
     </div>
-    <div v-if="state == viewState" class="action-tab-content">
+    <div v-if="state == viewState" class="box__content">
       <div class="list-items" v-if="activeTab === 0">
         <div class="list-items__header">
           <span class="list-items__header__space"><!--space for header--></span>
@@ -264,6 +262,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/containers';
 
 .actions {
   min-width: 48rem;

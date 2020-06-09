@@ -60,6 +60,10 @@
     font-size: 1rem;
     width: 100%;
   }
+  &__button {
+    @include primary-button();
+    margin-top: 1rem;
+  }
 }
 
 .button {

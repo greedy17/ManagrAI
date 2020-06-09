@@ -86,6 +86,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+  margin-bottom: 1.25rem;
 }
 
 .forecast-container {

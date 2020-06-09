@@ -5,7 +5,7 @@
 .box {
   @include standard-border();
   background-color: $white;
-  margin: 1rem 0;
+  margin: 0 0 1rem 0;
   &__header {
     display: flex;
     flex-flow: row;
@@ -92,7 +92,27 @@
   }
   &__row {
     display: flex;
-    padding: 0.5rem;
+    justify-content: center;
+    align-items: center;
+  }
+  &__row-item--double {
+    flex: 4;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &__row-item {
+    flex: 2;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &__row-item--half {
+    flex: 1;
+    padding-left: 0.33rem;
+    padding-right: 0.33rem;
+  }
+  &__row-item-content {
+    margin: 1rem 0;
+    width: 100%;
   }
 }
 

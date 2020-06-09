@@ -1,68 +1,81 @@
 <template>
-  <div class="action-action">
-    <div class="action-type-date-container">
-      <input class="action-type" placeholder="Action Type" disabled />
-      <input class="action-date" placeholder="Select Date" disabled />
+  <div class="flexbox-container">
+    <div class="flexbox-container__column">
+      <h4>Contacts</h4>
+      <ContactBox
+        v-for="contact in lead.linkedContactsRef"
+        :contact="contact"
+        @toggle="toggleActive($event)"
+        :isActive="contactIsActive(contact.id)"
+        :key="contact.id"
+      />
     </div>
-    <textarea class="action-detail" placeholder="Detail" />
-    <div class="save-button-container">
-      <span class="save-button">Save</span>
+    <div class="flexbox-container__column">
+      <div class="form">
+        <div class="form__element">
+          <div class="form__element-header">Type</div>
+          <select class="form__select" v-model="selectedContact">
+            <option value="Testing">A list of action types will go here</option>
+            <option value="Testing">A list of action types will go here</option>
+            <option value="Testing">A list of action types will go here</option>
+            <option value="Testing">A list of action types will go here</option>
+          </select>
+        </div>
+        <div class="form__element">
+          <div class="form__element-header">Title</div>
+          <input type="text" class="form__input" />
+        </div>
+        <div class="form__element">
+          <div class="form__element-header">Description</div>
+          <textarea class="form__textarea" />
+        </div>
+      </div>
+      <div class="form__element">
+        <div class="form__element-header">Date</div>
+        <input type="datetime-local" class="form__input" />
+      </div>
+      <div class="form__element">
+        <button class="form__button">Save</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import ContactBox from '@/components/shared/ContactBox'
 export default {
   name: 'ActionAction',
+  components: { ContactBox },
+  props: {
+    lead: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      // actionNote: new CallNote(),
+      activeContacts: [],
+    }
+  },
+  methods: {
+    toggleActive(contactId) {
+      if (this.activeContacts.includes(contactId)) {
+        this.activeContacts = this.activeContacts.filter(id => id !== contactId)
+      } else {
+        this.activeContacts.push(contactId)
+      }
+    },
+    contactIsActive(contactId) {
+      return this.activeContacts.includes(contactId)
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
+@import '@/styles/layout';
+@import '@/styles/forms';
 @import '@/styles/mixins/inputs';
-
-.action-action {
-  width: 100%;
-  display: flex;
-  flex-flow: column;
-}
-
-.action-type-date-container {
-  display: flex;
-  flex-flow: row;
-}
-
-.action-type {
-  width: 46%;
-}
-
-.action-date {
-  width: 49%;
-  margin-left: 5%;
-}
-
-input {
-  @include input-field();
-  height: 2.5rem;
-}
-
-textarea {
-  @include input-field();
-  resize: none;
-  height: 94%;
-  flex-grow: 1;
-  margin: 2% 0;
-  font-size: 14px;
-}
-
-.save-button-container {
-  display: flex;
-  flex-flow: row;
-}
-
-.save-button {
-  @include primary-button();
-  margin-left: auto;
-}
 </style>
