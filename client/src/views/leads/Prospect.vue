@@ -30,9 +30,7 @@ export default {
         ModelClass: Account,
       }),
       accountsWithLeads: [], // objects containing account info & collections of leads for account
-      repFilterState: {
-        [this.$store.state.user.id]: true,
-      },
+      repFilterState: {},
     }
   },
   async created() {

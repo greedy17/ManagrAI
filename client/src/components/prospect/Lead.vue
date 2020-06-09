@@ -11,15 +11,20 @@
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
         :forecast="lead.forecastRef && lead.forecastRef.forecast"
+        :disabled="!belongsToCurrentUser"
         @updated-forecast="updateForecast"
       />
-      <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
+      <LeadStatusDropdown
+        :status="lead.status"
+        :disabled="!belongsToCurrentUser"
+        @updated-status="updateStatus"
+      />
       <div class="button-container">
-        <button v-if="isClaimed" @click="routeToRepPage">
+        <button class="claimed-button" v-if="lead.claimedBy">
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span>{{ this.rep.name }}</span>
+          <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
         </button>
-        <button v-else @click="claimLead">
+        <button v-else class="claim-button" @click="claimLead">
           <img class="icon" alt="icon" src="@/assets/images/add.svg" />
           <span>Claim</span>
         </button>
@@ -35,7 +40,12 @@ import Forecast from '@/services/forecasts'
 import Lead from '@/services/leads'
 export default {
   name: 'Lead',
-  props: ['lead'],
+  props: {
+    lead: {
+      required: true,
+      type: Lead,
+    },
+  },
   components: {
     LeadForecastDropdown,
     LeadStatusDropdown,
@@ -46,7 +56,6 @@ export default {
       rep: null,
     }
   },
-  created() {},
   methods: {
     updateStatus(value) {
       if (this.lead.status == 'CLOSED') {
@@ -57,7 +66,7 @@ export default {
         })
       } else if (value != 'CLOSED') {
         let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then((lead) => {
+        Lead.api.update(this.lead.id, patchData).then(lead => {
           this.lead.status = lead.status
         })
       } else {
@@ -75,25 +84,27 @@ export default {
           lead: this.lead.id,
           forecast: value,
         }
-        Forecast.api.update(this.lead.forecast, patchData).then((forecast) => {
+        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
           this.lead.forecast = forecast.id
           this.lead.forecastRef = forecast
         })
       } else {
         // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then((forecast) => {
+        Forecast.api.create(this.lead.id, value).then(forecast => {
           this.lead.forecast = forecast.id
           this.lead.forecastRef = forecast
         })
       }
     },
-    routeToRepPage() {
-      alert('Clicking a rep name should route to the RepDetail')
-    },
     claimLead() {
       alert(
         'Clicking claim should claim the lead and not change the page (so that many leads can be claimed in succession)',
       )
+    },
+  },
+  computed: {
+    belongsToCurrentUser() {
+      return this.lead.claimedBy == this.$store.state.user.id
     },
   },
 }
@@ -209,8 +220,18 @@ export default {
   flex-flow: row;
   align-items: center;
 
-  button {
+  .claimed-button {
     @include secondary-button();
+    padding-right: 0.7rem;
+    padding-left: 0.5rem;
+    width: auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+  }
+
+  .claim-button {
+    @include primary-button();
     padding-right: 0.7rem;
     padding-left: 0.5rem;
     width: auto;

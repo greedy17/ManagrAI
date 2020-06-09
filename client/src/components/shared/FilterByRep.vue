@@ -9,18 +9,16 @@
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
       >
-        {{ rep.id == currentUser.id ? 'Me' : rep.fullName }}</span
+        {{ rep.id == currentUser.id ? 'You' : rep.fullName }}</span
       >
     </div>
   </div>
 </template>
 
 <script>
-// understanding reactivity pb 05/15/20
-//https://vuejs.org/v2/guide/list.html#Array-Change-Detection
-
 import User from '@/services/users'
 import CollectionManager from '@/services/collectionManager'
+
 export default {
   name: 'FilterByRep',
   props: {
