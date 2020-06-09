@@ -1,7 +1,7 @@
 <template>
   <div class="toolbar">
     <div class="header section-shadow">
-      Sort + Filter
+      Filter
     </div>
     <div class="filter section-shadow">
       <div class="filter-header">Rating</div>
