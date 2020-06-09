@@ -131,6 +131,7 @@ nav {
 
   .user-menu {
     @include standard-border;
+    border-top: 0px;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
     background-color: $white;
     margin-left: auto;
