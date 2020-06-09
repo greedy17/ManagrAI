@@ -1,39 +1,61 @@
 <template>
-  <nav id="nav">
-    <div class="logo">
-      <span class="name">managr</span>
+  <div>
+    <nav id="nav">
+      <div class="logo">
+        <span class="name">managr</span>
+      </div>
+      <div v-if="userIsLoggedIn" class="links">
+        <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+        <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
+        <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
+        <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
+        <NavLink icon="image" to="Styles">Styles</NavLink>
+      </div>
+      <img
+        v-if="userIsLoggedIn"
+        src="@/assets/images/dropdown-arrow.svg"
+        class="user-menu-dropdown"
+        @click="toggleUserMenu"
+      />
+    </nav>
+    <div class="menu-container">
+      <div v-if="showMenus.user" class="user-menu-container">
+        <div class="user-menu">
+          <h4 @click="routeToSettings">Settings</h4>
+          <h4 @click="logOut">Log Out</h4>
+        </div>
+      </div>
     </div>
-    <div v-if="userIsLoggedIn" class="links">
-      <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
-      <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
-      <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
-      <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
-      <NavLink icon="toc" to="Settings">Settings</NavLink>
-      <NavLink icon="image" to="Styles">Styles</NavLink>
-      <a style="padding-top: 20px;" @click="logOut">Log Out</a>
-    </div>
-    <img
-      v-if="userIsLoggedIn"
-      src="@/assets/images/screenshots/navbar-search-and-profile.png"
-      alt="screenshot"
-      class="navbar-search-and-profile"
-    />
-  </nav>
+  </div>
 </template>
 
 <script>
 import NavLink from '@/components/NavLink'
-import { mapActions } from 'vuex'
 
 export default {
   name: 'NavBar',
   components: {
     NavLink,
   },
+  data() {
+    return {
+      showMenus: {
+        user: false,
+      },
+    }
+  },
   methods: {
+    toggleUserMenu() {
+      this.showMenus.user = !this.showMenus.user
+    },
+    routeToSettings() {
+      this.$router.push({ name: 'Settings' })
+      this.toggleUserMenu()
+    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      this.toggleUserMenu()
     },
   },
   computed: {
@@ -88,9 +110,38 @@ nav {
   width: 28%;
 }
 
-.navbar-search-and-profile {
-  height: 34px;
+.user-menu-dropdown {
   margin-left: auto;
-  margin-right: 34px;
+  margin-right: 1rem;
+  opacity: 0.6;
+}
+
+.menu-container {
+  z-index: 1000;
+  position: absolute;
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+}
+
+.user-menu-container {
+  display: flex;
+  flex-flow: row;
+  justify-content: right;
+
+  .user-menu {
+    @include standard-border;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+    background-color: $white;
+    margin-left: auto;
+    margin-right: 1vw;
+    min-width: 7rem;
+    padding-left: 1rem;
+
+    h4 {
+      @include pointer-on-hover;
+      @include disable-text-select;
+    }
+  }
 }
 </style>
