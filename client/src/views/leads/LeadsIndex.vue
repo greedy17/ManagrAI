@@ -15,7 +15,7 @@
     </div>
     <div class="lists-container-pane">
       <ListsContainer
-        v-if="!loading"
+        :loading="loading"
         :leads="myLeads"
         :lists="myLists.list"
         @list-created="addListToCollection"
@@ -25,7 +25,6 @@
         @remove-from-list="removeFromList"
         :isOwner="true"
       />
-      <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
     </div>
   </div>
 </template>
