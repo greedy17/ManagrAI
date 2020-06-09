@@ -1,17 +1,16 @@
 <template>
   <div class="account">
-    <PageLoadingSVG v-if="refreshing" />
-
     <div class="header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="account-title">{{ account.name }}</span>
-      <span class="leads-count"
-        >{{ account.leadCount }} {{ account.leadCount === 1 ? 'Lead' : 'Leads' }}</span
-      >
+      <span class="leads-count">
+        {{ collection.pagination.totalCount }}
+        {{ collection.pagination.totalCount === 1 ? 'Lead' : 'Leads' }}
+      </span>
     </div>
     <div class="leads-container" v-if="showLeads">
-      <div v-if="accLeads.pagination.totalCount > 0" class="accLeads">
-        <Lead v-for="lead in accLeads.list" :key="lead.id" :lead="lead" />
+      <div v-if="collection.pagination.totalCount > 0" class="accLeads">
+        <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
       </div>
       <div v-else class="no-items-message">No Leads for this account</div>
     </div>
@@ -20,15 +19,17 @@
 
 <script>
 import Lead from '@/components/prospect/Lead'
-import LeadModel from '@/services/leads'
-import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'Account',
   props: {
     account: {
       type: Object,
-      default: () => {},
+      required: true,
+    },
+    collection: {
+      type: Object,
+      required: true,
     },
   },
   components: {
@@ -37,27 +38,11 @@ export default {
   data() {
     return {
       showLeads: false,
-      accLeads: CollectionManager.create({
-        ModelClass: LeadModel,
-        filters: {
-          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
-          byAccount: this.account.id,
-        },
-      }),
     }
   },
-  created() {},
   methods: {
-    async toggleLeads() {
+    toggleLeads() {
       this.showLeads = !this.showLeads
-      if (this.showLeads) {
-        await this.accLeads.refresh()
-      }
-    },
-  },
-  computed: {
-    refreshing() {
-      return this.accLeads.refreshing
     },
   },
 }
