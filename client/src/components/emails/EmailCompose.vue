@@ -140,13 +140,9 @@ export default {
       filesLoading: false,
       replyMessageId: '',
       uploadFile: {},
-      // NOTE: WHEN WE EVENTUALY MOVE THIS OVER TO ANOTHER COMPONENT, WE WILL HAVE TO FIGURE OUT
-      // HOW TO PASS IN THE VARIABLES. I'M GOING TO HOLD ON THIS UNTIL WE FIGURE OUT HOW TO INTEGRATE
-      // IT WITH THE LEAD PAGE.
       variables: {
-        first_name: 'Neil',
-        last_name: 'Shah',
-        company: 'The Banana Republic',
+        name: '',
+        company: '',
       },
     }
   },
@@ -164,9 +160,19 @@ export default {
       this.replyMessageId = this.replyMessage.id
       this.updateToReply()
     }
+    this.populateTemplateVariables()
     this.getEmailTemplates()
   },
   methods: {
+    populateTemplateVariables() {
+      // This is a function to populate the template variables that are passed along to Nylas.
+      if (this.lead.accountRef && this.lead.accountRef.name) {
+        this.variables.company = this.lead.accountRef.name
+      }
+      if (this.toEmails.length > 0) {
+        this.variables.name = this.toEmails[0].name
+      }
+    },
     uploadFiles(event) {
       const file = event.target.files[0]
       this.filesLoading = true
@@ -253,6 +259,7 @@ export default {
       })
     },
     sendEmail() {
+      this.populateTemplateVariables()
       Nylas.sendEmail(
         this.toEmails,
         this.subject,
@@ -275,6 +282,7 @@ export default {
         })
     },
     previewEmail() {
+      this.populateTemplateVariables()
       this.previewActive = true
       Nylas.previewEmail(
         this.toEmails,
@@ -283,6 +291,7 @@ export default {
         this.ccEmails,
         this.bccEmails,
         this.replyMessageId,
+        this.fileIds,
         this.variables,
       ).then(response => {
         this.preview = response.data

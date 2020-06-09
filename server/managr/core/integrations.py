@@ -253,7 +253,6 @@ def render_email(sender, recipient_emails, subject='(No Subject)',
     if bcc_emails:
         email_info['bcc'] = bcc_emails
 
-    print(file_ids)
     if len(file_ids) > 0:
         email_info['file_ids'] = file_ids
 
