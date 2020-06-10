@@ -137,7 +137,7 @@ class ForecastFilterSet(FilterSet):
             user_list = value.split(',')
             try:
                 if self.request.user.organization.users.filter(id__in=user_list).exists():
-                    return queryset.filter(lead__claimed_by__in=user_list).order_by('forecast')
+                    return queryset.filter(lead__claimed_by__in=user_list).order_by('forecast', 'lead__title')
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
                     # return None
