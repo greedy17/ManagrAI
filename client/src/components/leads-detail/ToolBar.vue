@@ -20,7 +20,7 @@
       <div class="header">Lists</div>
       <div class="container">
         <button @click="openListsModal">Add to A List</button>
-        <Modal v-if="listModal.isOpen" dimmed :width="20">
+        <Modal v-if="listModal.isOpen" dimmed :width="20" @close-modal="listModal.isOpen = false">
           <div class="list-modal-container">
             <h3>My Lists</h3>
             <div :key="i" v-for="(list, i) in usersLists" class="list-items">
@@ -29,11 +29,11 @@
                   the bitwise NOT of -1 is 0 therefore -1 becomes false everything else becomes true
                 -->
                 <Checkbox
-                  v-if="!~allLists.findIndex(lId => lId.id == list.id)"
+                  v-if="!~allLists.findIndex(l => l.id == list.id)"
                   name="lists"
                   @checkbox-clicked="addToPendingList(list.id)"
                   :checked="!!addToList.find(mL => mL == list.id)"
-                />{{ allLists.findIndex(l => lId.id == list.id) }}</span
+                />{{ allLists.findIndex(l => l.id == list.id) }}</span
               >
               <span class="list-items__item">{{ list.title }}</span>
             </div>

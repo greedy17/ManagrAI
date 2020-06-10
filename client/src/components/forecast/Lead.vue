@@ -1,8 +1,5 @@
 <template>
   <div class="lead">
-    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
-      <CloseLead :lead="lead" />
-    </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
@@ -24,11 +21,7 @@
         @updated-forecast="updateForecast"
         :disabled="!belongsToCurrentUser"
       />
-      <LeadStatusDropdown
-        :status="lead.status"
-        @updated-status="updateStatus"
-        :disabled="!belongsToCurrentUser"
-      />
+      <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
       <div class="claimed-by">
         <button>
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
@@ -48,9 +41,7 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
-import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'Lead',
@@ -68,33 +59,15 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
-    CloseLead,
   },
   data() {
     return {
       showDetails: false,
-      modal: {
-        isOpen: false,
-      },
     }
   },
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails
-    },
-    updateStatus(value) {
-      if (value != 'CLOSED') {
-        let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
-          this.lead.status = lead.status
-        })
-      } else {
-        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
-        // this.modal.isOpen = true
-        alert(
-          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
-        )
-      }
     },
     updateForecast(value) {
       if (this.forecast && this.forecast.id) {
@@ -113,9 +86,6 @@ export default {
           this.lead.forecast = response.id
         })
       }
-    },
-    closeModal() {
-      this.modal.isOpen = false
     },
   },
   computed: {
