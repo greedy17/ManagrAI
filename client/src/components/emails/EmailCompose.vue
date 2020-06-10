@@ -16,36 +16,46 @@
         Reply All
       </div>
     </div>
-    <div class="email__row">
-      <div class="form__element-header">From:</div>
-      <div class="email__contact-tag">neil@thinknimble.com</div>
+    <div class="flexbox-container">
+      <div class="flexbox-container__column">
+        <div class="email__row">
+          <div class="form__element-header">From:</div>
+          <div class="email__contact-tag">{{ user.email }}</div>
+        </div>
+        <EmailList
+          :emails="toEmails"
+          :lead="lead"
+          label="To"
+          @add="addToEmail($event)"
+          @remove="removeToEmail($event)"
+        />
+        <EmailList
+          :emails="ccEmails"
+          :lead="lead"
+          label="CC"
+          @add="addCCEmail($event)"
+          @remove="removeCCEmail($event)"
+        />
+        <EmailList
+          :emails="bccEmails"
+          :lead="lead"
+          label="BCC"
+          @add="addBCCEmail($event)"
+          @remove="removeBCCEmail($event)"
+        />
+      </div>
+      <div class="flexbox-container__column">
+        <div class="form__element" v-if="showSubject">
+          <div class="form__element-header">Subject</div>
+          <input type="text" class="form__input" v-model="subject" />
+        </div>
+        <div class="form__element">
+          <div class="form__element-header">Body</div>
+          <textarea class="form__textarea" rows="8" v-model="body"></textarea>
+        </div>
+      </div>
     </div>
-    <EmailList
-      :emails="toEmails"
-      label="To"
-      @add="addToEmail($event)"
-      @remove="removeToEmail($event)"
-    />
-    <EmailList
-      :emails="ccEmails"
-      label="CC"
-      @add="addCCEmail($event)"
-      @remove="removeCCEmail($event)"
-    />
-    <EmailList
-      :emails="bccEmails"
-      label="BCC"
-      @add="addBCCEmail($event)"
-      @remove="removeBCCEmail($event)"
-    />
-    <div class="form__element" v-if="showSubject">
-      <div class="form__element-header">Subject</div>
-      <input type="text" class="form__input" v-model="subject" />
-    </div>
-    <div class="form__element">
-      <div class="form__element-header">Body</div>
-      <textarea class="form__textarea" rows="8" v-model="body"></textarea>
-    </div>
+
     <div class="form__element">
       <div class="form__element-header">Attachments</div>
       <ComponentLoadingSVG v-if="filesLoading" style="margin: 2rem auto" />
@@ -106,6 +116,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    lead: {
+      type: Object,
+      default: () => {
+        return {}
+      },
+    },
   },
   data() {
     return {
@@ -124,13 +140,9 @@ export default {
       filesLoading: false,
       replyMessageId: '',
       uploadFile: {},
-      // NOTE: WHEN WE EVENTUALY MOVE THIS OVER TO ANOTHER COMPONENT, WE WILL HAVE TO FIGURE OUT
-      // HOW TO PASS IN THE VARIABLES. I'M GOING TO HOLD ON THIS UNTIL WE FIGURE OUT HOW TO INTEGRATE
-      // IT WITH THE LEAD PAGE.
       variables: {
-        first_name: 'Neil',
-        last_name: 'Shah',
-        company: 'The Banana Republic',
+        name: '',
+        company: '',
       },
     }
   },
@@ -148,9 +160,19 @@ export default {
       this.replyMessageId = this.replyMessage.id
       this.updateToReply()
     }
+    this.populateTemplateVariables()
     this.getEmailTemplates()
   },
   methods: {
+    populateTemplateVariables() {
+      // This is a function to populate the template variables that are passed along to Nylas.
+      if (this.lead.accountRef && this.lead.accountRef.name) {
+        this.variables.company = this.lead.accountRef.name
+      }
+      if (this.toEmails.length > 0) {
+        this.variables.name = this.toEmails[0].name
+      }
+    },
     uploadFiles(event) {
       const file = event.target.files[0]
       this.filesLoading = true
@@ -237,6 +259,7 @@ export default {
       })
     },
     sendEmail() {
+      this.populateTemplateVariables()
       Nylas.sendEmail(
         this.toEmails,
         this.subject,
@@ -259,6 +282,7 @@ export default {
         })
     },
     previewEmail() {
+      this.populateTemplateVariables()
       this.previewActive = true
       Nylas.previewEmail(
         this.toEmails,
@@ -267,6 +291,7 @@ export default {
         this.ccEmails,
         this.bccEmails,
         this.replyMessageId,
+        this.fileIds,
         this.variables,
       ).then(response => {
         this.preview = response.data

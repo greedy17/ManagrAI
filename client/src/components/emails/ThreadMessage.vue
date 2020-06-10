@@ -51,12 +51,12 @@
     <!-- ALSO, I WANT TO BE ABLE TO TOGGLE THIS ON AND OFF -->
     <h4 class="is-title">Attachments</h4>
     <div class="email__row">
+      <!-- TODO: Change this to a file-specific style instead of using the contact-tag -->
       <span
         v-for="file in message.files"
         class="email__contact-tag email__contact-tag--green"
         :key="file.id"
       >
-        <!-- TODO: Change this to a file-specific style -->
         <a :href="`/api/get-file/${file.id}/`" target="_blank">
           {{ file.filename }}
         </a>

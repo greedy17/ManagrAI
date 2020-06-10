@@ -1,12 +1,11 @@
 <template>
   <PageLoadingSVG v-if="loading" />
-  <div v-else class="leads-detail">
+  <div v-else class="page">
     <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
       <CloseLead :lead="lead" />
     </Modal>
-    <div class="left-pane">
+    <div class="page__left-nav-bar">
       <ToolBar
-        class="toolbar"
         :lead="lead"
         :lists="lists"
         :contacts="contacts"
@@ -15,7 +14,7 @@
         @updated-amount="updateAmount"
       />
     </div>
-    <div class="center-pane">
+    <div class="page__main-content-area">
       <LeadBanner
         :lead="lead"
         @lead-reset="resetLead"
@@ -27,7 +26,7 @@
       <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
       </div>
-      <div class="container">
+      <div class="container" style="margin: 2rem 0">
         <PinnedNotes
           :primaryDescription="lead.primaryDescription"
           :secondaryDescription="lead.secondaryDescription"
@@ -45,11 +44,42 @@
         />
       </div> -->
 
-      <div class="container">
-        <LeadActions v-if="lead" :state="viewState" :lead="lead" />
+      <div class="item-list">
+        <div class="item-list__header">
+          <span class="item-list__title">
+            History
+          </span>
+        </div>
+        <div class="item-list__item">
+          <div class="item-list__row">
+            <div class="item-list__row-item--half">Icon</div>
+            <div class="item-list__row-item--double">Title</div>
+            <div class="item-list__row-item--double">Available Date</div>
+            <div class="item-list__row-item">
+              <input type="text" class="input" />
+            </div>
+          </div>
+        </div>
+        <div class="item-list__item">
+          <div class="item-list__row">
+            <div class="item-list__row-item--half">[:)]</div>
+            <div class="item-list__row-item--double">This is an email's title</div>
+            <div class="item-list__row-item--double">4/12/1066</div>
+            <div class="item-list__row-item">
+              <!-- Filler to line up spacing -->
+            </div>
+          </div>
+          <div class="item-list__row-item-content">
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Itaque, cum magnam. Recusandae
+            necessitatibus itaque nesciunt quas magnam dolore veniam ab expedita in ipsa, minus,
+            aspernatur natus? Rem nulla culpa aperiam?
+          </div>
+        </div>
       </div>
+      <!-- <LeadActions v-if="lead" :state="viewState" :lead="lead" /> -->
     </div>
-    <div class="right-pane">
+
+    <div class="page__right-panel">
       <LeadInsights :lead="lead" />
     </div>
   </div>
@@ -229,49 +259,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/containers';
+@import '@/styles/layout';
+@import '@/styles/sidebars';
 @import '@/styles/variables';
-
-.leads-detail {
-  display: flex;
-  flex-flow: row;
-}
-
-.left-pane {
-  width: 21%;
-  min-width: 18.45rem;
-  padding-top: 2%;
-  padding-right: 1%;
-  display: flex;
-  flex-flow: row;
-
-  .toolbar {
-    width: 15.2rem;
-    margin-left: auto;
-  }
-}
-
-.center-pane {
-  width: 54%;
-  min-width: 49.75rem;
-  padding: 2% 1% 1% 1%;
-
-  .container {
-    margin-top: 3%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-.additional-information {
-  width: 100%;
-  display: inline-block;
-}
-
-.right-pane {
-  width: 25%;
-  min-width: 21rem;
-  box-sizing: border-box;
-  padding: 2% 1% 1% 1%;
-}
+@import '@/styles/forms';
 </style>

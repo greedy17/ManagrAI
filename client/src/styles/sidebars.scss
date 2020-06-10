@@ -56,7 +56,6 @@
 .toolbar {
   @include standard-border();
   background-color: $white;
-  margin: 1rem 0;
   &__header {
     padding: 1rem;
     text-align: center;
