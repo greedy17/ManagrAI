@@ -2,12 +2,7 @@
   <div class="lead-banner" :style="bannerBackgroundColor">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
-      <LeadForecastDropdown
-        class="forecast-dropdown"
-        :forecast="lead.forecast && lead.forecastRef.forecast"
-        :transparent="true"
-        @updated-forecast="emitUpdatedForecast"
-      />
+      <LeadForecastDropdown class="forecast-dropdown" :lead="lead" :transparent="true" />
     </div>
     <LeadStatusDropdown :lead="lead" />
     <div class="days-in-status-container">
@@ -39,7 +34,10 @@ import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 export default {
   name: 'LeadBanner',
   props: {
-    lead: Object,
+    lead: {
+      type: Object,
+      required: true,
+    },
   },
   components: {
     LeadForecastDropdown,
@@ -54,9 +52,6 @@ export default {
     },
     emitClaim() {
       this.$emit('lead-claimed')
-    },
-    emitUpdatedForecast(value) {
-      this.$emit('updated-forecast', value)
     },
   },
   computed: {

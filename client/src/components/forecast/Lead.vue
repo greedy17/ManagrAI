@@ -17,9 +17,11 @@
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
-        :forecast="forecast.forecast"
-        @updated-forecast="updateForecast"
+        :inForecastView="true"
+        :forecastProp="forecast"
+        :lead="lead"
         :disabled="!belongsToCurrentUser"
+        @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
       <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
       <div class="claimed-by">
@@ -41,7 +43,6 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import Forecast from '@/services/forecasts'
 
 export default {
   name: 'Lead',
@@ -68,24 +69,6 @@ export default {
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails
-    },
-    updateForecast(value) {
-      if (this.forecast && this.forecast.id) {
-        // since forecast exists, patch forecast
-        let patchData = {
-          lead: this.lead.id,
-          forecast: value,
-        }
-        Forecast.api.update(this.forecast.id, patchData).then(() => {
-          this.$emit('delete-lead', this.lead.id)
-        })
-      } else {
-        // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(response => {
-          this.lead.forecastRef = response
-          this.lead.forecast = response.id
-        })
-      }
     },
   },
   computed: {

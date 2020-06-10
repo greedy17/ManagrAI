@@ -1,7 +1,6 @@
 <template>
   <div class="status-dropdown">
     <select
-      ref="dropdown"
       v-model="selectedStatus"
       :style="computedStyles"
       :disabled="disabled || selectedStatus === 'CLOSED'"

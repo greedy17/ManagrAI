@@ -12,7 +12,7 @@
         :key="forecast.id"
         :forecast="forecast"
         :lead="forecast.leadRef"
-        @delete-lead="deleteLead"
+        @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
       <button v-if="moreToLoad" class="load-more-button" @click="loadMore">
         Load More
@@ -49,12 +49,6 @@ export default {
       if (this.numOfLeads > 0) {
         this.showLeads = !this.showLeads
       }
-    },
-    deleteLead(id) {
-      // NOTE (Bruno 5-7-20): this is incomplete, as just deleting a Lead from a ForecastList is not enough,
-      // it should also be added to another ForecastList, and that list's leadCount should also be updated
-      this.collection.list = this.collection.list.filter(forecast => forecast.lead !== id)
-      this.collection.pagination.totalCount -= 1
     },
     loadMore() {
       alert('WIP')

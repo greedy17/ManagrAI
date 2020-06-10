@@ -5,6 +5,7 @@
       :key="index"
       :title="capitalizeWord(forecast)"
       :collection="lists[forecast]"
+      @move-lead-in-forecast-list="moveLeadInForecastList"
     />
   </div>
 </template>
@@ -39,6 +40,28 @@ export default {
   },
   methods: {
     capitalizeWord,
+    moveLeadInForecastList(payload) {
+      let { forecast, from, to } = payload
+      let { leadRef } = forecast
+      // remove from proper collection
+      this.lists[from].list = this.lists[from].list.filter(f => f.leadRef.id != leadRef.id)
+      this.lists[from].pagination.totalCount -= 1
+      // add to proper collection, sort
+      let newCollectionList = [...this.lists[to].list, forecast]
+      newCollectionList.sort(this.listSorter)
+      this.lists[to].list = newCollectionList
+      this.lists[to].pagination.totalCount += 1
+    },
+    listSorter(firstForecast, secondForecast) {
+      if (firstForecast.leadRef.title > secondForecast.leadRef.title) {
+        return 1
+      }
+      if (secondForecast.leadRef.title > firstForecast.leadRef.title) {
+        return -1
+      }
+      // a must be equal to b
+      return 0
+    },
   },
 }
 </script>

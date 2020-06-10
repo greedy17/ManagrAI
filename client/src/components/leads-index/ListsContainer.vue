@@ -8,8 +8,10 @@
         :active="index === activeTab"
         :index="index"
         @update-active-tab="updateActiveTab"
-        >{{ tab }}</ActionTabHeader
+        class="header"
       >
+        {{ tab }}
+      </ActionTabHeader>
     </div>
     <div v-if="!loading" class="tab-content">
       <div v-if="!listView" class="view-toggle-container">
@@ -200,6 +202,10 @@ export default {
   flex-flow: row;
   width: 100%;
   margin-bottom: 1rem;
+
+  .header {
+    @include pointer-on-hover();
+  }
 }
 
 .action-tab-content {
