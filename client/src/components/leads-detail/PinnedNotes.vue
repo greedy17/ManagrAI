@@ -1,9 +1,11 @@
 <template>
-  <div class="pinned-notes">
-    <div class="header section-shadow">
-      Pinned Notes
+  <div class="item-list">
+    <div class="item-list__header">
+      <span class="item-list__title">
+        Pinned Notes
+      </span>
     </div>
-    <div class="note section-shadow">
+    <div class="item-list__item">
       <div class="note-header">
         <span>Primary Description</span>
         <img
@@ -23,7 +25,7 @@
         <button type="reset" @click="cancelEditPrimary">Cancel</button>
       </form>
     </div>
-    <div class="note section-shadow">
+    <div class="item-list__item">
       <div class="note-header">
         <span>Secondary Description</span>
         <img
@@ -99,6 +101,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/containers';
 
 .pinned-notes {
   @include base-font-styles();

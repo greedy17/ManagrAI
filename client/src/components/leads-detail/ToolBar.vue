@@ -29,11 +29,11 @@
                   the bitwise NOT of -1 is 0 therefore -1 becomes false everything else becomes true
                 -->
                 <Checkbox
-                  v-if="!~allLists.findIndex((lId) => lId.id == list.id)"
+                  v-if="!~allLists.findIndex(lId => lId.id == list.id)"
                   name="lists"
                   @checkbox-clicked="addToPendingList(list.id)"
-                  :checked="!!addToList.find((mL) => mL == list.id)"
-                />{{ allLists.findIndex((l) => lId.id == list.id) }}</span
+                  :checked="!!addToList.find(mL => mL == list.id)"
+                />{{ allLists.findIndex(l => lId.id == list.id) }}</span
               >
               <span class="list-items__item">{{ list.title }}</span>
             </div>
@@ -178,7 +178,7 @@ export default {
     },
     async addLeadsToList() {
       // make backend endpoint for this to be easier
-      let promises = this.addToList.map((l) => List.api.addToList([this.lead.id], l))
+      let promises = this.addToList.map(l => List.api.addToList([this.lead.id], l))
       try {
         await Promise.all(promises)
       } finally {
@@ -186,7 +186,7 @@ export default {
       }
     },
     addToPendingList(id) {
-      let index = this.addToList.findIndex((i) => i == id)
+      let index = this.addToList.findIndex(i => i == id)
       if (index > -1) {
         this.addToList.splice(index, 1)
       } else {

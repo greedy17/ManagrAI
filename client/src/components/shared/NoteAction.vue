@@ -1,99 +1,73 @@
 <template>
-  <div class="note-action">
-    <FormField :errors="notesForm.fc['title'].errors" binding="title" labelText="Note Title">
-      <template v-slot:input>
-        <input
-          id="title"
-          :name="notesForm.fc['title'].name"
-          class="note-title"
-          v-model="notesForm.fc['title'].value"
-          placeholder="Note Title"
-          @blur="notesForm.fc['title'].validate()"
-        />
-      </template>
-    </FormField>
-    <FormField :errors="notesForm.fc['content'].errors" binding="content" labelText="Note Content">
-      <template v-slot:input>
-        <textarea
-          id="content"
-          :name="notesForm.fc['content'].name"
-          class="note-detail"
-          v-model="notesForm.fc['content'].value"
-          placeholder="Note Detail"
-          @blur="notesForm.fc['content'].validate()"
-        />
-      </template>
-    </FormField>
-    <div class="save-button-container">
-      <span @click="emitSaveNote" class="save-button">Save</span>
+  <div class="flexbox-container">
+    <div class="flexbox-container__column">
+      <h4>Contacts</h4>
+      <ContactBox
+        v-for="contact in lead.linkedContactsRef"
+        :contact="contact"
+        @toggle="toggleActive($event)"
+        :isActive="contactIsActive(contact.id)"
+        :key="contact.id"
+      />
+    </div>
+    <div class="flexbox-container__column">
+      <div class="form">
+        <div class="form__element">
+          <div class="form__element-header">Title</div>
+          <input type="text" class="form__input" />
+          <!-- <div class="form__element-error">Error Message Goes here</div> -->
+        </div>
+        <div class="form__element">
+          <div class="form__element-header">Description</div>
+          <textarea class="form__textarea" />
+        </div>
+      </div>
+      <div class="form__element">
+        <div class="form__element-header">Date</div>
+        <input type="datetime-local" class="form__input" />
+      </div>
+      <div class="form__element">
+        <button class="form__button">Save</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import Note from '@/services/notes'
-import FormField from '@/components/forms/FormField'
-import { FormGroup } from '@/services/forms/index'
-import { required } from '@/services/forms/validators/index'
+import ContactBox from '@/components/shared/ContactBox'
 export default {
   name: 'NoteAction',
-  components: { FormField },
-
-  data() {
-    return {
-      // notify that item was successfully created and reset form
-
-      note: new Note(),
-      notesForm: new FormGroup({
-        name: 'Note Form',
-        fields: [
-          {
-            name: 'title',
-            value: '',
-            validators: [required({ message: 'Please Enter a Title for Your Note' })],
-          },
-          {
-            name: 'content',
-            value: '',
-            validators: [required({ message: 'Please Enter Some Content for Your Note' })],
-          },
-        ],
-      }),
-    }
-  },
-
-  methods: {
-    emitSaveNote() {
-      this.notesForm.validate()
-      if (!this.notesForm.valid) {
-        return
-      }
-
-      this.$emit('save-note', this.notesForm.Value)
+  components: { ContactBox },
+  props: {
+    lead: {
+      type: Object,
+      required: true,
     },
   },
-  created() {},
+  data() {
+    return {
+      // actionNote: new CallNote(),
+      activeContacts: [],
+    }
+  },
+  methods: {
+    toggleActive(contactId) {
+      if (this.activeContacts.includes(contactId)) {
+        this.activeContacts = this.activeContacts.filter(id => id !== contactId)
+      } else {
+        this.activeContacts.push(contactId)
+      }
+    },
+    contactIsActive(contactId) {
+      return this.activeContacts.includes(contactId)
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
+@import '@/styles/layout';
+@import '@/styles/forms';
 @import '@/styles/mixins/inputs';
-
-.note-action {
-  width: 100%;
-  display: flex;
-  flex-flow: column;
-}
-
-.save-button-container {
-  display: flex;
-  flex-flow: row;
-}
-
-.save-button {
-  @include primary-button();
-  margin-left: auto;
-}
 </style>
