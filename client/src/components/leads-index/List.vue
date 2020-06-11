@@ -131,7 +131,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .list-header {
