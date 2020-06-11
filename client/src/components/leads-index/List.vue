@@ -40,7 +40,7 @@
         <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
       </template>
       <LoadMoreButton
-        v-if="!trueList.refreshing && moreToLoad"
+        v-if="!trueList.refreshing && !!trueList.pagination.next"
         class="load-more-button"
         :collection="trueList"
       />
@@ -120,16 +120,10 @@ export default {
       }
       this.showLeads = !this.showLeads
     },
-    loadMore() {
-      alert('WIP')
-    },
   },
   computed: {
     numOfLeads() {
       return this.list.leadCount
-    },
-    moreToLoad() {
-      return !!this.trueList.pagination.next
     },
   },
 }
