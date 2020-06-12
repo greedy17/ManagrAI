@@ -1,7 +1,12 @@
 <template>
   <div class="prospect">
     <div class="toolbar-pane">
-      <ToolBar :repFilterState="repFilterState" @toggle-active-rep="toggleActiveRep" />
+      <ToolBar
+        :repFilterState="repFilterState"
+        :unclaimedFilterState="unclaimedFilterState"
+        @toggle-active-rep="toggleActiveRep"
+        @toggle-unclaimed="toggleUnclaimed"
+      />
     </div>
     <div class="lists-pane">
       <AccountsContainer
@@ -37,6 +42,7 @@ export default {
       }),
       accountsWithLeads: [], // objects containing account info & collections of leads for account
       repFilterState: {},
+      unclaimedFilterState: false,
     }
   },
   async created() {
@@ -66,7 +72,7 @@ export default {
     refreshCollections() {
       this.loading = true
       // update byUser filter for each collection,
-      this.applyFilterByRep()
+      this.applyFilters()
       // refresh each collection
       let promises = this.accountsWithLeads.map(accountWithLeads =>
         accountWithLeads.collection.refresh(),
@@ -75,13 +81,27 @@ export default {
         this.loading = false
       })
     },
-    applyFilterByRep() {
-      // turn array of rep IDs into a comma-delimited string of active reps
-      let filterString = this.activeReps.join(',')
-      // add string to filters for each of the collections
-      Object.keys(this.accountsWithLeads).forEach(key => {
-        this.accountsWithLeads[key].collection.filters.byUser = filterString
-      })
+    applyFilters() {
+      if (this.unclaimedFilterState) {
+        Object.keys(this.accountsWithLeads).forEach(key => {
+          this.accountsWithLeads[key].collection.filters = {
+            ...this.accountsWithLeads[key].collection.filters,
+            byUser: null,
+            isClaimed: 'False',
+          }
+        })
+      } else {
+        // turn array of rep IDs into a comma-delimited string of active reps
+        let filterString = this.activeReps.join(',')
+        // add string to filters for each of the collections
+        Object.keys(this.accountsWithLeads).forEach(key => {
+          this.accountsWithLeads[key].collection.filters = {
+            ...this.accountsWithLeads[key].collection.filters,
+            byUser: filterString,
+            isClaimed: null,
+          }
+        })
+      }
     },
     toggleActiveRep(repID) {
       // depending on state of this.repFilterState --> add or make false at that key
@@ -91,6 +111,8 @@ export default {
       } else {
         this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
       }
+      //  if filtering by rep, remove filter by unclaimed
+      this.unclaimedFilterState = false
       this.refreshCollections()
     },
     addNextPage() {
@@ -132,6 +154,12 @@ export default {
           this.accounts.loadingNextPage = false
           apiErrorHandler({ apiName: 'ProspectPage.addNextPage error' })(error)
         })
+    },
+    toggleUnclaimed() {
+      // if filtering by unclaimed, reset filterByRep
+      this.unclaimedFilterState = !this.unclaimedFilterState
+      this.repFilterState = {}
+      this.refreshCollections()
     },
   },
   computed: {
