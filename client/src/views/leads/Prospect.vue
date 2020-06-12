@@ -4,7 +4,12 @@
       <ToolBar :repFilterState="repFilterState" @toggle-active-rep="toggleActiveRep" />
     </div>
     <div class="lists-pane">
-      <AccountsContainer v-if="!loading" :accounts="accountsWithLeads" />
+      <AccountsContainer
+        v-if="!loading"
+        :accounts="accountsWithLeads"
+        :accountsCollection="accounts"
+        @load-more="addNextPage"
+      />
       <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
     </div>
   </div>
@@ -16,6 +21,7 @@ import AccountsContainer from '@/components/prospect/AccountsContainer'
 import Account from '@/services/accounts'
 import Lead from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
+import { apiErrorHandler } from '@/services/api'
 
 export default {
   name: 'Prospect',
@@ -37,13 +43,13 @@ export default {
     // get all of the accounts for this organization
     await this.accounts.refresh()
     // generate a collection for each retrieved account, to get its leads
-    this.generateCollections()
+    this.accountsWithLeads = this.generateCollections(this.accounts.list)
     this.refreshCollections()
   },
   methods: {
-    generateCollections() {
+    generateCollections(list) {
       // collections of leads filtered by account
-      this.accountsWithLeads = this.accounts.list.map(this.generateAccountLeadsObject)
+      return list.map(this.generateAccountLeadsObject)
     },
     generateAccountLeadsObject(account) {
       let collection = CollectionManager.create({
@@ -86,6 +92,46 @@ export default {
         this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
       }
       this.refreshCollections()
+    },
+    addNextPage() {
+      // this method borrows heavily from CollectionManager.addNextPage
+      // this custom method must be used instead because of the desired UX given the serialized data:
+      // we must get the next page of accounts to then go through this next page and
+      // fetch each account's first page of leads
+
+      this.accounts.loadingNextPage = true
+
+      let tempCollection = CollectionManager.create({
+        ModelClass: Account,
+      })
+
+      tempCollection.pagination = {
+        ...this.accounts.pagination,
+        page: this.accounts.pagination.page + 1,
+      }
+      tempCollection.filters = {
+        ...this.accounts.filters,
+      }
+
+      tempCollection
+        .refresh()
+        .then(collection => {
+          let tempAccountsWithLeads = this.generateCollections(collection.list)
+          let promises = tempAccountsWithLeads.map(accountWithLeads =>
+            accountWithLeads.collection.refresh(),
+          )
+
+          Promise.all(promises).then(() => {
+            // here add tempAccountsWithLeads to this.accountsWithLeads
+            this.accountsWithLeads = [...this.accountsWithLeads, ...tempAccountsWithLeads]
+            this.accounts.pagination = collection.pagination
+            this.accounts.loadingNextPage = false
+          })
+        })
+        .catch(error => {
+          this.accounts.loadingNextPage = false
+          apiErrorHandler({ apiName: 'ProspectPage.addNextPage error' })(error)
+        })
     },
   },
   computed: {
