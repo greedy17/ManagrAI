@@ -84,7 +84,12 @@ export default {
   data() {
     return {
       leadTitle: '',
-      accounts: CollectionManager.create({ ModelClass: Account }),
+      accounts: CollectionManager.create({
+        ModelClass: Account,
+        filters: {
+          pageSize: 2698,
+        },
+      }),
       selectedAccount: null,
       contacts: CollectionManager.create({ ModelClass: Contact }),
       contactsToInclude: {},
@@ -188,7 +193,7 @@ export default {
       }
       contacts = [...contacts, ...Object.values(this.contactsToInclude)]
 
-      Lead.api.create(this.leadTitle, this.selectedAccount, contacts).then((response) => {
+      Lead.api.create(this.leadTitle, this.selectedAccount, contacts).then(response => {
         this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
       })
     },
