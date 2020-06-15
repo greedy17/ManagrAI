@@ -16,6 +16,12 @@
       </div>
     </div>
     <div class="step">
+      <span class="title">Step 3</span>
+      <div v-if="currentStep > 3" class="checkmark">
+        <img class="icon" alt="checkmark" src="@/assets/images/checkmark.svg" />
+      </div>
+    </div>
+    <div class="step">
       <span class="title">Edit + get to closing!</span>
     </div>
   </div>
@@ -40,8 +46,8 @@ export default {
 .form-steps {
   @include standard-border();
   background-color: $white;
-  height: 15rem;
-  width: 15rem;
+  height: 20rem;
+  width: 17rem;
 }
 
 .header {

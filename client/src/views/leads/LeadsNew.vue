@@ -4,7 +4,11 @@
       <FormSteps :currentStep="currentStep" />
     </div>
     <div class="form-pane">
-      <Form :currentStep="currentStep" @clicked-next="showForm2" />
+      <Form
+        :currentStep="currentStep"
+        @to-create-account="toCreateAccount"
+        @to-add-contacts="toAddContacts"
+      />
     </div>
   </div>
 </template>
@@ -22,8 +26,11 @@ export default {
     }
   },
   methods: {
-    showForm2() {
+    toCreateAccount() {
       this.currentStep = 2
+    },
+    toAddContacts() {
+      this.currentStep = 3
     },
   },
 }
