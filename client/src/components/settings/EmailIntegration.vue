@@ -4,35 +4,26 @@
       <div class="box__header">
         <div class="box__title">Email Integration</div>
       </div>
-      <div class="box__content">
-        <div class="flexbox-container v-centered">
-          <div>
-            <a :href="user.emailAuthLink" style="text-decoration: none">
-              <button
-                class="inactive-button "
-                v-if="!user.emailAuthAccount || !user.emailAuthAccountRef.accessToken"
-              >
-                Connect Email
-              </button>
-            </a>
-            <button
-              class="primary-button"
-              style="margin-bottom: .1rem;"
-              v-if="user.emailAuthAccount && user.emailAuthAccountRef.accessToken"
-            >
-              Connected
-            </button>
-            <div
-              class="disconnect"
-              v-if="user.emailAuthAccount && user.emailAuthAccountRef.accessToken"
-              @click="revokeToken"
-            >
-              X Disconnect
-            </div>
-          </div>
-          <div>
-            Sync <strong>{{ user.email }}</strong> with your Managr Account
-          </div>
+
+      <!-- Email integration NOT ACTIVE -->
+      <div class="box__content" v-if="!user.emailConnected">
+        <div>
+          <strong>{{ user.email }}</strong> is not yet synced with your Managr account.
+        </div>
+        <div style="margin: 1rem 0">
+          <a :href="user.emailAuthLink" style="text-decoration: none">
+            <button class="inactive-button">Connect Email</button>
+          </a>
+        </div>
+      </div>
+
+      <!-- Email integration active -->
+      <div class="box__content" v-if="user.emailConnected">
+        <div>
+          <strong>{{ user.email }}</strong> is synced with your Mangr account.
+        </div>
+        <div style="margin: 1rem 0">
+          <button class="disconnect" v-if="user.emailConnected" @click="revokeToken">× Disconnect</button>
         </div>
       </div>
     </div>
@@ -90,10 +81,7 @@ export default {
 @import '@/styles/layout';
 
 .disconnect {
-  text-align: right;
-  font-size: 12px;
-  margin: 0 0.5rem 0 0;
-  color: $coral;
+  @include button-danger;
 }
 
 .v-centered {

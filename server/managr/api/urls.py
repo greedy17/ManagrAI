@@ -26,7 +26,7 @@ urlpatterns = [
         name="get_email_auth_link",
     ),
     path('users/email-auth-token/', core_views.email_auth_token, name="get_email_auth_token"),
-    path('users/revoke-email-auth', core_views.revoke_access_token, name="revoke_email_auth"),
+    path('users/revoke-email-auth/', core_views.revoke_access_token, name="revoke_email_auth"),
     path('account-status/', core_views.get_account_status, name='get_account_status'),
     path('get-file/<str:file_id>/', core_views.GetFileView.as_view(), name='get_file_from_nylas'),
 ]

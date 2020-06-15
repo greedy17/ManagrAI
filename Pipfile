@@ -16,10 +16,11 @@ django-rest-auth = "==0.*"
 django-storages = "==1.*"
 djangorestframework = "==3.*"
 daphne = "==2.*"
+
+# Used for populating example models while running tests
 factory-boy = "==2.*"
-# Used for populating example models while running tests
 faker = "==2.*"
-# Used for populating example models while running tests
+
 gunicorn = "==19.*"
 Pillow = "==5.*"
 psycopg2 = "==2.8.4"
@@ -30,11 +31,12 @@ rollbar = "==0.*"
 whitenoise = "==3.*"
 django-kronos = "==1.*"
 django-money = "*"
-pylint-django = "*"
 
 [requires]
 python_version = "3.7"
 
 [dev-packages]
+pylint = "*"
+pylint-django = "*"
 pycodestyle = "*"
 "autopep8" = "*"

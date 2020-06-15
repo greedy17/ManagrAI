@@ -1,11 +1,13 @@
 <template>
   <div class="container">
-    <button class="button" v-if="!showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">
-      Add New Template
-    </button>
-    <button class="button" v-if="showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">
-      Hide
-    </button>
+    <div style="margin-bottom: 1rem;">
+      <button
+        class="button"
+        v-if="!showNewEmailBox"
+        @click="showNewEmailBox = !showNewEmailBox"
+      >Add New Template</button>
+      <button class="button" v-if="showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">Hide</button>
+    </div>
     <div class="box" v-if="showNewEmailBox">
       <div class="box__header">
         <div class="box__title">New Email Template</div>

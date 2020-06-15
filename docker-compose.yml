@@ -1,0 +1,54 @@
+version: "3.4"
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+
+services:
+  postgres:
+    restart: always
+    image: postgres:12
+    environment:
+      - POSTGRES_DB=managr_db
+      - POSTGRES_USER=managr
+      - POSTGRES_PASSWORD=managr
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data/
+      - local_postgres_data_backups:/backups
+
+  server:
+    build:
+      context: .
+      dockerfile: ./compose/server/Dockerfile
+    restart: always
+    command: /start
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    env_file:
+      - "server/.env"
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    user: ${DOCKER_UID}
+
+  # 2020-06-15 William: Temporarily disabled, because WSL is not picking
+  #                     up file changes and auto-refreshing.
+  # client:
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/client/Dockerfile
+  #   restart: always
+  #   env_file:
+  #     - "client/.env.local"
+  #   environment:
+  #     - NPM_PRIVATE_TOKEN
+  #   volumes:
+  #     - .:/app
+  #     - /app/client/node_modules
+  #   depends_on:
+  #     - server
+  #   ports:
+  #     - "8080:8080"
+  #   user: ${DOCKER_UID}

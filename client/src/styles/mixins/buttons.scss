@@ -40,6 +40,12 @@
   color: $main-font-gray;
 }
 
+@mixin button-danger () {
+  @include base-button();
+  background-color: $coral;
+  color: $white;
+}
+
 @mixin disabled-button-styles() {
   &:disabled {
     background-color: $light-gray-blue;
