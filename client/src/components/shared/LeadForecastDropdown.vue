@@ -1,6 +1,6 @@
 <template>
   <div class="forecast-dropdown">
-    <select @change="onChange" :style="computedStyles" :disabled="disabled">
+    <select @change="updateForecast" :style="computedStyles" :disabled="disabled || leadIsClosed">
       <option
         v-for="option in selectableOptions"
         :selected="option.toUpperCase() === forecast"
@@ -9,19 +9,34 @@
       >
         {{ option }}
       </option>
-      <option disabled :selected="forecast == null" value="">Unforecasted</option>
+      <option disabled :selected="forecast == null || forecast == 'NA'" value="">
+        Unforecasted
+      </option>
     </select>
   </div>
 </template>
 
 <script>
 import { forecastEnums } from '@/services/leads/enumerables'
+import Forecast from '@/services/forecasts'
 
 export default {
   name: 'LeadForecastDropdown',
   props: {
-    forecast: {
+    lead: {
       required: true,
+      type: Object,
+    },
+    inForecastView: {
+      // the serialized data from /views/leads/Forecast is different, and so has to be handled differently
+      // the optional forecast prop is passed in only from /views/leads/Forecast, due to that difference in data
+      optional: true,
+      default: false,
+    },
+    forecastProp: {
+      // only passed in from Forecast view
+      optional: true,
+      type: Object,
     },
     transparent: {
       type: Boolean,
@@ -33,14 +48,73 @@ export default {
     },
   },
   methods: {
-    onChange(e) {
-      this.$emit('updated-forecast', e.target.value.toUpperCase())
+    updateForecast(e) {
+      let value = e.target.value.toUpperCase()
+      if (this.inForecastView) {
+        // handle specific case
+        this.forecastViewUpdate(value)
+      } else {
+        // handle generic case
+        this.genericUpdate(value)
+      }
+    },
+    genericUpdate(value) {
+      if (this.lead.forecast) {
+        // since forecast exists, patch forecast
+        let patchData = {
+          lead: this.lead.id,
+          forecast: value,
+        }
+        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
+          this.lead.forecast = forecast.id
+          this.lead.forecastRef = forecast
+        })
+      } else {
+        // since currently null, create forecast
+        Forecast.api.create(this.lead.id, value).then(forecast => {
+          this.lead.forecast = forecast.id
+          this.lead.forecastRef = forecast
+        })
+      }
+    },
+    forecastViewUpdate(value) {
+      if (this.forecastProp && this.forecastProp.id) {
+        // since forecast exists, patch forecast
+        let patchData = {
+          lead: this.lead.id,
+          forecast: value,
+        }
+        Forecast.api.update(this.forecastProp.id, patchData).then(data => {
+          let eventPayload = {
+            forecast: data, // includes the leadRef
+            from: this.forecastProp.forecast,
+            to: value,
+          }
+          this.$emit('move-lead-in-forecast-list', eventPayload)
+        })
+      } else {
+        // since currently null, create forecast
+        Forecast.api.create(this.lead.id, value).then(response => {
+          this.lead.forecastRef = response
+          this.lead.forecast = response.id
+        })
+      }
     },
   },
   computed: {
     selectableOptions() {
       // all options are selectable except 'Unforecasted'. A lead is only 'Unforecasted' on creation.
-      return forecastEnums.filter(option => option != 'Unforecasted')
+      return forecastEnums.filter(option => option != 'NA')
+    },
+    forecast() {
+      if (this.inForecastView) {
+        return this.forecastProp ? this.forecastProp.forecast : null
+      } else {
+        return this.lead.forecastRef ? this.lead.forecastRef.forecast : null
+      }
+    },
+    leadIsClosed() {
+      return this.lead.status && this.lead.status.toUpperCase() == 'CLOSED'
     },
     computedStyles() {
       if (this.transparent) {

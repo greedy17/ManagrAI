@@ -1,8 +1,5 @@
 <template>
   <div class="lead">
-    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
-      <CloseLead :lead="lead" />
-    </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
@@ -20,15 +17,13 @@
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown
-        :forecast="forecast.forecast"
-        @updated-forecast="updateForecast"
+        :inForecastView="true"
+        :forecastProp="forecast"
+        :lead="lead"
         :disabled="!belongsToCurrentUser"
+        @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
-      <LeadStatusDropdown
-        :status="lead.status"
-        @updated-status="updateStatus"
-        :disabled="!belongsToCurrentUser"
-      />
+      <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
       <div class="claimed-by">
         <button>
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
@@ -48,9 +43,6 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import Lead from '@/services/leads'
-import Forecast from '@/services/forecasts'
-import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'Lead',
@@ -68,54 +60,15 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
-    CloseLead,
   },
   data() {
     return {
       showDetails: false,
-      modal: {
-        isOpen: false,
-      },
     }
   },
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails
-    },
-    updateStatus(value) {
-      if (value != 'CLOSED') {
-        let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
-          this.lead.status = lead.status
-        })
-      } else {
-        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
-        // this.modal.isOpen = true
-        alert(
-          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
-        )
-      }
-    },
-    updateForecast(value) {
-      if (this.forecast && this.forecast.id) {
-        // since forecast exists, patch forecast
-        let patchData = {
-          lead: this.lead.id,
-          forecast: value,
-        }
-        Forecast.api.update(this.forecast.id, patchData).then(() => {
-          this.$emit('delete-lead', this.lead.id)
-        })
-      } else {
-        // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(response => {
-          this.lead.forecastRef = response
-          this.lead.forecast = response.id
-        })
-      }
-    },
-    closeModal() {
-      this.modal.isOpen = false
     },
   },
   computed: {

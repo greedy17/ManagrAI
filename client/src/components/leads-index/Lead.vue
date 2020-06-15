@@ -1,8 +1,5 @@
 <template>
   <div class="lead">
-    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
-      <CloseLead :lead="lead" />
-    </Modal>
     <div class="lead-header" v-bind:style="headerBackgroundColor">
       <span class="lead-name" @click="toggleDetails">{{ lead.title }}</span>
       <span class="lead-rating">{{ lead.rating }}</span>
@@ -13,11 +10,8 @@
       <div v-else class="lead-description">No Descriptions</div>
       <span class="lead-amount">{{ lead.amount | currency }}</span>
       <span class="lead-last-update">{{ lead.lastUpdateDate }}</span>
-      <LeadForecastDropdown
-        :forecast="lead.forecastRef && lead.forecastRef.forecast"
-        @updated-forecast="updateForecast"
-      />
-      <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
+      <LeadForecastDropdown :lead="lead" />
+      <LeadStatusDropdown :lead="lead" />
       <button class="route-to-detail">
         <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
       </button>
@@ -32,9 +26,6 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import Lead from '@/services/leads'
-import Forecast from '@/services/forecasts'
-import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'Lead',
@@ -48,55 +39,15 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
-    CloseLead,
   },
   data() {
     return {
       showDetails: false,
-      modal: {
-        isOpen: false,
-      },
     }
   },
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails
-    },
-    updateStatus(value) {
-      if (value != 'CLOSED') {
-        let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
-          this.lead.status = lead.status
-        })
-      } else {
-        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
-        // this.modal.isOpen = true
-        alert(
-          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
-        )
-      }
-    },
-    updateForecast(value) {
-      if (this.lead.forecast) {
-        // since forecast exists, patch forecast
-        let patchData = {
-          lead: this.lead.id,
-          forecast: value,
-        }
-        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
-        })
-      } else {
-        // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
-        })
-      }
-    },
-    closeModal() {
-      this.modal.isOpen = false
     },
     routeToLeadDetail() {
       this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })

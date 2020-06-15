@@ -1,9 +1,6 @@
 <template>
   <PageLoadingSVG v-if="loading" />
   <div v-else class="page">
-    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
-      <CloseLead :lead="lead" />
-    </Modal>
     <div class="page__left-nav-bar">
       <ToolBar
         :lead="lead"
@@ -21,7 +18,6 @@
         @lead-released="releaseLead"
         @lead-claimed="claimLead"
         @updated-forecast="updateForecast"
-        @updated-status="updateStatus"
       />
       <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
@@ -93,7 +89,6 @@ import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
-import CloseLead from '@/components/shared/CloseLead'
 import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
@@ -110,15 +105,11 @@ export default {
     LeadActions,
     PinnedNotes,
     LeadInsights,
-    CloseLead,
   },
   data() {
     return {
       loading: false,
       lead: null,
-      modal: {
-        isOpen: false,
-      },
       editState: EDIT_STATE,
       viewState: VIEW_STATE,
       lists: CollectionManager.create({
@@ -203,16 +194,6 @@ export default {
         })
       }
     },
-    updateStatus(value) {
-      if (value != 'CLOSED') {
-        let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
-          this.lead = lead
-        })
-      } else {
-        this.modal.isOpen = true
-      }
-    },
     resetLead() {
       let patchData = {
         status: null,
@@ -250,9 +231,6 @@ export default {
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
-    },
-    closeModal() {
-      this.modal.isOpen = false
     },
   },
 }

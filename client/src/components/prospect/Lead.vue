@@ -9,16 +9,8 @@
       </div>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <LeadForecastDropdown
-        :forecast="lead.forecastRef && lead.forecastRef.forecast"
-        :disabled="!belongsToCurrentUser"
-        @updated-forecast="updateForecast"
-      />
-      <LeadStatusDropdown
-        :status="lead.status"
-        :disabled="!belongsToCurrentUser"
-        @updated-status="updateStatus"
-      />
+      <LeadForecastDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
+      <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
       <div class="button-container">
         <button class="claimed-button" v-if="lead.claimedBy">
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
@@ -35,14 +27,13 @@
 <script>
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import Forecast from '@/services/forecasts'
-import Lead from '@/services/leads'
+
 export default {
   name: 'Lead',
   props: {
     lead: {
       required: true,
-      type: Lead,
+      type: Object,
     },
   },
   components: {
@@ -56,45 +47,6 @@ export default {
     }
   },
   methods: {
-    updateStatus(value) {
-      if (this.lead.status == 'CLOSED') {
-        this.$Alert.alert({
-          type: 'warning',
-          timeout: 4000,
-          message: 'Lead already closed!',
-        })
-      } else if (value != 'CLOSED') {
-        let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then(lead => {
-          this.lead.status = lead.status
-        })
-      } else {
-        // NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page
-        // this.modal.isOpen = true
-        alert(
-          'NOTE (Bruno 5-8-20): Modal positioning has a bug, so currently will only open from LeadDetail page',
-        )
-      }
-    },
-    updateForecast(value) {
-      if (this.lead.forecast) {
-        // since forecast exists, patch forecast
-        let patchData = {
-          lead: this.lead.id,
-          forecast: value,
-        }
-        Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
-        })
-      } else {
-        // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(forecast => {
-          this.lead.forecast = forecast.id
-          this.lead.forecastRef = forecast
-        })
-      }
-    },
     claimLead() {
       alert(
         'Clicking claim should claim the lead and not change the page (so that many leads can be claimed in succession)',

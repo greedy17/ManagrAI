@@ -1,28 +1,34 @@
 <template>
   <div class="status-dropdown">
-    <select @change="onChange" :style="computedStyles" :disabled="disabled || status === 'CLOSED'">
-      <option disabled :selected="status == null" value="">---</option>
-      <option
-        :selected="option.toUpperCase() === status"
-        v-for="option in statusEnums"
-        :key="option"
-        :value="option"
-      >
+    <select
+      v-model="selectedStatus"
+      :style="computedStyles"
+      :disabled="disabled || selectedStatus === 'CLOSED'"
+    >
+      <option disabled :value="null">---</option>
+      <option v-for="option in statusEnums" :key="option" :value="option.toUpperCase()">
         {{ option }}
       </option>
     </select>
+    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+      <CloseLead :lead="lead" />
+    </Modal>
   </div>
 </template>
 
 <script>
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
 import { statusEnums } from '@/services/leads/enumerables'
+import Lead from '@/services/leads'
+import CloseLead from '@/components/shared/CloseLead'
 
 export default {
   name: 'LeadStatusDropdown',
+  components: { CloseLead },
   props: {
-    status: {
+    lead: {
       required: true,
+      type: Object,
     },
     disabled: {
       type: Boolean,
@@ -32,16 +38,43 @@ export default {
   data() {
     return {
       statusEnums,
+      selectedStatus: this.lead.status,
+      modal: {
+        isOpen: false,
+      },
     }
   },
   methods: {
-    onChange(e) {
-      this.$emit('updated-status', e.target.value.toUpperCase())
+    updateStatus(newStatus) {
+      let patchData = { status: newStatus }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead.status = lead.status
+      })
+    },
+    closeModal() {
+      let selectedStatus = this.selectedStatus ? this.selectedStatus.toUpperCase() : null
+      let leadStatus = this.lead.status ? this.lead.status.toUpperCase() : null
+      if (selectedStatus != leadStatus) {
+        this.selectedStatus = this.lead.status
+      }
+      this.modal.isOpen = false
     },
   },
   computed: {
     computedStyles() {
-      return getStatusPrimaryColor(this.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
+      return getStatusPrimaryColor(this.lead.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
+    },
+  },
+  watch: {
+    selectedStatus(newStatus, oldStatus) {
+      if (newStatus == oldStatus) {
+        return
+      }
+      if (newStatus != 'CLOSED') {
+        this.updateStatus(newStatus)
+      } else {
+        this.modal.isOpen = true
+      }
     },
   },
 }
