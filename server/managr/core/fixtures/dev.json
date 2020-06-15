@@ -12,7 +12,7 @@
             "last_edited": "2020-06-09T17:38:38.085Z",
             "email": "test@thinknimble.com",
             "is_serviceaccount": false,
-            "is_active": false,
+            "is_active": true,
             "organization": "700287d3-4ce6-4803-a236-b18e160729a7",
             "type": "MANAGER",
             "first_name": "Test",
@@ -36,4 +36,3 @@
         }
     }
 ]
-    
