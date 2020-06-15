@@ -1,7 +1,7 @@
 <template>
   <div class="lead">
-    <div class="header">
-      <span class="lead-name"> {{ lead.title }} </span>
+    <div class="header" v-bind:style="headerBackgroundColor">
+      <span class="lead-name" @click="routeToLeadDetail"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
       <div class="lead-description">
         <span>{{ lead.primaryDescription }}</span>
@@ -25,6 +25,8 @@
 </template>
 
 <script>
+import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import Lead from '@/services/leads'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 
@@ -48,14 +50,27 @@ export default {
   },
   methods: {
     claimLead() {
-      alert(
-        'Clicking claim should claim the lead and not change the page (so that many leads can be claimed in succession)',
-      )
+      Lead.api.claim(this.lead.id).then(() => {
+        this.lead.claimedBy = this.$store.state.user.id
+        this.lead.claimedByRef = this.$store.state.user
+
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: `Claimed Lead titled '${this.lead.title}' of Account '${this.lead.accountRef.name}'.`,
+        })
+      })
+    },
+    routeToLeadDetail() {
+      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
     },
   },
   computed: {
     belongsToCurrentUser() {
       return this.lead.claimedBy == this.$store.state.user.id
+    },
+    headerBackgroundColor() {
+      return getStatusSecondaryColor(this.lead.status)
     },
   },
 }

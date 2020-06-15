@@ -6,7 +6,18 @@
         :key="accountWithLeads.id"
         :account="accountWithLeads.account"
         :collection="accountWithLeads.collection"
+        @load-more="$emit('load-more')"
       />
+      <template v-if="!accountsCollection.refreshing && !!accountsCollection.pagination.next">
+        <button
+          v-if="!accountsCollection.loadingNextPage"
+          class="load-more-button"
+          @click.prevent="$emit('load-more')"
+        >
+          Load More
+        </button>
+        <ComponentLoadingSVG v-else :style="{ margin: '0.5rem auto' }" />
+      </template>
     </div>
     <span v-else class="no-items-message">
       No Accounts
@@ -24,6 +35,10 @@ export default {
       type: Array,
       required: true,
     },
+    accountsCollection: {
+      type: Object,
+      required: true,
+    },
   },
   components: {
     Account,
@@ -34,6 +49,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/buttons';
 
 .accounts-container {
   @include standard-border();
@@ -47,5 +63,9 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
+}
+.load-more-button {
+  @include primary-button;
+  margin: 0.5rem auto;
 }
 </style>

@@ -15,25 +15,44 @@
     </div>
     <div v-if="!loading" class="tab-content">
       <div v-if="!listView" class="view-toggle-container">
-        <span class="left" :class="{ bold: !onList }">No List</span>
-        <ToggleCheckBox
-          class="checkbox"
-          :checked="onList"
-          @toggle-on-list="onList = !onList"
-          :eventToEmit="toggleEvent"
-        />
-        <span class="right" :class="{ bold: onList }">On List</span>
+        <div class="checkbox-container">
+          <span class="left" :class="{ bold: !onList }">No List</span>
+          <ToggleCheckBox
+            class="checkbox"
+            :checked="onList"
+            @toggle-on-list="onList = !onList"
+            :eventToEmit="toggleEvent"
+          />
+          <span class="right" :class="{ bold: onList }">On List</span>
+        </div>
+        <span class="centered">
+          {{
+            onList
+              ? `${onListLeadsCollection.pagination.totalCount} ${
+                  onListLeadsCollection.pagination.totalCount == 1 ? 'Lead' : 'Leads'
+                }`
+              : `${noListLeadsCollection.pagination.totalCount} ${
+                  noListLeadsCollection.pagination.totalCount == 1 ? 'Lead' : 'Leads'
+                }`
+          }}
+        </span>
       </div>
+
       <div v-if="listView">
-        <template v-if="lists.length > 0">
+        <template v-if="listsCollection.list.length > 0">
           <List
             :isOwner="isOwner"
             @delete-list="emitDeleteList($event, index)"
             @remove-from-list="$emit('remove-from-list', $event)"
-            v-for="(list, index) in lists"
+            v-for="(list, index) in listsCollection.list"
             :key="list.id"
             :list="list"
-            :leadFilters="leads.filters"
+            :leadFilters="listsCollection.filters"
+          />
+          <LoadMoreButton
+            v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
+            class="load-more-button"
+            :collection="listsCollection"
           />
         </template>
         <template v-else>
@@ -43,8 +62,21 @@
       </div>
       <div v-if="!listView">
         <template>
-          <template v-if="leads.list.length > 0">
-            <Lead v-for="lead in leads.list" :key="lead.id" :lead="lead" />
+          <template v-if="onList && onListLeadsCollection.list.length > 0">
+            <Lead v-for="lead in onListLeadsCollection.list" :key="lead.id" :lead="lead" />
+            <LoadMoreButton
+              v-if="!onListLeadsCollection.refreshing && !!onListLeadsCollection.pagination.next"
+              class="load-more-button"
+              :collection="onListLeadsCollection"
+            />
+          </template>
+          <template v-else-if="!onList && noListLeadsCollection.list.length > 0">
+            <Lead v-for="lead in noListLeadsCollection.list" :key="lead.id" :lead="lead" />
+            <LoadMoreButton
+              v-if="!noListLeadsCollection.refreshing && !!noListLeadsCollection.pagination.next"
+              class="load-more-button"
+              :collection="noListLeadsCollection"
+            />
           </template>
           <template v-else>
             <span class="no-items-message">No Leads to show here</span>
@@ -64,9 +96,12 @@ import CreateList from '@/components/leads-index/CreateList'
 import Lead from '@/components/leads-index/Lead'
 import ActionTabHeader from '@/components/shared/ActionTabHeader'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
+import LoadMoreButton from '@/components/shared/LoadMoreButton'
+
 const LISTVIEW = 'List View'
 const LEADVIEW = 'Lead View'
 const TOGGLEEVENT = 'toggle-on-list'
+
 export default {
   name: 'ListsContainer',
   components: {
@@ -75,6 +110,7 @@ export default {
     Lead,
     ActionTabHeader,
     ToggleCheckBox,
+    LoadMoreButton,
   },
   data() {
     return {
@@ -84,14 +120,6 @@ export default {
       activeTab: 0,
       viewTabs: [LISTVIEW, LEADVIEW],
     }
-  },
-  watch: {
-    onList(cur, pre) {
-      // toggles whether a user wants to view leads on or off a list
-      if (pre != cur) {
-        this.$emit('toggle-onlist', cur)
-      }
-    },
   },
   props: {
     loading: {
@@ -103,15 +131,17 @@ export default {
       required: false,
       default: null,
     },
-    lists: {
-      type: Array,
-      required: true,
-      default: () => [],
-    },
-
-    leads: {
+    listsCollection: {
       type: Object,
-      default: () => {},
+      required: true,
+    },
+    noListLeadsCollection: {
+      type: Object,
+      required: true,
+    },
+    onListLeadsCollection: {
+      type: Object,
+      required: true,
     },
     showCreateNew: {
       type: Boolean,
@@ -163,9 +193,14 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  justify-content: flex-start;
-  width: 20%;
   margin: 1rem 0;
+
+  .checkbox-container {
+    display: flex;
+    flex-flow: row;
+    width: 20rem;
+    justify-content: flex-start;
+  }
 
   .left,
   .right {
@@ -184,7 +219,12 @@ export default {
   .bold {
     font-weight: bold;
   }
+
+  .centered {
+    margin: 0 auto;
+  }
 }
+
 .actions {
   min-width: 48rem;
   width: 100%;
@@ -234,5 +274,9 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
+}
+
+.load-more-button {
+  margin: 0.5rem auto;
 }
 </style>

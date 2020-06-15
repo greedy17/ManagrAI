@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from rest_framework.authtoken.models import Token
 from django.core.exceptions import ValidationError as V
 from django.template.exceptions import TemplateDoesNotExist
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     authentication,
     filters,
@@ -51,6 +52,9 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
     permission_classes = (IsSalesPerson,)
+    filter_backends = (filters.OrderingFilter, DjangoFilterBackend,)
+    # Explicit fields the API may be ordered against
+    ordering_fields = ('name',)
 
     def get_queryset(self):
         return Account.objects.for_user(self.request.user)
