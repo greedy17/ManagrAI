@@ -12,22 +12,80 @@
       </div>
       <div class="form-field">
         <label>Lead Title</label>
-        <input v-model="leadTitle" class="input" tabindex="1" type="text" placeholder="Title" />
+        <input
+          v-model="leadTitle"
+          :disabled="currentStep > 1"
+          class="input"
+          tabindex="0"
+          type="text"
+          placeholder="Title"
+        />
       </div>
       <div class="form-field">
         <label>Account Relationship</label>
-        <select tabindex="2" @change="onSelectAccount" :disabled="currentStep > 1">
-          <option disabled :selected="selectedAccount == null" value="">Select Account</option>
-          <option v-for="account in accounts.list" :key="account.id" :value="account.id">{{
-            account.name
-          }}</option>
+        <select
+          ref="accountsDropdown"
+          tabindex="0"
+          :disabled="currentStep > 1"
+          v-model="selectedAccount"
+        >
+          <option disabled :value="null">Select Account</option>
+          <option v-for="account in accounts.list" :key="account.id" :value="account.id">
+            {{ account.name }}
+          </option>
         </select>
       </div>
-      <div v-if="currentStep < 2" class="button-container">
-        <button tabindex="3" @click="showStepTwo">Next</button>
+      <div v-if="currentStep == 1" class="button-container">
+        <span tabindex="0" @click="toCreateAccount">ADD NEW ACCOUNT</span>
+      </div>
+      <div v-if="currentStep == 1" class="button-container">
+        <button tabindex="0" :disabled="loading" @click="toAddContacts">Next</button>
       </div>
     </div>
-    <div v-if="currentStep > 1" class="step-2">
+    <div v-if="currentStep == 2" class="step-2">
+      <div class="errors">
+        <!-- client side validations -->
+        <div v-if="isFormValid !== null && !isFormValid && errors.newAccountNameIsBlank">
+          Account name may not be blank.
+        </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.newAccountUrlIsBlank">
+          Account URL may not be blank.
+        </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.newAccountTypeNotSelected">
+          Must select account type.
+        </div>
+      </div>
+      <div class="form-field">
+        <label>New Account</label>
+        <input
+          v-model="newAccountName"
+          :disabled="currentStep > 2"
+          class="input"
+          tabindex="0"
+          type="text"
+          placeholder="Name"
+        />
+        <input
+          v-model="newAccountURL"
+          :disabled="currentStep > 2"
+          class="input"
+          tabindex="0"
+          type="text"
+          placeholder="URL"
+        />
+      </div>
+      <div class="form-field">
+        <label>Account Type</label>
+        <select tabindex="0" v-model="newAccountType" :disabled="currentStep > 2">
+          <option disabled :value="null">Select Type</option>
+          <option v-for="type in ACCOUNT_TYPES" :key="type" :value="type">{{ type }}</option>
+        </select>
+      </div>
+      <div v-if="currentStep == 2" class="button-container">
+        <button tabindex="0" :disabled="loading" @click="createAccount">Next</button>
+      </div>
+    </div>
+    <div v-if="currentStep == 3" class="step-3">
       <div class="form-field">
         <label>Contacts</label>
         <p v-if="!contacts.list.length">No contacts available.</p>
@@ -55,7 +113,7 @@
         </label>
       </div>
       <div class="button-container">
-        <button tabindex="3" @click="createLead">Next</button>
+        <button tabindex="0" :disabled="loading" @click="createLead">Next</button>
       </div>
     </div>
   </div>
@@ -68,6 +126,10 @@ import Lead from '@/services/leads'
 import Account from '@/services/accounts'
 import Contact from '@/services/contacts'
 import CollectionManager from '@/services/collectionManager'
+
+const ACCOUNT_TYPE_RENEWAL = 'RENEWAL'
+const ACCOUNT_TYPE_NEW = 'NEW'
+const ACCOUNT_TYPES = [ACCOUNT_TYPE_NEW, ACCOUNT_TYPE_RENEWAL]
 
 export default {
   name: 'Form',
@@ -83,14 +145,20 @@ export default {
   },
   data() {
     return {
+      loading: false,
       leadTitle: '',
       accounts: CollectionManager.create({
         ModelClass: Account,
         filters: {
           pageSize: 2698,
+          ordering: 'name',
         },
       }),
       selectedAccount: null,
+      newAccountName: '',
+      newAccountURL: '',
+      newAccountType: null,
+      ACCOUNT_TYPES,
       contacts: CollectionManager.create({ ModelClass: Contact }),
       contactsToInclude: {},
       addContactForms: [
@@ -111,17 +179,14 @@ export default {
     this.accounts.refresh()
   },
   methods: {
-    onSelectAccount({ target: { value } }) {
-      this.selectedAccount = value
-    },
-    showStepTwo() {
+    toAddContacts() {
       // reset component data when submission begins, in case of prior request
       this.isFormValid = null
       this.success = null
       this.errors = {}
 
       // check form data
-      let validationResults = this.stepOneClientSideValidations()
+      let validationResults = this.toAddContactsClientSideValidations()
       this.isFormValid = validationResults[0]
       this.errors = validationResults[1]
       if (!this.isFormValid) {
@@ -130,7 +195,7 @@ export default {
 
       this.contacts.filters.account = this.selectedAccount
       this.contacts.refresh()
-      this.$emit('clicked-next')
+      this.$emit('to-add-contacts')
     },
     handleCheckboxClick({ status, contactID, email }) {
       // depending on payload status add or remove that key
@@ -155,7 +220,7 @@ export default {
       }
       this.addContactForms.push(blankForm)
     },
-    async createLead() {
+    createLead() {
       // reset component data when submission begins, in case of prior request
       this.isFormValid = null
       this.success = null
@@ -197,7 +262,7 @@ export default {
         this.$router.push({ name: 'LeadsDetail', params: { id: response.data.id } })
       })
     },
-    stepOneClientSideValidations() {
+    toAddContactsClientSideValidations() {
       let formErrors = {
         leadTitleIsBlank: this.leadTitleIsBlank,
         accountNotSelected: this.accountNotSelected,
@@ -240,6 +305,83 @@ export default {
 
       return !userInputPresent || (userInputPresent && !anyFieldBlank)
     },
+    toCreateAccount() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data
+      let validationResults = this.toCreateAccountClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      this.selectedAccount = null
+      this.$emit('to-create-account') // more descriptive events
+    },
+    onSelectAccountType({ target: { value } }) {
+      this.newAccountType = value
+    },
+    toCreateAccountClientSideValidations() {
+      let formErrors = {
+        leadTitleIsBlank: this.leadTitleIsBlank,
+      }
+      let isFormValid = !this.leadTitleIsBlank
+
+      return [isFormValid, formErrors]
+    },
+    createAccount() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data
+      let validationResults = this.createAccountClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+
+      if (!this.isFormValid) {
+        return
+      }
+
+      this.loading = true
+
+      let data = {
+        name: this.newAccountName,
+        url: this.newAccountURL,
+        type: this.newAccountType,
+      }
+
+      Account.api.create(data).then(account => {
+        this.accounts.list = [...this.accounts.list, account]
+        this.selectedAccount = account.id
+        this.loading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: `Created account: ${account.name}.`,
+        })
+        this.$emit('to-add-contacts')
+      })
+
+      // show alert-alert success
+      // emit on to final step
+    },
+    createAccountClientSideValidations() {
+      let formErrors = {
+        newAccountNameIsBlank: this.newAccountNameIsBlank,
+        newAccountUrlIsBlank: this.newAccountUrlIsBlank,
+        newAccountTypeNotSelected: this.newAccountTypeNotSelected,
+      }
+      let isFormValid =
+        !this.newAccountNameIsBlank && !this.newAccountUrlIsBlank && !this.newAccountTypeNotSelected
+
+      return [isFormValid, formErrors]
+    },
   },
   computed: {
     leadTitleIsBlank() {
@@ -247,6 +389,15 @@ export default {
     },
     accountNotSelected() {
       return !this.selectedAccount
+    },
+    newAccountNameIsBlank() {
+      return !this.newAccountName.length
+    },
+    newAccountUrlIsBlank() {
+      return !this.newAccountURL.length
+    },
+    newAccountTypeNotSelected() {
+      return !this.newAccountType
     },
   },
 }
@@ -259,7 +410,8 @@ export default {
 @import '@/styles/mixins/utils';
 
 .step-1,
-.step-2 {
+.step-2,
+.step-3 {
   @include standard-border();
   background-color: $white;
   height: auto;
@@ -271,8 +423,12 @@ export default {
   padding: 2rem 0;
 }
 
-.step-2 {
+.step-2,
+.step-3 {
   margin-top: 3rem;
+}
+
+.step-3 {
   margin-bottom: 5rem;
 }
 
@@ -305,6 +461,13 @@ export default {
   display: flex;
   flex-flow: row;
   width: inherit;
+
+  span {
+    @include pointer-on-hover();
+    margin: 0.2rem 5% 1rem auto;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
 
   button {
     @include primary-button();

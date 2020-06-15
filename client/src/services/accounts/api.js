@@ -27,6 +27,7 @@ export default class AccountAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      ordering: ApiFilter.create({ key: 'ordering' }),
     }
 
     const options = {
@@ -45,6 +46,23 @@ export default class AccountAPI {
       .catch(
         apiErrorHandler({
           apiName: 'AccountAPI.list error',
+        }),
+      )
+    return promise
+  }
+
+  create({ name, url, type }) {
+    let data = {
+      name,
+      url,
+      type,
+    }
+    const promise = apiClient()
+      .post(ACCOUNTS_ENDPOINT, data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'AccountAPI.create error',
         }),
       )
     return promise

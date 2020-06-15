@@ -137,7 +137,7 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
         password = request.data.get('password', None)
         pk = kwargs.get('pk', None)
         if not password or not magic_token or not pk:
-            raise ValidationError({'detail': [('A magic token and id are required')]})
+            raise ValidationError({'detail': [('A magic token, id, and password are required')]})
         try:
             user = User.objects.get(pk=pk)
             if (
