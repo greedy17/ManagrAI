@@ -70,13 +70,14 @@ class ListSerializer(serializers.ModelSerializer):
 
 
 class LeadRefSerializer(serializers.ModelSerializer):
-
     """ serializer for forecast """
+    claimed_by_ref = UserRefSerializer(source='claimed_by', read_only=True)
 
     class Meta:
         model = Lead
         fields = ('id', 'title', 'rating', 'amount', 'lists',
-                  'primary_description', 'secondary_description', 'status',)
+                  'primary_description', 'secondary_description', 'status',
+                  'claimed_by', 'claimed_by_ref')
 
 
 class FileSerializer(serializers.ModelSerializer):

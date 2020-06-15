@@ -1,7 +1,12 @@
 <template>
   <div class="accounts-container">
     <div v-if="accounts.length > 0" class="accounts">
-      <Account v-for="account in accounts" :key="account.id" :account="account" />
+      <Account
+        v-for="accountWithLeads in accounts"
+        :key="accountWithLeads.id"
+        :account="accountWithLeads.account"
+        :collection="accountWithLeads.collection"
+      />
     </div>
     <span v-else class="no-items-message">
       No Accounts
@@ -17,15 +22,12 @@ export default {
   props: {
     accounts: {
       type: Array,
-      default: () => [],
       required: true,
     },
   },
   components: {
     Account,
   },
-  methods: {},
-  computed: {},
 }
 </script>
 

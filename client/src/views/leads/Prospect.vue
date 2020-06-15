@@ -1,10 +1,11 @@
 <template>
-  <div class="prospect">
+  <PageLoadingSVG v-if="loading" />
+  <div v-else class="prospect">
     <div class="toolbar-pane">
-      <ToolBar />
+      <ToolBar :repFilterState="repFilterState" @toggle-active-rep="toggleActiveRep" />
     </div>
     <div class="lists-pane">
-      <AccountsContainer :accounts="accounts.list" />
+      <AccountsContainer :accounts="accountsWithLeads" />
     </div>
   </div>
 </template>
@@ -13,9 +14,8 @@
 import ToolBar from '@/components/prospect/ToolBar'
 import AccountsContainer from '@/components/prospect/AccountsContainer'
 import Account from '@/services/accounts'
+import Lead from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
-
-// import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'Prospect',
@@ -25,18 +25,74 @@ export default {
   },
   data() {
     return {
+      loading: true,
       accounts: CollectionManager.create({
         ModelClass: Account,
-        filters: {
-          // for this filter by adding the (-) minus symbol to a filter you can exclude it from the filter
-        },
       }),
+      accountsWithLeads: [], // objects containing account info & collections of leads for account
+      repFilterState: {},
     }
   },
   async created() {
+    // get all of the accounts for this organization
     await this.accounts.refresh()
+    // generate a collection for each retrieved account, to get its leads
+    this.generateCollections()
+    this.refreshCollections()
   },
-  methods: {},
+  methods: {
+    generateCollections() {
+      // collections of leads filtered by account
+      this.accountsWithLeads = this.accounts.list.map(this.generateAccountLeadsObject)
+    },
+    generateAccountLeadsObject(account) {
+      let collection = CollectionManager.create({
+        ModelClass: Lead,
+        filters: {
+          byAccount: account.id,
+        },
+      })
+      return {
+        account,
+        collection,
+      }
+    },
+    refreshCollections() {
+      this.loading = true
+      // update byUser filter for each collection,
+      this.applyFilterByRep()
+      // refresh each collection
+      let promises = this.accountsWithLeads.map(accountWithLeads =>
+        accountWithLeads.collection.refresh(),
+      )
+      Promise.all(promises).then(() => {
+        this.loading = false
+      })
+    },
+    applyFilterByRep() {
+      // turn array of rep IDs into a comma-delimited string of active reps
+      let filterString = this.activeReps.join(',')
+      // add string to filters for each of the collections
+      Object.keys(this.accountsWithLeads).forEach(key => {
+        this.accountsWithLeads[key].collection.filters.byUser = filterString
+      })
+    },
+    toggleActiveRep(repID) {
+      // depending on state of this.repFilterState --> add or make false at that key
+      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
+      if (!this.repFilterState[repID]) {
+        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: true })
+      } else {
+        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
+      }
+      this.refreshCollections()
+    },
+  },
+  computed: {
+    activeReps() {
+      return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
+    },
+  },
 }
 </script>
 

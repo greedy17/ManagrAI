@@ -5,26 +5,24 @@
       <span
         class="rep"
         v-for="rep in users.list"
-        @click="toggleRepInFilter(rep.id)"
+        @click="toggleActiveRep(rep.id)"
         :key="rep.id"
-        :class="{ active: activeReps[rep.id] }"
+        :class="{ active: repFilterState[rep.id] }"
       >
-        {{ rep.fullName }}</span
+        {{ rep.id == currentUser.id ? 'You' : rep.fullName }}</span
       >
     </div>
   </div>
 </template>
 
 <script>
-// understanding reactivity pb 05/15/20
-//https://vuejs.org/v2/guide/list.html#Array-Change-Detection
-
 import User from '@/services/users'
 import CollectionManager from '@/services/collectionManager'
+
 export default {
   name: 'FilterByRep',
   props: {
-    activeReps: {
+    repFilterState: {
       required: true,
       type: Object,
     },
@@ -43,8 +41,13 @@ export default {
     this.users.refresh()
   },
   methods: {
-    toggleRepInFilter(repID) {
-      this.$emit('toggle-rep-in-filter', repID)
+    toggleActiveRep(repID) {
+      this.$emit('toggle-active-rep', repID)
+    },
+  },
+  computed: {
+    currentUser() {
+      return this.$store.state.user
     },
   },
 }

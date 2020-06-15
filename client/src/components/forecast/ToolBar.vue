@@ -97,7 +97,7 @@
       </div>
     </div> -->
     <div class="filter-container">
-      <FilterByRep :activeReps="activeReps" @toggle-rep-in-filter="toggleRepInFilter" />
+      <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
     </div>
   </div>
 </template>
@@ -108,20 +108,15 @@ import FilterByRep from '@/components/shared/FilterByRep'
 export default {
   name: 'ForecastToolBar',
   components: { FilterByRep },
-  data() {
-    return {
-      activeReps: {}, // for reps filter
-    }
+  props: {
+    repFilterState: {
+      required: true,
+      type: Object,
+    },
   },
   methods: {
-    toggleRepInFilter(repID) {
-      // depending on state of this.activeReps --> add or make false at that key
-      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
-      if (!this.activeReps[repID]) {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: true })
-      } else {
-        this.activeReps = Object.assign({}, this.activeReps, { [repID]: false })
-      }
+    emitToggleActiveRep(repID) {
+      this.$emit('toggle-active-rep', repID)
     },
   },
 }

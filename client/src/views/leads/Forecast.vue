@@ -12,7 +12,11 @@
         />
         <span class="right" :class="{ bold: !isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar class="toolbar" />
+      <ToolBar
+        class="toolbar"
+        :repFilterState="repFilterState"
+        @toggle-active-rep="toggleActiveRep"
+      />
     </div>
     <div class="lists-container-pane">
       <ListsContainer :lists="lists" />
@@ -41,42 +45,71 @@ export default {
       lists: {
         '50/50': CollectionManager.create({
           ModelClass: Forecast,
-          filters: { byUser: this.userID, forecast: '50/50' },
+          filters: { forecast: '50/50' },
         }),
         STRONG: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { byUser: this.userID, forecast: 'STRONG' },
+          filters: { forecast: 'STRONG' },
         }),
         VERBAL: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { byUser: this.userID, forecast: 'VERBAL' },
+          filters: { forecast: 'VERBAL' },
         }),
         FUTURE: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { byUser: this.userID, forecast: 'FUTURE' },
+          filters: { forecast: 'FUTURE' },
         }),
         UNFORECASTED: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { byUser: this.userID, forecast: '50/50' },
+          filters: { forecast: 'NA' },
         }),
+      },
+      repFilterState: {
+        [this.$store.state.user.id]: true,
       },
     }
   },
   created() {
-    let lists = [
-      this.lists['50/50'].refresh(),
-      this.lists['STRONG'].refresh(),
-      this.lists['VERBAL'].refresh(),
-      this.lists['FUTURE'].refresh(),
-      this.lists['UNFORECASTED'].refresh(),
-    ]
-    Promise.all(lists).then(() => {
-      this.loading = false
-    })
+    this.updateForecastCollections()
   },
   methods: {
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
+    },
+    updateForecastCollections() {
+      this.applyFilterByRep()
+      this.refresh()
+    },
+    applyFilterByRep() {
+      // turn array of rep IDs into a comma-delimited string of active reps
+      let filterString = this.activeReps.join(',')
+      // add string to filters for each of the collections
+      Object.keys(this.lists).forEach(key => {
+        this.lists[key].filters.byUser = filterString
+      })
+    },
+    refresh() {
+      this.loading = true
+      let lists = [
+        this.lists['50/50'].refresh(),
+        this.lists['STRONG'].refresh(),
+        this.lists['VERBAL'].refresh(),
+        this.lists['FUTURE'].refresh(),
+        this.lists['UNFORECASTED'].refresh(),
+      ]
+      Promise.all(lists).then(() => {
+        this.loading = false
+      })
+    },
+    toggleActiveRep(repID) {
+      // depending on state of this.repFilterState --> add or make false at that key
+      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
+      if (!this.repFilterState[repID]) {
+        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: true })
+      } else {
+        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
+      }
+      this.updateForecastCollections()
     },
   },
   computed: {
@@ -85,6 +118,9 @@ export default {
     },
     userID() {
       return this.$store.state.user.id
+    },
+    activeReps() {
+      return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
     },
   },
 }

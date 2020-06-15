@@ -93,6 +93,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
         self.perform_create(serializer)
         # get the newly created object and
         serializer.instance.linked_contacts.add(*contact_list)
+        Forecast.objects.create(lead=serializer.instance)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):

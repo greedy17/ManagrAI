@@ -135,10 +135,11 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
         # users should only be able to activate if they are in an invited state
         magic_token = request.data.get('token', None)
         password = request.data.get('password', None)
-        if not password or not magic_token:
+        pk = kwargs.get('pk', None)
+        if not password or not magic_token or not pk:
             raise ValidationError({'detail': [('A magic token and id are required')]})
         try:
-            user = self.get_object()
+            user = User.objects.get(pk=pk)
             if (
                 str(user.magic_token) == str(magic_token)
                 and not user.magic_token_expired

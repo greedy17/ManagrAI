@@ -19,11 +19,21 @@
       </div>
       <span class="lead-amount"> {{ lead.amount | currency }} </span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
-      <LeadForecastDropdown :forecast="forecast.forecast" @updated-forecast="updateForecast" />
-      <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
-      <div class="lead-lists">
-        <LeadList class="lead-list" :listName="'Growth Accounts'" />
-        <LeadList class="lead-list" :listName="'Q2 Buyers'" />
+      <LeadForecastDropdown
+        :forecast="forecast.forecast"
+        @updated-forecast="updateForecast"
+        :disabled="!belongsToCurrentUser"
+      />
+      <LeadStatusDropdown
+        :status="lead.status"
+        @updated-status="updateStatus"
+        :disabled="!belongsToCurrentUser"
+      />
+      <div class="claimed-by">
+        <button>
+          <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
+          <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
+        </button>
       </div>
       <span class="lead-add-list">
         <img class="add-list-icon" src="@/assets/images/add.svg" alt="icon" />
@@ -38,7 +48,6 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-import LeadList from '@/components/shared/LeadList'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
 import CloseLead from '@/components/shared/CloseLead'
@@ -59,7 +68,6 @@ export default {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
-    LeadList,
     CloseLead,
   },
   data() {
@@ -77,7 +85,7 @@ export default {
     updateStatus(value) {
       if (value != 'CLOSED') {
         let patchData = { status: value }
-        Lead.api.update(this.lead.id, patchData).then((lead) => {
+        Lead.api.update(this.lead.id, patchData).then(lead => {
           this.lead.status = lead.status
         })
       } else {
@@ -100,7 +108,7 @@ export default {
         })
       } else {
         // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then((response) => {
+        Forecast.api.create(this.lead.id, value).then(response => {
           this.lead.forecastRef = response
           this.lead.forecast = response.id
         })
@@ -114,12 +122,16 @@ export default {
     headerBackgroundColor() {
       return getStatusSecondaryColor(this.lead.status)
     },
+    belongsToCurrentUser() {
+      return this.$store.state.user.id == this.lead.claimedBy
+    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .lead {
@@ -187,10 +199,25 @@ export default {
   width: 5%;
 }
 
-.lead-lists {
+.claimed-by {
   width: 28%;
   display: flex;
   align-items: center;
+  padding-left: 2rem;
+
+  button {
+    @include secondary-button;
+    padding-right: 0.7rem;
+    padding-left: 0.5rem;
+    width: auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    span {
+      margin-left: 1rem;
+    }
+  }
 }
 
 .lead-list {

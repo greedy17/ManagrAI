@@ -1,6 +1,6 @@
 <template>
   <div class="status-dropdown">
-    <select @change="onChange" :style="computedStyles" :disabled="status === 'CLOSED'">
+    <select @change="onChange" :style="computedStyles" :disabled="disabled || status === 'CLOSED'">
       <option disabled :selected="status == null" value="">---</option>
       <option
         :selected="option.toUpperCase() === status"
@@ -23,6 +23,10 @@ export default {
   props: {
     status: {
       required: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {

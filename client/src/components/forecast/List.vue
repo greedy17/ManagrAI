@@ -4,10 +4,11 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ title }} </span>
       <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="list-value">{{ totalValue | currency }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <Lead
-        v-for="forecast in list.list"
+        v-for="forecast in collection.list"
         :key="forecast.id"
         :forecast="forecast"
         :lead="forecast.leadRef"
@@ -26,7 +27,7 @@ import Lead from '@/components/forecast/Lead'
 export default {
   name: 'List',
   props: {
-    list: {
+    collection: {
       type: Object,
       required: true,
     },
@@ -45,13 +46,15 @@ export default {
   },
   methods: {
     toggleLeads() {
-      this.showLeads = !this.showLeads
+      if (this.numOfLeads > 0) {
+        this.showLeads = !this.showLeads
+      }
     },
     deleteLead(id) {
       // NOTE (Bruno 5-7-20): this is incomplete, as just deleting a Lead from a ForecastList is not enough,
       // it should also be added to another ForecastList, and that list's leadCount should also be updated
-      this.list.list = this.list.list.filter((forecast) => forecast.lead !== id)
-      this.list.pagination.totalCount -= 1
+      this.collection.list = this.collection.list.filter(forecast => forecast.lead !== id)
+      this.collection.pagination.totalCount -= 1
     },
     loadMore() {
       alert('WIP')
@@ -59,10 +62,13 @@ export default {
   },
   computed: {
     numOfLeads() {
-      return this.list.pagination.totalCount
+      return this.collection.pagination.totalCount
+    },
+    totalValue() {
+      return this.collection.list.reduce((sum, e) => e.leadRef.amount + sum, 0)
     },
     moreToLoad() {
-      return !!this.list.pagination.next
+      return !!this.collection.pagination.next
     },
   },
 }
@@ -104,15 +110,14 @@ export default {
 
 .list-title {
   font-weight: bold;
-  align-self: center;
-  width: 25%;
+  width: 20rem;
+  max-width: 20rem;
   margin-left: 0.75rem;
 }
 
 .list-length {
-  align-self: center;
-  margin-left: 20%;
-  margin-right: auto;
+  align-self: left;
+  width: 25rem;
 }
 
 .list-leads {

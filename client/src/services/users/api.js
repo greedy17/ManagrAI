@@ -86,7 +86,6 @@ export default class UserAPI {
     const data = { token, password }
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
-      .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.activate',
