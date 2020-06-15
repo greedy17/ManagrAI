@@ -14,15 +14,18 @@
         :lead="forecast.leadRef"
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
-      <button v-if="moreToLoad" class="load-more-button" @click="loadMore">
-        Load More
-      </button>
+      <LoadMoreButton
+        v-if="!collection.refreshing && !!collection.pagination.next"
+        class="load-more-button"
+        :collection="collection"
+      />
     </div>
   </div>
 </template>
 
 <script>
 import Lead from '@/components/forecast/Lead'
+import LoadMoreButton from '@/components/shared/LoadMoreButton'
 
 export default {
   name: 'List',
@@ -38,6 +41,7 @@ export default {
   },
   components: {
     Lead,
+    LoadMoreButton,
   },
   data() {
     return {
@@ -50,9 +54,6 @@ export default {
         this.showLeads = !this.showLeads
       }
     },
-    loadMore() {
-      alert('WIP')
-    },
   },
   computed: {
     numOfLeads() {
@@ -61,16 +62,12 @@ export default {
     totalValue() {
       return this.collection.list.reduce((sum, e) => e.leadRef.amount + sum, 0)
     },
-    moreToLoad() {
-      return !!this.collection.pagination.next
-    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .list-header {
@@ -121,7 +118,6 @@ export default {
 }
 
 .load-more-button {
-  @include primary-button();
   margin: 0.5rem auto;
 }
 </style>

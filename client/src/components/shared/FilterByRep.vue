@@ -4,12 +4,30 @@
     <div v-if="!users.refreshing" class="reps-container">
       <span
         class="rep"
-        v-for="rep in users.list"
+        @click="toggleActiveRep(currentUser.id)"
+        :key="currentUser.id"
+        :class="{ active: repFilterState[currentUser.id] }"
+      >
+        You
+      </span>
+      <span
+        v-if="filterByUnclaimed"
+        class="rep"
+        @click="$emit('toggle-unclaimed')"
+        :key="'unclaimed'"
+        :class="{ active: unclaimedFilterState }"
+      >
+        Unclaimed
+      </span>
+      <div class="divider" />
+      <span
+        class="rep"
+        v-for="rep in otherReps"
         @click="toggleActiveRep(rep.id)"
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
       >
-        {{ rep.id == currentUser.id ? 'You' : rep.fullName }}
+        {{ rep.fullName }}
       </span>
     </div>
     <div v-else class="reps-container">
@@ -28,6 +46,14 @@ export default {
     repFilterState: {
       required: true,
       type: Object,
+    },
+    filterByUnclaimed: {
+      type: Boolean,
+      default: false,
+    },
+    unclaimedFilterState: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -51,6 +77,9 @@ export default {
   computed: {
     currentUser() {
       return this.$store.state.user
+    },
+    otherReps() {
+      return this.users.list.filter(u => u.id != this.currentUser.id)
     },
   },
 }
@@ -96,5 +125,10 @@ export default {
   .active {
     background-color: rgba($color: $dark-green, $alpha: 0.4);
   }
+}
+
+.divider {
+  border-top: 1px solid $soft-gray;
+  margin: 0.3rem 0.5rem;
 }
 </style>

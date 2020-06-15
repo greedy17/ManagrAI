@@ -8,7 +8,13 @@
         Filter
       </div>
       <div class="filter-container">
-        <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
+        <FilterByRep
+          :repFilterState="repFilterState"
+          :filterByUnclaimed="true"
+          :unclaimedFilterState="unclaimedFilterState"
+          @toggle-active-rep="emitToggleActiveRep"
+          @toggle-unclaimed="$emit('toggle-unclaimed')"
+        />
       </div>
     </div>
   </div>
@@ -26,6 +32,10 @@ export default {
     repFilterState: {
       required: true,
       type: Object,
+    },
+    unclaimedFilterState: {
+      required: true,
+      type: Boolean,
     },
   },
   methods: {
