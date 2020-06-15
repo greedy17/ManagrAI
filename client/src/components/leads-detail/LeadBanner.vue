@@ -2,9 +2,14 @@
   <div class="lead-banner" :style="bannerBackgroundColor">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
-      <LeadForecastDropdown class="forecast-dropdown" :lead="lead" :transparent="true" />
+      <LeadForecastDropdown
+        class="forecast-dropdown"
+        :lead="lead"
+        :transparent="true"
+        :disabled="!isOwnedByUser"
+      />
     </div>
-    <LeadStatusDropdown :lead="lead" />
+    <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Days In Status</span>
       <span class="days-in-status">7 Days</span>

@@ -17,7 +17,6 @@
         @lead-reset="resetLead"
         @lead-released="releaseLead"
         @lead-claimed="claimLead"
-        @updated-forecast="updateForecast"
       />
       <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
@@ -30,16 +29,6 @@
           @updated-secondary-description="updateSecondaryDescription"
         />
       </div>
-      <!--  Hiding this as it is still WIP as requested by marcy pb 05/15/20
-        
-        <div class="container">
-        <img
-          class="additional-information"
-          src="@/assets/images/screenshots/AdditionalInformation.png"
-          alt="screenshot"
-        />
-      </div> -->
-
       <div class="item-list">
         <div class="item-list__header">
           <span class="item-list__title">
@@ -88,7 +77,6 @@ import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import Lead from '@/services/leads'
-import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
@@ -175,25 +163,6 @@ export default {
         this.lead = lead
       })
     },
-    updateForecast(value) {
-      if (this.lead.forecast) {
-        // since forecast exists, patch forecast
-        let patchData = {
-          lead: this.lead.id,
-          forecast: value,
-        }
-        Forecast.api.update(this.lead.forecastRef.id, patchData).then(response => {
-          this.lead.forecastRef = response
-          this.lead.forecast = response.id
-        })
-      } else {
-        // since currently null, create forecast
-        Forecast.api.create(this.lead.id, value).then(response => {
-          this.lead.forecastRef = response
-          this.lead.forecast = response.id
-        })
-      }
-    },
     resetLead() {
       let patchData = {
         status: null,
@@ -201,7 +170,7 @@ export default {
         forecast: null,
       }
       Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead = lead
+        this.lead = Object.assign(this.lead, lead)
         let message = `<div>Success! Lead reset.</div>`
         this.$Alert.alert({
           type: 'success',
