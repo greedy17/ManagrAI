@@ -1,7 +1,8 @@
 # this is a temp server file used to mimic redirect from front end until it is built
 # it is served by flask
 import requests
-from flask import Flask, request
+from flask import Flask, request, redirect
+
 app = Flask(__name__)
 
 
@@ -11,14 +12,14 @@ def send_code():
     # state is the magic token we passed to Nylas
     state = request.args.get('state', None)
     client = requests.Session()
-    res = client.post('http://localhost:8000/api/users/email-auth-token/',
-                      headers={
-                          'Authorization': 'token f5cbb7185985856abc81c7a1e92b647ae6bd6baf'},
-                      data={'magic_token': state, 'code': code})
-    print(res.status_code)
+    res = client.post(
+        'http://localhost:8000/api/users/email-auth-token/',
+        headers={'Authorization': 'token b517988dd772b7d816a0f79bf89e3ec4c405c2d5'},
+        data={'magic_token': state, 'code': code},
+    )
 
     if res.status_code == 204:
-        return "created token"
+        return redirect("http://localhost:8080/settings", code=302)
 
     return "Generate Token"
 

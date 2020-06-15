@@ -4,18 +4,16 @@
 
     <div class="header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="account-title"> {{ account.name }} </span>
-      <span class="leads-count">
-        {{ account.leadCount }} {{ account.leadCount === 1 ? 'Lead' : 'Leads' }}</span
+      <span class="account-title">{{ account.name }}</span>
+      <span class="leads-count"
+        >{{ account.leadCount }} {{ account.leadCount === 1 ? 'Lead' : 'Leads' }}</span
       >
     </div>
     <div class="leads-container" v-if="showLeads">
       <div v-if="accLeads.pagination.totalCount > 0" class="accLeads">
         <Lead v-for="lead in accLeads.list" :key="lead.id" :lead="lead" />
       </div>
-      <div v-else class="no-items-message">
-        No Leads for this account
-      </div>
+      <div v-else class="no-items-message">No Leads for this account</div>
     </div>
   </div>
 </template>
@@ -24,7 +22,6 @@
 import Lead from '@/components/prospect/Lead'
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
-import { debounce } from '@/services/utils'
 
 export default {
   name: 'Account',

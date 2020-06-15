@@ -1,0 +1,87 @@
+@import "./mixins/utils";
+@import "./mixins/buttons";
+@import "./mixins/inputs";
+@import "./variables";
+
+.form {
+  &__header {
+    margin-bottom: 0.5rem;
+  }
+  &__element {
+    // A form element is wrapper around an input, so we can maintain consistent spacing.
+    margin: 0.5rem 0;
+  }
+  &__element--inline {
+    // this is an inline form element for horizontal forms.
+    margin: 0.5rem 0;
+    width: 100%;
+    padding: 0.5rem;
+  }
+  &__element-header {
+    // The "title" of the input field (i.e. First Name)
+    font-size: 1rem;
+    font-weight: 1000;
+    margin-bottom: 0.5rem;
+  }
+  &__element-help {
+    // Help text for underneath the element header
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500rem;
+  }
+  &__element-error {
+    // An error underneath the input field
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-weight: 500rem;
+    color: #e57a7a;
+  }
+  &__input {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  &__input-group {
+    // This can be used for radio or checkbox buttons
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  &__textarea {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+  &__select {
+    @include input-field();
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+  &__button {
+    @include primary-button();
+    margin-top: 1rem;
+  }
+}
+
+.button {
+  @include primary-button();
+  margin-right: 0.5rem;
+}
+
+.primary-button {
+  @include primary-button();
+  margin-right: 0.5rem;
+}
+
+.secondary-button {
+  @include secondary-button();
+  margin-right: 0.5rem;
+}
+
+.inactive-button {
+  @include secondary-button();
+  margin-right: 0.5rem;
+}

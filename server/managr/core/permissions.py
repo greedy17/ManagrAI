@@ -67,11 +67,10 @@ def org_permissions(self, request, view, obj):
 
 
 class CanEditResourceOrReadOnly(permissions.BasePermission):
-    """ 
+    """
         Most resources allow read access to all but write access to only an owner
         Leads can be edited by their current claimed_by user we will also create custom methods
-        within the endpoints to allow overriding of this base permission however in general this rule 
-        will apply
+        within the endpoints to allow overriding of this base permission however in general this rule
     """
 
     def has_object_permission(self, request, view, obj):
@@ -98,8 +97,8 @@ class IsSuperUser(permissions.BasePermission):
 
 
 class SuperUserCreateOnly(permissions.BasePermission):
-    """ only super_user can create organization 
-        OrgMangers can edit org 
+    """ only super_user can create organization
+        OrgMangers can edit org
         all else can view own org
     """
 

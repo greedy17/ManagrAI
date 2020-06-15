@@ -1,0 +1,325 @@
+<template>
+  <div>
+    <div class="box__tab-header" v-if="replyMessage">
+      <div
+        class="box__tab"
+        @click="toggleActiveTab('reply')"
+        :class="{ 'box__tab--active': replyActive }"
+      >
+        Reply
+      </div>
+      <div
+        class="box__tab"
+        @click="toggleActiveTab('replyAll')"
+        :class="{ 'box__tab--active': replyAllActive }"
+      >
+        Reply All
+      </div>
+    </div>
+    <div class="flexbox-container">
+      <div class="flexbox-container__column">
+        <div class="email__row">
+          <div class="form__element-header">From:</div>
+          <div class="email__contact-tag">{{ user.email }}</div>
+        </div>
+        <EmailList
+          :emails="toEmails"
+          :lead="lead"
+          label="To"
+          @add="addToEmail($event)"
+          @remove="removeToEmail($event)"
+        />
+        <EmailList
+          :emails="ccEmails"
+          :lead="lead"
+          label="CC"
+          @add="addCCEmail($event)"
+          @remove="removeCCEmail($event)"
+        />
+        <EmailList
+          :emails="bccEmails"
+          :lead="lead"
+          label="BCC"
+          @add="addBCCEmail($event)"
+          @remove="removeBCCEmail($event)"
+        />
+      </div>
+      <div class="flexbox-container__column">
+        <div class="form__element" v-if="showSubject">
+          <div class="form__element-header">Subject</div>
+          <input type="text" class="form__input" v-model="subject" />
+        </div>
+        <div class="form__element">
+          <div class="form__element-header">Body</div>
+          <textarea class="form__textarea" rows="8" v-model="body"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form__element">
+      <div class="form__element-header">Attachments</div>
+      <ComponentLoadingSVG v-if="filesLoading" style="margin: 2rem auto" />
+      <div class="email__row" v-if="files.length > 0">
+        <span v-for="file in files" class="email__contact-tag" :key="file.id">
+          {{ file.filename }} <span @click="removeFiles(file.id)">[X]</span>
+        </span>
+      </div>
+      <input type="file" class="form__input" ref="myFileInput" @change="uploadFiles" />
+    </div>
+    <div class="form__element" v-if="emailTemplates.length > 0">
+      <div class="form__element-header">Templates</div>
+      <select class="form__select" v-model="activeTemplate" @change="updateBodyWithTemplate">
+        <option :value="template" v-for="template in emailTemplates" :key="template.id">{{
+          template.name
+        }}</option>
+      </select>
+    </div>
+    <div class="flexbox-container" style="margin-top: 1rem; justify-content: space-between">
+      <button class="button" @click="previewEmail">Preview Email</button>
+      <button class="button" @click="sendEmail">Send Email</button>
+    </div>
+    <div class="box" v-if="previewActive">
+      <div class="box__header">
+        <div class="box__content">
+          <strong>{{ preview.subject }}</strong>
+        </div>
+      </div>
+      <div class="box__content">
+        {{ preview.body }}
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapState } from 'vuex'
+
+import EmailList from '@/components/emails/EmailList'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
+
+import Nylas from '@/services/nylas'
+import EmailTemplate from '@/services/email-templates'
+
+export default {
+  name: 'EmailCompose',
+  components: { EmailList, ComponentLoadingSVG },
+  props: {
+    showSubject: {
+      type: Boolean,
+      default: true,
+    },
+    replyMessage: {
+      type: Object,
+      required: false,
+    },
+    replyAll: {
+      type: Boolean,
+      default: false,
+    },
+    lead: {
+      type: Object,
+      default: () => {
+        return {}
+      },
+    },
+  },
+  data() {
+    return {
+      activeTemplate: {},
+      emailTemplates: [],
+      preview: {},
+      previewActive: false,
+      replyActive: true,
+      replyAllActive: false,
+      subject: '',
+      body: '',
+      toEmails: [],
+      ccEmails: [],
+      bccEmails: [],
+      files: [],
+      filesLoading: false,
+      replyMessageId: '',
+      uploadFile: {},
+      variables: {
+        name: '',
+        company: '',
+      },
+    }
+  },
+  computed: {
+    ...mapState(['user']),
+    fileIds() {
+      return this.files.map(fileObject => fileObject.id)
+    },
+    fileNames() {
+      return this.files.map(fileObject => fileObject.filename)
+    },
+  },
+  created() {
+    if (this.replyMessage && this.replyMessage.from) {
+      this.replyMessageId = this.replyMessage.id
+      this.updateToReply()
+    }
+    this.populateTemplateVariables()
+    this.getEmailTemplates()
+  },
+  methods: {
+    populateTemplateVariables() {
+      // This is a function to populate the template variables that are passed along to Nylas.
+      if (this.lead.accountRef && this.lead.accountRef.name) {
+        this.variables.company = this.lead.accountRef.name
+      }
+      if (this.toEmails.length > 0) {
+        this.variables.name = this.toEmails[0].name
+      }
+    },
+    uploadFiles(event) {
+      const file = event.target.files[0]
+      this.filesLoading = true
+      Nylas.attachFile(file)
+        .then(response => {
+          this.files.push(response.data[0])
+        })
+        .finally(() => {
+          this.filesLoading = false
+        })
+    },
+    removeFiles(fileId) {
+      const filteredFiles = this.files.filter(file => file.id !== fileId)
+      this.files = filteredFiles
+    },
+    toggleActiveTab(tabToActivate) {
+      if (tabToActivate === 'reply') {
+        this.replyActive = true
+        this.replyAllActive = false
+        this.updateToReply()
+      }
+      if (tabToActivate === 'replyAll') {
+        this.replyActive = false
+        this.replyAllActive = true
+        this.updateToReplyAll()
+      }
+    },
+    updateToReply() {
+      this.toEmails = this.replyMessage.from
+      this.ccEmails = this.replyMessage.cc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+      this.bccEmails = this.replyMessage.bcc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+    },
+    updateToReplyAll() {
+      // We want the email to be "to" whoever sent it.
+      let replyEmailTos = this.replyMessage.from
+      // Add in the remaining "to"" emails (not including you) from the original message.
+      let otherToEmails = this.replyMessage.to.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+      const combinedEmailList = replyEmailTos.concat(otherToEmails)
+      this.toEmails = combinedEmailList
+      this.ccEmails = this.replyMessage.cc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+      this.bccEmails = this.replyMessage.bcc.filter(
+        contactObject => contactObject['email'] !== this.user.email,
+      )
+    },
+    addToEmail(contactObject) {
+      this.toEmails.push(contactObject)
+    },
+    addCCEmail(contactObject) {
+      this.ccEmails.push(contactObject)
+    },
+    addBCCEmail(contactObject) {
+      this.bccEmails.push(contactObject)
+    },
+    removeToEmail(contactObject) {
+      this.toEmails = this.toEmails.filter(
+        existingContact => existingContact.email !== contactObject.email,
+      )
+    },
+    removeCCEmail(contactObject) {
+      this.ccEmails = this.ccEmails.filter(
+        existingContact => existingContact.email !== contactObject.email,
+      )
+    },
+    removeBCCEmail(contactObject) {
+      this.bccEmails = this.bccEmails.filter(
+        existingContact => existingContact.email !== contactObject.email,
+      )
+    },
+    updateBodyWithTemplate() {
+      this.subject = this.activeTemplate.subject
+      this.body = this.activeTemplate.bodyHtml
+    },
+    getEmailTemplates() {
+      EmailTemplate.api.list().then(data => {
+        this.emailTemplates = data.results
+      })
+    },
+    sendEmail() {
+      this.populateTemplateVariables()
+      Nylas.sendEmail(
+        this.toEmails,
+        this.subject,
+        this.body,
+        this.ccEmails,
+        this.bccEmails,
+        this.replyMessageId,
+        this.fileIds,
+        this.variables,
+      )
+        .then(() => {
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 4000,
+            message: 'Email Sent',
+          })
+        })
+        .then(() => {
+          this.$emit('emailSent')
+        })
+    },
+    previewEmail() {
+      this.populateTemplateVariables()
+      this.previewActive = true
+      Nylas.previewEmail(
+        this.toEmails,
+        this.subject,
+        this.body,
+        this.ccEmails,
+        this.bccEmails,
+        this.replyMessageId,
+        this.fileIds,
+        this.variables,
+      ).then(response => {
+        this.preview = response.data
+      })
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/mixins/inputs';
+.filter-green {
+  filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
+}
+
+.new-email-box {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.add-new-contact-button {
+  @include primary-button;
+  padding: 0.5rem;
+}
+</style>

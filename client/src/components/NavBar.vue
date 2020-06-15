@@ -1,15 +1,16 @@
 <template>
   <nav id="nav">
     <div class="logo">
-      <span class="name">
-        managr
-      </span>
+      <span class="name">managr</span>
     </div>
     <div v-if="userIsLoggedIn" class="links">
       <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
       <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
       <NavLink icon="prospect" :to="'Prospect'">Prospect</NavLink>
       <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
+      <NavLink icon="toc" to="Settings">Settings</NavLink>
+      <NavLink icon="image" to="Styles">Styles</NavLink>
+      <a style="padding-top: 20px;" @click="logOut">Log Out</a>
     </div>
     <img
       v-if="userIsLoggedIn"
@@ -22,11 +23,18 @@
 
 <script>
 import NavLink from '@/components/NavLink'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'NavBar',
   components: {
     NavLink,
+  },
+  methods: {
+    logOut() {
+      this.$store.dispatch('logoutUser')
+      this.$router.push({ name: 'Login' })
+    },
   },
   computed: {
     userIsLoggedIn() {

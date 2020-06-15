@@ -30,9 +30,7 @@
         type="password"
         placeholder="password"
       />
-      <button type="submit">
-        {{ currentStep === 1 ? 'Next' : 'Login' }}
-      </button>
+      <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
     </form>
   </div>
 </template>

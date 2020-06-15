@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"boto3" = "==1.*"
+"boto3" = "==1.13.*"
 botocore = "==1.*"
 dj-database-url = "==0.*"
 Django = "==2.*"
@@ -30,11 +30,11 @@ rollbar = "==0.*"
 whitenoise = "==3.*"
 django-kronos = "==1.*"
 django-money = "*"
+pylint-django = "*"
 
 [requires]
 python_version = "3.7"
 
 [dev-packages]
-"pep8" = "*"
-pylint = "*"
+pycodestyle = "*"
 "autopep8" = "*"

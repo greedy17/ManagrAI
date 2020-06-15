@@ -1,0 +1,41 @@
+// Each page should use the 'page' as the primary container,
+// and then create a left nav bar, right panel, and main content area as needed
+// If you want the main content area to stay a consistent width
+// between a page with no panel and a page with a panel, then use the
+//  main-content-area-with-panel.
+
+.page {
+  padding: 2rem;
+  display: flex;
+  &__left-nav-bar {
+    flex: 3;
+  }
+  &__main-content-area {
+    flex: 12;
+    padding: 0 2rem;
+  }
+  &__main-content-area-with-panel {
+    flex: 9;
+    padding: 0 2rem;
+  }
+  &__right-panel {
+    flex: 3;
+  }
+}
+
+.row {
+  width: 100%;
+}
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.flexbox-container {
+  display: flex;
+  &__column {
+    flex: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

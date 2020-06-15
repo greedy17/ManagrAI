@@ -14,8 +14,9 @@ import LeadsDetail from '@/views/leads/LeadsDetail'
 import LeadsNew from '@/views/leads/LeadsNew'
 import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
-
-//TODO(Bruno 4-8-20): lazy-load views
+import Nylas from '@/views/nylas-integration/Nylas'
+import Settings from '@/views/settings/Settings'
+import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
 
@@ -71,6 +72,24 @@ export default new Router({
       path: '/forecast',
       name: 'Forecast',
       component: Forecast,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/nylas',
+      name: 'Nylas',
+      component: Nylas,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: Settings,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/styles',
+      name: 'Styles',
+      component: Styles,
       beforeEnter: Auth.requireAuth,
     },
   ],

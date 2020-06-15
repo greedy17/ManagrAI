@@ -205,6 +205,8 @@ class BaseNote(TimeStampModel):
         "core.User", null=True, related_name="updated_%(app_label)s_%(class)s", on_delete=models.SET_NULL)
     created_for = models.ForeignKey(
         'Lead', related_name='%(app_label)s_%(class)ss', null=True, on_delete=models.SET_NULL)
+    linked_contacts = models.ManyToManyField(
+        'organization.Contact', related_name='%(app_label)s_%(class)s', blank=True)
 
     objects = BaseNoteQuerySet.as_manager()
 

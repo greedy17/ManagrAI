@@ -36,7 +36,7 @@ export default {
   computed: {
     selectableOptions() {
       // all options are selectable except 'Unforecasted'. A lead is only 'Unforecasted' on creation.
-      return forecastEnums.filter(option => option != 'Unforecasted')
+      return forecastEnums.filter((option) => option != 'Unforecasted')
     },
     computedStyles() {
       if (this.transparent) {

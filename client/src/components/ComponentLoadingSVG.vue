@@ -11,7 +11,7 @@ const DARK_GREEN = '#199e54' // $dark-green
 const LIME_GREEN = '#78c142' // $lime-green
 const YELLOW = '#fab900' // $yellow
 const CORAL = '#fa646a' // $coral
-const themeColors = [DARK_GREEN, LIME_GREEN, YELLOW, CORAL]
+const themeColors = [DARK_GREEN, YELLOW, CORAL]
 const color = themeColors[Math.floor(Math.random() * themeColors.length)]
 
 export default {

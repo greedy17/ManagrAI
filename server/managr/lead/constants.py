@@ -1,9 +1,6 @@
 FILE_TYPE_OTHER = 'OTHER'
 FILE_TYPE_CONTRACT = 'CONTRACT'
-FILE_TYPE_CHOICES = (
-    (FILE_TYPE_OTHER, 'Other'),
-    (FILE_TYPE_CONTRACT, 'Contract')
-)
+FILE_TYPE_CHOICES = ((FILE_TYPE_OTHER, 'Other'), (FILE_TYPE_CONTRACT, 'Contract'))
 
 LEAD_STATUS_READY = 'READY'
 LEAD_STATUS_TRIAL = 'TRIAL'
@@ -12,6 +9,10 @@ LEAD_STATUS_WAITING = 'WAITING'
 LEAD_STATUS_CLOSED = 'CLOSED'
 LEAD_STATUS_LOST = 'LOST'
 LEAD_STATUS_CHOICES = (
-    (LEAD_STATUS_READY, 'Ready'), (LEAD_STATUS_TRIAL, 'Trial'), (LEAD_STATUS_DEMO,
-                                                                 'Demo'), (LEAD_STATUS_WAITING, 'Waiting'), (LEAD_STATUS_CLOSED, 'Closed'), (LEAD_STATUS_LOST, 'Lost'),
+    (LEAD_STATUS_READY, 'Ready'),
+    (LEAD_STATUS_TRIAL, 'Trial'),
+    (LEAD_STATUS_DEMO, 'Demo'),
+    (LEAD_STATUS_WAITING, 'Waiting'),
+    (LEAD_STATUS_CLOSED, 'Closed'),
+    (LEAD_STATUS_LOST, 'Lost'),
 )

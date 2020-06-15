@@ -1,10 +1,10 @@
-@import '../variables';
-@import './utils';
+@import "../variables";
+@import "./utils";
 
 @mixin input-field() {
   @include base-font-styles();
   border-radius: 4px;
-  background-color: $off-white;
+  background-color: $soft-gray;
   border: none;
   box-sizing: border-box;
   padding: 3%;
@@ -26,4 +26,17 @@
     letter-spacing: 0.5px;
     color: $base-gray;
   }
+}
+
+.input {
+  @include input-field();
+  font-size: 1rem;
+}
+
+.textarea {
+  @include input-field();
+
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
 }

@@ -11,17 +11,15 @@ from managr.utils import sites as site_utils
 from managr.core import constants as core_consts
 from managr.core.integrations import gen_auth_url, revoke_access_token
 
+
 ACCOUNT_TYPE_LIMITED = 'LIMITED'
 ACCOUNT_TYPE_MANAGER = 'MANAGER'
-ACCOUNT_TYPES = (
-    (ACCOUNT_TYPE_LIMITED, 'LIMITED'), (ACCOUNT_TYPE_MANAGER, 'MANAGER')
-)
+ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, 'LIMITED'), (ACCOUNT_TYPE_MANAGER, 'MANAGER'))
 
 STATE_ACTIVE = 'ACTIVE'
 STATE_INACTIVE = 'INACTIVE'
 STATE_INVITED = 'INVITED'
-STATE_CHOCIES = ((STATE_ACTIVE, 'Active'), (STATE_INACTIVE,
-                                            'Inactive'), (STATE_INVITED, 'Invited'))
+STATE_CHOCIES = ((STATE_ACTIVE, 'Active'), (STATE_INACTIVE, 'Inactive'), (STATE_INVITED, 'Invited'))
 
 
 class TimeStampModel(models.Model):
@@ -45,7 +43,6 @@ class UserManager(BaseUserManager):
         All emails are lowercased automatically.
         """
         email = self.normalize_email(email).lower()
-        print(extra_fields)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -87,24 +84,25 @@ class User(AbstractUser, TimeStampModel):
     is_serviceaccount = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     organization = models.ForeignKey(
-        'organization.Organization', related_name="users", on_delete=models.SET_NULL, null=True)
-    type = models.CharField(choices=ACCOUNT_TYPES,
-                            max_length=255, default=ACCOUNT_TYPE_MANAGER)
+        'organization.Organization', related_name="users", on_delete=models.SET_NULL, null=True
+    )
+    type = models.CharField(choices=ACCOUNT_TYPES, max_length=255, default=ACCOUNT_TYPE_MANAGER)
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
-    phone_number = models.CharField(
-        max_length=255, blank=True, null=False, default='')
+    phone_number = models.CharField(max_length=255, blank=True, null=False, default='')
     is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
-        help_text=('The magic token is a randomly-generated uuid that can be '
-                   'used to identify the user in a non-password based login flow. ')
+        help_text=(
+            'The magic token is a randomly-generated uuid that can be '
+            'used to identify the user in a non-password based login flow. '
+        ),
     )
-    # may need to make this a property as it keeps re-running a migration   is_invited = models.BooleanField(max_length=255, default=False)
+    # may need to make this a property as it keeps re-running a migration
+    # is_invited = models.BooleanField(max_length=255, default=False)
     magic_token_expiration = models.DateTimeField(
-        help_text='The datetime when the magic token is expired.',
-        null=True
+        help_text='The datetime when the magic token is expired.', null=True
     )
 
     objects = UserManager()
@@ -122,7 +120,7 @@ class User(AbstractUser, TimeStampModel):
     @property
     def magic_token_expired(self):
         if not self.magic_token_expiration:
-            self.magic_token_expiration = timezone.now()+timedelta(days=30)
+            self.magic_token_expiration = timezone.now() + timedelta(days=30)
 
         now = timezone.now()
         return now > self.magic_token_expiration
@@ -135,9 +133,11 @@ class User(AbstractUser, TimeStampModel):
 
         if self.magic_token_expired:
             self.regen_magic_token()
-        # return f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.AUTH_PARAMS}?login_hint={self.email}&client_id={core_consts.NYLAS_CLIENT_ID}&response_type=code&redirect_uri={base_url}&scopes=email.read_only&state={self.magic_token}'
-        return gen_auth_url(core_consts.EMAIL_AUTH_CALLBACK_URL,
-                            email=self.email, magic_token=str(self.magic_token))
+        # return
+        # f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.AUTH_PARAMS}?login_hint={self.email}&client_id={core_consts.NYLAS_CLIENT_ID}&response_type=code&redirect_uri={base_url}&scopes=email.read_only&state={self.magic_token}'
+        return gen_auth_url(
+            core_consts.EMAIL_AUTH_CALLBACK_URL, email=self.email, magic_token=str(self.magic_token)
+        )
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
@@ -150,10 +150,7 @@ class User(AbstractUser, TimeStampModel):
         """
         Log-in user and append authentication token to serialized response.
         """
-        login(
-            request, self,
-            backend='django.contrib.auth.backends.ModelBackend'
-        )
+        login(request, self, backend='django.contrib.auth.backends.ModelBackend')
         auth_token, token_created = Token.objects.get_or_create(user=self)
 
         serializer = serializer_type(self, context={'request': request})
@@ -170,16 +167,19 @@ class User(AbstractUser, TimeStampModel):
 
 class EmailAuthAccount(TimeStampModel):
     """ creates a model out of the nylas response """
+
     access_token = models.CharField(max_length=255, null=True)
     account_id = models.CharField(max_length=255, null=True)
     email_address = models.CharField(max_length=255, null=True)
     provider = models.CharField(max_length=255, null=True)
     sync_state = models.CharField(
-        max_length=255, null=True, help_text="sync state is managed by web_hook after it is set for the first time")
+        max_length=255,
+        null=True,
+        help_text="sync state is managed by web_hook after it is set for the first time",
+    )
     name = models.CharField(max_length=255, null=True)
     linked_at = models.DateTimeField(null=True)
-    user = models.OneToOneField(
-        'User', on_delete=models.CASCADE, related_name="email_auth_account")
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name="email_auth_account")
 
     def __str__(self):
         return f'{self.email_address}'
@@ -198,5 +198,47 @@ class EmailAuthAccount(TimeStampModel):
         try:
             return super(EmailAuthAccount, self).save(*args, **kwargs)
         except IntegrityError:
-            raise ValidationError({'non_form_errors': {
-                                  'access_token': 'This User already has an access Token please revoke the access token first'}})
+            raise ValidationError(
+                {
+                    'non_form_errors': {
+                        'access_token': 'This User already has an access Token \
+                    please revoke the access token first'
+                    }
+                }
+            )
+
+
+class EmailTemplateQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            return self.filter(user=user)
+        else:
+            return None
+
+
+class EmailTemplate(TimeStampModel):
+    user = models.ForeignKey(
+        'core.User',
+        on_delete=models.CASCADE,
+        related_name='email_templates'
+    )
+    name = models.CharField(max_length=128)
+    subject = models.TextField()
+    body_html = models.TextField(
+        help_text='WARNING: This content is not auto-escaped. Generally take care not to '
+                  'render user-provided data to avoid a possible HTML-injection.'
+    )
+
+    objects = EmailTemplateQuerySet.as_manager()
+
+    def __str__(self):
+        return f'{self.user} - {self.name}'
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Email Templates'
+        unique_together = ['user', 'name']

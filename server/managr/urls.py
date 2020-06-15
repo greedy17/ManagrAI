@@ -7,7 +7,6 @@ from managr.core import views as core_views
 
 urlpatterns = [
     path(r'admin/', admin.site.urls),
-    #path(r'', include('spotandtango.core.favicon_urls')),
     path(r'api/', include('managr.api.urls', namespace='api')),
 ]
 
