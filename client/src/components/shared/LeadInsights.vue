@@ -1,12 +1,7 @@
 <template>
   <div class="insights">
     <div class="insights-header section-shadow">
-      <span class="insights-header-title">Insights</span>
-      <div class="insights-header-link-container">
-        <router-link :to="{ name: 'LeadsDetail', params: { id: lead.id } }" v-if="showLink">
-          <span class="insights-header-link">See Lead Detail</span>
-        </router-link>
-      </div>
+      Insights
     </div>
     <!-- hiding these as they are still WIP --- as requested by Marcy pb 05/15/20 
   
@@ -103,45 +98,17 @@ export default {
 }
 
 .insights-header {
+  @include base-font-styles();
   height: 3rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-}
 
-.insights-header-title {
-  @include base-font-styles();
-  flex-grow: 1;
-  padding: 5% 0 5% 7%;
-  font-size: 14px;
+  padding-left: 1rem;
+  font-size: 0.875rem;
   font-weight: bold;
   line-height: 1.14;
   color: $main-font-gray;
-}
-
-.insights-header-link-container {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.insights-header-link {
-  @include pointer-on-hover();
-  @include base-font-styles();
-  text-transform: uppercase;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: $dark-green;
-
-  &:hover {
-    border-radius: 5px;
-    padding: 0.25rem 0.375rem;
-    background-color: $dark-green;
-    color: $white;
-  }
 }
 
 .insight-container {

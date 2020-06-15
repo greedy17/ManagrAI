@@ -86,10 +86,10 @@ class LeadFilterSet(FilterSet):
         """ filter leads by list count """
         if value:
             # if true on_list=True return leads with a list count of greater than 0 (non inclusive)
-            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0)
+            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0).order_by('title')
         else:
             # if false on_list=False return leads with a list count of less than 1 (non inclusive)
-            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1)
+            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1).order_by('title')
 
     def claim_status(self, queryset, name, value):
         """ checks if the claimed_by field is null """
@@ -119,7 +119,7 @@ class LeadFilterSet(FilterSet):
                 else:
                     account_list.remove(acc)
 
-            return queryset.filter(account__in=account_list).order_by('account')
+            return queryset.filter(account__in=account_list).order_by('account', 'title')
         return queryset
 
 

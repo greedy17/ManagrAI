@@ -11,7 +11,7 @@
         >{{ tab }}</ActionTabHeader
       >
     </div>
-    <div class="tab-content">
+    <div v-if="!loading" class="tab-content">
       <div v-if="!listView" class="view-toggle-container">
         <span class="left" :class="{ bold: !onList }">No List</span>
         <ToggleCheckBox
@@ -40,8 +40,7 @@
         <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
       </div>
       <div v-if="!listView">
-        <ComponentLoadingSVG v-if="loading" />
-        <template v-else>
+        <template>
           <template v-if="leads.list.length > 0">
             <Lead v-for="lead in leads.list" :key="lead.id" :lead="lead" />
           </template>
@@ -50,6 +49,9 @@
           </template>
         </template>
       </div>
+    </div>
+    <div v-else class="tab-content">
+      <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
     </div>
   </div>
 </template>
@@ -197,6 +199,7 @@ export default {
   display: flex;
   flex-flow: row;
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .action-tab-content {

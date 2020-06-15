@@ -1,11 +1,12 @@
 <template>
-  <div class="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
-    <div
-      class="modal"
-      :class="{ 'box-shadow': !dimmed }"
-      :style="{ height: `${height}vh`, width: `${width}vw` }"
-      @click="stopPropagation"
-    >
+  <div
+    class="container"
+    ref="container"
+    :class="{ dimmed: dimmed }"
+    :style="{ top: `${original.documentY}px` }"
+    @click="emitCloseModal"
+  >
+    <div class="modal" :class="{ 'box-shadow': !dimmed }" :style="{ width: `${width}vw` }">
       <div class="content">
         <slot />
       </div>
@@ -14,16 +15,37 @@
 </template>
 
 <script>
+/**
+ * @component Modal
+ *
+ * @contributors
+ *   Bruno Garcia Gonzalez
+ *
+ * Custom modal that does not rely on any libraries.
+ * Developer can just wrap their own code in this modal and leverage the <slot /> herein.
+ * Clicking outside of the modal yields the emission of @close-modal,
+ * so that this modal can be closed at the parent-level.
+ * <body /> original overflow settings are tracked so that on-close styles can reset to original.
+ *
+ * @example
+ *  <Modal v-if="modalIsOpen" :height="60" dimmed @close-modal="modalIsOpen = false">
+ *      <p>Hello from inside of the modal!</p>
+ *      <button @click="doStuffAndThenCloseModal">Do Thing and Close</button>
+ *  </Modal>
+ *
+ * Props:
+ *  @prop {Boolean} dimmed - Optional. Whether the background of the modal is dimmed or not. Defaults to false.
+ *  @prop {Integer} width - Optional. How tall, in vw units, the modal should be. Defaults to 60.
+ *
+ * Events:
+ *  @event close-modal - Emitted when the area of page around the actual modal is clicked.
+ */
 export default {
   name: 'Modal',
   props: {
     dimmed: {
       type: Boolean,
       default: false,
-    },
-    height: {
-      type: Number,
-      default: 80,
     },
     width: {
       type: Number,
@@ -32,23 +54,26 @@ export default {
   },
   data() {
     return {
-      currentY: window.scrollY,
+      original: {
+        documentY: document.documentElement.scrollTop,
+        overflowX: document.body.style.overflowX,
+        overflowY: document.body.style.overflowY,
+      },
     }
   },
   mounted() {
-    document.body.style.overflowY = 'hidden'
     document.body.style.overflowX = 'hidden'
+    document.body.style.overflowY = 'hidden'
   },
   beforeDestroy() {
-    document.body.style.overflowY = 'scroll'
-    document.body.style.overflowX = 'auto'
+    document.body.style.overflowX = this.original.overflowX
+    document.body.style.overflowY = this.original.overflowY
   },
   methods: {
-    emitCloseModal() {
-      this.$emit('close-modal')
-    },
-    stopPropagation(e) {
-      e.stopPropagation()
+    emitCloseModal({ target }) {
+      if (this.$refs.container === target) {
+        this.$emit('close-modal')
+      }
     },
   },
 }
@@ -56,20 +81,20 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/utils';
 
 .container {
   position: absolute;
   left: 0;
-  top: 0;
+  //   top: 0; This is calculated from componentState.original.documentY
   width: 100vw;
   height: 100vh;
+  min-height: 100vh !important; // in case of inheritance issues
   z-index: 1000;
-  max-height: 100vh !important;
   display: flex;
   flex-flow: column;
   align-items: center;
-  justify-content: center;
+  overflow-y: scroll;
+  padding: 8vh 0;
 }
 
 .dimmed {
@@ -77,18 +102,18 @@ export default {
 }
 
 .modal {
-  @include standard-border();
+  border: 1px solid $soft-gray; // soft-gray
   z-index: 1001;
   background: $white;
   display: flex;
   flex-flow: column;
   box-sizing: border-box;
+  height: auto;
 }
 
 .content {
   margin: 1rem;
   height: inherit;
-  overflow-y: auto;
 }
 
 .box-shadow {

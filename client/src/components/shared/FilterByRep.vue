@@ -1,7 +1,7 @@
 <template>
   <div class="filter">
     <span class="title">Filter by Rep</span>
-    <div class="reps-container">
+    <div v-if="!users.refreshing" class="reps-container">
       <span
         class="rep"
         v-for="rep in users.list"
@@ -9,8 +9,11 @@
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
       >
-        {{ rep.id == currentUser.id ? 'You' : rep.fullName }}</span
-      >
+        {{ rep.id == currentUser.id ? 'You' : rep.fullName }}
+      </span>
+    </div>
+    <div v-else class="reps-container">
+      <ComponentLoadingSVG />
     </div>
   </div>
 </template>

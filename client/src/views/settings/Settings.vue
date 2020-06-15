@@ -26,6 +26,9 @@
         >
           Email Test
         </div>
+        <div class="toolbar__row" @click="routeToInviteUser">
+          Invite User
+        </div>
       </div>
     </div>
     <div class="page__main-content-area">
@@ -64,6 +67,9 @@ export default {
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
       if (pageToActivate === 'emailTest') this.emailTestActive = true
     },
+    routeToInviteUser() {
+      this.$router.push({ name: 'Invite' })
+    },
   },
 }
 </script>
@@ -73,4 +79,9 @@ export default {
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/sidebars';
+@import '@/styles/mixins/utils';
+
+.toolbar__row {
+  @include pointer-on-hover;
+}
 </style>

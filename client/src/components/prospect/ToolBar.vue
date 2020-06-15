@@ -4,22 +4,22 @@
       New Lead
     </button>
     <div class="kpi-container">
-      <KPIs />
-    </div>
-    <div class="filter-container">
-      <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
+      <div class="header section-shadow">
+        Filter
+      </div>
+      <div class="filter-container">
+        <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import KPIs from '@/components/prospect/KPIs'
 import FilterByRep from '@/components/shared/FilterByRep'
 
 export default {
   name: 'ToolBar',
   components: {
-    KPIs,
     FilterByRep,
   },
   props: {
@@ -45,9 +45,6 @@ export default {
 @import '@/styles/mixins/utils';
 
 .toolbar {
-  @include disable-text-select();
-  @include standard-border();
-  background-color: $white;
   width: 78%;
   height: auto;
   display: flex;
@@ -63,12 +60,17 @@ export default {
 }
 
 .header {
+  @include base-font-styles();
+  color: $main-font-gray;
+  line-height: 1.14;
+  font-size: 1rem;
+  font-weight: bold;
+  height: 3rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
-  height: 3rem;
-  padding-left: 7%;
-  font-weight: bold;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
 }
 
 button.new-lead {
@@ -79,7 +81,9 @@ button.new-lead {
 }
 
 .kpi-container {
+  @include standard-border;
   margin-top: 1rem;
+  background-color: $white;
 }
 .filter-container {
   height: auto;

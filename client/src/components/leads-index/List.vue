@@ -41,7 +41,7 @@
       </template>
 
       <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
-        >Load More
+        Load More
       </button>
     </div>
   </div>

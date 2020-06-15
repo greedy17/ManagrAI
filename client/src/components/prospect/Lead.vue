@@ -25,7 +25,6 @@
           <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
         </button>
         <button v-else class="claim-button" @click="claimLead">
-          <img class="icon" alt="icon" src="@/assets/images/add.svg" />
           <span>Claim</span>
         </button>
       </div>

@@ -18,24 +18,9 @@
         @updated-forecast="updateForecast"
       />
       <LeadStatusDropdown :status="lead.status" @updated-status="updateStatus" />
-      <!--       <div class="lead-lists">
-        <LeadList class="lead-list" :listName="'Growth Accounts'" />
-        <LeadList class="lead-list" :listName="'Q2 Buyers'" />
-      </div>-->
-
-      <span class="lead-add-list">
-        <img class="add-list-icon" src="@/assets/images/add.svg" alt="icon" />
-      </span>
-      <div class="button-container">
-        <button v-if="!!lead.claimedBy" @click="routeToRepPage">
-          <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span>Claimed</span>
-        </button>
-        <button v-else @click="claimLead">
-          <img class="icon" alt="icon" src="@/assets/images/add.svg" />
-          <span>Claim</span>
-        </button>
-      </div>
+      <button class="route-to-detail">
+        <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
+      </button>
     </div>
 
     <LeadDetails :lead="lead" v-if="showDetails" />
@@ -74,14 +59,6 @@ export default {
     }
   },
   methods: {
-    routeToRepPage() {
-      alert('Clicking a rep name should route to the RepDetail')
-    },
-    claimLead() {
-      alert(
-        'Clicking claim should claim the lead and not change the page (so that many leads can be claimed in succession)',
-      )
-    },
     toggleDetails() {
       this.showDetails = !this.showDetails
     },
@@ -120,6 +97,9 @@ export default {
     },
     closeModal() {
       this.modal.isOpen = false
+    },
+    routeToLeadDetail() {
+      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
     },
   },
   computed: {
@@ -200,46 +180,11 @@ export default {
   width: 5%;
 }
 
-.lead-lists {
-  width: 28%;
-  display: flex;
-  align-items: center;
-}
-
-.lead-list {
-  margin: 0 1vh;
-}
-
-.lead-add-list {
-  width: 5%;
-  display: flex;
-}
-
-.add-list-icon {
-  @include pointer-on-hover();
-  background-color: $soft-gray;
-  border-radius: 5px;
-  height: 1rem;
-  width: 1rem;
+.route-to-detail {
+  @include secondary-button;
   margin-left: auto;
-  margin-right: 15%;
-}
-.button-container {
-  width: 15%;
-  margin-left: auto;
-  margin-right: 5rem;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-
-  button {
-    @include secondary-button();
-    padding-right: 0.7rem;
-    padding-left: 0.5rem;
-    width: auto;
-    display: flex;
-    flex-flow: row;
-    align-items: center;
-  }
+  margin-right: 1rem;
+  height: 2rem;
+  width: 2.5rem;
 }
 </style>

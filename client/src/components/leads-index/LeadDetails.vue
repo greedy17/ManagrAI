@@ -5,9 +5,10 @@
         <LeadActions :lead="lead" />
       </div>
       <div class="insights-pane">
-        <LeadInsights :lead="lead" :showLink="true" />
+        <LeadInsights :lead="lead" />
       </div>
     </div>
+    <div class="route-to-detail" @click="routeToLeadDetail">See Lead Detail</div>
   </div>
 </template>
 
@@ -22,10 +23,18 @@ export default {
     LeadActions,
     LeadInsights,
   },
+  methods: {
+    routeToLeadDetail() {
+      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/mixins/utils';
+
 .lead-details {
   padding: 2%;
 }
@@ -44,5 +53,18 @@ export default {
   flex-grow: 1;
   display: flex;
   justify-content: center;
+}
+
+.route-to-detail {
+  @include pointer-on-hover;
+  @include disable-text-select;
+  @include base-font-styles;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: $dark-green;
+  margin-top: 1rem;
 }
 </style>
