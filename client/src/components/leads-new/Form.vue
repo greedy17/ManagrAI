@@ -367,9 +367,6 @@ export default {
         })
         this.$emit('to-add-contacts')
       })
-
-      // show alert-alert success
-      // emit on to final step
     },
     createAccountClientSideValidations() {
       let formErrors = {
