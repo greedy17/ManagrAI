@@ -48,6 +48,7 @@
             :key="list.id"
             :list="list"
             :leadFilters="listsCollection.filters"
+            @refresh-lists="listsCollection.refresh()"
           />
           <LoadMoreButton
             v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"

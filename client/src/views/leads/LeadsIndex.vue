@@ -52,6 +52,7 @@ export default {
         ModelClass: List,
         filters: {
           byUser: this.$store.state.user.id,
+          ordering: 'title',
         },
       }),
       myLeadsOnList: CollectionManager.create({

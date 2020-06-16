@@ -7,7 +7,7 @@
     @click="emitCloseModal"
   >
     <div class="modal" :class="{ 'box-shadow': !dimmed }" :style="{ width: `${width}vw` }">
-      <div class="content">
+      <div :class="{ content: includeMargin }">
         <slot />
       </div>
     </div>
@@ -50,6 +50,10 @@ export default {
     width: {
       type: Number,
       default: 60,
+    },
+    includeMargin: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {
