@@ -20,10 +20,16 @@ LEAD_STATUS_WAITING = 'WAITING'
 LEAD_STATUS_CLOSED = 'CLOSED'
 LEAD_STATUS_LOST = 'LOST'
 LEAD_STATUS_BOOKED = 'BOOKED'
+LEAD_STATUS_LEAD = 'LEAD'
 LEAD_STATUS_CHOICES = (
-    (LEAD_STATUS_READY, 'Ready'), (LEAD_STATUS_TRIAL, 'Trial'), (LEAD_STATUS_DEMO,
-                                                                 'Demo'), (LEAD_STATUS_WAITING, 'Waiting'), (LEAD_STATUS_CLOSED, 'Closed'),
-    (LEAD_STATUS_LOST, 'Lost'), (LEAD_STATUS_BOOKED, 'Booked')
+    (LEAD_STATUS_READY, 'Ready'),
+    (LEAD_STATUS_TRIAL, 'Trial'),
+    (LEAD_STATUS_DEMO, 'Demo'),
+    (LEAD_STATUS_WAITING, 'Waiting'),
+    (LEAD_STATUS_CLOSED, 'Closed'),
+    (LEAD_STATUS_LOST, 'Lost'),
+    (LEAD_STATUS_BOOKED, 'Booked'),
+    (LEAD_STATUS_LEAD, 'Lead'),
 )
 FORECAST_FIFTY_FIFTY = '50/50'
 FORECAST_NA = 'NA'
