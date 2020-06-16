@@ -20,17 +20,18 @@
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="trueList.refreshing" />
       <template v-else>
-        <div v-if="trueList.list.length" class="list-leads__row bulk-row">
-          <span class="list-leads__row__action icon">
-            <Checkbox :checked="allLeadsSelected" @checkbox-clicked="toggleAllSelected" />
-          </span>
+        <div class="list-leads__row" v-if="trueList.list.length">
           <span
             class="list-leads__row__lead"
-            :style="{ marginLeft: '1rem', display: 'flex', flexFlow: 'row', alignItems: 'center' }"
+            :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
           >
-            <span>
-              Select All
-            </span>
+            <Checkbox
+              :style="{ marginLeft: '1rem' }"
+              :checked="allLeadsSelected"
+              @checkbox-clicked="toggleAllSelected"
+            />
+
+            <span :style="{ marginLeft: '0.75rem' }">Select All</span>
             <button class="bulk-action-button" v-if="!noLeadsSelected" @click="onBulkAction">
               Take Action
             </button>
@@ -47,14 +48,13 @@
           </span>
         </div>
         <div :key="lead.id" class="list-leads__row" v-for="lead in trueList.list">
-          <span class="list-leads__row__action icon">
-            <Checkbox
-              :checked="!!selectedLeads[lead.id]"
+          <span class="list-leads__row__lead">
+            <Lead
+              :key="lead.id"
+              :lead="lead"
+              :isSelected="!!selectedLeads[lead.id]"
               @checkbox-clicked="toggleSelectedLead(lead)"
             />
-          </span>
-          <span class="list-leads__row__lead">
-            <Lead :key="lead.id" :lead="lead" />
           </span>
         </div>
         <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
@@ -264,14 +264,6 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
-}
-
-.bulk-row {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-flow: row;
-  justify-content: center;
-  height: 2.5rem;
 }
 
 .bulk-action-button {

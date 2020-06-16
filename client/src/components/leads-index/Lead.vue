@@ -1,6 +1,11 @@
 <template>
   <div class="lead">
     <div class="lead-header" v-bind:style="headerBackgroundColor">
+      <Checkbox
+        class="checkbox"
+        :checked="isSelected"
+        @checkbox-clicked="$emit('checkbox-clicked', lead)"
+      />
       <span class="lead-name" @click="toggleDetails">{{ lead.title }}</span>
       <span class="lead-rating">{{ lead.rating }}</span>
       <div v-if="lead.primaryDescription || lead.secondaryDescription" class="lead-description">
@@ -26,6 +31,7 @@ import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import Checkbox from '@/components/leads-new/CheckBox'
 
 export default {
   name: 'Lead',
@@ -34,11 +40,16 @@ export default {
       type: Object,
       required: true,
     },
+    isSelected: {
+      type: Boolean,
+      required: true,
+    },
   },
   components: {
     LeadDetails,
     LeadForecastDropdown,
     LeadStatusDropdown,
+    Checkbox,
   },
   data() {
     return {
@@ -76,6 +87,10 @@ export default {
   flex-flow: row;
   align-items: center;
   height: 3rem;
+}
+
+.checkbox {
+  margin-left: 1rem;
 }
 
 .lead-name {
