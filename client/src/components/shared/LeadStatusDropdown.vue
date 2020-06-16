@@ -5,7 +5,7 @@
       :style="computedStyles"
       :disabled="disabled || selectedStatus === 'CLOSED'"
     >
-      <option disabled :value="null">---</option>
+      <option :value="null">---</option>
       <option v-for="option in statusEnums" :key="option" :value="option.toUpperCase()">
         {{ option }}
       </option>
