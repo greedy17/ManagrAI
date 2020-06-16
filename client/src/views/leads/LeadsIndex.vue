@@ -24,6 +24,7 @@
         @delete-list="deleteList"
         @remove-from-list="removeFromList"
         :isOwner="true"
+        @refresh-collections="refreshCollections"
       />
     </div>
   </div>

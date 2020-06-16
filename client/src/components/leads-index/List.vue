@@ -41,7 +41,7 @@
             <Modal v-if="modal.isOpen" dimmed @close-modal="onCloseModal" :includeMargin="false">
               <BulkLeadActions
                 :leads="Object.values(selectedLeads)"
-                @bulk-move-success="onBulkMoveSuccess"
+                @bulk-move-success="$emit('refresh-collections')"
                 @bulk-success="onCloseModal"
               />
             </Modal>
@@ -72,7 +72,6 @@
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
-import List from '@/services/lists'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
@@ -112,7 +111,6 @@ export default {
   },
   data() {
     return {
-      loading: false,
       showLeads: false,
       madeInitialRetrieval: false,
       trueList: CollectionManager.create({
@@ -126,17 +124,6 @@ export default {
     }
   },
   methods: {
-    // async removeFromList(leads, listId) {
-    //   try {
-    //     this.loading = true
-    //     await List.api.removeFromList(leads, listId)
-    //     this.trueList.refresh()
-
-    //     this.list.leadCount = this.list.leadCount - 1
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
     onBulkAction() {
       this.modal.isOpen = true
     },
@@ -173,9 +160,6 @@ export default {
     onCloseModal() {
       this.selectedLeads = {}
       this.modal.isOpen = false
-    },
-    onBulkMoveSuccess() {
-      this.$emit('refresh-lists')
     },
   },
   computed: {
