@@ -1,16 +1,16 @@
 <template>
   <div class="forecast-dropdown">
     <select @change="updateForecast" :style="computedStyles" :disabled="disabled || leadIsClosed">
+      <option disabled :selected="forecast == null" :value="null">
+        Select Forecast
+      </option>
       <option
         v-for="option in selectableOptions"
         :selected="option.toUpperCase() === forecast"
         :key="option"
         :value="option"
       >
-        {{ option }}
-      </option>
-      <option disabled :selected="forecast == null || forecast == 'NA'" value="">
-        Unforecasted
+        {{ option == 'NA' ? 'Unforecasted' : option }}
       </option>
     </select>
   </div>
@@ -103,8 +103,7 @@ export default {
   },
   computed: {
     selectableOptions() {
-      // all options are selectable except 'Unforecasted'. A lead is only 'Unforecasted' on creation.
-      return forecastEnums.filter(option => option != 'NA')
+      return forecastEnums
     },
     forecast() {
       if (this.inForecastView) {
