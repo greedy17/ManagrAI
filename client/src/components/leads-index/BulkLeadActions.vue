@@ -36,7 +36,9 @@
           </div>
         </template>
       </div>
-      <div v-if="activeTab == 1">Bulk Action</div>
+      <div v-if="activeTab == 1">
+        <BulkCustomAction :leads="leads" />
+      </div>
       <div v-if="activeTab == 2">Bulk Note</div>
       <div v-if="activeTab == 3">Bulk Email</div>
     </div>
@@ -48,12 +50,14 @@ import ActionTabHeader from '@/components/shared/ActionTabHeader'
 import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Checkbox from '@/components/leads-new/CheckBox'
+import BulkCustomAction from '@/components/leads-index/BulkCustomAction'
 
 export default {
   name: 'BulkLeadActions',
   components: {
     ActionTabHeader,
     Checkbox,
+    BulkCustomAction,
   },
   props: {
     leads: {
@@ -65,6 +69,7 @@ export default {
     return {
       activeTab: 0,
       tabs: ['Lists', 'Action', 'Note', 'Email'],
+      // for bulk movement:
       lists: CollectionManager.create({
         ModelClass: List,
         filters: {
@@ -150,8 +155,11 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
 @import '@/styles/containers';
+@import '@/styles/layout';
+@import '@/styles/forms';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/inputs';
 
 .actions {
   min-width: 48rem;

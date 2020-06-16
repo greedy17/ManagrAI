@@ -408,6 +408,8 @@ class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsOrganizationManager, )
     serializer_class = ActionChoiceSerializer
+    filter_backends = (DjangoFilterBackend, LeadRatingOrderFiltering,)
+    ordering = ('title',)
 
     def get_queryset(self):
         return ActionChoice.objects.for_user(self.request.user)
