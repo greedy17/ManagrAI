@@ -63,7 +63,7 @@ export default class ListAPI {
     return promise
   }
   async deleteList(listId) {
-    const url = `${LISTS_ENDPOINT}/${listId}`
+    const url = `${LISTS_ENDPOINT}${listId}`
     try {
       await this.client.delete(url)
     } catch (e) {
