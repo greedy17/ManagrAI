@@ -14,6 +14,12 @@
 
     <div class="box__content">
       <div v-if="activeTab == 0">
+        <BulkCustomAction :leads="leads" />
+      </div>
+      <div v-if="activeTab == 1">
+        <BulkNoteAction :leads="leads" />
+      </div>
+      <div v-if="activeTab == 2">
         <ComponentLoadingSVG v-if="lists.refreshing" />
         <template v-else>
           Move all selected Leads to the following Lists:
@@ -35,13 +41,7 @@
           </div>
         </template>
       </div>
-      <div v-if="activeTab == 1">
-        <BulkCustomAction :leads="leads" />
-      </div>
-      <div v-if="activeTab == 2">
-        <BulkNoteAction :leads="leads" />
-      </div>
-      <div v-if="activeTab == 3">Bulk Email</div>
+      <!-- <div v-if="activeTab == 3">Bulk Email</div> -->
     </div>
   </div>
 </template>
@@ -71,7 +71,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['Lists', 'Action', 'Note', 'Email'],
+      tabs: ['Action', 'Note', 'Lists'],
       // for bulk movement:
       lists: CollectionManager.create({
         ModelClass: List,
@@ -114,35 +114,6 @@ export default {
         this.$emit('bulk-move-success')
       })
     },
-    // async createNote(note) {
-    //   let d = { note }        await this.listItems(this.tabs[index])
-
-    //       type: 'success',
-    //       timeout: 4000,
-    //       message: 'note created!',
-    //     })
-    //     this.$refs['note-action'].notesForm.resetForm()
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
-
-    // async createCallNote(callNote) {
-    //   let d = { ...callNote }
-    //   d.created_for = this.lead.id
-    //   this.loading = true
-    //   try {
-    //     await CallNote.api.create(d)
-    //     this.$Alert.alert({
-    //       type: 'success',
-    //       timeout: 4000,
-    //       message: 'call note created!',
-    //     })
-    //     this.$refs['call-note-action'].callNotesForm.resetForm()
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
   },
   computed: {
     height() {
