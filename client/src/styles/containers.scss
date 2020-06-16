@@ -6,6 +6,9 @@
   @include standard-border();
   background-color: $white;
   margin: 0 0 1rem 0;
+  &--no-border {
+    border: none;
+  }
   &__header {
     display: flex;
     flex-flow: row;
@@ -89,6 +92,14 @@
   &__item {
     padding: 1.25rem;
     box-shadow: 0 1px 0 0 #eeeeee;
+  }
+  &__item--hover-effect {
+    transition: background-color ease 0.4s;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $soft-gray;
+    }
   }
   &__row {
     display: flex;

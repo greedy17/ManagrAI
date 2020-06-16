@@ -1,5 +1,5 @@
 <template>
-  <div class="flexbox-container">
+  <form @submit.prevent="onSubmit" class="flexbox-container">
     <div class="flexbox-container__column">
       <h4>Contacts</h4>
       <ContactBox
@@ -14,27 +14,26 @@
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Title</div>
-          <input type="text" class="form__input" />
+          <input type="text" class="form__input" v-model="note.title" />
           <!-- <div class="form__element-error">Error Message Goes here</div> -->
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
-          <textarea class="form__textarea" />
+          <textarea class="form__textarea" v-model="note.content" />
         </div>
-      </div>
-      <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input type="datetime-local" class="form__input" />
       </div>
       <div class="form__element">
         <button class="form__button">Save</button>
       </div>
     </div>
-  </div>
+  </form>
 </template>
 
 <script>
 import ContactBox from '@/components/shared/ContactBox'
+
+import Note from '@/services/notes'
+
 export default {
   name: 'NoteAction',
   components: { ContactBox },
@@ -46,20 +45,50 @@ export default {
   },
   data() {
     return {
-      // actionNote: new CallNote(),
-      activeContacts: [],
+      note: Note.create({
+        createdFor: this.lead.id,
+      }),
     }
   },
   methods: {
+    reset() {
+      this.note = Note.create({
+        createdFor: this.lead.id,
+      })
+    },
     toggleActive(contactId) {
-      if (this.activeContacts.includes(contactId)) {
-        this.activeContacts = this.activeContacts.filter(id => id !== contactId)
+      if (this.note.linkedContacts.includes(contactId)) {
+        this.note.linkedContacts = this.note.linkedContacts.filter(id => id !== contactId)
       } else {
-        this.activeContacts.push(contactId)
+        this.note.linkedContacts.push(contactId)
       }
     },
     contactIsActive(contactId) {
-      return this.activeContacts.includes(contactId)
+      return this.note.linkedContacts.includes(contactId)
+    },
+    onSubmit() {
+      Note.api
+        .create(this.note)
+        .then(() => {
+          this.reset()
+          this.$Alert.alert({
+            type: 'success',
+            message: `
+              <p>Note saved.</p>
+            `,
+          })
+        })
+        .catch(error => {
+          this.$Alert.alert({
+            type: 'error',
+            message: `
+              <h3>Error</h3>
+              <p>There was an error saving this note.</p>
+            `,
+          })
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
     },
   },
 }

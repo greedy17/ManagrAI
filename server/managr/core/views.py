@@ -370,7 +370,7 @@ class GetFileView(View):
 )
 def email_auth_token(request):
     """Nylas OAuth callback.
-    
+
     NOTE: This is not a Django Rest Framework view, it is a "normal" Django view.
 
     After authenticating with Google and then authorizing Nylas, the user will be redirected

@@ -1,16 +1,21 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 const NOTES_ENDPOINT = '/notes/'
+const NOTES_BULK_ENDPOINT = '/notes/bulk/'
+
 export default class NoteAPI {
   constructor(cls) {
     this.cls = cls
   }
+
   get client() {
     return apiClient()
   }
+
   static create(cls) {
     return new NoteAPI(cls)
   }
+
   async list({ pagination, filters }) {
     const url = NOTES_ENDPOINT
     const filtersMap = {
@@ -35,17 +40,21 @@ export default class NoteAPI {
       apiErrorHandler({ apiName: 'NotesAPI.list' })
     }
   }
-  async create(noteDetails) {
-    // notes are created with {note:{title:'',content:''}, leads:[]}
-    let data = { ...noteDetails }
-    data = this.cls.toAPI(data)
+
+  async create(note) {
     const url = NOTES_ENDPOINT
+    const data = this.cls.toAPI(note)
+
     try {
       const res = await this.client.post(url, data)
-
-      return res
-    } catch (e) {
-      apiErrorHandler({ apiName: 'NotesAPI.create' })
+      return this.cls.fromAPI(res.data)
+    } catch (error) {
+      apiErrorHandler({ apiName: 'NotesAPI.create' })(error)
     }
+  }
+
+  async bulk_create() {
+    // TODO: Complete this method to enable bulk creating notes for Leads.
+    const url = NOTES_BULK_ENDPOINT
   }
 }

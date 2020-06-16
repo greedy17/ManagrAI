@@ -5,15 +5,15 @@ import Vue from 'vue'
  * string. This is particularly useful for translating objects with
  * nested values into a string.
  **/
-function toMessageString(data) {
+function toMessageString(data, prefix = '') {
   if (typeof data === 'string' || typeof data === 'number') {
-    return `<div>${String(data)}</div>`
+    return `<div>${prefix} ${String(data)}</div>`
   } else if (data instanceof Array) {
-    return '<div>' + data.map(i => String(i)).join(', ') + '</div>'
+    return `<div>${prefix} ${data.map(i => String(i)).join(', ')}</div>`
   } else if (data instanceof Object) {
     let message = ''
     for (var key in data) {
-      message += '<div>' + toMessageString(data[key]) + '</div>'
+      message += '<div>' + toMessageString(data[key], `${key}:`) + '</div>'
     }
     return message
   }

@@ -1,6 +1,8 @@
 <template>
   <div class="text-action">
     <div class="contacts-container">
+      <!--
+        2020-06-16 William: Temporarily disabled.
       <div
         v-for="contact in contacts"
         :key="contact.id"
@@ -15,10 +17,11 @@
           <span class="contact-phone-number">{{ contact.phone }}</span>
         </div>
       </div>
+      -->
     </div>
     <textarea class="note-detail" placeholder="Detail" />
     <div class="save-button-container">
-      <span class="save-button">Save</span>
+      <span class="save-button">Coming Soon!</span>
     </div>
   </div>
 </template>
