@@ -41,7 +41,7 @@
               <BulkLeadActions
                 :leads="Object.values(selectedLeads)"
                 @bulk-move-success="onBulkMoveSuccess"
-                @bulk-custom-action-success="onCloseModal"
+                @bulk-success="onCloseModal"
               />
             </Modal>
           </span>

@@ -13,7 +13,6 @@
     </div>
 
     <div class="box__content">
-      <!-- specific action type goes here -->
       <div v-if="activeTab == 0">
         <ComponentLoadingSVG v-if="lists.refreshing" />
         <template v-else>
@@ -39,7 +38,9 @@
       <div v-if="activeTab == 1">
         <BulkCustomAction :leads="leads" />
       </div>
-      <div v-if="activeTab == 2">Bulk Note</div>
+      <div v-if="activeTab == 2">
+        <BulkNoteAction :leads="leads" />
+      </div>
       <div v-if="activeTab == 3">Bulk Email</div>
     </div>
   </div>
@@ -51,6 +52,7 @@ import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkCustomAction from '@/components/leads-index/BulkCustomAction'
+import BulkNoteAction from '@/components/leads-index/BulkNoteAction'
 
 export default {
   name: 'BulkLeadActions',
@@ -58,6 +60,7 @@ export default {
     ActionTabHeader,
     Checkbox,
     BulkCustomAction,
+    BulkNoteAction,
   },
   props: {
     leads: {

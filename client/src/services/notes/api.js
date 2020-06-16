@@ -35,17 +35,14 @@ export default class NoteAPI {
       apiErrorHandler({ apiName: 'NotesAPI.list' })
     }
   }
-  async create(noteDetails) {
-    // notes are created with {note:{title:'',content:''}, leads:[]}
-    let data = { ...noteDetails }
-    data = this.cls.toAPI(data)
-    const url = NOTES_ENDPOINT
-    try {
-      const res = await this.client.post(url, data)
 
-      return res
-    } catch (e) {
-      apiErrorHandler({ apiName: 'NotesAPI.create' })
-    }
+  async create(noteDetails) {
+    // notes are created with {note:{title:'',content:''}, created_for:[]}
+    let data = { ...noteDetails }
+
+    const promise = apiClient()
+      .post(NOTES_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'NoteAPI.create' }))
+    return promise
   }
 }
