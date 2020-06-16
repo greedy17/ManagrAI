@@ -22,6 +22,12 @@
         title="No List"
         @refresh-collections="$emit('refresh-collections')"
       />
+      <CustomList
+        :collection="allLeadsCollection"
+        key="All Leads"
+        title="All Leads"
+        @refresh-collections="$emit('refresh-collections')"
+      />
       <CreateList @list-created="emitListCreated" />
     </div>
     <div v-else class="tab-content">
@@ -62,7 +68,7 @@ export default {
       type: Object,
       required: true,
     },
-    onListLeadsCollection: {
+    allLeadsCollection: {
       type: Object,
       required: true,
     },

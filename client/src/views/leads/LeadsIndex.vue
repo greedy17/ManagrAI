@@ -17,7 +17,7 @@
       <ListsContainer
         :loading="loading"
         :noListLeadsCollection="myLeadsNoList"
-        :onListLeadsCollection="myLeadsOnList"
+        :allLeadsCollection="myLeadsAll"
         :listsCollection="myLists"
         @list-created="addListToCollection"
         :showCreateNew="true"
@@ -56,11 +56,10 @@ export default {
           ordering: 'title',
         },
       }),
-      myLeadsOnList: CollectionManager.create({
+      myLeadsAll: CollectionManager.create({
         ModelClass: Lead,
         filters: {
           byUser: this.$store.state.user.id,
-          onList: true,
         },
       }),
       myLeadsNoList: CollectionManager.create({
@@ -84,9 +83,7 @@ export default {
       return this.myLists.filters
     },
     loading() {
-      return (
-        this.myLists.refreshing || this.myLeadsOnList.refreshing || this.myLeadsNoList.refreshing
-      )
+      return this.myLists.refreshing || this.myLeadsAll.refreshing || this.myLeadsNoList.refreshing
     },
   },
   methods: {
@@ -111,7 +108,7 @@ export default {
     },
     refreshCollections() {
       this.myLists.refresh()
-      this.myLeadsOnList.refresh()
+      this.myLeadsAll.refresh()
       this.myLeadsNoList.refresh()
     },
     toggleView() {
@@ -135,7 +132,7 @@ export default {
       //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
 
       this.$set(this.myLists.filters, filter.key, filter.value)
-      this.$set(this.myLeadsOnList.filters, filter.key, filter.value)
+      this.$set(this.myLeadsAll.filters, filter.key, filter.value)
       this.$set(this.myLeadsNoList.filters, filter.key, filter.value)
 
       this.refreshCollections()
