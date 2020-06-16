@@ -11,6 +11,11 @@
     <div class="leads-container" v-if="showLeads">
       <div v-if="collection.pagination.totalCount > 0" class="accLeads">
         <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
+        <LoadMoreButton
+          v-if="!collection.refreshing && !!collection.pagination.next"
+          class="load-more-button"
+          :collection="collection"
+        />
       </div>
       <div v-else class="no-items-message">No Leads for this account</div>
     </div>
@@ -19,6 +24,7 @@
 
 <script>
 import Lead from '@/components/prospect/Lead'
+import LoadMoreButton from '@/components/shared/LoadMoreButton'
 
 export default {
   name: 'Account',
@@ -34,6 +40,7 @@ export default {
   },
   components: {
     Lead,
+    LoadMoreButton,
   },
   data() {
     return {
@@ -104,5 +111,9 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
+}
+
+.load-more-button {
+  margin: 0.5rem auto;
 }
 </style>

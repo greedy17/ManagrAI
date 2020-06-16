@@ -16,10 +16,10 @@
     <div class="lists-container-pane">
       <ListsContainer
         :loading="loading"
-        :leads="myLeads"
-        :lists="myLists.list"
+        :noListLeadsCollection="myLeadsNoList"
+        :onListLeadsCollection="myLeadsOnList"
+        :listsCollection="myLists"
         @list-created="addListToCollection"
-        @toggle-onlist="applyMyLeadsOnListFilter"
         :showCreateNew="true"
         @delete-list="deleteList"
         @remove-from-list="removeFromList"
@@ -54,11 +54,18 @@ export default {
           byUser: this.$store.state.user.id,
         },
       }),
-      myLeads: CollectionManager.create({
+      myLeadsOnList: CollectionManager.create({
         ModelClass: Lead,
         filters: {
           byUser: this.$store.state.user.id,
           onList: true,
+        },
+      }),
+      myLeadsNoList: CollectionManager.create({
+        ModelClass: Lead,
+        filters: {
+          byUser: this.$store.state.user.id,
+          onList: false,
         },
       }),
     }
@@ -75,7 +82,9 @@ export default {
       return this.myLists.filters
     },
     loading() {
-      return this.myLists.refreshing || this.myLeads.refreshing
+      return (
+        this.myLists.refreshing || this.myLeadsOnList.refreshing || this.myLeadsNoList.refreshing
+      )
     },
   },
   methods: {
@@ -93,21 +102,22 @@ export default {
 
       await List.api.deleteList(listInfo.id)
       // nested component wont react to splice
-      this.$set(this.myLists, 'lists', this.myLists.list.splice(listInfo.index, 1))
+      let newList = [...this.myLists.list]
+      newList.splice(listInfo.index, 1)
+      this.$set(this.myLists, 'list', newList)
+      this.myLists.refreshing = false
     },
     refreshCollections() {
       this.myLists.refresh()
-      this.myLeads.refresh()
+      this.myLeadsOnList.refresh()
+      this.myLeadsNoList.refresh()
     },
     toggleView() {
       this.$router.push({ name: 'Forecast' })
     },
     addListToCollection(list) {
-      this.myLists.list.unshift(list)
-    },
-    async applyMyLeadsOnListFilter(val) {
-      this.myLeads.filters['onList'] = val
-      await this.myLeads.refresh()
+      let instance = List.fromAPI(list)
+      this.myLists.list.unshift(instance)
     },
     updateFilters(filter) {
       if (this.myLists.filters[filter.key] == filter.value) {
@@ -123,7 +133,8 @@ export default {
       //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
 
       this.$set(this.myLists.filters, filter.key, filter.value)
-      this.$set(this.myLeads.filters, filter.key, filter.value)
+      this.$set(this.myLeadsOnList.filters, filter.key, filter.value)
+      this.$set(this.myLeadsNoList.filters, filter.key, filter.value)
 
       this.refreshCollections()
     },

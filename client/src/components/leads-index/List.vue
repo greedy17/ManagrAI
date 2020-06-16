@@ -39,10 +39,11 @@
         </div>
         <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
       </template>
-
-      <button v-if="!trueList.refreshing && moreToLoad" class="load-more-button" @click="loadMore">
-        Load More
-      </button>
+      <LoadMoreButton
+        v-if="!trueList.refreshing && !!trueList.pagination.next"
+        class="load-more-button"
+        :collection="trueList"
+      />
     </div>
   </div>
 </template>
@@ -52,6 +53,7 @@ import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
 import List from '@/services/lists'
+import LoadMoreButton from '@/components/shared/LoadMoreButton'
 
 export default {
   name: 'List',
@@ -73,6 +75,7 @@ export default {
   },
   components: {
     Lead,
+    LoadMoreButton,
   },
   watch: {
     leadFilters: {
@@ -117,16 +120,10 @@ export default {
       }
       this.showLeads = !this.showLeads
     },
-    loadMore() {
-      alert('WIP')
-    },
   },
   computed: {
     numOfLeads() {
       return this.list.leadCount
-    },
-    moreToLoad() {
-      return !!this.trueList.pagination.next
     },
   },
 }
@@ -134,7 +131,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .list-header {
@@ -196,7 +192,6 @@ export default {
 }
 
 .load-more-button {
-  @include primary-button();
   margin: 0.5rem auto;
 }
 .no-items-message {

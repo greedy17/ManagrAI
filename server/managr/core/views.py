@@ -161,7 +161,9 @@ class UserViewSet(
         password = request.data.get("password", None)
         pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
-            raise ValidationError({"detail": [("A magic token and id are required")]})
+            raise ValidationError(
+                {"detail": [("A magic token, id, and password are required")]}
+            )
         try:
             user = User.objects.get(pk=pk)
             if (
@@ -368,7 +370,7 @@ class GetFileView(View):
 )
 def email_auth_token(request):
     """Nylas OAuth callback.
-    
+
     NOTE: This is not a Django Rest Framework view, it is a "normal" Django view.
 
     After authenticating with Google and then authorizing Nylas, the user will be redirected
