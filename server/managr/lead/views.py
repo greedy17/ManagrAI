@@ -39,8 +39,9 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = LeadSerializer
     filter_class = LeadFilterSet
-    filter_backends = (DjangoFilterBackend, LeadRatingOrderFiltering,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter, LeadRatingOrderFiltering,)
     ordering = ('rating',)
+    search_fields = ('title',)
 
     def get_queryset(self):
         return Lead.objects.for_user(self.request.user).order_by(Lower('title'))
