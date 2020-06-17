@@ -10,6 +10,9 @@
       >
         {{ tab }}
       </ActionTabHeader>
+      <div class="acting-on-leads">
+        Acting on {{ leads.length }} {{ leads.length == 1 ? 'Lead' : 'Leads' }}
+      </div>
     </div>
 
     <div class="box__content">
@@ -201,5 +204,11 @@ export default {
 .on-bulk-move {
   @include primary-button;
   margin-left: auto;
+}
+
+.acting-on-leads {
+  margin: auto 2rem auto auto;
+  color: $dark-green;
+  font-weight: bold;
 }
 </style>
