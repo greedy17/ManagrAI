@@ -42,6 +42,9 @@ export default {
       loading: true,
       accounts: CollectionManager.create({
         ModelClass: Account,
+        filters: {
+          ordering: 'name',
+        },
       }),
       accountsWithLeads: [], // objects containing account info & collections of leads for account
       repFilterState: {},
