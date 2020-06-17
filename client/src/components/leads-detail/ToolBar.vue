@@ -46,7 +46,7 @@
           </template>
         </Modal>
         <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">
-          Not in a List
+          None
         </span>
         <LeadList
           @remove-lead="removeLeadFromList($event, i)"
