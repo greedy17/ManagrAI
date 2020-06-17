@@ -42,6 +42,9 @@ export default {
     capitalizeWord,
     moveLeadInForecastList(payload) {
       let { forecast, from, to } = payload
+      // clean up 'Unforecasted'/'NA' client/server inconsistency
+      to = to == 'NA' ? 'UNFORECASTED' : to
+      from = from == 'NA' ? 'UNFORECASTED' : from
       let { leadRef } = forecast
       // remove from proper collection
       this.lists[from].list = this.lists[from].list.filter(f => f.leadRef.id != leadRef.id)

@@ -1,11 +1,62 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.db.models import F, Q, Count
-
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
-
 from . import constants as lead_constants
+
+LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
+
+LEAD_STATE_CLAIMED = 'CLAIMED'
+LEAD_STATE_UNCLAIMED = 'UNCLAIMED'
+LEAD_STATE_CHOICES = ((LEAD_STATE_CLAIMED, 'Claimed'),
+                      (LEAD_STATE_UNCLAIMED, 'Unclaimed'),)
+
+LEAD_STATUS_READY = 'READY'
+LEAD_STATUS_TRIAL = 'TRIAL'
+LEAD_STATUS_DEMO = 'DEMO'
+LEAD_STATUS_WAITING = 'WAITING'
+LEAD_STATUS_CLOSED = 'CLOSED'
+LEAD_STATUS_LOST = 'LOST'
+LEAD_STATUS_BOOKED = 'BOOKED'
+LEAD_STATUS_LEAD = 'LEAD'
+LEAD_STATUS_CHOICES = (
+    (LEAD_STATUS_READY, 'Ready'),
+    (LEAD_STATUS_TRIAL, 'Trial'),
+    (LEAD_STATUS_DEMO, 'Demo'),
+    (LEAD_STATUS_WAITING, 'Waiting'),
+    (LEAD_STATUS_CLOSED, 'Closed'),
+    (LEAD_STATUS_LOST, 'Lost'),
+    (LEAD_STATUS_BOOKED, 'Booked'),
+    (LEAD_STATUS_LEAD, 'Lead'),
+)
+FORECAST_FIFTY_FIFTY = '50/50'
+FORECAST_NA = 'NA'
+FORCAST_STRONG = 'STRONG'
+FORECAST_FUTURE = 'FUTURE'
+FORECAST_VERBAL = 'VERBAL'
+FORECAST_CHOICES = (
+    (FORECAST_FIFTY_FIFTY, '50/50'), (FORECAST_NA, 'NA'), (FORCAST_STRONG,
+                                                           'Strong'), (FORECAST_FUTURE, 'Future'), (FORECAST_VERBAL, 'Verbal'),
+)
+ACTIVITY_NOTE_ADDED = 'NOTE_ADDED'
+ACTIVITY_NOTE_DELETED = 'NOTE_DELETED'
+ACTIVITY_NOTE_UPDATED = 'NOTE_UPDATED'
+ACTIVITY_LEAD_CREATED = "LEAD_CREATED"
+ACTIVITY_LEAD_UPDATED = "LEAD_UPDATED"
+ACTIVITY_LEAD_CLAIMED = "LEAD_CLAIMED"
+ACTIVITY_LEAD_UNCLAIMED = "LEAD_UNCLAIMED"
+# THERE WILL BE MANY MORE OF THESE, MAY MOVE THEM TO SEPARATE PY FILE
+ACTIVITY_CHOICES = (
+    (ACTIVITY_NOTE_ADDED, 'Note Added'), (ACTIVITY_NOTE_DELETED,
+                                          'Note Deleted'), (ACTIVITY_NOTE_UPDATED, 'Note Updated')
+)
+# WILL RESULT IN A SNOOZE FOR A CERTAIN TIME BEFORE IT REMINDS AGAIN
+NOTIFICATION_ACTION_SNOOZE = 'SNOOZE'
+NOTIFICATION_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
+NOTIFICATION_ACTION_CHOICES = (
+    (NOTIFICATION_ACTION_SNOOZE, 'Snooze'), (NOTIFICATION_ACTION_VIEWED, 'Viewed')
+)
 
 
 class LeadQuerySet(models.QuerySet):
@@ -20,7 +71,7 @@ class LeadQuerySet(models.QuerySet):
 
 class Lead(TimeStampModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.
-        
+     
     Currently we are setting on_delete to null and allowing null values. However we may
     choose to use PROTECT and require that leads are transferred before delete.
     """

@@ -1,4 +1,4 @@
 const forecastEnums = ['50/50', 'Strong', 'Verbal', 'Future', 'NA']
-const statusEnums = ['Booked', 'Ready', 'Trial', 'Demo', 'Waiting', 'Lost', 'Closed']
+const statusEnums = ['Lead', 'Ready', 'Booked', 'Demo', 'Trial', 'Waiting', 'Closed', 'Lost']
 
 export { forecastEnums, statusEnums }
