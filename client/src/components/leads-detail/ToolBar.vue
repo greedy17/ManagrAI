@@ -19,7 +19,7 @@
     <div class="lead-lists">
       <div class="header">Lists</div>
       <div class="container">
-        <button @click="openListsModal">Add to A List</button>
+        <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
         <Modal v-if="listModal.isOpen" dimmed :width="20" @close-modal="listModal.isOpen = false">
           <div class="list-modal-container">
             <h3>My Lists</h3>
@@ -41,7 +41,7 @@
             <button @click="listModal.isOpen = false">Cancel</button>
           </div>
         </Modal>
-        <p v-if="lists.pagination.totalCount <= 0">N/A</p>
+        <p v-if="lists.pagination.totalCount <= 0">Not in a List</p>
         <LeadList
           @remove-lead="removeLeadFromList($event, i)"
           v-else
@@ -238,6 +238,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
 .toolbar {
@@ -496,5 +497,9 @@ export default {
       flex: 0.5;
     }
   }
+}
+
+.add-to-a-list {
+  @include primary-button;
 }
 </style>
