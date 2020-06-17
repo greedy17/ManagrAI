@@ -54,7 +54,7 @@
         />
       </div>
     </div>
-    <div class="account-link" @click="goToAccount">{{ lead.accountRef.name }}</div>
+    <div class="account-link" @click="goToProspect">{{ lead.accountRef.name }}</div>
     <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
@@ -214,8 +214,8 @@ export default {
     //     this.contactsLoading = false
     //   })
     // },
-    goToAccount() {
-      alert("This should route to account's page")
+    goToProspect() {
+      this.$router.push({ name: 'Prospect' })
     },
     emitUpdatedRating(rating) {
       this.$emit('updated-rating', rating)
