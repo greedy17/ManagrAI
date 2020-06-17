@@ -264,30 +264,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/containers';
 
-.actions {
-  min-width: 48rem;
-  width: 100%;
-  min-height: 21rem;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px $soft-gray;
-  background-color: $white;
-  display: flex;
-  flex-flow: column;
-}
-
-.actions-tab-headers {
-  min-height: 3rem;
-  display: flex;
-  flex-flow: row;
-}
-
-.action-tab-content {
-  flex: 1 auto;
-  padding: 2vh;
-  display: flex;
-  flex-flow: row;
-  overflow: scroll;
-}
 .list-items {
   display: flex;
   flex-direction: column;
