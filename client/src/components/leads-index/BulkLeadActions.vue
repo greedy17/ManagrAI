@@ -36,6 +36,7 @@
               <span class="list-items__item">{{ list.title }}</span>
             </span>
           </div>
+          <h5>To remove leads from all lists, leave all checkboxes blank</h5>
           <div :style="{ display: 'flex', flexFlow: 'row' }">
             <button class="on-bulk-move" @click="onBulkMove">Bulk Move Leads</button>
           </div>
