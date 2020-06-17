@@ -262,8 +262,11 @@ class ListViewSet(
 ):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly)
-    filter_class = lead_filters.ListFilterSet
+    filter_class = (lead_filters.ListFilterSet)
     serializer_class = lead_serializers.ListSerializer
+    filter_backends = (filters.OrderingFilter, DjangoFilterBackend,)
+    # Explicit fields the API may be ordered against
+    ordering_fields = ('title',)
 
     def get_queryset(self):
         return List.objects.for_user(self.request.user)
@@ -337,6 +340,17 @@ class ListViewSet(
 
         serializer = self.serializer_class(self.get_object())
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['post'], permission_classes=(IsSalesPerson, ), detail=False, url_path="bulk-update")
+    def bulk_update(self, request, *args, **kwargs):
+        """ End point to allow for
+        All leads in request params to be processed to only be in the lists present in request params"""
+        for lead_id in request.data['leads']:
+            try:
+                Lead.objects.get(pk=lead_id).lists.set(request.data['lists'])
+            except Lead.DoesNotExist:
+                raise ValidationError({'detail': f'Invalid Lead ID: {lead_id}'})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class NoteViewSet(
@@ -551,8 +565,10 @@ class ActionChoiceViewSet(
     mixins.RetrieveModelMixin,
 ):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsOrganizationManager,)
+    permission_classes = (IsOrganizationManager, )
     serializer_class = lead_serializers.ActionChoiceSerializer
+    filter_backends = (DjangoFilterBackend, LeadRatingOrderFiltering,)
+    ordering = ('title',)
 
     def get_queryset(self):
         return ActionChoice.objects.for_user(self.request.user)

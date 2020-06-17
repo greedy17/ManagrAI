@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Status</div>
+      <div class="filter-header">Stage</div>
       <div class="filter-options">
         <div
           class="option"

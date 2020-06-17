@@ -179,7 +179,9 @@ class ForecastSerializer(serializers.ModelSerializer):
 class ReminderSerializer(serializers.ModelSerializer):
     created_by_ref = UserRefSerializer(source="created_by")
     updated_by_ref = UserRefSerializer(source="updated_by")
-    linked_contacts_ref = UserRefSerializer(source="linked_contacts", read_only=True)
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
 
     def to_internal_value(self, data):
         """ sanitize datetime_for it is not a required field but if passed and is null or blank

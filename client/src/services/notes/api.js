@@ -53,8 +53,25 @@ export default class NoteAPI {
     }
   }
 
-  async bulk_create() {
-    // TODO: Complete this method to enable bulk creating notes for Leads.
-    const url = NOTES_BULK_ENDPOINT
+  /**
+   * Bulk create notes
+   *
+   * Notes can be created in bulk with this payload:
+   *
+   *    {
+   *       note: {
+   *         title: '',
+   *         content: ''
+   *       },
+   *       created_for: []
+   *    }
+   */
+  async bulkCreate(noteDetails) {
+    let data = { ...noteDetails }
+
+    const promise = apiClient()
+      .post(NOTES_BULK_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'NoteAPI.bulkCreate' }))
+    return promise
   }
 }

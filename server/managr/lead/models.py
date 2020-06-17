@@ -4,7 +4,6 @@ from django.contrib.postgres.fields import JSONField
 
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
-
 from . import constants as lead_constants
 
 
