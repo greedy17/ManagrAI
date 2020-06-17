@@ -47,6 +47,7 @@ from .models import (
     Action,
     ActionChoice,
 )
+from .insights import LeadInsights
 
 
 class LeadActivityLogViewSet(
@@ -54,6 +55,7 @@ class LeadActivityLogViewSet(
 ):
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
+    filter_fields = ("lead",)
 
     def get_queryset(self):
         return LeadActivityLog.objects.for_user(self.request.user)
@@ -72,25 +74,8 @@ class LeadActivityLogViewSet(
               once the log has 'updated' and 'deleted' events, these calculations should
               be updated to reflect that.
         """
-        qs = self.get_queryset()
-        return Response(
-            {
-                "calls": {
-                    "count": qs.filter(
-                        activity=lead_constants.CALL_NOTE_CREATED
-                    ).count(),
-                    "latest": qs.filter(activity=lead_constants.CALL_NOTE_CREATED)
-                    .first()
-                    .action_timestamp,
-                },
-                "notes": {
-                    "count": qs.filter(activity=lead_constants.NOTE_CREATED).count(),
-                    "latest": qs.filter(activity=lead_constants.NOTE_CREATED)
-                    .first()
-                    .action_timestamp,
-                },
-            }
-        )
+        insights = LeadInsights(self.get_queryset())
+        return Response(insights.as_dict)
 
 
 class LeadViewSet(

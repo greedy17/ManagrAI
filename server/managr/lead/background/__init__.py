@@ -2,6 +2,7 @@ import logging
 
 from background_task import background
 from .routing import routes
+from .exceptions import ConsumerConfigError
 
 logger = logging.getLogger("managr")
 
