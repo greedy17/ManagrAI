@@ -1,0 +1,38 @@
+[
+    {
+        "model": "core.user",
+        "pk": "3dddd261-93b1-46fe-a83e-bc064551362a",
+        "fields": {
+            "password": "testing123",
+            "last_login": null,
+            "is_superuser": false,
+            "is_staff": false,
+            "date_joined": "2020-06-09T17:38:38.084Z",
+            "datetime_created": "2020-06-09T17:38:38.085Z",
+            "last_edited": "2020-06-09T17:38:38.085Z",
+            "email": "test@thinknimble.com",
+            "is_serviceaccount": false,
+            "is_active": true,
+            "organization": "700287d3-4ce6-4803-a236-b18e160729a7",
+            "type": "MANAGER",
+            "first_name": "Test",
+            "last_name": "User",
+            "phone_number": "",
+            "is_invited": true,
+            "magic_token": "630222a1-48bd-4314-b548-952ddd51376a",
+            "magic_token_expiration": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "organization.organization",
+        "pk": "700287d3-4ce6-4803-a236-b18e160729a7",
+        "fields": {
+            "datetime_created": "2020-06-09T18:30:17.568Z",
+            "last_edited": "2020-06-09T18:30:17.568Z",
+            "name": "ABC Corp",
+            "state": "ACTIVE"
+        }
+    }
+]

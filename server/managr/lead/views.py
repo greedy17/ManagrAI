@@ -1,7 +1,16 @@
+from django_filters.rest_framework import DjangoFilterBackend
+
+from rest_framework.authtoken.models import Token
+from rest_framework import (
+    viewsets, mixins, generics, status, filters, permissions
+)
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.response import Response
+
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
-from django.db import transaction
-from rest_framework.authtoken.models import Token
+from django.db import transaction, IntegrityError
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
     authentication,
@@ -13,26 +22,35 @@ from rest_framework import (
     views,
     viewsets,
 )
-from django.db import IntegrityError
-from rest_framework import (
-    viewsets, mixins, generics, status, filters, permissions
-)
-from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework.response import Response
+
 from managr.core.permissions import (
-    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, )
-from .models import Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice, LEAD_STATUS_CLOSED
-from .serializers import LeadSerializer, LeadVerboseSerializer,  NoteSerializer, ActivityLogSerializer, ListSerializer, FileSerializer, ForecastSerializer, \
-    ReminderSerializer, ActionChoiceSerializer, ActionSerializer, LeadListRefSerializer, CallNoteSerializer
+    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly,
+)
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from .filters import LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet, NoteFilterSet, FileFilterSet, CallNoteFilterSet
 from managr.organization.models import Contact, Account
 from managr.lead import constants as lead_constants
-from django_filters.rest_framework import DjangoFilterBackend
 
 
-class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+from .constants import LEAD_STATUS_CLOSED
+from .models import (
+    Lead, Note, ActivityLog, CallNote, List, File, Forecast, Reminder, Action, ActionChoice,
+)
+from .filters import (
+    LeadFilterSet, ForecastFilterSet, LeadRatingOrderFiltering, ListFilterSet, NoteFilterSet,
+    FileFilterSet, CallNoteFilterSet,
+)
+from .serializers import (
+    LeadSerializer, LeadVerboseSerializer,  NoteSerializer, ActivityLogSerializer, ListSerializer,
+    FileSerializer, ForecastSerializer, ReminderSerializer, ActionChoiceSerializer, ActionSerializer,
+    LeadListRefSerializer, CallNoteSerializer,
+)
+
+class LeadViewSet(viewsets.GenericViewSet,
+                  mixins.CreateModelMixin,
+                  mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin):
     """ Viewset for leads Permissions are set on the Permissions.py"""
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
@@ -341,7 +359,12 @@ class CallNoteViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         return Response(serializer.data)
 
 
-class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class ReminderViewSet(viewsets.GenericViewSet,
+                      mixins.CreateModelMixin,
+                      mixins.UpdateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = ReminderSerializer
@@ -404,7 +427,12 @@ class ReminderViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.U
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class ActionChoiceViewSet(viewsets.GenericViewSet,
+                          mixins.CreateModelMixin,
+                          mixins.UpdateModelMixin,
+                          mixins.DestroyModelMixin,
+                          mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsOrganizationManager, )
     serializer_class = ActionChoiceSerializer
@@ -437,7 +465,12 @@ class ActionChoiceViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
         return Response(serializer.data)
 
 
-class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class ActionViewSet(viewsets.GenericViewSet,
+                    mixins.CreateModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.ListModelMixin,
+                    mixins.RetrieveModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, )
     serializer_class = ActionSerializer
@@ -446,7 +479,10 @@ class ActionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Upd
         return Action.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        """ expects array of multiple leads to apply action to -- design decision to create separate actions per lead """
+        """This expects an array of multiple leads to apply action to.
+        
+        It is a design decision to create separate actions per lead.
+        """
         action_data = request.data.get('action', None)
         if not action_data:
             raise ValidationError(detail={'detail': 'Action data Required'})

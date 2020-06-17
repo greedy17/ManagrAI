@@ -29,25 +29,39 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import (User, ACCOUNT_TYPE_MANAGER, STATE_ACTIVE,
-                     STATE_INVITED, EmailAuthAccount, EmailTemplate)
-from .serializers import (UserSerializer, UserLoginSerializer,
-                          UserInvitationSerializer, EmailTemplateSerializer)
+from .models import (
+    User,
+    ACCOUNT_TYPE_MANAGER,
+    STATE_ACTIVE,
+    STATE_INVITED,
+    EmailAuthAccount,
+    EmailTemplate,
+)
+from .serializers import (
+    UserSerializer,
+    UserLoginSerializer,
+    UserInvitationSerializer,
+    EmailTemplateSerializer,
+)
 from .permissions import IsOrganizationManager, IsSuperUser
 from managr.organization.models import Organization
 
 from .integrations import (
-    send_new_email, send_new_email_legacy,
-    retrieve_user_threads, retrieve_messages, generate_preview_email_data,
-    return_file_id_from_nylas, download_file_from_nylas
+    send_new_email,
+    send_new_email_legacy,
+    retrieve_user_threads,
+    retrieve_messages,
+    generate_preview_email_data,
+    return_file_id_from_nylas,
+    download_file_from_nylas,
 )
 
 
 def index(request):
     try:
-        return render(request, 'index.html', {})
+        return render(request, "index.html", {})
     except TemplateDoesNotExist:
-        return render(request, 'core/index-placeholder.html', {})
+        return render(request, "core/index-placeholder.html", {})
 
 
 class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -73,8 +87,11 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         if user is None:
             raise ValidationError(
                 {
-                    'non_field_errors': [
-                        ('Incorrect email and password combination. ' 'Please try again')
+                    "non_field_errors": [
+                        (
+                            "Incorrect email and password combination. "
+                            "Please try again"
+                        )
                     ],
                 }
             )
@@ -84,34 +101,41 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         # Build and send the response
         u = User.objects.get(pk=user.id)
-        serializer = UserSerializer(u, context={'request': request})
+        serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
-        response_data['token'] = user.auth_token.key
+        response_data["token"] = user.auth_token.key
         return Response(response_data)
 
 
-class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
-                  mixins.ListModelMixin, mixins.UpdateModelMixin):
+class UserViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+):
 
     serializer_class = UserSerializer
 
     def get_queryset(self):
         if self.request.user.is_superuser:
             return User.objects.all()
-        elif self.request.user.type == ACCOUNT_TYPE_MANAGER and self.request.user.is_active:
+        elif (
+            self.request.user.type == ACCOUNT_TYPE_MANAGER
+            and self.request.user.is_active
+        ):
             return User.objects.filter(organization=self.request.user.organization)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     def update(self, request, *args, **kwargs):
-        user = User.objects.get(pk=kwargs['pk'])
+        user = User.objects.get(pk=kwargs["pk"])
         request_user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         if request_user != user:
             return Response(
-                {'non_field_errors': ('You can only update your own details')},
+                {"non_field_errors": ("You can only update your own details")},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         for field in serializer.read_only_fields:
@@ -120,24 +144,26 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
         self.perform_update(serializer)
         user = serializer.instance
 
-        serializer = UserSerializer(user, context={'request': request})
+        serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
 
         return Response(response_data)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.AllowAny],
         detail=True,
-        url_path='activate',
+        url_path="activate",
     )
     def activate(self, request, *args, **kwargs):
         # users should only be able to activate if they are in an invited state
-        magic_token = request.data.get('token', None)
-        password = request.data.get('password', None)
-        pk = kwargs.get('pk', None)
+        magic_token = request.data.get("token", None)
+        password = request.data.get("password", None)
+        pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
-            raise ValidationError({'detail': [('A magic token, id, and password are required')]})
+            raise ValidationError(
+                {"detail": [("A magic token, id, and password are required")]}
+            )
         try:
             user = User.objects.get(pk=pk)
             if (
@@ -156,122 +182,135 @@ class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
                 Token.objects.get_or_create(user=user)
 
                 # Build and send the response
-                serializer = UserSerializer(user, context={'request': request})
+                serializer = UserSerializer(user, context={"request": request})
                 response_data = serializer.data
-                response_data['token'] = user.auth_token.key
+                response_data["token"] = user.auth_token.key
                 return Response(response_data)
 
             else:
                 return Response(
-                    {'non_field_errors': ('Invalid Link or Token')},
+                    {"non_field_errors": ("Invalid Link or Token")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path='threads',
+        url_path="threads",
     )
     def threads(self, request, *args, **kwargs):
-        '''
+        """
         Allows a user to retrieve all of a user's email threads from the connected Nylas account.
-        '''
+        """
         user = request.user
-        to_email = request.data.get('to_email', None)
+        to_email = request.data.get("to_email", None)
         threads = retrieve_user_threads(user, to_email)
         return Response(threads)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path='thread-messages',
+        url_path="thread-messages",
     )
     def thread_messages(self, request, *args, **kwargs):
-        '''
+        """
         Allows a user to retrieve all of a user's messages for a specific thread
         from the connected Nylas account.
-        '''
+        """
         user = request.user
-        thread_id = request.data.get('threadId', None)
+        thread_id = request.data.get("threadId", None)
         messages = retrieve_messages(user, thread_id)
         return Response(messages)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path='send-email',
+        url_path="send-email",
     )
     def send_email(self, request, *args, **kwargs):
-        '''
+        """
         Sends an email from the requesting user's email address
-        '''
+        """
         user = request.user
 
         # TODO: This is so clunky -- I should replace this with a class.
 
         sender = user
-        subject = request.data.get('subject')
-        body = request.data.get('body')
-        recipient_emails = request.data.get('to')
-        cc_emails = request.data.get('cc', None)
-        bcc_emails = request.data.get('bcc', None)
-        reply_to_message_id = request.data.get('reply_to_message_id', None)
-        file_ids = request.data.get('file_ids', None)
-        variables = request.data.get('variables', None)
+        subject = request.data.get("subject")
+        body = request.data.get("body")
+        recipient_emails = request.data.get("to")
+        cc_emails = request.data.get("cc", None)
+        bcc_emails = request.data.get("bcc", None)
+        reply_to_message_id = request.data.get("reply_to_message_id", None)
+        file_ids = request.data.get("file_ids", None)
+        variables = request.data.get("variables", None)
 
-        send_new_email(sender, recipient_emails, subject=subject, body=body,
-                       cc_emails=cc_emails, bcc_emails=bcc_emails,
-                       reply_to_message_id=reply_to_message_id, file_ids=file_ids, variables=variables)
+        send_new_email(
+            sender,
+            recipient_emails,
+            subject=subject,
+            body=body,
+            cc_emails=cc_emails,
+            bcc_emails=bcc_emails,
+            reply_to_message_id=reply_to_message_id,
+            file_ids=file_ids,
+            variables=variables,
+        )
 
         return Response(status=status.HTTP_200_OK)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path='preview-email',
+        url_path="preview-email",
     )
     def preview_email(self, request, *args, **kwargs):
-        '''
+        """
         Sends an email from the requesting user's email address
-        '''
+        """
         user = request.user
 
         sender = user
-        subject = request.data.get('subject')
-        body = request.data.get('body')
-        recipient_emails = request.data.get('to')
-        cc_emails = request.data.get('cc', None)
-        bcc_emails = request.data.get('bcc', None)
-        reply_to_message_id = request.data.get('reply_to_message_id', None)
-        variables = request.data.get('variables', None)
+        subject = request.data.get("subject")
+        body = request.data.get("body")
+        recipient_emails = request.data.get("to")
+        cc_emails = request.data.get("cc", None)
+        bcc_emails = request.data.get("bcc", None)
+        reply_to_message_id = request.data.get("reply_to_message_id", None)
+        variables = request.data.get("variables", None)
 
         preview_data = generate_preview_email_data(
-            sender, recipient_emails, subject=subject, body=body,
-            cc_emails=cc_emails, bcc_emails=bcc_emails,
-            reply_to_message_id=reply_to_message_id, variables=variables
+            sender,
+            recipient_emails,
+            subject=subject,
+            body=body,
+            cc_emails=cc_emails,
+            bcc_emails=bcc_emails,
+            reply_to_message_id=reply_to_message_id,
+            variables=variables,
         )
 
         return Response(preview_data, status=status.HTTP_200_OK)
 
     @action(
-        methods=['post'],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path='attach-file',
+        url_path="attach-file",
     )
     def attach_file(self, request, *args, **kwargs):
-        '''
+        """
         Attaches a file and returns file_id
         https://docs.nylas.com/reference#metadata
-        '''
+        """
         user = request.user
-        file_object = request.FILES['file']
+        file_object = request.FILES["file"]
         response = return_file_id_from_nylas(user=user, file_object=file_object)
 
         return Response(response, status=status.HTTP_200_OK)
@@ -284,22 +323,23 @@ class ActivationLinkView(APIView):
         user = None
 
         try:
-            user = User.objects.get(email=kwargs['email'])
+            user = User.objects.get(email=kwargs["email"])
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={'activation_link': user.activation_link}, status=status.HTTP_204_NO_CONTENT
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated, ]
+    [permissions.IsAuthenticated,]
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
@@ -312,26 +352,36 @@ def get_email_authorization_link(request):
     was generated by our backend and the appropriate email is included.
     """
     u = request.user
-    return Response({'email_auth_link': u.email_auth_link})
+    return Response({"email_auth_link": u.email_auth_link})
     # generate link
 
 
 class GetFileView(View):
-
     def get(self, request, file_id):
         """ This endpoint returns a file from nylas using an nylas ID """
         user = request.user
-        response = download_file_from_nylas(
-            user=user, file_id=file_id)
+        response = download_file_from_nylas(user=user, file_id=file_id)
         return response
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated, ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
+    """Nylas OAuth callback.
+
+    NOTE: This is not a Django Rest Framework view, it is a "normal" Django view.
+
+    After authenticating with Google and then authorizing Nylas, the user will be redirected
+    to this view. This view will make a "back-channel" to validate the query parameters
+    passed along with the client secret.
+
+    If everything checks out, Nylas will return an access_token, which we'll save to the
+    EmailAuthAccount model.
+    """
     u = request.user
+
     # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
     # they charge if we have duplicates and there isn't a way to get a list of them
     try:
@@ -347,10 +397,13 @@ def email_auth_token(request):
             # we have a cron job running every 24 hours to remove all old
             # tokens which are not in sync
             pass
-    magic_token = request.data.get('magic_token', None)
-    code = request.data.get('code', None)
+
+    magic_token = request.data.get("magic_token", None)
+    code = request.data.get("code", None)
+
     if not magic_token or not code:
-        raise ValidationError({'detail': 'Code or Magic Token Missing'})
+        raise ValidationError({"detail": "Code or magic_token parameter missing"})
+
     if magic_token == str(u.magic_token) and not u.magic_token_expired:
         # check the user making the request is the same as the one
         # the link was created for
@@ -368,31 +421,39 @@ def email_auth_token(request):
                 account = get_account_details(access_token)
                 EmailAuthAccount.objects.create(
                     access_token=access_token,
-                    account_id=account['account_id'],
-                    email_address=account['email_address'],
-                    provider=account['provider'],
-                    sync_state=account['sync_state'],
-                    name=account['name'],
-                    linked_at=account['linked_at'],
+                    account_id=account["account_id"],
+                    email_address=account["email_address"],
+                    provider=account["provider"],
+                    sync_state=account["sync_state"],
+                    name=account["name"],
+                    linked_at=account["linked_at"],
                     user=request.user,
                 )
             except requests.exceptions.HTTPError as e:
                 if 400 in e.args:
                     raise ValidationError(
-                        {'non_field_errors': {'code': 'Code invalid or expired please try again'}}
+                        {
+                            "non_field_errors": {
+                                "code": "Code invalid or expired please try again"
+                            }
+                        }
                     )
 
         else:
-            raise ValidationError({'detail': {'code': 'code is a required field'}})
+            raise ValidationError({"detail": {"code": "code is a required field"}})
     else:
         return Response(
-            data={'non_field_errors': 'Token Invalid or Expired, please request a new one'},
+            data={
+                "non_field_errors": "Token Invalid or Expired, please request a new one"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    # TODO: Return a redirect to the user's settings page
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_access_token(request):
     """ endpoint to revoke access for a token
@@ -420,13 +481,16 @@ def revoke_access_token(request):
                 pass
             return Response(status=status.HTTP_204_NO_CONTENT)
     else:
-        raise ValidationError({'non_form_errors': {'no_token': 'user has not authorized nylas'}})
+        raise ValidationError(
+            {"non_form_errors": {"no_token": "user has not authorized nylas"}}
+        )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def get_account_status(request):
-    email = request.data.get('email')
+    """Check whether a User account associated with a given email is active."""
+    email = request.data.get("email")
     try:
         user = User.objects.get(email=email)
 
@@ -457,26 +521,30 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             pass
 
         if not u.is_superuser:
-            if str(u.organization.id) != str(request.data['organization']):
+            if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
 
-        serializer = UserSerializer(user, context={'request': request})
+        serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
         if ea:
             token = ea.access_token
-            sender = {'email': ea.email_address, 'name': 'Managr'}
-            recipient = [{'email': response_data['email'], 'name': response_data['first_name']}]
+            sender = {"email": ea.email_address, "name": "Managr"}
+            recipient = [
+                {"email": response_data["email"], "name": response_data["first_name"]}
+            ]
             message = {
                 "subject": "Invitation To Join",
-                "body": 'Your Organization {} has invited you to join Managr, \
+                "body": "Your Organization {} has invited you to join Managr, \
                    Please click the following link to accept and activate your account \
-                       {}'.format(
+                       {}".format(
                     user.organization.name, user.activation_link
                 ),
             }
@@ -486,16 +554,21 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 """ this error is most likely going to be an error on our set
                 up rather than the user_token """
                 pass
-        response_data['activation_link'] = user.activation_link
+        response_data["activation_link"] = user.activation_link
 
         return Response(response_data)
 
 
-class EmailTemplateViewset(viewsets.GenericViewSet, mixins.CreateModelMixin,
-                           mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
-                           mixins.RetrieveModelMixin):
+class EmailTemplateViewset(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = EmailTemplateSerializer
 
     def get_queryset(self):

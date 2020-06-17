@@ -15,6 +15,7 @@ import LeadsNew from '@/views/leads/LeadsNew'
 import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
+import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
 import Styles from '@/views/settings/Styles'
 
@@ -78,6 +79,12 @@ export default new Router({
       path: '/nylas',
       name: 'Nylas',
       component: Nylas,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/nylas/callback',
+      name: 'NylasCallback',
+      component: NylasCallback,
       beforeEnter: Auth.requireAuth,
     },
     {

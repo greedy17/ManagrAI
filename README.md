@@ -1,60 +1,62 @@
-# ThinkNimble New App Bootstrapper
+# Managr App #
 
-## Bootstrapper To-Dos and Wishlist
+## To Get Up and Running ##
 
-William, 2019-11-25: I've copied in the following from our #bootstrapper channel. We can check in on these in a future dev process meeting. In the meantime
+First, see the section below on setting up your .env files, the proceed with installing system dependencies.
 
-Things to finish on the Bootstrapper:
- - Implement Channels
- - Remove Bulma
- - Remove irrelevant stuff from package.json
- - Remove irrelevant stuff from client/tests
- - Add new code to utils?
- - Deploy and test
- - (Neil, 2019-10-17) Add pagination service to client/services/utils folder
+### With Virtual Environments ###
 
-      See: https://bitbucket.org/thinknimble/tn-components/src/master/vue/services/pagination.js
+[Follow the instructions in the ThinkNimble developer setup guide.](https://docs.google.com/document/d/1nRLCNbfoknrcb762cwgjSChzsbkTzr1MH4AyLgRLKQc/edit)
 
-      William, 2019-11-25: We've recently taken this a bit further and created a `CollectionManager` class. It would be good to include this in the bootstrapper and provide some documentation and examples for how to use it.
+This app depends on:
+ - PostgreSQL 12
+ - Python 3.7 + pipenv - The Pipfile in the root directory defines the Python dependencies
+   - It is recommended to use pyenv to install and manage Python version
+ - Node 12 - package.json in the root directory and client/package.json outline these dependencies
+   - It is recommended to use Node Version Manager (NVM) to install and manage Node versions
 
-Future:
-- IN PROGRESS: Build “mobile” folder for mobile apps?
-- Build separate “users” Django app?
-- Build an automated tool to set up a new environment for new users
+### Or, use Docker ###
 
-****
+This project contains configuration for running the client, server, and postgres inside of containers. These configs are very much in a "beta" stage. The necessary Docker and Docker Compose commands are organized in a Makefile for convenience and documentation purposes.
 
-## New App Checklist
+To start a dev environment with Docker:
 
-**In the Root Directory**
+1. [Download and install Docker for your system](https://docs.docker.com/get-docker/)
+2. Add `export DOCKER_UID=$(id -u):$(id -g)` to your bash profile*
+3. `make build` - Will run the docker-compose command to build your containers.
+4. Make sure your database host is set to 'postgres', and not 'localhost' in you server/.env file
+5. `make run` - Will begin running the containers
 
-1. Edit 'Procfile': replace `templateapp.wsgi` with `{your_app_name}.wsgi`.
-2. Update the name of application in package.json and package-lock.json
+Access the backend at localhost:8000 and the front end dev server at localhost:8080 as usual.
 
-**In the Server Directory (/server)**
+*This makes it so that any files or folders created within the container are owned by your user. This is an awkward workaround, and we are looking for a better solution. If you access the shell of your containers, it will say "I have no name!" instead of your username, but it does work.
 
-1. Change name of templateapp to the name of the new application
-2. Change `templateapp.settings` to `{your_app_name}.settings` in line 10 of manage.py
+## How to Configure Your .env Files ##
 
-**In the Django app directory (/server/{new_app_name})**
+The client and server each have their own .env files. `.env.example` files are provided that should be ready to go. Make copies of them like so:
 
-1. Replace every instance of `templateapp` in settings.py
-2. Replace `templateapp.settings` in line 18 of wsgi.py
-3. Replace `template.core.urls` in templateapp/urls.py
-4. Replace `templateapp.core` in INSTALLED_APPS in templateapp/settings.py
+```bash
+cp client/.env.example client/.env.local
+cp server/.env.example server/.env
+```
 
-**Server Config Directory (/server/config)**
+Not that the client .env file has a special extension based on the environment name.
 
-1. Copy .env.example to root directory (`cp /server/config/.env.example .env`). More on configuring this below.
+A .env file is required for development, but no configuration should be required to get your app up and running. When you are ready to test and prototype third-party services like AWS and Mailgun, the following may be helpful:
 
+ - Set up an AWS Access Key ID if you'd like to use AWS. If you aren't using it, set `USE_AWS_STORAGE` to 'False'
+ - Create a Mailgun Account and set the Mailgun API Key to that API key. If you aren't using it, leave it blank.
+ - Create a Rollbar app in the shared Rollbar account and get the server access token from the dashboard. Set `ROLLBAR_ACCESS_TOKEN` to this value
 
-## TODO: Instructions on how to upgrade to Django Channels
+## Load Data for Local Development ##
 
-## TODO: Revise the following
+Some data has been prepared as a fixture. Run the following to load it into your local database.
 
-----------------
+```bash
+./server/manage.py loaddata managr/core/fixtures/dev.json
+```
 
-**Generate favicons**
+## How to Generate favicons ##
 
 The Django app is already configured to serve favorite icons for all browsers and platforms (include, for example, apple-icons and android-icons at various sizes). By default, this icon is the 'Aspire flame' logo.
 
@@ -63,12 +65,3 @@ Visit [favicon-generator.org](https://www.favicon-generator.org/) and upload a h
 Download the ZIP file of icons that the site generates for you and paste them in the `client/static/favicons/` directory (yes, it is OK to overwrite the default 'Aspire flame' icons in that directory).
 
 _Optional: Change theme color_ - Find the `<meta name="theme-color"...` tag in `client/src/index.html` and change the value of `content` to the HEX code of the color you want. The default color is 'Aspire Red' (HEX code `#d73126`).
-
-
-**Configure Your .env File**
-
-A .env file is required for development, but no configuration should be required to get your app up and running. When you are ready to test and prototype third-party services like AWS and Mailgun, the following may be helpful:
-
- - Set up an AWS Access Key ID if you'd like to use AWS. If you aren't using it, set `USE_AWS_STORAGE` to 'False'
- - Create a Mailgun Account and set the Mailgun API Key to that API key. If you aren't using it, leave it blank.
- - Create a Rollbar app in the shared Rollbar account and get the server access token from the dashboard. Set `ROLLBAR_ACCESS_TOKEN` to this value

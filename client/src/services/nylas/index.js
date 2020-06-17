@@ -5,6 +5,7 @@ const MESSAGES_ENDPOINT = '/users/thread-messages/'
 const SEND_EMAIL_ENDPOINT = '/users/send-email/'
 const PREVIEW_EMAIL_ENDPOINT = '/users/preview-email/'
 const REVOKE_TOKEN_ENDPOINT = '/users/revoke-email-auth/'
+const RETRIEVE_TOKEN_ENDPOINT = '/users/email-auth-token/'
 const ATTACH_FILE_ENDPOINT = '/users/attach-file/'
 const DOWNLOAD_FILE_ENDPOINT = id => `/get-file/${id}/`
 
@@ -130,6 +131,15 @@ export default {
       .post(PREVIEW_EMAIL_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'NylasAPI.previewEmail' }))
     return promise
+  },
+  /**
+   * 
+   */
+  retrieveUserToken(code, magicToken) {
+    const data = { code, magic_token: magicToken }
+    return apiClient()
+      .post(RETRIEVE_TOKEN_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'NylasAPI.retrieveToken' }))
   },
   revokeUserToken() {
     const promise = apiClient()
