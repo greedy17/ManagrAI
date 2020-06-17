@@ -17,31 +17,37 @@
       />
     </div>
     <div class="lead-lists">
+      <div :style="{ display: 'flex', flexFlow: 'row', justifyContent: 'center' }">
+        <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
+      </div>
       <div class="header">Lists</div>
       <div class="container">
-        <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
-        <Modal v-if="listModal.isOpen" dimmed :width="20" @close-modal="listModal.isOpen = false">
-          <div class="list-modal-container">
-            <h3>My Lists</h3>
-            <div :key="i" v-for="(list, i) in usersLists" class="list-items">
-              <span class="list-items__item__select">
-                <!-- findIndex returns the index or -1 in JS 0 is false therefore -1 is not false 
-                  the bitwise NOT of -1 is 0 therefore -1 becomes false everything else becomes true
-                -->
-                <Checkbox
-                  v-if="!~allLists.findIndex(l => l.id == list.id)"
-                  name="lists"
-                  @checkbox-clicked="addToPendingList(list.id)"
-                  :checked="!!addToList.find(mL => mL == list.id)"
-                />{{ allLists.findIndex(l => l.id == list.id) }}</span
+        <Modal v-if="listModal.isOpen" dimmed :width="20" @close-modal="closeListModal">
+          <ComponentLoadingSVG v-if="myLists.refreshing" />
+          <template v-else>
+            <h3>Check all lists this lead should be in:</h3>
+            <div v-for="list in myLists.list" :key="list.id" class="list-items">
+              <span
+                class="list-items__item__select"
+                :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center' }"
               >
-              <span class="list-items__item">{{ list.title }}</span>
+                <Checkbox
+                  name="lists"
+                  @checkbox-clicked="toggleSelectedList(list)"
+                  :checked="!!selectedLists[list.id]"
+                />
+                <span class="list-items__item">{{ list.title }}</span>
+              </span>
             </div>
-            <button @click="addLeadsToList">Save</button>
-            <button @click="listModal.isOpen = false">Cancel</button>
-          </div>
+            <h5>To remove Lead from all lists, leave all checkboxes blank</h5>
+            <div :style="{ display: 'flex', flexFlow: 'row' }">
+              <button class="update-lists" @click="onUpdateLists">Save</button>
+            </div>
+          </template>
         </Modal>
-        <p v-if="lists.pagination.totalCount <= 0">Not in a List</p>
+        <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">
+          Not in a List
+        </span>
         <LeadList
           @remove-lead="removeLeadFromList($event, i)"
           v-else
@@ -119,6 +125,21 @@ import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
 import Checkbox from '@/components/leads-new/CheckBox'
 
+function listsModalReducer(acc, list) {
+  acc[list.id] = list
+  return acc
+}
+
+function listSorter(firstList, secondList) {
+  if (firstList.title.toLowerCase() > secondList.title.toLowerCase()) {
+    return 1
+  }
+  if (secondList.title.toLowerCase() > firstList.title.toLowerCase()) {
+    return -1
+  }
+  return 0
+}
+
 export default {
   name: 'ToolBar',
   components: {
@@ -156,6 +177,7 @@ export default {
         ModelClass: List,
         filters: {
           byUser: this.$store.state.user.id,
+          ordering: 'title',
         },
       }),
       editAmount: false,
@@ -163,6 +185,7 @@ export default {
 
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
+      selectedLists: {},
     }
   },
 
@@ -198,7 +221,12 @@ export default {
     },
     async openListsModal() {
       await this.myLists.refresh()
+      this.selectedLists = this.lists.list.reduce(listsModalReducer, {})
       this.listModal.isOpen = true
+    },
+    closeListModal() {
+      this.listModal.isOpen = false
+      this.selectedLists = {}
     },
     // NOTE (Bruno 5-7-20): The following code assumes ContactAPI.retrieve gets built in backend in a coming sprint.
     // Instead we may serialize contacts-data within LeadAPI.retrieve
@@ -230,6 +258,28 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    toggleSelectedList(list) {
+      if (this.selectedLists[list.id]) {
+        let copy = { ...this.selectedLists }
+        delete copy[list.id]
+        this.selectedLists = copy
+      } else {
+        this.selectedLists = { ...this.selectedLists, [list.id]: list }
+      }
+    },
+    onUpdateLists() {
+      let selectedLeads = [this.lead.id]
+      let selectedLists = Object.keys(this.selectedLists)
+      List.api.bulkUpdate(selectedLeads, selectedLists).then(() => {
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: 'Lists updated!',
+        })
+        this.lists.list = Object.values(this.selectedLists).sort(listSorter)
+        this.closeListModal()
+      })
     },
   },
 }
@@ -297,12 +347,12 @@ export default {
 
   .header {
     margin-bottom: 0.625rem;
+    font-weight: bold;
   }
 
   .container {
     display: flex;
     flex-flow: column;
-    max-height: 10rem;
     overflow-y: scroll;
 
     p {
@@ -501,5 +551,12 @@ export default {
 
 .add-to-a-list {
   @include primary-button;
+  width: 70%;
+  margin-bottom: 1rem;
+}
+
+.update-lists {
+  @include primary-button;
+  margin-left: auto;
 }
 </style>
