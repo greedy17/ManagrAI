@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.db import transaction
+from django.db.models.functions import Lower
 from rest_framework.authtoken.models import Token
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
@@ -42,7 +43,7 @@ class LeadViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Updat
     ordering = ('rating',)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user)
+        return Lead.objects.for_user(self.request.user).order_by(Lower('title'))
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get('verbose', None)
