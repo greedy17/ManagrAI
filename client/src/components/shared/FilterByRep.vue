@@ -27,7 +27,7 @@
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
       >
-        {{ rep.fullName }}
+        {{ rep.fullName.trim() ? rep.fullName : rep.email }}
       </span>
     </div>
     <div v-else class="reps-container">
