@@ -1,89 +1,34 @@
 <template>
   <div class="lists-container">
-    <span class="container-header" v-if="title">{{ title.toUpperCase() }}</span>
-    <div class="actions-tab-headers section-shadow">
-      <ActionTabHeader
-        v-for="(tab, index) in viewTabs"
-        :key="tab"
-        :active="index === activeTab"
-        :index="index"
-        @update-active-tab="updateActiveTab"
-        class="header"
-      >
-        {{ tab }}
-      </ActionTabHeader>
-    </div>
     <div v-if="!loading" class="tab-content">
-      <div v-if="!listView" class="view-toggle-container">
-        <div class="checkbox-container">
-          <span class="left" :class="{ bold: !onList }">No List</span>
-          <ToggleCheckBox
-            class="checkbox"
-            :checked="onList"
-            @toggle-on-list="onList = !onList"
-            :eventToEmit="toggleEvent"
-          />
-          <span class="right" :class="{ bold: onList }">On List</span>
-        </div>
-        <span class="centered">
-          {{
-            onList
-              ? `${onListLeadsCollection.pagination.totalCount} ${
-                  onListLeadsCollection.pagination.totalCount == 1 ? 'Lead' : 'Leads'
-                }`
-              : `${noListLeadsCollection.pagination.totalCount} ${
-                  noListLeadsCollection.pagination.totalCount == 1 ? 'Lead' : 'Leads'
-                }`
-          }}
-        </span>
-      </div>
-
-      <div v-if="listView">
-        <template v-if="listsCollection.list.length > 0">
-          <List
-            :isOwner="isOwner"
-            @delete-list="emitDeleteList($event, index)"
-            @remove-from-list="$emit('remove-from-list', $event)"
-            v-for="(list, index) in listsCollection.list"
-            :key="list.id"
-            :list="list"
-            :leadFilters="listsCollection.filters"
-            @refresh-lists="listsCollection.refresh()"
-          />
-          <LoadMoreButton
-            v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
-            class="load-more-button"
-            :collection="listsCollection"
-          />
-        </template>
-        <template v-else>
-          <span class="no-items-message">No Lists to show here</span>
-        </template>
-        <CreateList v-if="showCreateNew && listView" @list-created="emitListCreated" />
-      </div>
-      <div v-if="!listView">
-        <template>
-          <template v-if="onList && onListLeadsCollection.list.length > 0">
-            <Lead v-for="lead in onListLeadsCollection.list" :key="lead.id" :lead="lead" />
-            <LoadMoreButton
-              v-if="!onListLeadsCollection.refreshing && !!onListLeadsCollection.pagination.next"
-              class="load-more-button"
-              :collection="onListLeadsCollection"
-            />
-          </template>
-          <template v-else-if="!onList && noListLeadsCollection.list.length > 0">
-            <Lead v-for="lead in noListLeadsCollection.list" :key="lead.id" :lead="lead" />
-            <LoadMoreButton
-              v-if="!noListLeadsCollection.refreshing && !!noListLeadsCollection.pagination.next"
-              class="load-more-button"
-              :collection="noListLeadsCollection"
-            />
-          </template>
-          <template v-else>
-            <span class="no-items-message">No Leads to show here</span>
-          </template>
-        </template>
-      </div>
+      <List
+        :isOwner="isOwner"
+        @delete-list="emitDeleteList($event, index)"
+        @remove-from-list="$emit('remove-from-list', $event)"
+        v-for="(list, index) in listsCollection.list"
+        :key="list.id"
+        :list="list"
+        :leadFilters="listsCollection.filters"
+        @refresh-collections="$emit('refresh-collections')"
+      />
+      <LoadMoreButton
+        v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
+        class="load-more-button"
+        :collection="listsCollection"
+      />
+      <CustomList
+        :collection="noListLeadsCollection"
+        key="No List"
+        title="No List"
+        @refresh-collections="$emit('refresh-collections')"
+      />
+      <CustomList
+        :collection="allLeadsCollection"
+        key="All Leads"
+        title="All Leads"
+        @refresh-collections="$emit('refresh-collections')"
+      />
+      <CreateList @list-created="emitListCreated" />
     </div>
     <div v-else class="tab-content">
       <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
@@ -93,34 +38,17 @@
 
 <script>
 import List from '@/components/leads-index/List'
+import CustomList from '@/components/leads-index/CustomList'
 import CreateList from '@/components/leads-index/CreateList'
-import Lead from '@/components/leads-index/Lead'
-import ActionTabHeader from '@/components/shared/ActionTabHeader'
-import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
-
-const LISTVIEW = 'List View'
-const LEADVIEW = 'Lead View'
-const TOGGLEEVENT = 'toggle-on-list'
 
 export default {
   name: 'ListsContainer',
   components: {
     List,
     CreateList,
-    Lead,
-    ActionTabHeader,
-    ToggleCheckBox,
     LoadMoreButton,
-  },
-  data() {
-    return {
-      toggleEvent: TOGGLEEVENT,
-      listView: true,
-      onList: true,
-      activeTab: 0,
-      viewTabs: [LISTVIEW, LEADVIEW],
-    }
+    CustomList,
   },
   props: {
     loading: {
@@ -140,7 +68,7 @@ export default {
       type: Object,
       required: true,
     },
-    onListLeadsCollection: {
+    allLeadsCollection: {
       type: Object,
       required: true,
     },

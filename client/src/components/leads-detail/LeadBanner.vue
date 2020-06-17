@@ -11,7 +11,7 @@
     </div>
     <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser" />
     <div class="days-in-status-container">
-      <span class="days-in-status-label">Days In Status</span>
+      <span class="days-in-status-label">Days In Stage</span>
       <span class="days-in-status">7 Days</span>
     </div>
     <div class="banner-buttons">

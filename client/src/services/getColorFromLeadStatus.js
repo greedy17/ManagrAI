@@ -1,22 +1,24 @@
 const statusToPrimaryColor = {
+  lead: '#c2c4ca',
   ready: '#FAB900',
-  trial: '#9596B3',
+  booked: '#FA646A',
   demo: '#88C9F9',
-  waiting: '#9596B4',
+  trial: 'rgba(165, 55, 253, 1)',
+  waiting: '#9596B3',
   closed: '#2F9E54',
-  lost: '#9596B4',
-  booked: 'rgba(165, 55, 253, 1)',
+  lost: '#1C1F1D',
   null: '#9596B4',
 }
 
 const statusToSecondaryColor = {
+  lead: 'white',
   ready: '#FEF1CD',
-  trial: '#EFF0F5',
+  booked: ' #FFB5B8',
   demo: '#E8F4FE',
-  waiting: '#EFEFF5',
+  trial: 'rgba(165, 55, 253, 0.5)',
+  waiting: '#EFF0F5',
   closed: '#D1ECDD',
-  lost: '#EFEFF5',
-  booked: 'rgba(165, 55, 253, 0.5)', // using rgba and changing opacity rather than color
+  lost: '#CACFCC',
   null: '#EFEFF5',
 }
 
