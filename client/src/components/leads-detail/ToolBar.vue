@@ -74,7 +74,7 @@
       <div v-if="contactsLoading" class="contacts-loading contacts-container section-shadow">
         <ComponentLoadingSVG />
       </div>
-      <div v-else class="contacts-container">
+      <div v-else-if="contacts.list.length" class="contacts-container">
         <div class="contact section-shadow" v-for="contact in contacts.list" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="name">{{
@@ -90,6 +90,9 @@
             <img class="icon" src="@/assets/images/email.svg" alt="icon" />
           </div>
         </div>
+      </div>
+      <div v-else class="contacts-container">
+        <span class="no-items-message">No Contacts</span>
       </div>
     </div>
     <div class="files">
