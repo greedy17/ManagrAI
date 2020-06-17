@@ -19,7 +19,7 @@ export default {
 <style lang="scss">
 .dropdown-icon {
   transition: transform ease 0.3s;
-  transform: rotate3d(0);
+  transform: rotate3d(0, 0, 0, 0);
 
   &--up {
     transform: rotate3d(0, 0, 1, 3.142rad);
