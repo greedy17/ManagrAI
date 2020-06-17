@@ -8,9 +8,7 @@
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.titleIsBlank"
-          >
-            Must include a Title.
-          </div>
+          >Must include a Title.</div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
@@ -18,9 +16,7 @@
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.descriptionIsBlank"
-          >
-            Must include a Description.
-          </div>
+          >Must include a Description.</div>
         </div>
       </div>
       <div class="form__element">
@@ -29,9 +25,7 @@
         <div
           class="form__element-error"
           v-if="isFormValid !== null && !isFormValid && errors.dateNotSelected"
-        >
-          Must select a date.
-        </div>
+        >Must select a date.</div>
       </div>
       <div class="form__element">
         <button class="form__button" @click.prevent="onBulkLogging">Save</button>
@@ -83,7 +77,7 @@ export default {
         },
         created_for: leads,
       }
-      Note.api.create(data).then(() => {
+      Note.api.bulkCreate(data).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,

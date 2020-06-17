@@ -1,62 +1,10 @@
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 from django.db.models import F, Q, Count
+from django.contrib.postgres.fields import JSONField
+
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
 from . import constants as lead_constants
-
-LEAD_RATING_CHOCIES = [(i, i) for i in range(1, 6)]
-
-LEAD_STATE_CLAIMED = 'CLAIMED'
-LEAD_STATE_UNCLAIMED = 'UNCLAIMED'
-LEAD_STATE_CHOICES = ((LEAD_STATE_CLAIMED, 'Claimed'),
-                      (LEAD_STATE_UNCLAIMED, 'Unclaimed'),)
-
-LEAD_STATUS_READY = 'READY'
-LEAD_STATUS_TRIAL = 'TRIAL'
-LEAD_STATUS_DEMO = 'DEMO'
-LEAD_STATUS_WAITING = 'WAITING'
-LEAD_STATUS_CLOSED = 'CLOSED'
-LEAD_STATUS_LOST = 'LOST'
-LEAD_STATUS_BOOKED = 'BOOKED'
-LEAD_STATUS_LEAD = 'LEAD'
-LEAD_STATUS_CHOICES = (
-    (LEAD_STATUS_READY, 'Ready'),
-    (LEAD_STATUS_TRIAL, 'Trial'),
-    (LEAD_STATUS_DEMO, 'Demo'),
-    (LEAD_STATUS_WAITING, 'Waiting'),
-    (LEAD_STATUS_CLOSED, 'Closed'),
-    (LEAD_STATUS_LOST, 'Lost'),
-    (LEAD_STATUS_BOOKED, 'Booked'),
-    (LEAD_STATUS_LEAD, 'Lead'),
-)
-FORECAST_FIFTY_FIFTY = '50/50'
-FORECAST_NA = 'NA'
-FORCAST_STRONG = 'STRONG'
-FORECAST_FUTURE = 'FUTURE'
-FORECAST_VERBAL = 'VERBAL'
-FORECAST_CHOICES = (
-    (FORECAST_FIFTY_FIFTY, '50/50'), (FORECAST_NA, 'NA'), (FORCAST_STRONG,
-                                                           'Strong'), (FORECAST_FUTURE, 'Future'), (FORECAST_VERBAL, 'Verbal'),
-)
-ACTIVITY_NOTE_ADDED = 'NOTE_ADDED'
-ACTIVITY_NOTE_DELETED = 'NOTE_DELETED'
-ACTIVITY_NOTE_UPDATED = 'NOTE_UPDATED'
-ACTIVITY_LEAD_CREATED = "LEAD_CREATED"
-ACTIVITY_LEAD_UPDATED = "LEAD_UPDATED"
-ACTIVITY_LEAD_CLAIMED = "LEAD_CLAIMED"
-ACTIVITY_LEAD_UNCLAIMED = "LEAD_UNCLAIMED"
-# THERE WILL BE MANY MORE OF THESE, MAY MOVE THEM TO SEPARATE PY FILE
-ACTIVITY_CHOICES = (
-    (ACTIVITY_NOTE_ADDED, 'Note Added'), (ACTIVITY_NOTE_DELETED,
-                                          'Note Deleted'), (ACTIVITY_NOTE_UPDATED, 'Note Updated')
-)
-# WILL RESULT IN A SNOOZE FOR A CERTAIN TIME BEFORE IT REMINDS AGAIN
-NOTIFICATION_ACTION_SNOOZE = 'SNOOZE'
-NOTIFICATION_ACTION_VIEWED = 'VIEWED'  # MARK AS VIEWED
-NOTIFICATION_ACTION_CHOICES = (
-    (NOTIFICATION_ACTION_SNOOZE, 'Snooze'), (NOTIFICATION_ACTION_VIEWED, 'Viewed')
-)
 
 
 class LeadQuerySet(models.QuerySet):
@@ -71,7 +19,7 @@ class LeadQuerySet(models.QuerySet):
 
 class Lead(TimeStampModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.
-     
+
     Currently we are setting on_delete to null and allowing null values. However we may
     choose to use PROTECT and require that leads are transferred before delete.
     """
@@ -246,6 +194,7 @@ class BaseNote(TimeStampModel):
         related_name="%(app_label)s_%(class)ss",
         null=True,
         on_delete=models.SET_NULL,
+        help_text="The Lead that this note was created for.",
     )
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="%(app_label)s_%(class)s", blank=True
@@ -255,8 +204,24 @@ class BaseNote(TimeStampModel):
 
     class Meta:
         abstract = True
-
         ordering = ["-datetime_created"]
+
+    @property
+    def activity_log_meta(self):
+        """A metadata dict for activity logs"""
+        return {
+            "id": str(self.id),
+            "title": self.title,
+            "content": self.content,
+            "created_by": {
+                "id": str(self.created_by.id),
+                "full_name": self.created_by.full_name,
+            },
+            "linked_contacts": [
+                {"id": str(c.id), "full_name": c.full_name,}
+                for c in self.linked_contacts.all()
+            ],
+        }
 
 
 class Note(BaseNote):
@@ -266,7 +231,7 @@ class Note(BaseNote):
 
 class Reminder(BaseNote):
     """Reminders are like notes they are created with a date time, a title and content.
-       
+
     Reminders are not automatically set to notify, in order to notify they will need to be
     attached to a notification.
     """
@@ -295,15 +260,13 @@ class Reminder(BaseNote):
 
 
 class CallNote(BaseNote):
-    """ this class (distinct from the call class) is also inherited from the base note class
-        It will contain data that refers to a call (like call notes)
+    """Record notes from a phone call.
+
+    This class (distinct from the call class) is also inherited from the base note class
+    It will contain data that refers to a call (like call notes).
     """
 
-    # TODO: Ask marcy about who the participants are, if they are only internal we can use a UserModel FK
-    # otherwise we should just save a json.string
-    # participants = models.
-
-    call_date = models.DateField(help_text="The date the call occured")
+    call_date = models.DateTimeField(help_text="The date the call occurred")
 
 
 class ForecastQuerySet(models.QuerySet):
@@ -337,12 +300,28 @@ class Forecast(TimeStampModel):
         ordering = ["-datetime_created"]
 
 
-class ActivityLog(TimeStampModel):
+class LeadActivityLogQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(lead__account__organization=user.organization_id)
+
+
+class LeadActivityLog(TimeStampModel):
     """Log all activity taken on a Lead.
-    
+
     An ActivityLog record is created whenever an activity occurs.
     """
 
+    lead = models.ForeignKey("Lead", null=True, on_delete=models.SET_NULL)
+    action_timestamp = models.DateTimeField(
+        help_text=(
+            "Keep track of when the action happened so we can construct "
+            "a timeline for the lead, since this might be different from the "
+            "'datetime_created' timestamp."
+        )
+    )
     activity = models.CharField(
         max_length=255,
         choices=lead_constants.ACTIVITY_CHOICES,
@@ -351,13 +330,12 @@ class ActivityLog(TimeStampModel):
     action_taken_by = models.ForeignKey(
         "core.User", on_delete=models.SET_NULL, null=True
     )
-    lead = models.ForeignKey("Lead", null=True, on_delete=models.SET_NULL)
-    meta = models.CharField(
-        max_length=255, help_text="Extra details about activity", blank=True
-    )
+    meta = JSONField(help_text="Details about the activity", default=dict)
+
+    objects = LeadActivityLogQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["-action_timestamp", "-datetime_created"]
 
 
 class Notification(TimeStampModel):
@@ -365,7 +343,7 @@ class Notification(TimeStampModel):
         Pari: There are various types of notifications (that are not going to be built until V2)
         in order to handle all notification in one central location we are creating a quick
         version here.
-        
+
         One of those notifications is a reminder, in order to be reminded of a reminder it
         must have a notification attached to it.
     """

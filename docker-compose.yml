@@ -33,6 +33,19 @@ services:
       - "8000:8000"
     user: ${DOCKER_UID}
 
+  worker:
+    build:
+      context: .
+      dockerfile: ./compose/server/Dockerfile
+    restart: always
+    command: python3 server/manage.py process_tasks
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    env_file:
+      - "server/.env"
+
   # 2020-06-15 William: Temporarily disabled, because WSL is not picking
   #                     up file changes and auto-refreshing.
   # client:

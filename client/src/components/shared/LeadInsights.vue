@@ -1,23 +1,35 @@
 <template>
   <div class="insights">
-    <div class="insights-header section-shadow">
-      Insights
-    </div>
-    <!-- hiding these as they are still WIP --- as requested by Marcy pb 05/15/20 
-  
-     <div class="insight-container section-shadow">
+    <div class="insights-header section-shadow">Insights</div>
+
+    <div class="insight-container section-shadow" v-if="insights">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
-          4 Calls
+          {{ insights.calls.count }}
+          {{ 'Call' | pluralize(insights.calls.count) }}
         </span>
-        <span class="insight-bottom">
-          3 mins ago
-        </span>
+        <span class="insight-bottom">{{ insights.calls.latest | timeAgo }}</span>
       </div>
     </div>
+
+    <div class="insight-container section-shadow" v-if="insights">
+      <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/pencil.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          {{ insights.notes.count }}
+          {{ 'Note' | pluralize(insights.notes.count) }}
+        </span>
+        <span class="insight-bottom">{{ insights.notes.latest | timeAgo }}</span>
+      </div>
+    </div>
+
+    <!-- hiding these as they are still WIP --- as requested by Marcy pb 05/15/20
+
     <div class="insight-container section-shadow">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/sms.svg" alt="icon" />
@@ -69,7 +81,7 @@
           3 mins ago
         </span>
       </div>
-    </div> -->
+    </div>-->
   </div>
 </template>
 
@@ -77,8 +89,13 @@
 export default {
   name: 'LeadInsights',
   props: {
-    lead: Object,
-    showLink: Boolean,
+    insights: {
+      type: Object,
+      required: true,
+    },
+  },
+  created() {
+    console.log('INSIGHTS:', this.insights)
   },
 }
 </script>

@@ -1,5 +1,6 @@
 import moment from 'moment'
-export { uppercase, momentDateTime, momentDateTimeShort }
+
+export { uppercase, momentDateTime, momentDateTimeShort, timeAgo }
 
 function uppercase(value) {
   if (!value) return ''
@@ -14,4 +15,9 @@ function momentDateTime(value) {
 function momentDateTimeShort(value) {
   if (!value) return ''
   return moment.unix(value).format('LLLL')
+}
+
+function timeAgo(value) {
+  if (!value) return ''
+  return moment(value).fromNow()
 }

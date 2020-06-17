@@ -3,7 +3,7 @@
         "model": "core.user",
         "pk": "3dddd261-93b1-46fe-a83e-bc064551362a",
         "fields": {
-            "password": "testing123",
+            "password": "pbkdf2_sha256$150000$FXtF6UR1Hg8Q$MYUa42GCygpIFFiSUY5k7dk1VuIg397mU4HlWUjeqfQ=",
             "last_login": null,
             "is_superuser": false,
             "is_staff": false,

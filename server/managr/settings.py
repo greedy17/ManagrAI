@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "djmoney",
+    "background_task",
 ]
 
 MIDDLEWARE = [

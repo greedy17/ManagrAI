@@ -31,41 +31,16 @@
       </div>
       <div class="item-list">
         <div class="item-list__header">
-          <span class="item-list__title">
-            History
-          </span>
+          <span class="item-list__title">History</span>
         </div>
-        <div class="item-list__item">
-          <div class="item-list__row">
-            <div class="item-list__row-item--half">Icon</div>
-            <div class="item-list__row-item--double">Title</div>
-            <div class="item-list__row-item--double">Available Date</div>
-            <div class="item-list__row-item">
-              <input type="text" class="input" />
-            </div>
-          </div>
-        </div>
-        <div class="item-list__item">
-          <div class="item-list__row">
-            <div class="item-list__row-item--half">[:)]</div>
-            <div class="item-list__row-item--double">This is an email's title</div>
-            <div class="item-list__row-item--double">4/12/1066</div>
-            <div class="item-list__row-item">
-              <!-- Filler to line up spacing -->
-            </div>
-          </div>
-          <div class="item-list__row-item-content">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Itaque, cum magnam. Recusandae
-            necessitatibus itaque nesciunt quas magnam dolore veniam ab expedita in ipsa, minus,
-            aspernatur natus? Rem nulla culpa aperiam?
-          </div>
-        </div>
+
+        <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
       </div>
       <!-- <LeadActions v-if="lead" :state="viewState" :lead="lead" /> -->
     </div>
 
     <div class="page__right-panel">
-      <LeadInsights :lead="lead" />
+      <LeadInsights :insights="insights" />
     </div>
   </div>
 </template>
@@ -76,14 +51,19 @@ import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
-import Lead from '@/services/leads'
+
 import CollectionManager from '@/services/collectionManager'
+import Lead from '@/services/leads'
+import LeadActivityLog from '@/services/leadActivityLogs'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import File from '@/services/files'
 
+import ActivityLogItem from './_ActivityLogItem'
+
 const EDIT_STATE = 'create'
 const VIEW_STATE = 'view'
+
 export default {
   name: 'LeadsDetail',
   props: ['id'],
@@ -93,6 +73,7 @@ export default {
     LeadActions,
     PinnedNotes,
     LeadInsights,
+    ActivityLogItem,
   },
   data() {
     return {
@@ -118,6 +99,13 @@ export default {
           byLead: this.id,
         },
       }),
+      history: CollectionManager.create({
+        ModelClass: LeadActivityLog,
+        filters: {
+          lead: this.id,
+        },
+      }),
+      insights: null,
     }
   },
   async created() {
@@ -133,8 +121,23 @@ export default {
       this.files = res[3]
       this.loading = false
     })
+
+    // Start polling for history
+    // TODO: If this starts failing for any reason, it will start pumping out
+    //       error messages, so we might want to clear or extend the interval
+    //       if that happens.
+    this.pollingInterval = setInterval(this.refreshHistory, 2000)
+  },
+  destroyed() {
+    clearInterval(this.pollingInterval)
   },
   methods: {
+    refreshHistory() {
+      this.history.refresh()
+      LeadActivityLog.api.getInsights().then(result => {
+        this.insights = result
+      })
+    },
     retrieveLead() {
       this.loading = true
       return Lead.api.retrieve(this.id)

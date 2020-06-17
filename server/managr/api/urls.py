@@ -49,6 +49,7 @@ router.register('forecasts', lead_views.ForecastViewSet, 'forecast')
 router.register('reminders', lead_views.ReminderViewSet, 'reminders')
 router.register('actionchoices', lead_views.ActionChoiceViewSet, 'actionchoices')
 router.register('actions', lead_views.ActionViewSet, 'actions')
+router.register('lead-activity', lead_views.LeadActivityLogViewSet, 'lead-activity')
 
 router.register('action-choices', lead_views.ActionChoiceViewSet, 'action-choices')
 router.register('actions', lead_views.ActionViewSet, 'actions')

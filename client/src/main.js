@@ -18,7 +18,8 @@ import Modal from '@/components/Modal'
 // filters
 import currencyFilter from '@/services/currency'
 import { formatDateShort } from '@/services/utils'
-import { momentDateTime, momentDateTimeShort } from '@/services/filters'
+import { momentDateTime, momentDateTimeShort, timeAgo } from '@/services/filters'
+import pluralize from 'pluralize'
 
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
@@ -26,15 +27,20 @@ Vue.config.productionTip = false
 
 Vue.use(Vuex)
 Vue.use(AlertAlert)
+
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)
+Vue.filter('currency', currencyFilter)
+Vue.filter('dateShort', formatDateShort)
+Vue.filter('timeAgo', timeAgo)
+Vue.filter('pluralize', function (value, number) {
+  return pluralize(value, number)
+})
 
 Vue.component('PageLoadingSVG', PageLoadingSVG)
 Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)
 Vue.component('datetime', Datetime)
-Vue.filter('currency', currencyFilter)
-Vue.filter('dateShort', formatDateShort)
 
 /* eslint-disable no-new */
 new Vue({
