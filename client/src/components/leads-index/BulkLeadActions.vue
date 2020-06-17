@@ -115,15 +115,6 @@ export default {
       })
     },
   },
-  computed: {
-    height() {
-      if (this.tabs[this.activeTab] === 'email') {
-        return { height: '28rem' }
-      } else {
-        return { height: '21rem' }
-      }
-    },
-  },
 }
 </script>
 
