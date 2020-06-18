@@ -5,12 +5,15 @@ export default class CallNoteAPI {
   constructor(cls) {
     this.cls = cls
   }
+
   get client() {
     return apiClient()
   }
+
   static create(cls) {
     return new CallNoteAPI(cls)
   }
+
   async list({ pagination, filters }) {
     const url = CALL_NOTE_ENDPOINT
     const filtersMap = {
@@ -32,22 +35,16 @@ export default class CallNoteAPI {
       apiErrorHandler({ apiName: 'NotesAPI.list' })
     }
   }
-  async create(noteDetails) {
-    // notes are created with {note:{title:'',content:''}, leads:[]}
-    let data = { ...noteDetails }
-    data = this.cls.toAPI(data)
 
+  async create(callNote) {
     const url = CALL_NOTE_ENDPOINT
+    const data = this.cls.toAPI(callNote)
+
     try {
       const res = await this.client.post(url, data)
-      this.$Alert.alert({
-        type: 'success',
-        timeout: 4000,
-        message: 'note created!',
-      })
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'NotesAPI.create' })
+      apiErrorHandler({ apiName: 'NotesAPI.create' })(e)
     }
   }
 }

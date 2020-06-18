@@ -2,23 +2,30 @@
 import base64
 import json
 import requests
+from requests.exceptions import HTTPError
+from urllib.parse import urlencode
+
+from rest_framework.exceptions import APIException
 
 from django.http import HttpResponse
-
-from requests.exceptions import HTTPError
-from rest_framework.exceptions import APIException
-from urllib.parse import urlencode
+from django.urls import reverse
 from django.template import Context, Template
 
-from managr.core import constants as core_consts
+from managr.utils import sites as site_utils
 
-SCOPES = (core_consts.SCOPE_EMAIL_READ_ONLY, core_consts.SCOPE_EMAIL_SEND)
+from . import constants as core_consts
 
 
-def gen_auth_url(callback_url, email, magic_token, scopes=(', ').join(SCOPES)):
-
-    query = dict(redirect_uri=callback_url, response_type='code',
-                 login_hint=email, state=magic_token, scopes=scopes, client_id=core_consts.NYLAS_CLIENT_ID)
+def gen_auth_url(email, magic_token, scopes=core_consts.ALL_SCOPES_STR):
+    """Generate the redirect URL that should kick off the Nylas OAuth flow."""
+    query = dict(
+        redirect_uri=core_consts.NYLAS_OAUTH_CALLBACK_URL,
+        response_type='code',
+        login_hint=email,
+        state=magic_token,
+        scopes=scopes,
+        client_id=core_consts.NYLAS_CLIENT_ID,
+    )
     params = urlencode(query)
     return f'{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_AUTH_URI}?{params}'
 

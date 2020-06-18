@@ -1,5 +1,5 @@
 <template>
-  <div class="flexbox-container">
+  <form @submit.prevent="onSubmit" class="flexbox-container">
     <div class="flexbox-container__column">
       <h4>Contacts</h4>
       <ContactBox
@@ -15,25 +15,25 @@
         <div class="form__element">
           <div class="form__element-header">Topic</div>
           <div class="form__element-help">What was the meeting topic?</div>
-          <input type="text" class="form__input" />
+          <input type="text" class="form__input" v-model="callNote.title" />
           <!-- <div class="form__element-error">Error Message Goes here</div> -->
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
           <div class="form__element-help">What notes do you have?</div>
-          <textarea class="form__textarea" />
+          <textarea class="form__textarea" v-model="callNote.content" />
           <!-- <div class="form__element-error">Error Message Goes here</div> -->
         </div>
       </div>
       <div class="form__element">
         <div class="form__element-header">Date</div>
-        <input type="datetime-local" class="form__input" />
+        <input type="date" class="form__input" v-model="callNote.callDate" />
       </div>
       <div class="form__element">
         <button class="form__button">Save</button>
       </div>
     </div>
-  </div>
+  </form>
 </template>
 
 <script>
@@ -52,23 +52,51 @@ export default {
   },
   data() {
     return {
-      callNote: new CallNote(),
-      activeContacts: [],
+      callNote: CallNote.create({ createdFor: this.lead.id }),
     }
   },
   methods: {
+    reset() {
+      this.callNote = CallNote.create({
+        createdFor: this.lead.id,
+      })
+    },
     toggleActive(contactId) {
-      if (this.activeContacts.includes(contactId)) {
-        this.activeContacts = this.activeContacts.filter(id => id !== contactId)
+      if (this.callNote.linkedContacts.includes(contactId)) {
+        this.callNote.linkedContacts = this.callNote.linkedContacts.filter(id => id !== contactId)
       } else {
-        this.activeContacts.push(contactId)
+        this.callNote.linkedContacts.push(contactId)
       }
     },
     contactIsActive(contactId) {
-      return this.activeContacts.includes(contactId)
+      return this.callNote.linkedContacts.includes(contactId)
+    },
+    onSubmit() {
+      CallNote.api
+        .create(this.callNote)
+        .then(() => {
+          this.reset()
+
+          this.$Alert.alert({
+            type: 'success',
+            message: `
+              <p>Call saved.</p>
+            `,
+          })
+        })
+        .catch(error => {
+          this.$Alert.alert({
+            type: 'error',
+            message: `
+              <h3>Error</h3>
+              <p>There was an error saving this note.</p>
+            `,
+          })
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
     },
   },
-  computed: {},
 }
 </script>
 

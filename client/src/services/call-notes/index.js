@@ -1,8 +1,10 @@
 import CallNoteAPI from '@/services/call-notes/api'
-import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
+import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
+
+import Contact from '../contacts'
 
 export default class CallNote {
-  static readOnlyFields = ['id']
+  static readOnlyFields = ['id', 'linkedContactsRef', 'createdByRef', 'updatedByRef']
   static api = CallNoteAPI.create(CallNote)
 
   constructor({
@@ -15,6 +17,8 @@ export default class CallNote {
     updatedByRef = null,
     createdByRef = null,
     callDate = null,
+    linkedContacts = [],
+    linkedContactsRef = [],
   } = {}) {
     Object.assign(this, {
       id,
@@ -26,28 +30,46 @@ export default class CallNote {
       lastEdited,
       updatedByRef,
       createdByRef,
+      linkedContacts,
+      linkedContactsRef: linkedContactsRef.map(Contact.create),
     })
   }
 
-  static create(opts) {
+  static create(opts = {}) {
     return new CallNote(opts)
   }
-  static fromAPI(json) {
+
+  static fromAPI(json = {}) {
     return new CallNote(objectToCamelCase(json))
   }
-  static toAPI(json, fields = [], excludeFields = []) {
+
+  clone() {
+    return CallNote.create(this)
+  }
+
+  static toAPI(obj, fields = [], excludeFields = []) {
     let data = {}
+
     if (fields.length > 0) {
       fields.forEach(f => {
-        data[f] = json[f]
+        data[f] = obj[f]
       })
     } else {
-      data = json
+      data = obj.clone()
     }
+
     excludeFields = [...CallNote.readOnlyFields, ...excludeFields]
     excludeFields.forEach(f => {
       delete data[f]
     })
+
+    // HACK: Format callDate as a ISO-8601 datetime using the current time
+    if (data.callDate) {
+      const nowTime = new Date().toISOString().split('T')[1]
+      data.callDate = `${data.callDate}T${nowTime}`
+    }
+    // END HACK
+
     return objectToSnakeCase(data)
   }
 }

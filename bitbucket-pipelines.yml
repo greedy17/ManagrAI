@@ -12,7 +12,7 @@ djangoTests: &djangoTests
   script:
     - pip install pipenv
     - pipenv install --system --deploy --ignore-pipfile
-    - cp server/config/.env.example .env
+    - cp server/.env.example .env
     - cd server
     - python manage.py test
   services:
@@ -27,8 +27,8 @@ e2eTests: &e2eTests
   image: cypress/base:10
   script:
     - cd client
-    - npm ci
-    - npm run ci
+    - NPM_PRIVATE_TOKEN=$NPM_PRIVATE_TOKEN npm ci
+    - NPM_PRIVATE_TOKEN=$NPM_PRIVATE_TOKEN npm run ci
 
 vueAppBuild: &vueAppBuild
   name: Build Vue App
@@ -38,8 +38,8 @@ vueAppBuild: &vueAppBuild
     - cypress
   script:
     - cd client
-    - npm ci
-    - npm run build
+    - NPM_PRIVATE_TOKEN=$NPM_PRIVATE_TOKEN npm ci
+    - NPM_PRIVATE_TOKEN=$NPM_PRIVATE_TOKEN npm run build
   artifacts:
     - dist/**/
 

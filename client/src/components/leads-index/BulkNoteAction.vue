@@ -74,7 +74,7 @@ export default {
         },
         created_for: leads,
       }
-      Note.api.create(data).then(() => {
+      Note.api.bulkCreate(data).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,

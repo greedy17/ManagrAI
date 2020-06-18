@@ -55,4 +55,8 @@ export default class User {
   clone() {
     return new User(this)
   }
+
+  get emailConnected() {
+    return this.emailAuthAccount && this.emailAuthAccountRef.accessToken
+  }
 }
