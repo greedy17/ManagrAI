@@ -34,7 +34,7 @@ from managr.lead import constants as lead_constants
 from . import models as lead_models
 from . import filters as lead_filters
 from . import serializers as lead_serializers
-from .background import log_lead_action
+from .background import emit_event
 from .models import (
     Lead,
     Note,
@@ -67,14 +67,12 @@ class LeadActivityLogViewSet(
         url_path="insights",
     )
     def insights(self, request):
-        """Compute summary stats for a lead.
-
-        TODO: This is currently just counting the 'created' events for each major related
-              model. This is fine as long as users cannot update and delete items, but
-              once the log has 'updated' and 'deleted' events, these calculations should
-              be updated to reflect that.
-        """
-        insights = LeadInsights(self.get_queryset())
+        """Compute summary stats for a lead."""
+        qs = self.get_queryset()
+        lead = request.query_params.get("lead")
+        if lead:
+            qs = qs.filter(lead__id=lead)
+        insights = LeadInsights(qs)
         return Response(insights.as_dict)
 
 
@@ -152,7 +150,7 @@ class LeadViewSet(
         serializer.instance.linked_contacts.add(*contact_list)
         Forecast.objects.create(lead=serializer.instance)
 
-        log_lead_action(lead_constants.LEAD_CREATED, user, serializer.instance)
+        emit_event(lead_constants.LEAD_CREATED, user, serializer.instance)
 
         return Response(serializer.data)
 
@@ -182,7 +180,7 @@ class LeadViewSet(
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        log_lead_action(lead_constants.LEAD_UPDATED, user, serializer.instance)
+        emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance)
         return Response(serializer.data)
 
     @action(
@@ -196,7 +194,7 @@ class LeadViewSet(
         lead = self.get_object()
         lead.claimed_by = user
         lead.save()
-        log_lead_action(lead_constants.LEAD_CLAIMED, user, lead)
+        emit_event(lead_constants.LEAD_CLAIMED, user, lead)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -219,7 +217,7 @@ class LeadViewSet(
             pass
         lead.amount = 0
         lead.save()
-        log_lead_action(lead_constants.LEAD_RELEASED, request.user, lead)
+        emit_event(lead_constants.LEAD_RELEASED, request.user, lead)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -248,7 +246,7 @@ class LeadViewSet(
         lead.status = LEAD_STATUS_CLOSED
         lead.closing_amount = closing_amount
         lead.save()
-        log_lead_action(lead_constants.LEAD_CLOSED, request.user, lead)
+        emit_event(lead_constants.LEAD_CLOSED, request.user, lead)
         return Response()
 
 
@@ -386,7 +384,7 @@ class NoteViewSet(
         serializer = self.serializer_class(data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        log_lead_action(lead_constants.NOTE_CREATED, u, serializer.instance)
+        emit_event(lead_constants.NOTE_CREATED, u, serializer.instance)
         return Response(serializer.data)
 
     @action(
@@ -416,7 +414,7 @@ class NoteViewSet(
             serializer = self.serializer_class(data=d, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
-            log_lead_action(lead_constants.NOTE_CREATED, user, serializer.instance)
+            emit_event(lead_constants.NOTE_CREATED, user, serializer.instance)
             notes_created.append(serializer.data)
         return Response({"detail": notes_created})
 
@@ -435,7 +433,7 @@ class NoteViewSet(
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        log_lead_action(lead_constants.NOTE_UPDATED, user, serializer.instance)
+        emit_event(lead_constants.NOTE_UPDATED, user, serializer.instance)
         return Response(serializer.data)
 
 
@@ -480,7 +478,7 @@ class CallNoteViewSet(
         serializer = self.serializer_class(data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        log_lead_action(lead_constants.CALL_NOTE_CREATED, u, serializer.instance)
+        emit_event(lead_constants.CALL_NOTE_CREATED, u, serializer.instance)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -492,7 +490,7 @@ class CallNoteViewSet(
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        log_lead_action(lead_constants.CALL_NOTE_UPDATED, u, serializer.instance)
+        emit_event(lead_constants.CALL_NOTE_UPDATED, u, serializer.instance)
         return Response(serializer.data)
 
 
@@ -623,6 +621,16 @@ class ActionViewSet(
         return Action.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
+        u = request.user
+        d = request.data
+        d["created_by"] = u.id
+        serializer = self.serializer_class(data=d, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
+        return Response(serializer.data)
+
+    def bulk_create(self, request, *args, **kwargs):
         """This expects an array of multiple leads to apply action to.
 
         It is a design decision to create separate actions per lead.
@@ -637,6 +645,7 @@ class ActionViewSet(
         created = list()
         for l in leads:
             d = {
+                "created_by": request.user,
                 "action_type": action_data["action_type"],
                 "action_detail": action_data["action_detail"],
                 "lead": l,
@@ -645,6 +654,7 @@ class ActionViewSet(
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             created.append(serializer.data)
+            emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
         return Response({"created": created})
 
     def update(self, request, *args, **kwargs):

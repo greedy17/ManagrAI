@@ -7,9 +7,7 @@
         :active="index === activeTab"
         :index="index"
         @update-active-tab="updateActiveTab"
-      >
-        {{ tab }}
-      </ActionTabHeader>
+      >{{ tab }}</ActionTabHeader>
     </div>
 
     <div v-if="state == editState" class="box__content">
@@ -24,7 +22,9 @@
     <div v-if="state == viewState" class="box__content">
       <div class="list-items" v-if="activeTab === 0">
         <div class="list-items__header">
-          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__space">
+            <!--space for header-->
+          </span>
           <span class="list-items__header__title">Title</span>
           <span class="list-items__header__content">Content</span>
           <span class="list-items__header__call-date">Call Date</span>
@@ -40,19 +40,21 @@
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
-            <span class="list-items__item__call-date">{{
-              moment(item.callDate).format('MM/DD/YYYY')
-            }}</span>
+            <span
+              class="list-items__item__call-date"
+            >{{ moment(item.callDate).format('MM/DD/YYYY') }}</span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span class="list-items__item__datetime-created">{{
-              moment(item.datetimeCreated).format('MM/DD/YYYY')
-            }}</span>
+            <span
+              class="list-items__item__datetime-created"
+            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
           </div>
         </template>
       </div>
       <div class="list-items" v-if="activeTab === 4">
         <div class="list-items__header">
-          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__space">
+            <!--space for header-->
+          </span>
           <span class="list-items__header__title">Title</span>
           <span class="list-items__header__content">Content</span>
           <span class="list-items__header__datetimeFor">Reminder On</span>
@@ -68,20 +70,22 @@
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
-            <span class="list-items__item__datetime-for">{{
-              moment(item.datetimeFor).format('MM/DD/YYYY')
-            }}</span>
+            <span
+              class="list-items__item__datetime-for"
+            >{{ moment(item.datetimeFor).format('MM/DD/YYYY') }}</span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span class="list-items__item__datetime-created">{{
-              moment(item.datetimeCreated).format('MM/DD/YYYY')
-            }}</span>
+            <span
+              class="list-items__item__datetime-created"
+            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
           </div>
         </template>
       </div>
 
       <div class="list-items" v-if="activeTab === 5">
         <div class="list-items__header">
-          <span class="list-items__header__space"><!--space for header--></span>
+          <span class="list-items__header__space">
+            <!--space for header-->
+          </span>
           <span class="list-items__header__title">Title</span>
           <span class="list-items__header__content">Content</span>
           <span class="list-items__header__created-by">Creator</span>
@@ -97,9 +101,9 @@
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span class="list-items__item__datetime-created">{{
-              moment(item.datetimeCreated).format('MM/DD/YYYY')
-            }}</span>
+            <span
+              class="list-items__item__datetime-created"
+            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
           </div>
         </template>
       </div>
@@ -120,8 +124,10 @@ import Reminder from '@/services/reminders'
 import CallNote from '@/services/call-notes'
 import CollectionManager from '@/services/collectionManager'
 import moment from 'moment'
+
 const EDIT_STATE = 'create'
 const VIEW_STATE = 'view'
+
 export default {
   name: 'LeadActions',
 

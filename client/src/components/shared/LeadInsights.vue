@@ -28,60 +28,18 @@
       </div>
     </div>
 
-    <!-- hiding these as they are still WIP --- as requested by Marcy pb 05/15/20
-
-    <div class="insight-container section-shadow">
+    <div class="insight-container section-shadow" v-if="insights">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/sms.svg" alt="icon" />
+        <img class="insight-icon" src="@/assets/images/checkmark.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
-          4 Texts
+          {{ insights.actions.count }}
+          {{ 'Action' | pluralize(insights.actions.count) }}
         </span>
-        <span class="insight-bottom">
-          1/14/20
-        </span>
+        <span class="insight-bottom">{{ insights.actions.latest | timeAgo }}</span>
       </div>
     </div>
-    <div class="insight-container section-shadow">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
-      </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          9 Emails
-        </span>
-        <span class="insight-bottom">
-          Yesterday
-        </span>
-      </div>
-    </div>
-    <div class="insight-container section-shadow">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/message.svg" alt="icon" />
-      </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          03/01/20
-        </span>
-        <span class="insight-bottom">
-          Last Action
-        </span>
-      </div>
-    </div>
-    <div class="insight-container section-shadow">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/calendar.svg" alt="icon" />
-      </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          17 Actions
-        </span>
-        <span class="insight-bottom">
-          3 mins ago
-        </span>
-      </div>
-    </div>-->
   </div>
 </template>
 
@@ -93,9 +51,6 @@ export default {
       type: Object,
       required: true,
     },
-  },
-  created() {
-    console.log('INSIGHTS:', this.insights)
   },
 }
 </script>

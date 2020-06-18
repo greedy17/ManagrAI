@@ -4,4 +4,5 @@ routes = {
     "Lead": consumers.LeadActionConsumer,
     "Note": consumers.NoteActionConsumer,
     "CallNote": consumers.CallNoteActionConsumer,
+    "Action": consumers.ActionActionConsumer,
 }

@@ -176,7 +176,7 @@ class BaseNote(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=False, null=False)
-    content = models.CharField(max_length=255, blank=False, null=False)
+    content = models.CharField(max_length=255, blank=True)
     created_by = models.ForeignKey(
         "core.User",
         null=True,
@@ -407,11 +407,44 @@ class Action(TimeStampModel):
     action_type = models.ForeignKey(
         "ActionChoice", on_delete=models.PROTECT, null=True, blank=False
     )
-    action_detail = models.CharField(max_length=255, blank=True, null=False)
+    created_by = models.ForeignKey(
+        "core.User",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="created_actions",
+    )
+    action_detail = models.CharField(max_length=255, blank=True)
     lead = models.ForeignKey(
         "Lead", on_delete=models.CASCADE, null=True, blank=False, related_name="actions"
     )
+    linked_contacts = models.ManyToManyField(
+        "organization.Contact", related_name="actions", blank=True
+    )
+
     objects = ActionQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def activity_log_meta(self):
+        """Generate a JSON-serializable dictionary for the activity log."""
+        return {
+            "id": str(self.id),
+            "action_type": str(self.action_type.id),
+            "action_type_ref": {
+                "id": str(self.action_type.id),
+                "title": self.action_type.title,
+                "description": self.action_type.description,
+            },
+            "action_detail": self.action_detail,
+            "created_by": {
+                "id": str(self.created_by.id),
+                "full_name": self.created_by.full_name,
+            },
+            "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
+            "linked_contacts_ref": [
+                {"id": str(c.id), "full_name": c.full_name,}
+                for c in self.linked_contacts.all()
+            ],
+        }

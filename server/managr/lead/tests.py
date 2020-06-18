@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.utils import timezone
 
 from managr.organization.models import Organization
 from managr.organization.factories import AccountFactory, ContactFactory
@@ -7,6 +8,7 @@ from .factories import LeadFactory, CallNoteFactory
 from .background.consumers import BaseActionConsumer, CallNoteActionConsumer
 from .background.exceptions import ConsumerConfigError
 from .models import CallNote, LeadActivityLog
+from .insights import LeadInsights
 from . import constants as lead_constants
 
 
@@ -120,3 +122,86 @@ class CallNoteActionConsumerTestCase(TestCase):
         # "now" (the time of the update), so NOT the time of the call,
         # which is in the past.
         self.assertNotEqual(log.action_timestamp, self.call_note.call_date)
+
+
+class LeadInsightsTestCase(TestCase):
+    def setUp(self):
+        self.lead = LeadFactory()
+
+    def test_call_count(self):
+        LeadActivityLog.objects.create(
+            activity=lead_constants.CALL_NOTE_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.call_count, 1)
+
+        LeadActivityLog.objects.create(
+            activity=lead_constants.CALL_NOTE_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.call_count, 2)
+
+    def test_call_latest(self):
+        older_timestamp = timezone.make_aware(timezone.datetime(2020, 4, 1))
+        newer_timestamp = timezone.make_aware(timezone.datetime(2020, 5, 1))
+        LeadActivityLog.objects.create(
+            action_timestamp=older_timestamp, activity=lead_constants.CALL_NOTE_CREATED,
+        )
+        LeadActivityLog.objects.create(
+            action_timestamp=newer_timestamp, activity=lead_constants.CALL_NOTE_CREATED,
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+
+        self.assertEqual(insights.call_latest, newer_timestamp)
+
+    def test_note_count(self):
+        LeadActivityLog.objects.create(
+            activity=lead_constants.NOTE_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.note_count, 1)
+
+        LeadActivityLog.objects.create(
+            activity=lead_constants.NOTE_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.note_count, 2)
+
+    def test_note_latest(self):
+        older_timestamp = timezone.make_aware(timezone.datetime(2020, 4, 1))
+        newer_timestamp = timezone.make_aware(timezone.datetime(2020, 5, 1))
+        LeadActivityLog.objects.create(
+            action_timestamp=older_timestamp, activity=lead_constants.NOTE_CREATED,
+        )
+        LeadActivityLog.objects.create(
+            action_timestamp=newer_timestamp, activity=lead_constants.NOTE_CREATED,
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+
+        self.assertEqual(insights.note_latest, newer_timestamp)
+
+    def test_action_count(self):
+        LeadActivityLog.objects.create(
+            activity=lead_constants.ACTION_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.action_count, 1)
+
+        LeadActivityLog.objects.create(
+            activity=lead_constants.ACTION_CREATED, action_timestamp=timezone.now()
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+        self.assertEqual(insights.action_count, 2)
+
+    def test_note_latest(self):
+        older_timestamp = timezone.make_aware(timezone.datetime(2020, 4, 1))
+        newer_timestamp = timezone.make_aware(timezone.datetime(2020, 5, 1))
+        LeadActivityLog.objects.create(
+            action_timestamp=older_timestamp, activity=lead_constants.ACTION_CREATED,
+        )
+        LeadActivityLog.objects.create(
+            action_timestamp=newer_timestamp, activity=lead_constants.ACTION_CREATED,
+        )
+        insights = LeadInsights(LeadActivityLog.objects.all())
+
+        self.assertEqual(insights.action_latest, newer_timestamp)

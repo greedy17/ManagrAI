@@ -27,7 +27,7 @@
         <input type="datetime-local" class="form__input" />
       </div>
       <div class="form__element">
-        <button class="form__button">Save</button>
+        <button class="form__button">Coming Soon!</button>
       </div>
     </div>
   </div>
