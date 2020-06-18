@@ -35,8 +35,14 @@
         </div>
 
         <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
+
+        <button
+          class="primary-button"
+          @click="addHistoryPage"
+          v-if="history.pagination.hasNextPage"
+          style="margin: 1rem"
+        >Load More</button>
       </div>
-      <!-- <LeadActions v-if="lead" :state="viewState" :lead="lead" /> -->
     </div>
 
     <div class="page__right-panel">
@@ -134,9 +140,24 @@ export default {
   methods: {
     refreshHistory() {
       this.history.refresh()
-      LeadActivityLog.api.getInsights().then(result => {
-        this.insights = result
-      })
+
+      LeadActivityLog.api
+        .getInsights({
+          filters: {
+            lead: this.id,
+          },
+        })
+        .then(result => {
+          this.insights = result
+        })
+    },
+    addHistoryPage() {
+      // TODO: This conflicts with polling, so we'll have to figure
+      //       out how to handle that. For now, we disable polling
+      //       if the user loads the next page, because they are
+      //       looking for something old, not new.
+      clearInterval(this.pollingInterval)
+      this.history.addNextPage()
     },
     retrieveLead() {
       this.loading = true

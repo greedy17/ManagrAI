@@ -36,7 +36,7 @@ export function apiErrorHandler({
     console.log(`${apiName} Error:`, error)
 
     // Show error to user
-    if (response.status >= 400 && response.status < 500) {
+    if (response && response.status >= 400 && response.status < 500) {
       // Handle 4xx errors (probably bad user input)
       const { data } = response
       let message = '<div>Error...</div>'
@@ -63,7 +63,7 @@ export function apiErrorHandler({
       return
     }
 
-    if (enable500Alert) {
+    if (response && response.status >= 500 && enable500Alert) {
       // Generic handling for other errors (ex: 500 errors)
       Vue.prototype.$Alert.alert({
         type: 'error',
@@ -71,6 +71,7 @@ export function apiErrorHandler({
         timeout: 6000,
       })
     }
+
     // Optionally re-raise for further optional error handling
     if (rethrowErrors) {
       throw error

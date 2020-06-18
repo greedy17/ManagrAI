@@ -1,6 +1,12 @@
 <template>
-  <div :class="{ 'box__tab--active': active, box__tab: !active }" @click="handleClick">
-    <slot><!-- header text --></slot>
+  <div
+    class="action-tab"
+    :class="{ 'box__tab--active': active, box__tab: !active }"
+    @click="handleClick"
+  >
+    <slot>
+      <!-- header text -->
+    </slot>
   </div>
 </template>
 
@@ -23,4 +29,8 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 @import '@/styles/containers';
+
+.action-tab {
+  text-transform: capitalize;
+}
 </style>

@@ -7,8 +7,12 @@ from .exceptions import ConsumerConfigError
 logger = logging.getLogger("managr")
 
 
-def log_lead_action(action, user, obj):
-    """Background tasks need JSON-serializble params, so this function is for convenience."""
+def emit_event(action, user, obj):
+    """Background tasks need JSON-serializable params, so this function is for convenience.
+
+    TODO: Make 'emit_event' and its consumers more general. At the moment, the
+          handlers only log the event by creating a LeadActivityLog.
+    """
     _log_lead_action(action, str(user.id), str(obj.id))
 
 

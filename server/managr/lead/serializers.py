@@ -245,7 +245,11 @@ class CallNoteSerializer(serializers.ModelSerializer):
             "created_by_ref",
             "call_date",
         )
-        extra_kwargs = {"created_for": {"required": True}}
+        extra_kwargs = {
+            "created_for": {"required": True},
+            "linked_contacts": {"required": True},
+            "content": {"required": False, "allow_blank": True},
+        }
 
 
 class LeadActivityLogSerializer(serializers.ModelSerializer):
@@ -261,9 +265,27 @@ class ActionChoiceSerializer(serializers.ModelSerializer):
 
 
 class ActionSerializer(serializers.ModelSerializer):
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
+    created_by_ref = UserRefSerializer(source="created_by", read_only=True)
+    lead_ref = LeadRefSerializer(source="lead", read_only=True)
+    action_type_ref = ActionChoiceSerializer(source="action_type", read_only=True)
+
     class Meta:
         model = Action
-        fields = "__all__"
+        fields = (
+            "id",
+            "created_by",
+            "created_by_ref",
+            "action_type",
+            "action_type_ref",
+            "action_detail",
+            "lead",
+            "lead_ref",
+            "linked_contacts",
+            "linked_contacts_ref",
+        )
 
 
 class LeadSerializer(serializers.ModelSerializer):

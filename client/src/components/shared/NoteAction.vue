@@ -2,6 +2,11 @@
   <form @submit.prevent="onSubmit" class="flexbox-container">
     <div class="flexbox-container__column">
       <h4>Contacts</h4>
+      <div
+        class="form__element-error"
+        v-if="showErrors && !linkedContactsValid"
+        style="margin-bottom: 0.5rem;"
+      >Select one or more contacts</div>
       <ContactBox
         v-for="contact in lead.linkedContactsRef"
         :contact="contact"
@@ -15,7 +20,10 @@
         <div class="form__element">
           <div class="form__element-header">Title</div>
           <input type="text" class="form__input" v-model="note.title" />
-          <!-- <div class="form__element-error">Error Message Goes here</div> -->
+          <div
+            class="form__element-error"
+            v-if="showErrors && !titleValid"
+          >Enter a title for this note</div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
@@ -23,7 +31,10 @@
         </div>
       </div>
       <div class="form__element">
-        <button class="form__button">Save</button>
+        <button class="form__button" :disabled="saving">
+          <span v-if="!saving">Save</span>
+          <ComponentLoadingSVG v-if="saving" />
+        </button>
       </div>
     </div>
   </form>
@@ -48,7 +59,20 @@ export default {
       note: Note.create({
         createdFor: this.lead.id,
       }),
+      saving: false,
+      showErrors: false,
     }
+  },
+  computed: {
+    formValid() {
+      return this.titleValid && this.linkedContactsValid
+    },
+    linkedContactsValid() {
+      return this.note.linkedContacts.length > 0
+    },
+    titleValid() {
+      return this.note.title !== ''
+    },
   },
   methods: {
     reset() {
@@ -67,6 +91,14 @@ export default {
       return this.note.linkedContacts.includes(contactId)
     },
     onSubmit() {
+      if (!this.formValid) {
+        this.showErrors = true
+        return
+      } else {
+        this.showErrors = false
+      }
+
+      this.saving = true
       Note.api
         .create(this.note)
         .then(() => {
@@ -88,6 +120,9 @@ export default {
           })
           // eslint-disable-next-line no-console
           console.error(error)
+        })
+        .finally(() => {
+          this.saving = false
         })
     },
   },

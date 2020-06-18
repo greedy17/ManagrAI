@@ -1,11 +1,16 @@
 import logging
 
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+
 from django.utils import timezone
 
 from managr.core.models import User
 
 from .. import models as lead_models
 from .. import constants as lead_constants
+from ..serializers import ActionSerializer
+
 from .exceptions import ConsumerConfigError
 
 logger = logging.getLogger("managr")
@@ -66,13 +71,15 @@ class BaseActionConsumer:
 
     def get_meta(self):
         obj = self.get_object()
-        if getattr(obj, "activity_log_meta"):
-            return obj.activity_log_meta
 
-        logger.warning(
-            f"{self.model_class_name} does not implement a 'activity_log_meta' property. "
-            f"This means LeadActivityLog entries will have no metadata about this model."
-        )
+        try:
+            return obj.activity_log_meta
+        except AttributeError:
+            logger.warning(
+                f"{self.model_class_name} does not implement a 'activity_log_meta' property. "
+                f"This means LeadActivityLog entries will have no metadata about this model."
+            )
+        return {}
 
     def get_lead(self):
         """This MUST be overriden on sub-classes."""
@@ -147,4 +154,4 @@ class ActionActionConsumer(BaseActionConsumer):
 
     def get_lead(self):
         obj = self.get_object()
-        return obj.created_for
+        return obj.lead

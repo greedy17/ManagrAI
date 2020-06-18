@@ -6,9 +6,9 @@
           <div class="form__element-header">Type</div>
           <select class="form__select" v-model="type">
             <option disabled :value="null">Select Action Type</option>
-            <option v-for="choice in actionChoices.list" :key="choice.id" :value="choice.id">
-              {{ choice.title }}
-            </option>
+            <option v-for="choice in actionChoices.list" :key="choice.id" :value="choice.id">{{
+              choice.title
+            }}</option>
           </select>
           <div
             class="form__element-error"
@@ -84,7 +84,7 @@ export default {
       }
 
       let leads = this.leads.map(l => l.id)
-      Action.api.create(this.type, this.description, leads).then(() => {
+      Action.api.bulkCreate(this.type, this.description, leads).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,

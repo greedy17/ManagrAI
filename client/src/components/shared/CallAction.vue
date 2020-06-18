@@ -2,6 +2,11 @@
   <form @submit.prevent="onSubmit" class="flexbox-container">
     <div class="flexbox-container__column">
       <h4>Contacts</h4>
+      <div
+        class="form__element-error"
+        v-if="showErrors && !linkedContactsValid"
+        style="margin-bottom: 0.5rem;"
+      >Select one or more contacts</div>
       <ContactBox
         v-for="contact in lead.linkedContactsRef"
         :contact="contact"
@@ -15,22 +20,31 @@
         <div class="form__element">
           <div class="form__element-header">Topic</div>
           <div class="form__element-help">What was the meeting topic?</div>
-          <input type="text" class="form__input" v-model="callNote.title" />
-          <!-- <div class="form__element-error">Error Message Goes here</div> -->
+          <select class="form__select" v-model="callNote.title">
+            <option v-for="(option, index) in TOPIC_OPTIONS" :value="option" :key="index">
+              {{
+              option
+              }}
+            </option>
+          </select>
+          <div class="form__element-error" v-if="showErrors && !titleValid">Select a meeting topic</div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
           <div class="form__element-help">What notes do you have?</div>
           <textarea class="form__textarea" v-model="callNote.content" />
-          <!-- <div class="form__element-error">Error Message Goes here</div> -->
         </div>
       </div>
       <div class="form__element">
         <div class="form__element-header">Date</div>
         <input type="date" class="form__input" v-model="callNote.callDate" />
+        <div class="form__element-error" v-if="showErrors && !dateValid">Please enter a date.</div>
       </div>
       <div class="form__element">
-        <button class="form__button">Save</button>
+        <button class="form__button" :disabled="saving">
+          <span v-if="!saving">Save</span>
+          <ComponentLoadingSVG v-if="saving" />
+        </button>
       </div>
     </div>
   </form>
@@ -40,6 +54,8 @@
 import CallNote from '@/services/call-notes'
 
 import ContactBox from '@/components/shared/ContactBox'
+
+const TOPIC_OPTIONS = ['Pick Up', 'Voicemail', 'No Answer', 'Success', 'Other']
 
 export default {
   name: 'CallAction',
@@ -52,12 +68,30 @@ export default {
   },
   data() {
     return {
-      callNote: CallNote.create({ createdFor: this.lead.id }),
+      callNote: CallNote.create({ title: TOPIC_OPTIONS[0], createdFor: this.lead.id }),
+      TOPIC_OPTIONS,
+      saving: false,
+      showErrors: false,
     }
+  },
+  computed: {
+    formValid() {
+      return this.titleValid && this.linkedContactsValid && this.dateValid
+    },
+    linkedContactsValid() {
+      return this.callNote.linkedContacts.length > 0
+    },
+    titleValid() {
+      return this.callNote.title !== '' && TOPIC_OPTIONS.includes(this.callNote.title)
+    },
+    dateValid() {
+      return !!this.callNote.callDate
+    },
   },
   methods: {
     reset() {
       this.callNote = CallNote.create({
+        title: TOPIC_OPTIONS[0],
         createdFor: this.lead.id,
       })
     },
@@ -72,6 +106,14 @@ export default {
       return this.callNote.linkedContacts.includes(contactId)
     },
     onSubmit() {
+      if (!this.formValid) {
+        this.showErrors = true
+        return
+      } else {
+        this.showErrors = false
+      }
+
+      this.saving = true
       CallNote.api
         .create(this.callNote)
         .then(() => {
@@ -94,6 +136,9 @@ export default {
           })
           // eslint-disable-next-line no-console
           console.error(error)
+        })
+        .finally(() => {
+          this.saving = false
         })
     },
   },
