@@ -2,6 +2,11 @@
   <div class="flexbox-container">
     <div class="flexbox-container__column">
       <h4>Contacts</h4>
+      <div
+        class="form__element-error"
+        v-if="showErrors && !linkedContactsValid"
+        style="margin-bottom: 0.5rem;"
+      >Select one or more contacts</div>
       <ContactBox
         v-for="contact in lead.linkedContactsRef"
         :contact="contact"
@@ -10,39 +15,52 @@
         :key="contact.id"
       />
     </div>
-    <div class="flexbox-container__column">
+    <form @submit.prevent="onSubmit" class="flexbox-container__column">
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Type</div>
-          <select class="form__select" v-model="selectedContact">
-            <option value="Testing">A list of action types will go here</option>
-            <option value="Testing">A list of action types will go here</option>
-            <option value="Testing">A list of action types will go here</option>
-            <option value="Testing">A list of action types will go here</option>
+          <select
+            class="form__select"
+            v-model="action.actionType"
+            v-if="!actionChoices.refreshing && actionChoices.list.length > 0"
+          >
+            <option
+              v-for="(choice, index) in actionChoices.list"
+              :key="index"
+              :value="choice.id"
+            >{{ choice.title }}</option>
           </select>
-        </div>
-        <div class="form__element">
-          <div class="form__element-header">Title</div>
-          <input type="text" class="form__input" />
+          <p
+            v-if="!actionChoices.refreshing && actionChoices.list.length === 0"
+          >Organization has no action choices</p>
+          <ComponentLoadingSVG v-if="actionChoices.refreshing" />
+          <div
+            class="form__element-error"
+            v-if="showErrors && !actionTypeValid"
+          >Select an action from the list.</div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
-          <textarea class="form__textarea" />
+          <textarea class="form__textarea" v-model="action.actionDetail" />
         </div>
       </div>
       <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input type="datetime-local" class="form__input" />
+        <button type="submit" class="form__button" :disabled="saving">
+          <span v-if="!saving">Save</span>
+          <ComponentLoadingSVG v-if="saving" />
+        </button>
       </div>
-      <div class="form__element">
-        <button class="form__button">Save</button>
-      </div>
-    </div>
+    </form>
   </div>
 </template>
 
 <script>
 import ContactBox from '@/components/shared/ContactBox'
+
+import CollectionManager from '@/services/collectionManager'
+import Action from '@/services/actions'
+import ActionChoice from '@/services/action-choices'
+
 export default {
   name: 'ActionAction',
   components: { ContactBox },
@@ -54,20 +72,87 @@ export default {
   },
   data() {
     return {
-      // actionNote: new CallNote(),
-      activeContacts: [],
+      action: Action.create({
+        lead: this.lead.id,
+      }),
+      actionChoices: CollectionManager.create({
+        ModelClass: ActionChoice,
+      }),
+      saving: false,
+      showErrors: false,
     }
   },
+  created() {
+    this.refreshActionChoices()
+  },
+  computed: {
+    formValid() {
+      return this.linkedContactsValid && this.actionTypeValid
+    },
+    linkedContactsValid() {
+      return this.action.linkedContacts.length > 0
+    },
+    actionTypeValid() {
+      return !!this.action.actionType
+    },
+  },
   methods: {
+    reset() {
+      this.action = Action.create({
+        lead: this.lead.id,
+        actionType: this.actionChoices.list.length > 0 ? this.actionChoices.list[0].id : null,
+      })
+    },
+    async refreshActionChoices() {
+      await this.actionChoices.refresh()
+      if (this.actionChoices.list.length > 0) {
+        this.action.actionType = this.actionChoices.list[0].id
+      }
+    },
     toggleActive(contactId) {
-      if (this.activeContacts.includes(contactId)) {
-        this.activeContacts = this.activeContacts.filter(id => id !== contactId)
+      if (this.action.linkedContacts.includes(contactId)) {
+        this.action.linkedContacts = this.action.linkedContacts.filter(id => id !== contactId)
       } else {
-        this.activeContacts.push(contactId)
+        this.action.linkedContacts.push(contactId)
       }
     },
     contactIsActive(contactId) {
-      return this.activeContacts.includes(contactId)
+      return this.action.linkedContacts.includes(contactId)
+    },
+    onSubmit() {
+      if (!this.formValid) {
+        this.showErrors = true
+        return
+      } else {
+        this.showErrors = false
+      }
+
+      this.saving = true
+      Action.api
+        .create(this.action)
+        .then(() => {
+          this.reset()
+          this.$Alert.alert({
+            type: 'success',
+            message: `
+              <p>Action saved.</p>
+            `,
+          })
+        })
+        .catch(error => {
+          this.$Alert.alert({
+            type: 'error',
+            message: `
+              <h3>Error</h3>
+              <p>There was an error saving this action.</p>
+            `,
+          })
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
+        .finally(() => {
+          this.saving = false
+        })
     },
   },
 }

@@ -44,11 +44,17 @@ export default class LeadActivityLogAPI {
     throw Error('Lead Activity Logs may not be created through the API.')
   }
 
-  async getInsights() {
+  async getInsights({ filters }) {
     const url = INSIGHTS_ENDPOINT
+    const filtersMap = {
+      lead: ApiFilter.create({ key: 'lead' }),
+    }
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...filters }),
+    }
 
     try {
-      const response = await this.client.get(url)
+      const response = await this.client.get(url, options)
       return objectToCamelCase(response.data)
     } catch (error) {
       apiErrorHandler({ apiName: 'LeadActivityLogAPI.list' })(error)

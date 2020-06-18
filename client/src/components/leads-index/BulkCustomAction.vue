@@ -6,16 +6,16 @@
           <div class="form__element-header">Type</div>
           <select class="form__select" v-model="type">
             <option disabled :value="null">Select Action Type</option>
-            <option v-for="choice in actionChoices.list" :key="choice.id" :value="choice.id">
-              {{ choice.title }}
-            </option>
+            <option
+              v-for="choice in actionChoices.list"
+              :key="choice.id"
+              :value="choice.id"
+            >{{ choice.title }}</option>
           </select>
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.typeNotSelected"
-          >
-            Must select an Action Type.
-          </div>
+          >Must select an Action Type.</div>
         </div>
 
         <div class="form__element">
@@ -24,9 +24,7 @@
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.descriptionIsBlank"
-          >
-            Must include a description.
-          </div>
+          >Must include a description.</div>
         </div>
       </div>
       <div class="form__element">
@@ -35,9 +33,7 @@
         <div
           class="form__element-error"
           v-if="isFormValid !== null && !isFormValid && errors.dateNotSelected"
-        >
-          Must select a date.
-        </div>
+        >Must select a date.</div>
       </div>
       <div class="form__element">
         <button class="form__button" @click.prevent="onBulkLogging">Save</button>
@@ -93,7 +89,7 @@ export default {
       }
 
       let leads = this.leads.map(l => l.id)
-      Action.api.create(this.type, this.description, leads).then(() => {
+      Action.api.bulkCreate(this.type, this.description, leads).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,

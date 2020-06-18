@@ -63,10 +63,11 @@ export default class CallNote {
       delete data[f]
     })
 
-    // HACK: Format callDate as a ISO-8601 datetime using the current time
+    // HACK: Format callDate as a ISO-8601 datetime using the current
+    //       timezone offset.
     if (data.callDate) {
-      const nowTime = new Date().toISOString().split('T')[1]
-      data.callDate = `${data.callDate}T${nowTime}`
+      const tzOffset = (new Date()).getTimezoneOffset()
+      data.callDate = `${data.callDate}T${tzOffset / 60}:00`
     }
     // END HACK
 

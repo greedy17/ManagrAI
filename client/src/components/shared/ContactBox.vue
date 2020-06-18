@@ -3,22 +3,16 @@
   <!-- making the nested serializers camel case as well  -->
   <div class="contact-box" :class="{ 'contact-box--active': isActive }" @click="toggleActive()">
     <div class="contact-box__contact-circle-container">
-      <div class="contact-box__contact-circle">
-        {{ initials }}
-      </div>
+      <div class="contact-box__contact-circle">{{ initials }}</div>
     </div>
     <div class="contact-box__contact-name-container">
-      <div class="contact-box__contact-name">
-        {{ contact.full_name }}
-      </div>
+      <div class="contact-box__contact-name">{{ contact.full_name }}</div>
     </div>
     <div class="contact-box__contact-number-container">
       <div class="contact-box__contact-icon">
         <img alt="icon" :src="require(`@/assets/images/telephone.svg`)" class="icon" />
       </div>
-      <div class="contact-box__contact-number">
-        {{ contact.phone_number_1 }}
-      </div>
+      <div class="contact-box__contact-number">{{ contact.phone_number_1 }}</div>
     </div>
   </div>
 </template>
@@ -71,6 +65,9 @@ export default {
   justify-content: space-between;
   padding: 0.75rem;
   border-radius: 0.5rem;
+  &:hover {
+    cursor: pointer;
+  }
   &__contact-circle-container {
     flex: 1;
     line-height: 1rem;

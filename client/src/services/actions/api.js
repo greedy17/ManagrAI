@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const ACTIONS_ENDPOINT = '/actions/'
+const BULK_ACTIONS_ENDPOINT = '/actions/bulk/'
 
 export default class ActionAPI {
   /**
@@ -51,8 +52,34 @@ export default class ActionAPI {
     return promise
   }
 
-  create(type, detail, leads) {
-    let data = {
+  async create(action) {
+    const url = ACTIONS_ENDPOINT
+    const data = this.cls.toAPI(action)
+
+    try {
+      const res = await apiClient().post(url, data)
+      return res.data
+    } catch (error) {
+      apiErrorHandler({ apiName: 'Action.create' })(error)
+    }
+  }
+
+  /**
+   * Bulk create actions
+   *
+   * Actions can be created in bulk with this payload:
+   *
+   *    {
+   *       action: {
+   *         action_type: '',
+   *         action_detail: ''
+   *       },
+   *       leads: []
+   *    }
+   */
+  bulkCreate(type, detail, leads) {
+    const url = BULK_ACTIONS_ENDPOINT
+    const data = {
       action: {
         action_type: type,
         action_detail: detail,
@@ -60,8 +87,8 @@ export default class ActionAPI {
       leads,
     }
     const promise = apiClient()
-      .post(ACTIONS_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'ActionAPI.create' }))
+      .post(url, data)
+      .catch(apiErrorHandler({ apiName: 'ActionAPI.bulkCreate' }))
     return promise
   }
 }
