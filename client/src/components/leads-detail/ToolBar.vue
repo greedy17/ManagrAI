@@ -22,7 +22,7 @@
       </div>
       <div class="header">Lists</div>
       <div class="container">
-        <Modal v-if="listModal.isOpen" dimmed :width="20" @close-modal="closeListModal">
+        <Modal v-if="listModal.isOpen" dimmed :width="40" @close-modal="closeListModal">
           <ComponentLoadingSVG v-if="myLists.refreshing" />
           <template v-else>
             <h3>Check all lists this lead should be in:</h3>

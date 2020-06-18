@@ -40,7 +40,9 @@
         </div>
       </div>
       <div class="form__element">
-        <button class="form__button" @click.prevent="onBulkLogging">Save</button>
+        <button class="form__button" :style="{ marginLeft: 'auto' }" @click.prevent="onBulkLogging">
+          Save
+        </button>
       </div>
     </div>
   </div>
