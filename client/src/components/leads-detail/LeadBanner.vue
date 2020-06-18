@@ -79,6 +79,7 @@ export default {
 
 .lead-banner {
   @include disable-text-select();
+  @include standard-border();
   height: 3rem;
   display: flex;
   flex-flow: row;

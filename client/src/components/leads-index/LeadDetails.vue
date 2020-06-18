@@ -2,11 +2,11 @@
   <div class="lead-details">
     <div class="lead-details-content">
       <div class="actions-pane">
-        <LeadActions :lead="lead" />
+        <LeadActions class="lead-actions" :lead="lead" />
       </div>
-      <div class="insights-pane">
+      <!-- <div class="insights-pane">
         <LeadInsights :lead="lead" />
-      </div>
+      </div> -->
     </div>
     <div class="route-to-detail" @click="routeToLeadDetail">See Lead Detail</div>
   </div>
@@ -14,14 +14,12 @@
 
 <script>
 import LeadActions from '@/components/shared/LeadActions'
-import LeadInsights from '@/components/shared/LeadInsights'
 
 export default {
   name: 'LeadDetails',
   props: ['lead'],
   components: {
     LeadActions,
-    LeadInsights,
   },
   methods: {
     routeToLeadDetail() {
@@ -44,9 +42,12 @@ export default {
 }
 
 .actions-pane {
-  width: 72.5%;
   display: flex;
   justify-content: center;
+}
+
+.lead-actions {
+  width: 75rem;
 }
 
 .insights-pane {

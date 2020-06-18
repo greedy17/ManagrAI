@@ -7,6 +7,14 @@
       <div class="header section-shadow">
         Filter
       </div>
+      <form @submit.prevent="onSearchFilter">
+        <label>Filter by Lead Title</label>
+        <input v-model="searchTerm" />
+        <div v-if="activeSearchTerm">
+          <span class="help-text">Currently active: "{{ activeSearchTerm }}"</span>
+          <span class="clear" @click.stop="clearSearchTerm">CLEAR</span>
+        </div>
+      </form>
       <div class="filter-container">
         <FilterByRep
           :repFilterState="repFilterState"
@@ -28,6 +36,11 @@ export default {
   components: {
     FilterByRep,
   },
+  data() {
+    return {
+      searchTerm: '',
+    }
+  },
   props: {
     repFilterState: {
       required: true,
@@ -37,6 +50,10 @@ export default {
       required: true,
       type: Boolean,
     },
+    activeSearchTerm: {
+      type: String,
+      required: true,
+    },
   },
   methods: {
     routeToLeadsNew() {
@@ -45,6 +62,13 @@ export default {
     emitToggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
     },
+    onSearchFilter() {
+      this.$emit('search-filter', this.searchTerm)
+    },
+    clearSearchTerm() {
+      this.searchTerm = ''
+      this.$emit('clear-search-filter')
+    },
   },
 }
 </script>
@@ -52,6 +76,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/buttons';
+@import '@/styles/mixins/inputs';
 @import '@/styles/mixins/utils';
 
 .toolbar {
@@ -95,8 +120,47 @@ button.new-lead {
   margin-top: 1rem;
   background-color: $white;
 }
+
 .filter-container {
   height: auto;
   margin: 1.5rem 0;
+}
+
+form {
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+  margin-top: 1rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
+
+  input {
+    @include input-field;
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  div {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+
+    .help-text {
+      font-weight: 500rem;
+      margin-left: 1rem;
+      color: $dark-green;
+    }
+
+    .clear {
+      @include pointer-on-hover;
+      margin-left: auto;
+
+      &:hover {
+        font-weight: bold;
+      }
+    }
+  }
 }
 </style>

@@ -56,10 +56,10 @@ export default {
       this.lists[to].pagination.totalCount += 1
     },
     listSorter(firstForecast, secondForecast) {
-      if (firstForecast.leadRef.title > secondForecast.leadRef.title) {
+      if (firstForecast.leadRef.title.toLowerCase() > secondForecast.leadRef.title.toLowerCase()) {
         return 1
       }
-      if (secondForecast.leadRef.title > firstForecast.leadRef.title) {
+      if (secondForecast.leadRef.title.toLowerCase() > firstForecast.leadRef.title.toLowerCase()) {
         return -1
       }
       // a must be equal to b

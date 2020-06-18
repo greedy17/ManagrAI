@@ -148,6 +148,8 @@ export default {
 
 .note-content {
   color: rgba($color: $main-font-gray, $alpha: 0.4);
+  max-width: 65rem;
+  word-wrap: break-word;
 }
 
 .edit-form {
