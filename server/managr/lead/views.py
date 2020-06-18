@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 
 from django.shortcuts import render
+from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.db.models.functions import Lower
 from django.db import transaction, IntegrityError
@@ -168,6 +169,11 @@ class LeadViewSet(
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
+
+        # if updating status, also update status_last_update
+        if 'status' in data:
+            data['status_last_update'] = timezone.now()
+
         # make sure the user that created the lead is not updated as well
 
         data["last_updated_by"] = user.id
@@ -240,7 +246,7 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = LEAD_STATUS_CLOSED
+        lead.status = lead_constants.LEAD_STATUS_CLOSED
         lead.closing_amount = closing_amount
         lead.save()
         emit_event(lead_constants.LEAD_CLOSED, request.user, lead)

@@ -1,9 +1,10 @@
 <template>
   <div class="status-dropdown">
     <select
-      v-model="selectedStatus"
+      :value="lead.status"
       :style="computedStyles"
-      :disabled="disabled || selectedStatus === 'CLOSED'"
+      :disabled="disabled || lead.status === 'CLOSED'"
+      @change="onChange"
     >
       <option :value="null">---</option>
       <option v-for="option in statusEnums" :key="option" :value="option.toUpperCase()">
@@ -38,43 +39,33 @@ export default {
   data() {
     return {
       statusEnums,
-      selectedStatus: this.lead.status,
       modal: {
         isOpen: false,
       },
     }
   },
   methods: {
+    onChange({ target: { value } }) {
+      if (value != 'CLOSED') {
+        this.updateStatus(value)
+      } else {
+        this.modal.isOpen = true
+      }
+    },
     updateStatus(newStatus) {
       let patchData = { status: newStatus }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead.status = lead.status
+        this.lead.statusLastUpdate = lead.statusLastUpdate
       })
     },
     closeModal() {
-      let selectedStatus = this.selectedStatus ? this.selectedStatus.toUpperCase() : null
-      let leadStatus = this.lead.status ? this.lead.status.toUpperCase() : null
-      if (selectedStatus != leadStatus) {
-        this.selectedStatus = this.lead.status
-      }
       this.modal.isOpen = false
     },
   },
   computed: {
     computedStyles() {
       return getStatusPrimaryColor(this.lead.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
-    },
-  },
-  watch: {
-    selectedStatus(newStatus, oldStatus) {
-      if (newStatus == oldStatus) {
-        return
-      }
-      if (newStatus != 'CLOSED') {
-        this.updateStatus(newStatus)
-      } else {
-        this.modal.isOpen = true
-      }
     },
   },
 }

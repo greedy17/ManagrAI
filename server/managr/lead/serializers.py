@@ -318,6 +318,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "secondary_description",
             "rating",
             "status",
+            "status_last_update",
             "account",
             "account_ref",
             "created_by",

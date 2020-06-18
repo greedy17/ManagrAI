@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F, Q, Count
 from django.contrib.postgres.fields import JSONField
+from django.utils import timezone
 
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
@@ -50,6 +51,7 @@ class Lead(TimeStampModel):
         help_text="Status in the sale process",
         null=True,
     )
+    status_last_update = models.DateTimeField(default=timezone.now, blank=True)
     claimed_by = models.ForeignKey(
         "core.User",
         related_name="claimed_leads",

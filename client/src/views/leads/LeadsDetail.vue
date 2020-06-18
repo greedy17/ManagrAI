@@ -41,7 +41,9 @@
           @click="addHistoryPage"
           v-if="history.pagination.hasNextPage"
           style="margin: 1rem"
-        >Load More</button>
+        >
+          Load More
+        </button>
       </div>
     </div>
 
@@ -64,6 +66,7 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import File from '@/services/files'
+import Forecast from '@/services/forecasts'
 
 import ActivityLogItem from './_ActivityLogItem'
 
@@ -188,20 +191,32 @@ export default {
       })
     },
     resetLead() {
-      let patchData = {
+      let forecastPatchData = {
+        lead: this.lead.id,
+        forecast: 'NA',
+      }
+
+      let leadPatchData = {
         status: null,
         amount: 0,
-        forecast: null,
+        rating: 1,
       }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead = Object.assign(this.lead, lead)
-        let message = `<div>Success! Lead reset.</div>`
-        this.$Alert.alert({
-          type: 'success',
-          message,
-          timeout: 4000,
+
+      Forecast.api
+        .update(this.lead.forecast, forecastPatchData)
+        .then(() => {
+          return Lead.api.update(this.lead.id, leadPatchData)
         })
-      })
+        .then(lead => {
+          console.log(lead.statusLastUpdate)
+          this.lead = lead
+          let message = `<div>Success! Lead reset.</div>`
+          this.$Alert.alert({
+            type: 'success',
+            message,
+            timeout: 4000,
+          })
+        })
     },
     claimLead() {
       Lead.api.claim(this.lead.id).then(() => {

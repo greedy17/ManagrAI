@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-export { uppercase, momentDateTime, momentDateTimeShort, timeAgo }
+export { uppercase, momentDateTime, momentDateTimeShort, timeAgo, timeToNow }
 
 function uppercase(value) {
   if (!value) return ''
@@ -20,4 +20,9 @@ function momentDateTimeShort(value) {
 function timeAgo(value) {
   if (!value) return ''
   return moment(value).fromNow()
+}
+
+function timeToNow(value) {
+  if (!value) return 'N/A'
+  return moment(value).toNow(true)
 }
