@@ -22,10 +22,11 @@
       <div class="divider" />
       <span
         class="rep"
-        v-for="rep in otherReps"
+        v-for="(rep, i) in otherReps"
         @click="toggleActiveRep(rep.id)"
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
+        :style="{ marginBottom: i == otherReps.length - 1 ? '0.5rem' : null }"
       >
         {{ rep.fullName.trim() ? rep.fullName : rep.email }}
       </span>
