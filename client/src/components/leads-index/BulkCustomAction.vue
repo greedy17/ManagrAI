@@ -30,16 +30,6 @@
         </div>
       </div>
       <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input v-model="date" type="datetime-local" class="form__input" />
-        <div
-          class="form__element-error"
-          v-if="isFormValid !== null && !isFormValid && errors.dateNotSelected"
-        >
-          Must select a date.
-        </div>
-      </div>
-      <div class="form__element">
         <button class="form__button" :style="{ marginLeft: 'auto' }" @click.prevent="onBulkLogging">
           Save
         </button>
@@ -71,7 +61,6 @@ export default {
       }),
       type: null,
       description: '',
-      date: null,
       isFormValid: null,
       errors: {},
     }
@@ -108,9 +97,8 @@ export default {
       let formErrors = {
         typeNotSelected: this.typeNotSelected,
         descriptionIsBlank: this.descriptionIsBlank,
-        dateNotSelected: this.dateNotSelected,
       }
-      let isFormValid = !this.typeNotSelected && !this.descriptionIsBlank && !this.dateNotSelected
+      let isFormValid = !this.typeNotSelected && !this.descriptionIsBlank
 
       return [isFormValid, formErrors]
     },
@@ -121,9 +109,6 @@ export default {
     },
     descriptionIsBlank() {
       return !this.description.length
-    },
-    dateNotSelected() {
-      return !this.date
     },
   },
 }
