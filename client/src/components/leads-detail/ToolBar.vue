@@ -177,9 +177,10 @@
           </label>
         </div>
         <div class="button-container">
-          <button tabindex="0" :disabled="contactsModal.loading" @click="updateContacts">
+          <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">
             Update
           </button>
+          <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
         </div>
       </div>
     </Modal>
@@ -862,7 +863,7 @@ export default {
 
   button {
     @include primary-button();
-    margin: 1rem 5% 0 auto;
+    margin: 1rem 1rem 0 auto;
   }
 }
 
