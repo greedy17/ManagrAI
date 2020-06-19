@@ -19,13 +19,14 @@
         >
           Email Templates
         </div>
-        <div
+        <!-- NOTE (Bruno 6-19-2020) hiding email-test page -->
+        <!-- <div
           class="toolbar__row"
           @click="toggleActivePage('emailTest')"
           :class="{ toolbar__active: emailTestActive }"
         >
           Email Test
-        </div>
+        </div> -->
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
