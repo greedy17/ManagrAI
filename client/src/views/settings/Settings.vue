@@ -29,12 +29,16 @@
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
+        <div class="toolbar__row" @click="toggleActivePage('profile')">
+          Profile
+        </div>
       </div>
     </div>
     <div class="page__main-content-area">
       <EmailIntegration v-if="emailIntegrationActive"></EmailIntegration>
       <EmailTemplates v-if="emailTemplatesActive"></EmailTemplates>
       <EmailTest v-if="emailTestActive"></EmailTest>
+      <Profile v-if="profileActive"></Profile>
     </div>
   </div>
 </template>
@@ -43,6 +47,7 @@
 import EmailTest from '@/components/settings/EmailTest'
 import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
+import Profile from '@/components/settings/Profile'
 
 export default {
   name: 'Settings',
@@ -50,12 +55,14 @@ export default {
     EmailIntegration,
     EmailTemplates,
     EmailTest,
+    Profile,
   },
   data() {
     return {
       emailIntegrationActive: false,
       emailTemplatesActive: false,
       emailTestActive: true,
+      profileActive: true,
     }
   },
   methods: {
@@ -66,6 +73,7 @@ export default {
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
       if (pageToActivate === 'emailTest') this.emailTestActive = true
+      if (pageToActivate === 'profile') this.profileActive = true
     },
     routeToInviteUser() {
       this.$router.push({ name: 'Invite' })
