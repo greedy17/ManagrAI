@@ -9,7 +9,7 @@
         <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
-        <NavLink icon="image" to="Styles">Styles</NavLink>
+        <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
       <img
         v-if="userIsLoggedIn"

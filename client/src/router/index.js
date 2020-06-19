@@ -17,7 +17,7 @@ import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
-import Styles from '@/views/settings/Styles'
+// import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
 
@@ -93,11 +93,11 @@ export default new Router({
       component: Settings,
       beforeEnter: Auth.requireAuth,
     },
-    {
-      path: '/styles',
-      name: 'Styles',
-      component: Styles,
-      beforeEnter: Auth.requireAuth,
-    },
+    // {
+    //   path: '/styles',
+    //   name: 'Styles',
+    //   component: Styles,
+    //   beforeEnter: Auth.requireAuth,
+    // },
   ],
 })
