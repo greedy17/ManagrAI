@@ -1,5 +1,7 @@
 <template>
-  <PageLoadingSVG v-if="loading" />
+  <div v-if="loading" class="page">
+    <ComponentLoadingSVG style="margin-top: 5rem;" />
+  </div>
   <div v-else class="page">
     <div class="page__left-nav-bar">
       <ToolBar
