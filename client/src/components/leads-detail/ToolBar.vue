@@ -97,12 +97,12 @@
           </div>
         </div>
       </div>
-      <div v-else class="contacts-container">
+      <div v-else class="container">
         <span class="no-items-message">No Contacts</span>
       </div>
     </div>
     <div class="files">
-      <div class="header section-shadow files-header">
+      <div class="header section-shadow" style="border-top: 1px solid #eeeeee; margin-top: 1rem;">
         <span>Files</span>
         <img
           class="add"
@@ -112,7 +112,7 @@
         />
         <input type="file" accept="*" hidden ref="file" @change="onFileUpload" />
       </div>
-      <div class="files-container">
+      <div class="container">
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
@@ -486,6 +486,13 @@ export default {
       font-weight: bold;
     }
   }
+
+  .container {
+    min-height: 3rem;
+    display: flex;
+    flex-flow: column;
+  }
+
   .contact {
     display: flex;
     flex-flow: row;
@@ -559,11 +566,18 @@ export default {
       width: 1.5rem;
     }
   }
+
+  .container {
+    min-height: 3rem;
+    display: flex;
+    flex-flow: column;
+  }
+
   .file {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 3rem;
+    min-height: 3rem;
     padding-left: 1.25rem;
     font-size: 14px;
 
@@ -577,7 +591,6 @@ export default {
 .no-items-message {
   font-weight: bold;
   align-self: center;
-  width: 25%;
   margin: 1rem 0.75rem;
 }
 .list-items {
