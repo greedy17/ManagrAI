@@ -102,18 +102,28 @@
       </div>
     </div>
     <div class="files">
-      <div class="header section-shadow">
+      <div class="header section-shadow files-header">
         <span>Files</span>
+        <img
+          class="add"
+          style="margin: 0 1rem 0 auto;"
+          src="@/assets/images/add.svg"
+          @click="$refs.file.click()"
+        />
+        <input type="file" accept="*" hidden ref="file" @change="onFileUpload" />
       </div>
       <div class="files-container">
-        <template v-if="files.list.length > 0">
-          <div class="file section-shadow" v-for="file in files.lists" :key="file">
+        <template v-if="this.lead.filesRef.length > 0">
+          <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            {{ file }}
+            {{ file.filename }}
           </div>
         </template>
         <span v-else class="no-items-message">No Files</span>
       </div>
+      <Modal v-if="fileUploadLoading" :width="10">
+        <ComponentLoadingSVG />
+      </Modal>
     </div>
   </div>
 </template>
@@ -123,7 +133,18 @@ import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 import CollectionManager from '@/services/collectionManager'
 import List from '@/services/lists'
+import File from '@/services/files'
 import Checkbox from '@/components/leads-new/CheckBox'
+
+function fileSorter(firstFile, secondFile) {
+  if (firstFile.filename.toLowerCase() > secondFile.filename.toLowerCase()) {
+    return 1
+  }
+  if (secondFile.filename.toLowerCase() > firstFile.filename.toLowerCase()) {
+    return -1
+  }
+  return 0
+}
 
 function listsModalReducer(acc, list) {
   acc[list.id] = list
@@ -161,10 +182,6 @@ export default {
       type: Object,
       default: () => CollectionManager.create(),
     },
-    files: {
-      type: Object,
-      default: () => CollectionManager.create(),
-    },
   },
   data() {
     return {
@@ -173,6 +190,7 @@ export default {
       listModal: {
         isOpen: false,
       },
+      fileUploadLoading: false,
       myLists: CollectionManager.create({
         ModelClass: List,
         filters: {
@@ -195,6 +213,10 @@ export default {
     },
     allLists() {
       return this.lists.list
+    },
+    sortedFiles() {
+      let copy = [...this.lead.filesRef]
+      return copy.sort(fileSorter)
     },
   },
   methods: {
@@ -281,6 +303,21 @@ export default {
         this.closeListModal()
       })
     },
+    onFileUpload(e) {
+      let file = e.target.files[0]
+      this.fileUploadLoading = true
+      File.api
+        .create(file, this.lead.id)
+        .then(response => {
+          this.lead.filesRef = [...this.lead.filesRef, response.data]
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 4000,
+            message: `File uploaded as "${response.data.filename}"!`,
+          })
+        })
+        .finally(() => (this.fileUploadLoading = false))
+    },
   },
 }
 </script>
@@ -295,7 +332,7 @@ export default {
   @include standard-border();
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  height: 50rem;
+  min-height: 50rem;
   width: 100%;
   display: flex;
   flex-flow: column;
@@ -512,6 +549,14 @@ export default {
 
     span {
       font-weight: bold;
+    }
+
+    .add {
+      @include pointer-on-hover();
+      background-color: $soft-gray;
+      border-radius: 5px;
+      height: 1.5rem;
+      width: 1.5rem;
     }
   }
   .file {

@@ -6,7 +6,6 @@
         :lead="lead"
         :lists="lists"
         :contacts="contacts"
-        :files="files"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
       />
@@ -65,7 +64,6 @@ import Lead from '@/services/leads'
 import LeadActivityLog from '@/services/leadActivityLogs'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
-import File from '@/services/files'
 import Forecast from '@/services/forecasts'
 
 import ActivityLogItem from './_ActivityLogItem'
@@ -102,12 +100,6 @@ export default {
           byLead: this.id,
         },
       }),
-      files: CollectionManager.create({
-        ModelClass: File,
-        filters: {
-          byLead: this.id,
-        },
-      }),
       history: CollectionManager.create({
         ModelClass: LeadActivityLog,
         filters: {
@@ -118,16 +110,10 @@ export default {
     }
   },
   async created() {
-    Promise.all([
-      this.retrieveLead(),
-      this.lists.refresh(),
-      this.contacts.refresh(),
-      this.files.refresh(),
-    ]).then(res => {
+    Promise.all([this.retrieveLead(), this.lists.refresh(), this.contacts.refresh()]).then(res => {
       this.lead = res[0]
       this.lists = res[1]
       this.contacts = res[2]
-      this.files = res[3]
       this.loading = false
     })
 
@@ -208,7 +194,6 @@ export default {
           return Lead.api.update(this.lead.id, leadPatchData)
         })
         .then(lead => {
-          console.log(lead.statusLastUpdate)
           this.lead = lead
           let message = `<div>Success! Lead reset.</div>`
           this.$Alert.alert({

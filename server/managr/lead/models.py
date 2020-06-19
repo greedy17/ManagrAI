@@ -146,6 +146,10 @@ class File(TimeStampModel):
 
     objects = FileQuerySet.as_manager()
 
+    @property
+    def filename(self):
+        return self.file.name
+
     def save(self, *args, **kwargs):
         """ unset other files that are set as contract """
         if self.doc_type == lead_constants.FILE_TYPE_CONTRACT:
