@@ -5,7 +5,7 @@
       <ToolBar
         :lead="lead"
         :lists="lists"
-        :contacts="contacts"
+        :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
       />
