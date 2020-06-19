@@ -41,7 +41,6 @@ import User from '@/services/users'
 
 export default {
   name: 'Profile',
-  components: {},
   data() {
     return {
       first: '',
