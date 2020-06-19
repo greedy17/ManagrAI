@@ -117,6 +117,12 @@
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
             {{ file.filename }}
+            <img
+              class="add"
+              style="margin: 0 1rem 0 auto;"
+              src="@/assets/images/remove.svg"
+              @click="deleteFile(file)"
+            />
           </div>
         </template>
         <span v-else class="no-items-message">No Files</span>
@@ -317,6 +323,11 @@ export default {
           })
         })
         .finally(() => (this.fileUploadLoading = false))
+    },
+    deleteFile(file) {
+      File.api.delete(file.id).then(() => {
+        this.lead.filesRef = this.lead.filesRef.filter(f => f.id !== file.id)
+      })
     },
   },
 }
@@ -580,6 +591,13 @@ export default {
     min-height: 3rem;
     padding-left: 1.25rem;
     font-size: 14px;
+
+    .add {
+      @include pointer-on-hover();
+      border-radius: 5px;
+      height: 1.25rem;
+      opacity: 0.6;
+    }
 
     .icon {
       height: 1.25rem;
