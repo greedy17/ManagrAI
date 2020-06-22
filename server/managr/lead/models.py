@@ -184,7 +184,7 @@ class BaseNote(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=False, null=False)
-    content = models.CharField(max_length=255, blank=True)
+    content = models.TextField(blank=True)
     created_by = models.ForeignKey(
         "core.User",
         null=True,
