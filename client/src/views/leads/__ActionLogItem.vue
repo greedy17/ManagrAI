@@ -21,7 +21,10 @@
         <p>{{ log.meta.actionDetail }}</p>
         <p>
           Contacts:
-          {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
+          {{
+            log.meta.linkedContactsRef &&
+              log.meta.linkedContactsRef.map(c => c.full_name).join(', ')
+          }}
         </p>
       </div>
     </div>

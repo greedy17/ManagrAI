@@ -6,7 +6,9 @@
         class="form__element-error"
         v-if="showErrors && !linkedContactsValid"
         style="margin-bottom: 0.5rem;"
-      >Select one or more contacts</div>
+      >
+        Select one or more contacts
+      </div>
       <ContactBox
         v-for="contact in lead.linkedContactsRef"
         :contact="contact"
@@ -24,20 +26,17 @@
             v-model="action.actionType"
             v-if="!actionChoices.refreshing && actionChoices.list.length > 0"
           >
-            <option
-              v-for="(choice, index) in actionChoices.list"
-              :key="index"
-              :value="choice.id"
-            >{{ choice.title }}</option>
+            <option v-for="(choice, index) in actionChoices.list" :key="index" :value="choice.id">{{
+              choice.title
+            }}</option>
           </select>
-          <p
-            v-if="!actionChoices.refreshing && actionChoices.list.length === 0"
-          >Organization has no action choices</p>
+          <p v-if="!actionChoices.refreshing && actionChoices.list.length === 0">
+            Organization has no action choices
+          </p>
           <ComponentLoadingSVG v-if="actionChoices.refreshing" />
-          <div
-            class="form__element-error"
-            v-if="showErrors && !actionTypeValid"
-          >Select an action from the list.</div>
+          <div class="form__element-error" v-if="showErrors && !actionTypeValid">
+            Select an action from the list.
+          </div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
@@ -87,7 +86,7 @@ export default {
   },
   computed: {
     formValid() {
-      return this.linkedContactsValid && this.actionTypeValid
+      return this.actionTypeValid
     },
     linkedContactsValid() {
       return this.action.linkedContacts.length > 0

@@ -6,7 +6,9 @@
         class="form__element-error"
         v-if="showErrors && !linkedContactsValid"
         style="margin-bottom: 0.5rem;"
-      >Select one or more contacts</div>
+      >
+        Select one or more contacts
+      </div>
       <ContactBox
         v-for="contact in lead.linkedContactsRef"
         :contact="contact"
@@ -20,10 +22,9 @@
         <div class="form__element">
           <div class="form__element-header">Title</div>
           <input type="text" class="form__input" v-model="note.title" />
-          <div
-            class="form__element-error"
-            v-if="showErrors && !titleValid"
-          >Enter a title for this note</div>
+          <div class="form__element-error" v-if="showErrors && !titleValid">
+            Enter a title for this note
+          </div>
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
@@ -65,7 +66,7 @@ export default {
   },
   computed: {
     formValid() {
-      return this.titleValid && this.linkedContactsValid
+      return this.titleValid
     },
     linkedContactsValid() {
       return this.note.linkedContacts.length > 0

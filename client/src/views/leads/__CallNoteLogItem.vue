@@ -21,7 +21,7 @@
         <p>{{ log.meta.content }}</p>
         <p>
           Contacts:
-          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
+          {{ log.meta.linkedContacts && log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
         </p>
       </div>
     </div>

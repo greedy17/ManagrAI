@@ -140,14 +140,7 @@ class FileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = (
-            "id",
-            "doc_type",
-            "uploaded_by",
-            "lead",
-            "file",
-            "filename"
-        )
+        fields = ("id", "doc_type", "uploaded_by", "lead", "file", "filename")
 
 
 class ForecastSerializer(serializers.ModelSerializer):

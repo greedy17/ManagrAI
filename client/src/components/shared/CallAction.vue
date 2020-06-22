@@ -78,7 +78,7 @@ export default {
   },
   computed: {
     formValid() {
-      return this.titleValid && this.linkedContactsValid && this.dateValid
+      return this.titleValid && this.dateValid
     },
     linkedContactsValid() {
       return this.callNote.linkedContacts.length > 0
