@@ -99,10 +99,20 @@ export default {
         page: this.filters.page + 1,
         ...this.filters,
       }
-      Nylas.getThreads({ filters: this.filters })
+      Nylas.getThreads({
+        filters: this.filters,
+        enable500Alert: false,
+      })
         .then(result => {
           this.threads.list = [...this.threads.list, ...result]
           this.threads.hasNextPage = this.checkHasNextPage(result)
+        })
+        .catch(error => {
+          // TODO: Better handle the situation where the user has not
+          //       connected with Nylas.
+          // For Now: Suppress errors, but log to the console.
+          // eslint-disable-next-line no-console
+          console.error(error)
         })
         .finally(() => {
           this.threads.loadingNextPage = false

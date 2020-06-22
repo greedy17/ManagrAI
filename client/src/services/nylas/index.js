@@ -10,7 +10,7 @@ const ATTACH_FILE_ENDPOINT = '/users/attach-file/'
 const DOWNLOAD_FILE_ENDPOINT = id => `/get-file/${id}/`
 
 export default {
-  getThreads({ filters }) {
+  getThreads({ filters, enable400Alert, enable500Alert, rethrowErrors }) {
     const filtersMap = {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
@@ -23,7 +23,14 @@ export default {
     const promise = apiClient()
       .get(THREADS_ENDPOINT, options)
       .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'NylasAPI.getThreads' }))
+      .catch(
+        apiErrorHandler({
+          apiName: 'NylasAPI.getThreads',
+          enable400Alert,
+          enable500Alert,
+          rethrowErrors,
+        }),
+      )
     return promise
   },
   getThreadMessages(threadId) {
