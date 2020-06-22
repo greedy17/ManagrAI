@@ -19,7 +19,7 @@
     <div class="flexbox-container">
       <div class="flexbox-container__column">
         <div class="email__row">
-          <div class="form__element-header">From:</div>
+          <div class="form__element-header form__element-header--small">From</div>
           <div class="email__contact-tag">{{ user.email }}</div>
         </div>
         <EmailList
@@ -43,8 +43,7 @@
           @add="addBCCEmail($event)"
           @remove="removeBCCEmail($event)"
         />
-      </div>
-      <div class="flexbox-container__column">
+
         <div class="form__element" v-if="showSubject">
           <div class="form__element-header">Subject</div>
           <input type="text" class="form__input" v-model="subject" />

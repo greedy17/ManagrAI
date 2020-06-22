@@ -17,7 +17,8 @@
         :key="contact.id"
       />
     </div>
-    <div class="flexbox-container__column">
+
+    <div class="flexbox-container__column" style="flex: 2;">
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Title</div>
@@ -31,7 +32,10 @@
           <textarea class="form__textarea" v-model="note.content" />
         </div>
       </div>
-      <div class="form__element">
+      <div
+        class="form__element"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
         <button class="form__button" :disabled="saving">
           <span v-if="!saving">Save</span>
           <ComponentLoadingSVG v-if="saving" />

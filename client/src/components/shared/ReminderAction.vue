@@ -10,7 +10,8 @@
         :key="contact.id"
       />
     </div>
-    <div class="flexbox-container__column">
+
+    <div class="flexbox-container__column" style="flex: 2">
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Title</div>
@@ -26,7 +27,10 @@
         <div class="form__element-header">Date</div>
         <input type="datetime-local" class="form__input" />
       </div>
-      <div class="form__element">
+      <div
+        class="form__element"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
         <button class="form__button">Coming Soon!</button>
       </div>
     </div>

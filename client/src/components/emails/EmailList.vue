@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="email__row">
-      <div class="form__element-header">{{ label }}:</div>
+      <div class="form__element-header">{{ label }}</div>
       <div class="email__contact-tag" v-for="contactObject in emails" :key="contactObject.email">
         {{ contactObject.email }}
         <span @click="removeEmail(contactObject)">

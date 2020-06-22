@@ -17,7 +17,8 @@
         :key="contact.id"
       />
     </div>
-    <div class="flexbox-container__column">
+
+    <div class="flexbox-container__column" style="flex: 2;">
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Topic</div>
@@ -42,7 +43,11 @@
         <input type="date" class="form__input" v-model="callNote.callDate" />
         <div class="form__element-error" v-if="showErrors && !dateValid">Please enter a date.</div>
       </div>
-      <div class="form__element">
+
+      <div
+        class="form__element"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
         <button class="form__button" :disabled="saving">
           <span v-if="!saving">Save</span>
           <ComponentLoadingSVG v-if="saving" />

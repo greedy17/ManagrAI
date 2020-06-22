@@ -17,7 +17,8 @@
         :key="contact.id"
       />
     </div>
-    <form @submit.prevent="onSubmit" class="flexbox-container__column">
+
+    <form @submit.prevent="onSubmit" class="flexbox-container__column" style="flex: 2">
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Type</div>
@@ -43,7 +44,10 @@
           <textarea class="form__textarea" v-model="action.actionDetail" />
         </div>
       </div>
-      <div class="form__element">
+      <div
+        class="form__element"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
         <button type="submit" class="form__button" :disabled="saving">
           <span v-if="!saving">Save</span>
           <ComponentLoadingSVG v-if="saving" />
