@@ -111,7 +111,7 @@ def return_file_id_from_nylas(user, file_object):
     response = requests.post(
         f"{core_consts.NYLAS_API_BASE_URL}/files/", files=file_data, headers=headers
     )
-    json_response = _handle_nylas_reponse(response)
+    json_response = _handle_nylas_response(response)
     return json_response
 
 
