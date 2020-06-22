@@ -75,6 +75,10 @@ export default {
       return result.length === 10
     },
     refresh() {
+      // If no emails to search, do nothing
+      if (this.filters.anyEmail === '') {
+        return
+      }
       this.threads.refreshing = true
       Nylas.getThreads({ filters: this.filters })
         .then(result => {
@@ -86,6 +90,10 @@ export default {
         })
     },
     addPage() {
+      // If no emails to search, do nothing
+      if (this.filters.anyEmail === '') {
+        return
+      }
       this.threads.loadingNextPage = true
       this.filters = {
         page: this.filters.page + 1,
