@@ -1,5 +1,5 @@
 const statusToPrimaryColor = {
-  lead: '#c2c4ca',
+  lead: '#1C1F1D',
   ready: '#FAB900',
   booked: '#FA646A',
   demo: '#88C9F9',

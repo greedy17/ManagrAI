@@ -6,16 +6,16 @@
           <div class="form__element-header">Type</div>
           <select class="form__select" v-model="type">
             <option disabled :value="null">Select Action Type</option>
-            <option
-              v-for="choice in actionChoices.list"
-              :key="choice.id"
-              :value="choice.id"
-            >{{ choice.title }}</option>
+            <option v-for="choice in actionChoices.list" :key="choice.id" :value="choice.id">{{
+              choice.title
+            }}</option>
           </select>
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.typeNotSelected"
-          >Must select an Action Type.</div>
+          >
+            Must select an Action Type.
+          </div>
         </div>
 
         <div class="form__element">
@@ -24,19 +24,15 @@
           <div
             class="form__element-error"
             v-if="isFormValid !== null && !isFormValid && errors.descriptionIsBlank"
-          >Must include a description.</div>
+          >
+            Must include a description.
+          </div>
         </div>
       </div>
       <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input v-model="date" type="datetime-local" class="form__input" />
-        <div
-          class="form__element-error"
-          v-if="isFormValid !== null && !isFormValid && errors.dateNotSelected"
-        >Must select a date.</div>
-      </div>
-      <div class="form__element">
-        <button class="form__button" @click.prevent="onBulkLogging">Save</button>
+        <button class="form__button" :style="{ marginLeft: 'auto' }" @click.prevent="onBulkLogging">
+          Save
+        </button>
       </div>
     </div>
   </div>
@@ -65,7 +61,6 @@ export default {
       }),
       type: null,
       description: '',
-      date: null,
       isFormValid: null,
       errors: {},
     }
@@ -102,9 +97,8 @@ export default {
       let formErrors = {
         typeNotSelected: this.typeNotSelected,
         descriptionIsBlank: this.descriptionIsBlank,
-        dateNotSelected: this.dateNotSelected,
       }
-      let isFormValid = !this.typeNotSelected && !this.descriptionIsBlank && !this.dateNotSelected
+      let isFormValid = !this.typeNotSelected && !this.descriptionIsBlank
 
       return [isFormValid, formErrors]
     },
@@ -115,9 +109,6 @@ export default {
     },
     descriptionIsBlank() {
       return !this.description.length
-    },
-    dateNotSelected() {
-      return !this.date
     },
   },
 }

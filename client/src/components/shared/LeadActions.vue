@@ -7,17 +7,19 @@
         :active="index === activeTab"
         :index="index"
         @update-active-tab="updateActiveTab"
-      >{{ tab }}</ActionTabHeader>
+      >
+        {{ tab }}
+      </ActionTabHeader>
     </div>
 
     <div v-if="state == editState" class="box__content">
       <CallAction :lead="lead" v-if="activeTab === 0" />
-      <!-- NOTE: TEXTACTION WILL BE DISABLED FOR THE DEMO -->
-      <TextAction v-if="activeTab === 1" />
-      <EmailAction :lead="lead" v-if="activeTab === 2" />
-      <ActionAction :lead="lead" v-if="activeTab === 3" />
-      <ReminderAction :lead="lead" v-if="activeTab === 4" />
-      <NoteAction :lead="lead" v-if="activeTab === 5" />
+      <!-- NOTE: TEXTACTION WILL BE DISABLED FOR v1 -->
+      <!-- <TextAction v-if="activeTab === 1" /> -->
+      <EmailAction :lead="lead" v-if="activeTab === 1" />
+      <ActionAction :lead="lead" v-if="activeTab === 2" />
+      <ReminderAction :lead="lead" v-if="activeTab === 3" />
+      <NoteAction :lead="lead" v-if="activeTab === 4" />
     </div>
     <div v-if="state == viewState" class="box__content">
       <div class="list-items" v-if="activeTab === 0">
@@ -40,13 +42,13 @@
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
-            <span
-              class="list-items__item__call-date"
-            >{{ moment(item.callDate).format('MM/DD/YYYY') }}</span>
+            <span class="list-items__item__call-date">
+              {{ moment(item.callDate).format('MM/DD/YYYY') }}
+            </span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span
-              class="list-items__item__datetime-created"
-            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
+            <span class="list-items__item__datetime-created">
+              {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
+            </span>
           </div>
         </template>
       </div>
@@ -70,13 +72,13 @@
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
-            <span
-              class="list-items__item__datetime-for"
-            >{{ moment(item.datetimeFor).format('MM/DD/YYYY') }}</span>
+            <span class="list-items__item__datetime-for">
+              {{ moment(item.datetimeFor).format('MM/DD/YYYY') }}
+            </span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span
-              class="list-items__item__datetime-created"
-            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
+            <span class="list-items__item__datetime-created">
+              {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
+            </span>
           </div>
         </template>
       </div>
@@ -101,9 +103,9 @@
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
             <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
-            <span
-              class="list-items__item__datetime-created"
-            >{{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}</span>
+            <span class="list-items__item__datetime-created">
+              {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
+            </span>
           </div>
         </template>
       </div>
@@ -114,7 +116,7 @@
 <script>
 import ActionTabHeader from '@/components/shared/ActionTabHeader'
 import CallAction from '@/components/shared/CallAction'
-import TextAction from '@/components/shared/TextAction'
+// import TextAction from '@/components/shared/TextAction'
 import EmailAction from '@/components/shared/EmailAction'
 import ReminderAction from '@/components/shared/ReminderAction'
 import ActionAction from '@/components/shared/ActionAction'
@@ -134,7 +136,7 @@ export default {
   components: {
     ActionTabHeader,
     CallAction,
-    TextAction,
+    // TextAction,
     EmailAction,
     ReminderAction,
     ActionAction,
@@ -153,7 +155,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['call', 'text', 'email', 'action', 'reminder', 'note'],
+      tabs: ['call', 'email', 'action', 'reminder', 'note'],
       loading: false,
       editState: EDIT_STATE,
       viewState: VIEW_STATE,
@@ -270,30 +272,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/containers';
 
-.actions {
-  min-width: 48rem;
-  width: 100%;
-  min-height: 21rem;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  border: solid 1px $soft-gray;
-  background-color: $white;
-  display: flex;
-  flex-flow: column;
-}
-
-.actions-tab-headers {
-  min-height: 3rem;
-  display: flex;
-  flex-flow: row;
-}
-
-.action-tab-content {
-  flex: 1 auto;
-  padding: 2vh;
-  display: flex;
-  flex-flow: row;
-  overflow: scroll;
-}
 .list-items {
   display: flex;
   flex-direction: column;

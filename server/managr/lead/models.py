@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F, Q, Count
 from django.contrib.postgres.fields import JSONField
+from django.utils import timezone
 
 from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
@@ -27,10 +28,9 @@ class Lead(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
-        help_text="This field is set at close and non-editable", default=0
-    )
-    primary_description = models.CharField(max_length=150, blank=True)
-    secondary_description = models.CharField(max_length=150, blank=True)
+        help_text="This field is set at close and non-editable", default=0)
+    primary_description = models.TextField(blank=True)
+    secondary_description = models.TextField(blank=True)
     rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
         "organization.Account",
@@ -51,6 +51,7 @@ class Lead(TimeStampModel):
         help_text="Status in the sale process",
         null=True,
     )
+    status_last_update = models.DateTimeField(default=timezone.now, blank=True)
     claimed_by = models.ForeignKey(
         "core.User",
         related_name="claimed_leads",
@@ -144,6 +145,10 @@ class File(TimeStampModel):
     )
 
     objects = FileQuerySet.as_manager()
+
+    @property
+    def filename(self):
+        return self.file.name
 
     def save(self, *args, **kwargs):
         """ unset other files that are set as contract """

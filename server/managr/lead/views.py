@@ -7,7 +7,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 
 from django.shortcuts import render
+from django.utils import timezone
 from django.contrib.auth import authenticate, login
+from django.db.models.functions import Lower
 from django.db import transaction, IntegrityError
 from django.template.exceptions import TemplateDoesNotExist
 from rest_framework import (
@@ -87,20 +89,16 @@ class LeadViewSet(
     """ Viewset for leads Permissions are set on the Permissions.py"""
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (
-        IsSalesPerson,
-        CanEditResourceOrReadOnly,
-    )
+
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
     serializer_class = lead_serializers.LeadSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter, lead_filters.LeadRatingOrderFiltering,)
     filter_class = lead_filters.LeadFilterSet
-    filter_backends = (
-        DjangoFilterBackend,
-        lead_filters.LeadRatingOrderFiltering,
-    )
-    ordering = ("rating",)
+    ordering = ('rating',)
+    search_fields = ('title',)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user)
+        return Lead.objects.for_user(self.request.user).order_by(Lower('title'))
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get("verbose", None)
@@ -171,6 +169,11 @@ class LeadViewSet(
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
+
+        # if updating status, also update status_last_update
+        if 'status' in data:
+            data['status_last_update'] = timezone.now()
+
         # make sure the user that created the lead is not updated as well
 
         data["last_updated_by"] = user.id
@@ -243,7 +246,7 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = LEAD_STATUS_CLOSED
+        lead.status = lead_constants.LEAD_STATUS_CLOSED
         lead.closing_amount = closing_amount
         lead.save()
         emit_event(lead_constants.LEAD_CLOSED, request.user, lead)

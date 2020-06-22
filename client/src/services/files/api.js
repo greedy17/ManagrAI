@@ -2,7 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const FILES_ENDPOINT = '/files/'
-
+const GET_FILE_ENDPOINT = id => `/files/${id}`
 export default class FileAPI {
   /**
    * Instantiate a new `FileAPI`
@@ -58,6 +58,13 @@ export default class FileAPI {
 
     const promise = apiClient()
       .post(FILES_ENDPOINT, data)
+      .catch(apiErrorHandler({ apiName: 'FileAPI.create' }))
+    return promise
+  }
+
+  delete(fileID) {
+    const promise = apiClient()
+      .delete(GET_FILE_ENDPOINT(fileID))
       .catch(apiErrorHandler({ apiName: 'FileAPI.create' }))
     return promise
   }

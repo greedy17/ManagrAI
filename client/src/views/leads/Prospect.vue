@@ -4,8 +4,11 @@
       <ToolBar
         :repFilterState="repFilterState"
         :unclaimedFilterState="unclaimedFilterState"
+        :activeSearchTerm="toolbarSearchTerm"
         @toggle-active-rep="toggleActiveRep"
         @toggle-unclaimed="toggleUnclaimed"
+        @search-filter="filterByLeadTitle"
+        @clear-search-filter="clearSearchFilter"
       />
     </div>
     <div class="lists-pane">
@@ -39,10 +42,14 @@ export default {
       loading: true,
       accounts: CollectionManager.create({
         ModelClass: Account,
+        filters: {
+          ordering: 'name',
+        },
       }),
       accountsWithLeads: [], // objects containing account info & collections of leads for account
       repFilterState: {},
       unclaimedFilterState: false,
+      toolbarSearchTerm: '',
     }
   },
   async created() {
@@ -88,6 +95,7 @@ export default {
             ...this.accountsWithLeads[key].collection.filters,
             byUser: null,
             isClaimed: 'False',
+            search: this.toolbarSearchTerm ? this.toolbarSearchTerm : null,
           }
         })
       } else {
@@ -99,6 +107,7 @@ export default {
             ...this.accountsWithLeads[key].collection.filters,
             byUser: filterString,
             isClaimed: null,
+            search: this.toolbarSearchTerm ? this.toolbarSearchTerm : null,
           }
         })
       }
@@ -159,6 +168,14 @@ export default {
       // if filtering by unclaimed, reset filterByRep
       this.unclaimedFilterState = !this.unclaimedFilterState
       this.repFilterState = {}
+      this.refreshCollections()
+    },
+    filterByLeadTitle(searchTerm) {
+      this.toolbarSearchTerm = searchTerm
+      this.refreshCollections()
+    },
+    clearSearchFilter() {
+      this.toolbarSearchTerm = ''
       this.refreshCollections()
     },
   },

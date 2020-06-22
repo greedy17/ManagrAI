@@ -3,13 +3,16 @@
     <div class="email__row">
       <div class="form__element-header">{{ label }}:</div>
       <div class="email__contact-tag" v-for="contactObject in emails" :key="contactObject.email">
-        {{ contactObject.email }} <span @click="removeEmail(contactObject)">&nbsp;[X]</span>
+        {{ contactObject.email }}
+        <span @click="removeEmail(contactObject)">
+          &nbsp;<img src="@/assets/images/remove.svg" alt="remove icon" />
+        </span>
       </div>
       <span v-if="!showAddBox" @click="showEmailBox()">
-        &nbsp;[ + ]
+        &nbsp; <img src="@/assets/images/add.svg" alt="add icon" />
       </span>
       <span v-if="showAddBox" @click="hideEmailBoxes()">
-        &nbsp;[ - ]
+        &nbsp; <img src="@/assets/images/remove.svg" alt="remove icon" />
       </span>
     </div>
     <div class="box" v-if="showAddBox">

@@ -10,6 +10,9 @@
       >
         {{ tab }}
       </ActionTabHeader>
+      <div class="acting-on-leads">
+        Acting on {{ leads.length }} {{ leads.length == 1 ? 'Lead' : 'Leads' }}
+      </div>
     </div>
 
     <div class="box__content">
@@ -36,6 +39,7 @@
               <span class="list-items__item">{{ list.title }}</span>
             </span>
           </div>
+          <h5>To remove leads from all lists, leave all checkboxes blank</h5>
           <div :style="{ display: 'flex', flexFlow: 'row' }">
             <button class="on-bulk-move" @click="onBulkMove">Bulk Move Leads</button>
           </div>
@@ -191,5 +195,11 @@ export default {
 .on-bulk-move {
   @include primary-button;
   margin-left: auto;
+}
+
+.acting-on-leads {
+  margin: auto 2rem auto auto;
+  color: $dark-green;
+  font-weight: bold;
 }
 </style>
