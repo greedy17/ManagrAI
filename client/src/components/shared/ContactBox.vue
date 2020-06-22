@@ -2,17 +2,21 @@
   <!-- TODO: I don't know why the objectToCamelCase in services/leads is not  -->
   <!-- making the nested serializers camel case as well  -->
   <div class="contact-box" :class="{ 'contact-box--active': isActive }" @click="toggleActive()">
-    <div class="contact-box__contact-circle-container">
-      <div class="contact-box__contact-circle">{{ initials }}</div>
-    </div>
-    <div class="contact-box__contact-name-container">
-      <div class="contact-box__contact-name">{{ contact.full_name }}</div>
-    </div>
-    <div class="contact-box__contact-number-container">
-      <div class="contact-box__contact-icon">
-        <img alt="icon" :src="require(`@/assets/images/telephone.svg`)" class="icon" />
+    <div class="contact-box__row">
+      <div class="contact-box__contact-circle-container">
+        <div class="contact-box__contact-circle">{{ initials }}</div>
       </div>
-      <div class="contact-box__contact-number">{{ contact.phone_number_1 }}</div>
+      <div class="contact-box__contact-name-container">
+        <div class="contact-box__contact-name">{{ contact.full_name }}</div>
+      </div>
+    </div>
+    <div class="contact-box__row">
+      <div class="contact-box__contact-number-container">
+        <div class="contact-box__contact-icon">
+          <img alt="icon" :src="require(`@/assets/images/telephone.svg`)" class="icon" />
+        </div>
+        <div class="contact-box__contact-number">{{ contact.phone_number_1 }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -60,14 +64,20 @@ export default {
 .contact-box {
   @include standard-border();
   margin-bottom: 0.75rem;
-  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem;
   border-radius: 0.5rem;
+
   &:hover {
     cursor: pointer;
   }
+
+  &__row {
+    display: flex;
+    margin-bottom: 0.5rem;
+  }
+
   &__contact-circle-container {
     flex: 1;
     line-height: 1rem;
@@ -81,28 +91,38 @@ export default {
     display: flex;
     border-radius: 50%;
   }
+
   &__contact-circle {
   }
+
   &__contact-name-container {
-    text-align: center;
+    align-self: center;
+    margin-left: 0.5rem;
     flex: 4;
   }
+
   &__contact-name {
   }
+
   &__contact-number-container {
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
-    text-align: center;
+    align-self: center;
     background-color: $soft-gray;
     flex: 4;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
+
   &__contact-number-icon {
   }
+
   &__contact-number {
+    flex: 1;
+    margin-left: 0.5rem;
   }
+
   &--active {
     border: 1px solid $dark-gray-blue;
   }
