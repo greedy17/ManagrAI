@@ -137,12 +137,9 @@ export function isObject(value) {
  */
 
 export function debounce(callback, time) {
-  console.log(time)
   let timer = null
-  debugger
   return function (...args) {
     const onComplete = () => {
-      console.log(this)
       callback.apply(this, args)
       timer = null
     }

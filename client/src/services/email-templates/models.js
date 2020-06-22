@@ -43,7 +43,7 @@ export default class EmailTemplate {
     excludeFields.forEach(item => {
       delete data[item]
     })
-    console.log(data)
+
     return objectToSnakeCase(data)
   }
 

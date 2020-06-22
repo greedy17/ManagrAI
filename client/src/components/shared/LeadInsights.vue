@@ -40,16 +40,59 @@
         <span class="insight-bottom">{{ insights.actions.latest | timeAgo }}</span>
       </div>
     </div>
+
+    <div class="insight-container section-shadow" v-if="insights">
+      <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          {{ insights.emails.count }}
+          {{ 'Email' | pluralize(insights.emails.count) }}
+        </span>
+        <span class="insight-bottom">{{ insights.emails.latest | timeAgo }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import LeadActivityLog from '@/services/leadActivityLogs'
+
 export default {
   name: 'LeadInsights',
   props: {
-    insights: {
+    lead: {
       type: Object,
       required: true,
+    },
+  },
+  data() {
+    return {
+      insights: null,
+    }
+  },
+  created() {
+    // Start polling for lead insights
+    // TODO: If this starts failing for any reason, it will start pumping out
+    //       error messages, so we might want to clear or extend the interval
+    //       if that happens.
+    this.pollingInterval = setInterval(this.refresh, 2000)
+  },
+  destroyed() {
+    clearInterval(this.pollingInterval)
+  },
+  methods: {
+    refresh() {
+      LeadActivityLog.api
+        .getInsights({
+          filters: {
+            lead: this.lead.id,
+          },
+        })
+        .then(result => {
+          this.insights = result
+        })
     },
   },
 }

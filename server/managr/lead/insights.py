@@ -51,9 +51,20 @@ class LeadInsights:
             return latest_action.action_timestamp
 
     @property
+    def email_count(self):
+        return self.queryset.filter(activity=lead_constants.EMAIL_SENT).count()
+
+    @property
+    def email_latest(self):
+        latest_action = self.queryset.filter(activity=lead_constants.EMAIL_SENT).first()
+        if latest_action is not None:
+            return latest_action.action_timestamp
+
+    @property
     def as_dict(self):
         return {
             "calls": {"count": self.call_count, "latest": self.call_latest,},
             "notes": {"count": self.note_count, "latest": self.note_latest,},
             "actions": {"count": self.action_count, "latest": self.action_latest,},
+            "emails": {"count": self.email_count, "latest": self.email_latest,},
         }

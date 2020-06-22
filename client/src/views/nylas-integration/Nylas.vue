@@ -40,8 +40,8 @@ export default {
   methods: {
     refreshEmails() {
       this.emailsLoading = true
-      Nylas.getUserThreads(this.filterBy).then(response => {
-        this.threads = response.data
+      Nylas.getThreads({ toEmail: this.filterBy }).then(data => {
+        this.threads = data
         this.emailsLoading = false
       })
     },

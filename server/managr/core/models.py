@@ -1,15 +1,19 @@
 import uuid
 from datetime import datetime, timedelta
 import pytz
-from django.db import models, IntegrityError
+
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+
+from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth import login
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
+
 from managr.utils import sites as site_utils
 from managr.core import constants as core_consts
-from managr.core.integrations import gen_auth_url, revoke_access_token
+
+from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 
 ACCOUNT_TYPE_LIMITED = "LIMITED"

@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler } from '@/services/api'
+import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 const THREADS_ENDPOINT = '/users/threads/'
 const MESSAGES_ENDPOINT = '/users/thread-messages/'
@@ -10,13 +10,20 @@ const ATTACH_FILE_ENDPOINT = '/users/attach-file/'
 const DOWNLOAD_FILE_ENDPOINT = id => `/get-file/${id}/`
 
 export default {
-  getUserThreads(toEmail = null) {
-    const data = {
-      to_email: toEmail,
+  getThreads({ filters }) {
+    const filtersMap = {
+      page: ApiFilter.create({ key: 'page' }),
+      pageSize: ApiFilter.create({ key: 'page_size' }),
+      toEmail: ApiFilter.create({ key: 'to_email' }),
+      anyEmail: ApiFilter.create({ key: 'any_email' }),
+    }
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...filters }),
     }
     const promise = apiClient()
-      .post(THREADS_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'NylasAPI.getUserThreads' }))
+      .get(THREADS_ENDPOINT, options)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'NylasAPI.getThreads' }))
     return promise
   },
   getThreadMessages(threadId) {
@@ -25,7 +32,7 @@ export default {
     }
     const promise = apiClient()
       .post(MESSAGES_ENDPOINT, data)
-      .catch(apiErrorHandler({ apiName: 'NylasAPI.getUserThreads' }))
+      .catch(apiErrorHandler({ apiName: 'NylasAPI.getThreadMessages' }))
     return promise
   },
   downloadFile(fileId) {
@@ -50,18 +57,19 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.attachFile' }))
     return promise
   },
-  sendEmail(
+  sendEmail({
     to,
     subject,
     body,
+    lead,
     ccEmails = [],
     bccEmails = [],
     replyMessageId = '',
     fileIds = [],
     variables = {},
-  ) {
+  }) {
     /*
-    Use Nylas to send emails from this user. 
+    Use Nylas to send emails from this user.
     PARAMS:
       subject: A string for the subject of the email.
       body: A string for the body of the email.
@@ -73,12 +81,13 @@ export default {
             Contact objects must be in the format { "name": NAME, "email": EMAIL }.
 
       NOTE: WE NEED TO MAKE SURE THESE TWO FUNCTIONS, PREVIEWEMAIL AND SENDEMAIL, STAY IN SYNC.
-      TODO: FIND A WAY TO COMBINE THEM. 
+      TODO: FIND A WAY TO COMBINE THEM.
     */
 
     const data = {
       subject,
       body,
+      lead,
       to,
       cc: ccEmails,
       bcc: bccEmails,
@@ -91,18 +100,19 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.sendEmail' }))
     return promise
   },
-  previewEmail(
+  previewEmail({
     to,
     subject,
     body,
+    lead,
     ccEmails = [],
     bccEmails = [],
     replyMessageId = '',
     fileIds = [],
     variables = {},
-  ) {
+  }) {
     /*
-    Use Nylas to preview emails from this user. 
+    Use Nylas to preview emails from this user.
     PARAMS:
       subject: A string for the subject of the email.
       body: A string for the body of the email.
@@ -112,7 +122,7 @@ export default {
             Contact objects must be in the format { "name": NAME, "email": EMAIL }.
       bcc_email: An array of contact objects for the BCC field.
             Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-            
+
       NOTE: WE NEED TO MAKE SURE THESE TWO FUNCTIONS, PREVIEWEMAIL AND SENDEMAIL, STAY IN SYNC.
       TODO: FIND A WAY TO COMBINE THEM.
     */
@@ -121,6 +131,7 @@ export default {
       subject,
       body,
       to,
+      lead,
       cc: ccEmails,
       bcc: bccEmails,
       reply_to_message_id: replyMessageId,
@@ -132,9 +143,6 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.previewEmail' }))
     return promise
   },
-  /**
-   * 
-   */
   retrieveUserToken(code, magicToken) {
     const data = { code, magic_token: magicToken }
     return apiClient()

@@ -18,6 +18,12 @@
       v-if="log.model === 'Action'"
       @item-click="toggleCollapsed"
     />
+    <EmailLogItem
+      :log="log"
+      :collapsed="collapsed"
+      v-if="log.model === 'LeadEmail'"
+      @item-click="toggleCollapsed"
+    />
   </div>
 </template>
 
@@ -25,10 +31,11 @@
 import NoteLogItem from './__NoteLogItem'
 import CallNoteLogItem from './__CallNoteLogItem'
 import ActionLogItem from './__ActionLogItem'
+import EmailLogItem from './__EmailLogItem'
 
 export default {
   name: 'ActivityLogItem',
-  components: { ActionLogItem, NoteLogItem, CallNoteLogItem },
+  components: { ActionLogItem, NoteLogItem, CallNoteLogItem, EmailLogItem },
   props: {
     log: {
       type: Object,

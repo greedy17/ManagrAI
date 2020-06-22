@@ -1,0 +1,2 @@
+class NylasAPIError(Exception):
+    pass

@@ -23,7 +23,9 @@
           <strong>{{ user.email }}</strong> is synced with your Mangr account.
         </div>
         <div style="margin: 1rem 0">
-          <button class="disconnect" v-if="user.emailConnected" @click="revokeToken">× Disconnect</button>
+          <button class="disconnect" v-if="user.emailConnected" @click="revokeToken">
+            × Disconnect
+          </button>
         </div>
       </div>
     </div>
@@ -33,11 +35,9 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import Nylas from '@/services/nylas'
-import Thread from '@/components/emails/Thread'
 
 export default {
   name: 'EmailIntegration',
-  components: { Thread },
   data() {
     return {
       filterBy: '',
@@ -62,8 +62,8 @@ export default {
         })
     },
     refreshEmails() {
-      Nylas.getUserThreads(this.filterBy).then(response => {
-        this.threads = response.data
+      Nylas.getThreads({ toEmail: this.filterBy }).then(data => {
+        this.threads = data
       })
     },
   },

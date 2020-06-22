@@ -1,21 +1,29 @@
 <template>
   <div class="actions__item">
-    <div class="actions__row">
+    <div class="actions__row" @click="toggleExpanded()" style="cursor: pointer;">
       <div class="actions__item-header-icon">
         <img
           alt="icon"
           :src="require(`@/assets/images/email.svg`)"
-          @click="toggleExpanded()"
           :class="{ 'filter-green': isExpanded }"
           class="icon"
         />
       </div>
       <div class="actions__item-header-title">{{ thread.subject }}</div>
-      <div class="actions__item-header-date">
-        {{ thread.last_message_timestamp | momentDateTimeShort }}
+      <div
+        class="actions__item-header-date"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
+        <span
+          :title="thread.last_message_timestamp | momentDateTimeShort"
+          style="flex: 1; text-align: right;"
+        >
+          {{ (thread.last_message_timestamp * 1000) | timeAgo }}
+        </span>
       </div>
       <div class="actions__item-header-action"></div>
     </div>
+
     <div class="actions__item-header" v-if="!isExpanded">
       <div class="actions__item-header-title">{{ thread.snippet }}</div>
     </div>
@@ -25,19 +33,19 @@
       </div>
       <div v-if="!isLoading">
         <ThreadMessage
+          :lead="lead"
           :message="message"
           @emailSent="emailSent"
-          v-for="(message, index) in messages"
+          v-for="message in firstMessage"
           :key="message.id"
-          v-if="index === 0"
           :initiallyExpanded="true"
         ></ThreadMessage>
         <ThreadMessage
+          :lead="lead"
           :message="message"
           @emailSent="emailSent"
-          v-for="(message, index) in messages"
+          v-for="message in otherMessages"
           :key="message.id"
-          v-if="index > 0"
           :initiallyExpanded="false"
         ></ThreadMessage>
       </div>
@@ -63,6 +71,10 @@ export default {
       required: false,
       default: false,
     },
+    lead: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -76,6 +88,14 @@ export default {
     if (this.initiallyExpanded) {
       this.getThreadMessages(this.thread.id)
     }
+  },
+  computed: {
+    firstMessage() {
+      return this.messages.filter((m, idx) => idx === 0)
+    },
+    otherMessages() {
+      return this.messages.filter((m, idx) => idx > 0)
+    },
   },
   methods: {
     toggleExpanded() {

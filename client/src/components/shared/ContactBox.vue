@@ -79,7 +79,6 @@ export default {
   }
 
   &__contact-circle-container {
-    flex: 1;
     line-height: 1rem;
     background-color: $dark-gray-blue;
     color: $white;

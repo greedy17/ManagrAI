@@ -86,7 +86,11 @@ ACTION_CREATED = "Action.CREATED"
 ACTION_UPDATED = "Action.UPDATED"
 ACTION_DELETED = "Action.DELETED"
 
-# TODO: Add actions for other note types
+# Email-specific events
+SENT = "SENT"
+RECEIVED = "RECEIVED"
+EMAIL_SENT = "LeadEmail.SENT"
+EMAIL_RECEIVED = "LeadEmail.Received"
 
 ACTIVITY_CHOICES = (
     (LEAD_CREATED, "Lead Created",),
@@ -107,9 +111,11 @@ ACTIVITY_CHOICES = (
     (REMINDER_CREATED, "Reminder Created",),
     (REMINDER_UPDATED, "Reminder Updated",),
     (REMINDER_DELETED, "Reminder Deleted",),
-    (ACTION_CREATED, "Action.CREATED",),
-    (ACTION_UPDATED, "Action.UPDATED",),
-    (ACTION_DELETED, "Action.DELETED",),
+    (ACTION_CREATED, "Action Created",),
+    (ACTION_UPDATED, "Action Updated",),
+    (ACTION_DELETED, "Action Deleted",),
+    (EMAIL_SENT, "Email Sent",),
+    (EMAIL_RECEIVED, "Email Received",),
 )
 
 NOTIFICATION_ACTION_SNOOZE = "SNOOZE"

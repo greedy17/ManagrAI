@@ -72,24 +72,30 @@
     <div class="form__element" v-if="emailTemplates.length > 0">
       <div class="form__element-header">Templates</div>
       <select class="form__select" v-model="activeTemplate" @change="updateBodyWithTemplate">
-        <option :value="template" v-for="template in emailTemplates" :key="template.id">{{
-          template.name
-        }}</option>
+        <option :value="template" v-for="template in emailTemplates" :key="template.id">
+          {{ template.name }}
+        </option>
       </select>
     </div>
-    <div class="flexbox-container" style="margin-top: 1rem; justify-content: space-between">
-      <button class="button" @click="previewEmail">Preview Email</button>
-      <button class="button" @click="sendEmail">Send Email</button>
+
+    <div class="flexbox-container" style="margin: 1rem 0; justify-content: space-between">
+      <button class="button" @click="previewEmail">
+        <ComponentLoadingSVG v-if="refreshingPreview" />
+        <span v-if="!refreshingPreview">Preview Email</span>
+      </button>
+      <button class="button" @click="sendEmail">
+        <ComponentLoadingSVG v-if="sendingEmail" />
+        <span v-if="!sendingEmail">Send Email</span>
+      </button>
     </div>
+
     <div class="box" v-if="previewActive">
       <div class="box__header">
         <div class="box__content">
           <strong>{{ preview.subject }}</strong>
         </div>
       </div>
-      <div class="box__content">
-        {{ preview.body }}
-      </div>
+      <div class="box__content" v-html="preview.body"></div>
     </div>
   </div>
 </template>
@@ -121,9 +127,7 @@ export default {
     },
     lead: {
       type: Object,
-      default: () => {
-        return {}
-      },
+      required: true,
     },
   },
   data() {
@@ -134,6 +138,8 @@ export default {
       previewActive: false,
       replyActive: true,
       replyAllActive: false,
+
+      //
       subject: '',
       body: '',
       toEmails: [],
@@ -147,6 +153,10 @@ export default {
         name: '',
         company: '',
       },
+
+      //
+      refreshingPreview: false,
+      sendingEmail: false,
     }
   },
   computed: {
@@ -160,6 +170,7 @@ export default {
   },
   created() {
     if (this.replyMessage && this.replyMessage.from) {
+      this.subject = this.replyMessage.subject
       this.replyMessageId = this.replyMessage.id
       this.updateToReply()
     }
@@ -167,6 +178,31 @@ export default {
     this.getEmailTemplates()
   },
   methods: {
+    /**
+     * Reset the form on a successful submission.
+     */
+    resetForm() {
+      this.body = ''
+      this.toEmails = []
+      this.ccEmails = []
+      this.bccEmails = []
+      this.files = []
+      this.filesLoading = false
+      this.uploadFile = {}
+      this.variables = {
+        name: '',
+        company: '',
+      }
+
+      if (this.replyMessage && this.replyMessage.from) {
+        this.subject = this.replyMessage.subject
+        this.replyMessageId = this.replyMessage.id
+        this.updateToReply()
+      } else {
+        this.subject = ''
+        this.replyMessageId = ''
+      }
+    },
     populateTemplateVariables() {
       // This is a function to populate the template variables that are passed along to Nylas.
       if (this.lead.accountRef && this.lead.accountRef.name) {
@@ -262,17 +298,19 @@ export default {
       })
     },
     sendEmail() {
+      this.sendingEmail = true
       this.populateTemplateVariables()
-      Nylas.sendEmail(
-        this.toEmails,
-        this.subject,
-        this.body,
-        this.ccEmails,
-        this.bccEmails,
-        this.replyMessageId,
-        this.fileIds,
-        this.variables,
-      )
+      Nylas.sendEmail({
+        to: this.toEmails,
+        lead: this.lead.id,
+        subject: this.subject,
+        body: this.body,
+        ccEmails: this.ccEmails,
+        bccEmails: this.bccEmails,
+        replyMessageId: this.replyMessageId,
+        fileIds: this.fileIds,
+        variables: this.variables,
+      })
         .then(() => {
           this.$Alert.alert({
             type: 'success',
@@ -283,20 +321,25 @@ export default {
         .then(() => {
           this.$emit('emailSent')
         })
+        .finally(() => {
+          this.resetForm()
+          this.sendingEmail = false
+        })
     },
     previewEmail() {
       this.populateTemplateVariables()
       this.previewActive = true
-      Nylas.previewEmail(
-        this.toEmails,
-        this.subject,
-        this.body,
-        this.ccEmails,
-        this.bccEmails,
-        this.replyMessageId,
-        this.fileIds,
-        this.variables,
-      ).then(response => {
+      Nylas.previewEmail({
+        to: this.toEmails,
+        subject: this.subject,
+        body: this.body,
+        lead: this.lead.id,
+        cc: this.ccEmails,
+        bcc: this.bccEmails,
+        replyMessageId: this.replyMessageId,
+        fileIds: this.fileIds,
+        variables: this.variables,
+      }).then(response => {
         this.preview = response.data
       })
     },
@@ -305,11 +348,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables';
 @import '@/styles/layout';
 @import '@/styles/containers';
 @import '@/styles/forms';
 @import '@/styles/emails';
 @import '@/styles/mixins/inputs';
+
 .filter-green {
   filter: invert(45%) sepia(96%) saturate(2978%) hue-rotate(123deg) brightness(92%) contrast(80%);
 }

@@ -155,3 +155,11 @@ class ActionActionConsumer(BaseActionConsumer):
     def get_lead(self):
         obj = self.get_object()
         return obj.lead
+
+
+class LeadEmailActionConsumer(BaseActionConsumer):
+    model_class = lead_models.LeadEmail
+
+    def get_lead(self):
+        obj = self.get_object()
+        return obj.lead

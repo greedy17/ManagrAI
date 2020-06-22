@@ -30,26 +30,46 @@
           @updated-secondary-description="updateSecondaryDescription"
         />
       </div>
-      <div class="item-list">
-        <div class="item-list__header">
-          <span class="item-list__title">History</span>
+
+      <!-- Lead History and Emails -->
+      <div class="box">
+        <div class="box__tab-header">
+          <div
+            class="box__tab"
+            :class="{ 'box__tab--active': activityTabSelected === HISTORY }"
+            @click="
+              () => {
+                activityTabSelected = HISTORY
+              }
+            "
+          >
+            History
+          </div>
+          <div
+            class="box__tab"
+            :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
+            @click="
+              () => {
+                activityTabSelected = EMAILS
+              }
+            "
+          >
+            Email
+          </div>
         </div>
 
-        <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
+        <div v-show="activityTabSelected === HISTORY" class="box__content">
+          <LeadHistory :lead="lead" />
+        </div>
 
-        <button
-          class="primary-button"
-          @click="addHistoryPage"
-          v-if="history.pagination.hasNextPage"
-          style="margin: 1rem"
-        >
-          Load More
-        </button>
+        <div v-show="activityTabSelected === EMAILS" class="box__content">
+          <LeadEmails :lead="lead" />
+        </div>
       </div>
     </div>
 
     <div class="page__right-panel">
-      <LeadInsights :insights="insights" />
+      <LeadInsights :lead="lead" />
     </div>
   </div>
 </template>
@@ -63,13 +83,15 @@ import LeadInsights from '@/components/shared/LeadInsights'
 
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
-import LeadActivityLog from '@/services/leadActivityLogs'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import Forecast from '@/services/forecasts'
 
-import ActivityLogItem from './_ActivityLogItem'
+import LeadHistory from './_LeadHistory'
+import LeadEmails from './_LeadEmails'
 
+const HISTORY = 'HISTORY'
+const EMAILS = 'EMAILS'
 const EDIT_STATE = 'create'
 const VIEW_STATE = 'view'
 
@@ -82,7 +104,8 @@ export default {
     LeadActions,
     PinnedNotes,
     LeadInsights,
-    ActivityLogItem,
+    LeadHistory,
+    LeadEmails,
   },
   data() {
     return {
@@ -102,13 +125,12 @@ export default {
           byLead: this.id,
         },
       }),
-      history: CollectionManager.create({
-        ModelClass: LeadActivityLog,
-        filters: {
-          lead: this.id,
-        },
-      }),
       insights: null,
+
+      // Past Activity Area
+      HISTORY,
+      EMAILS,
+      activityTabSelected: HISTORY,
     }
   },
   async created() {
@@ -118,38 +140,8 @@ export default {
       this.contacts = res[2]
       this.loading = false
     })
-
-    // Start polling for history
-    // TODO: If this starts failing for any reason, it will start pumping out
-    //       error messages, so we might want to clear or extend the interval
-    //       if that happens.
-    this.pollingInterval = setInterval(this.refreshHistory, 2000)
-  },
-  destroyed() {
-    clearInterval(this.pollingInterval)
   },
   methods: {
-    refreshHistory() {
-      this.history.refresh()
-
-      LeadActivityLog.api
-        .getInsights({
-          filters: {
-            lead: this.id,
-          },
-        })
-        .then(result => {
-          this.insights = result
-        })
-    },
-    addHistoryPage() {
-      // TODO: This conflicts with polling, so we'll have to figure
-      //       out how to handle that. For now, we disable polling
-      //       if the user loads the next page, because they are
-      //       looking for something old, not new.
-      clearInterval(this.pollingInterval)
-      this.history.addNextPage()
-    },
     retrieveLead() {
       this.loading = true
       return Lead.api.retrieve(this.id)

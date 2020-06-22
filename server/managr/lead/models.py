@@ -1,9 +1,11 @@
+import uuid
+
 from django.db import models
 from django.db.models import F, Q, Count
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 
-from managr.core.models import UserManager, TimeStampModel, STATE_ACTIVE
+from managr.core.models import TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
 from . import constants as lead_constants
 
@@ -28,7 +30,8 @@ class Lead(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
-        help_text="This field is set at close and non-editable", default=0)
+        help_text="This field is set at close and non-editable", default=0
+    )
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
     rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
@@ -452,4 +455,43 @@ class Action(TimeStampModel):
                 {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
+        }
+
+
+class LeadEmail(models.Model):
+    """Tie a lead to a Nylas email thread."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    datetime_created = models.DateTimeField(auto_now_add=True)
+    last_edited = models.DateTimeField(auto_now=True)
+
+    created_by = models.ForeignKey(
+        "core.User",
+        related_name="created_email_threads",
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    lead = models.ForeignKey(
+        "Lead",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+        related_name="email_threads",
+    )
+
+    thread_id = models.CharField(max_length=128)
+
+    @property
+    def activity_log_meta(self):
+        """A metadata dict for activity logs"""
+        return {
+            "id": str(self.id),
+            "lead": str(self.lead.id),
+            "thread_id": self.thread_id,
+            "created_by": str(self.created_by.id),
+            "created_by_ref": {
+                "id": str(self.created_by.id),
+                "full_name": self.created_by.full_name,
+            },
         }

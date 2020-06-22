@@ -1,14 +1,15 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login
 import requests
-from django.db import transaction
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from managr.core.integrations import get_access_token, get_account_details
+
+from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
+from django.shortcuts import render
+from django.contrib.auth import authenticate, login
 
+from managr.core.nylas.auth import get_access_token, get_account_details
 
 from rest_framework import (
     authentication,
@@ -42,14 +43,14 @@ from .serializers import (
     UserLoginSerializer,
     UserInvitationSerializer,
     EmailTemplateSerializer,
+    EmailSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 from managr.organization.models import Organization
 
-from .integrations import (
-    send_new_email,
+from .nylas.emails import (
     send_new_email_legacy,
-    retrieve_user_threads,
+    retrieve_threads,
     retrieve_messages,
     generate_preview_email_data,
     return_file_id_from_nylas,
@@ -196,18 +197,22 @@ class UserViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(
-        methods=["post"],
+        methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="threads",
     )
     def threads(self, request, *args, **kwargs):
-        """
-        Allows a user to retrieve all of a user's email threads from the connected Nylas account.
+        """Retrieve all of the user's email threads from the connected Nylas account.
+
+        Supported Query Parameters:
+            page (int):        Page of results to retrieve.
+            page_size (int):   Size of each page of results.
+            to_email (str):    Single email.
+            any_email (str):   Comma-separated list of emails.
         """
         user = request.user
-        to_email = request.data.get("to_email", None)
-        threads = retrieve_user_threads(user, to_email)
+        threads = retrieve_threads(user, **request.query_params.dict())
         return Response(threads)
 
     @action(
@@ -217,10 +222,7 @@ class UserViewSet(
         url_path="thread-messages",
     )
     def thread_messages(self, request, *args, **kwargs):
-        """
-        Allows a user to retrieve all of a user's messages for a specific thread
-        from the connected Nylas account.
-        """
+        """Retrieve all of a user's messages for a specific thread."""
         user = request.user
         thread_id = request.data.get("threadId", None)
         messages = retrieve_messages(user, thread_id)
@@ -236,33 +238,11 @@ class UserViewSet(
         """
         Sends an email from the requesting user's email address
         """
-        user = request.user
+        serializer = EmailSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.send()
 
-        # TODO: This is so clunky -- I should replace this with a class.
-
-        sender = user
-        subject = request.data.get("subject")
-        body = request.data.get("body")
-        recipient_emails = request.data.get("to")
-        cc_emails = request.data.get("cc", None)
-        bcc_emails = request.data.get("bcc", None)
-        reply_to_message_id = request.data.get("reply_to_message_id", None)
-        file_ids = request.data.get("file_ids", None)
-        variables = request.data.get("variables", None)
-
-        send_new_email(
-            sender,
-            recipient_emails,
-            subject=subject,
-            body=body,
-            cc_emails=cc_emails,
-            bcc_emails=bcc_emails,
-            reply_to_message_id=reply_to_message_id,
-            file_ids=file_ids,
-            variables=variables,
-        )
-
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=["post"],
@@ -271,31 +251,10 @@ class UserViewSet(
         url_path="preview-email",
     )
     def preview_email(self, request, *args, **kwargs):
-        """
-        Sends an email from the requesting user's email address
-        """
-        user = request.user
-
-        sender = user
-        subject = request.data.get("subject")
-        body = request.data.get("body")
-        recipient_emails = request.data.get("to")
-        cc_emails = request.data.get("cc", None)
-        bcc_emails = request.data.get("bcc", None)
-        reply_to_message_id = request.data.get("reply_to_message_id", None)
-        variables = request.data.get("variables", None)
-
-        preview_data = generate_preview_email_data(
-            sender,
-            recipient_emails,
-            subject=subject,
-            body=body,
-            cc_emails=cc_emails,
-            bcc_emails=bcc_emails,
-            reply_to_message_id=reply_to_message_id,
-            variables=variables,
-        )
-
+        """Render the email based on provided context and return the result."""
+        serializer = EmailSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        preview_data = serializer.preview()
         return Response(preview_data, status=status.HTTP_200_OK)
 
     @action(
