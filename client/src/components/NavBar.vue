@@ -5,7 +5,7 @@
         <span class="name">managr</span>
       </div>
       <div v-if="userIsLoggedIn" class="links">
-        <NavLink icon="leads" :to="'LeadsIndex'">Leads</NavLink>
+        <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
         <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>

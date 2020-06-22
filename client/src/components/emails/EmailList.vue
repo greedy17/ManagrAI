@@ -22,7 +22,7 @@
           v-if="lead.linkedContactsRef"
           @click="showLeadContacts = !showLeadContacts"
         >
-          Lead Contacts
+          Opportunity Contacts
         </div>
         <div
           :class="{ 'box__tab--active': !showLeadContacts, box__tab: showLeadContacts }"
@@ -36,7 +36,7 @@
         <div class="form__element">
           <div class="form__element-header">Name</div>
           <select class="form__select" v-model="selectedContact">
-            <option :value="null">Select Contact From Lead</option>
+            <option :value="null">Select Contact From Opportunity</option>
             <option v-for="contact in lead.linkedContactsRef" :value="contact" :key="contact.id">{{
               contact.full_name
             }}</option>

@@ -35,6 +35,9 @@ export const ACTION_CREATED = 'Action.CREATED'
 export const ACTION_UPDATED = 'Action.UPDATED'
 export const ACTION_DELETED = 'Action.DELETED'
 
+export const EMAIL_SENT = 'LeadEmail.SENT'
+export const EMAIL_RECEIVED = 'LeadEmail.RECEIVED'
+
 export default {
   CREATED,
   UPDATED,
@@ -63,4 +66,6 @@ export default {
   ACTION_CREATED,
   ACTION_UPDATED,
   ACTION_DELETED,
+  EMAIL_SENT,
+  EMAIL_RECEIVED,
 }

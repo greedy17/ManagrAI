@@ -30,7 +30,7 @@
         <textarea v-model="note" class="bordered" placeholder="Input note" />
       </div>
       <div class="cta-container">
-        <button type="submit" class="cta">Close Lead</button>
+        <button type="submit" class="cta">Close Opportunity</button>
       </div>
     </form>
   </div>
@@ -91,7 +91,7 @@ export default {
           this.$Alert.alert({
             type: 'success',
             timeout: 4000,
-            message: 'Success! Lead closed!',
+            message: 'Success! Opportunity closed!',
           })
         })
     },

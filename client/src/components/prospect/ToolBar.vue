@@ -1,14 +1,14 @@
 <template>
   <div class="toolbar">
     <button class="new-lead" @click="routeToLeadsNew">
-      New Lead
+      New Opportunity
     </button>
     <div class="kpi-container">
       <div class="header section-shadow">
         Filter
       </div>
       <form @submit.prevent="onSearchFilter">
-        <label>Filter by Lead Title</label>
+        <label>Filter by Opportunity Title</label>
         <input v-model="searchTerm" />
         <div v-if="activeSearchTerm">
           <span class="help-text">Currently active: "{{ activeSearchTerm }}"</span>

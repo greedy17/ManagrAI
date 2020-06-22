@@ -5,7 +5,11 @@
       <span class="account-title">{{ account.name }}</span>
       <span class="leads-count">
         {{ collection.pagination.totalCount }}
-        {{ collection.pagination.totalCount === 1 ? 'Lead' : 'Leads' }}
+        {{
+          collection.pagination.totalCount > 1 || collection.pagination.totalCount === 0
+            ? 'Opportunities'
+            : 'Opportunity'
+        }}
       </span>
     </div>
     <div class="leads-container" v-if="showLeads">
@@ -17,7 +21,7 @@
           :collection="collection"
         />
       </div>
-      <div v-else class="no-items-message">No Leads for this account</div>
+      <div v-else class="no-items-message">No Opportunities for this account</div>
     </div>
   </div>
 </template>

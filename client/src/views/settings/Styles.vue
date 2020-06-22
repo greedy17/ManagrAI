@@ -360,31 +360,33 @@
           <h2>
             Full Width Action Callout (flexbox)
           </h2>
-          <div class="action-callout">You are viewing a lead owned by:&nbsp<b>Mike Jones</b></div>
+          <div class="action-callout">
+            You are viewing a opportunity owned by:&nbsp<b>Mike Jones</b>
+          </div>
           <h2>
-            Lead Lists
+            Opportunity Lists
           </h2>
           <div class="lead-row lead-row--list">
             <div class="lead-row__title">
-              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+              <img src="@/assets/images/add.svg" alt="add icon" /> Opportunity List Name
             </div>
-            <div class="lead-row__title">Number of Leads</div>
+            <div class="lead-row__title">Number of Opportunity</div>
           </div>
           <div class="lead-row lead-row--list">
             <div class="lead-row__title">
-              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+              <img src="@/assets/images/add.svg" alt="add icon" /> Opportunity List Name
             </div>
-            <div class="lead-row__title">Number of Leads</div>
+            <div class="lead-row__title">Number of Opportunity</div>
           </div>
           <div class="lead-row lead-row--list">
             <div class="lead-row__title">
-              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+              <img src="@/assets/images/add.svg" alt="add icon" /> Opportunity List Name
             </div>
-            <div class="lead-row__title">Number of Leads</div>
+            <div class="lead-row__title">Number of Opportunity</div>
           </div>
 
           <div class="lead-row">
-            <div class="lead-row__title">Lead Name</div>
+            <div class="lead-row__title">Opportunity Name</div>
             <div class="lead-row__item--double">Summary (double)</div>
             <div class="lead-row__item">$500</div>
             <div class="lead-row__item">3/4/20</div>
@@ -395,7 +397,7 @@
             </div>
           </div>
           <div class="lead-row lead-row--gray">
-            <div class="lead-row__title">Lead with tags</div>
+            <div class="lead-row__title">Opportunity with tags</div>
 
             <div class="lead-row__item--double">
               <div class="tag">Tag 1</div>
@@ -410,7 +412,7 @@
             </div>
           </div>
           <div class="lead-row lead-row--red">
-            <div class="lead-row__title">Lead with Input Box</div>
+            <div class="lead-row__title">Opportunity with Input Box</div>
             <div class="lead-row__item--double">Summary (double)</div>
             <div class="lead-row__item">$500</div>
             <div class="lead-row__item">3/4/20</div>

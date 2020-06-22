@@ -8,7 +8,7 @@
         <LeadInsights :lead="lead" />
       </div> -->
     </div>
-    <div class="route-to-detail" @click="routeToLeadDetail">See Lead Detail</div>
+    <div class="route-to-detail" @click="routeToLeadDetail">See Opportunity Detail</div>
   </div>
 </template>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="form-steps">
     <div class="header section-shadow">
-      Add a Lead
+      Add an Opportunity
     </div>
     <div class="step">
       <span class="title">Step 1</span>

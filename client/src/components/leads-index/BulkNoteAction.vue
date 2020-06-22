@@ -78,7 +78,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,
-          message: 'Notes logged for selected leads!',
+          message: 'Notes logged for selected opportunities!',
         })
         this.$parent.$emit('bulk-success')
       })

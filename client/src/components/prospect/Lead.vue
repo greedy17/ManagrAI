@@ -57,7 +57,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
-          message: `Claimed Lead titled '${this.lead.title}' of Account '${this.lead.accountRef.name}'.`,
+          message: `Claimed Opportunity titled '${this.lead.title}' of Account '${this.lead.accountRef.name}'.`,
         })
       })
     },

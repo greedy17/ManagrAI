@@ -3,7 +3,10 @@
     <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ title }} </span>
-      <span class="list-length"> {{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="list-length">
+        {{ numOfLeads }}
+        {{ numOfLeads > 1 || numOfLeads === 0 ? 'Opportunities' : 'Opportunity' }}
+      </span>
       <span class="list-value">{{ totalValue | currency }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">

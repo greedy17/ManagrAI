@@ -24,8 +24,8 @@
       />
       <CustomList
         :collection="allLeadsCollection"
-        key="All Leads"
-        title="All Leads"
+        key="All Opportunities"
+        title="All Opportunities"
         @refresh-collections="$emit('refresh-collections')"
       />
       <CreateList @list-created="emitListCreated" />
@@ -98,7 +98,7 @@ export default {
         case 'List View':
           this.listView = true
           break
-        case 'Lead View':
+        case 'Opportunity View':
           this.listView = false
       }
     },

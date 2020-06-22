@@ -189,7 +189,7 @@ export default {
         })
         .then(lead => {
           this.lead = lead
-          let message = `<div>Success! Lead reset.</div>`
+          let message = `<div>Success! Opportunity reset.</div>`
           this.$Alert.alert({
             type: 'success',
             message,
@@ -200,7 +200,7 @@ export default {
     claimLead() {
       Lead.api.claim(this.lead.id).then(() => {
         this.lead.claimedBy = this.$store.state.user.id
-        let message = `<div>Lead claimed!</div>`
+        let message = `<div>Opportunity claimed!</div>`
         this.$Alert.alert({
           type: 'success',
           message,
@@ -210,7 +210,7 @@ export default {
     },
     releaseLead() {
       Lead.api.unclaim(this.lead.id).then(() => {
-        let message = `<div>Success! Lead released.</div>`
+        let message = `<div>Success! Opportunity released.</div>`
         this.$Alert.alert({
           type: 'success',
           message,

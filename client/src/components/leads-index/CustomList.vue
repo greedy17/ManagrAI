@@ -3,7 +3,10 @@
     <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title">{{ title }}</span>
-      <span class="list-length">{{ numOfLeads }} {{ numOfLeads === 1 ? 'Lead' : 'Leads' }}</span>
+      <span class="list-length">
+        {{ numOfLeads }}
+        {{ numOfLeads > 1 || numOfLeads === 0 ? 'Opportunities' : 'Opportunity' }}
+      </span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing" />
@@ -45,7 +48,9 @@
             />
           </span>
         </div>
-        <span v-if="collection.list.length <= 0" class="no-items-message">No Leads On List</span>
+        <span v-if="collection.list.length <= 0" class="no-items-message">
+          No Opportunities On List
+        </span>
       </template>
       <LoadMoreButton
         v-if="!collection.refreshing && !!collection.pagination.next"

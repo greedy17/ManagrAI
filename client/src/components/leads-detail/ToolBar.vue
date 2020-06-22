@@ -1,6 +1,6 @@
 <template>
   <div class="toolbar">
-    <!-- Hidding WIP as Marcy requested PB 05/15/2020    
+    <!-- Hidding WIP as Marcy requested PB 05/15/2020
    <div class="top-menu">
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
@@ -39,7 +39,7 @@
                 <span class="list-items__item">{{ list.title }}</span>
               </span>
             </div>
-            <h5>To remove Lead from all lists, leave all checkboxes blank</h5>
+            <h5>To remove Opportunity from all lists, leave all checkboxes blank</h5>
             <div :style="{ display: 'flex', flexFlow: 'row' }">
               <button class="update-lists" @click="onUpdateLists">Save</button>
             </div>

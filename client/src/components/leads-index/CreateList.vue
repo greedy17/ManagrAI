@@ -5,7 +5,7 @@
       <form @submit.prevent="createList">
         <input ref="input" v-model="title" type="text" placeholder="Enter List Name" />
       </form>
-      <span class="list-length">No Leads</span>
+      <span class="list-length">No Opportunities</span>
       <button class="cancel" @click="resetForm">Cancel</button>
       <button class="save" @click="createList">Save</button>
     </div>
@@ -28,7 +28,7 @@ export default {
         return
       }
 
-      List.api.create(this.title).then((response) => {
+      List.api.create(this.title).then(response => {
         this.resetForm()
         this.$refs.input.blur()
         this.$emit('list-created', response.data)

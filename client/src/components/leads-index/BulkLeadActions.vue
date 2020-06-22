@@ -11,7 +11,8 @@
         {{ tab }}
       </ActionTabHeader>
       <div class="acting-on-leads">
-        Acting on {{ leads.length }} {{ leads.length == 1 ? 'Lead' : 'Leads' }}
+        Acting on {{ leads.length }}
+        {{ leads.length > 1 || leads.length === 0 ? 'Opportunities' : 'Opportunity' }}
       </div>
     </div>
 
@@ -25,7 +26,7 @@
       <div v-if="activeTab == 2">
         <ComponentLoadingSVG v-if="lists.refreshing" />
         <template v-else>
-          Move all selected Leads to the following Lists:
+          Move all selected Opportunities to the following Lists:
           <div v-for="list in lists.list" :key="list.id" class="list-items">
             <span
               class="list-items__item__select"
@@ -39,9 +40,9 @@
               <span class="list-items__item">{{ list.title }}</span>
             </span>
           </div>
-          <h5>To remove leads from all lists, leave all checkboxes blank</h5>
+          <h5>To remove opportunities from all lists, leave all checkboxes blank</h5>
           <div :style="{ display: 'flex', flexFlow: 'row' }">
-            <button class="on-bulk-move" @click="onBulkMove">Bulk Move Leads</button>
+            <button class="on-bulk-move" @click="onBulkMove">Bulk Move Opportunities</button>
           </div>
         </template>
       </div>
@@ -112,7 +113,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 4000,
-          message: 'Leads moved!',
+          message: 'Opportunities moved!',
         })
         this.selectedLists = {}
         this.$emit('bulk-move-success')

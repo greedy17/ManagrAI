@@ -4,14 +4,14 @@
       <div class="errors">
         <!-- client side validations -->
         <div v-if="isFormValid !== null && !isFormValid && errors.leadTitleIsBlank">
-          Lead Title may not be blank.
+          Opportunity Title may not be blank.
         </div>
         <div v-if="isFormValid !== null && !isFormValid && errors.accountNotSelected">
           Account must be selected.
         </div>
       </div>
       <div class="form-field">
-        <label>Lead Title</label>
+        <label>Opportunity Title</label>
         <input
           v-model="leadTitle"
           :disabled="currentStep > 1"
