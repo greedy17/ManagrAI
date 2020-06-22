@@ -109,29 +109,17 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
         u = request.user
         d = request.data
         contacts = d.get('contacts', [])
-        contacts_added = list()
         leads = d.get('leads', [])
+        for_payload = None
         for (index, lead)in enumerate(leads):
-            for contact in contacts:
-                try:
-                    l = Lead.objects.get(pk=lead)
-                except (V, Lead.DoesNotExist, ValueError,):
-                    # if any exceptions of the 3 above occur remove the lead from the list and continue
-                    # with the rest
-                    del leads[index]
-                    l = None
-                    pass
-                if l:
-                    try:
-                        l.linked_contacts.add(contact)
-                        l.save()
-                        contacts_added.append(contact)
-                    except IntegrityError:
-                        # passing the integrity error, it is triggered if a contact already exists on a user
-                        # it means that a contact is already added to this user
-                        pass
-
-        return Response(data={'linked_contacts_added': contacts_added})
+            try:
+                l = Lead.objects.get(pk=lead)
+                l.linked_contacts.set(contacts)
+                for_payload = l.linked_contacts
+            except (V, Lead.DoesNotExist, ValueError,):
+                pass
+        payload = [ContactSerializer(c).data for c in for_payload.all()]
+        return Response(data=payload)
 
     @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="remove-from-lead")
     def remove_from_lead(self, request, *args, **kwargs):

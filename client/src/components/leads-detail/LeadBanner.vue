@@ -11,8 +11,8 @@
     </div>
     <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser" />
     <div class="days-in-status-container">
-      <span class="days-in-status-label">Days In Stage</span>
-      <span class="days-in-status">7 Days</span>
+      <span class="days-in-status-label">Time In Stage</span>
+      <span class="days-in-status">{{ this.lead.statusLastUpdate | timeToNow }}</span>
     </div>
     <div class="banner-buttons">
       <div v-if="isOwnedByUser" class="banner-button" @click="emitReset">

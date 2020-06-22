@@ -146,6 +146,7 @@ class FileSerializer(serializers.ModelSerializer):
             "uploaded_by",
             "lead",
             "file",
+            "filename"
         )
 
 
@@ -306,6 +307,7 @@ class LeadSerializer(serializers.ModelSerializer):
     linked_contacts_ref = ContactSerializer(
         source="linked_contacts", read_only=True, many=True
     )
+    files_ref = FileSerializer(source="files", read_only=True, many=True)
 
     class Meta:
         model = Lead
@@ -318,6 +320,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "secondary_description",
             "rating",
             "status",
+            "status_last_update",
             "account",
             "account_ref",
             "created_by",
@@ -335,6 +338,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "actions",
             "actions_ref",
             "files",
+            "files_ref",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the
         # create/update/delete end points for forecasts

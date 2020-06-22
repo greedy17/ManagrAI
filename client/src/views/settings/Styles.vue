@@ -37,7 +37,7 @@
               Update Date
             </div>
             <div class="filter-box__section-header-icon">
-              [+]
+              <img src="@/assets/images/add.svg" alt="add icon" />
             </div>
           </div>
           <div class="filter-box__section-row">
@@ -56,29 +56,29 @@
               Review Icons
             </div>
             <div class="filter-box__section-header-icon">
-              [+]
+              <img src="@/assets/images/add.svg" alt="add icon" />
             </div>
           </div>
           <div class="filter-box__section-row-icons">
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
           </div>
           <div class="filter-box__section-row-icons">
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[O]</div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star_outline.svg" alt="star outline icon" /></div>
           </div>
           <div class="filter-box__section-row-icons">
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[X]</div>
-            <div>[O]</div>
-            <div>[O]</div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star.svg" alt="star icon" /></div>
+            <div><img src="@/assets/images/star_outline.svg" alt="star outline icon" /></div>
+            <div><img src="@/assets/images/star_outline.svg" alt="star outline icon" /></div>
           </div>
         </div>
         <div class="filter-box__section">
@@ -324,7 +324,9 @@
               <div class="action-item">
                 <div class="action-item__header">
                   <span class="title">This is the title</span>
-                  <span class="action-item__title">[+]</span>
+                  <span class="action-item__title">
+                    <img src="@/assets/images/add.svg" alt="add icon" />
+                  </span>
                 </div>
                 <div class="action-item__content">
                   <div class="content">
@@ -341,7 +343,9 @@
               <div class="action-item">
                 <div class="action-item__header">
                   <span class="title">This is the title</span>
-                  <span class="action-item__title">[+]</span>
+                  <span class="action-item__title">
+                    <img src="@/assets/images/add.svg" alt="add icon" />
+                  </span>
                 </div>
                 <div class="action-item__content">
                   Or maybe you don't? Lorem ipsum dolor sit amet consectetur adipisicing elit.
@@ -361,15 +365,21 @@
             Lead Lists
           </h2>
           <div class="lead-row lead-row--list">
-            <div class="lead-row__title">[+] Lead List Name</div>
+            <div class="lead-row__title">
+              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+            </div>
             <div class="lead-row__title">Number of Leads</div>
           </div>
           <div class="lead-row lead-row--list">
-            <div class="lead-row__title">[+] Lead List Name</div>
+            <div class="lead-row__title">
+              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+            </div>
             <div class="lead-row__title">Number of Leads</div>
           </div>
           <div class="lead-row lead-row--list">
-            <div class="lead-row__title">[+] Lead List Name</div>
+            <div class="lead-row__title">
+              <img src="@/assets/images/add.svg" alt="add icon" /> Lead List Name
+            </div>
             <div class="lead-row__title">Number of Leads</div>
           </div>
 
@@ -380,7 +390,9 @@
             <div class="lead-row__item">3/4/20</div>
             <div class="lead-row__item"><button class="button">Button</button></div>
             <div class="lead-row__item"><button class="button">Button</button></div>
-            <div class="lead-row__item--half">[+]</div>
+            <div class="lead-row__item--half">
+              <img src="@/assets/images/add.svg" alt="add icon" />
+            </div>
           </div>
           <div class="lead-row lead-row--gray">
             <div class="lead-row__title">Lead with tags</div>
@@ -393,7 +405,9 @@
             <div class="lead-row__item">04/05/20</div>
             <div class="lead-row__item"><button class="button">Button</button></div>
             <div class="lead-row__item"><button class="button">Button</button></div>
-            <div class="lead-row__item--half">[+]</div>
+            <div class="lead-row__item--half">
+              <img src="@/assets/images/add.svg" alt="add icon" />
+            </div>
           </div>
           <div class="lead-row lead-row--red">
             <div class="lead-row__title">Lead with Input Box</div>
@@ -521,21 +535,27 @@
           <div class="box__title">Test</div>
         </div>
         <div class="box__panel-row">
-          <div class="box__panel-row-icon">[+]</div>
+          <div class="box__panel-row-icon">
+            <img src="@/assets/images/add.svg" alt="add icon" />
+          </div>
           <div class="box__panel-row-content">
             <span class="is-title">Title</span>
             <span class="is-subtitle">Summary Text</span>
           </div>
         </div>
         <div class="box__panel-row">
-          <div class="box__panel-row-icon">[+]</div>
+          <div class="box__panel-row-icon">
+            <img src="@/assets/images/add.svg" alt="add icon" />
+          </div>
           <div class="box__panel-row-content">
             <span class="is-title">Title</span>
             <span class="is-subtitle">Summary Text</span>
           </div>
         </div>
         <div class="box__panel-row">
-          <div class="box__panel-row-icon">[+]</div>
+          <div class="box__panel-row-icon">
+            <img src="@/assets/images/add.svg" alt="add icon" />
+          </div>
           <div class="box__panel-row-content">
             <span class="is-title">Title</span>
             <span class="is-subtitle">Summary Text</span>

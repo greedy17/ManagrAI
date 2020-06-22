@@ -19,22 +19,32 @@
         >
           Email Templates
         </div>
-        <div
+        <!-- NOTE (Bruno 6-19-2020) hiding email-test page -->
+        <!-- <div
           class="toolbar__row"
           @click="toggleActivePage('emailTest')"
           :class="{ toolbar__active: emailTestActive }"
         >
           Email Test
-        </div>
+        </div> -->
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
+        <div class="toolbar__row" @click="toggleActivePage('profile')">
+          Profile
+        </div>
+        <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
+        <!-- <div class="toolbar__row" @click="toggleActivePage('password')">
+          Password
+        </div> -->
       </div>
     </div>
     <div class="page__main-content-area">
       <EmailIntegration v-if="emailIntegrationActive"></EmailIntegration>
       <EmailTemplates v-if="emailTemplatesActive"></EmailTemplates>
       <EmailTest v-if="emailTestActive"></EmailTest>
+      <Profile v-if="profileActive"></Profile>
+      <Password v-if="passwordActive"></Password>
     </div>
   </div>
 </template>
@@ -43,6 +53,8 @@
 import EmailTest from '@/components/settings/EmailTest'
 import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
+import Profile from '@/components/settings/Profile'
+import Password from '@/components/settings/Password'
 
 export default {
   name: 'Settings',
@@ -50,12 +62,16 @@ export default {
     EmailIntegration,
     EmailTemplates,
     EmailTest,
+    Profile,
+    Password,
   },
   data() {
     return {
-      emailIntegrationActive: false,
+      emailIntegrationActive: true,
       emailTemplatesActive: false,
-      emailTestActive: true,
+      emailTestActive: false,
+      profileActive: false,
+      passwordActive: false,
     }
   },
   methods: {
@@ -63,9 +79,13 @@ export default {
       this.emailIntegrationActive = false
       this.emailTemplatesActive = false
       this.emailTestActive = false
+      this.profileActive = false
+      this.passwordActive = false
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
       if (pageToActivate === 'emailTest') this.emailTestActive = true
+      if (pageToActivate === 'profile') this.profileActive = true
+      if (pageToActivate === 'password') this.passwordActive = true
     },
     routeToInviteUser() {
       this.$router.push({ name: 'Invite' })

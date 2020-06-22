@@ -1,12 +1,13 @@
 <template>
-  <PageLoadingSVG v-if="loading" />
+  <div v-if="loading" class="page">
+    <ComponentLoadingSVG style="margin-top: 5rem;" />
+  </div>
   <div v-else class="page">
     <div class="page__left-nav-bar">
       <ToolBar
         :lead="lead"
         :lists="lists"
-        :contacts="contacts"
-        :files="files"
+        :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
       />
@@ -41,7 +42,9 @@
           @click="addHistoryPage"
           v-if="history.pagination.hasNextPage"
           style="margin: 1rem"
-        >Load More</button>
+        >
+          Load More
+        </button>
       </div>
     </div>
 
@@ -63,7 +66,7 @@ import Lead from '@/services/leads'
 import LeadActivityLog from '@/services/leadActivityLogs'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
-import File from '@/services/files'
+import Forecast from '@/services/forecasts'
 
 import ActivityLogItem from './_ActivityLogItem'
 
@@ -99,12 +102,6 @@ export default {
           byLead: this.id,
         },
       }),
-      files: CollectionManager.create({
-        ModelClass: File,
-        filters: {
-          byLead: this.id,
-        },
-      }),
       history: CollectionManager.create({
         ModelClass: LeadActivityLog,
         filters: {
@@ -115,16 +112,10 @@ export default {
     }
   },
   async created() {
-    Promise.all([
-      this.retrieveLead(),
-      this.lists.refresh(),
-      this.contacts.refresh(),
-      this.files.refresh(),
-    ]).then(res => {
+    Promise.all([this.retrieveLead(), this.lists.refresh(), this.contacts.refresh()]).then(res => {
       this.lead = res[0]
       this.lists = res[1]
       this.contacts = res[2]
-      this.files = res[3]
       this.loading = false
     })
 
@@ -188,20 +179,31 @@ export default {
       })
     },
     resetLead() {
-      let patchData = {
+      let forecastPatchData = {
+        lead: this.lead.id,
+        forecast: 'NA',
+      }
+
+      let leadPatchData = {
         status: null,
         amount: 0,
-        forecast: null,
+        rating: 1,
       }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead = Object.assign(this.lead, lead)
-        let message = `<div>Success! Lead reset.</div>`
-        this.$Alert.alert({
-          type: 'success',
-          message,
-          timeout: 4000,
+
+      Forecast.api
+        .update(this.lead.forecast, forecastPatchData)
+        .then(() => {
+          return Lead.api.update(this.lead.id, leadPatchData)
         })
-      })
+        .then(lead => {
+          this.lead = lead
+          let message = `<div>Success! Lead reset.</div>`
+          this.$Alert.alert({
+            type: 'success',
+            message,
+            timeout: 4000,
+          })
+        })
     },
     claimLead() {
       Lead.api.claim(this.lead.id).then(() => {

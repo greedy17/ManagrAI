@@ -61,7 +61,10 @@
       <ComponentLoadingSVG v-if="filesLoading" style="margin: 2rem auto" />
       <div class="email__row" v-if="files.length > 0">
         <span v-for="file in files" class="email__contact-tag" :key="file.id">
-          {{ file.filename }} <span @click="removeFiles(file.id)">[X]</span>
+          {{ file.filename }}
+          <span @click="removeFiles(file.id)">
+            <img src="@/assets/images/remove.svg" alt="remove icon" />
+          </span>
         </span>
       </div>
       <input type="file" class="form__input" ref="myFileInput" @change="uploadFiles" />

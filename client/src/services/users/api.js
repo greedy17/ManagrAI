@@ -117,4 +117,11 @@ export default class UserAPI {
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
   }
+
+  update(id, data) {
+    const promise = apiClient()
+      .patch(GET_USER_ENDPOINT(id), this.cls.toAPI(data))
+      .catch(apiErrorHandler({ apiName: 'UserAPI.update' }))
+    return promise
+  }
 }
