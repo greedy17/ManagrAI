@@ -3,71 +3,84 @@
     <div class="header section-shadow">
       KPIs
     </div>
-    <div class="single-statistic section-shadow">
-      <span class="title">Total Closed Value</span>
-      <span class="statistic">
-        {{ insights ? insights.closedLeads.totalValue : 0 | currency }}</span
-      >
+
+    <div
+      class="single-statistic section-shadow"
+      v-if="refreshedOnce && apiFailing"
+      style="padding: 1rem;"
+    >
+      <p>We are unable to retrieve KPIs at this time. Please try again later.</p>
     </div>
-    <div class="single-statistic section-shadow">
-      <span class="title">Average Contract Value</span>
-      <span class="statistic"> {{ insights ? insights.averageContractValue : 0 | currency }}</span>
-    </div>
-    <div class="single-statistic section-shadow">
-      <span class="title">Forecast</span>
-      <span class="statistic"> {{ insights ? insights.forecast : 0 | currency }}</span>
-    </div>
-    <div class="statistics-container section-shadow">
-      <span class="title">Statistics</span>
-      <div class="graphic-statistic section-shadow">
-        <div class="icon-container">
-          <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
-        </div>
-        <div class="information">
-          <span class="top">
-            {{ insights && insights.calls.count }}
-            {{ 'Call' | pluralize(insights ? insights.calls.count : 0) }}
-          </span>
-          <span class="bottom">
-            {{ insights && insights.calls.latest | timeAgo }}
-          </span>
-        </div>
+
+    <div v-if="refreshedOnce && !apiFailing">
+      <div class="single-statistic section-shadow">
+        <span class="title">Total Closed Value</span>
+        <span class="statistic">
+          {{ insights ? insights.closedLeads.totalValue : 0 | currency }}</span
+        >
       </div>
-      <div class="graphic-statistic section-shadow">
-        <div class="icon-container">
-          <img class="icon" src="@/assets/images/checkmark.svg" alt="icon" />
-        </div>
-        <div class="information">
-          <span class="top">
-            {{ insights && insights.actions.count }}
-            {{ 'Action' | pluralize(insights ? insights.actions.count : 0) }}
-          </span>
-          <span class="bottom">
-            {{ insights && insights.actions.latest | timeAgo }}
-          </span>
-        </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Average Contract Value</span>
+        <span class="statistic">
+          {{ insights ? insights.averageContractValue : 0 | currency }}</span
+        >
       </div>
-      <div class="graphic-statistic section-shadow">
-        <div class="icon-container">
-          <img class="icon" src="@/assets/images/email.svg" alt="icon" />
-        </div>
-        <div class="information">
-          <span class="top">
-            {{ insights && insights.emails.count }}
-            {{ 'Email' | pluralize(insights ? insights.emails.count : 0) }}
-          </span>
-          <span class="bottom">
-            {{ insights && insights.emails.latest | timeAgo }}
-          </span>
-        </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Forecast</span>
+        <span class="statistic"> {{ insights ? insights.forecast : 0 | currency }}</span>
       </div>
-      <div class="graphic-statistic section-shadow">
-        <div class="icon-container">
-          <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
+      <div class="statistics-container section-shadow">
+        <span class="title">Statistics</span>
+        <div class="graphic-statistic section-shadow">
+          <div class="icon-container">
+            <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+          </div>
+          <div class="information">
+            <span class="top">
+              {{ insights && insights.calls.count }}
+              {{ 'Call' | pluralize(insights ? insights.calls.count : 0) }}
+            </span>
+            <span class="bottom">
+              {{ insights && insights.calls.latest | timeAgo }}
+            </span>
+          </div>
         </div>
-        <div class="information">
-          <span class="top"> {{ insights && insights.closedLeads.count }} Closed </span>
-          <span class="bottom"> </span>
+        <div class="graphic-statistic section-shadow">
+          <div class="icon-container">
+            <img class="icon" src="@/assets/images/checkmark.svg" alt="icon" />
+          </div>
+          <div class="information">
+            <span class="top">
+              {{ insights && insights.actions.count }}
+              {{ 'Action' | pluralize(insights ? insights.actions.count : 0) }}
+            </span>
+            <span class="bottom">
+              {{ insights && insights.actions.latest | timeAgo }}
+            </span>
+          </div>
+        </div>
+        <div class="graphic-statistic section-shadow">
+          <div class="icon-container">
+            <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+          </div>
+          <div class="information">
+            <span class="top">
+              {{ insights && insights.emails.count }}
+              {{ 'Email' | pluralize(insights ? insights.emails.count : 0) }}
+            </span>
+            <span class="bottom">
+              {{ insights && insights.emails.latest | timeAgo }}
+            </span>
+          </div>
+        </div>
+        <div class="graphic-statistic section-shadow">
+          <div class="icon-container">
+            <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
+          </div>
+          <div class="information">
+            <span class="top"> {{ insights && insights.closedLeads.count }} Closed </span>
+            <span class="bottom"> </span>
+          </div>
         </div>
       </div>
     </div>
@@ -82,14 +95,13 @@ export default {
   data() {
     return {
       insights: null,
+      apiFailing: false,
+      refreshedOnce: false,
     }
   },
   created() {
     this.refresh()
     // Start polling for lead insights
-    // TODO: If this starts failing for any reason, it will start pumping out
-    //       error messages, so we might want to clear or extend the interval
-    //       if that happens.
     this.pollingInterval = setInterval(this.refresh, 10000)
   },
   destroyed() {
@@ -97,10 +109,18 @@ export default {
   },
   methods: {
     refresh() {
-      LeadActivityLog.api.getInsights().then(result => {
-        this.insights = result
-        console.log('INSIGHTS:', this.insights)
-      })
+      LeadActivityLog.api
+        .getInsights({ enable400Alert: false, enable500Alert: false })
+        .then(result => {
+          this.insights = result
+          this.apiFailing = false
+        })
+        .catch(() => {
+          this.apiFailing = true
+        })
+        .finally(() => {
+          this.refreshedOnce = true
+        })
     },
   },
 }

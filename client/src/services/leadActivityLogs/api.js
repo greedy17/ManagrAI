@@ -17,7 +17,7 @@ export default class LeadActivityLogAPI {
     return new LeadActivityLogAPI(cls)
   }
 
-  async list({ pagination, filters }) {
+  async list({ pagination, filters, enable400Alert, enable500Alert, rethrowErrors }) {
     const url = LEAD_ACTIVITY_ENDPOINT
     const filtersMap = {
       // Pagination
@@ -36,7 +36,12 @@ export default class LeadActivityLogAPI {
         results: res.data.results.map(this.cls.fromAPI),
       }
     } catch (error) {
-      apiErrorHandler({ apiName: 'LeadActivityLogAPI.list' })(error)
+      apiErrorHandler({
+        apiName: 'LeadActivityLogAPI.list',
+        enable400Alert,
+        enable500Alert,
+        rethrowErrors,
+      })(error)
     }
   }
 
@@ -44,7 +49,7 @@ export default class LeadActivityLogAPI {
     throw Error('Lead Activity Logs may not be created through the API.')
   }
 
-  async getInsights({ filters = {} } = {}) {
+  async getInsights({ filters = {}, enable400Alert, enable500Alert, rethrowErrors } = {}) {
     const url = INSIGHTS_ENDPOINT
     const filtersMap = {
       lead: ApiFilter.create({ key: 'lead' }),
@@ -57,7 +62,12 @@ export default class LeadActivityLogAPI {
       const response = await this.client.get(url, options)
       return objectToCamelCase(response.data)
     } catch (error) {
-      apiErrorHandler({ apiName: 'LeadActivityLogAPI.list' })(error)
+      apiErrorHandler({
+        apiName: 'LeadActivityLogAPI.list',
+        enable400Alert,
+        enable500Alert,
+        rethrowErrors,
+      })(error)
     }
   }
 }

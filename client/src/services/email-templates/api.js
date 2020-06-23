@@ -23,18 +23,7 @@ export default class EmailTemplateAPI {
     return new EmailTemplateAPI(cls)
   }
 
-  // list({ pagination, filters }) {
   list() {
-    // TODO: Figure out how all these ApiFilters work
-    // const filtersMap = {
-    //   // Pagination
-    //   page: ApiFilter.create({ key: 'page' }),
-    //   pageSize: ApiFilter.create({ key: 'page_size' }),
-    // }
-    // const options = {
-    //   params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
-    // }
-
     const promise = apiClient()
       .get(EMAIL_TEMPLATE_ENDPOINT)
       // .get(EMAIL_TEMPLATE_ENDPOINT, options)

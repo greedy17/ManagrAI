@@ -3,7 +3,6 @@ export default {
   minLength,
   mustMatch,
 }
-// TODO: Validate field instanceof new form control
 
 /********************************************************
  * @message: message to be displayed to the user
@@ -11,7 +10,7 @@ export default {
  *  might just be able to send the field it is applied to
  * ********************************************************/
 export function required({ check = true, message = '' } = {}) {
-  return function(field) {
+  return function (field) {
     let error = { name: 'required', message: 'This is a Required Field' }
     let name = field.name
     let value = field.value
@@ -27,7 +26,7 @@ export function required({ check = true, message = '' } = {}) {
 }
 
 export function minLength({ length = 0, message = '' } = {}) {
-  return function(field) {
+  return function (field) {
     let error = {
       name: 'minlength',
       message: 'Please Enter a Minimum of ' + length + ' Characters',
@@ -47,7 +46,7 @@ export function minLength({ length = 0, message = '' } = {}) {
 // ***** Currently if trying to validate on blur will validate whole form as it is a formlevel validator
 export function mustMatch({ targetString, matcherString, message = '' } = {}) {
   // matcher is passed as a string and taken from the form group this is a formGroup level validator
-  return function(formGroup) {
+  return function (formGroup) {
     let formFields = formGroup.fc
     let field = formFields[targetString]
     let matcher = formFields[matcherString]

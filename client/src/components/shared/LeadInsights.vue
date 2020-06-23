@@ -2,7 +2,13 @@
   <div class="insights">
     <div class="insights-header section-shadow">Insights</div>
 
-    <div class="insight-container section-shadow" v-if="insights">
+    <div class="insight-container section-shadow" v-if="refreshedOnce && apiFailing">
+      <div style="padding: 1rem;">
+        <p>We're having trouble fetching insights for this lead. Please try again later.</p>
+      </div>
+    </div>
+
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
       </div>
@@ -15,7 +21,7 @@
       </div>
     </div>
 
-    <div class="insight-container section-shadow" v-if="insights">
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/pencil.svg" alt="icon" />
       </div>
@@ -28,7 +34,7 @@
       </div>
     </div>
 
-    <div class="insight-container section-shadow" v-if="insights">
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/checkmark.svg" alt="icon" />
       </div>
@@ -41,7 +47,7 @@
       </div>
     </div>
 
-    <div class="insight-container section-shadow" v-if="insights">
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">
         <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
       </div>
@@ -70,13 +76,12 @@ export default {
   data() {
     return {
       insights: null,
+      refreshedOnce: false,
+      apiFailing: false,
     }
   },
   created() {
     // Start polling for lead insights
-    // TODO: If this starts failing for any reason, it will start pumping out
-    //       error messages, so we might want to clear or extend the interval
-    //       if that happens.
     this.pollingInterval = setInterval(this.refresh, 2000)
   },
   destroyed() {
@@ -89,9 +94,18 @@ export default {
           filters: {
             lead: this.lead.id,
           },
+          enable400Alert: false,
+          enable500Alert: false,
         })
         .then(result => {
           this.insights = result
+          this.apiFailing = false
+        })
+        .catch(() => {
+          this.apiFailing = true
+        })
+        .finally(() => {
+          this.refreshedOnce = true
         })
     },
   },
@@ -130,13 +144,13 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  height: 3rem;
 }
 
 .insight-info {
   display: flex;
   flex-flow: column;
   flex-grow: 1;
+  padding: 1rem 0;
 }
 
 .icon-container {

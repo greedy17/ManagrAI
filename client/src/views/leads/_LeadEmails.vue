@@ -107,7 +107,7 @@ export default {
           this.threads.hasNextPage = this.checkHasNextPage(result)
         })
         .catch(error => {
-          // TODO: Better handle the situation where the user has not
+          // TODO: Provide better handling for the situation where the user has not
           //       connected with Nylas.
           // For Now: Suppress errors, but log to the console.
           // eslint-disable-next-line no-console

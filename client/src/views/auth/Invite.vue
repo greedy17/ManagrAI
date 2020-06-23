@@ -63,7 +63,7 @@ const initialData = {
   isFormValid: null,
   errors: {},
   success: null,
-  link: '', // NOTE(Bruno 4-20-20): temproary, for staging purposes
+  link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
 }
 
 export default {
@@ -92,11 +92,11 @@ export default {
       let invitePromise = User.api.invite(this.email, this.type, organization)
 
       invitePromise
-        .then((response) => {
+        .then(response => {
           this.link = response.data.activation_link // NOTE(Bruno 4-20-20): this line is temporary, for staging purposes
           this.success = true
         })
-        .catch((error) => {
+        .catch(error => {
           // NOTE: all form field-error validations are completed client side
           this.success = false
           let { status } = error.response

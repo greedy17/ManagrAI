@@ -65,6 +65,20 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.attachFile' }))
     return promise
   },
+  /**
+   * Use Nylas to send emails from this user
+   *
+   * @param {Array<String>}   obj.to               List of email recipient emails
+   * @param {String}          obj.subject          Email subject
+   * @param {String}          obj.body             Email message body
+   * @param {String}          obj.lead             Related Managr Lead ID
+   * @param {Array<String>}   obj.ccEmails         List of emails to send "carbon copy."
+   * @param {Array<String>}   obj.bccEmails        List of emails to send "blind carbon copy."
+   * @param {String}          obj.replyMessageId   ID of related Nylas email message, if any.
+   * @param {Array<String>}   obj.fileIds          List of Nylas file IDs to attach to message.
+   * @param {Object}          obj.variables        Dictionary of context variables to use when
+   *                                                 rendering the email message.
+   */
   sendEmail({
     to,
     subject,
@@ -76,22 +90,6 @@ export default {
     fileIds = [],
     variables = {},
   }) {
-    /*
-    Use Nylas to send emails from this user.
-    PARAMS:
-      subject: A string for the subject of the email.
-      body: A string for the body of the email.
-      recipient_email: An array of contact objects for the To field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-      cc_email: An array of contact objects for the CC field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-      bcc_email: An array of contact objects for the BCC field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-
-      NOTE: WE NEED TO MAKE SURE THESE TWO FUNCTIONS, PREVIEWEMAIL AND SENDEMAIL, STAY IN SYNC.
-      TODO: FIND A WAY TO COMBINE THEM.
-    */
-
     const data = {
       subject,
       body,
@@ -108,6 +106,20 @@ export default {
       .catch(apiErrorHandler({ apiName: 'NylasAPI.sendEmail' }))
     return promise
   },
+  /**
+   * Generate a rendered preview of the email message.
+   *
+   * @param {Array<String>}   obj.to               List of email recipient emails
+   * @param {String}          obj.subject          Email subject
+   * @param {String}          obj.body             Email message body
+   * @param {String}          obj.lead             Related Managr Lead ID
+   * @param {Array<String>}   obj.ccEmails         List of emails to send "carbon copy."
+   * @param {Array<String>}   obj.bccEmails        List of emails to send "blind carbon copy."
+   * @param {String}          obj.replyMessageId   ID of related Nylas email message, if any.
+   * @param {Array<String>}   obj.fileIds          List of Nylas file IDs to attach to message.
+   * @param {Object}          obj.variables        Dictionary of context variables to use when
+   *                                                 rendering the email message.
+   */
   previewEmail({
     to,
     subject,
@@ -119,22 +131,6 @@ export default {
     fileIds = [],
     variables = {},
   }) {
-    /*
-    Use Nylas to preview emails from this user.
-    PARAMS:
-      subject: A string for the subject of the email.
-      body: A string for the body of the email.
-      recipient_email: An array of contact objects for the To field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-      cc_email: An array of contact objects for the CC field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-      bcc_email: An array of contact objects for the BCC field.
-            Contact objects must be in the format { "name": NAME, "email": EMAIL }.
-
-      NOTE: WE NEED TO MAKE SURE THESE TWO FUNCTIONS, PREVIEWEMAIL AND SENDEMAIL, STAY IN SYNC.
-      TODO: FIND A WAY TO COMBINE THEM.
-    */
-
     const data = {
       subject,
       body,

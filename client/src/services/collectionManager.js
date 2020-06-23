@@ -51,18 +51,17 @@ export default class CollectionManager {
   /**
    * Refresh the collection.
    */
-  async refresh() {
+  async refresh({ enable400Alert, enable500Alert, rethrowErrors } = {}) {
     this.refreshing = true
     try {
       const response = await this.ModelClass.api.list({
         pagination: this.pagination,
         filters: this.filters,
+        enable400Alert,
+        enable500Alert,
+        rethrowErrors,
       })
       return this.update(response)
-    } catch (error) {
-      apiErrorHandler({
-        apiName: `Refresh ${this.ModelClass.name} Collection error`,
-      })
     } finally {
       this.refreshing = false
     }
@@ -88,7 +87,7 @@ export default class CollectionManager {
    * Get the next page for a collection and add this page
    * to the collection.
    */
-  async addNextPage() {
+  async addNextPage({ enable400Alert, enable500Alert, rethrowErrors } = {}) {
     if (this.pagination.next === null) {
       return
     }
@@ -103,12 +102,11 @@ export default class CollectionManager {
       const response = await this.ModelClass.api.list({
         pagination: this.pagination,
         filters: this.filters,
+        enable400Alert,
+        enable500Alert,
+        rethrowErrors,
       })
       return this.update(response, true)
-    } catch (error) {
-      apiErrorHandler({
-        apiName: `Add Next Page for ${this.ModelClass.name} Collection error`,
-      })
     } finally {
       this.loadingNextPage = false
     }
