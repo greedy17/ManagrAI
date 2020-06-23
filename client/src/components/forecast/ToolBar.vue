@@ -1,6 +1,6 @@
 <template>
   <div class="toolbar">
-    <KPIs />
+    <KPIs :repFilterState="repFilterState" />
     <div class="filter-container">
       <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
     </div>

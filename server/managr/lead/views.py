@@ -72,19 +72,29 @@ class LeadActivityLogViewSet(
         """Compute summary stats for a lead.
 
         Query Parameters:
-            leads (str):      Comma-separated list of lead IDs. Insights
+            leads (str):      Comma-separated list of Lead IDs. Insights
                                 will be filtered to these leads.
+            claimed_by (str)  Comma-separated list of User IDs. Insights
+                                will be filtered to leads claimed by these
+                                users.
         """
         qs = self.get_queryset()
+        empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
+        claimed_by = request.query_params.get("claimed_by")
 
         # IMPORTANT: For security reasons, first filter leads to
         #            those visible by this user.
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
             lead_qs = lead_qs.filter(id__in=leads.split(","))
+        if claimed_by:
+            lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
 
-        insights = LeadInsights(lead_qs, qs)
+        # The Empty param overrides the others
+        empty = empty is not None and empty.lower() == "true"
+
+        insights = LeadInsights(lead_qs, qs, empty)
         return Response(insights.as_dict)
 
 

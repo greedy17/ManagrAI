@@ -90,8 +90,16 @@
 <script>
 import LeadActivityLog from '@/services/leadActivityLogs'
 
+const POLLING_INTERVAL = 10000
+
 export default {
   name: 'KPIs',
+  props: {
+    repFilterState: {
+      required: true,
+      type: Object,
+    },
+  },
   data() {
     return {
       insights: null,
@@ -100,27 +108,50 @@ export default {
     }
   },
   created() {
-    this.refresh()
-    // Start polling for lead insights
-    this.pollingInterval = setInterval(this.refresh, 10000)
+    this.refresh(POLLING_INTERVAL)
   },
   destroyed() {
-    clearInterval(this.pollingInterval)
+    clearTimeout(this.pollingTimeout)
   },
   methods: {
-    refresh() {
+    refresh(repeat) {
+      clearTimeout(this.pollingTimeout)
+
+      const filters = {}
+      const claimedBy = Object.entries(this.repFilterState)
+        .map(([key, value]) => (value === true ? key : null))
+        .filter(i => i !== null)
+
+      if (claimedBy.length > 0) {
+        filters['claimedBy'] = claimedBy
+      } else {
+        filters['empty'] = true
+      }
+
       LeadActivityLog.api
-        .getInsights({ enable400Alert: false, enable500Alert: false })
+        .getInsights({ filters, enable400Alert: false, enable500Alert: false })
         .then(result => {
           this.insights = result
           this.apiFailing = false
+          if (repeat) {
+            this.pollingTimeout = setTimeout(() => this.refresh(POLLING_INTERVAL), repeat)
+          }
         })
         .catch(() => {
           this.apiFailing = true
+          if (repeat) {
+            // Repeat with exponential back-off as long as calls are failing
+            this.pollingTimeout = setTimeout(() => this.refresh(repeat * 2), repeat * 2)
+          }
         })
         .finally(() => {
           this.refreshedOnce = true
         })
+    },
+  },
+  watch: {
+    repFilterState() {
+      this.refresh(POLLING_INTERVAL)
     },
   },
 }

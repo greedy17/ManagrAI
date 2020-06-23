@@ -1,13 +1,15 @@
 <template>
   <div class="lead-history">
-    <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
-
     <div v-if="refreshedOnce && !apiFailing && history.list.length === 0">
       <p>No actions have been taken on this opportunity.</p>
     </div>
 
     <div v-if="refreshedOnce && apiFailing">
       <p>We're having trouble retrieving this lead's history. Please try again later.</p>
+    </div>
+
+    <div v-if="!apiFailing">
+      <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
     </div>
 
     <button
@@ -27,6 +29,8 @@ import CollectionManager from '@/services/collectionManager'
 import LeadActivityLog from '@/services/leadActivityLogs'
 
 import ActivityLogItem from './_ActivityLogItem'
+
+const POLLING_INTERVAL = 2000
 
 export default {
   name: 'LeadHistory',
@@ -52,16 +56,14 @@ export default {
     }
   },
   created() {
-    this.refresh()
-
-    // Start polling for history
-    this.pollingInterval = setInterval(this.refresh, 2000)
+    this.refresh(POLLING_INTERVAL)
   },
   destroyed() {
-    clearInterval(this.pollingInterval)
+    clearTimeout(this.pollingTimeout)
   },
   methods: {
-    refresh() {
+    refresh(repeat) {
+      clearTimeout(this.pollingTimeout)
       // Since we're polling, we want to suppress the default error handling,
       // because that produces a lot of error alert boxes. Instead, we set an
       // apiFailing flag, so we can show a custom error message.
@@ -72,10 +74,16 @@ export default {
         })
         .then(() => {
           this.apiFailing = false
+          if (repeat) {
+            this.pollingTimeout = setTimeout(() => this.refresh(POLLING_INTERVAL), repeat)
+          }
         })
         .catch(error => {
-          console.log('HANDLING ERROR:', error)
           this.apiFailing = true
+          if (repeat) {
+            // Repeat with exponential back-off as long as calls are failing
+            this.pollingTimeout = setTimeout(() => this.refresh(repeat * 2), repeat * 2)
+          }
         })
         .finally(() => {
           this.refreshedOnce = true
@@ -86,7 +94,7 @@ export default {
       //       out how to handle that. For now, we disable polling
       //       if the user loads the next page, because they are
       //       looking for something old, not new.
-      clearInterval(this.pollingInterval)
+      clearTimeout(this.pollingTimeout)
       this.history.addNextPage()
     },
   },

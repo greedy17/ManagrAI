@@ -53,6 +53,8 @@ export default class LeadActivityLogAPI {
     const url = INSIGHTS_ENDPOINT
     const filtersMap = {
       leads: ApiFilter.create({ key: 'leads', extractor: i => i.join(',') }),
+      claimedBy: ApiFilter.create({ key: 'claimed_by', extractor: i => i.join(',') }),
+      empty: ApiFilter.create({ key: 'empty' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...filters }),

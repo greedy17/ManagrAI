@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.utils import timezone
 
+from managr.core.models import User
 from managr.organization.models import Organization
 from managr.organization.factories import AccountFactory, ContactFactory
 
@@ -13,22 +14,42 @@ from .. import constants as lead_constants
 
 
 class LeadInsightsTestCase(TestCase):
+    # The fixture provides a test user and org
+    fixtures = ["dev.json"]
+
     def setUp(self):
+        self.org = Organization.objects.first()
+        self.user_1 = self.org.users.first()
+        self.user_2 = User.objects.create_user(organizations=self.org)
+
         # Random lead for basic insight testing
-        self.lead = LeadFactory(amount=25000, status=lead_constants.LEAD_STATUS_WAITING)
+        self.lead = LeadFactory(
+            amount=25000,
+            status=lead_constants.LEAD_STATUS_WAITING,
+            claimed_by=self.user_1,
+        )
 
         # Open and closed leads for KPI testing
         self.open_lead_1 = LeadFactory(
-            amount=25000, status=lead_constants.LEAD_STATUS_WAITING
+            amount=25000,
+            status=lead_constants.LEAD_STATUS_WAITING,
+            claimed_by=self.user_1,
         )
         self.open_lead_2 = LeadFactory(
-            amount=25000, status=lead_constants.LEAD_STATUS_WAITING
+            amount=25000,
+            status=lead_constants.LEAD_STATUS_WAITING,
+            claimed_by=self.user_1,
         )
         self.closed_lead_1 = LeadFactory(
-            amount=25000, closing_amount=30000, status=lead_constants.LEAD_STATUS_CLOSED
+            amount=25000,
+            closing_amount=30000,
+            status=lead_constants.LEAD_STATUS_CLOSED,
+            claimed_by=self.user_1,
         )
         self.lost_lead_1 = LeadFactory(
-            amount=25000, status=lead_constants.LEAD_STATUS_LOST
+            amount=25000,
+            status=lead_constants.LEAD_STATUS_LOST,
+            claimed_by=self.user_1,
         )
 
     def test_call_count(self):
@@ -138,6 +159,12 @@ class LeadInsightsTestCase(TestCase):
         self.assertEqual(insights.total_closed_value, 30000)
 
     def test_avg_contract_value(self):
+        insights = LeadInsights()
+        self.assertEqual(insights.average_contract_value, 26250)
+
+    def test_avg_contract_value_excludes_zero_amount(self):
+        """Average value should not change, even after adding a lead with a $0 amount."""
+        LeadFactory(amount=0, status=lead_constants.LEAD_STATUS_WAITING)
         insights = LeadInsights()
         self.assertEqual(insights.average_contract_value, 26250)
 

@@ -10,6 +10,7 @@ export default class LeadActivityLog {
   constructor({
     id = null,
     lead = null,
+    leadRef = null,
     actionTimestamp = null,
     activity = null,
     actionTakenBy = null,
@@ -19,6 +20,7 @@ export default class LeadActivityLog {
     Object.assign(this, {
       id,
       lead,
+      leadRef,
       actionTimestamp,
       activity,
       actionTakenBy,

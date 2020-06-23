@@ -25,89 +25,79 @@ class LeadInsights:
         self,
         lead_queryset=Lead.objects.all(),
         log_queryset=LeadActivityLog.objects.all(),
+        empty=False,
     ):
         # Start with a base queryset, for example, already filtered by lead or
         # activity logs that a user is allowed to see.
-        self.lead_queryset = lead_queryset
-        self.log_queryset = log_queryset
+        self._lead_queryset = lead_queryset
+        self._log_queryset = log_queryset
+        self.empty = empty
 
-    def filter_log_queryset(self):
+    @property
+    def lead_queryset(self):
+        if self.empty:
+            return self._lead_queryset.none()
+        return self._lead_queryset
+
+    @property
+    def log_queryset(self):
         """Filter the log queryset by leads, if applicable."""
-        lead_ids = self.lead_queryset.values_list("id", flat=True)
+        if self.empty:
+            return self._log_queryset.none()
+
+        lead_ids = self._lead_queryset.values_list("id", flat=True)
         if len(lead_ids) > 0:
-            return self.log_queryset.filter(lead__id__in=lead_ids)
-        return self.log_queryset
+            return self._log_queryset.filter(lead__id__in=lead_ids)
+        return self._log_queryset
 
     @property
     def call_count(self):
-        return (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.CALL_NOTE_CREATED)
-            .count()
-        )
+        return self.log_queryset.filter(
+            activity=lead_constants.CALL_NOTE_CREATED
+        ).count()
 
     @property
     def call_latest(self):
         """Get timestamp of the latest call action."""
-        latest_call = (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.CALL_NOTE_CREATED)
-            .first()
-        )
+        latest_call = self.log_queryset.filter(
+            activity=lead_constants.CALL_NOTE_CREATED
+        ).first()
         if latest_call is not None:
             return latest_call.action_timestamp
 
     @property
     def note_count(self):
-        return (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.NOTE_CREATED)
-            .count()
-        )
+        return self.log_queryset.filter(activity=lead_constants.NOTE_CREATED).count()
 
     @property
     def note_latest(self):
-        latest_note = (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.NOTE_CREATED)
-            .first()
-        )
+        latest_note = self.log_queryset.filter(
+            activity=lead_constants.NOTE_CREATED
+        ).first()
         if latest_note is not None:
             return latest_note.action_timestamp
 
     @property
     def action_count(self):
-        return (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.ACTION_CREATED)
-            .count()
-        )
+        return self.log_queryset.filter(activity=lead_constants.ACTION_CREATED).count()
 
     @property
     def action_latest(self):
-        latest_action = (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.ACTION_CREATED)
-            .first()
-        )
+        latest_action = self.log_queryset.filter(
+            activity=lead_constants.ACTION_CREATED
+        ).first()
         if latest_action is not None:
             return latest_action.action_timestamp
 
     @property
     def email_count(self):
-        return (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.EMAIL_SENT)
-            .count()
-        )
+        return self.log_queryset.filter(activity=lead_constants.EMAIL_SENT).count()
 
     @property
     def email_latest(self):
-        latest_action = (
-            self.filter_log_queryset()
-            .filter(activity=lead_constants.EMAIL_SENT)
-            .first()
-        )
+        latest_action = self.log_queryset.filter(
+            activity=lead_constants.EMAIL_SENT
+        ).first()
         if latest_action is not None:
             return latest_action.action_timestamp
 
@@ -156,10 +146,11 @@ class LeadInsights:
 
         For 'closed' leads, use the closing amount. For open leads, just use 'amount'.
         """
+        nonzero_open_leads_count = self.open_leads.exclude(amount=0).count()
         average = 0
-        if (self.closed_leads_count + self.open_leads_count) > 0:
+        if (self.closed_leads_count + nonzero_open_leads_count) > 0:
             average = (self.closed_leads_value + self.open_leads_value) / (
-                self.closed_leads_count + self.open_leads_count
+                self.closed_leads_count + nonzero_open_leads_count
             )
         return average
 

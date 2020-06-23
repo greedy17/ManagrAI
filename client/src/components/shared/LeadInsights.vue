@@ -65,6 +65,8 @@
 <script>
 import LeadActivityLog from '@/services/leadActivityLogs'
 
+const POLLING_INTERVAL = 2000
+
 export default {
   name: 'LeadInsights',
   props: {
@@ -81,14 +83,14 @@ export default {
     }
   },
   created() {
-    // Start polling for lead insights
-    this.pollingInterval = setInterval(this.refresh, 2000)
+    this.refresh(POLLING_INTERVAL)
   },
   destroyed() {
-    clearInterval(this.pollingInterval)
+    clearTimeout(this.pollingTimeout)
   },
   methods: {
-    refresh() {
+    refresh(repeat) {
+      clearTimeout(this.pollingTimeout)
       LeadActivityLog.api
         .getInsights({
           filters: {
@@ -100,9 +102,16 @@ export default {
         .then(result => {
           this.insights = result
           this.apiFailing = false
+          if (repeat) {
+            this.pollingTimeout = setTimeout(() => this.refresh(POLLING_INTERVAL), repeat)
+          }
         })
         .catch(() => {
           this.apiFailing = true
+          if (repeat) {
+            // Repeat with exponential back-off as long as calls are failing
+            this.pollingTimeout = setTimeout(() => this.refresh(repeat * 2), repeat * 2)
+          }
         })
         .finally(() => {
           this.refreshedOnce = true

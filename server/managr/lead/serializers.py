@@ -18,9 +18,7 @@ from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator
 from collections import OrderedDict
 
-
 from rest_framework import status, filters, permissions
-
 
 from rest_framework.response import Response
 
@@ -247,9 +245,22 @@ class CallNoteSerializer(serializers.ModelSerializer):
 
 
 class LeadActivityLogSerializer(serializers.ModelSerializer):
+    action_taken_by_ref = UserRefSerializer(source="action_taken_by")
+    lead_ref = LeadRefSerializer(source="lead")
+
     class Meta:
         model = LeadActivityLog
-        fields = "__all__"
+        fields = (
+            "id",
+            "datetime_created",
+            "last_edited",
+            "lead",
+            "lead_ref",
+            "action_taken_by",
+            "action_taken_by_ref",
+            "action_timestamp",
+            "activity",
+        )
 
 
 class ActionChoiceSerializer(serializers.ModelSerializer):
