@@ -82,7 +82,7 @@ class LeadActivityLogViewSet(
         #            those visible by this user.
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
-            lead_qs.filter(id__in=leads.split(","))
+            lead_qs = lead_qs.filter(id__in=leads.split(","))
 
         insights = LeadInsights(lead_qs, qs)
         return Response(insights.as_dict)

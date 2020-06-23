@@ -92,7 +92,7 @@ export default {
       LeadActivityLog.api
         .getInsights({
           filters: {
-            lead: this.lead.id,
+            leads: [this.lead.id],
           },
           enable400Alert: false,
           enable500Alert: false,

@@ -52,7 +52,7 @@ export default class LeadActivityLogAPI {
   async getInsights({ filters = {}, enable400Alert, enable500Alert, rethrowErrors } = {}) {
     const url = INSIGHTS_ENDPOINT
     const filtersMap = {
-      lead: ApiFilter.create({ key: 'lead' }),
+      leads: ApiFilter.create({ key: 'leads', extractor: i => i.join(',') }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...filters }),
