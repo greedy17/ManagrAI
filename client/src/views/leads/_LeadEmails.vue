@@ -80,7 +80,7 @@ export default {
         return
       }
       this.threads.refreshing = true
-      Nylas.getThreads({ filters: this.filters })
+      Nylas.getThreads({ filters: this.filters, enable500Alert: false })
         .then(result => {
           this.threads.list = result
           this.threads.hasNextPage = this.checkHasNextPage(result)
@@ -101,7 +101,6 @@ export default {
       }
       Nylas.getThreads({
         filters: this.filters,
-        enable500Alert: false,
       })
         .then(result => {
           this.threads.list = [...this.threads.list, ...result]
