@@ -43,11 +43,12 @@ export default {
 
 .actions-pane {
   display: flex;
+  flex: 1;
   justify-content: center;
 }
 
 .lead-actions {
-  width: 75rem;
+  flex: 1;
 }
 
 .insights-pane {

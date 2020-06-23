@@ -40,6 +40,7 @@
 
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'

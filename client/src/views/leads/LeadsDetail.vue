@@ -56,6 +56,16 @@
           >
             Email
           </div>
+
+          <div class="check-email-btn" v-if="activityTabSelected === EMAILS">
+            <button
+              class="primary-button"
+              @click="() => $refs.Emails.refresh()"
+              :disabled="$refs.Emails && $refs.Emails.threads.refreshing"
+            >
+              Check for Mail
+            </button>
+          </div>
         </div>
 
         <div v-show="activityTabSelected === HISTORY" class="box__content">
@@ -63,7 +73,7 @@
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
-          <LeadEmails :lead="lead" />
+          <LeadEmails :lead="lead" ref="Emails" />
         </div>
       </div>
     </div>
@@ -229,4 +239,12 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/variables';
 @import '@/styles/forms';
+
+.check-email-btn {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  justify-content: center;
+}
 </style>
