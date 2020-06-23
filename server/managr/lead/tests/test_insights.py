@@ -20,7 +20,9 @@ class LeadInsightsTestCase(TestCase):
     def setUp(self):
         self.org = Organization.objects.first()
         self.user_1 = self.org.users.first()
-        self.user_2 = User.objects.create_user(organizations=self.org)
+        self.user_2 = User.objects.create_user(
+            organization=self.org, email="test2@thinknimble.com"
+        )
 
         # Random lead for basic insight testing
         self.lead = LeadFactory(
