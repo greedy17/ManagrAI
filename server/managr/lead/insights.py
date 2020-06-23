@@ -1,8 +1,19 @@
+from django.db.models import Sum, Avg
+
+from .models import Lead, LeadActivityLog
 from . import constants as lead_constants
 
 
 class LeadInsights:
-    """Compute insights from a queryset.
+    """Compute insights for Leads from a LeadActivityLog queryset.
+
+    Attributes:
+        lead_queryset (QuerySet<Lead>):             QuerySet of Leads to use for gathering insights.
+                                                      Some are computed directly from the leads, others
+                                                      from related activity logs.
+        loq_queryset (QuerySet<LeadActivityLog>):   QuerySet of LeadActivityLog objects to use
+                                                      as a basis for filtering events. Defaults
+                                                      to ALL.
 
     TODO: This is currently just counting the 'created' events for each major related
             model. This is fine as long as users cannot update and delete items, but
@@ -10,55 +21,147 @@ class LeadInsights:
             be updated to reflect that.
     """
 
-    def __init__(self, queryset):
+    def __init__(
+        self,
+        lead_queryset=Lead.objects.all(),
+        log_queryset=LeadActivityLog.objects.all(),
+    ):
         # Start with a base queryset, for example, already filtered by lead or
         # activity logs that a user is allowed to see.
-        self.queryset = queryset
+        self.lead_queryset = lead_queryset
+        self.log_queryset = log_queryset
+
+    def filter_log_queryset(self):
+        """Filter the log queryset by leads, if applicable."""
+        lead_ids = self.lead_queryset.values_list("id", flat=True)
+        if len(lead_ids) > 0:
+            return self.log_queryset.filter(lead__id__in=lead_ids)
+        return self.log_queryset
 
     @property
     def call_count(self):
-        return self.queryset.filter(activity=lead_constants.CALL_NOTE_CREATED).count()
+        return (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.CALL_NOTE_CREATED)
+            .count()
+        )
 
     @property
     def call_latest(self):
         """Get timestamp of the latest call action."""
-        latest_call = self.queryset.filter(
-            activity=lead_constants.CALL_NOTE_CREATED
-        ).first()
+        latest_call = (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.CALL_NOTE_CREATED)
+            .first()
+        )
         if latest_call is not None:
             return latest_call.action_timestamp
 
     @property
     def note_count(self):
-        return self.queryset.filter(activity=lead_constants.NOTE_CREATED).count()
+        return (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.NOTE_CREATED)
+            .count()
+        )
 
     @property
     def note_latest(self):
-        latest_note = self.queryset.filter(activity=lead_constants.NOTE_CREATED).first()
+        latest_note = (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.NOTE_CREATED)
+            .first()
+        )
         if latest_note is not None:
             return latest_note.action_timestamp
 
     @property
     def action_count(self):
-        return self.queryset.filter(activity=lead_constants.ACTION_CREATED).count()
+        return (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.ACTION_CREATED)
+            .count()
+        )
 
     @property
     def action_latest(self):
-        latest_action = self.queryset.filter(
-            activity=lead_constants.ACTION_CREATED
-        ).first()
+        latest_action = (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.ACTION_CREATED)
+            .first()
+        )
         if latest_action is not None:
             return latest_action.action_timestamp
 
     @property
     def email_count(self):
-        return self.queryset.filter(activity=lead_constants.EMAIL_SENT).count()
+        return (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.EMAIL_SENT)
+            .count()
+        )
 
     @property
     def email_latest(self):
-        latest_action = self.queryset.filter(activity=lead_constants.EMAIL_SENT).first()
+        latest_action = (
+            self.filter_log_queryset()
+            .filter(activity=lead_constants.EMAIL_SENT)
+            .first()
+        )
         if latest_action is not None:
             return latest_action.action_timestamp
+
+    @property
+    def open_leads(self):
+        return self.lead_queryset.open_leads()
+
+    @property
+    def closed_leads(self):
+        return self.lead_queryset.closed_leads()
+
+    @property
+    def open_leads_count(self):
+        return self.open_leads.count()
+
+    @property
+    def closed_leads_count(self):
+        return self.closed_leads.count()
+
+    @property
+    def total_closed_value(self):
+        """Get the total value of closed leads."""
+        return (
+            self.lead_queryset.closed_leads().aggregate(sum=Sum("closing_amount"))[
+                "sum"
+            ]
+            or 0
+        )
+
+    @property
+    def forecast(self):
+        """Forecast 'open' leads. That is all leads, except CLOSED and LOST."""
+        return self.lead_queryset.open_leads().aggregate(sum=Sum("amount"))["sum"] or 0
+
+    @property
+    def closed_leads_value(self):
+        return self.closed_leads.aggregate(sum=Sum("closing_amount"))["sum"] or 0
+
+    @property
+    def open_leads_value(self):
+        return self.open_leads.aggregate(sum=Sum("amount"))["sum"] or 0
+
+    @property
+    def average_contract_value(self):
+        """Get the average contract value.
+
+        For 'closed' leads, use the closing amount. For open leads, just use 'amount'.
+        """
+        average = 0
+        if (self.closed_leads_count + self.open_leads_count) > 0:
+            average = (self.closed_leads_value + self.open_leads_value) / (
+                self.closed_leads_count + self.open_leads_count
+            )
+        return average
 
     @property
     def as_dict(self):
@@ -67,4 +170,14 @@ class LeadInsights:
             "notes": {"count": self.note_count, "latest": self.note_latest,},
             "actions": {"count": self.action_count, "latest": self.action_latest,},
             "emails": {"count": self.email_count, "latest": self.email_latest,},
+            "closed_leads": {
+                "count": self.closed_leads_count,
+                "total_value": self.closed_leads_value,
+            },
+            "open_leads": {
+                "count": self.open_leads_count,
+                "total_value": self.open_leads_value,
+            },
+            "average_contract_value": self.average_contract_value,
+            "forecast": self.forecast,
         }

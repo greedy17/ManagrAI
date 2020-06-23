@@ -19,6 +19,17 @@ class LeadQuerySet(models.QuerySet):
         else:
             return None
 
+    def open_leads(self):
+        return self.exclude(
+            status__in=[
+                lead_constants.LEAD_STATUS_CLOSED,
+                lead_constants.LEAD_STATUS_LOST,
+            ]
+        )
+
+    def closed_leads(self):
+        return self.filter(status__in=[lead_constants.LEAD_STATUS_CLOSED])
+
 
 class Lead(TimeStampModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.

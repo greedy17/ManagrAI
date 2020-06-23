@@ -69,12 +69,22 @@ class LeadActivityLogViewSet(
         url_path="insights",
     )
     def insights(self, request):
-        """Compute summary stats for a lead."""
+        """Compute summary stats for a lead.
+
+        Query Parameters:
+            leads (str):      Comma-separated list of lead IDs. Insights
+                                will be filtered to these leads.
+        """
         qs = self.get_queryset()
-        lead = request.query_params.get("lead")
-        if lead:
-            qs = qs.filter(lead__id=lead)
-        insights = LeadInsights(qs)
+        leads = request.query_params.get("leads")
+
+        # IMPORTANT: For security reasons, first filter leads to
+        #            those visible by this user.
+        lead_qs = Lead.objects.for_user(request.user)
+        if leads:
+            lead_qs.filter(id__in=leads.split(","))
+
+        insights = LeadInsights(lead_qs, qs)
         return Response(insights.as_dict)
 
 
@@ -90,15 +100,22 @@ class LeadViewSet(
 
     authentication_classes = (authentication.TokenAuthentication,)
 
-    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly, )
+    permission_classes = (
+        IsSalesPerson,
+        CanEditResourceOrReadOnly,
+    )
     serializer_class = lead_serializers.LeadSerializer
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter, lead_filters.LeadRatingOrderFiltering,)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        lead_filters.LeadRatingOrderFiltering,
+    )
     filter_class = lead_filters.LeadFilterSet
-    ordering = ('rating',)
-    search_fields = ('title',)
+    ordering = ("rating",)
+    search_fields = ("title",)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user).order_by(Lower('title'))
+        return Lead.objects.for_user(self.request.user).order_by(Lower("title"))
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get("verbose", None)
@@ -171,8 +188,8 @@ class LeadViewSet(
                 del data[field]
 
         # if updating status, also update status_last_update
-        if 'status' in data:
-            data['status_last_update'] = timezone.now()
+        if "status" in data:
+            data["status_last_update"] = timezone.now()
 
         # make sure the user that created the lead is not updated as well
 
