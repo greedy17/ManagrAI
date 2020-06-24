@@ -5,115 +5,125 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 
 urlpatterns = [
     path(
-        r'favicon.ico',
+        r"favicon.ico",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/favicon.ico'),
-            permanent=False),
-        name='favicon'
+            url=staticfiles_storage.url("favicons/favicon.ico"), permanent=False
+        ),
+        name="favicon",
     ),
     path(
-        r'apple-icon-57x57.png',
+        r"apple-icon-57x57.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-57x57.png'),
-            permanent=False),
-        name='apple-icon-57'
+            url=staticfiles_storage.url("favicons/apple-icon-57x57.png"),
+            permanent=False,
+        ),
+        name="apple-icon-57",
     ),
     path(
-        r'apple-icon-60x60.png',
+        r"apple-icon-60x60.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-60x60.png'),
-            permanent=False),
-        name='apple-icon-60'
+            url=staticfiles_storage.url("favicons/apple-icon-60x60.png"),
+            permanent=False,
+        ),
+        name="apple-icon-60",
     ),
     path(
-        r'apple-icon-72x72.png',
+        r"apple-icon-72x72.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-72x72.png'),
-            permanent=False),
-        name='apple-icon-72'
+            url=staticfiles_storage.url("favicons/apple-icon-72x72.png"),
+            permanent=False,
+        ),
+        name="apple-icon-72",
     ),
     path(
-        r'apple-icon-76x76.png',
+        r"apple-icon-76x76.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-76x76.png'),
-            permanent=False),
-        name='apple-icon-76'
+            url=staticfiles_storage.url("favicons/apple-icon-76x76.png"),
+            permanent=False,
+        ),
+        name="apple-icon-76",
     ),
     path(
-        r'apple-icon-114x114.png',
+        r"apple-icon-114x114.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-114x114.png'),
-            permanent=False),
-        name='apple-icon-114'
+            url=staticfiles_storage.url("favicons/apple-icon-114x114.png"),
+            permanent=False,
+        ),
+        name="apple-icon-114",
     ),
     path(
-        r'apple-icon-120x120.png',
+        r"apple-icon-120x120.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-120x120.png'),
-            permanent=False),
-        name='apple-icon-120'
+            url=staticfiles_storage.url("favicons/apple-icon-120x120.png"),
+            permanent=False,
+        ),
+        name="apple-icon-120",
     ),
     path(
-        r'apple-icon-144x144.png',
+        r"apple-icon-144x144.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-144x144.png'),
-            permanent=False),
-        name='apple-icon-144'
+            url=staticfiles_storage.url("favicons/apple-icon-144x144.png"),
+            permanent=False,
+        ),
+        name="apple-icon-144",
     ),
     path(
-        r'apple-icon-152x152.png',
+        r"apple-icon-152x152.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-152x152.png'),
-            permanent=False),
-        name='apple-icon-152'
+            url=staticfiles_storage.url("favicons/apple-icon-152x152.png"),
+            permanent=False,
+        ),
+        name="apple-icon-152",
     ),
     path(
-        r'apple-icon-180x180.png',
+        r"apple-icon-180x180.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/apple-icon-180x180.png'),
-            permanent=False),
-        name='apple-icon-180'
+            url=staticfiles_storage.url("favicons/apple-icon-180x180.png"),
+            permanent=False,
+        ),
+        name="apple-icon-180",
     ),
     path(
-        r'android-icon-192x192.png',
+        r"android-icon-192x192.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/android-icon-192x192.png'),
-            permanent=False),
-        name='apple-icon-192'
+            url=staticfiles_storage.url("favicons/android-icon-192x192.png"),
+            permanent=False,
+        ),
+        name="apple-icon-192",
     ),
     path(
-        r'favicon-32x32.png',
+        r"favicon-32x32.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/favicon-32x32.png'),
-            permanent=False),
-        name='favicon-32'
+            url=staticfiles_storage.url("favicons/favicon-32x32.png"), permanent=False
+        ),
+        name="favicon-32",
     ),
     path(
-        r'favicon-96x96.png',
+        r"favicon-96x96.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/favicon-96x96.png'),
-            permanent=False),
-        name='favicon-96'
+            url=staticfiles_storage.url("favicons/favicon-96x96.png"), permanent=False
+        ),
+        name="favicon-96",
     ),
     path(
-        r'favicon-16x16.png',
+        r"favicon-16x16.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/favicon-16x16.png'),
-            permanent=False),
-        name='favicon-16'
+            url=staticfiles_storage.url("favicons/favicon-16x16.png"), permanent=False
+        ),
+        name="favicon-16",
     ),
     path(
-        r'manifest.json',
+        r"manifest.json",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/manifest.json'),
-            permanent=False),
-        name='icon-manifest'
+            url=staticfiles_storage.url("favicons/manifest.json"), permanent=False
+        ),
+        name="icon-manifest",
     ),
     path(
-        r'ms-icon-144x144.png',
+        r"ms-icon-144x144.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url('favicons/ms-icon-144x144.png'),
-            permanent=False),
-        name='ms-icon'
+            url=staticfiles_storage.url("favicons/ms-icon-144x144.png"), permanent=False
+        ),
+        name="ms-icon",
     ),
 ]
