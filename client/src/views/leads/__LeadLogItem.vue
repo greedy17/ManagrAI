@@ -12,6 +12,9 @@
           <strong v-if="log.action === 'RELEASED'"
             >{{ log.actionTakenByRef.fullName }} released this lead.</strong
           >
+          <strong v-if="log.action === 'UPDATED'"
+            >{{ log.actionTakenByRef.fullName }} made a change.</strong
+          >
         </div>
         <div class="item-list__row-item--double">
           <span class="date-text">{{ log.actionTimestamp | dateShort }}</span>
@@ -23,7 +26,7 @@
 
 <script>
 /**
- * Displays Lead.CLAIMED and Lead.RELEASED action log items.
+ * Displays Lead-related action log items.
  *
  * This item does not collapse/expand like others.
  */
