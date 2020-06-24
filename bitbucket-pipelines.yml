@@ -14,7 +14,7 @@ djangoTests: &djangoTests
     - pipenv install --system --deploy --ignore-pipfile
     - cp server/.env.example .env
     - cd server
-    - python manage.py test
+    - IN_CI=True python manage.py test
   services:
     - postgres
 

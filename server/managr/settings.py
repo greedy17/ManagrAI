@@ -19,6 +19,7 @@ ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
 IN_DEV = ENVIRONMENT == "development"
 IN_STAGING = ENVIRONMENT == "staging"
 IN_PROD = ENVIRONMENT == "production"
+IN_CI = os.environ.get("IN_CI") == "True"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = _env_get_required("SECRET_KEY")
