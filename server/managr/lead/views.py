@@ -660,6 +660,12 @@ class ActionViewSet(
         emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
         return Response(serializer.data)
 
+    @action(
+        methods=["post"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk",
+    )
     def bulk_create(self, request, *args, **kwargs):
         """This expects an array of multiple leads to apply action to.
 
@@ -675,7 +681,7 @@ class ActionViewSet(
         created = list()
         for l in leads:
             d = {
-                "created_by": request.user,
+                "created_by": str(request.user.id),
                 "action_type": action_data["action_type"],
                 "action_detail": action_data["action_detail"],
                 "lead": l,
@@ -684,7 +690,7 @@ class ActionViewSet(
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             created.append(serializer.data)
-            emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
+            emit_event(lead_constants.ACTION_CREATED, request.user, serializer.instance)
         return Response({"created": created})
 
     def update(self, request, *args, **kwargs):

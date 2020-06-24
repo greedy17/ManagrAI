@@ -9,7 +9,7 @@ urlpatterns = [
     path(r"admin/", admin.site.urls),
     path(r"api/", include("managr.api.urls", namespace="api")),
     *(
-        [path(r"", include("canary.core.favicon_urls"))]
+        [path(r"", include("managr.core.favicon_urls"))]
         if not settings.IN_CI and not settings.IN_DEV
         else []
     ),

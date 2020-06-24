@@ -260,6 +260,7 @@ class LeadActivityLogSerializer(serializers.ModelSerializer):
             "action_taken_by_ref",
             "action_timestamp",
             "activity",
+            "meta",
         )
 
 
