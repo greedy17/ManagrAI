@@ -33,21 +33,6 @@
         <span :style="{ fontWeight: 'bold' }">{{ email }}</span
         >.
       </p>
-      <!-- NOTE(Bruno 4-20-20): below code is temporary, for testing on staging -->
-      <div
-        :style="{
-          wordBreak: 'all',
-          padding: '0 1rem',
-          display: 'flex',
-          flexFlow: 'column',
-          alignItems: 'center',
-          opacity: '0.4',
-        }"
-      >
-        <div>(For Testing/Staging) Link:</div>
-        {{ link }}
-      </div>
-      <!-- end of temp code -->
       <button @click="resetData">Send Another</button>
     </div>
   </div>
