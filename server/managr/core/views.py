@@ -116,6 +116,7 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
+    filter_fields = ("organization",)
 
     def get_queryset(self):
         if self.request.user.is_superuser:
