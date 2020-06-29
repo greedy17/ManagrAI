@@ -5,10 +5,12 @@ from factory.django import DjangoModelFactory
 from managr.core.models import User
 from managr.lead.factories import LeadFactory
 
-from .models import Account, Contact
+from .models import Account, Contact, Organization
 
 
 # Factories go here
+
+
 class AccountFactory(DjangoModelFactory):
     name = factory.Faker('company')
     url = factory.Faker('url')
@@ -28,6 +30,14 @@ class ContactFactory(DjangoModelFactory):
 
     class Meta:
         model = Contact
+
+
+class OrganizationFactory(DjangoModelFactory):
+    name = factory.Faker('company')
+    state = "ACTIVE"
+
+    class Meta:
+        model = Organization
 
 
 def gen_random_test_data():
