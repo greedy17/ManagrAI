@@ -117,11 +117,11 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
             serializer.save()
             res = serializer.data
 
-        except IntegrityError as e:
+        except IntegrityError:
             # an integrity error here means two contacts with the same info are added
             # if both are the same and not unique then django returns an array of errors
             return Response(
-                data={"non_field_errors": "One of More Contacts already exist"}, status=400)
+                data={"non_field_errors": "One of More Contacts already exist"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(res)
 
     @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="link-to-leads")

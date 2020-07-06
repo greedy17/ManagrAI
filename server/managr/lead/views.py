@@ -146,10 +146,12 @@ class LeadViewSet(
         # check account to be sure it is in org
         account_for = request.data.get("account", None)
         if not account_for:
-            raise ValidationError(detail={"detail": "Account is a required field"})
+            raise ValidationError(
+                detail={"detail": "Account is a required field"})
         # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
         try:
-            account = Account.objects.for_user(request.user).get(pk=account_for)
+            account = Account.objects.for_user(
+                request.user).get(pk=account_for)
         except Account.DoesNotExist:
             raise PermissionDenied()
         # if there are contacts to be added first check that contacts exist or create them
@@ -163,11 +165,14 @@ class LeadViewSet(
             if created:
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
-                c.phone_number_1 = contact.get("phone_number_1", c.phone_number_1)
-                c.phone_number_2 = contact.get("phone_number_2", c.phone_number_2)
+                c.phone_number_1 = contact.get(
+                    "phone_number_1", c.phone_number_1)
+                c.phone_number_2 = contact.get(
+                    "phone_number_2", c.phone_number_2)
                 c.save()
             contact_list.append(c.id)
-        serializer = self.serializer_class(data=data, context={"request": request})
+        serializer = self.serializer_class(
+            data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
@@ -212,6 +217,65 @@ class LeadViewSet(
         self.perform_update(serializer)
         emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance)
         return Response(serializer.data)
+
+    @action(
+        methods=["POST"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk-create"
+    )
+    def bulk_create(self, request, *args, **kwargs):
+        """ manually set org and only allow accounts in org """
+        user = request.user
+
+        d = request.data
+        # make sure the user that created the lead is in the created_by field
+        created_leads = []
+        for data in d:
+
+            data["created_by"] = user.id
+            # set its status to claimed by assigning it to the user that created the lead
+            data["claimed_by"] = user.id
+            # check account to be sure it is in org
+            account_for = data.get("account", None)
+            if not account_for:
+                raise ValidationError(
+                    detail={"detail": "Account is a required field"})
+            # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
+            try:
+                account = Account.objects.for_user(
+                    request.user).get(pk=account_for)
+            except Account.DoesNotExist:
+                raise PermissionDenied()
+            # if there are contacts to be added first check that contacts exist or create them
+            # TODO: PB 05/15/20 fix issue where This get_or_create allows creating a user with a blank first_name and number
+            contacts = data.pop("linked_contacts", [])
+            contact_list = list()
+            for contact in contacts:
+                c, created = Contact.objects.for_user(request.user).get_or_create(
+                    email=contact["email"], defaults={"account": account}
+                )
+                if created:
+                    c.first_name = contact.get("first_name", c.first_name)
+                    c.last_name = contact.get("last_name", c.last_name)
+                    c.phone_number_1 = contact.get(
+                        "phone_number_1", c.phone_number_1)
+                    c.phone_number_2 = contact.get(
+                        "phone_number_2", c.phone_number_2)
+                    c.save()
+                contact_list.append(c.id)
+            serializer = self.serializer_class(
+                data=data, context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+
+        # Attach contacts and create a Forecast
+            serializer.instance.linked_contacts.add(*contact_list)
+            Forecast.objects.create(lead=serializer.instance)
+
+            emit_event(lead_constants.LEAD_CREATED, user, serializer.instance)
+            created_leads.append(serializer.data)
+        return Response(data={"created": created_leads})
 
     @action(
         methods=["POST"],
@@ -265,7 +329,8 @@ class LeadViewSet(
             closing_amount = request.data.get("closing_amount")
             contract = request.data.get("contract")
         except KeyError:
-            raise ValidationError({"detail": "Closing Amount and Contract Required"})
+            raise ValidationError(
+                {"detail": "Closing Amount and Contract Required"})
         lead = self.get_object()
         try:
             contract = File.objects.get(pk=contract)
@@ -310,7 +375,8 @@ class ListViewSet(
         # make sure the user that created the lead is in the created_by field
 
         data["created_by"] = user.id
-        serializer = self.serializer_class(data=data, context={"request": request})
+        serializer = self.serializer_class(
+            data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
@@ -385,7 +451,8 @@ class ListViewSet(
             try:
                 Lead.objects.get(pk=lead_id).lists.set(request.data["lists"])
             except Lead.DoesNotExist:
-                raise ValidationError({"detail": f"Invalid Lead ID: {lead_id}"})
+                raise ValidationError(
+                    {"detail": f"Invalid Lead ID: {lead_id}"})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -411,7 +478,8 @@ class NoteViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(data=d, context={"request": request})
+        serializer = self.serializer_class(
+            data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.NOTE_CREATED, u, serializer.instance)
@@ -441,7 +509,8 @@ class NoteViewSet(
                 "created_for": lead,
                 "created_by": user.id,
             }
-            serializer = self.serializer_class(data=d, context={"request": request})
+            serializer = self.serializer_class(
+                data=d, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             emit_event(lead_constants.NOTE_CREATED, user, serializer.instance)
@@ -505,7 +574,8 @@ class CallNoteViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(data=d, context={"request": request})
+        serializer = self.serializer_class(
+            data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.CALL_NOTE_CREATED, u, serializer.instance)
@@ -546,7 +616,8 @@ class ReminderViewSet(
         leads = request.data.get("created_for", [])
         created = list()
         if len(leads) < 1:
-            raise ValidationError({"detail": "lead or leads required in created_for"})
+            raise ValidationError(
+                {"detail": "lead or leads required in created_for"})
         # TODO: change this to create a list of items not created if a user does not exist instead
         for lead in leads:
             try:
@@ -557,7 +628,8 @@ class ReminderViewSet(
             data["created_for"] = lead
             data["created_by"] = user.id
 
-            serializer = self.serializer_class(data=data, context={"request": request})
+            serializer = self.serializer_class(
+                data=data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             created.append(serializer.data)
@@ -616,7 +688,8 @@ class ActionChoiceViewSet(
         user = request.user
         data = dict(request.data)
         data["organization"] = user.organization.id
-        serializer = self.serializer_class(data=data, context={"request": request})
+        serializer = self.serializer_class(
+            data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
@@ -654,7 +727,8 @@ class ActionViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(data=d, context={"request": request})
+        serializer = self.serializer_class(
+            data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
@@ -686,11 +760,13 @@ class ActionViewSet(
                 "action_detail": action_data["action_detail"],
                 "lead": l,
             }
-            serializer = self.serializer_class(data=d, context={"request": request})
+            serializer = self.serializer_class(
+                data=d, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             created.append(serializer.data)
-            emit_event(lead_constants.ACTION_CREATED, request.user, serializer.instance)
+            emit_event(lead_constants.ACTION_CREATED,
+                       request.user, serializer.instance)
         return Response({"created": created})
 
     def update(self, request, *args, **kwargs):
@@ -724,7 +800,8 @@ class FileViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        serializer = self.serializer_class(data=data, context={"request": request})
+        serializer = self.serializer_class(
+            data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
