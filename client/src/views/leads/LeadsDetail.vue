@@ -203,7 +203,7 @@ export default {
           this.$Alert.alert({
             type: 'success',
             message,
-            timeout: 4000,
+            timeout: 3000,
           })
         })
     },
@@ -214,7 +214,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 2000,
+          timeout: 3000,
         })
       })
     },
@@ -224,7 +224,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 4000,
+          timeout: 3000,
         })
         this.$router.push({ name: 'LeadsIndex' })
       })

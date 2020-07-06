@@ -131,6 +131,7 @@ export default {
 
           this.$Alert.alert({
             type: 'success',
+            timeout: 3000,
             message: `
               <p>Call saved.</p>
             `,
@@ -139,6 +140,7 @@ export default {
         .catch(error => {
           this.$Alert.alert({
             type: 'error',
+            timeout: 3000,
             message: `
               <h3>Error</h3>
               <p>There was an error saving this note.</p>
