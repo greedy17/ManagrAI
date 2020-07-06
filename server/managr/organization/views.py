@@ -22,6 +22,7 @@ from rest_framework import (
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Organization, Account, Contact
 from managr.lead.models import Lead
 from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer
@@ -97,6 +98,16 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
     @action(methods=["PATCH"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update")
     def bulk_update(self, request, *args, **kwargs):
         accounts = request.data
+#        query = Q()
+#        for acc in accounts:
+#            query = (Q(id=acc['id']))
+
+#        accs = Account.objects.for_user(request.user).filter(query)
+#        serializer = AccountSerializer(
+#            accs, data=request.data, many=True, context={'request': request})
+#        serializer.is_valid(raise_exception=True)
+#        serializer.save()
+#        return Response(serializer.data)
         updated_accounts = []
         for account in accounts:
             a = None

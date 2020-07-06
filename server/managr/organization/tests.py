@@ -1,6 +1,7 @@
 from django.test import TestCase
-
-from .models import Organization
+from faker import Faker
+from .models import Organization, Account
+from .serializers import AccountSerializer
 from .factories import AccountFactory, OrganizationFactory
 # Create your tests here.
 
@@ -25,3 +26,16 @@ class AccountTestCase(TestCase):
 
         acc = AccountFactory(organization=self.org)
         self.assertEqual(acc.organization, self.org)
+
+    def test_account_bulk_create(self):
+        # create random fake accounts to add in bulk
+        accounts = []
+        for i in range(30):
+            faker = Faker()
+            acc = dict(name=faker.name(), url=faker.url())
+            accounts.append(acc)
+        serializer = AccountSerializer(data=accounts, many=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # get org accounts
+        self.assertGreaterEqual(self.org.accounts.all().count(), 30,)
