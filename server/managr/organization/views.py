@@ -107,13 +107,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
                 # pass if the acc doesn't exist
                 # TODO: Could have it create the acc if it does not exist PB 07/06
                 pass
-
             if(a):
                 serializer = AccountSerializer(
                     a, data=account, context={'request': request})
-
                 serializer.is_valid(raise_exception=True)
-
                 serializer.save()
                 updated_accounts.append(serializer.data)
 
