@@ -94,6 +94,31 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
         else:
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
 
+    @action(methods=["PATCH"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update")
+    def bulk_update(self, request, *args, **kwargs):
+        accounts = request.data
+        updated_accounts = []
+        for account in accounts:
+            a = None
+            try:
+                a = Account.objects.for_user(
+                    request.user).get(id=account['id'])
+            except Account.DoesNotExist:
+                # pass if the acc doesn't exist
+                # TODO: Could have it create the acc if it does not exist PB 07/06
+                pass
+
+            if(a):
+                serializer = AccountSerializer(
+                    a, data=account, context={'request': request})
+
+                serializer.is_valid(raise_exception=True)
+
+                serializer.save()
+                updated_accounts.append(serializer.data)
+
+        return Response(updated_accounts)
+
 
 class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     """ All memebers of the organization can add, create and update contacts """
@@ -135,6 +160,8 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
                 c = Contact.objects.for_user(request.user).get(
                     email=contact['email'], account=contact['account'])
             except Contact.DoesNotExist:
+                # pass if the contact doesn't exist
+                # TODO: Could have it create the contact if it does not exist PB 07/06
                 pass
             if(c):
                 serializer = ContactSerializer(c,
