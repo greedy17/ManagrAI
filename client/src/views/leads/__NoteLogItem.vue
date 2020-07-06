@@ -9,7 +9,7 @@
           <strong>{{ log.meta.title }}</strong>
         </div>
         <div class="item-list__row-item--double">
-          <span class="date-text">{{ log.actionTimestamp | dateShort }}</span>
+          <span class="date-text">{{ log.actionTimestamp | dateShortWithTime }}</span>
         </div>
         <div class="item-list__row-item--half">
           <LogItemArrowIcon :down="collapsed" />
