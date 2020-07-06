@@ -75,7 +75,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
 
     def update(self, request, *args, **kwargs):
         user = request.user
-        acc = Account.objects.get(pk=kwargs['pk'])
+        acc = self.get_object
         serializer = self.serializer_class(acc,
                                            data=request.data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -123,6 +123,29 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
             return Response(
                 data={"non_field_errors": "One of More Contacts already exist"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(res)
+
+    @action(methods=["PATCH"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update")
+    def bulk_update(self, request, *args, **kwargs):
+        # check if this is a bulk add
+        contacts = request.data
+        updated_contacts = []
+        for contact in contacts:
+            c = None
+            try:
+                c = Contact.objects.for_user(request.user).get(
+                    email=contact['email'], account=contact['account'])
+            except Contact.DoesNotExist:
+                pass
+            if(c):
+                serializer = ContactSerializer(c,
+                                               data=contact, context={'request': request})
+
+                serializer.is_valid(raise_exception=True)
+
+                serializer.save()
+                updated_contacts.append(serializer.data)
+
+        return Response(updated_contacts)
 
     @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="link-to-leads")
     def add_to_lead(self, request, *args, **kwargs):

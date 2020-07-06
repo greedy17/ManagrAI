@@ -90,7 +90,6 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-
     def validate_account(self, value):
         accounts = Account.objects.filter(
             organization=self.context['request'].user.organization)
