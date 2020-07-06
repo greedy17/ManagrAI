@@ -63,13 +63,9 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
         user = request.user
         # passing in the request as a context to manually add the organization
         # checking to see if this is a bulk add or not if it is set to many
-        accounts = request.data.get('accounts', None)
-        if accounts:
-            serializer = self.get_serializer(data=request.data['accounts'], context={
-                                             'request': request}, many=isinstance(request.data['accounts'], list))
-        else:
-            serializer = AccountSerializer(
-                data=request.data, context={'request': request}, many=isinstance(request.data, list))
+
+        serializer = AccountSerializer(
+            data=request.data, context={'request': request}, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         if user.type != ACCOUNT_TYPE_MANAGER:
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
@@ -110,19 +106,22 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
         return Contact.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        user = request.user
+        # check if this is a bulk add
 
-        contacts = request.data.get('contacts', None)
-        if contacts:
-            serializer = self.get_serializer(
-                data=contacts, context={'request': request}, many=isinstance(contacts, list))
-        else:
-            serializer = ContactSerializer(
-                data=request.data, context={'request': request})
+        serializer = ContactSerializer(
+            data=request.data, context={'request': request}, many=isinstance(request.data, list))
 
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        res = serializer.data
+
+        try:
+            serializer.save()
+            res = serializer.data
+
+        except IntegrityError as e:
+            # an integrity error here means two contacts with the same info are added
+            # if both are the same and not unique then django returns an array of errors
+            return Response(
+                data={"non_field_errors": "One of More Contacts already exist"}, status=400)
         return Response(res)
 
     @action(methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="link-to-leads")
