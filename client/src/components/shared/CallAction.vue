@@ -21,8 +21,8 @@
     <div class="flexbox-container__column" style="flex: 2;">
       <div class="form">
         <div class="form__element">
-          <div class="form__element-header">Topic</div>
-          <div class="form__element-help">What was the meeting topic?</div>
+          <div class="form__element-header">Call</div>
+          <div class="form__element-help">Outcome</div>
           <select class="form__select" v-model="callNote.title">
             <option v-for="(option, index) in TOPIC_OPTIONS" :value="option" :key="index">
               {{ option }}
@@ -62,7 +62,7 @@ import CallNote from '@/services/call-notes'
 
 import ContactBox from '@/components/shared/ContactBox'
 
-const TOPIC_OPTIONS = ['Pick Up', 'Voicemail', 'No Answer', 'Success', 'Other']
+const TOPIC_OPTIONS = ['Pick Up', 'Voicemail', 'No Answer', 'Other']
 
 export default {
   name: 'CallAction',
@@ -80,6 +80,9 @@ export default {
       saving: false,
       showErrors: false,
     }
+  },
+  created() {
+    this.callNote.callDate = new Date().toISOString().split('T')[0]
   },
   computed: {
     formValid() {
