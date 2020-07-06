@@ -39,13 +39,15 @@ class Lead(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
+    amount = models.PositiveIntegerField(
+        help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
     )
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
-    rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
+    rating = models.IntegerField(
+        choices=lead_constants.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
         "organization.Account",
         related_name="leads",
@@ -123,7 +125,8 @@ class ListQuerySet(models.QuerySet):
 
 class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
-    created_by = models.ForeignKey("core.User", null=True, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(
+        "core.User", null=True, on_delete=models.SET_NULL)
     leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
@@ -237,7 +240,7 @@ class BaseNote(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {"id": str(c.id), "full_name": c.full_name, }
                 for c in self.linked_contacts.all()
             ],
         }
@@ -378,12 +381,17 @@ class Notification(TimeStampModel):
     title = models.CharField(
         max_length=255, null=True, help_text="a title for the notification"
     )
-    action_taken = models.CharField(
+    notification_type = models.CharField(
         max_length=255,
-        choices=lead_constants.NOTIFICATION_ACTION_CHOICES,
-        help_text="a notification can either be viewed or snoozed",
-        null=True,
+        choices=lead_constants.NOTIFICATION_TYPE_CHOICES,
+        help_text="type of Notification being created",
     )
+
+    viewed = models.BooleanField(blank=False, null=False, default=False)
+    meta = JSONField(help_text="Details about the notification", default=dict)
+
+    class Meta:
+        ordering = ["-action_timestamp", "-datetime_created"]
 
 
 class ActionChoiceQuerySet(models.QuerySet):
@@ -463,7 +471,7 @@ class Action(TimeStampModel):
             },
             "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
             "linked_contacts_ref": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {"id": str(c.id), "full_name": c.full_name, }
                 for c in self.linked_contacts.all()
             ],
         }
