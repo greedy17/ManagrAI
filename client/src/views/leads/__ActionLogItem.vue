@@ -19,12 +19,9 @@
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
         <p>{{ log.meta.actionDetail }}</p>
-        <p>
+        <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
-          {{
-            log.meta.linkedContactsRef &&
-              log.meta.linkedContactsRef.map(c => c.full_name).join(', ')
-          }}
+          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
         </p>
       </div>
     </div>
