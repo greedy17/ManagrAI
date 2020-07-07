@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-export { uppercase, momentDateTime, momentDateTimeShort, timeAgo, timeToNow }
+export { uppercase, momentDateTime, momentDateTimeShort, timeAgo, timeToNow, prependUrlProtocol }
 
 function uppercase(value) {
   if (!value) return ''
@@ -25,4 +25,17 @@ function timeAgo(value) {
 function timeToNow(value) {
   if (!value) return 'N/A'
   return moment(value).toNow(true)
+}
+
+function prependUrlProtocol(value) {
+  if (!value) return ''
+  if (!value.includes('http')) {
+    value = 'https://' + value
+  } else {
+    if (!value.includes('https')) {
+      let domainAndPath = link_url_from_params.split('://')[1]
+      value = 'https://' + domainAndPath
+    }
+  }
+  return value
 }

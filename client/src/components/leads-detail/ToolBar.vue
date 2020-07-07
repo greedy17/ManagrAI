@@ -60,7 +60,17 @@
         />
       </div>
     </div>
-    <div class="account-link" @click="goToProspect">{{ lead.accountRef.name }}</div>
+    <div style="display: flex; flex-flow: row; justify-content: center;">
+      <a
+        class="account-link"
+        :href="lead.accountRef.url | prependUrlProtocol"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ lead.accountRef.name }}
+        <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
+      </a>
+    </div>
     <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
@@ -335,9 +345,6 @@ export default {
     closeListModal() {
       this.listModal.isOpen = false
       this.selectedLists = {}
-    },
-    goToProspect() {
-      this.$router.push({ name: 'Prospect' })
     },
     emitUpdatedRating(rating) {
       this.$emit('updated-rating', rating)
@@ -649,6 +656,7 @@ export default {
   justify-content: center;
   color: $dark-green;
   text-decoration: underline;
+  width: fit-content;
 
   &:hover {
     font-weight: bold;
