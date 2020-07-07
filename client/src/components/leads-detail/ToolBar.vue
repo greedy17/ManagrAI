@@ -136,7 +136,9 @@
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            <a class="file-link" :href="file.file">{{ file.filename }}</a>
+            <a class="file-link" :href="file.file" target="_blank" rel="noopener noreferrer">
+              {{ file.filename }}
+            </a>
             <img
               class="add"
               style="margin: 0 1rem 0 auto;"
