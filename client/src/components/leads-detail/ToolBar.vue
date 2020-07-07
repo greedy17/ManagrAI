@@ -83,23 +83,18 @@
           @click.stop="openContactsModal"
         />
       </div>
-      <div v-if="contactsLoading" class="contacts-loading contacts-container section-shadow">
+      <div v-if="contactsLoading" class="contacts-loading section-shadow">
         <ComponentLoadingSVG />
       </div>
-      <div v-else-if="leadContacts.list.length" class="contacts-container">
+      <div v-else-if="leadContacts.list.length" class="">
         <div class="contact section-shadow" v-for="contact in leadContacts.list" :key="contact.id">
           <img src="@/assets/images/sara-smith.png" alt="contact image" />
           <span class="name">{{
             contact.fullName.length > 0 ? contact.fullName : contact.email
           }}</span>
-          <div class="phone button">
-            <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
-          </div>
-          <div class="text button">
-            <img class="icon" src="@/assets/images/sms.svg" alt="icon" />
-          </div>
-          <div class="email button">
-            <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+          <div class="contact-title" v-if="contact.title">
+            <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
+            {{ contact.title }}
           </div>
         </div>
       </div>
@@ -727,32 +722,21 @@ export default {
       margin-right: 1rem;
     }
 
-    .phone {
-      margin-left: auto;
-    }
-
-    .text {
-      margin-left: 0.5rem;
-    }
-
-    .email {
-      margin: 0 0.5rem;
-    }
-
-    .button {
-      @include pointer-on-hover();
+    .contact-title {
       height: 1.5rem;
-      width: 1.5rem;
+      padding: 0 1rem;
       background-color: $soft-gray;
       border-radius: 5px;
       display: flex;
       flex-flow: row;
       align-items: center;
       justify-content: center;
+      margin-left: auto;
+      margin-right: 1rem;
 
       .icon {
         height: 1rem;
-        margin: auto;
+        margin-right: 1rem;
       }
     }
   }
