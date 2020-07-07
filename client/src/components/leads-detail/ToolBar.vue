@@ -88,7 +88,9 @@
       </div>
       <div v-else-if="leadContacts.list.length" class="">
         <div class="contact section-shadow" v-for="contact in leadContacts.list" :key="contact.id">
-          <img src="@/assets/images/sara-smith.png" alt="contact image" />
+          <div class="contact-circle-container">
+            <div>{{ contactInitials(contact) }}</div>
+          </div>
           <span class="name">{{
             contact.fullName.length > 0 ? contact.fullName : contact.email
           }}</span>
@@ -533,6 +535,17 @@ export default {
 
       return !userInputPresent || (userInputPresent && !anyFieldBlank)
     },
+    contactInitials(contact) {
+      if (!contact.fullName) {
+        return
+      }
+      let names = contact.fullName.split(' '),
+        initials = names[0].substring(0, 1).toUpperCase()
+      if (names.length > 1) {
+        initials += names[names.length - 1].substring(0, 1).toUpperCase()
+      }
+      return initials
+    },
   },
 }
 </script>
@@ -886,5 +899,19 @@ export default {
       margin-right: 1rem;
     }
   }
+}
+
+.contact-circle-container {
+  line-height: 1rem;
+  background-color: $dark-gray-blue;
+  color: $white;
+  font-weight: 1000;
+  height: 2rem;
+  width: 2rem;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-radius: 50%;
+  margin-right: 0.2rem;
 }
 </style>
