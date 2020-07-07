@@ -17,7 +17,7 @@
           >
         </div>
         <div class="item-list__row-item--double">
-          <span class="date-text">{{ log.actionTimestamp | dateShort }}</span>
+          <span class="date-text">{{ log.actionTimestamp | dateShortWithTime }}</span>
         </div>
       </div>
     </div>

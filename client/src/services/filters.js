@@ -1,6 +1,14 @@
 import moment from 'moment'
 
-export { uppercase, momentDateTime, momentDateTimeShort, timeAgo, timeToNow, prependUrlProtocol }
+export {
+  uppercase,
+  momentDateTime,
+  momentDateTimeShort,
+  timeAgo,
+  timeToNow,
+  prependUrlProtocol,
+  formatDateShortWithTime,
+}
 
 function uppercase(value) {
   if (!value) return ''
@@ -33,9 +41,21 @@ function prependUrlProtocol(value) {
     value = 'https://' + value
   } else {
     if (!value.includes('https')) {
-      let domainAndPath = link_url_from_params.split('://')[1]
+      let domainAndPath = value.split('://')[1]
       value = 'https://' + domainAndPath
     }
   }
   return value
+}
+
+function formatDateShortWithTime(value) {
+  if (!value) return 'N/A'
+  const date = new Date(value)
+  return date.toLocaleDateString(['en-US'], {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }

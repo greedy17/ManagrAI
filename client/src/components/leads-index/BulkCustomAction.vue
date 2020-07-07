@@ -87,7 +87,7 @@ export default {
       Action.api.bulkCreate(this.type, this.description, leads).then(() => {
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Action logged for selected opportunities!',
         })
         this.$parent.$emit('bulk-success')

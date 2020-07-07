@@ -2,33 +2,33 @@
   <div class="activity-log-item">
     <NoteLogItem
       :log="log"
-      :collapsed="collapsed"
+      :collapsed="!expanded"
       v-if="log.model === 'Note'"
-      @item-click="toggleCollapsed"
+      @item-click="emitToggleCollapse"
     />
     <CallNoteLogItem
       :log="log"
-      :collapsed="collapsed"
+      :collapsed="!expanded"
       v-if="log.model === 'CallNote'"
-      @item-click="toggleCollapsed"
+      @item-click="emitToggleCollapse"
     />
     <ActionLogItem
       :log="log"
-      :collapsed="collapsed"
+      :collapsed="!expanded"
       v-if="log.model === 'Action'"
-      @item-click="toggleCollapsed"
+      @item-click="emitToggleCollapse"
     />
     <EmailLogItem
       :log="log"
-      :collapsed="collapsed"
+      :collapsed="!expanded"
       v-if="log.model === 'LeadEmail'"
-      @item-click="toggleCollapsed"
+      @item-click="emitToggleCollapse"
     />
     <LeadLogItem
       :log="log"
-      :collapsed="collapsed"
+      :collapsed="!expanded"
       v-if="log.model === 'Lead'"
-      @item-click="toggleCollapsed"
+      @item-click="emitToggleCollapse"
     />
   </div>
 </template>
@@ -48,6 +48,10 @@ export default {
       type: Object,
       required: true,
     },
+    expanded: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -55,8 +59,8 @@ export default {
     }
   },
   methods: {
-    toggleCollapsed() {
-      this.collapsed = !this.collapsed
+    emitToggleCollapse() {
+      this.$emit('toggle-history-item', this.log.id)
     },
   },
 }

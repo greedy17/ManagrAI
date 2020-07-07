@@ -32,7 +32,7 @@
       </div>
 
       <!-- Lead History and Emails -->
-      <div class="box">
+      <div class="box" style="box-sizing: border-box;">
         <div class="box__tab-header">
           <div
             class="box__tab"
@@ -66,10 +66,27 @@
               Check for Mail
             </button>
           </div>
+
+          <div class="history-menu" v-if="activityTabSelected === HISTORY">
+            <img
+              class="icon"
+              src="@/assets/images/more_horizontal.svg"
+              @click="showHistoryMenu = !showHistoryMenu"
+            />
+            <div v-if="showHistoryMenu" class="menu">
+              <p class="option" @click="expandAllHistoryItems">Expand All</p>
+              <p class="option" @click="collapseAllHistoryItems">Collapse All</p>
+            </div>
+          </div>
         </div>
 
         <div v-show="activityTabSelected === HISTORY" class="box__content">
-          <LeadHistory :lead="lead" />
+          <LeadHistory
+            :lead="lead"
+            ref="History"
+            @toggle-history-item="toggleHistoryItem"
+            :expandedHistoryItems="expandedHistoryItems"
+          />
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
@@ -141,6 +158,8 @@ export default {
       HISTORY,
       EMAILS,
       activityTabSelected: HISTORY,
+      showHistoryMenu: false,
+      expandedHistoryItems: [],
     }
   },
   async created() {
@@ -152,6 +171,21 @@ export default {
     })
   },
   methods: {
+    expandAllHistoryItems() {
+      this.expandedHistoryItems = this.$refs.History.$data.history.list.map(h => h.id)
+      this.showHistoryMenu = false
+    },
+    collapseAllHistoryItems() {
+      this.expandedHistoryItems = []
+      this.showHistoryMenu = false
+    },
+    toggleHistoryItem(id) {
+      if (this.expandedHistoryItems.includes(id)) {
+        this.expandedHistoryItems = this.expandedHistoryItems.filter(i => i != id)
+      } else {
+        this.expandedHistoryItems = [...this.expandedHistoryItems, id]
+      }
+    },
     retrieveLead() {
       this.loading = true
       return Lead.api.retrieve(this.id)
@@ -203,7 +237,7 @@ export default {
           this.$Alert.alert({
             type: 'success',
             message,
-            timeout: 4000,
+            timeout: 3000,
           })
         })
     },
@@ -214,7 +248,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 2000,
+          timeout: 3000,
         })
       })
     },
@@ -224,7 +258,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 4000,
+          timeout: 3000,
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
@@ -246,5 +280,34 @@ export default {
   align-items: flex-end;
   flex-direction: column;
   justify-content: center;
+}
+
+.history-menu {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  justify-content: center;
+
+  margin-right: 1rem;
+
+  .icon {
+    @include pointer-on-hover();
+    opacity: 0.4;
+  }
+
+  .menu {
+    position: absolute;
+    z-index: 1083;
+    margin-top: 3.5rem;
+    background-color: $soft-gray;
+    width: 6rem;
+    padding: 0 1rem;
+    border-radius: 3px;
+
+    .option {
+      @include pointer-on-hover();
+    }
+  }
 }
 </style>

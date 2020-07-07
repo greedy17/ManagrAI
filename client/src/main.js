@@ -19,6 +19,7 @@ import Modal from '@/components/Modal'
 import currencyFilter from '@/services/currency'
 import { formatDateShort } from '@/services/utils'
 import {
+  formatDateShortWithTime,
   momentDateTime,
   momentDateTimeShort,
   timeAgo,
@@ -41,6 +42,7 @@ Vue.filter('dateShort', formatDateShort)
 Vue.filter('timeAgo', timeAgo)
 Vue.filter('timeToNow', timeToNow)
 Vue.filter('prependUrlProtocol', prependUrlProtocol)
+Vue.filter('dateShortWithTime', formatDateShortWithTime)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })

@@ -375,7 +375,7 @@ export default {
       List.api.bulkUpdate(selectedLeads, selectedLists).then(() => {
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Lists updated!',
         })
         this.lists.list = Object.values(this.selectedLists).sort(listSorter)
@@ -391,7 +391,7 @@ export default {
           this.lead.filesRef = [...this.lead.filesRef, response.data]
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: `File uploaded as "${response.data.filename}"!`,
           })
         })
@@ -489,7 +489,7 @@ export default {
           .then(response => {
             this.$Alert.alert({
               type: 'success',
-              timeout: 4000,
+              timeout: 3000,
               message: 'Contacts updated!',
             })
             this.leadContacts.list = response.data.map(c => Contact.fromAPI(c))
@@ -505,7 +505,7 @@ export default {
           .then(response => {
             this.$Alert.alert({
               type: 'success',
-              timeout: 4000,
+              timeout: 3000,
               message: 'Contacts updated!',
             })
             this.leadContacts.list = response.data.map(c => Contact.fromAPI(c))
