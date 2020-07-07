@@ -1,9 +1,18 @@
 from django.test import TestCase
 from faker import Faker
+from django.test import RequestFactory
 from .models import Organization, Account
 from .serializers import AccountSerializer
 from .factories import AccountFactory, OrganizationFactory
+from managr.core.models import User
+import json
+
 # Create your tests here.
+
+
+class MockRequest:
+    def __init__(self, user):
+        self.user = user
 
 
 class OrganizationTestCase(TestCase):
@@ -17,13 +26,15 @@ class OrganizationTestCase(TestCase):
 
 
 class AccountTestCase(TestCase):
+    fixtures = ["dev.json"]
 
     def setUp(self):
-        self.org = OrganizationFactory()
+        self.org = Organization.objects.first()
+        self.user = self.org.users.first()
+        self.request = MockRequest(self.user)
 
     def test_account_created_to_org(self):
         # test to see if an account was created and set to an org
-
         acc = AccountFactory(organization=self.org)
         self.assertEqual(acc.organization, self.org)
 
@@ -34,8 +45,17 @@ class AccountTestCase(TestCase):
             faker = Faker()
             acc = dict(name=faker.name(), url=faker.url())
             accounts.append(acc)
-        serializer = AccountSerializer(data=accounts, many=True)
+        data = {'data': accounts}
+        serializer = AccountSerializer(data=accounts, context={
+                                       'request': self.request}, many=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        # get org accounts
+        # get org accounts number
+
         self.assertGreaterEqual(self.org.accounts.all().count(), 30,)
+
+#    def test_account_bulk_update(self):
+#        faker = Faker()
+#        acc = dict(name=faker.name(), url=faker.url())
+#        serializer = AccountSerializer(data=acc, context={
+#                                       'request': self.request}, many=True)
