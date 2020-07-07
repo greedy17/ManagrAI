@@ -10,6 +10,7 @@
         :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
+        @updated-title="updateTitle"
       />
     </div>
     <div class="page__main-content-area">
@@ -210,6 +211,12 @@ export default {
     },
     updateAmount(amount) {
       let patchData = { amount }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateTitle(title) {
+      let patchData = { title }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
       })

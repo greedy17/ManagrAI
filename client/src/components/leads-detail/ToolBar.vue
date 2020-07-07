@@ -5,8 +5,15 @@
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div> -->
-    <div class="lead-name">
+    <div class="lead-title" v-if="!editTitle" @click="onEditTitle">
       <h2>{{ lead.title }}</h2>
+    </div>
+    <div v-else class="title-editable">
+      <form class="title-form" @submit.prevent="updateTitle">
+        <input v-model="tempTitle" type="text" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click="updateTitle" />
+        <img class="reset" src="@/assets/images/remove.svg" @click="resetTitle" />
+      </form>
     </div>
     <div class="rating">
       <LeadRating
@@ -298,7 +305,8 @@ export default {
       }),
       editAmount: false,
       tempAmount: this.lead.amount,
-
+      editTitle: false,
+      tempTitle: this.lead.title,
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
       selectedLists: {},
@@ -361,6 +369,17 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    onEditTitle() {
+      this.editTitle = true
+    },
+    updateTitle() {
+      this.$emit('updated-title', this.tempTitle)
+      this.editTitle = false
+    },
+    resetTitle() {
+      this.tempTitle = this.lead.title
+      this.editTitle = false
     },
     toggleSelectedList(list) {
       if (this.selectedLists[list.id]) {
@@ -612,9 +631,49 @@ export default {
   }
 }
 
-.lead-name {
+.lead-title {
+  @include pointer-on-hover;
+  margin-top: 1rem;
   padding: 0 15%;
   text-align: center;
+}
+
+.title-editable {
+  @include pointer-on-hover();
+  margin-top: 2rem;
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  font-size: 1.125rem;
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 10rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
 }
 
 .rating {
