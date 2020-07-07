@@ -38,12 +38,6 @@
           <textarea class="form__textarea" v-model="callNote.content" />
         </div>
       </div>
-      <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input type="date" class="form__input" v-model="callNote.callDate" />
-        <div class="form__element-error" v-if="showErrors && !dateValid">Please enter a date.</div>
-      </div>
-
       <div
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
@@ -80,9 +74,6 @@ export default {
       saving: false,
       showErrors: false,
     }
-  },
-  created() {
-    this.callNote.callDate = new Date().toISOString().split('T')[0]
   },
   computed: {
     formValid() {
