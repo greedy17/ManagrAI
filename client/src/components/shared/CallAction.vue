@@ -77,16 +77,13 @@ export default {
   },
   computed: {
     formValid() {
-      return this.titleValid && this.dateValid
+      return this.titleValid
     },
     linkedContactsValid() {
       return this.callNote.linkedContacts.length > 0
     },
     titleValid() {
       return this.callNote.title !== '' && TOPIC_OPTIONS.includes(this.callNote.title)
-    },
-    dateValid() {
-      return !!this.callNote.callDate
     },
   },
   methods: {
