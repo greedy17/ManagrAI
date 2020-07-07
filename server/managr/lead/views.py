@@ -57,7 +57,9 @@ class LeadActivityLogViewSet(
 ):
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
-    filter_fields = ("lead",)
+    filter_fields = ('lead',)
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend,)
+    search_fields = ('meta__title', 'meta__content')
 
     def get_queryset(self):
         return LeadActivityLog.objects.for_user(self.request.user)

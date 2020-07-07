@@ -68,6 +68,12 @@
             </button>
           </div>
 
+          <div class="history-search-container" v-if="activityTabSelected === HISTORY">
+            <form @submit.prevent="onSearchHistory">
+              <input v-model="historySearchTerm" placeholder="Search" />
+            </form>
+          </div>
+
           <div class="history-menu" v-if="activityTabSelected === HISTORY">
             <img
               class="icon"
@@ -87,6 +93,7 @@
             ref="History"
             @toggle-history-item="toggleHistoryItem"
             :expandedHistoryItems="expandedHistoryItems"
+            :activityLogLoading="activityLogLoading"
           />
         </div>
 
@@ -161,6 +168,8 @@ export default {
       activityTabSelected: HISTORY,
       showHistoryMenu: false,
       expandedHistoryItems: [],
+      historySearchTerm: '',
+      activityLogLoading: false,
     }
   },
   async created() {
@@ -172,6 +181,14 @@ export default {
     })
   },
   methods: {
+    onSearchHistory() {
+      this.$refs.History.$data.history.filters.search = this.historySearchTerm
+      // Can not use history.refreshing because that will interfere with the polling
+      this.activityLogLoading = true
+      this.$refs.History.$data.history.refresh().finally(() => {
+        this.activityLogLoading = false
+      })
+    },
     expandAllHistoryItems() {
       this.expandedHistoryItems = this.$refs.History.$data.history.list.map(h => h.id)
       this.showHistoryMenu = false
@@ -314,6 +331,23 @@ export default {
 
     .option {
       @include pointer-on-hover();
+    }
+  }
+}
+
+.history-search-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  width: 20rem;
+  margin-left: 20rem;
+  box-sizing: border-box;
+
+  form {
+    width: inherit;
+    input {
+      @include input-field;
+      width: inherit;
     }
   }
 }
