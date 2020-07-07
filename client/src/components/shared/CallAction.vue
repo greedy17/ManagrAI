@@ -21,8 +21,8 @@
     <div class="flexbox-container__column" style="flex: 2;">
       <div class="form">
         <div class="form__element">
-          <div class="form__element-header">Topic</div>
-          <div class="form__element-help">What was the meeting topic?</div>
+          <div class="form__element-header">Call</div>
+          <div class="form__element-help">Outcome</div>
           <select class="form__select" v-model="callNote.title">
             <option v-for="(option, index) in TOPIC_OPTIONS" :value="option" :key="index">
               {{ option }}
@@ -38,12 +38,6 @@
           <textarea class="form__textarea" v-model="callNote.content" />
         </div>
       </div>
-      <div class="form__element">
-        <div class="form__element-header">Date</div>
-        <input type="date" class="form__input" v-model="callNote.callDate" />
-        <div class="form__element-error" v-if="showErrors && !dateValid">Please enter a date.</div>
-      </div>
-
       <div
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
@@ -62,7 +56,7 @@ import CallNote from '@/services/call-notes'
 
 import ContactBox from '@/components/shared/ContactBox'
 
-const TOPIC_OPTIONS = ['Pick Up', 'Voicemail', 'No Answer', 'Success', 'Other']
+const TOPIC_OPTIONS = ['Pick Up', 'Voicemail', 'No Answer', 'Other']
 
 export default {
   name: 'CallAction',
@@ -83,16 +77,13 @@ export default {
   },
   computed: {
     formValid() {
-      return this.titleValid && this.dateValid
+      return this.titleValid
     },
     linkedContactsValid() {
       return this.callNote.linkedContacts.length > 0
     },
     titleValid() {
       return this.callNote.title !== '' && TOPIC_OPTIONS.includes(this.callNote.title)
-    },
-    dateValid() {
-      return !!this.callNote.callDate
     },
   },
   methods: {
@@ -128,6 +119,7 @@ export default {
 
           this.$Alert.alert({
             type: 'success',
+            timeout: 3000,
             message: `
               <p>Call saved.</p>
             `,
@@ -136,6 +128,7 @@ export default {
         .catch(error => {
           this.$Alert.alert({
             type: 'error',
+            timeout: 3000,
             message: `
               <h3>Error</h3>
               <p>There was an error saving this note.</p>

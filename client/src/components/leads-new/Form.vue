@@ -362,7 +362,7 @@ export default {
         this.loading = false
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: `Created account: ${account.name}.`,
         })
         this.$emit('to-add-contacts')

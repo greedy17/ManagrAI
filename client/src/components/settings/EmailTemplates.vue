@@ -1,12 +1,12 @@
 <template>
   <div class="container">
     <div style="margin-bottom: 1rem;">
-      <button
-        class="button"
-        v-if="!showNewEmailBox"
-        @click="showNewEmailBox = !showNewEmailBox"
-      >Add New Template</button>
-      <button class="button" v-if="showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">Hide</button>
+      <button class="button" v-if="!showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">
+        Add New Template
+      </button>
+      <button class="button" v-if="showNewEmailBox" @click="showNewEmailBox = !showNewEmailBox">
+        Hide
+      </button>
     </div>
     <div class="box" v-if="showNewEmailBox">
       <div class="box__header">
@@ -81,7 +81,7 @@ export default {
         .then(() => {
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: 'Template Added',
           })
         })
