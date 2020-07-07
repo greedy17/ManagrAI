@@ -214,7 +214,7 @@ export default {
         await Note.api.create(d)
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'note created!',
         })
         this.$refs['note-action'].notesForm.resetForm()
@@ -230,7 +230,7 @@ export default {
         await Reminder.api.create(d)
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'reminder created!',
         })
         this.$refs['reminder-action'].remindersForm.resetForm()
@@ -246,7 +246,7 @@ export default {
         await CallNote.api.create(d)
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'call note created!',
         })
         this.$refs['call-note-action'].callNotesForm.resetForm()

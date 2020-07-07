@@ -9,7 +9,13 @@
     </div>
 
     <div v-if="!apiFailing">
-      <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
+      <ActivityLogItem
+        v-for="log in history.list"
+        :key="log.id"
+        :log="log"
+        :expanded="expandedHistoryItems.includes(log.id)"
+        @toggle-history-item="id => $emit('toggle-history-item', id)"
+      />
     </div>
 
     <button
@@ -37,6 +43,10 @@ export default {
   props: {
     lead: {
       type: Object,
+      required: true,
+    },
+    expandedHistoryItems: {
+      type: Array,
       required: true,
     },
   },
