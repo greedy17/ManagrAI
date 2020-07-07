@@ -452,6 +452,7 @@ export default {
             lastName: currentForm.lastName,
             email: currentForm.email,
             phone: currentForm.phone,
+            title: currentForm.title,
           }
           contacts.push(contactData)
         }
@@ -460,7 +461,14 @@ export default {
 
       if (contacts.length) {
         let promises = contacts.map(cData =>
-          Contact.api.create(cData.firstName, cData.lastName, cData.email, cData.phone, account),
+          Contact.api.create(
+            cData.firstName,
+            cData.lastName,
+            cData.email,
+            cData.phone,
+            account,
+            cData.title,
+          ),
         )
         Promise.all(promises)
           .then(responses => {
