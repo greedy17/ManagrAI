@@ -136,7 +136,7 @@
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            {{ file.filename }}
+            <a class="file-link" :href="file.file">{{ file.filename }}</a>
             <img
               class="add"
               style="margin: 0 1rem 0 auto;"
@@ -929,5 +929,15 @@ export default {
   display: flex;
   border-radius: 50%;
   margin-right: 0.2rem;
+}
+
+.file-link {
+  @include base-font-styles;
+  text-decoration: none;
+  color: $main-font-gray;
+
+  &:hover {
+    color: $dark-green;
+  }
 }
 </style>
