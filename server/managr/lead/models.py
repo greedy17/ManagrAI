@@ -389,9 +389,11 @@ class Notification(TimeStampModel):
 
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
+    user = models.ForeignKey(
+        'core.User', on_delete=models.SET_NULL, related_name="notifications", null=True)
 
     class Meta:
-        ordering = ["-action_timestamp", "-datetime_created"]
+        ordering = ["-datetime_created"]
 
 
 class ActionChoiceQuerySet(models.QuerySet):

@@ -3,6 +3,7 @@ import logging
 from background_task import background
 from .routing import routes
 from .exceptions import ConsumerConfigError
+from managr.core.models import EmailAuthAccount, User
 
 logger = logging.getLogger("managr")
 
@@ -36,3 +37,20 @@ def _log_lead_action(action, user_id, obj_id):
         logger.exception(
             f"The consumer class class '{consumer.__class__.__name__}' is misconfigured: {e}"
         )
+
+
+@background(schedule=0)
+def _get_email_info(account_id, object_id, date):
+    """ 
+        check if the email is for a lead that the user is claiming 
+        account_id email account of the user 
+        object_id the id of the object for querying 
+        date epoch datetime when the change occured
+    """
+    user = None
+    try:
+        user = User.objects.get(email_auth_account__account_id=account_id)
+    except User.DoesNotExist as e:
+        print(e)
+        pass
+    print(user)
