@@ -5,6 +5,7 @@ from .models import Organization, Account
 from .serializers import AccountSerializer
 from .factories import AccountFactory, OrganizationFactory
 from managr.core.models import User
+import copy
 import json
 
 # Create your tests here.
@@ -45,17 +46,25 @@ class AccountTestCase(TestCase):
             faker = Faker()
             acc = dict(name=faker.name(), url=faker.url())
             accounts.append(acc)
-        data = {'data': accounts}
         serializer = AccountSerializer(data=accounts, context={
                                        'request': self.request}, many=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        # get org accounts number
+        # get org total accounts number
 
         self.assertGreaterEqual(self.org.accounts.all().count(), 30,)
 
-#    def test_account_bulk_update(self):
-#        faker = Faker()
-#        acc = dict(name=faker.name(), url=faker.url())
-#        serializer = AccountSerializer(data=acc, context={
-#                                       'request': self.request}, many=True)
+    def test_account_bulk_update(self):
+        faker = Faker()
+        acc = AccountFactory(organization=self.org)
+        updated_acc = {
+            'id': acc.id,
+            'name': faker.name(),
+            'url': acc.url
+        }
+
+        serializer = AccountSerializer(acc, data=updated_acc, context={
+                                       'request': self.request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        self.assertEqual(serializer.data['name'], updated_acc['name'])

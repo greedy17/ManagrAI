@@ -42,7 +42,7 @@ class OrganizationFactory(DjangoModelFactory):
 
 def gen_random_test_data():
     """Quick script to generate random accounts, contacts, and leads."""
-    u = User.objects.get(email='test@thinknimble.com')
+    u = User.objects.get(email='testing@thinknimble.com')
     o = u.organization
 
     # Create 30 accounts

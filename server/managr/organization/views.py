@@ -6,6 +6,7 @@ from rest_framework.authtoken.models import Token
 from django.core.exceptions import ValidationError as V
 from django.template.exceptions import TemplateDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
+import copy
 from rest_framework import (
     authentication,
     filters,
@@ -98,32 +99,22 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
     @action(methods=["PATCH"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update")
     def bulk_update(self, request, *args, **kwargs):
         accounts = request.data
-#        query = Q()
-#        for acc in accounts:
-#            query = (Q(id=acc['id']))
+        query = Q()
+        for acc in accounts:
+            query |= (Q(id=acc['id']))
 
-#        accs = Account.objects.for_user(request.user).filter(query)
-#        serializer = AccountSerializer(
-#            accs, data=request.data, many=True, context={'request': request})
-#        serializer.is_valid(raise_exception=True)
-#        serializer.save()
-#        return Response(serializer.data)
+        accs = Account.objects.for_user(request.user).filter(query)
         updated_accounts = []
-        for account in accounts:
-            a = None
-            try:
-                a = Account.objects.for_user(
-                    request.user).get(id=account['id'])
-            except Account.DoesNotExist:
-                # pass if the acc doesn't exist
-                # TODO: Could have it create the acc if it does not exist PB 07/06
-                pass
-            if(a):
-                serializer = AccountSerializer(
-                    a, data=account, context={'request': request})
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                updated_accounts.append(serializer.data)
+        for account in accs:
+            updated_acc = copy.deepcopy(acc)
+            updated_acc = updated_acc.values
+            for updated_data in accounts:
+                if updated_data['id'] == str(account.id):
+                    serializer = AccountSerializer(
+                        account, data=updated_data, context={'request': request})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    updated_accounts.append(serializer.data)
 
         return Response(updated_accounts)
 
