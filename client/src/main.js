@@ -5,6 +5,7 @@ import 'babel-polyfill'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import AlertAlert from '@/services/alertAlert'
+import VueMask from 'v-mask'
 
 import App from './App'
 import router from './router'
@@ -34,6 +35,7 @@ Vue.config.productionTip = false
 
 Vue.use(Vuex)
 Vue.use(AlertAlert)
+Vue.use(VueMask)
 
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)

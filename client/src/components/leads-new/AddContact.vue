@@ -39,8 +39,8 @@
         v-model="form.phone"
         class="second input"
         tabindex="0"
-        type="number"
         placeholder="Phone"
+        v-mask="'(###) ###-####'"
       />
     </div>
   </div>
