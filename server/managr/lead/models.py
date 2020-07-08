@@ -4,7 +4,8 @@ from django.db import models
 from django.db.models import F, Q, Count
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
-
+from django.core import serializers
+import json
 from managr.core.models import TimeStampModel, STATE_ACTIVE
 from managr.utils.misc import datetime_appended_filepath
 from . import constants as lead_constants
@@ -107,6 +108,22 @@ class Lead(TimeStampModel):
     def list_count(self):
         """ property to define count of lists a lead is on """
         return self.lists.count()
+
+    @property
+    def activity_log_meta(self):
+        linked_contacts = serializers.serialize(
+            'json', self.linked_contacts.all())
+        linked_contacts = json.loads(
+            linked_contacts)
+        linked_contacts = [c['fields'] for c in linked_contacts]
+        activity = serializers.serialize('json', [self, ])
+        activity = json.loads(activity)
+
+        activity = activity[0]
+
+        activity['fields']['linked_contacts_ref'] = linked_contacts
+
+        return activity['fields']
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
