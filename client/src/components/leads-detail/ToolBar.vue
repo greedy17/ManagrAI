@@ -61,17 +61,20 @@
       </div>
     </div>
     <div class="account-link" @click="goToProspect">{{ lead.accountRef.name }}</div>
-    <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
+    <div v-if="!editAmount" class="amount" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
-    <div v-else class="amount-editable section-shadow">
+    <div v-else class="amount-editable">
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
         <input v-model="tempAmount" type="number" />
         <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
         <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
       </form>
+    </div>
+    <div class="expected-close-date section-shadow">
+      Expected Close Date: <span>{{ lead.expectedCloseDate | dateShort }}</span>
     </div>
     <div class="contacts">
       <div class="header section-shadow">
@@ -648,6 +651,10 @@ export default {
   justify-content: center;
   font-size: 1.125rem;
 
+  &:hover {
+    font-weight: bold;
+  }
+
   span {
     margin-left: 0.5rem;
   }
@@ -660,6 +667,7 @@ export default {
   flex-flow: column;
   align-items: center;
   font-size: 1.125rem;
+  margin-bottom: 0.75rem;
 
   span {
     margin-left: 0.5rem;
@@ -691,6 +699,23 @@ export default {
       border-radius: 3px;
       margin-left: auto;
     }
+  }
+}
+
+.expected-close-date {
+  @include pointer-on-hover();
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 1rem;
+
+  &:hover {
+    font-weight: bold;
+  }
+
+  span {
+    margin-left: 0.5rem;
   }
 }
 
