@@ -101,7 +101,7 @@ export default class LeadAPI {
 
   update(id, data) {
     const promise = apiClient()
-      .patch(GENERATE_LEAD_ENDPOINT(id), data)
+      .patch(GENERATE_LEAD_ENDPOINT(id), this.cls.toAPI(data))
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'LeadAPI.update' }))
     return promise

@@ -224,6 +224,7 @@ export default {
         status: null,
         amount: 0,
         rating: 1,
+        expectedCloseDate: null,
       }
 
       Forecast.api

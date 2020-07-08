@@ -239,6 +239,7 @@ class LeadViewSet(
 
         lead.claimed_by = None
         lead.status = None
+        lead.expected_close_date = None
         # delete lead forecast
         try:
             if lead.forecast:
