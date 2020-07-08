@@ -24,11 +24,13 @@ def _generate_nylas_basic_auth_token(user):
     """
     password = ""
     if user.email_auth_account is None or user.email_auth_account.access_token is None:
-        raise PermissionDenied(detail="User does not have a Nylas access token")
+        raise PermissionDenied(
+            detail="User does not have a Nylas access token")
 
     access_token = user.email_auth_account.access_token
     auth_string = f"{access_token}:{password}"
-    base64_secret = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
+    base64_secret = base64.b64encode(
+        auth_string.encode("ascii")).decode("utf-8")
     return base64_secret
 
 
@@ -49,13 +51,15 @@ def _handle_nylas_response(response):
             code=response.status_code,
         )
     else:
-        raise APIException(detail="Error from Nylas server", code=response.status_code)
+        raise APIException(detail="Error from Nylas server",
+                           code=response.status_code)
 
 
 def _return_nylas_headers(user):
     """ Function to generate the basic headers required by Nylas
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
-    headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
+    headers = dict(Authorization=(
+        f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
 
 
@@ -101,6 +105,14 @@ def retrieve_messages(user, thread_id, page=1, page_size=10):
     response = requests.get(request_url, params=params, headers=headers)
     json_response = _handle_nylas_response(response)
 
+    return json_response
+
+
+def retrieve_message(user, message_id):
+    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/{message_id}"
+    headers = _return_nylas_headers(user)
+    response = requests.get(request_url, headers=headers)
+    json_response = _handle_nylas_response(response)
     return json_response
 
 
@@ -260,7 +272,8 @@ def send_new_email(
     if response.status_code == 200:
         # Create a Lead/Thread connection
         obj = LeadEmail.objects.create(
-            created_by=sender, lead=lead, thread_id=response.json()["thread_id"],
+            created_by=sender, lead=lead, thread_id=response.json()[
+                "thread_id"],
         )
 
         # Emit an EMAIL_SENT event and pass in Lead/Thread record.

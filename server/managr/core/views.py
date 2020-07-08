@@ -346,19 +346,6 @@ class NylasMessageWebhook(APIView):
         return Response()
 
 
-@api_view(["GET"])
-# nylas attaches a special header we can check for
-@permission_classes([permissions.AllowAny, ])
-def respond_to_nylas_verification(request):
-    """ Respond to Nylas verification webhook """
-    challenge = request.query_params.get('challenge', None)
-    if challenge:
-        return HttpResponse(content=challenge)
-
-    else:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(["POST"])
 @permission_classes(
     [permissions.IsAuthenticated, ]

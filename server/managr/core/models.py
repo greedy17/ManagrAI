@@ -18,7 +18,8 @@ from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 ACCOUNT_TYPE_LIMITED = "LIMITED"
 ACCOUNT_TYPE_MANAGER = "MANAGER"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"), (ACCOUNT_TYPE_MANAGER, "MANAGER"))
+ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"),
+                 (ACCOUNT_TYPE_MANAGER, "MANAGER"))
 
 STATE_ACTIVE = "ACTIVE"
 STATE_INACTIVE = "INACTIVE"
@@ -102,7 +103,8 @@ class User(AbstractUser, TimeStampModel):
     )
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
-    phone_number = models.CharField(max_length=255, blank=True, null=False, default="")
+    phone_number = models.CharField(
+        max_length=255, blank=True, null=False, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
@@ -166,6 +168,9 @@ class User(AbstractUser, TimeStampModel):
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
+
+    def get_contacts_from_leads(self):
+        return self.claimed_leads
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
