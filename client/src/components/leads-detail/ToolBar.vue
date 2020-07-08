@@ -381,7 +381,13 @@ export default {
       this.editAmount = false
     },
     onEditExpectedCloseDate() {
-      this.tempExpectedCloseDate = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
+      let date
+      if (this.lead.expectedCloseDate) {
+        date = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
+      } else {
+        date = new Date().toISOString().split('T')[0]
+      }
+      this.tempExpectedCloseDate = date
       this.editExpectedCloseDate = true
     },
     updateExpectedCloseDate() {
