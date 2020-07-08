@@ -234,8 +234,6 @@ class LeadViewSet(
         for data in d:
 
             data["created_by"] = user.id
-            # set its status to claimed by assigning it to the user that created the lead
-            data["claimed_by"] = user.id
             # check account to be sure it is in org
             account_for = data.get("account", None)
             if not account_for:
