@@ -14,7 +14,7 @@
       </div>
       <div v-else class="lead-description">No Descriptions</div>
       <span class="lead-amount">{{ lead.amount | currency }}</span>
-      <span class="lead-last-update">{{ lead.lastUpdateDate }}</span>
+      <span class="lead-expected-close-date">{{ lead.expectedCloseDate | dateShort }}</span>
       <LeadForecastDropdown :lead="lead" />
       <LeadStatusDropdown :lead="lead" />
       <button class="route-to-detail">
@@ -118,7 +118,7 @@ export default {
 
 .lead-description,
 .lead-amount,
-.lead-last-update {
+.lead-expected-close-date {
   @include base-font-styles();
   font-size: 11px;
   line-height: 1.45;
@@ -142,8 +142,8 @@ export default {
   padding-left: 0.625rem;
 }
 
-.lead-last-update {
-  width: 5%;
+.lead-expected-close-date {
+  width: 10%;
 }
 
 .route-to-detail {
