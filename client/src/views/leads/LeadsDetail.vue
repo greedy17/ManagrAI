@@ -10,6 +10,7 @@
         :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
+        @updated-expected-close-date="updateExpectedCloseDate"
       />
     </div>
     <div class="page__main-content-area">
@@ -210,6 +211,14 @@ export default {
     },
     updateAmount(amount) {
       let patchData = { amount }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateExpectedCloseDate(expectedCloseDate) {
+      const tzOffset = new Date().getTimezoneOffset()
+      expectedCloseDate = `${expectedCloseDate}T${tzOffset / 60}:00`
+      let patchData = { expectedCloseDate }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
       })

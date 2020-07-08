@@ -73,8 +73,28 @@
         <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
       </form>
     </div>
-    <div class="expected-close-date section-shadow">
+    <div
+      v-if="!editExpectedCloseDate"
+      class="expected-close-date section-shadow"
+      @click="onEditExpectedCloseDate"
+    >
       Expected Close Date: <span>{{ lead.expectedCloseDate | dateShort }}</span>
+    </div>
+    <div v-else class="expected-close-date-editable">
+      Expected Close Date:
+      <form class="expected-close-date-form" @submit.prevent="() => {}">
+        <input
+          v-model="tempExpectedCloseDate"
+          @change="updateExpectedCloseDate"
+          type="date"
+          class="form__input"
+        />
+        <img
+          class="reset"
+          src="@/assets/images/remove.svg"
+          @click="editExpectedCloseDate = false"
+        />
+      </form>
     </div>
     <div class="contacts">
       <div class="header section-shadow">
@@ -292,7 +312,8 @@ export default {
       }),
       editAmount: false,
       tempAmount: this.lead.amount,
-
+      editExpectedCloseDate: false,
+      tempExpectedCloseDate: null,
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
       selectedLists: {},
@@ -358,6 +379,14 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    onEditExpectedCloseDate() {
+      this.tempExpectedCloseDate = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
+      this.editExpectedCloseDate = true
+    },
+    updateExpectedCloseDate() {
+      this.$emit('updated-expected-close-date', this.tempExpectedCloseDate)
+      this.editExpectedCloseDate = false
     },
     toggleSelectedList(list) {
       if (this.selectedLists[list.id]) {
@@ -550,6 +579,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/forms';
 
 .toolbar {
   @include standard-border();
@@ -685,7 +715,7 @@ export default {
     input {
       @include input-field();
       margin-left: 0.5rem;
-      width: 6rem;
+      width: 10rem;
     }
 
     .save {
@@ -716,6 +746,47 @@ export default {
 
   span {
     margin-left: 0.5rem;
+  }
+}
+
+.expected-close-date-editable {
+  @include pointer-on-hover();
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  margin-bottom: 0.75rem;
+
+  span {
+    margin-left: 0.5rem;
+  }
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 12rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
   }
 }
 
