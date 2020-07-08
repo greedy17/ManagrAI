@@ -113,6 +113,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "status",
             "claimed_by",
             "claimed_by_ref",
+            "expected_close_date",
         )
 
 
@@ -321,6 +322,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "title",
             "amount",
             "closing_amount",
+            "expected_close_date",
             "primary_description",
             "secondary_description",
             "rating",
@@ -384,6 +386,7 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
             "title",
             "amount",
             "closing_amount",
+            "expected_close_date",
             "primary_description",
             "secondary_description",
             "rating",

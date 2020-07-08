@@ -43,6 +43,7 @@ class Lead(TimeStampModel):
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
     )
+    expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
     rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
