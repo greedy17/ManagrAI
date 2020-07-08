@@ -1,6 +1,6 @@
 <template>
   <div class="lead-history" ref="mainDiv">
-    <ComponentLoadingSVG v-if="activityLogLoading" />
+    <ComponentLoadingSVG style="margin-top: 2rem; margin-bottom: 2rem;" v-if="activityLogLoading" />
     <template v-else>
       <div v-if="refreshedOnce && !apiFailing && history.list.length === 0">
         <p>No actions have been taken on this opportunity.</p>
