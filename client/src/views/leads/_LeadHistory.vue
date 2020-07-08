@@ -35,7 +35,6 @@
 
 <script>
 import CollectionManager from '@/services/collectionManager'
-import LeadActivityLog from '@/services/leadActivityLogs'
 
 import ActivityLogItem from './_ActivityLogItem'
 
@@ -56,6 +55,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    history: {
+      type: CollectionManager,
+      required: true,
+    },
   },
   components: {
     ActivityLogItem,
@@ -64,12 +67,6 @@ export default {
     return {
       refreshedOnce: false,
       apiFailing: false,
-      history: CollectionManager.create({
-        ModelClass: LeadActivityLog,
-        filters: {
-          lead: this.lead.id,
-        },
-      }),
     }
   },
   created() {

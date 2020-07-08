@@ -91,6 +91,7 @@
           <LeadHistory
             :lead="lead"
             ref="History"
+            :history="history"
             @toggle-history-item="toggleHistoryItem"
             :expandedHistoryItems="expandedHistoryItems"
             :activityLogLoading="activityLogLoading"
@@ -121,6 +122,7 @@ import Lead from '@/services/leads'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import Forecast from '@/services/forecasts'
+import LeadActivityLog from '@/services/leadActivityLogs'
 
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
@@ -170,6 +172,12 @@ export default {
       expandedHistoryItems: [],
       historySearchTerm: '',
       activityLogLoading: false,
+      history: CollectionManager.create({
+        ModelClass: LeadActivityLog,
+        filters: {
+          lead: this.id,
+        },
+      }),
     }
   },
   async created() {
@@ -182,15 +190,15 @@ export default {
   },
   methods: {
     onSearchHistory() {
-      this.$refs.History.$data.history.filters.search = this.historySearchTerm
+      this.history.filters.search = this.historySearchTerm
       // Can not use history.refreshing because that will interfere with the polling
       this.activityLogLoading = true
-      this.$refs.History.$data.history.refresh().finally(() => {
+      this.history.refresh().finally(() => {
         this.activityLogLoading = false
       })
     },
     expandAllHistoryItems() {
-      this.expandedHistoryItems = this.$refs.History.$data.history.list.map(h => h.id)
+      this.expandedHistoryItems = this.history.list.map(h => h.id)
       this.showHistoryMenu = false
     },
     collapseAllHistoryItems() {
