@@ -185,8 +185,11 @@ export default {
       this.$refs.History.$data.history.filters.search = this.historySearchTerm
       // Can not use history.refreshing because that will interfere with the polling
       this.activityLogLoading = true
+      // keep height of <LeadHistory /> the same during the loading phase, for UX purposes
+      this.$refs.History.$refs.mainDiv.style.height = this.$refs.History.$refs.mainDiv.clientHeight
       this.$refs.History.$data.history.refresh().finally(() => {
         this.activityLogLoading = false
+        this.$refs.History.$refs.mainDiv.style.height = ''
       })
     },
     expandAllHistoryItems() {
