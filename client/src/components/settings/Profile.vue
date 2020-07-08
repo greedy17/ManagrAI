@@ -77,7 +77,7 @@ export default {
           this.last = ''
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: 'Profile updated.',
           })
         })

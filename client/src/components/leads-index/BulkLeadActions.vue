@@ -112,7 +112,7 @@ export default {
       List.api.bulkUpdate(selectedLeads, selectedLists).then(() => {
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Opportunities moved!',
         })
         this.selectedLists = {}

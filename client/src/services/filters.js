@@ -26,3 +26,15 @@ function timeToNow(value) {
   if (!value) return 'N/A'
   return moment(value).toNow(true)
 }
+
+export function formatDateShortWithTime(value) {
+  if (!value) return 'N/A'
+  const date = new Date(value)
+  return date.toLocaleDateString(['en-US'], {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

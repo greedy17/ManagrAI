@@ -313,7 +313,7 @@ export default {
         .then(() => {
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: 'Email Sent',
           })
         })

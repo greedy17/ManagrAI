@@ -1,3 +1,4 @@
+import moment from 'moment'
 import CallNoteAPI from '@/services/call-notes/api'
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 
@@ -63,13 +64,7 @@ export default class CallNote {
       delete data[f]
     })
 
-    // HACK: Format callDate as a ISO-8601 datetime using the current
-    //       timezone offset.
-    if (data.callDate) {
-      const tzOffset = (new Date()).getTimezoneOffset()
-      data.callDate = `${data.callDate}T${tzOffset / 60}:00`
-    }
-    // END HACK
+    data.callDate = moment().format()
 
     return objectToSnakeCase(data)
   }
