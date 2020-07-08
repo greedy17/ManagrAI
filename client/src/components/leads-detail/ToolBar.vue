@@ -103,17 +103,19 @@
       <div v-if="contactsLoading" class="contacts-loading section-shadow">
         <ComponentLoadingSVG />
       </div>
-      <div v-else-if="leadContacts.list.length" class="">
+      <div v-else-if="leadContacts.list.length">
         <div class="contact section-shadow" v-for="contact in leadContacts.list" :key="contact.id">
           <div class="contact-circle-container">
             <div>{{ contactInitials(contact) }}</div>
           </div>
-          <span class="name">{{
-            contact.fullName.length > 0 ? contact.fullName : contact.email
-          }}</span>
-          <div class="contact-title" v-if="contact.title">
-            <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
-            {{ contact.title }}
+          <div class="contact-info-container">
+            <span class="contact-name">
+              {{ contact.fullName.length > 0 ? contact.fullName : contact.email }}
+            </span>
+            <div class="contact-title" v-if="contact.title">
+              <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
+              <span>{{ contact.title }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -802,33 +804,9 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 3rem;
-    padding-left: 1.25rem;
+    min-height: 5.5rem;
+    padding: 0.3rem 0 0.3rem 1.25rem;
     font-size: 14px;
-
-    img {
-      height: 1.25rem;
-      border-radius: 50%;
-      margin-right: 1rem;
-    }
-
-    .contact-title {
-      height: 1.5rem;
-      padding: 0 1rem;
-      background-color: $soft-gray;
-      border-radius: 5px;
-      display: flex;
-      flex-flow: row;
-      align-items: center;
-      justify-content: center;
-      margin-left: auto;
-      margin-right: 1rem;
-
-      .icon {
-        height: 1rem;
-        margin-right: 1rem;
-      }
-    }
   }
 }
 
@@ -983,13 +961,36 @@ export default {
   background-color: $dark-gray-blue;
   color: $white;
   font-weight: 1000;
-  height: 2rem;
-  width: 2rem;
+  height: 2.2rem;
+  width: 2.2rem;
   justify-content: center;
   align-items: center;
   display: flex;
   border-radius: 50%;
   margin-right: 0.2rem;
+}
+
+.contact-info-container {
+  margin-left: 0.5rem;
+  width: 7rem;
+
+  .contact-title {
+    padding: 0.3rem 0.5rem;
+    background-color: $soft-gray;
+    border-radius: 5px;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 0.3rem;
+
+    .icon {
+      height: 1rem;
+    }
+
+    span {
+      margin-left: 0.5rem;
+    }
+  }
 }
 
 .file-link {
