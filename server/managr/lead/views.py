@@ -60,7 +60,8 @@ class LeadActivityLogViewSet(
     filter_fields = ("lead",)
 
     def get_queryset(self):
-        return LeadActivityLog.objects.for_user(self.request.user)
+        return LeadActivityLog.objects.for_user(self.request.user) \
+            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
 
     @action(
         methods=["GET"],
@@ -78,7 +79,9 @@ class LeadActivityLogViewSet(
                                 will be filtered to leads claimed by these
                                 users.
         """
-        qs = self.get_queryset()
+        # NOTE (Bruno 7-9-2020): self.get_queryset excludes
+        # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following qs instead.
+        qs = LeadActivityLog.objects.for_user(self.request.user)
         empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
         claimed_by = request.query_params.get("claimed_by")
