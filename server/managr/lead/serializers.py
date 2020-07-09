@@ -99,6 +99,9 @@ class LeadRefSerializer(serializers.ModelSerializer):
     """ serializer for forecast """
 
     claimed_by_ref = UserRefSerializer(source="claimed_by", read_only=True)
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
 
     class Meta:
         model = Lead
@@ -114,6 +117,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "claimed_by",
             "claimed_by_ref",
             "expected_close_date",
+            "linked_contacts_ref"
         )
 
 
