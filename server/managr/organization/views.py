@@ -106,8 +106,8 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
         accs = Account.objects.for_user(request.user).filter(query)
         updated_accounts = []
         for account in accs:
-            updated_acc = copy.deepcopy(acc)
-            updated_acc = updated_acc.values
+            #updated_acc = copy.deepcopy(account)
+            #updated_acc = updated_acc.values
             for updated_data in accounts:
                 if updated_data['id'] == str(account.id):
                     serializer = AccountSerializer(

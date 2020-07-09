@@ -32,6 +32,7 @@ def _log_lead_action(action, user_id, obj_id):
 
     try:
         consumer.create_log()
+
     except ConsumerConfigError as e:
         logger.exception(
             f"The consumer class class '{consumer.__class__.__name__}' is misconfigured: {e}"

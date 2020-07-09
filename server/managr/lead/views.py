@@ -5,7 +5,7 @@ from rest_framework import viewsets, mixins, generics, status, filters, permissi
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
-
+from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
@@ -225,7 +225,9 @@ class LeadViewSet(
         url_path="bulk-create"
     )
     def bulk_create(self, request, *args, **kwargs):
-        """ manually set org and only allow accounts in org """
+        """Endpoint to create bulk Leads used for the integrations"""
+        # will also use endpoint for bulk imports currently not setting the users as claimed but will for that
+        # will check if the user is integration type or not, if it is then set the emitter to api
         user = request.user
 
         d = request.data
@@ -271,9 +273,60 @@ class LeadViewSet(
             serializer.instance.linked_contacts.add(*contact_list)
             Forecast.objects.create(lead=serializer.instance)
 
-            emit_event(lead_constants.LEAD_CREATED, user, serializer.instance)
+            emit_event(lead_constants.LEAD_CREATED_API,
+                       user, serializer.instance)
             created_leads.append(serializer.data)
         return Response(data={"created": created_leads})
+
+    @action(
+        methods=["PATCH"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk-update"
+    )
+    def bulk_update(self, request, *args, **kwargs):
+        user = request.user
+
+        # restricted fields array to delete them if they are in
+        restricted_fields = (
+            "created_by",
+            "account",
+            "claimed_by",
+            "contacts",
+            "linked_contacts"
+        )
+        leads = request.data
+        updated_lead = []
+        query = Q()
+        for lead in leads:
+            query |= (Q(id=lead['id']))
+
+        existing_leads = Lead.objects.for_user(user).filter(query)
+        for existing_lead in existing_leads:
+            for lead in leads:
+                if lead['id'] == str(existing_lead.id):
+                    for field in restricted_fields:
+                        if field in lead.keys():
+                            del lead[field]
+
+                    # if updating status, also update status_last_update
+                    if "status" in lead:
+                        lead["status_last_update"] = timezone.now()
+
+                    # make sure the user that created the lead is not updated as well
+
+                    lead["last_updated_by"] = user.id
+                    # set its status to claimed by assigning it to the user that created the lead
+                    serializer = self.serializer_class(
+                        existing_lead, data=lead, context={"request": request}, partial=True
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    self.perform_update(serializer)
+                    emit_event(lead_constants.LEAD_UPDATED_API,
+                               user, serializer.instance)
+                    updated_lead.append(serializer.data)
+
+        return Response({"updated_leads": updated_lead})
 
     @action(
         methods=["POST"],

@@ -92,6 +92,7 @@ class BaseActionConsumer:
         return timezone.now()
 
     def create_log(self):
+
         self.assert_model_class()
 
         return lead_models.LeadActivityLog.objects.create(
