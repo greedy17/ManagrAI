@@ -125,7 +125,8 @@ class LeadViewSet(
     search_fields = ("title",)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user).order_by(Lower("title"))
+        return Lead.objects.for_user(self.request.user) \
+            .order_by(Lower("title")).prefetch_related('activity_logs')
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get("verbose", None)

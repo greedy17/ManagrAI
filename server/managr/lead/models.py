@@ -334,7 +334,12 @@ class LeadActivityLog(TimeStampModel):
     An ActivityLog record is created whenever an activity occurs.
     """
 
-    lead = models.ForeignKey("Lead", null=True, on_delete=models.SET_NULL)
+    lead = models.ForeignKey(
+        "Lead",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="activity_logs",
+    )
     action_timestamp = models.DateTimeField(
         help_text=(
             "Keep track of when the action happened so we can construct "
