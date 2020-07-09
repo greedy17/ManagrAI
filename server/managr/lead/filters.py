@@ -5,7 +5,9 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead, Forecast, List, Note, File, CallNote
+from .models import Lead, Forecast, List, Note, File, CallNote, LeadActivityLog
+from django.utils import timezone
+from dateutil.parser import parse
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -19,6 +21,42 @@ class LeadRatingOrderFiltering(OrderingFilter):
                 queryset = queryset.order_by(ordering)
 
         return queryset
+
+
+class LeadActivityLogFilterSet(FilterSet):
+    leads = django_filters.CharFilter(method="by_leads")
+    min_date = django_filters.CharFilter(
+        method="by_min_date")
+    max_date = django_filters.CharFilter(method="by_max_date")
+
+    class Meta:
+        model = LeadActivityLog
+        fields = ['lead', 'leads']
+
+    def by_leads(self, queryset, name, value):
+        q = Q()
+        if value:
+            l = value.split(',')
+            for lead in l:
+                q |= (Q(id=lead))
+            leads = Lead.objects.for_user(self.request.user).filter(q)
+
+            return queryset.filter(lead__in=leads)
+        return queryset
+
+    def by_min_date(self, queryset, name, value):
+        if value:
+
+            #min = timezone.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f%Z')
+            min = parse(value)
+            return queryset.filter(action_timestamp__gte=min)
+
+    def by_max_date(self, queryset, name, value):
+        if value:
+
+            #min = timezone.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f%Z')
+            min = parse(value)
+            return queryset.filter(action_timestamp__lte=min)
 
 
 class LeadFilterSet(FilterSet):
@@ -40,7 +78,8 @@ class LeadFilterSet(FilterSet):
 
     class Meta:
         model = Lead
-        fields = ['rating', 'on_list', 'is_claimed', 'by_list', 'by_user', 'by_account']
+        fields = ['rating', 'on_list', 'is_claimed',
+                  'by_list', 'by_user', 'by_account']
 
     def leads_by_user(self, queryset, name, value):
         u = self.request.user
