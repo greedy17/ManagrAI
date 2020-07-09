@@ -1,6 +1,10 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
+from managr.core import constants as core_consts
 from django.db.models import Sum, Avg
+from rest_framework.authtoken.models import Token
+from django.core import serializers
+import json
 
 # Create your models here.
 
@@ -35,7 +39,8 @@ class Organization(TimeStampModel):
     name = models.CharField(max_length=255, null=True)
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
-
+    is_externalsyncenabled = models.BooleanField(
+        default=False, null=False, blank=False)
     objects = OrganizationQuerySet.as_manager()
 
     @property
@@ -65,6 +70,19 @@ class Organization(TimeStampModel):
     @property
     def avg_amount_closed_contracts(self):
         return Organization.objects.aggregate(Avg('accounts__leads__amount'))
+
+    @property
+    def org_token(self):
+        if self.is_externalsyncenabled:
+            integration = self.users.filter(
+                type=core_consts.ACCOUNT_TYPE_INTEGRATION).first()
+            if integration:
+                if integration.is_active and integration.is_invited:
+                    auth_token, token_created = Token.objects.get_or_create(
+                        user=integration)
+                    token = json.loads(
+                        serializers.serialize('json', [auth_token, ]))
+                    return token[0]['pk']
 
 
 class AccountQuerySet(models.QuerySet):

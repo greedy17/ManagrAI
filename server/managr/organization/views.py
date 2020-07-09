@@ -28,7 +28,7 @@ from .models import Organization, Account, Contact
 from managr.lead.models import Lead
 from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer
 from .filters import ContactFilterSet
-from managr.core.models import ACCOUNT_TYPE_MANAGER
+from managr.core import constants as core_consts
 
 from managr.core.permissions import (
     IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, SuperUserCreateOnly,)
@@ -69,7 +69,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
         serializer = AccountSerializer(
             data=request.data, context={'request': request}, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
-        if user.type != ACCOUNT_TYPE_MANAGER:
+        if user.type != core_consts.ACCOUNT_TYPE_MANAGER:
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
         self.perform_create(serializer)
         response_data = serializer.data
@@ -81,7 +81,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Re
         serializer = self.serializer_class(acc,
                                            data=request.data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
-        if user.organization != acc.organization or user.type != ACCOUNT_TYPE_MANAGER:
+        if user.organization != acc.organization or user.type != core_consts.ACCOUNT_TYPE_MANAGER:
             return Response({'non_field_errors': ('Not Authorized')}, status=status.HTTP_401_UNAUTHORIZED)
         serializer.save()
 

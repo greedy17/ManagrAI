@@ -11,6 +11,7 @@ EMAIL_AUTH_TOKEN_REVOKE_URI = "oauth/revoke"
 EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
 
+
 # OAuth permission scopes to request from Nylas
 SCOPE_EMAIL_READ_ONLY = "email.read_only"
 SCOPE_EMAIL_SEND = "email.send"
@@ -23,3 +24,25 @@ ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 def EMAIL_REVOKE_ALL_TOKENS_URI(account_id):
     return f"a/{NYLAS_CLIENT_ID}/accounts/{account_id}/revoke-all/"
+
+
+ACCOUNT_TYPE_LIMITED = "LIMITED"
+ACCOUNT_TYPE_MANAGER = "MANAGER"
+ACCOUNT_TYPE_INTEGRATION = "INTEGRATION"
+ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"), (ACCOUNT_TYPE_MANAGER,
+                                                     "MANAGER"), (ACCOUNT_TYPE_INTEGRATION, "INTEGRATION"))
+
+STATE_ACTIVE = "ACTIVE"
+STATE_INACTIVE = "INACTIVE"
+STATE_INVITED = "INVITED"
+STATE_CHOCIES = (
+    (STATE_ACTIVE, "Active"),
+    (STATE_INACTIVE, "Inactive"),
+    (STATE_INVITED, "Invited"),
+)
+
+SERVICE_TYPE_NULL = None
+SERVICE_TYPE_EMAIL = "EMAIL"
+SERVICE_TYPE_EXTERNAL_API = "EXTERNAL"
+SERVICE_TYPES = ((SERVICE_TYPE_EMAIL, "Email"),
+                 (SERVICE_TYPE_EXTERNAL_API, "External"), (SERVICE_TYPE_NULL, None))

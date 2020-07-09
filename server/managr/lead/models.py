@@ -6,9 +6,10 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.core import serializers
 import json
-from managr.core.models import TimeStampModel, STATE_ACTIVE
+from managr.core.models import TimeStampModel
 from managr.utils.misc import datetime_appended_filepath
 from . import constants as lead_constants
+from managr.core import constants as core_consts
 
 
 class LeadQuerySet(models.QuerySet):

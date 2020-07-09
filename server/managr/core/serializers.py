@@ -13,7 +13,7 @@ from managr.organization.serializers import (
 from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
-from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount
+from .models import User, EmailAuthAccount
 from .models import EmailTemplate
 
 
@@ -158,7 +158,8 @@ class EmailSerializer(serializers.Serializer):
         child=ContactDictField(), required=False, allow_null=True
     )
 
-    reply_to_message_id = serializers.CharField(allow_blank=True, required=False)
+    reply_to_message_id = serializers.CharField(
+        allow_blank=True, required=False)
     file_ids = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=False
     )
