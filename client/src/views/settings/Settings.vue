@@ -4,6 +4,7 @@
       <div class="toolbar">
         <div class="toolbar__header">
           <span class="toolbar__title">Settings</span>
+          <h5 class="org-statement">You're viewing settings for {{ organization }}</h5>
         </div>
         <div
           class="toolbar__row"
@@ -91,6 +92,11 @@ export default {
       this.$router.push({ name: 'Invite' })
     },
   },
+  computed: {
+    organization() {
+      return this.$store.state.user.organizationRef.name
+    },
+  },
 }
 </script>
 
@@ -103,5 +109,11 @@ export default {
 
 .toolbar__row {
   @include pointer-on-hover;
+}
+
+.org-statement {
+  color: $mid-gray;
+  margin-top: 1rem;
+  margin-bottom: 0;
 }
 </style>
