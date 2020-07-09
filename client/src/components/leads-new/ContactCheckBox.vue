@@ -1,7 +1,11 @@
 <template>
   <div class="contact-checkbox">
     <CheckBox :checked="checked" @checkbox-clicked="bubbleCheckboxClick" />
-    <ContactInformation :contact="contact" />
+    <ContactInformation
+      :contact="contact"
+      :editable="editable"
+      @updated-contact="(contact, editForm) => $emit('updated-contact', contact, editForm)"
+    />
   </div>
 </template>
 
@@ -18,6 +22,10 @@ export default {
     checked: {
       type: Boolean,
       required: true,
+    },
+    editable: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {

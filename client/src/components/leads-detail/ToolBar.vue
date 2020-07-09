@@ -169,7 +169,7 @@
     </Modal>
     <Modal v-if="contactsModal.isOpen" :width="45" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
-      <div v-else class="step-3">
+      <div v-else>
         <div class="form-field">
           <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
           <label>Account Contacts</label>
@@ -180,7 +180,9 @@
             :key="contact.id"
             :contact="contact"
             :checked="!!contactsModal.selectedContacts[contact.id]"
+            :editable="true"
             @checkbox-clicked="handleCheckboxClick"
+            @updated-contact="onUpdateContact"
           />
         </div>
         <div class="form-field">
@@ -333,6 +335,18 @@ export default {
     },
   },
   methods: {
+    onUpdateContact(contact, editForm) {
+      // Form validation happens in a child (<ContactInformation />).
+      // Therefore, if update attempt gets this far it has valid data.
+
+      // call Contact.api here and then on update run through the lead's linkedContacts and map
+      // if IDs match then put response.data as element, else keep current element
+      // also need to edit Collection of all account contacts and map that as well
+      Contact.api.update
+
+      // remember to turn editMode off in the child after emitted updated-contact (passed validations)
+      // TODO: figure out editable vs isEditForm drama (the above comment may resolve this?)
+    },
     async removeLeadFromList(listId, listIndex) {
       await List.api.removeFromList([this.lead.id], listId)
       this.lists.list.splice(listIndex, 1)
