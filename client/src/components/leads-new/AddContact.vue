@@ -9,21 +9,21 @@
     <div class="form-field">
       <input
         v-model="form.firstName"
-        class="name input"
+        class="first-name input"
         tabindex="0"
         type="text"
         placeholder="First Name"
       />
       <input
         v-model="form.lastName"
-        class="name input"
+        class="last-name input"
         tabindex="0"
         type="text"
         placeholder="Last Name"
       />
       <input
         v-model="form.title"
-        class="second input"
+        class="title input"
         tabindex="0"
         type="text"
         placeholder="Title"
@@ -32,25 +32,21 @@
     <div class="form-field">
       <input
         v-model="form.email"
-        class="first input"
+        class="email input"
         tabindex="0"
         type="text"
         placeholder="Email"
       />
       <input
         v-model="form.phone"
-        class="second input"
+        class="phone input"
         tabindex="0"
         type="number"
         placeholder="Phone"
       />
     </div>
     <div v-if="isEditForm" style="display: flex; flex-flow: row;">
-      <button
-        class="cancel-button"
-        style="margin-left: auto;"
-        @click.stop="$emit('cancel-edit-form')"
-      >
+      <button class="cancel-button" @click.stop="$emit('cancel-edit-form')">
         Cancel
       </button>
       <button
@@ -109,18 +105,27 @@ label {
   flex-flow: row;
   width: 100%;
 
-  .name {
-    width: 35%;
-    margin-right: 3%;
+  .first-name {
+    width: 15rem;
+    margin-right: 1rem;
   }
 
-  .first {
-    width: 60%;
-    margin-right: 5%;
+  .last-name {
+    width: 18rem;
+    margin-right: 1rem;
   }
 
-  .second {
-    flex-grow: 1;
+  .title {
+    width: 15rem;
+  }
+
+  .email {
+    width: 30rem;
+    margin-right: 1rem;
+  }
+
+  .phone {
+    width: 19rem;
   }
 }
 

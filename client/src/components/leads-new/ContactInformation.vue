@@ -70,14 +70,15 @@ export default {
   },
   methods: {
     onUpdateAttempt() {
-      this.editFormValid = null
-      if (this.isEditForm()) {
+      this.editFormValid = true
+      if (this.isEditFormValid()) {
         this.$emit('updated-contact', this.contact, this.editForm)
+        this.showEditForm = false
       } else {
         this.editFormValid = false
       }
     },
-    isEditForm() {
+    isEditFormValid() {
       let anyFieldBlank =
         !this.editForm.firstName.length ||
         !this.editForm.lastName.length ||

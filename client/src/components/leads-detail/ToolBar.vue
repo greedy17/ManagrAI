@@ -167,7 +167,7 @@
     <Modal v-if="fileUploadLoading" :width="10">
       <ComponentLoadingSVG />
     </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="45" dimmed @close-modal="closeContactsModal">
+    <Modal v-if="contactsModal.isOpen" :width="55" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
       <div v-else>
         <div class="form-field">
@@ -339,13 +339,37 @@ export default {
       // Form validation happens in a child (<ContactInformation />).
       // Therefore, if update attempt gets this far it has valid data.
 
-      // call Contact.api here and then on update run through the lead's linkedContacts and map
-      // if IDs match then put response.data as element, else keep current element
-      // also need to edit Collection of all account contacts and map that as well
-      Contact.api.update
+      let patchData = { ...editForm }
+      patchData.phoneNumber1 = patchData.phone
+      delete patchData.phone
+      Contact.api.update(contact.id, patchData).then(response => {
+        // update accountContacts (these populate Contacts Modal)
+        this.accountContacts.list = this.accountContacts.list.map(aC => {
+          if (aC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return aC
+          }
+        })
 
-      // remember to turn editMode off in the child after emitted updated-contact (passed validations)
-      // TODO: figure out editable vs isEditForm drama (the above comment may resolve this?)
+        // update leadContacts (these populate the ToolBar)
+        this.leadContacts.list = this.leadContacts.list.map(lC => {
+          if (lC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return lC
+          }
+        })
+
+        // update lead.linkedContactsRef (this is not currently in use)
+        this.lead.linkedContactsRef = this.lead.linkedContactsRef.map(cRef => {
+          if (cRef.id == contact.id) {
+            return response.data
+          } else {
+            return cRef
+          }
+        })
+      })
     },
     async removeLeadFromList(listId, listIndex) {
       await List.api.removeFromList([this.lead.id], listId)
