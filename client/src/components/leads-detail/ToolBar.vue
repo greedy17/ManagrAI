@@ -186,7 +186,7 @@
     <Modal v-if="fileUploadLoading" :width="10">
       <ComponentLoadingSVG />
     </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="55" dimmed @close-modal="closeContactsModal">
+    <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
       <div v-else>
         <div class="form-field">
