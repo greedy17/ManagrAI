@@ -96,7 +96,12 @@
       class="expected-close-date section-shadow"
       @click="onEditExpectedCloseDate"
     >
-      Expected Close Date: <span>{{ lead.expectedCloseDate | dateShort }}</span>
+      <div v-if="!lead.expectedCloseDate">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
+      <div v-else style="display: flex; flex-flow: column; align-items: center;">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
     </div>
     <div v-else class="expected-close-date-editable">
       Expected Close Date:
@@ -186,7 +191,7 @@
     <Modal v-if="fileUploadLoading" :width="10">
       <ComponentLoadingSVG />
     </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="55" dimmed @close-modal="closeContactsModal">
+    <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
       <div v-else>
         <div class="form-field">
@@ -361,7 +366,11 @@ export default {
       // Therefore, if update attempt gets this far it has valid data.
 
       let patchData = { ...editForm }
-      patchData.phoneNumber1 = patchData.phone
+      // NOTE (Bruno 7-10-2020): even though within Contact.api.update patchData
+      // is put through toAPI, 'phoneNumber1' is turned to 'phone_number1' and thus
+      // this property does not get updated by the server-side.
+      // That is why the following like uses snake_case.
+      patchData.phone_number_1 = patchData.phone
       delete patchData.phone
       Contact.api.update(contact.id, patchData).then(response => {
         // update accountContacts (these populate Contacts Modal)
@@ -872,6 +881,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding-bottom: 1rem;
+  margin-top: 1rem;
 
   &:hover {
     font-weight: bold;
@@ -889,6 +899,7 @@ export default {
   flex-flow: column;
   align-items: center;
   margin-bottom: 0.75rem;
+  margin-top: 1rem;
 
   span {
     margin-left: 0.5rem;

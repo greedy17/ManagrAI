@@ -390,7 +390,9 @@ class LeadSerializer(serializers.ModelSerializer):
 
     def get_last_action_taken(self, instance):
         return LeadActivityLogRefSerializer(
-                instance.activity_logs.order_by('-datetime_created').first()).data
+                instance.activity_logs.order_by('-datetime_created')
+                .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+                .first()).data
 
 
 class LeadVerboseSerializer(serializers.ModelSerializer):

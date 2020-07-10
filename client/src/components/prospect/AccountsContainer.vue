@@ -1,11 +1,13 @@
 <template>
   <div class="accounts-container">
-    <br />
-    <span class="no-items-message" v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
-      Sorry! Your search did not return any results!
-    </span>
-    <br />
-    <br />
+    <template v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
+      <br />
+      <span class="no-items-message">
+        Sorry! Your search did not return any results!
+      </span>
+      <br />
+      <br />
+    </template>
     <div v-if="accounts.length" class="accounts">
       <Account
         v-for="accountWithLeads in accounts"
