@@ -64,7 +64,6 @@ export default class ContactAPI {
       account,
       title,
     }
-    console.log('title: ', title)
     const promise = apiClient()
       .post(CONTACTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ContactAPI.create' }))

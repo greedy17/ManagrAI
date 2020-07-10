@@ -361,7 +361,11 @@ export default {
       // Therefore, if update attempt gets this far it has valid data.
 
       let patchData = { ...editForm }
-      patchData.phoneNumber1 = patchData.phone
+      // NOTE (Bruno 7-10-2020): even though within Contact.api.update patchData
+      // is put through toAPI, 'phoneNumber1' is turned to 'phone_number1' and thus
+      // this property does not get updated by the server-side.
+      // That is why the following like uses snake_case.
+      patchData.phone_number_1 = patchData.phone
       delete patchData.phone
       Contact.api.update(contact.id, patchData).then(response => {
         // update accountContacts (these populate Contacts Modal)
