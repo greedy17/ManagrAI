@@ -96,7 +96,12 @@
       class="expected-close-date section-shadow"
       @click="onEditExpectedCloseDate"
     >
-      Expected Close Date: <span>{{ lead.expectedCloseDate | dateShort }}</span>
+      <div v-if="!lead.expectedCloseDate">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
+      <div v-else style="display: flex; flex-flow: column; align-items: center;">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
     </div>
     <div v-else class="expected-close-date-editable">
       Expected Close Date:
@@ -876,6 +881,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding-bottom: 1rem;
+  margin-top: 1rem;
 
   &:hover {
     font-weight: bold;
@@ -893,6 +899,7 @@ export default {
   flex-flow: column;
   align-items: center;
   margin-bottom: 0.75rem;
+  margin-top: 1rem;
 
   span {
     margin-left: 0.5rem;
