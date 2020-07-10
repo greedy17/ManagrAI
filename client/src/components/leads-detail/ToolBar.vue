@@ -5,8 +5,15 @@
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div> -->
-    <div class="lead-name">
+    <div class="lead-title" v-if="!editTitle" @click="onEditTitle">
       <h2>{{ lead.title }}</h2>
+    </div>
+    <div v-else class="title-editable">
+      <form class="title-form" @submit.prevent="updateTitle">
+        <input v-model="tempTitle" type="text" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click="updateTitle" />
+        <img class="reset" src="@/assets/images/remove.svg" @click="resetTitle" />
+      </form>
     </div>
     <div class="rating">
       <LeadRating
@@ -60,7 +67,17 @@
         />
       </div>
     </div>
-    <div class="account-link" @click="goToProspect">{{ lead.accountRef.name }}</div>
+    <div style="display: flex; flex-flow: row; justify-content: center;">
+      <a
+        class="account-link"
+        :href="lead.accountRef.url | prependUrlProtocol"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ lead.accountRef.name }}
+        <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
+      </a>
+    </div>
     <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
@@ -83,23 +100,22 @@
           @click.stop="openContactsModal"
         />
       </div>
-      <div v-if="contactsLoading" class="contacts-loading contacts-container section-shadow">
+      <div v-if="contactsLoading" class="contacts-loading section-shadow">
         <ComponentLoadingSVG />
       </div>
-      <div v-else-if="leadContacts.list.length" class="contacts-container">
+      <div v-else-if="leadContacts.list.length">
         <div class="contact section-shadow" v-for="contact in leadContacts.list" :key="contact.id">
-          <img src="@/assets/images/sara-smith.png" alt="contact image" />
-          <span class="name">{{
-            contact.fullName.length > 0 ? contact.fullName : contact.email
-          }}</span>
-          <div class="phone button">
-            <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+          <div class="contact-circle-container">
+            <div>{{ contactInitials(contact) }}</div>
           </div>
-          <div class="text button">
-            <img class="icon" src="@/assets/images/sms.svg" alt="icon" />
-          </div>
-          <div class="email button">
-            <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+          <div class="contact-info-container">
+            <span class="contact-name">
+              {{ contact.fullName.length > 0 ? contact.fullName : contact.email }}
+            </span>
+            <div class="contact-title" v-if="contact.title">
+              <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
+              <span>{{ contact.title }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -129,7 +145,9 @@
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            {{ file.filename }}
+            <a class="file-link" :href="file.file" target="_blank" rel="noopener noreferrer">
+              {{ file.filename }}
+            </a>
             <img
               class="add"
               style="margin: 0 1rem 0 auto;"
@@ -289,7 +307,8 @@ export default {
       }),
       editAmount: false,
       tempAmount: this.lead.amount,
-
+      editTitle: false,
+      tempTitle: this.lead.title,
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
       selectedLists: {},
@@ -339,9 +358,6 @@ export default {
       this.listModal.isOpen = false
       this.selectedLists = {}
     },
-    goToProspect() {
-      this.$router.push({ name: 'Prospect' })
-    },
     emitUpdatedRating(rating) {
       this.$emit('updated-rating', rating)
     },
@@ -355,6 +371,17 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    onEditTitle() {
+      this.editTitle = true
+    },
+    updateTitle() {
+      this.$emit('updated-title', this.tempTitle)
+      this.editTitle = false
+    },
+    resetTitle() {
+      this.tempTitle = this.lead.title
+      this.editTitle = false
     },
     toggleSelectedList(list) {
       if (this.selectedLists[list.id]) {
@@ -455,6 +482,7 @@ export default {
             lastName: currentForm.lastName,
             email: currentForm.email,
             phone: currentForm.phone,
+            title: currentForm.title,
           }
           contacts.push(contactData)
         }
@@ -463,7 +491,14 @@ export default {
 
       if (contacts.length) {
         let promises = contacts.map(cData =>
-          Contact.api.create(cData.firstName, cData.lastName, cData.email, cData.phone, account),
+          Contact.api.create(
+            cData.firstName,
+            cData.lastName,
+            cData.email,
+            cData.phone,
+            account,
+            cData.title,
+          ),
         )
         Promise.all(promises)
           .then(responses => {
@@ -538,6 +573,17 @@ export default {
 
       return !userInputPresent || (userInputPresent && !anyFieldBlank)
     },
+    contactInitials(contact) {
+      if (!contact.fullName) {
+        return
+      }
+      let names = contact.fullName.split(' '),
+        initials = names[0].substring(0, 1).toUpperCase()
+      if (names.length > 1) {
+        initials += names[names.length - 1].substring(0, 1).toUpperCase()
+      }
+      return initials
+    },
   },
 }
 </script>
@@ -587,9 +633,49 @@ export default {
   }
 }
 
-.lead-name {
+.lead-title {
+  @include pointer-on-hover;
+  margin-top: 1rem;
   padding: 0 15%;
   text-align: center;
+}
+
+.title-editable {
+  @include pointer-on-hover();
+  margin-top: 2rem;
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  font-size: 1.125rem;
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 10rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
 }
 
 .rating {
@@ -633,6 +719,7 @@ export default {
   justify-content: center;
   color: $dark-green;
   text-decoration: underline;
+  width: fit-content;
 
   &:hover {
     font-weight: bold;
@@ -717,44 +804,9 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 3rem;
-    padding-left: 1.25rem;
+    min-height: 5.5rem;
+    padding: 0.3rem 0 0.3rem 1.25rem;
     font-size: 14px;
-
-    img {
-      height: 1.25rem;
-      border-radius: 50%;
-      margin-right: 1rem;
-    }
-
-    .phone {
-      margin-left: auto;
-    }
-
-    .text {
-      margin-left: 0.5rem;
-    }
-
-    .email {
-      margin: 0 0.5rem;
-    }
-
-    .button {
-      @include pointer-on-hover();
-      height: 1.5rem;
-      width: 1.5rem;
-      background-color: $soft-gray;
-      border-radius: 5px;
-      display: flex;
-      flex-flow: row;
-      align-items: center;
-      justify-content: center;
-
-      .icon {
-        height: 1rem;
-        margin: auto;
-      }
-    }
   }
 }
 
@@ -901,6 +953,53 @@ export default {
       width: 1.4rem;
       margin-right: 1rem;
     }
+  }
+}
+
+.contact-circle-container {
+  line-height: 1rem;
+  background-color: $dark-gray-blue;
+  color: $white;
+  font-weight: 1000;
+  height: 2.2rem;
+  width: 2.2rem;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-radius: 50%;
+  margin-right: 0.2rem;
+}
+
+.contact-info-container {
+  margin-left: 0.5rem;
+  width: 7rem;
+
+  .contact-title {
+    padding: 0.3rem 0.5rem;
+    background-color: $soft-gray;
+    border-radius: 5px;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 0.3rem;
+
+    .icon {
+      height: 1rem;
+    }
+
+    span {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.file-link {
+  @include base-font-styles;
+  text-decoration: none;
+  color: $main-font-gray;
+
+  &:hover {
+    color: $dark-green;
   }
 }
 </style>

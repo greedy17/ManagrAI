@@ -11,6 +11,7 @@ export default class Contact {
     fullName = '',
     email = '',
     account = null,
+    title = '',
     phoneNumber1 = '',
     phoneNumber2 = '',
   } = {}) {
@@ -21,6 +22,7 @@ export default class Contact {
       fullName,
       email,
       account,
+      title,
       phoneNumber1,
       phoneNumber2,
     })

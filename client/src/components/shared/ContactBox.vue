@@ -15,7 +15,9 @@
         <div class="contact-box__contact-icon">
           <img alt="icon" :src="require(`@/assets/images/telephone.svg`)" class="icon" />
         </div>
-        <div class="contact-box__contact-number">{{ contact.phone_number_1 }}</div>
+        <div class="contact-box__contact-number">
+          {{ contact.phone_number_1 | VMask('(###) ###-####') }}
+        </div>
       </div>
     </div>
   </div>
