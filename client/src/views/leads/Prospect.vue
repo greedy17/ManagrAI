@@ -16,6 +16,7 @@
         v-if="!loading"
         :accounts="accountsWithLeads"
         :accountsCollection="accounts"
+        :isFilteringActive="isFilteringActive"
         @load-more="addNextPage"
       />
       <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
@@ -50,6 +51,7 @@ export default {
       repFilterState: {},
       unclaimedFilterState: false,
       toolbarSearchTerm: '',
+      isFilteringActive: false,
     }
   },
   async created() {
@@ -78,8 +80,14 @@ export default {
     },
     refreshCollections() {
       this.loading = true
-      // update byUser filter for each collection,
+      // update filters for each collection,
       this.applyFilters()
+      // update isFilteringActive state, for filtering-result purposes
+      this.isFilteringActive = !!(
+        this.unclaimedFilterState ||
+        this.toolbarSearchTerm.length ||
+        this.activeReps.length
+      )
       // refresh each collection
       let promises = this.accountsWithLeads.map(accountWithLeads =>
         accountWithLeads.collection.refresh(),

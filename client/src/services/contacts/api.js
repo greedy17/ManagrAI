@@ -3,6 +3,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 // API Endpoints
 const CONTACTS_ENDPOINT = '/contacts/'
 const LINK_TO_LEADS_ENDPOINT = '/contacts/link-to-leads/'
+const GENERATE_CONTACT_ENDPOINT = id => `/contacts/${id}/`
 
 export default class ContactAPI {
   /**
@@ -53,7 +54,7 @@ export default class ContactAPI {
     return promise
   }
 
-  create(firstName, lastName, email, phone, account) {
+  create(firstName, lastName, email, phone, account, title) {
     // NOTE (Bruno 5-4-20): server-side does not yet include contact.position, so that is not being sent for now
     let data = {
       first_name: firstName,
@@ -61,10 +62,18 @@ export default class ContactAPI {
       email,
       phone_number_1: phone,
       account,
+      title,
     }
     const promise = apiClient()
       .post(CONTACTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ContactAPI.create' }))
+    return promise
+  }
+
+  update(id, patchData) {
+    const promise = apiClient()
+      .patch(GENERATE_CONTACT_ENDPOINT(id), this.cls.toAPI(patchData))
+      .catch(apiErrorHandler({ apiName: 'ContactAPI.update' }))
     return promise
   }
 
