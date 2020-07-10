@@ -41,8 +41,8 @@
         v-model="form.phone"
         class="phone input"
         tabindex="0"
-        type="number"
         placeholder="Phone"
+        v-mask="'(###) ###-####'"
       />
     </div>
     <div v-if="isEditForm" style="display: flex; flex-flow: row;">

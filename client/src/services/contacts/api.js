@@ -54,7 +54,7 @@ export default class ContactAPI {
     return promise
   }
 
-  create(firstName, lastName, email, phone, account) {
+  create(firstName, lastName, email, phone, account, title) {
     // NOTE (Bruno 5-4-20): server-side does not yet include contact.position, so that is not being sent for now
     let data = {
       first_name: firstName,
@@ -62,7 +62,9 @@ export default class ContactAPI {
       email,
       phone_number_1: phone,
       account,
+      title,
     }
+    console.log('title: ', title)
     const promise = apiClient()
       .post(CONTACTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ContactAPI.create' }))

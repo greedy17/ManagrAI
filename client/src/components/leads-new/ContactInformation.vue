@@ -16,7 +16,7 @@
     </div>
     <div class="container background-color">
       <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
-      <span class="contact-phone-number">{{ contact.phoneNumber1 || 'N/A' }}</span>
+      <span class="contact-phone-number">{{ contact.phoneNumber1 | VMask('(###) ###-####') }}</span>
     </div>
     <div class="container background-color">
       <img class="icon" src="@/assets/images/email.svg" alt="icon" />

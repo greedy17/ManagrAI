@@ -24,6 +24,7 @@ export default class LeadActivityLogAPI {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       lead: ApiFilter.create({ key: 'lead' }),
+      search: ApiFilter.create({ key: 'search' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

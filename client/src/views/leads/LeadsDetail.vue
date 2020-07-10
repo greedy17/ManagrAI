@@ -11,6 +11,7 @@
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
         @updated-expected-close-date="updateExpectedCloseDate"
+        @updated-title="updateTitle"
       />
     </div>
     <div class="page__main-content-area">
@@ -49,11 +50,7 @@
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
-            @click="
-              () => {
-                activityTabSelected = EMAILS
-              }
-            "
+            @click="activityTabSelected = EMAILS"
           >
             Email
           </div>
@@ -66,6 +63,12 @@
             >
               Check for Mail
             </button>
+          </div>
+
+          <div class="history-search-container" v-if="activityTabSelected === HISTORY">
+            <form @submit.prevent="onSearchHistory">
+              <input v-model="historySearchTerm" placeholder="Search" />
+            </form>
           </div>
 
           <div class="history-menu" v-if="activityTabSelected === HISTORY">
@@ -85,8 +88,10 @@
           <LeadHistory
             :lead="lead"
             ref="History"
+            :history="history"
             @toggle-history-item="toggleHistoryItem"
             :expandedHistoryItems="expandedHistoryItems"
+            :activityLogLoading="activityLogLoading"
           />
         </div>
 
@@ -114,6 +119,7 @@ import Lead from '@/services/leads'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import Forecast from '@/services/forecasts'
+import LeadActivityLog from '@/services/leadActivityLogs'
 
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
@@ -161,6 +167,14 @@ export default {
       activityTabSelected: HISTORY,
       showHistoryMenu: false,
       expandedHistoryItems: [],
+      historySearchTerm: '',
+      activityLogLoading: false,
+      history: CollectionManager.create({
+        ModelClass: LeadActivityLog,
+        filters: {
+          lead: this.id,
+        },
+      }),
     }
   },
   async created() {
@@ -172,8 +186,16 @@ export default {
     })
   },
   methods: {
+    onSearchHistory() {
+      this.history.filters.search = this.historySearchTerm
+      // Can not use history.refreshing because that will interfere with the polling
+      this.activityLogLoading = true
+      this.history.refresh().finally(() => {
+        this.activityLogLoading = false
+      })
+    },
     expandAllHistoryItems() {
-      this.expandedHistoryItems = this.$refs.History.$data.history.list.map(h => h.id)
+      this.expandedHistoryItems = this.history.list.map(h => h.id)
       this.showHistoryMenu = false
     },
     collapseAllHistoryItems() {
@@ -219,6 +241,12 @@ export default {
       const tzOffset = new Date().getTimezoneOffset()
       expectedCloseDate = `${expectedCloseDate}T${tzOffset / 60}:00`
       let patchData = { expectedCloseDate }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateTitle(title) {
+      let patchData = { title }
       Lead.api.update(this.lead.id, patchData).then(lead => {
         this.lead = lead
       })
@@ -317,6 +345,23 @@ export default {
 
     .option {
       @include pointer-on-hover();
+    }
+  }
+}
+
+.history-search-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  width: 20rem;
+  margin-left: 20rem;
+  box-sizing: border-box;
+
+  form {
+    width: inherit;
+    input {
+      @include input-field;
+      width: inherit;
     }
   }
 }
