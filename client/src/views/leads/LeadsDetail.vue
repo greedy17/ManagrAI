@@ -10,6 +10,7 @@
         :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
+        @updated-expected-close-date="updateExpectedCloseDate"
         @updated-title="updateTitle"
       />
     </div>
@@ -49,11 +50,7 @@
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
-            @click="
-              () => {
-                activityTabSelected = EMAILS
-              }
-            "
+            @click="activityTabSelected = EMAILS"
           >
             Email
           </div>
@@ -240,6 +237,14 @@ export default {
         this.lead = lead
       })
     },
+    updateExpectedCloseDate(expectedCloseDate) {
+      const tzOffset = new Date().getTimezoneOffset()
+      expectedCloseDate = `${expectedCloseDate}T${tzOffset / 60}:00`
+      let patchData = { expectedCloseDate }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
     updateTitle(title) {
       let patchData = { title }
       Lead.api.update(this.lead.id, patchData).then(lead => {
@@ -256,6 +261,7 @@ export default {
         status: null,
         amount: 0,
         rating: 1,
+        expectedCloseDate: null,
       }
 
       Forecast.api

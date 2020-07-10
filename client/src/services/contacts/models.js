@@ -9,9 +9,9 @@ export default class Contact {
     firstName = '',
     lastName = '',
     fullName = '',
+    title = '',
     email = '',
     account = null,
-    title = '',
     phoneNumber1 = '',
     phoneNumber2 = '',
   } = {}) {
@@ -20,9 +20,9 @@ export default class Contact {
       firstName,
       lastName,
       fullName,
+      title,
       email,
       account,
-      title,
       phoneNumber1,
       phoneNumber2,
     })

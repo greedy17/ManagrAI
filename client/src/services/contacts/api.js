@@ -3,6 +3,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 // API Endpoints
 const CONTACTS_ENDPOINT = '/contacts/'
 const LINK_TO_LEADS_ENDPOINT = '/contacts/link-to-leads/'
+const GENERATE_CONTACT_ENDPOINT = id => `/contacts/${id}/`
 
 export default class ContactAPI {
   /**
@@ -67,6 +68,13 @@ export default class ContactAPI {
     const promise = apiClient()
       .post(CONTACTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'ContactAPI.create' }))
+    return promise
+  }
+
+  update(id, patchData) {
+    const promise = apiClient()
+      .patch(GENERATE_CONTACT_ENDPOINT(id), this.cls.toAPI(patchData))
+      .catch(apiErrorHandler({ apiName: 'ContactAPI.update' }))
     return promise
   }
 

@@ -13,6 +13,14 @@
     <div class="contact-box__row">
       <div class="contact-box__contact-number-container">
         <div class="contact-box__contact-icon">
+          <img alt="icon" :src="require(`@/assets/images/contact.svg`)" class="icon" />
+        </div>
+        <div class="contact-box__contact-number">{{ contact.title }}</div>
+      </div>
+    </div>
+    <div class="contact-box__row">
+      <div class="contact-box__contact-number-container">
+        <div class="contact-box__contact-icon">
           <img alt="icon" :src="require(`@/assets/images/telephone.svg`)" class="icon" />
         </div>
         <div class="contact-box__contact-number">

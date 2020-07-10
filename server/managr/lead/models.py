@@ -43,6 +43,7 @@ class Lead(TimeStampModel):
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
     )
+    expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
     rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
@@ -333,7 +334,12 @@ class LeadActivityLog(TimeStampModel):
     An ActivityLog record is created whenever an activity occurs.
     """
 
-    lead = models.ForeignKey("Lead", null=True, on_delete=models.SET_NULL)
+    lead = models.ForeignKey(
+        "Lead",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="activity_logs",
+    )
     action_timestamp = models.DateTimeField(
         help_text=(
             "Keep track of when the action happened so we can construct "

@@ -67,6 +67,7 @@
         />
       </div>
     </div>
+
     <div style="display: flex; flex-flow: row; justify-content: center;">
       <a
         class="account-link"
@@ -78,16 +79,39 @@
         <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
       </a>
     </div>
-    <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
+    <div v-if="!editAmount" class="amount" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
-    <div v-else class="amount-editable section-shadow">
+    <div v-else class="amount-editable">
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
         <input v-model="tempAmount" type="number" />
         <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
         <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
+      </form>
+    </div>
+    <div
+      v-if="!editExpectedCloseDate"
+      class="expected-close-date section-shadow"
+      @click="onEditExpectedCloseDate"
+    >
+      Expected Close Date: <span>{{ lead.expectedCloseDate | dateShort }}</span>
+    </div>
+    <div v-else class="expected-close-date-editable">
+      Expected Close Date:
+      <form class="expected-close-date-form" @submit.prevent="() => {}">
+        <input
+          v-model="tempExpectedCloseDate"
+          @change="updateExpectedCloseDate"
+          type="date"
+          class="form__input"
+        />
+        <img
+          class="reset"
+          src="@/assets/images/remove.svg"
+          @click="editExpectedCloseDate = false"
+        />
       </form>
     </div>
     <div class="contacts">
@@ -162,9 +186,9 @@
     <Modal v-if="fileUploadLoading" :width="10">
       <ComponentLoadingSVG />
     </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="45" dimmed @close-modal="closeContactsModal">
+    <Modal v-if="contactsModal.isOpen" :width="55" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
-      <div v-else class="step-3">
+      <div v-else>
         <div class="form-field">
           <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
           <label>Account Contacts</label>
@@ -175,7 +199,9 @@
             :key="contact.id"
             :contact="contact"
             :checked="!!contactsModal.selectedContacts[contact.id]"
+            :editable="true"
             @checkbox-clicked="handleCheckboxClick"
+            @updated-contact="onUpdateContact"
           />
         </div>
         <div class="form-field">
@@ -307,6 +333,8 @@ export default {
       }),
       editAmount: false,
       tempAmount: this.lead.amount,
+      editExpectedCloseDate: false,
+      tempExpectedCloseDate: null,
       editTitle: false,
       tempTitle: this.lead.title,
       contactsLoading: false,
@@ -328,6 +356,42 @@ export default {
     },
   },
   methods: {
+    onUpdateContact(contact, editForm) {
+      // Form validation happens in a child (<ContactInformation />).
+      // Therefore, if update attempt gets this far it has valid data.
+
+      let patchData = { ...editForm }
+      patchData.phoneNumber1 = patchData.phone
+      delete patchData.phone
+      Contact.api.update(contact.id, patchData).then(response => {
+        // update accountContacts (these populate Contacts Modal)
+        this.accountContacts.list = this.accountContacts.list.map(aC => {
+          if (aC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return aC
+          }
+        })
+
+        // update leadContacts (these populate the ToolBar)
+        this.leadContacts.list = this.leadContacts.list.map(lC => {
+          if (lC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return lC
+          }
+        })
+
+        // update lead.linkedContactsRef (this is not currently in use)
+        this.lead.linkedContactsRef = this.lead.linkedContactsRef.map(cRef => {
+          if (cRef.id == contact.id) {
+            return response.data
+          } else {
+            return cRef
+          }
+        })
+      })
+    },
     async removeLeadFromList(listId, listIndex) {
       await List.api.removeFromList([this.lead.id], listId)
       this.lists.list.splice(listIndex, 1)
@@ -371,6 +435,20 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    onEditExpectedCloseDate() {
+      let date
+      if (this.lead.expectedCloseDate) {
+        date = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
+      } else {
+        date = new Date().toISOString().split('T')[0]
+      }
+      this.tempExpectedCloseDate = date
+      this.editExpectedCloseDate = true
+    },
+    updateExpectedCloseDate() {
+      this.$emit('updated-expected-close-date', this.tempExpectedCloseDate)
+      this.editExpectedCloseDate = false
     },
     onEditTitle() {
       this.editTitle = true
@@ -593,6 +671,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/forms';
 
 .toolbar {
   @include standard-border();
@@ -735,6 +814,10 @@ export default {
   justify-content: center;
   font-size: 1.125rem;
 
+  &:hover {
+    font-weight: bold;
+  }
+
   span {
     margin-left: 0.5rem;
   }
@@ -747,6 +830,7 @@ export default {
   flex-flow: column;
   align-items: center;
   font-size: 1.125rem;
+  margin-bottom: 0.75rem;
 
   span {
     margin-left: 0.5rem;
@@ -764,7 +848,65 @@ export default {
     input {
       @include input-field();
       margin-left: 0.5rem;
-      width: 6rem;
+      width: 10rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
+}
+
+.expected-close-date {
+  @include pointer-on-hover();
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 1rem;
+
+  &:hover {
+    font-weight: bold;
+  }
+
+  span {
+    margin-left: 0.5rem;
+  }
+}
+
+.expected-close-date-editable {
+  @include pointer-on-hover();
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  margin-bottom: 0.75rem;
+
+  span {
+    margin-left: 0.5rem;
+  }
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 12rem;
     }
 
     .save {
