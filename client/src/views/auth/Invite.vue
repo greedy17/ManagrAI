@@ -109,7 +109,6 @@ export default {
       this.isFormValid = null
       this.success = null
       this.errors = {}
-
       // check form data for this request
       let validationResults = this.clientSideValidations()
       this.isFormValid = validationResults[0]
@@ -142,10 +141,13 @@ export default {
         emailIsBlank: this.emailIsBlank,
         emailsDontMatch: this.emailsDontMatch,
         invalidEmail: this.invalidEmail,
-        organization: this.organization,
+        invalidOrganization: this.invalidOrganization,
       }
       let isFormValid =
-        !this.emailIsBlank && !this.emailsDontMatch && !this.invalidEmail && !this.organization
+        !this.emailIsBlank &&
+        !this.emailsDontMatch &&
+        !this.invalidEmail &&
+        !this.invalidOrganization
 
       return [isFormValid, formErrors]
     },
@@ -186,6 +188,9 @@ export default {
       // eslint-disable-next-line no-useless-escape
       let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       return !regex.test(this.email)
+    },
+    invalidOrganization() {
+      return !this.organization
     },
   },
 }
