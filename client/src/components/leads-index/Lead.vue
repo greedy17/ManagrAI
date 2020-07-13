@@ -14,9 +14,12 @@
       </div>
       <div v-else class="lead-description">No Descriptions</div>
       <span class="lead-amount">{{ lead.amount | currency }}</span>
-      <span class="lead-last-update">{{ lead.lastUpdateDate }}</span>
+      <span class="lead-expected-close-date">{{ lead.expectedCloseDate | dateShort }}</span>
       <LeadForecastDropdown :lead="lead" />
       <LeadStatusDropdown :lead="lead" />
+      <div class="last-action-taken">
+        {{ lead.lastActionTaken.actionTimestamp | timeAgo }} - {{ lead.lastActionTaken.activity }}
+      </div>
       <button class="route-to-detail">
         <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
       </button>
@@ -100,7 +103,7 @@ export default {
   padding-left: 1%;
   height: 1rem;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.14;
   color: $main-font-gray;
 }
@@ -110,7 +113,7 @@ export default {
   width: 4%;
   text-align: center;
   opacity: 0.5;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: bold;
   letter-spacing: 0.5px;
   color: $base-gray;
@@ -118,9 +121,9 @@ export default {
 
 .lead-description,
 .lead-amount,
-.lead-last-update {
+.lead-expected-close-date {
   @include base-font-styles();
-  font-size: 11px;
+  font-size: 0.6875rem;
   line-height: 1.45;
   color: $main-font-gray;
 }
@@ -142,8 +145,8 @@ export default {
   padding-left: 0.625rem;
 }
 
-.lead-last-update {
-  width: 5%;
+.lead-expected-close-date {
+  width: 10%;
 }
 
 .route-to-detail {
@@ -152,5 +155,11 @@ export default {
   margin-right: 1rem;
   height: 2rem;
   width: 2.5rem;
+}
+
+.last-action-taken {
+  @include base-font-styles();
+  font-size: 0.6875rem;
+  margin-left: 4rem;
 }
 </style>

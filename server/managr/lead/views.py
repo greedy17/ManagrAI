@@ -57,9 +57,12 @@ class LeadActivityLogViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
     filter_class = lead_filters.LeadActivityLogFilterSet
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend,)
+    search_fields = ('meta',)
 
     def get_queryset(self):
-        return LeadActivityLog.objects.for_user(self.request.user)
+        return LeadActivityLog.objects.for_user(self.request.user) \
+            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
 
     @action(
         methods=["GET"],
@@ -77,7 +80,9 @@ class LeadActivityLogViewSet(
                                 will be filtered to leads claimed by these
                                 users.
         """
-        qs = self.get_queryset()
+        # NOTE (Bruno 7-9-2020): self.get_queryset excludes
+        # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following qs instead.
+        qs = LeadActivityLog.objects.for_user(self.request.user)
         empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
         claimed_by = request.query_params.get("claimed_by")
@@ -124,7 +129,8 @@ class LeadViewSet(
     search_fields = ("title",)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user).order_by(Lower("title"))
+        return Lead.objects.for_user(self.request.user) \
+            .order_by(Lower("title")).prefetch_related('activity_logs')
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get("verbose", None)
@@ -353,6 +359,7 @@ class LeadViewSet(
 
         lead.claimed_by = None
         lead.status = None
+        lead.expected_close_date = None
         # delete lead forecast
         try:
             if lead.forecast:

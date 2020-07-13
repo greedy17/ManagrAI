@@ -1,11 +1,20 @@
 <template>
   <div class="accounts-container">
-    <div v-if="accounts.length > 0" class="accounts">
+    <template v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
+      <br />
+      <span class="no-items-message">
+        Sorry! Your search did not return any results!
+      </span>
+      <br />
+      <br />
+    </template>
+    <div v-if="accounts.length" class="accounts">
       <Account
         v-for="accountWithLeads in accounts"
         :key="accountWithLeads.id"
         :account="accountWithLeads.account"
         :collection="accountWithLeads.collection"
+        :isFilteringActive="isFilteringActive"
         @load-more="$emit('load-more')"
       />
       <template v-if="!accountsCollection.refreshing && !!accountsCollection.pagination.next">
@@ -39,9 +48,18 @@ export default {
       type: Object,
       required: true,
     },
+    isFilteringActive: {
+      type: Boolean,
+      required: true,
+    },
   },
   components: {
     Account,
+  },
+  computed: {
+    zeroLeadsPresent() {
+      return !this.accounts.filter(a => a.collection.pagination.totalCount > 0).length
+    },
   },
 }
 </script>
@@ -62,7 +80,7 @@ export default {
   font-weight: bold;
   align-self: center;
   width: 25%;
-  margin-left: 0.75rem;
+  margin-left: 1rem;
 }
 .load-more-button {
   @include primary-button;

@@ -21,7 +21,7 @@
         <p>{{ log.meta.content }}</p>
         <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
-          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
+          {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
         </p>
       </div>
     </div>

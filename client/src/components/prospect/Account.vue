@@ -1,5 +1,5 @@
 <template>
-  <div class="account">
+  <div class="account" v-if="!isFilteringActive || collection.pagination.totalCount">
     <div class="header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="account-title">{{ account.name }}</span>
@@ -24,6 +24,7 @@
       <div v-else class="no-items-message">No Opportunities for this account</div>
     </div>
   </div>
+  <div v-else></div>
 </template>
 
 <script>
@@ -39,6 +40,10 @@ export default {
     },
     collection: {
       type: Object,
+      required: true,
+    },
+    isFilteringActive: {
+      type: Boolean,
       required: true,
     },
   },
