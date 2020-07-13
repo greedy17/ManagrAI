@@ -22,7 +22,7 @@ STATE_CHOCIES = ((STATE_ACTIVE, 'Active'), (STATE_INACTIVE, 'Inactive'))
 
 class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
+        if user.is_superuser or user.is_serviceaccount:
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(pk=user.organization_id)

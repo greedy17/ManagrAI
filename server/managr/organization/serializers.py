@@ -27,7 +27,7 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'name', 'state',
+            'id', 'name', 'state', 'org_token', 'is_externalsyncenabled',
         )
 
 
@@ -63,7 +63,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'name', 'state', 'total_amount_closed_contracts', 'avg_amount_closed_contracts', 'org_token', 'is_externalsyncenabled',
+            'id', 'name', 'state', 'total_amount_closed_contracts', 'avg_amount_closed_contracts',
         )
 
 

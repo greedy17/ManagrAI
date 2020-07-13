@@ -4,8 +4,10 @@ from django.db import transaction
 from django.db import IntegrityError
 from rest_framework.authtoken.models import Token
 from django.core.exceptions import ValidationError as V
+from django.core import serializers
 from django.template.exceptions import TemplateDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
+
 import copy
 from rest_framework import (
     authentication,
@@ -26,17 +28,18 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .models import Organization, Account, Contact
 from managr.lead.models import Lead
-from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer
+from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer, OrganizationRefSerializer
 from .filters import ContactFilterSet
 from managr.core import constants as core_consts
 
 from managr.core.permissions import (
-    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, SuperUserCreateOnly,)
+    IsOrganizationManager, IsSuperUser, IsSalesPerson, CanEditResourceOrReadOnly, SuperUserCreateOnly, IsExternalIntegrationAccount,)
 
 
 class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (SuperUserCreateOnly, CanEditResourceOrReadOnly,)
+    permission_classes = (
+        SuperUserCreateOnly, CanEditResourceOrReadOnly, )
 
     def get_queryset(self):
         return Organization.objects.for_user(self.request.user)
@@ -46,6 +49,18 @@ class OrganizationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixi
         if is_verbose is not None and is_verbose.lower() == 'true':
             return OrganizationVerboseSerializer
         return OrganizationSerializer
+
+    @action(methods=["GET"], permission_classes=(IsExternalIntegrationAccount,), detail=False, url_path="list-org-tokens")
+    def list_org_tokens(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts """
+        param = request.query_params.get('name', None)
+
+        qs = self.get_queryset().filter(is_externalsyncenabled=True)
+        if param:
+            qs = qs.filter(name=param)
+        serializer = OrganizationRefSerializer(qs, many=True)
+
+        return Response(serializer.data)
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):

@@ -18,6 +18,17 @@ class IsOrganizationManager(permissions.BasePermission):
         return user.type == core_consts.ACCOUNT_TYPE_MANAGER and user.organization and user.is_active
 
 
+class IsExternalIntegrationAccount(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or request.user.is_anonymous:
+            raise exceptions.ValidationError('Authentication Required.')
+        if request.method in permissions.SAFE_METHODS and user.is_serviceaccount:
+            return True
+        return False
+
+
 class IsSalesPerson(permissions.BasePermission):
     def has_permission(self, request, view):
 
