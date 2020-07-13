@@ -43,6 +43,7 @@ export default {
 <style lang="scss">
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/inputs';
 
 body {
   overflow-y: scroll;
@@ -51,7 +52,9 @@ body {
   min-height: 100vh;
   background-color: $off-white;
 }
-
+input[type='text'] {
+  @include input-field();
+}
 #app {
   @include base-font-styles;
   height: inherit;

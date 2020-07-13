@@ -1,9 +1,20 @@
 <template>
   <div class="invite">
-    <form v-if="!success" @submit.prevent="handleInvite">
+    <form class="invite-form" v-if="!success" @submit.prevent="handleInvite">
       <h2>Invite</h2>
+
       <div class="errors">
         <!-- client side validations -->
+        <div v-if="isStaff && organizations.length > 0" class="organization">
+          <DropDownSelect
+            :items="organizations"
+            v-model="organization"
+            displayKey="name"
+            valueKey="id"
+            searchable
+            local
+          />
+        </div>
         <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
           Fields may not be blank.
         </div>
@@ -24,6 +35,17 @@
       <!-- type="text" instead of type="email" so we can control UI when invalid -->
       <input v-model="email" type="text" placeholder="email" />
       <input v-model="emailConfirmation" type="text" placeholder="confirm email" />
+      <div class="group" v-if="isStaff && isIntegrationEnabled">
+        <label for="is-integration-account">Integration Account</label>
+        <input
+          type="checkbox"
+          class="checkbox"
+          v-model="isIntegrationAccount"
+          :checked="type == 'INTEGRATION'"
+          id="is-integration-account"
+        />
+      </div>
+
       <button type="submit">Invite</button>
     </form>
     <div v-else class="success-prompt">
@@ -40,22 +62,45 @@
 
 <script>
 import User from '@/services/users'
-
-const initialData = {
-  email: '',
-  emailConfirmation: '',
-  type: 'MANAGER', // TODO(Bruno 4-9-20): Make this dynamic
-  isFormValid: null,
-  errors: {},
-  success: null,
-  link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
-}
+import DropDownSelect from '@/components/forms/inputs/DropDownSelect'
+import Organization from '@/services/organizations'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'Invite',
-  components: {},
+  components: {
+    DropDownSelect,
+  },
   data() {
-    return Object.assign({}, initialData)
+    return {
+      email: '',
+      emailConfirmation: '',
+      type: 'MANAGER', // TODO(Bruno 4-9-20): Make this dynamic
+      isFormValid: null,
+      errors: {},
+      success: null,
+      link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
+      isIntegrationAccount: false,
+      organization: null,
+      organizations: [],
+    }
+  },
+  watch: {
+    isIntegrationAccount(val) {
+      if (val) {
+        this.type = 'INTEGRATION'
+      } else {
+        this.type = 'MANAGER'
+      }
+    },
+  },
+  async created() {
+    if (this.isStaff) {
+      let i = await Organization.api.list({})
+      this.organizations = i.results
+    } else {
+      this.organization = this.$store.state.user.organization
+    }
   },
 
   methods: {
@@ -73,8 +118,7 @@ export default {
         return
       }
 
-      let organization = this.$store.state.user.organization
-      let invitePromise = User.api.invite(this.email, this.type, organization)
+      let invitePromise = User.api.invite(this.email, this.type, this.organization)
 
       invitePromise
         .then(response => {
@@ -98,16 +142,39 @@ export default {
         emailIsBlank: this.emailIsBlank,
         emailsDontMatch: this.emailsDontMatch,
         invalidEmail: this.invalidEmail,
+        organization: this.organization,
       }
-      let isFormValid = !this.emailIsBlank && !this.emailsDontMatch && !this.invalidEmail
+      let isFormValid =
+        !this.emailIsBlank && !this.emailsDontMatch && !this.invalidEmail && !this.organization
 
       return [isFormValid, formErrors]
     },
     resetData() {
-      Object.assign(this, initialData)
+      this.email = ''
+      this.emailConfirmation = ''
+      this.type = 'MANAGER' // TODO(Bruno 4-9-20): Make this dynamic
+      this.isFormValid = null
+      this.errors = {}
+      this.success = null
+      this.link = '' // NOTE(Bruno 4-20-20): temporary, for staging purposes
+      this.isIntegrationAccount = false
+      this.organization = null
     },
   },
   computed: {
+    isStaff() {
+      // checking isStaff to see if they can create organizations or invite special users
+      // on the backend only superusers can do this
+      return this.$store.state.user.isStaff
+    },
+    isIntegrationEnabled() {
+      // if the user isStaff and the org is integration enabled
+      if (this.isStaff && this.organization) {
+        let org = this.organizations.find(i => i.id == this.organization)
+        return org.isExternalsyncenabled
+      }
+      return false
+    },
     emailIsBlank() {
       return !this.email.length
     },
@@ -162,11 +229,35 @@ input {
   display: block;
   margin: 0.375rem 0;
 }
+.checkbox {
+  width: auto;
+  height: auto;
+}
 
 button {
   @include primary-button();
   margin-top: 1.25rem;
   height: 1.875rem;
   width: 9.375rem;
+}
+.group {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  align-items: center;
+  > * {
+    margin: 0.5rem;
+  }
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  > * {
+    margin-top: 1rem;
+  }
+}
+::v-deep.dropdown {
+  margin-bottom: 1rem;
 }
 </style>

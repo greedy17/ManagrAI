@@ -78,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
         "full_name",
         "email_auth_account",
         "is_serviceaccount",
+        "is_staff"
     )
 
 
