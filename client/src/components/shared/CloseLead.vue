@@ -90,7 +90,7 @@ export default {
           this.$parent.$emit('close-modal')
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: 'Success! Opportunity closed!',
           })
         })

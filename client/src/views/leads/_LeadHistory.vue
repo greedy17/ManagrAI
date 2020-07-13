@@ -1,32 +1,40 @@
 <template>
-  <div class="lead-history">
-    <div v-if="refreshedOnce && !apiFailing && history.list.length === 0">
-      <p>No actions have been taken on this opportunity.</p>
-    </div>
+  <div class="lead-history" ref="mainDiv">
+    <ComponentLoadingSVG style="margin-top: 2rem; margin-bottom: 2rem;" v-if="activityLogLoading" />
+    <template v-else>
+      <div v-if="refreshedOnce && !apiFailing && history.list.length === 0">
+        <p>No actions have been taken on this opportunity.</p>
+      </div>
 
-    <div v-if="refreshedOnce && apiFailing">
-      <p>We're having trouble retrieving this lead's history. Please try again later.</p>
-    </div>
+      <div v-if="refreshedOnce && apiFailing">
+        <p>We're having trouble retrieving this lead's history. Please try again later.</p>
+      </div>
 
-    <div v-if="!apiFailing">
-      <ActivityLogItem v-for="log in history.list" :key="log.id" :log="log" />
-    </div>
+      <div v-if="!apiFailing">
+        <ActivityLogItem
+          v-for="log in history.list"
+          :key="log.id"
+          :log="log"
+          :expanded="expandedHistoryItems.includes(log.id)"
+          @toggle-history-item="id => $emit('toggle-history-item', id)"
+        />
+      </div>
 
-    <button
-      class="primary-button"
-      @click="addPage"
-      v-if="history.pagination.hasNextPage"
-      style="margin: 1rem"
-      :disabled="history.loadingNextPage"
-    >
-      Load More
-    </button>
+      <button
+        class="primary-button"
+        @click="addPage"
+        v-if="history.pagination.hasNextPage"
+        style="margin: 1rem"
+        :disabled="history.loadingNextPage"
+      >
+        Load More
+      </button>
+    </template>
   </div>
 </template>
 
 <script>
 import CollectionManager from '@/services/collectionManager'
-import LeadActivityLog from '@/services/leadActivityLogs'
 
 import ActivityLogItem from './_ActivityLogItem'
 
@@ -39,6 +47,18 @@ export default {
       type: Object,
       required: true,
     },
+    expandedHistoryItems: {
+      type: Array,
+      required: true,
+    },
+    activityLogLoading: {
+      type: Boolean,
+      required: true,
+    },
+    history: {
+      type: CollectionManager,
+      required: true,
+    },
   },
   components: {
     ActivityLogItem,
@@ -47,12 +67,6 @@ export default {
     return {
       refreshedOnce: false,
       apiFailing: false,
-      history: CollectionManager.create({
-        ModelClass: LeadActivityLog,
-        filters: {
-          lead: this.lead.id,
-        },
-      }),
     }
   },
   created() {

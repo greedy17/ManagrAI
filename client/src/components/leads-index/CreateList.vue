@@ -34,7 +34,7 @@ export default {
         this.$emit('list-created', response.data)
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Success! List created.',
         })
       })

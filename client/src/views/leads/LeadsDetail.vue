@@ -10,6 +10,8 @@
         :leadContacts="contacts"
         @updated-rating="updateRating"
         @updated-amount="updateAmount"
+        @updated-expected-close-date="updateExpectedCloseDate"
+        @updated-title="updateTitle"
       />
     </div>
     <div class="page__main-content-area">
@@ -32,7 +34,7 @@
       </div>
 
       <!-- Lead History and Emails -->
-      <div class="box">
+      <div class="box" style="box-sizing: border-box;">
         <div class="box__tab-header">
           <div
             class="box__tab"
@@ -48,11 +50,7 @@
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
-            @click="
-              () => {
-                activityTabSelected = EMAILS
-              }
-            "
+            @click="activityTabSelected = EMAILS"
           >
             Email
           </div>
@@ -66,10 +64,35 @@
               Check for Mail
             </button>
           </div>
+
+          <div class="history-search-container" v-if="activityTabSelected === HISTORY">
+            <form @submit.prevent="onSearchHistory">
+              <input v-model="historySearchTerm" placeholder="Search" />
+            </form>
+          </div>
+
+          <div class="history-menu" v-if="activityTabSelected === HISTORY">
+            <img
+              class="icon"
+              src="@/assets/images/more_horizontal.svg"
+              @click="showHistoryMenu = !showHistoryMenu"
+            />
+            <div v-if="showHistoryMenu" class="menu">
+              <p class="option" @click="expandAllHistoryItems">Expand All</p>
+              <p class="option" @click="collapseAllHistoryItems">Collapse All</p>
+            </div>
+          </div>
         </div>
 
         <div v-show="activityTabSelected === HISTORY" class="box__content">
-          <LeadHistory :lead="lead" />
+          <LeadHistory
+            :lead="lead"
+            ref="History"
+            :history="history"
+            @toggle-history-item="toggleHistoryItem"
+            :expandedHistoryItems="expandedHistoryItems"
+            :activityLogLoading="activityLogLoading"
+          />
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
@@ -96,6 +119,7 @@ import Lead from '@/services/leads'
 import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import Forecast from '@/services/forecasts'
+import LeadActivityLog from '@/services/leadActivityLogs'
 
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
@@ -141,6 +165,16 @@ export default {
       HISTORY,
       EMAILS,
       activityTabSelected: HISTORY,
+      showHistoryMenu: false,
+      expandedHistoryItems: [],
+      historySearchTerm: '',
+      activityLogLoading: false,
+      history: CollectionManager.create({
+        ModelClass: LeadActivityLog,
+        filters: {
+          lead: this.id,
+        },
+      }),
     }
   },
   async created() {
@@ -152,6 +186,29 @@ export default {
     })
   },
   methods: {
+    onSearchHistory() {
+      this.history.filters.search = this.historySearchTerm
+      // Can not use history.refreshing because that will interfere with the polling
+      this.activityLogLoading = true
+      this.history.refresh().finally(() => {
+        this.activityLogLoading = false
+      })
+    },
+    expandAllHistoryItems() {
+      this.expandedHistoryItems = this.history.list.map(h => h.id)
+      this.showHistoryMenu = false
+    },
+    collapseAllHistoryItems() {
+      this.expandedHistoryItems = []
+      this.showHistoryMenu = false
+    },
+    toggleHistoryItem(id) {
+      if (this.expandedHistoryItems.includes(id)) {
+        this.expandedHistoryItems = this.expandedHistoryItems.filter(i => i != id)
+      } else {
+        this.expandedHistoryItems = [...this.expandedHistoryItems, id]
+      }
+    },
     retrieveLead() {
       this.loading = true
       return Lead.api.retrieve(this.id)
@@ -180,6 +237,20 @@ export default {
         this.lead = lead
       })
     },
+    updateExpectedCloseDate(expectedCloseDate) {
+      const tzOffset = new Date().getTimezoneOffset()
+      expectedCloseDate = `${expectedCloseDate}T${tzOffset / 60}:00`
+      let patchData = { expectedCloseDate }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
+    updateTitle(title) {
+      let patchData = { title }
+      Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead = lead
+      })
+    },
     resetLead() {
       let forecastPatchData = {
         lead: this.lead.id,
@@ -190,6 +261,7 @@ export default {
         status: null,
         amount: 0,
         rating: 1,
+        expectedCloseDate: null,
       }
 
       Forecast.api
@@ -203,7 +275,7 @@ export default {
           this.$Alert.alert({
             type: 'success',
             message,
-            timeout: 4000,
+            timeout: 3000,
           })
         })
     },
@@ -214,7 +286,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 2000,
+          timeout: 3000,
         })
       })
     },
@@ -224,7 +296,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           message,
-          timeout: 4000,
+          timeout: 3000,
         })
         this.$router.push({ name: 'LeadsIndex' })
       })
@@ -246,5 +318,51 @@ export default {
   align-items: flex-end;
   flex-direction: column;
   justify-content: center;
+}
+
+.history-menu {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  justify-content: center;
+
+  margin-right: 1rem;
+
+  .icon {
+    @include pointer-on-hover();
+    opacity: 0.4;
+  }
+
+  .menu {
+    position: absolute;
+    z-index: 1083;
+    margin-top: 3.5rem;
+    background-color: $soft-gray;
+    width: 6rem;
+    padding: 0 1rem;
+    border-radius: 3px;
+
+    .option {
+      @include pointer-on-hover();
+    }
+  }
+}
+
+.history-search-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  width: 20rem;
+  margin-left: 20rem;
+  box-sizing: border-box;
+
+  form {
+    width: inherit;
+    input {
+      @include input-field;
+      width: inherit;
+    }
+  }
 }
 </style>

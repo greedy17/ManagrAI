@@ -99,6 +99,9 @@ class LeadRefSerializer(serializers.ModelSerializer):
     """ serializer for forecast """
 
     claimed_by_ref = UserRefSerializer(source="claimed_by", read_only=True)
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
 
     class Meta:
         model = Lead
@@ -113,6 +116,8 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "status",
             "claimed_by",
             "claimed_by_ref",
+            "expected_close_date",
+            "linked_contacts_ref"
         )
 
 
@@ -264,6 +269,29 @@ class LeadActivityLogSerializer(serializers.ModelSerializer):
         )
 
 
+class LeadActivityLogRefSerializer(serializers.ModelSerializer):
+    '''
+    This serializer is specifically for serializing the log for a Lead,
+    so it lacks lead-related data, and action-taken-by-ref data.
+    '''
+    activity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LeadActivityLog
+        fields = (
+            "id",
+            "action_taken_by",
+            "action_timestamp",
+            "activity",
+            "meta",
+        )
+
+    def get_activity(self, instance):
+        for option in lead_constants.ACTIVITY_CHOICES:
+            if option[0] == instance.activity:
+                return option[1]
+
+
 class ActionChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionChoice
@@ -313,6 +341,7 @@ class LeadSerializer(serializers.ModelSerializer):
         source="linked_contacts", read_only=True, many=True
     )
     files_ref = FileSerializer(source="files", read_only=True, many=True)
+    last_action_taken = serializers.SerializerMethodField()
 
     class Meta:
         model = Lead
@@ -321,6 +350,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "title",
             "amount",
             "closing_amount",
+            "expected_close_date",
             "primary_description",
             "secondary_description",
             "rating",
@@ -344,6 +374,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "actions_ref",
             "files",
             "files_ref",
+            "last_action_taken",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the
         # create/update/delete end points for forecasts
@@ -356,6 +387,12 @@ class LeadSerializer(serializers.ModelSerializer):
 
     def get_contract(self, instance):
         return instance.contract_file
+
+    def get_last_action_taken(self, instance):
+        return LeadActivityLogRefSerializer(
+                instance.activity_logs.order_by('-datetime_created')
+                .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+                .first()).data
 
 
 class LeadVerboseSerializer(serializers.ModelSerializer):
@@ -384,6 +421,7 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
             "title",
             "amount",
             "closing_amount",
+            "expected_close_date",
             "primary_description",
             "secondary_description",
             "rating",

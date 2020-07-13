@@ -5,8 +5,15 @@
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div> -->
-    <div class="lead-name">
+    <div class="lead-title" v-if="!editTitle" @click="onEditTitle">
       <h2>{{ lead.title }}</h2>
+    </div>
+    <div v-else class="title-editable">
+      <form class="title-form" @submit.prevent="updateTitle">
+        <input v-model="tempTitle" type="text" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click="updateTitle" />
+        <img class="reset" src="@/assets/images/remove.svg" @click="resetTitle" />
+      </form>
     </div>
     <div class="rating">
       <LeadRating
@@ -60,17 +67,56 @@
         />
       </div>
     </div>
-    <div class="account-link" @click="goToProspect">{{ lead.accountRef.name }}</div>
-    <div v-if="!editAmount" class="amount section-shadow" @click="onEditAmount">
+
+    <div style="display: flex; flex-flow: row; justify-content: center;">
+      <a
+        class="account-link"
+        :href="lead.accountRef.url | prependUrlProtocol"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ lead.accountRef.name }}
+        <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
+      </a>
+    </div>
+    <div v-if="!editAmount" class="amount" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
-    <div v-else class="amount-editable section-shadow">
+    <div v-else class="amount-editable">
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
         <input v-model="tempAmount" type="number" />
         <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
         <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
+      </form>
+    </div>
+    <div
+      v-if="!editExpectedCloseDate"
+      class="expected-close-date section-shadow"
+      @click="onEditExpectedCloseDate"
+    >
+      <div v-if="!lead.expectedCloseDate">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
+      <div v-else style="display: flex; flex-flow: column; align-items: center;">
+        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
+    </div>
+    <div v-else class="expected-close-date-editable">
+      Expected Close Date:
+      <form class="expected-close-date-form" @submit.prevent="() => {}">
+        <input
+          v-model="tempExpectedCloseDate"
+          @change="updateExpectedCloseDate"
+          type="date"
+          class="form__input"
+        />
+        <img
+          class="reset"
+          src="@/assets/images/remove.svg"
+          @click="editExpectedCloseDate = false"
+        />
       </form>
     </div>
     <div class="contacts">
@@ -83,23 +129,22 @@
           @click.stop="openContactsModal"
         />
       </div>
-      <div v-if="contactsLoading" class="contacts-loading contacts-container section-shadow">
+      <div v-if="contactsLoading" class="contacts-loading section-shadow">
         <ComponentLoadingSVG />
       </div>
-      <div v-else-if="leadContacts.list.length" class="contacts-container">
+      <div v-else-if="leadContacts.list.length">
         <div class="contact section-shadow" v-for="contact in leadContacts.list" :key="contact.id">
-          <img src="@/assets/images/sara-smith.png" alt="contact image" />
-          <span class="name">{{
-            contact.fullName.length > 0 ? contact.fullName : contact.email
-          }}</span>
-          <div class="phone button">
-            <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+          <div class="contact-circle-container">
+            <div>{{ contactInitials(contact) }}</div>
           </div>
-          <div class="text button">
-            <img class="icon" src="@/assets/images/sms.svg" alt="icon" />
-          </div>
-          <div class="email button">
-            <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+          <div class="contact-info-container">
+            <span class="contact-name">
+              {{ contact.fullName.length > 0 ? contact.fullName : contact.email }}
+            </span>
+            <div class="contact-title" v-if="contact.title">
+              <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
+              <span>{{ contact.title }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -129,7 +174,9 @@
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            {{ file.filename }}
+            <a class="file-link" :href="file.file" target="_blank" rel="noopener noreferrer">
+              {{ file.filename }}
+            </a>
             <img
               class="add"
               style="margin: 0 1rem 0 auto;"
@@ -144,9 +191,9 @@
     <Modal v-if="fileUploadLoading" :width="10">
       <ComponentLoadingSVG />
     </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="45" dimmed @close-modal="closeContactsModal">
+    <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
       <ComponentLoadingSVG v-if="accountContacts.refreshing" />
-      <div v-else class="step-3">
+      <div v-else>
         <div class="form-field">
           <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
           <label>Account Contacts</label>
@@ -157,7 +204,9 @@
             :key="contact.id"
             :contact="contact"
             :checked="!!contactsModal.selectedContacts[contact.id]"
+            :editable="true"
             @checkbox-clicked="handleCheckboxClick"
+            @updated-contact="onUpdateContact"
           />
         </div>
         <div class="form-field">
@@ -289,7 +338,10 @@ export default {
       }),
       editAmount: false,
       tempAmount: this.lead.amount,
-
+      editExpectedCloseDate: false,
+      tempExpectedCloseDate: null,
+      editTitle: false,
+      tempTitle: this.lead.title,
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
       selectedLists: {},
@@ -309,6 +361,46 @@ export default {
     },
   },
   methods: {
+    onUpdateContact(contact, editForm) {
+      // Form validation happens in a child (<ContactInformation />).
+      // Therefore, if update attempt gets this far it has valid data.
+
+      let patchData = { ...editForm }
+      // NOTE (Bruno 7-10-2020): even though within Contact.api.update patchData
+      // is put through toAPI, 'phoneNumber1' is turned to 'phone_number1' and thus
+      // this property does not get updated by the server-side.
+      // That is why the following like uses snake_case.
+      patchData.phone_number_1 = patchData.phone
+      delete patchData.phone
+      Contact.api.update(contact.id, patchData).then(response => {
+        // update accountContacts (these populate Contacts Modal)
+        this.accountContacts.list = this.accountContacts.list.map(aC => {
+          if (aC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return aC
+          }
+        })
+
+        // update leadContacts (these populate the ToolBar)
+        this.leadContacts.list = this.leadContacts.list.map(lC => {
+          if (lC.id == contact.id) {
+            return Contact.fromAPI(response.data)
+          } else {
+            return lC
+          }
+        })
+
+        // update lead.linkedContactsRef (this is not currently in use)
+        this.lead.linkedContactsRef = this.lead.linkedContactsRef.map(cRef => {
+          if (cRef.id == contact.id) {
+            return response.data
+          } else {
+            return cRef
+          }
+        })
+      })
+    },
     async removeLeadFromList(listId, listIndex) {
       await List.api.removeFromList([this.lead.id], listId)
       this.lists.list.splice(listIndex, 1)
@@ -339,9 +431,6 @@ export default {
       this.listModal.isOpen = false
       this.selectedLists = {}
     },
-    goToProspect() {
-      this.$router.push({ name: 'Prospect' })
-    },
     emitUpdatedRating(rating) {
       this.$emit('updated-rating', rating)
     },
@@ -355,6 +444,31 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
+    },
+    onEditExpectedCloseDate() {
+      let date
+      if (this.lead.expectedCloseDate) {
+        date = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
+      } else {
+        date = new Date().toISOString().split('T')[0]
+      }
+      this.tempExpectedCloseDate = date
+      this.editExpectedCloseDate = true
+    },
+    updateExpectedCloseDate() {
+      this.$emit('updated-expected-close-date', this.tempExpectedCloseDate)
+      this.editExpectedCloseDate = false
+    },
+    onEditTitle() {
+      this.editTitle = true
+    },
+    updateTitle() {
+      this.$emit('updated-title', this.tempTitle)
+      this.editTitle = false
+    },
+    resetTitle() {
+      this.tempTitle = this.lead.title
+      this.editTitle = false
     },
     toggleSelectedList(list) {
       if (this.selectedLists[list.id]) {
@@ -371,7 +485,7 @@ export default {
       List.api.bulkUpdate(selectedLeads, selectedLists).then(() => {
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Lists updated!',
         })
         this.lists.list = Object.values(this.selectedLists).sort(listSorter)
@@ -387,7 +501,7 @@ export default {
           this.lead.filesRef = [...this.lead.filesRef, response.data]
           this.$Alert.alert({
             type: 'success',
-            timeout: 4000,
+            timeout: 3000,
             message: `File uploaded as "${response.data.filename}"!`,
           })
         })
@@ -455,6 +569,7 @@ export default {
             lastName: currentForm.lastName,
             email: currentForm.email,
             phone: currentForm.phone,
+            title: currentForm.title,
           }
           contacts.push(contactData)
         }
@@ -463,7 +578,14 @@ export default {
 
       if (contacts.length) {
         let promises = contacts.map(cData =>
-          Contact.api.create(cData.firstName, cData.lastName, cData.email, cData.phone, account),
+          Contact.api.create(
+            cData.firstName,
+            cData.lastName,
+            cData.email,
+            cData.phone,
+            account,
+            cData.title,
+          ),
         )
         Promise.all(promises)
           .then(responses => {
@@ -477,7 +599,7 @@ export default {
           .then(response => {
             this.$Alert.alert({
               type: 'success',
-              timeout: 4000,
+              timeout: 3000,
               message: 'Contacts updated!',
             })
             this.leadContacts.list = response.data.map(c => Contact.fromAPI(c))
@@ -493,7 +615,7 @@ export default {
           .then(response => {
             this.$Alert.alert({
               type: 'success',
-              timeout: 4000,
+              timeout: 3000,
               message: 'Contacts updated!',
             })
             this.leadContacts.list = response.data.map(c => Contact.fromAPI(c))
@@ -538,6 +660,17 @@ export default {
 
       return !userInputPresent || (userInputPresent && !anyFieldBlank)
     },
+    contactInitials(contact) {
+      if (!contact.fullName) {
+        return
+      }
+      let names = contact.fullName.split(' '),
+        initials = names[0].substring(0, 1).toUpperCase()
+      if (names.length > 1) {
+        initials += names[names.length - 1].substring(0, 1).toUpperCase()
+      }
+      return initials
+    },
   },
 }
 </script>
@@ -547,6 +680,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/forms';
 
 .toolbar {
   @include standard-border();
@@ -587,9 +721,49 @@ export default {
   }
 }
 
-.lead-name {
+.lead-title {
+  @include pointer-on-hover;
+  margin-top: 1rem;
   padding: 0 15%;
   text-align: center;
+}
+
+.title-editable {
+  @include pointer-on-hover();
+  margin-top: 2rem;
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  font-size: 1.125rem;
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 10rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
 }
 
 .rating {
@@ -633,6 +807,7 @@ export default {
   justify-content: center;
   color: $dark-green;
   text-decoration: underline;
+  width: fit-content;
 
   &:hover {
     font-weight: bold;
@@ -648,6 +823,10 @@ export default {
   justify-content: center;
   font-size: 1.125rem;
 
+  &:hover {
+    font-weight: bold;
+  }
+
   span {
     margin-left: 0.5rem;
   }
@@ -660,6 +839,7 @@ export default {
   flex-flow: column;
   align-items: center;
   font-size: 1.125rem;
+  margin-bottom: 0.75rem;
 
   span {
     margin-left: 0.5rem;
@@ -677,7 +857,67 @@ export default {
     input {
       @include input-field();
       margin-left: 0.5rem;
-      width: 6rem;
+      width: 10rem;
+    }
+
+    .save {
+      background-color: $dark-green;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .reset {
+      background-color: $silver;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+  }
+}
+
+.expected-close-date {
+  @include pointer-on-hover();
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 1rem;
+  margin-top: 1rem;
+
+  &:hover {
+    font-weight: bold;
+  }
+
+  span {
+    margin-left: 0.5rem;
+  }
+}
+
+.expected-close-date-editable {
+  @include pointer-on-hover();
+  height: 4rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+
+  span {
+    margin-left: 0.5rem;
+  }
+
+  form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10%;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    input {
+      @include input-field();
+      margin-left: 0.5rem;
+      width: 12rem;
     }
 
     .save {
@@ -717,44 +957,9 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
-    height: 3rem;
-    padding-left: 1.25rem;
+    min-height: 5.5rem;
+    padding: 0.3rem 0 0.3rem 1.25rem;
     font-size: 14px;
-
-    img {
-      height: 1.25rem;
-      border-radius: 50%;
-      margin-right: 1rem;
-    }
-
-    .phone {
-      margin-left: auto;
-    }
-
-    .text {
-      margin-left: 0.5rem;
-    }
-
-    .email {
-      margin: 0 0.5rem;
-    }
-
-    .button {
-      @include pointer-on-hover();
-      height: 1.5rem;
-      width: 1.5rem;
-      background-color: $soft-gray;
-      border-radius: 5px;
-      display: flex;
-      flex-flow: row;
-      align-items: center;
-      justify-content: center;
-
-      .icon {
-        height: 1rem;
-        margin: auto;
-      }
-    }
   }
 }
 
@@ -901,6 +1106,53 @@ export default {
       width: 1.4rem;
       margin-right: 1rem;
     }
+  }
+}
+
+.contact-circle-container {
+  line-height: 1rem;
+  background-color: $dark-gray-blue;
+  color: $white;
+  font-weight: 1000;
+  height: 2.2rem;
+  width: 2.2rem;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-radius: 50%;
+  margin-right: 0.2rem;
+}
+
+.contact-info-container {
+  margin-left: 0.5rem;
+  width: 7rem;
+
+  .contact-title {
+    padding: 0.3rem 0.5rem;
+    background-color: $soft-gray;
+    border-radius: 5px;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 0.3rem;
+
+    .icon {
+      height: 1rem;
+    }
+
+    span {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.file-link {
+  @include base-font-styles;
+  text-decoration: none;
+  color: $main-font-gray;
+
+  &:hover {
+    color: $dark-green;
   }
 }
 </style>

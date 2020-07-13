@@ -77,7 +77,7 @@ export default {
       Note.api.bulkCreate(data).then(() => {
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
+          timeout: 3000,
           message: 'Notes logged for selected opportunities!',
         })
         this.$parent.$emit('bulk-success')

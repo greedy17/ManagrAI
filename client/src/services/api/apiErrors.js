@@ -52,7 +52,7 @@ export function apiErrorHandler({
         Vue.prototype.$Alert.alert({
           type: 'error',
           message,
-          timeout: 6000,
+          timeout: 3000,
         })
       }
       // Optionally re-raise for further optional error handling
@@ -68,7 +68,7 @@ export function apiErrorHandler({
       Vue.prototype.$Alert.alert({
         type: 'error',
         message: '<div>Error...</div>' + '<div>Something went wrong! Please try again later.</div>',
-        timeout: 6000,
+        timeout: 3000,
       })
     }
 
