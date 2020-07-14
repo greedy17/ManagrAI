@@ -590,13 +590,15 @@ class ReminderViewSet(
         data = dict(request.data.get("reminders"))
         data.pop("created_for", None)
         data.pop("created_by", None)
-        data["updated_by"] = user
+        data["updated_by"] = user.id
         reminder = self.get_object()
         serializer = self.serializer_class(
             reminder, data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        # check if a notification has been created, if the datetime has been updated and is out of range remove it
+
         return Response(serializer.data)
 
     @action(methods=["POST"], detail=True, url_path="mark-as-viewed")

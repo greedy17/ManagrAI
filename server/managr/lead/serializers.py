@@ -212,6 +212,7 @@ class ReminderSerializer(serializers.ModelSerializer):
             "created_by_ref",
             "linked_contacts",
             "linked_contacts_ref",
+            "has_notification",
         )
         read_only_fields = (
             "viewed",

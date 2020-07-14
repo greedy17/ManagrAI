@@ -33,7 +33,7 @@ def revoke_extra_access_tokens():
 
 
 @kronos.register("* * * * *")
-def create_notification():
+def create_notifications():
     """ Poll the reminders endpoint and create a notification if the reminder is 5 mins away """
     now = timezone.now()
     remind_time = now+timezone.timedelta(minutes=5)
@@ -46,6 +46,7 @@ def create_notification():
                 title=row.title,
                 notification_type="REMINDER",
                 resource_id=row.id,
+                user=row.created_by
 
 
             )
