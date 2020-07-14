@@ -281,6 +281,15 @@ class Reminder(BaseNote):
         self.completed = True
         self.save()
 
+    @property
+    def has_notification(self):
+        return Notification.objects.filter(resource_id=self.id).exists()
+
+    def save(self, *args, **kwargs):
+        # TODO: if a reminder is updated and its datetime for changes then update the notification for that time
+
+        return super(Reminder, self).save(*args, **kwargs)
+
 
 class CallNote(BaseNote):
     """Record notes from a phone call.
@@ -390,8 +399,11 @@ class Notification(TimeStampModel):
     notification_type = models.CharField(
         max_length=255,
         choices=lead_constants.NOTIFICATION_TYPE_CHOICES,
+        null=True,
         help_text="type of Notification being created",
     )
+    resource_id = models.CharField(
+        max_length=255, null=True, help_text="Id of the resource if it is an email it will be the thread id")
 
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
