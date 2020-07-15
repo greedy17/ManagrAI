@@ -22,7 +22,7 @@ export default class Notification {
       case NOTIFICATION_TYPE_EMAIL:
         return data
       case NOTIFICATION_TYPE_REMINDER:
-        return Reminder.create(data)
+        return data
       case NOTIFICATION_TYPE_SYSTEM:
         return data
     }

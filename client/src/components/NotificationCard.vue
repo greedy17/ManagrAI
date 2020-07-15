@@ -11,6 +11,13 @@
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
         {{ notification.meta ? notification.meta.content : '' }}
+        <div
+          :key="lead.id"
+          v-for="(lead, i) in notification.meta.leads"
+          class="notification-card__content__leads"
+        >
+          {{ lead.title }}
+        </div>
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
         <span class="notification-card__footer__type">
@@ -58,6 +65,7 @@ export default {
   &__content {
     display: none;
     justify-content: center;
+    flex-direction: column;
     overflow: hidden;
   }
   &__footer {

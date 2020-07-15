@@ -47,7 +47,16 @@ def create_notifications():
                 notification_type="REMINDER",
                 resource_id=row.id,
                 user=row.created_by,
-                meta=row.activity_log_meta
+                meta={
+                    'id': str(row.id),
+                    'title': row.title,
+                    'content': row.content,
+                    'linked_contacts': [
+                        {"id": str(c.id), "full_name": c.full_name, }
+                        for c in row.linked_contacts.all()
+                    ],
+                    'leads': [{'id': str(row.created_for.id), 'title': row.created_for.title}]
+                }
 
 
             )

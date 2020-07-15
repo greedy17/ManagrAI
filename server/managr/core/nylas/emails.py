@@ -116,6 +116,14 @@ def retrieve_message(user, message_id):
     return json_response
 
 
+def retrieve_thread(user, thread_id):
+    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/{thread_id}"
+    headers = _return_nylas_headers(user)
+    response = requests.get(request_url, headers=headers)
+    json_response = _handle_nylas_response(response)
+    return json_response
+
+
 def return_file_id_from_nylas(user, file_object):
     """Use Nylas to generate a file_id for file attachment."""
     headers = _return_nylas_headers(user)
