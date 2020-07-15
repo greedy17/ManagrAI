@@ -375,6 +375,14 @@ class LeadActivityLog(TimeStampModel):
         ordering = ["-action_timestamp", "-datetime_created"]
 
 
+class NotificationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+
+
 class Notification(TimeStampModel):
     """
         Pari: There are various types of notifications (that are not going to be built until V2)
@@ -410,8 +418,10 @@ class Notification(TimeStampModel):
     user = models.ForeignKey(
         'core.User', on_delete=models.SET_NULL, related_name="notifications", null=True)
 
+    objects = NotificationQuerySet.as_manager()
+
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["-notify_at"]
 
 
 class ActionChoiceQuerySet(models.QuerySet):

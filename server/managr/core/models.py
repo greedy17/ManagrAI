@@ -150,6 +150,10 @@ class User(AbstractUser, TimeStampModel):
 
         return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
+    @property
+    def unviewed_notifications_count(self):
+        return self.notifications.filter(viewed=False).count()
+
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()

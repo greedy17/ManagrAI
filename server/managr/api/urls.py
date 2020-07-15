@@ -66,6 +66,7 @@ router.register('action-choices',
                 lead_views.ActionChoiceViewSet, 'action-choices')
 router.register('actions', lead_views.ActionViewSet, 'actions')
 router.register('files', lead_views.FileViewSet, 'files')
-
+router.register('notifications',
+                lead_views.NotificationViewSet, 'notificiations')
 
 urlpatterns += router.urls

@@ -48,6 +48,7 @@ from .models import (
     Reminder,
     Action,
     ActionChoice,
+    Notification
 )
 from .insights import LeadInsights
 
@@ -101,6 +102,25 @@ class LeadActivityLogViewSet(
 
         insights = LeadInsights(lead_qs, qs, empty)
         return Response(insights.as_dict)
+
+
+class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    serializer_class = lead_serializers.NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.for_user(self.request.user)
+
+    @action(
+        methods=["GET"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="unviewed-notifications-count",
+    )
+    def get_unviewed_count(self, request, *args, **kwargs):
+        user = self.request.user
+        return Response(data={"count": user.unviewed_notifications_count})
 
 
 class LeadViewSet(

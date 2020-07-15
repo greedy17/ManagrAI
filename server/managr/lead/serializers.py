@@ -11,6 +11,7 @@ from .models import (
     ActionChoice,
     Action,
     CallNote,
+    Notification
 )
 from managr.organization.serializers import AccountRefSerializer, ContactSerializer
 from managr.core.models import User
@@ -32,6 +33,14 @@ class UserRefSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, instance):
         return f"{instance.first_name} {instance.last_name}"
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = (
+            'id', 'notify_at', 'notified_at', 'title', 'notification_type', 'resource_id', 'viewed', 'meta', 'user',
+        )
 
 
 class NoteSerializer(serializers.ModelSerializer):

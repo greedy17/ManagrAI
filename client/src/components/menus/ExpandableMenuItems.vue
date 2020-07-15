@@ -14,27 +14,23 @@
       >
 
       <svg v-if="menuItems.options.length > 0" class="icon" fill="black" viewBox="0 0 30 30">
-        <use xlink:href="~@../../../public/img/collection.svg#caret-down" />
+        <use xlink:href="@/assets/images/remove.svg" />
       </svg>
     </div>
 
     <template v-if="expandParent">
       <div class="menu-item__sub" :key="o" v-for="(i, o) in menuItems.options">
-        <expandable-menu-items
-          :primary="!!i.primary"
-          :menuItems="i"
-          :defaultExpanded="i.expanded"
-        />
+        <ExpandableMenuItems :primary="!!i.primary" :menuItems="i" :defaultExpanded="i.expanded" />
       </div>
     </template>
   </div>
 </template>
 <script>
 export default {
-  name: 'ExpandableMenu',
+  name: 'ExpandableMenuItems',
   props: {
     menuItems: {
-      type: Array,
+      type: Object,
     },
     primary: {
       default: false,
@@ -51,20 +47,23 @@ export default {
       selected: false,
     }
   },
-  computed(){
-      selectedItem(){},
-      currentRoute(){},
-
+  computed: {
+    selectedItem() {
+      return true
+    },
+    currentRoute() {
+      return true
+    },
   },
-  methods:{
-      toggleParent(){
-          this.expandParent=!this.expandParent
-          this.setSelected(this.menuItems)
-      },
-      setSelected(val){
-          return
-      }
-  }
+  methods: {
+    toggleParent() {
+      this.expandParent = !this.expandParent
+      this.setSelected(this.menuItems)
+    },
+    setSelected(val) {
+      return
+    },
+  },
 }
 </script>
 <style scoped lang="scss">

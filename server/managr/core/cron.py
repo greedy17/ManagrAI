@@ -46,7 +46,8 @@ def create_notifications():
                 title=row.title,
                 notification_type="REMINDER",
                 resource_id=row.id,
-                user=row.created_by
+                user=row.created_by,
+                meta=row.activity_log_meta
 
 
             )

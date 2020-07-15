@@ -11,17 +11,30 @@
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
-      <img
+      <!--       <img
         v-if="userIsLoggedIn"
         src="@/assets/images/dropdown-arrow.svg"
         class="user-menu-dropdown"
         @click="toggleUserMenu"
-      />
+      /> -->
+      <div class="right">
+        <span class="right__items" @click="toggleUserMenu">
+          <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 24 20">
+            <use xlink:href="@/assets/images/icon-menu.svg#settings" />
+          </svg>
+        </span>
+        <span class="right__items" @click="toggleNotifications">
+          <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 16 19">
+            <use xlink:href="@/assets/images/notification.svg#notification" />
+          </svg>
+        </span>
+      </div>
     </nav>
     <div class="menu-container">
       <div v-if="showMenus.user" class="user-menu-container">
         <div class="user-menu">
           <h4 @click="routeToSettings">Settings</h4>
+
           <h4 @click="logOut">Log Out</h4>
         </div>
       </div>
@@ -48,6 +61,9 @@ export default {
     toggleUserMenu() {
       this.showMenus.user = !this.showMenus.user
     },
+    toggleNotifications() {
+      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
+    },
     routeToSettings() {
       this.$router.push({ name: 'Settings' })
       this.toggleUserMenu()
@@ -61,6 +77,9 @@ export default {
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    showSideNav() {
+      return this.$store.getters.showSideNav
     },
   },
 }
@@ -144,5 +163,33 @@ nav {
       @include disable-text-select;
     }
   }
+}
+.right {
+  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  position: relative;
+  margin-right: 1rem;
+  > * {
+    margin-right: 1rem;
+  }
+  &__items {
+    border-radius: 50%;
+    padding: 0.5rem;
+
+    &:hover {
+      background-color: $soft-gray;
+      cursor: pointer;
+    }
+    &:active {
+      background-color: darken($soft-gray, 5%);
+    }
+  }
+}
+.icon {
+  width: 20px;
+  height: 15px;
+  fill: #484a6e;
 }
 </style>
