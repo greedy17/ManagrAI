@@ -3,7 +3,10 @@ import logging
 
 from background_task import background
 from managr.core.models import EmailAuthAccount, User
+from managr.lead.models import Notification, LeadEmail
 from ..nylas.emails import retrieve_message
+from django.db.models import F, Q, Count
+from django.utils import timezone
 
 
 @background(schedule=0)
@@ -13,10 +16,10 @@ def _get_email_info(account_id, object_id, date):
         account_id email account of the user
         object_id the id of the object for querying
         date epoch datetime when the change occured
-        we can also use this to emit to the activity log 
+        we can also use this to emit to the activity log
         currently only looking for incoming emails
     """
-    print('here')
+
     user = None
     try:
         user = User.objects.get(email_auth_account__account_id=account_id)
@@ -27,8 +30,8 @@ def _get_email_info(account_id, object_id, date):
         pass
 
     # get the message form nylas and make it into a json object
-    #from managr.core.background import _get_email_info
-    #t = _get_email_info.now
+    # from managr.core.background import _get_email_info
+    # t = _get_email_info.now
     # t('2yyyiu5lq221zmm4dvhmng5gc','5s0f2hsvh4htrm4fskqn8xnty','')
 
     # if user.claimed_leads.count() > 0:
@@ -38,7 +41,23 @@ def _get_email_info(account_id, object_id, date):
     # message_contacts.extend(
     #    message['bcc']+message['cc']+message['to'] + message['from'])
     message_contacts = message_contacts.extend(message['from'])
-
+    query = Q()
     message_contacts = [c['email'] for c in message_contacts if c['email']]
+    for c in message_contacts:
+        query |= c
+    # retrieve user leads and contacts
+    # create a new leademailaction
+    # create a new notification
+    leads = user.leads.filter(query).values_list(
+        'id', 'email', flat=True
+    )
 
-    print(message_contacts)
+    if leads.count() > 0:
+        #    for lead in leads:
+        #        email_log = LeadEmail.objects.create(
+        #            created_by = user, lead = lead, thread_id = object_id)
+
+        n = Notification.objects.create(notify_at=timezone.now(
+        ), title=message['subject'], notification_type="EMAIL", resource_id=object_id, user=user, meta={'leads': [{'id': l.id, 'title': l.title} for l in leads]})
+
+        print(n)

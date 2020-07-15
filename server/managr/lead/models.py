@@ -507,12 +507,10 @@ class Action(TimeStampModel):
         }
 
 
-class LeadEmail(models.Model):
+class LeadEmail(TimeStampModel):
     """Tie a lead to a Nylas email thread."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    datetime_created = models.DateTimeField(auto_now_add=True)
-    last_edited = models.DateTimeField(auto_now=True)
 
     created_by = models.ForeignKey(
         "core.User",
