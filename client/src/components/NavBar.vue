@@ -24,6 +24,7 @@
           </svg>
         </span>
         <span class="right__items" @click="toggleNotifications">
+          {{ unViewedCount }}
           <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 16 19">
             <use xlink:href="@/assets/images/notification.svg#notification" />
           </svg>
@@ -44,7 +45,8 @@
 
 <script>
 import NavLink from '@/components/NavLink'
-
+import Notification from '@/services/notifications/'
+const POLLING_INTERVAL = 10000
 export default {
   name: 'NavBar',
   components: {
@@ -55,9 +57,36 @@ export default {
       showMenus: {
         user: false,
       },
+      unViewedCount: null,
     }
   },
+  async created() {
+    const count = await Notification.api.getUnviewedCount({})
+    this.unViewedCount = count.count
+  },
+  destroyed() {
+    clearTimeout(this.pollingTimeout)
+  },
   methods: {
+    async refresh(repeat) {
+      clearTimeout(this.pollingTimeout)
+      try {
+        const count = await Notification.api.getUnviewedCount({})
+        this.unViewedCount = count.count
+        if (repeat) {
+          this.polllingTimeout = setTimeout(async () => {
+            this.refresh(POLLING_INTERVAL)
+          }, repeat)
+        }
+      } catch (e) {
+        this.apiFailing = true
+        if (repeat) {
+          this.pollingTimeout = setTimeout(async () => {
+            this.refresh(repeat * 2)
+          }, repeat * 2)
+        }
+      }
+    },
     toggleUserMenu() {
       this.showMenus.user = !this.showMenus.user
     },

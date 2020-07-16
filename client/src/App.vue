@@ -25,7 +25,6 @@ export default {
     NavBar,
     SideNavBar,
   },
-
   watch: {
     // When route changes, scroll to the top
     '$route.path': function watchRoutePath() {

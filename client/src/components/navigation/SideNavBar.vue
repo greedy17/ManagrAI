@@ -17,9 +17,7 @@ export default {
   components: { NotificationPage },
   props: {},
   data() {
-    return {
-      menuItems: [{ name: 'config', options: [{ name: 'config', options: [] }] }],
-    }
+    return {}
   },
   methods: {
     toggleNotifications() {
@@ -71,6 +69,9 @@ export default {
   width: 0rem;
   max-width: 15vw;
   min-height: 92vh;
+  > .content {
+    display: none;
+  }
 }
 
 .sidenav.close {

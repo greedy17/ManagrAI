@@ -20,6 +20,7 @@ export default {
   data() {
     return {
       notifications: CollectionManager.create({ ModelClass: Notification }),
+
       pollingTimeout: null,
     }
   },
@@ -31,13 +32,18 @@ export default {
       clearTimeout(this.pollingTimeout)
       try {
         await this.notifications.refresh()
+
         if (repeat) {
-          this.polllingTimeout = setTimeout(() => this.refresh(POLLING_INTERVAL), repeat)
+          this.polllingTimeout = setTimeout(async () => {
+            this.refresh(POLLING_INTERVAL)
+          }, repeat)
         }
       } catch (e) {
         this.apiFailing = true
         if (repeat) {
-          this.pollingTimeout = setTimeout(() => this.refresh(repeat * 2), repeat * 2)
+          this.pollingTimeout = setTimeout(async () => {
+            this.refresh(repeat * 2)
+          }, repeat * 2)
         }
       }
     },
