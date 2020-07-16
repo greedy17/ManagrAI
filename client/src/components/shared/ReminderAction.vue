@@ -31,7 +31,7 @@
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
-        <button class="form__button">Coming Soon!</button>
+        <button class="form__button">Save</button>
       </div>
     </div>
   </div>
@@ -39,6 +39,7 @@
 
 <script>
 import ContactBox from '@/components/shared/ContactBox'
+import Reminder from '@/services/reminders/'
 
 export default {
   name: 'ReminderAction',
@@ -52,9 +53,13 @@ export default {
   data() {
     return {
       activeContacts: [],
+      reminder: {},
     }
   },
   methods: {
+    save() {
+      Reminder.api.create(this.reminder)
+    },
     toggleActive(contactId) {
       if (this.activeContacts.includes(contactId)) {
         this.activeContacts = this.activeContacts.filter(id => id !== contactId)
