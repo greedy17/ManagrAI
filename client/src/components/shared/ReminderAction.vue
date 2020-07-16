@@ -15,23 +15,23 @@
       <div class="form">
         <div class="form__element">
           <div class="form__element-header">Title</div>
-          <input type="text" class="form__input" />
+          <input type="text" class="form__input" v-model="reminder.title" />
           <!-- <div class="form__element-error">Error Message Goes here</div> -->
         </div>
         <div class="form__element">
           <div class="form__element-header">Description</div>
-          <textarea class="form__textarea" />
+          <textarea class="form__textarea" v-model="reminder.content" />
         </div>
       </div>
       <div class="form__element">
         <div class="form__element-header">Date</div>
-        <input type="datetime-local" class="form__input" />
+        <input type="datetime-local" class="form__input" v-model="reminder.datetimeFor" />
       </div>
       <div
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
-        <button class="form__button">Save</button>
+        <button @click="save" class="form__button">Save</button>
       </div>
     </div>
   </div>
@@ -53,12 +53,19 @@ export default {
   data() {
     return {
       activeContacts: [],
-      reminder: {},
+      reminder: Reminder.create({}),
     }
   },
   methods: {
     save() {
-      Reminder.api.create(this.reminder)
+      Reminder.api.create({
+        reminder: {
+          title: this.reminder.title,
+          content: this.reminder.content,
+          datetimeFor: this.reminder.datetimeFor,
+        },
+        createdFor: [this.lead.id],
+      })
     },
     toggleActive(contactId) {
       if (this.activeContacts.includes(contactId)) {

@@ -22,17 +22,19 @@
         </div>
       </div>
     </div>
+    <!--
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
         <p>{{ log.meta.createdByRef.fullName }} sent an email.</p>
-        <!--
+       
         <p>
           Contacts:
           {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
         </p>
-        -->
+       
       </div>
     </div>
+    -->
   </div>
 </template>
 

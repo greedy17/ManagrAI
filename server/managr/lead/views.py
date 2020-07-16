@@ -631,6 +631,8 @@ class ReminderViewSet(
                 data=data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
+            emit_event(lead_constants.REMINDER_CREATED,
+                       user, serializer.instance)
             created.append(serializer.data)
             return Response(data=created, status=status.HTTP_201_CREATED)
 

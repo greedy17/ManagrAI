@@ -1,5 +1,5 @@
 <template>
-  <div class="note" @click="$emit('item-click')">
+  <div class="reminder" @click="$emit('item-click')">
     <div class="item-list__item item-list__item--hover-effect">
       <div class="item-list__row">
         <div class="item-list__row-item--half">
@@ -19,6 +19,7 @@
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
         <p>{{ log.meta.content }}</p>
+        <p>Reminder Set For {{ moment(log.meta.datetimeFor).format('MMM DD yy') }}</p>
         <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
           {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
@@ -30,16 +31,22 @@
 
 <script>
 import LogItemArrowIcon from './__LogItemArrowIcon'
-
+import moment from 'moment'
 export default {
-  name: 'NoteLogItem',
+  name: 'ReminderLogItem',
   components: { LogItemArrowIcon },
   props: {
     log: {
       type: Object,
       required: true,
     },
+
     collapsed: Boolean,
+  },
+  data() {
+    return {
+      moment: moment,
+    }
   },
 }
 </script>
