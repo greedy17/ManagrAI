@@ -57,15 +57,27 @@ export default {
     }
   },
   methods: {
-    save() {
-      Reminder.api.create({
-        reminder: {
-          title: this.reminder.title,
-          content: this.reminder.content,
-          datetimeFor: this.reminder.datetimeFor,
-        },
-        createdFor: [this.lead.id],
-      })
+    async save() {
+      try {
+        await Reminder.api.create({
+          reminder: {
+            title: this.reminder.title,
+            content: this.reminder.content,
+            datetimeFor: this.reminder.datetimeFor,
+          },
+          createdFor: [this.lead.id],
+        })
+        this.reminder = Reminder.create({})
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: `
+              <p>Note saved.</p>
+            `,
+        })
+      } catch (e) {
+        return e
+      }
     },
     toggleActive(contactId) {
       if (this.activeContacts.includes(contactId)) {
