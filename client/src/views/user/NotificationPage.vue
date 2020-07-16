@@ -2,7 +2,7 @@
   <div class="notification-page-container">
     <div class="notifications-list">
       <template v-for="(notification, i) in notifications.list">
-        <NotificationCard :key="i" :notification="notification" />
+        <NotificationCard @mark-as-viewed="markAsViewed" :key="i" :notification="notification" />
       </template>
     </div>
   </div>
@@ -28,6 +28,10 @@ export default {
     await this.refresh(POLLING_INTERVAL)
   },
   methods: {
+    markAsViewed(notificationId) {
+      Notification.api.markAsViewed([notificationId])
+    },
+
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
       try {

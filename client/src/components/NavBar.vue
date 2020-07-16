@@ -65,6 +65,7 @@ export default {
   async created() {
     const count = await Notification.api.getUnviewedCount({})
     this.unViewedCount = count.count
+    await this.refresh(POLLING_INTERVAL)
   },
   mounted() {},
   destroyed() {
@@ -77,22 +78,26 @@ export default {
       try {
         const count = await Notification.api.getUnviewedCount({})
         this.unViewedCount = count.count
+
         if (repeat) {
           this.polllingTimeout = setTimeout(async () => {
-            this.refresh(POLLING_INTERVAL)
+            await this.refresh(POLLING_INTERVAL)
           }, repeat)
         }
       } catch (e) {
         this.apiFailing = true
         if (repeat) {
           this.pollingTimeout = setTimeout(async () => {
-            this.refresh(repeat * 2)
+            await this.refresh(repeat * 2)
           }, repeat * 2)
         }
       }
     },
     toggleUserMenu() {
       this.showMenus.user = !this.showMenus.user
+      if (this.showMenus.user) {
+        this.$store.commit('TOGGLE_SIDE_NAV', false)
+      }
     },
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
@@ -182,6 +187,7 @@ nav {
   margin-right: 1vw;
   min-width: 7rem;
   padding-left: 1rem;
+  z-index: 100;
 
   h4 {
     @include pointer-on-hover;

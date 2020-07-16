@@ -1,7 +1,8 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 const NOTIFICATIONS_ENDPOINT = '/notifications/'
-const UNVIEWED_COUNT_URI = 'unviewed-notifications-count/'
+const UNVIEWED_COUNT_URI = 'unviewed-count/'
+const MARK_AS_VIEWED_URI = 'mark-as-viewed/'
 export default class NotificationAPI {
   constructor(cls) {
     this.cls = cls
@@ -51,6 +52,19 @@ export default class NotificationAPI {
       }
 
       return results
+    } catch {
+      apiErrorHandler({ apiName: 'Notification.list' })
+    }
+  }
+
+  async markAsViewed(data) {
+    //expects data to be obj of notifications:[ids]
+    const url = NOTIFICATIONS_ENDPOINT + MARK_AS_VIEWED_URI
+
+    try {
+      const res = await this.client.post(url, { notifications: data })
+
+      return res
     } catch {
       apiErrorHandler({ apiName: 'Notification.list' })
     }

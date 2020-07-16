@@ -23,6 +23,23 @@ export default {
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
     },
+    removeEvent() {
+      /*
+        Remove the event listener if the toggle is no longer visible to reduce the events triggered
+        */
+
+      return window.removeEventListener('click', this.closeNavBarEvent)
+    },
+    closeNavBarEvent(e) {
+      if (!this.$el.contains(e.target)) {
+        this.$store.commit('TOGGLE_SIDE_NAV', false)
+      }
+
+      // this.removeEvent()
+      // this.$store.commit('TOGGLE_SIDE_NAV', false)
+
+      // helper to close navbar on click outside of element
+    },
   },
   computed: {
     ...mapGetters(['showSideNav']),
@@ -37,6 +54,9 @@ export default {
     } else {
       this.$refs.sidenav.classList.remove('expanded')
     }
+  },
+  created() {
+    // add the eventlistener to the $el click to hide when the click is outside of its el
   },
   watch: {
     show: {

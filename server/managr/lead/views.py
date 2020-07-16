@@ -5,7 +5,7 @@ from rest_framework import viewsets, mixins, generics, status, filters, permissi
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
-
+from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
@@ -112,15 +112,45 @@ class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         return Notification.objects.for_user(self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        """ override to set the notified_at field when an object is gotten"""
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset.filter(notified_at__isnull=True).update(
+            notified_at=timezone.now())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(
         methods=["GET"],
         authentication_classes=(authentication.TokenAuthentication,),
         detail=False,
-        url_path="unviewed-notifications-count",
+        url_path="unviewed-count",
     )
     def get_unviewed_count(self, request, *args, **kwargs):
         user = self.request.user
         return Response(data={"count": user.unviewed_notifications_count})
+
+    @action(methods=["POST"], authentication_classes=(authentication.TokenAuthentication,), detail=False, url_path="mark-as-viewed")
+    def mark_as_viewed(self, request, *args, **kwargs):
+        user = self.request.user
+        query = Q()
+        notifications = request.data.get('notifications', None)
+        if not notifications:
+            return ValidationError()
+
+        for notification in notifications:
+            query |= Q(id=notification)
+        notifications_items = Notification.objects.for_user(user).filter(query)
+        for n in notifications_items:
+            n.viewed = True
+            n.save()
+        return Response()
 
 
 class LeadViewSet(

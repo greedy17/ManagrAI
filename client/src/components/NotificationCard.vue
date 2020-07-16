@@ -1,8 +1,8 @@
 <template>
   <div class="notificaion-container">
-    <div class="notification-card">
+    <div class="notification-card" :class="{ unviewed: !notification.viewed }">
       <div class="notification-card__title">
-        <span @click="expand = !expand" class="notification-card__title__text">{{
+        <span @click="toggleCard" class="notification-card__title__text">{{
           notification.title
         }}</span>
         <span class="notification-card__title__type">
@@ -14,6 +14,7 @@
       <div class="notification-card__content" :class="{ expand: expand }">
         {{ notification.meta ? notification.meta.content : '' }}
         <div
+          @click.prevent="goToLead(lead.id)"
           :key="lead.id"
           v-for="lead in notification.meta.leads"
           class="notification-card__content__leads"
@@ -32,6 +33,7 @@
 
 <script>
 import { NOTIFICATION_TYPES } from '@/services/notifications/'
+
 export default {
   name: 'NotificationCard',
   props: {
@@ -53,12 +55,34 @@ export default {
           return 'clock'
       }
     },
+    showSideNav() {
+      return this.$store.getters.showSideNav
+    },
   },
   data() {
     return {
       expand: false,
       notificationTypes: NOTIFICATION_TYPES,
     }
+  },
+  methods: {
+    toggleNotifications() {
+      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
+    },
+    toggleCard() {
+      this.expand = !this.expand
+      if (!this.notification.viewed) {
+        this.$emit('mark-as-viewed', this.notification.id)
+      }
+    },
+
+    goToLead(id) {
+      // avoid redundant route redirect if on current page
+      this.toggleNotifications()
+      if (this.$route.path !== `/leads/${id}`) {
+        this.$router.push({ name: 'LeadsDetail', params: { id: id } })
+      }
+    },
   },
 }
 </script>
@@ -68,6 +92,9 @@ export default {
 @import '@/styles/variables';
 .notification-card {
   @include card();
+  &:hover {
+    cursor: pointer;
+  }
   &__title {
     display: flex;
     overflow: hidden;
@@ -103,5 +130,8 @@ export default {
 .icon-notification {
   width: 25px;
   height: 20px;
+}
+.unviewed {
+  background-color: $item-active;
 }
 </style>
