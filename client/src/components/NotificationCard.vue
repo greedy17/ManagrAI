@@ -84,7 +84,8 @@ export default {
     flex-direction: column;
     overflow: hidden;
     &__leads {
-      right: 0px;
+      display: flex;
+      justify-content: flex-end;
     }
   }
   &__footer {
