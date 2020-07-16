@@ -6,7 +6,13 @@
           <img alt="icon" :src="require(`@/assets/images/email.svg`)" class="icon" />
         </div>
         <div class="item-list__row-item--double">
-          <strong>Email Sent</strong>
+          <strong
+            >{{
+              log.activity == 'LeadEmail.RECEIVED'
+                ? `Email Received  From ${getLinkedContacts}`
+                : 'Email Sent To'
+            }}
+          </strong>
         </div>
         <div class="item-list__row-item--double">
           <span class="date-text">{{ log.actionTimestamp | dateShortWithTime }}</span>
@@ -42,6 +48,16 @@ export default {
       required: true,
     },
     collapsed: Boolean,
+  },
+  computed: {
+    getLinkedContacts() {
+      //most activity logs meta have linked_contacts but some older ones may not so check if they do first
+      // will most likely fix this with a migration PB 07/16
+      if (this.log.meta.linkedContacts) {
+        return this.log.meta.linkedContacts.map(c => c.full_name).join(', ')
+      }
+      return []
+    },
   },
 }
 </script>

@@ -7,6 +7,8 @@ from managr.lead.models import Notification, LeadEmail
 from ..nylas.emails import retrieve_message, retrieve_thread
 from django.db.models import F, Q, Count
 from django.utils import timezone
+from managr.lead.background import emit_event as log_event
+from managr.lead import constants as lead_constants
 
 
 logger = logging.getLogger("managr")
@@ -59,28 +61,37 @@ def _get_email_info(account_id, object_id, date):
         #    message['bcc']+message['cc']+message['to'] + message['from'])
 
         message_contacts = message['from']
+        message_to = message['to']
 
         message_contacts = [c['email'] for c in message_contacts if c['email']]
-
+        message_to = [c['email'] for c in message_to if c['email']]
         # retrieve user leads and contacts
         # create a new leademailaction
         # create a new notification
 
         leads = user.claimed_leads.filter(
-            linked_contacts__email__in=message_contacts).values('id', 'title')
+            linked_contacts__email__in=message_contacts)
 
         if leads.count() > 0:
-            #    for lead in leads:
-            #        email_log = LeadEmail.objects.create(
-            #            created_by = user, lead = lead, thread_id = object_id)
-            # meta={'leads': [{'id': l.id, 'title': l.title} for l in leads]}
 
             meta_contacts = ''.join(message_contacts)
             meta_body = thread['snippet']
             n = Notification.objects.create(notify_at=timezone.now(
-            ), title=message['subject'], notification_type="EMAIL", resource_id=object_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l['id']), 'title': l['title']} for l in leads]})
+            ), title=message['subject'], notification_type="EMAIL", resource_id=object_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l.id), 'title': l.title} for l in leads]})
 
-            print(n)
+            # PLACEHOLDER = IN FUTURE EMAILS SENT/RECIEVED WILL ALL LOG ON THE WEBHOOK
+            # if user.email in message_to:
+            for lead in leads:
+                obj = LeadEmail.objects.create(
+                    created_by=user, lead=lead, thread_id=object_id
+                )
+                linked_contacts = lead.linked_contacts.filter(
+                    email__in=message_contacts)
+                obj.linked_contacts.set(linked_contacts)
+
+            # Emit an EMAIL_SENT event and pass in Lead/Thread record.
+                log_event(lead_constants.EMAIL_RECEIVED, user, obj)
+
     except Exception as e:
         logger.exception(
             f"Failed {e}"

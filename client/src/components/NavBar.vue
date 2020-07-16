@@ -17,28 +17,30 @@
         class="user-menu-dropdown"
         @click="toggleUserMenu"
       /> -->
-      <div class="right">
-        <span class="right__items" @click="toggleUserMenu">
+      <div class="right" ref="user-menu-icon">
+        <span class="right__items" @click="toggleUserMenu" ref="toggle-user-menu">
           <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 24 20">
             <use xlink:href="@/assets/images/icon-menu.svg#settings" />
           </svg>
         </span>
         <span class="right__items" @click="toggleNotifications">
           {{ unViewedCount }}
-          <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 16 19">
+          <svg
+            v-if="userIsLoggedIn"
+            class="icon"
+            :class="{ green: unViewedCount > 0 }"
+            viewBox="0 0 16 19"
+          >
             <use xlink:href="@/assets/images/notification.svg#notification" />
           </svg>
         </span>
       </div>
     </nav>
-    <div class="menu-container">
-      <div v-if="showMenus.user" class="user-menu-container">
-        <div class="user-menu">
-          <h4 @click="routeToSettings">Settings</h4>
 
-          <h4 @click="logOut">Log Out</h4>
-        </div>
-      </div>
+    <div v-if="showMenus.user" class="user-menu" ref="user-menu">
+      <h4 @click="routeToSettings">Settings</h4>
+
+      <h4 @click="logOut">Log Out</h4>
     </div>
   </div>
 </template>
@@ -64,9 +66,11 @@ export default {
     const count = await Notification.api.getUnviewedCount({})
     this.unViewedCount = count.count
   },
+  mounted() {},
   destroyed() {
     clearTimeout(this.pollingTimeout)
   },
+
   methods: {
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
@@ -103,6 +107,7 @@ export default {
       this.toggleUserMenu()
     },
   },
+
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
@@ -162,37 +167,28 @@ nav {
   margin-left: auto;
   margin-right: 1rem;
   opacity: 0.6;
+  position: relative;
 }
 
-.menu-container {
-  z-index: 1000;
+.user-menu {
   position: absolute;
-  width: 100%;
-  display: flex;
-  flex-flow: column;
-}
+  right: 4rem;
+  top: auto;
+  @include standard-border;
+  border-top: 0px;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+  background-color: $white;
+  margin-left: auto;
+  margin-right: 1vw;
+  min-width: 7rem;
+  padding-left: 1rem;
 
-.user-menu-container {
-  display: flex;
-  flex-flow: row;
-  justify-content: right;
-
-  .user-menu {
-    @include standard-border;
-    border-top: 0px;
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-    background-color: $white;
-    margin-left: auto;
-    margin-right: 1vw;
-    min-width: 7rem;
-    padding-left: 1rem;
-
-    h4 {
-      @include pointer-on-hover;
-      @include disable-text-select;
-    }
+  h4 {
+    @include pointer-on-hover;
+    @include disable-text-select;
   }
 }
+
 .right {
   margin-left: auto;
   display: flex;
@@ -220,5 +216,8 @@ nav {
   width: 20px;
   height: 15px;
   fill: #484a6e;
+}
+.icon.green {
+  fill: green;
 }
 </style>

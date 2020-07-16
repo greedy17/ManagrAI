@@ -3,7 +3,6 @@ import logging
 from background_task import background
 from .routing import routes
 from .exceptions import ConsumerConfigError
-from managr.core.models import EmailAuthAccount, User
 
 
 logger = logging.getLogger("managr")

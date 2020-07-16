@@ -526,6 +526,9 @@ class LeadEmail(TimeStampModel):
         blank=False,
         related_name="email_threads",
     )
+    linked_contacts = models.ManyToManyField(
+        "organization.Contact", related_name="email_activity_logs", blank=True
+    )
 
     thread_id = models.CharField(max_length=128)
 
@@ -541,4 +544,9 @@ class LeadEmail(TimeStampModel):
                 "id": str(self.created_by.id),
                 "full_name": self.created_by.full_name,
             },
+            "linked_contacts": [
+                {"id": str(c.id), "full_name": c.full_name, }
+                for c in self.linked_contacts.all()
+            ],
+
         }

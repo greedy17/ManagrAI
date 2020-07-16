@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login
 
 from managr.core.nylas.auth import get_access_token, get_account_details
 
+
 from rest_framework import (
     authentication,
     filters,

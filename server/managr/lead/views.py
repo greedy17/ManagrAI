@@ -189,6 +189,7 @@ class LeadViewSet(
                 email=contact["email"], defaults={"account": account}
             )
             if created:
+                c.title = contact.get("title", c.title)
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
                 c.phone_number_1 = contact.get(
