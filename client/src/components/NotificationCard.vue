@@ -1,11 +1,13 @@
 <template>
   <div class="notificaion-container">
-    <div @click="expand = !expand" class="notification-card">
+    <div class="notification-card">
       <div class="notification-card__title">
-        <span class="notification-card__title__text">{{ notification.title }}</span>
+        <span @click="expand = !expand" class="notification-card__title__text">{{
+          notification.title
+        }}</span>
         <span class="notification-card__title__type">
-          <svg class="icon__clock">
-            <use xlink:href="@/assets/images/clock.svg#clock" />
+          <svg class="icon-notification">
+            <use :xlink:href="require('@/assets/images/svg-repo.svg') + '#' + notificationIcon" />
           </svg>
         </span>
       </div>
@@ -13,7 +15,7 @@
         {{ notification.meta ? notification.meta.content : '' }}
         <div
           :key="lead.id"
-          v-for="(lead, i) in notification.meta.leads"
+          v-for="lead in notification.meta.leads"
           class="notification-card__content__leads"
         >
           {{ lead.title }}
@@ -36,6 +38,20 @@ export default {
     notification: {
       type: [Object, null],
       default: null,
+    },
+  },
+  computed: {
+    notificationIcon() {
+      switch (this.notification.notificationType) {
+        case NOTIFICATION_TYPES.email:
+          return 'email'
+        case NOTIFICATION_TYPES.reminder:
+          return 'clock'
+        case NOTIFICATION_TYPES.system:
+          return 'clock'
+        default:
+          return 'clock'
+      }
     },
   },
   data() {
@@ -67,6 +83,9 @@ export default {
     justify-content: center;
     flex-direction: column;
     overflow: hidden;
+    &__leads {
+      right: 0px;
+    }
   }
   &__footer {
     display: none;
@@ -80,8 +99,8 @@ export default {
 .expand {
   display: flex;
 }
-.icon__clock {
-  width: 15px;
-  height: 15px;
+.icon-notification {
+  width: 25px;
+  height: 20px;
 }
 </style>
