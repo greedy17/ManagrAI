@@ -1,7 +1,7 @@
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-
+import logging
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
