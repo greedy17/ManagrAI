@@ -60,6 +60,8 @@ from .nylas.emails import (
 
 from managr.core.background import emit_event
 
+logger = logging.getLogger("managr")
+
 
 def index(request):
     try:
@@ -345,7 +347,7 @@ class NylasMessageWebhook(APIView):
 
     def post(self, request):
         data = request.data
-
+        logger.debug(f'request {request.data}')
         data_object = data['deltas'][0]['object_data']
         emit_event(data_object['account_id'], data_object['attributes']
                    ['thread_id'], data['deltas'][0]['date'])
