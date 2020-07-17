@@ -4,7 +4,7 @@
       <div class="item-list__row">
         <div class="item-list__row-item--half">
           <svg class="icon" viewBox="0 0 24 20">
-            <use xlink:href="@/assets/images/clock.svg#clock" />
+            <use xlink:href="@/assets/images/alarm.svg#alarm" />
           </svg>
         </div>
         <div class="item-list__row-item--double">

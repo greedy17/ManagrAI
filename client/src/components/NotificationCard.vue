@@ -48,11 +48,11 @@ export default {
         case NOTIFICATION_TYPES.email:
           return 'email'
         case NOTIFICATION_TYPES.reminder:
-          return 'clock'
+          return 'alarm'
         case NOTIFICATION_TYPES.system:
-          return 'clock'
+          return 'alarm'
         default:
-          return 'clock'
+          return 'alarm'
       }
     },
     showSideNav() {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="13px" id="alarm" height="13px" viewBox="0 0 8 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Icon</title>
+    <desc>Created with Sketch.</desc>
+    <g id="UI-Mockups" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="V4.1-Note" transform="translate(-294.000000, -750.000000)">
+            <g id="Table" transform="translate(272.500000, 684.000000)">
+                <g id="Icon-/-icon-alarm" transform="translate(20.500000, 65.000000)">
+                    <polygon id="Shape" points="0 0 15 0 15 15 0 15"></polygon>
+                    <path d="M13.75,3.575 L10.875,1.1625 L10.06875,2.11875 L12.94375,4.53125 L13.75,3.575 Z M4.925,2.11875 L4.125,1.1625 L1.25,3.56875 L2.05625,4.525 L4.925,2.11875 Z M7.8125,5 L6.875,5 L6.875,8.75 L9.84375,10.53125 L10.3125,9.7625 L7.8125,8.28125 L7.8125,5 Z M7.5,2.5 C4.39375,2.5 1.875,5.01875 1.875,8.125 C1.875,11.23125 4.3875,13.75 7.5,13.75 C10.60625,13.75 13.125,11.23125 13.125,8.125 C13.125,5.01875 10.60625,2.5 7.5,2.5 Z M7.5,12.5 C5.08125,12.5 3.125,10.54375 3.125,8.125 C3.125,5.70625 5.08125,3.75 7.5,3.75 C9.91875,3.75 11.875,5.70625 11.875,8.125 C11.875,10.54375 9.91875,12.5 7.5,12.5 Z" id="Shape" fill="#484A6E" fill-rule="evenodd"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
