@@ -252,6 +252,7 @@ export default {
             email: currentForm.email,
             phone_number_1: currentForm.phone,
             account: this.selectedAccount,
+            title: currentForm.title,
           }
           contacts.push(contactData)
         }
