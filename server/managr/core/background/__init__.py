@@ -36,6 +36,7 @@ def _get_email_info(account_id, object_id, date):
         logger.exception(
             f"The user account_id is not in saved on the system they might need to re-auth a token,{account_id}"
         )
+        raise
 
     # get the message form nylas and make it into a json object
     # from managr.core.background import _get_email_info
