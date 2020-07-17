@@ -25,13 +25,21 @@
       </div>
       <div class="form__element">
         <div class="form__element-header">Date</div>
-        <input type="datetime-local" class="form__input" v-model="reminder.datetimeFor" />
+        <input
+          type="datetime-local"
+          step="300"
+          class="form__input"
+          v-model="reminder.datetimeFor"
+        />
       </div>
       <div
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
-        <button @click="save" class="form__button">Save</button>
+        <button @click="save" class="form__button" :disabled="saving">
+          <span v-if="!saving">Save</span>
+          <ComponentLoadingSVG v-if="saving" />
+        </button>
       </div>
     </div>
   </div>
@@ -59,6 +67,7 @@ export default {
   methods: {
     async save() {
       try {
+        this.loading = true
         await Reminder.api.create({
           reminder: {
             title: this.reminder.title,
@@ -72,11 +81,13 @@ export default {
           type: 'success',
           timeout: 3000,
           message: `
-              <p>Note saved.</p>
+              <p>Reminder Has Been Set.</p>
             `,
         })
       } catch (e) {
         return e
+      } finally {
+        this.loading = false
       }
     },
     toggleActive(contactId) {

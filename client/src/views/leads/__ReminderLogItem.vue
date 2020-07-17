@@ -3,7 +3,9 @@
     <div class="item-list__item item-list__item--hover-effect">
       <div class="item-list__row">
         <div class="item-list__row-item--half">
-          <img alt="icon" :src="require(`@/assets/images/pencil.svg`)" class="icon" />
+          <svg class="icon" viewBox="0 0 24 20">
+            <use xlink:href="@/assets/images/clock.svg#clock" />
+          </svg>
         </div>
         <div class="item-list__row-item--double">
           <strong>{{ log.meta.title }}</strong>
@@ -19,7 +21,7 @@
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
         <p>{{ log.meta.content }}</p>
-        <p>Reminder Set For {{ moment(log.meta.datetimeFor).format('MMM DD yy') }}</p>
+        <p>Reminder Set For {{ moment(log.meta.datetimeFor).format('MMM DD YYYY hh:mm:ss') }}</p>
         <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
           {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
@@ -56,5 +58,9 @@ export default {
 
 .date-text {
   color: $mid-gray;
+}
+.icon {
+  height: 25px;
+  width: 25px;
 }
 </style>

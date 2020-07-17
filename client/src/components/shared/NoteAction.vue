@@ -126,7 +126,6 @@ export default {
             `,
           })
           // eslint-disable-next-line no-console
-          console.error(error)
         })
         .finally(() => {
           this.saving = false
