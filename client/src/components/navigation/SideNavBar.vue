@@ -17,7 +17,9 @@ export default {
   components: { NotificationPage },
   props: {},
   data() {
-    return {}
+    return {
+      triggerElements: [],
+    }
   },
   methods: {
     toggleNotifications() {
@@ -31,23 +33,37 @@ export default {
       return window.removeEventListener('click', this.closeNavBarEvent)
     },
     closeNavBarEvent(e) {
-      if (!this.$el.contains(e.target)) {
-        this.$store.commit('TOGGLE_SIDE_NAV', false)
+      /** Function to be executed when any click occurs
+       * if the click is on the side-nav or on any of its triggers then
+       * do not close the modal
+       */
+      for (let i = 0; i < this.triggerElements.length; i++) {
+        if (!this.triggerElements[i].contains(e.target) && !this.$el.contains(e.target)) {
+          // if the modal is hidden remove the event listener
+          this.removeEvent()
+          this.$store.commit('TOGGLE_SIDE_NAV', false)
+        }
       }
-
-      // this.removeEvent()
-      // this.$store.commit('TOGGLE_SIDE_NAV', false)
-
-      // helper to close navbar on click outside of element
     },
   },
   computed: {
-    ...mapGetters(['showSideNav']),
+    ...mapGetters(['showSideNav', 'listenToSideNav']),
     show() {
       return this.showSideNav
     },
   },
   mounted() {
+    // gathering all refs that have been defined as triggers
+    // when these items are clicked it will consider the click as part
+    // of the notifications div
+    let children = this.$parent.$children
+      .filter(e => e.$refs['notification-trigger'])
+      .map(v => {
+        return v.$refs['notification-trigger']
+      })
+
+    this.triggerElements = children.length > 0 ? [...children] : []
+
     if (this.show) {
       this.$refs.sidenav.classList.remove('close')
       this.$refs.sidenav.classList.add('expanded')
@@ -55,17 +71,18 @@ export default {
       this.$refs.sidenav.classList.remove('expanded')
     }
   },
-  created() {
-    // add the eventlistener to the $el click to hide when the click is outside of its el
-  },
   watch: {
     show: {
-      immediate: false,
+      immediate: true,
       handler(val) {
+        if (val) {
+          window.addEventListener('click', this.closeNavBarEvent)
+        }
         if (this.$refs.sidenav) {
           if (val) {
             this.$refs.sidenav.classList.remove('close')
             this.$refs.sidenav.classList.add('expanded')
+            this.$store.commit('TOGGLE_SIDE_NAV_LISTENER', true)
           } else {
             this.$refs.sidenav.classList.remove('expanded')
             this.$refs.sidenav.classList.add('close')
@@ -97,7 +114,7 @@ export default {
 .sidenav.close {
   background-color: lighten($soft-gray, 5%);
   animation: closemenu forwards;
-  animation-duration: 1.5s;
+  animation-duration: 1s;
   animation-iteration-count: 1;
   > .content {
     display: none;

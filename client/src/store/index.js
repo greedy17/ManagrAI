@@ -12,6 +12,7 @@ const state = {
   user: null,
   token: null,
   showSideNav: false,
+  listenToSideNav: false,
 }
 
 const mutations = {
@@ -28,6 +29,9 @@ const mutations = {
   },
   TOGGLE_SIDE_NAV(state, show) {
     state.showSideNav = show
+  },
+  TOGGLE_SIDE_NAV_LISTENER(state, listen) {
+    state.listenToSideNav = listen
   },
 }
 
@@ -70,6 +74,9 @@ const getters = {
   },
   showSideNav: state => {
     return state.showSideNav
+  },
+  listenToSideNav: state => {
+    return state.listenToSideNav
   },
 }
 

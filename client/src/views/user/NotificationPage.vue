@@ -1,7 +1,12 @@
 <template>
   <div class="notification-page-container">
-    <template v-for="(notification, i) in notifications.list">
-      <NotificationCard @mark-as-viewed="markAsViewed" :key="i" :notification="notification" />
+    <template v-if="notifications.list.length > 0">
+      <template v-for="(notification, i) in notifications.list">
+        <NotificationCard @mark-as-viewed="markAsViewed" :key="i" :notification="notification" />
+      </template>
+    </template>
+    <template v-else>
+      No Notifications
     </template>
   </div>
 </template>
