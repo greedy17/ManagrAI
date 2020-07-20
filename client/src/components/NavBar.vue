@@ -66,9 +66,11 @@ export default {
     }
   },
   async created() {
-    const count = await Notification.api.getUnviewedCount({})
-    this.unViewedCount = count.count
-    await this.refresh(POLLING_INTERVAL)
+    if (this.userIsLoggedIn) {
+      const count = await Notification.api.getUnviewedCount({})
+      this.unViewedCount = count.count
+      await this.refresh(POLLING_INTERVAL)
+    }
   },
   mounted() {},
   destroyed() {
