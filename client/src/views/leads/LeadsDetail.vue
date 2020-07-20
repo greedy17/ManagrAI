@@ -72,15 +72,20 @@
           </div>
 
           <div class="history-menu" v-if="activityTabSelected === HISTORY">
-            <img
-              class="icon"
-              src="@/assets/images/more_horizontal.svg"
-              @click="showHistoryMenu = !showHistoryMenu"
-            />
-            <div v-if="showHistoryMenu" class="menu">
-              <p class="option" @click="expandAllHistoryItems">Expand All</p>
-              <p class="option" @click="collapseAllHistoryItems">Collapse All</p>
-            </div>
+            <DropDownMenu
+              @selectedItem="moreActionsAction"
+              :right="10"
+              :items="[
+                { key: 'Expand All', value: 'expandAll' },
+                { key: 'Collapse All', value: 'collapseAll' },
+              ]"
+            >
+              <template v-slot:dropdown-trigger="{ selected }">
+                <svg @click="selected" class="dd-icon" viewBox="0 0 24 20">
+                  <use xlink:href="@/assets/images/more_horizontal.svg#more" />
+                </svg>
+              </template>
+            </DropDownMenu>
           </div>
         </div>
 
@@ -113,6 +118,7 @@ import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
+import DropDownMenu from '@/components/forms/DropDownMenu'
 
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
@@ -140,6 +146,7 @@ export default {
     LeadInsights,
     LeadHistory,
     LeadEmails,
+    DropDownMenu,
   },
   data() {
     return {
@@ -186,6 +193,16 @@ export default {
     })
   },
   methods: {
+    moreActionsAction(selected) {
+      // TODO: PB Change this to be static with an enum type list (django style) 07/20
+
+      if (selected == 'expandAll') {
+        this.expandAllHistoryItems()
+      }
+      if (selected == 'collapseAll') {
+        this.collapseAllHistoryItems()
+      }
+    },
     onSearchHistory() {
       this.history.filters.search = this.historySearchTerm
       // Can not use history.refreshing because that will interfere with the polling
@@ -363,6 +380,14 @@ export default {
       @include input-field;
       width: inherit;
     }
+  }
+}
+.dd-icon {
+  width: 20px;
+  height: 15px;
+  fill: #484a6e;
+  &:hover {
+    cursor: pointer;
   }
 }
 </style>

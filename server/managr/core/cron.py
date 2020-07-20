@@ -37,7 +37,7 @@ def create_notifications():
     """ Poll the reminders endpoint and create a notification if the reminder is 5 mins away """
     now = timezone.now()
     remind_time = now+timezone.timedelta(minutes=5)
-    for row in Reminder.objects.filter(datetime_for__gte=now, datetime_for__lte=remind_time):
+    for row in Reminder.objects.filter(datetime_for__lte=remind_time):
         if row.has_notification:
             return
         else:

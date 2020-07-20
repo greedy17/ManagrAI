@@ -21,10 +21,10 @@
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
         <p>{{ log.meta.content }}</p>
-        <p>Reminder Set For {{ moment(log.meta.datetimeFor).format('MMM DD YYYY hh:mm:ss') }}</p>
+        <p>Reminder Set For {{ log.meta.datetimeFor | dateShortWithTime }}</p>
         <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
-          {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
+          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
         </p>
       </div>
     </div>
@@ -34,6 +34,8 @@
 <script>
 import LogItemArrowIcon from './__LogItemArrowIcon'
 import moment from 'moment'
+require('moment-timezone')
+
 export default {
   name: 'ReminderLogItem',
   components: { LogItemArrowIcon },

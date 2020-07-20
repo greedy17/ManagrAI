@@ -97,12 +97,12 @@ export default {
 .sidenav.close {
   background-color: lighten($soft-gray, 5%);
   animation: closemenu forwards;
-  animation-duration: 2s;
+  animation-duration: 1.5s;
   animation-iteration-count: 1;
   > .content {
     display: block;
     animation: togglecontent backwards;
-    animation-duration: 2s;
+    animation-duration: 1.5s;
     animation-iteration-count: 1;
     animation-direction: reverse;
   }
@@ -112,13 +112,13 @@ export default {
   @include standard-border();
   background-color: lighten($soft-gray, 5%);
   animation: expandmenu forwards;
-  animation-duration: 1.5s;
+  animation-duration: 1s;
   animation-iteration-count: 1;
 
   > .content {
     display: block;
     animation: togglecontent forwards;
-    animation-duration: 1.5s;
+    animation-duration: 1s;
     animation-iteration-count: 1;
   }
 }

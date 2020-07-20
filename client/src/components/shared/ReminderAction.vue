@@ -25,20 +25,15 @@
       </div>
       <div class="form__element">
         <div class="form__element-header">Date</div>
-        <input
-          type="datetime-local"
-          step="300"
-          class="form__input"
-          v-model="reminder.datetimeFor"
-        />
+        <input type="datetime-local" class="form__input" v-model="reminder.datetimeFor" />
       </div>
       <div
         class="form__element"
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
-        <button @click="save" class="form__button" :disabled="saving">
-          <span v-if="!saving">Save</span>
-          <ComponentLoadingSVG v-if="saving" />
+        <button @click="save" class="form__button" :disabled="loading">
+          <span v-if="!loading">Save</span>
+          <ComponentLoadingSVG v-if="loading" />
         </button>
       </div>
     </div>
@@ -48,6 +43,7 @@
 <script>
 import ContactBox from '@/components/shared/ContactBox'
 import Reminder from '@/services/reminders/'
+import moment from 'moment'
 
 export default {
   name: 'ReminderAction',
@@ -62,6 +58,7 @@ export default {
     return {
       activeContacts: [],
       reminder: Reminder.create({}),
+      loading: false,
     }
   },
   methods: {
@@ -72,7 +69,7 @@ export default {
           reminder: {
             title: this.reminder.title,
             content: this.reminder.content,
-            datetimeFor: this.reminder.datetimeFor,
+            datetimeFor: moment(this.reminder.datetimeFor).format(),
           },
           createdFor: [this.lead.id],
         })

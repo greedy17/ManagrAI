@@ -326,13 +326,13 @@ def send_new_email_legacy(auth, sender, receipient, message):
         THIS WITH SEND_NEW_EMAIL() ABOVE AND IT WILL WORK.
     """
     token = auth
-    from_info = [sender]  # {'name':'','email':''}
-    to_info = receipient
+    sender = [sender]  # {'name':'','email':''}
+    to = receipient
     subject = message.get("subject", None)
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {"from": from_info, "to": to_info, "subject": subject, "body": body}
+        {"from": sender, "to": to, "subject": subject, "body": body}
     )
 
     response = requests.post(

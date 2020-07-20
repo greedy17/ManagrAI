@@ -11,18 +11,25 @@
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
-      <!--       <img
-        v-if="userIsLoggedIn"
-        src="@/assets/images/dropdown-arrow.svg"
-        class="user-menu-dropdown"
-        @click="toggleUserMenu"
-      /> -->
+
       <div class="right" ref="user-menu-icon">
-        <span class="right__items" @click="toggleUserMenu" ref="toggle-user-menu">
-          <svg v-if="userIsLoggedIn" class="icon" viewBox="0 0 24 20">
-            <use xlink:href="@/assets/images/icon-menu.svg#settings" />
-          </svg>
-        </span>
+        <div v-if="userIsLoggedIn" class="right__items">
+          <DropDownMenu
+            @selectedItem="routeToSelected"
+            :right="10"
+            :items="[
+              { key: 'Settings', value: 'settings' },
+              { key: 'Log Out', value: 'logout' },
+            ]"
+          >
+            <template v-slot:dropdown-trigger="{ selected }">
+              <svg @click="selected" class="dd-icon" viewBox="0 0 24 20">
+                <use xlink:href="@/assets/images/icon-menu.svg#settings" />
+              </svg>
+            </template>
+          </DropDownMenu>
+        </div>
+
         <span class="right__items" @click="toggleNotifications">
           {{ unViewedCount }}
           <svg
@@ -36,23 +43,19 @@
         </span>
       </div>
     </nav>
-
-    <div v-if="showMenus.user" class="user-menu" ref="user-menu">
-      <h4 @click="routeToSettings">Settings</h4>
-
-      <h4 @click="logOut">Log Out</h4>
-    </div>
   </div>
 </template>
 
 <script>
 import NavLink from '@/components/NavLink'
 import Notification from '@/services/notifications/'
+import DropDownMenu from '@/components/forms/DropDownMenu'
 const POLLING_INTERVAL = 10000
 export default {
   name: 'NavBar',
   components: {
     NavLink,
+    DropDownMenu,
   },
   data() {
     return {
@@ -73,6 +76,15 @@ export default {
   },
 
   methods: {
+    routeToSelected(selected) {
+      // TODO: PB Change this to be static with an enum type list (django style) 07/20
+      if (selected == 'settings') {
+        this.routeToSettings()
+      }
+      if (selected == 'logout') {
+        this.logOut()
+      }
+    },
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
       try {
@@ -225,5 +237,10 @@ nav {
 }
 .icon.green {
   fill: green;
+}
+.dd-icon {
+  width: 20px;
+  height: 15px;
+  fill: #484a6e;
 }
 </style>
