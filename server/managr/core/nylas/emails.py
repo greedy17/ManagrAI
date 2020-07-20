@@ -220,6 +220,10 @@ def render_email(
     if len(file_ids) > 0:
         email_info["file_ids"] = file_ids
 
+    # add open email tracking to emails sent
+    email_info['tracking'] = {
+        'opens': True
+    }
     return email_info
 
 
@@ -336,7 +340,8 @@ def send_new_email_legacy(auth, sender, receipient, message):
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {"from": sender, "to": to, "subject": subject, "body": body}
+        {"from": sender, "to": to, "subject": subject,
+            "body": body, "tracking": {"opens": True}}
     )
 
     response = requests.post(

@@ -346,6 +346,7 @@ class NylasMessageWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
+
         data = request.data
         logger.debug(f'request {request.data}')
         data_object = data['deltas'][0]['object_data']
