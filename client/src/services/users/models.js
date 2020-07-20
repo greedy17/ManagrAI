@@ -21,6 +21,9 @@ export default class User {
       emailAuthLink = '',
       emailAuthAccount = {},
       emailAuthAccountRef = {},
+      quota = null,
+      upside = null,
+      commit = null,
     } = user
     Object.assign(this, {
       id,
@@ -36,6 +39,9 @@ export default class User {
       emailAuthLink,
       emailAuthAccount,
       emailAuthAccountRef,
+      quota,
+      upside,
+      commit,
     })
   }
 
