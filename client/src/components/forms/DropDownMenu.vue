@@ -1,7 +1,7 @@
 <template>
   <div class="dropdown">
     <div class="dropdown-container">
-      <slot :classes="'dd-button'" :selected="toggle" name="dropdown-trigger">
+      <slot :classes="'dd-button'" :toggle="toggle" name="dropdown-trigger">
         <button class="dd-button" @click="toggle">
           <svg class="dd-icon" viewBox="0 0 24 24">
             <use xlink:href="@/assets/images/dropdown-arrow.svg#caret" />

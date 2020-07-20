@@ -80,8 +80,8 @@
                 { key: 'Collapse All', value: 'collapseAll' },
               ]"
             >
-              <template v-slot:dropdown-trigger="{ selected }">
-                <svg @click="selected" class="dd-icon" viewBox="0 0 24 20">
+              <template v-slot:dropdown-trigger="{ toggle }">
+                <svg @click="toggle" class="dd-icon" viewBox="0 0 24 20">
                   <use xlink:href="@/assets/images/more_horizontal.svg#more" />
                 </svg>
               </template>

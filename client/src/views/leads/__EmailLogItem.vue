@@ -10,7 +10,7 @@
             >{{
               log.activity == 'LeadEmail.RECEIVED'
                 ? `Email Received  From ${getLinkedContacts}`
-                : 'Email Sent To'
+                : `Email Sent To ${getLinkedContacts}`
             }}
           </strong>
         </div>
@@ -22,19 +22,17 @@
         </div>
       </div>
     </div>
-    <!--
+
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
-        <p>{{ log.meta.createdByRef.fullName }} sent an email.</p>
-       
-        <p>
-          Contacts:
-          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
+        <p v-if="log.activity == 'LeadEmail.RECEIVED'">
+          {{ log.actionTakenByRef.fullName }} Received an Email From {{ getLinkedContacts }}
         </p>
-       
+        <p v-if="log.activity == 'LeadEmail.SENT'">
+          {{ log.actionTakenByRef.fullName }} sent an email to {{ getLinkedContacts }}
+        </p>
       </div>
     </div>
-    -->
   </div>
 </template>
 

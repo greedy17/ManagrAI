@@ -22,8 +22,8 @@
               { key: 'Log Out', value: 'logout' },
             ]"
           >
-            <template v-slot:dropdown-trigger="{ selected }">
-              <svg @click="selected" class="dd-icon" viewBox="0 0 24 20">
+            <template v-slot:dropdown-trigger="{ toggle }">
+              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="0 0 24 20">
                 <use xlink:href="@/assets/images/icon-menu.svg#settings" />
               </svg>
             </template>
@@ -224,7 +224,6 @@ nav {
   }
   &__items {
     border-radius: 50%;
-    padding: 0.5rem;
 
     &:hover {
       background-color: $soft-gray;

@@ -283,6 +283,10 @@ def send_new_email(
             created_by=sender, lead=lead, thread_id=response.json()[
                 "thread_id"],
         )
+        cleaned_contacts = [c['email'] for c in to if c['email']]
+        linked_contacts = lead.linked_contacts.filter(
+            email__in=cleaned_contacts)
+        obj.linked_contacts.set(linked_contacts)
 
         # Emit an EMAIL_SENT event and pass in Lead/Thread record.
         emit_event(lead_constants.EMAIL_SENT, sender, obj)
