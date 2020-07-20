@@ -100,11 +100,10 @@ export default {
   animation-duration: 1.5s;
   animation-iteration-count: 1;
   > .content {
-    display: flex;
-    animation: togglecontent backwards;
+    display: block;
+    animation: hidecontent forwards;
     animation-duration: 1.5s;
     animation-iteration-count: 1;
-    animation-direction: reverse;
   }
 }
 
@@ -116,8 +115,8 @@ export default {
   animation-iteration-count: 1;
 
   > .content {
-    display: flex;
-    animation: togglecontent forwards;
+    display: block;
+    animation: showcontent forwards;
     animation-duration: 1s;
     animation-iteration-count: 1;
   }
@@ -142,8 +141,8 @@ export default {
     width: 0vw;
   }
 }
-@keyframes togglecontent {
-  /*   0% {
+@keyframes showcontent {
+  0% {
     opacity: 0;
   }
   50% {
@@ -154,6 +153,21 @@ export default {
   }
   100% {
     opacity: 80%;
-  } */
+  }
+}
+@keyframes hidecontent {
+  0% {
+    opacity: 100%;
+  }
+  50% {
+    opacity: 80%;
+  }
+  70% {
+    opacity: 40%;
+  }
+  100% {
+    opacity: 0%;
+    display: none;
+  }
 }
 </style>
