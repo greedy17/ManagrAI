@@ -31,7 +31,7 @@
         </div>
 
         <span class="right__items" @click="toggleNotifications">
-          {{ unViewedCount }}
+          {{ unViewedCount > 0 ? unViewedCount : '' }}
           <svg
             v-if="userIsLoggedIn"
             class="icon"

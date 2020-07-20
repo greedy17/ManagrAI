@@ -100,10 +100,7 @@ export default {
   animation-duration: 1.5s;
   animation-iteration-count: 1;
   > .content {
-    display: block;
-    animation: hidecontent forwards;
-    animation-duration: 1.5s;
-    animation-iteration-count: 1;
+    display: none;
   }
 }
 
@@ -116,9 +113,6 @@ export default {
 
   > .content {
     display: block;
-    animation: showcontent forwards;
-    animation-duration: 1s;
-    animation-iteration-count: 1;
   }
 }
 
@@ -154,6 +148,7 @@ export default {
   }
   100% {
     opacity: 80%;
+    display: block;
   }
 }
 @keyframes hidecontent {
