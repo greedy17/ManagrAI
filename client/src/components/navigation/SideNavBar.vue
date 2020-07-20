@@ -100,7 +100,7 @@ export default {
   animation-duration: 1.5s;
   animation-iteration-count: 1;
   > .content {
-    display: block;
+    display: flex;
     animation: togglecontent backwards;
     animation-duration: 1.5s;
     animation-iteration-count: 1;
@@ -116,7 +116,7 @@ export default {
   animation-iteration-count: 1;
 
   > .content {
-    display: block;
+    display: flex;
     animation: togglecontent forwards;
     animation-duration: 1s;
     animation-iteration-count: 1;
@@ -143,7 +143,7 @@ export default {
   }
 }
 @keyframes togglecontent {
-  0% {
+  /*   0% {
     opacity: 0;
   }
   50% {
@@ -154,6 +154,6 @@ export default {
   }
   100% {
     opacity: 80%;
-  }
+  } */
 }
 </style>
