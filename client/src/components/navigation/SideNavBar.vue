@@ -122,48 +122,15 @@ export default {
   }
   100% {
     width: 15vw;
-    opacity: 100%;
   }
 }
 @keyframes closemenu {
   0% {
     width: 15vw;
-    opacity: 100%;
   }
 
   100% {
-    opacity: 0%;
     width: 0vw;
-  }
-}
-@keyframes showcontent {
-  0% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 10%;
-  }
-  70% {
-    opacity: 70%;
-  }
-  100% {
-    opacity: 80%;
-    display: block;
-  }
-}
-@keyframes hidecontent {
-  0% {
-    opacity: 100%;
-  }
-  50% {
-    opacity: 80%;
-  }
-  70% {
-    opacity: 40%;
-  }
-  100% {
-    opacity: 0%;
-    display: none;
   }
 }
 </style>
