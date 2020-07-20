@@ -128,6 +128,7 @@ export default {
   }
   100% {
     width: 15vw;
+    opacity: 100%;
   }
 }
 @keyframes closemenu {
