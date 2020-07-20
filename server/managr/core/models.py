@@ -117,9 +117,13 @@ class User(AbstractUser, TimeStampModel):
     magic_token_expiration = models.DateTimeField(
         help_text="The datetime when the magic token is expired.", null=True
     )
-    quota = models.PositiveIntegerField(help_text="Help text for User.quota", default=0)
-    upside = models.PositiveIntegerField(help_text="Help text for User.upside", default=0)
-    commit = models.PositiveIntegerField(help_text="Help text for User.commit", default=0)
+    quota = models.PositiveIntegerField(
+                help_text='Target sell amount for some defined timespan '
+                'set by their Organization.',
+                default=0
+            )
+    commit = models.PositiveIntegerField(help_text='Worst-case quota.', default=0)
+    upside = models.PositiveIntegerField(help_text='Optimistic quota.', default=0)
 
     objects = UserManager()
 
