@@ -125,6 +125,7 @@ export default {
               <p>There was an error saving this note.</p>
             `,
           })
+          console.log(error)
           // eslint-disable-next-line no-console
         })
         .finally(() => {

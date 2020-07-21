@@ -605,6 +605,7 @@ class ReminderViewSet(
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ReminderSerializer
+    filter_class = lead_filters.ReminderFilterSet
 
     def get_queryset(self):
         return Reminder.objects.for_user(self.request.user)
@@ -654,6 +655,14 @@ class ReminderViewSet(
         # check if a notification has been created, if the datetime has been updated and is out of range remove it
 
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        reminder = self.get_object()
+        if reminder.has_notification:
+
+            return Response(data={'non_field_errors': 'Cannot Delete Reminder that has already been executed'}, status=status.HTTP_400_BAD_REQUEST)
+        reminder.delete()
+        return Response(data=None, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["POST"], detail=True, url_path="mark-as-viewed")
     def mark_as_viewed(self, request, *args, **kwargs):

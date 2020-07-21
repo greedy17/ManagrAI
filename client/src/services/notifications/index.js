@@ -1,6 +1,5 @@
 import NotificationAPI from '@/services/notifications/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
-import Reminder from '@/services/reminders/'
 
 const NOTIFICATION_TYPE_REMINDER = 'REMINDER'
 const NOTIFICATION_TYPE_SYSTEM = 'SYSTEM'

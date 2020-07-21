@@ -99,10 +99,13 @@ export default {
 
     goToLead(id) {
       // avoid redundant route redirect if on current page
-      this.toggleNotifications()
-      if (this.$route.path !== `/leads/${id}`) {
-        this.$router.push({ name: 'LeadsDetail', params: { id: id } })
+      let nextRoute = this.$router.resolve({ name: 'LeadsDetail', params: { id: id } }).route
+      // avoid redundant route redirect if on current page
+      if (this.$route.path !== nextRoute.path) {
+        this.$router.push({ params: nextRoute.params, name: nextRoute.name })
       }
+
+      this.toggleNotifications()
     },
   },
 }

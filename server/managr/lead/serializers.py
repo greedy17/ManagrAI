@@ -188,6 +188,8 @@ class ReminderSerializer(serializers.ModelSerializer):
     linked_contacts_ref = ContactSerializer(
         source="linked_contacts", read_only=True, many=True
     )
+    created_for_ref = LeadRefSerializer(
+        source="created_for",  read_only=True)
 
     def to_internal_value(self, data):
         """ sanitize datetime_for it is not a required field but if passed and is null or blank
@@ -222,6 +224,7 @@ class ReminderSerializer(serializers.ModelSerializer):
             "linked_contacts",
             "linked_contacts_ref",
             "has_notification",
+            "created_for_ref",
         )
         read_only_fields = (
             "viewed",

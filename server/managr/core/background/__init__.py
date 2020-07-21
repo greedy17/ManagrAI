@@ -1,16 +1,17 @@
-
 import logging
 
 from background_task import background
-from managr.core.models import EmailAuthAccount, User
-from managr.lead.models import Notification, LeadEmail
-from ..nylas.emails import retrieve_message, retrieve_thread
+
 from django.db.models import F, Q, Count
 from django.utils import timezone
+
+from managr.core.models import EmailAuthAccount, User
 from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
 from managr.core import constants as core_consts
+from managr.lead.models import Notification, LeadEmail
 
+from ..nylas.emails import retrieve_message, retrieve_thread
 
 logger = logging.getLogger("managr")
 
@@ -38,7 +39,8 @@ def _get_email_notification(account_id, object_id, date):
         user = User.objects.get(email_auth_account__account_id=account_id)
     except User.DoesNotExist as e:
         logger.exception(
-            f"The user account_id is not in saved on the system they might need to re-auth a token,{account_id}"
+            f"The user account_id is not in saved on the system they might need"
+            "to re-auth a token,{account_id}"
         )
         return
 
@@ -84,7 +86,10 @@ def _get_email_notification(account_id, object_id, date):
                 meta_contacts = ''.join(message_contacts)
                 meta_body = thread['snippet']
                 n = Notification.objects.create(notify_at=timezone.now(
-                ), title=message['subject'], notification_type="EMAIL", resource_id=object_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l.id), 'title': l.title} for l in leads]})
+                ), title=message['subject'], notification_type="EMAIL",
+                    resource_id=object_id, user=user,
+                    meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads':
+                          [{'id': str(l.id), 'title': l.title} for l in leads]})
 
                 # PLACEHOLDER = IN FUTURE EMAILS SENT/RECIEVED WILL ALL LOG ON THE WEBHOOK
                 # if user.email in message_to:
@@ -103,7 +108,6 @@ def _get_email_notification(account_id, object_id, date):
         logger.exception(
             f"Failed {e}"
         )
-        pass
 
 
 @background(schedule=0)
@@ -139,7 +143,5 @@ def _get_email_metadata_info(account_id, object_id, date):
                 n = Notification.objects.create(notify_at=timezone.now(
                 ), title=message['subject'], notification_type="EMAIL_OPENED", resource_id=object_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l.id), 'title': l.title} for l in leads]})
 
-                return n
     except Exception as e:
-        print(e)
-    return
+        logger.exception(f"Error {e}")

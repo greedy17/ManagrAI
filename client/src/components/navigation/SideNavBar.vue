@@ -3,7 +3,20 @@
     <div class="background"></div>
     <div class="sidenav" ref="sidenav">
       <div class="content">
-        <NotificationPage />
+        <div class="view-toggle-container">
+          <span class="left" :class="{ bold: selectedView == remindersView }">Reminders</span>
+          <ToggleCheckBox
+            class="checkbox"
+            :checked="selectedView == notificationsView"
+            @toggle-view="toggleView"
+            :eventToEmit="'toggle-view'"
+          />
+          <span class="right" :class="{ bold: selectedView == notificationsView }"
+            >Notifications</span
+          >
+        </div>
+        <NotificationPage v-if="selectedView == notificationsView" />
+        <ReminderPage v-if="selectedView == remindersView" />
       </div>
     </div>
   </div>
@@ -11,17 +24,37 @@
 
 <script>
 import NotificationPage from '@/views/user/NotificationPage'
+import ReminderPage from '@/views/user/ReminderPage'
+import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
+
 import { mapGetters } from 'vuex'
+const VIEW_OPTION_REMINDERS = 'REMINDERS'
+const VIEW_OPTION_NOTIFICATIONS = 'NOTIFICATIONS'
+const VIEW_OPTIONS = {
+  notifications: VIEW_OPTION_NOTIFICATIONS,
+  reminders: VIEW_OPTION_REMINDERS,
+}
 export default {
   name: 'SideNavBar',
-  components: { NotificationPage },
+  components: { NotificationPage, ToggleCheckBox, ReminderPage },
   props: {},
   data() {
     return {
       triggerElements: [],
+      viewOptions: VIEW_OPTIONS,
+      remindersView: VIEW_OPTION_REMINDERS,
+      notificationsView: VIEW_OPTION_NOTIFICATIONS,
+      selectedView: VIEW_OPTION_NOTIFICATIONS,
     }
   },
   methods: {
+    toggleView(event) {
+      if (event) {
+        this.selectedView = this.viewOptions.notifications
+      } else {
+        this.selectedView = this.viewOptions.reminders
+      }
+    },
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
     },
@@ -149,5 +182,12 @@ export default {
   100% {
     width: 0vw;
   }
+}
+.view-toggle-container {
+  display: flex;
+  justify-content: space-between;
+}
+.bold {
+  font-weight: bold;
 }
 </style>

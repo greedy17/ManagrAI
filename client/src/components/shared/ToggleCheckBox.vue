@@ -22,7 +22,7 @@ export default {
   },
   methods: {
     emitToggle() {
-      this.$emit(this.eventToEmit)
+      this.$emit(this.eventToEmit, !this.checked)
     },
   },
 }
