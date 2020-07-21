@@ -1,6 +1,5 @@
 import NotificationAPI from '@/services/notifications/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
-import Reminder from '@/services/reminders/'
 
 const NOTIFICATION_TYPE_REMINDER = 'REMINDER'
 const NOTIFICATION_TYPE_SYSTEM = 'SYSTEM'
@@ -17,16 +16,6 @@ export default class Notification {
   static readOnlyFields = ['id']
   static api = NotificationAPI.create(Notification)
 
-  _determineNotifType(type, data) {
-    switch (type) {
-      case NOTIFICATION_TYPE_EMAIL:
-        return data
-      case NOTIFICATION_TYPE_REMINDER:
-        return data
-      case NOTIFICATION_TYPE_SYSTEM:
-        return data
-    }
-  }
   constructor({
     id = null,
     title = '',
@@ -43,7 +32,7 @@ export default class Notification {
       notificationType,
       notifyAt,
       notifiedAt,
-      meta: this._determineNotifType(notificationType, meta),
+      meta: objectToCamelCase(meta),
       resourceId,
       viewed,
     })

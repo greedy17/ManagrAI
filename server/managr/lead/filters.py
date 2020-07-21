@@ -5,7 +5,9 @@ from django_filters import OrderingFilter
 from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead, Forecast, List, Note, File, CallNote
+from .models import Lead, Forecast, List, Note, File, CallNote, Reminder
+from django.utils import timezone
+from dateutil.parser import parse
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -40,7 +42,8 @@ class LeadFilterSet(FilterSet):
 
     class Meta:
         model = Lead
-        fields = ['rating', 'on_list', 'is_claimed', 'by_list', 'by_user', 'by_account']
+        fields = ['rating', 'on_list', 'is_claimed',
+                  'by_list', 'by_user', 'by_account']
 
     def leads_by_user(self, queryset, name, value):
         u = self.request.user
@@ -192,3 +195,21 @@ class FileFilterSet(FilterSet):
     def files_by_lead(self, queryset, name, value):
         if value:
             return queryset.filter(lead=value)
+
+
+class ReminderFilterSet(FilterSet):
+    """ filter for reminders that are in the future (+5 minutes) to display to user"""
+    # also filtering out has_notifications technically this should not occur
+    by_remind_on = django_filters.CharFilter(method="from_date")
+
+    class Meta:
+        model = Reminder
+        fields = ['by_remind_on']
+
+    def from_date(self, qs, name, value):
+        if value:
+            min = parse(value)
+
+            min = min+timezone.timedelta(minutes=5)
+
+            return qs.filter(datetime_for__gte=min)
