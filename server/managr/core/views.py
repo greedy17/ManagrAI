@@ -349,7 +349,6 @@ class NylasMessageWebhook(APIView):
     def post(self, request):
 
         data = request.data
-        print(data)
         webhook_object = data['deltas'][0]['object']
         webhook_type = data['deltas'][0]['type']
         if webhook_type == 'message.created' and webhook_object == 'message':
