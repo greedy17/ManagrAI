@@ -11,6 +11,8 @@ export const STORAGE_KEY = `managr-${STORAGE_HASH}`
 const state = {
   user: null,
   token: null,
+  showSideNav: false,
+  listenToSideNav: false,
 }
 
 const mutations = {
@@ -24,6 +26,12 @@ const mutations = {
   LOGOUT_USER(state) {
     state.token = null
     state.user = null
+  },
+  TOGGLE_SIDE_NAV(state, show) {
+    state.showSideNav = show
+  },
+  TOGGLE_SIDE_NAV_LISTENER(state, listen) {
+    state.listenToSideNav = listen
   },
 }
 
@@ -63,6 +71,12 @@ const plugins = [
 const getters = {
   userIsLoggedIn: state => {
     return !!(state.token && state.user)
+  },
+  showSideNav: state => {
+    return state.showSideNav
+  },
+  listenToSideNav: state => {
+    return state.listenToSideNav
   },
 }
 

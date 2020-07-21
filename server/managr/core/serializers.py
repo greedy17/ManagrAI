@@ -70,6 +70,7 @@ class UserSerializer(serializers.ModelSerializer):
             "quota",
             "upside",
             "commit",
+            "unviewed_notifications_count",
         )
 
     read_only_fields = (
@@ -161,7 +162,8 @@ class EmailSerializer(serializers.Serializer):
         child=ContactDictField(), required=False, allow_null=True
     )
 
-    reply_to_message_id = serializers.CharField(allow_blank=True, required=False)
+    reply_to_message_id = serializers.CharField(
+        allow_blank=True, required=False)
     file_ids = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=False
     )

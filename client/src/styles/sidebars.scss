@@ -1,7 +1,7 @@
-@import "./mixins/utils";
-@import "./mixins/buttons";
-@import "./variables";
-@import "./fonts";
+@import './mixins/utils';
+@import './mixins/buttons';
+@import './variables';
+@import './fonts';
 
 .filter-box {
   @include standard-border();
@@ -89,5 +89,42 @@
     font-size: 1.25rem;
     padding-top: 1rem;
     padding-bottom: 1rem;
+  }
+}
+
+@mixin card() {
+  @include standard-border();
+  @include base-font-styles();
+  background-color: $white;
+  display: flex;
+  flex-direction: column;
+
+  margin: 1rem 0;
+  &__header {
+    padding: 1rem;
+    box-shadow: 0 1px 0 0 $soft-gray;
+  }
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.188;
+    color: $main-font-gray;
+    text-transform: uppercase;
+    padding: 0.5rem;
+  }
+
+  &__content {
+    border-top: 1px solid $soft-gray;
+    font-weight: 300;
+    font-size: 14px;
+    border-bottom: 1px solid $soft-gray;
+    flex: 1 0 auto;
+    min-height: 3rem;
+    padding: 0.5rem;
+  }
+  &__footer {
+    font-weight: 300;
+    font-size: 14px;
+    padding: 0.5rem;
   }
 }

@@ -1,7 +1,7 @@
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-
+import logging
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
 from managr.core.nylas.auth import get_access_token, get_account_details
+
 
 from rest_framework import (
     authentication,
@@ -56,6 +57,10 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
+
+from managr.core.background import emit_event
+
+logger = logging.getLogger("managr")
 
 
 def index(request):
@@ -132,7 +137,8 @@ class UserViewSet(
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
         request_user = request.user
-        serializer = self.serializer_class(user, data=request.data, partial=True)
+        serializer = self.serializer_class(
+            user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         if request_user != user:
@@ -239,7 +245,8 @@ class UserViewSet(
         """
         Sends an email from the requesting user's email address
         """
-        serializer = EmailSerializer(data=request.data, context={"request": request})
+        serializer = EmailSerializer(
+            data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.send()
 
@@ -253,7 +260,8 @@ class UserViewSet(
     )
     def preview_email(self, request, *args, **kwargs):
         """Render the email based on provided context and return the result."""
-        serializer = EmailSerializer(data=request.data, context={"request": request})
+        serializer = EmailSerializer(
+            data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         preview_data = serializer.preview()
         return Response(preview_data, status=status.HTTP_200_OK)
@@ -271,7 +279,8 @@ class UserViewSet(
         """
         user = request.user
         file_object = request.FILES["file"]
-        response = return_file_id_from_nylas(user=user, file_object=file_object)
+        response = return_file_id_from_nylas(
+            user=user, file_object=file_object)
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -299,7 +308,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [permissions.IsAuthenticated, ]
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
@@ -324,9 +333,32 @@ class GetFileView(View):
         return response
 
 
+class NylasMessageWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Nylas verification webhook """
+        challenge = request.query_params.get('challenge', None)
+        if challenge:
+            return HttpResponse(content=challenge)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+
+        data = request.data
+        logger.debug(f'request {request.data}')
+        data_object = data['deltas'][0]['object_data']
+        emit_event(data_object['account_id'], data_object['attributes']
+                   ['thread_id'], data['deltas'][0]['date'])
+
+        return Response()
+
+
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [permissions.IsAuthenticated, ]
 )
 def email_auth_token(request):
     """Nylas OAuth callback.
@@ -362,7 +394,8 @@ def email_auth_token(request):
     code = request.data.get("code", None)
 
     if not magic_token or not code:
-        raise ValidationError({"detail": "Code or magic_token parameter missing"})
+        raise ValidationError(
+            {"detail": "Code or magic_token parameter missing"})
 
     if magic_token == str(u.magic_token) and not u.magic_token_expired:
         # check the user making the request is the same as the one
@@ -400,7 +433,8 @@ def email_auth_token(request):
                     )
 
         else:
-            raise ValidationError({"detail": {"code": "code is a required field"}})
+            raise ValidationError(
+                {"detail": {"code": "code is a required field"}})
     else:
         return Response(
             data={
@@ -475,7 +509,8 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         # therefore selecting the first email that is of type service_account
 
         try:
-            ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
+            ea = EmailAuthAccount.objects.filter(
+                user__is_serviceaccount=True).first()
         except EmailAuthAccount.DoesNotExist:
             # currently passing if there is an error, when we are ready we will require this
             pass
@@ -498,7 +533,8 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             token = ea.access_token
             sender = {"email": ea.email_address, "name": "Managr"}
             recipient = [
-                {"email": response_data["email"], "name": response_data["first_name"]}
+                {"email": response_data["email"],
+                    "name": response_data["first_name"]}
             ]
             message = {
                 "subject": "Invitation To Join",
