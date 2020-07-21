@@ -135,7 +135,6 @@ nav {
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
     background-color: $white;
     margin-left: auto;
-    margin-right: 1vw;
     min-width: 7rem;
     padding-left: 1rem;
 
