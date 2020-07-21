@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="caret" height="24" viewBox="0 0 24 24" width="24">
+   <path id="arrow" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    <path id="arrow-outline" d="M0 0h24v24H0V0z" fill="none"/> 
+    <circle id="circle" r="9" cx="12" cy="12" stroke-width="1.5" fill="none" stroke="black"/>
+</svg>

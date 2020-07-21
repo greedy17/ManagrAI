@@ -90,6 +90,18 @@ class LeadInsights:
             return latest_action.action_timestamp
 
     @property
+    def reminder_count(self):
+        return self.log_queryset.filter(activity=lead_constants.REMINDER_CREATED).count()
+
+    @property
+    def reminder_latest(self):
+        latest_reminder = self.log_queryset.filter(
+            activity=lead_constants.REMINDER_CREATED
+        ).first()
+        if latest_reminder is not None:
+            return latest_reminder.action_timestamp
+
+    @property
     def email_count(self):
         return self.log_queryset.filter(activity=lead_constants.EMAIL_SENT).count()
 
@@ -157,10 +169,11 @@ class LeadInsights:
     @property
     def as_dict(self):
         return {
-            "calls": {"count": self.call_count, "latest": self.call_latest,},
-            "notes": {"count": self.note_count, "latest": self.note_latest,},
-            "actions": {"count": self.action_count, "latest": self.action_latest,},
-            "emails": {"count": self.email_count, "latest": self.email_latest,},
+            "calls": {"count": self.call_count, "latest": self.call_latest, },
+            "notes": {"count": self.note_count, "latest": self.note_latest, },
+            "reminders": {"count": self.reminder_count, "latest": self.reminder_latest, },
+            "actions": {"count": self.action_count, "latest": self.action_latest, },
+            "emails": {"count": self.email_count, "latest": self.email_latest, },
             "closed_leads": {
                 "count": self.closed_leads_count,
                 "total_value": self.closed_leads_value,

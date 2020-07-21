@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ActionChoice, Lead, List
+from .models import ActionChoice, Lead, List, Reminder, Notification
 # Register your models here.
 
 
@@ -19,3 +19,5 @@ class CustomList(admin.ModelAdmin):
 admin.site.register(Lead, CustomLead)
 admin.site.register(ActionChoice, CustomActionChoice)
 admin.site.register(List, CustomList)
+admin.site.register(Reminder)
+admin.site.register(Notification)

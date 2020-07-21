@@ -11,6 +11,7 @@ from .models import (
     ActionChoice,
     Action,
     CallNote,
+    Notification
 )
 from managr.organization.serializers import AccountRefSerializer, ContactSerializer
 from managr.core.models import User
@@ -32,6 +33,14 @@ class UserRefSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, instance):
         return f"{instance.first_name} {instance.last_name}"
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = (
+            'id', 'notify_at', 'notified_at', 'title', 'notification_type', 'resource_id', 'viewed', 'meta', 'user',
+        )
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -174,11 +183,13 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 
 class ReminderSerializer(serializers.ModelSerializer):
-    created_by_ref = UserRefSerializer(source="created_by")
-    updated_by_ref = UserRefSerializer(source="updated_by")
+    created_by_ref = UserRefSerializer(source="created_by", read_only=True)
+    updated_by_ref = UserRefSerializer(source="updated_by", read_only=True)
     linked_contacts_ref = ContactSerializer(
         source="linked_contacts", read_only=True, many=True
     )
+    created_for_ref = LeadRefSerializer(
+        source="created_for",  read_only=True)
 
     def to_internal_value(self, data):
         """ sanitize datetime_for it is not a required field but if passed and is null or blank
@@ -212,6 +223,8 @@ class ReminderSerializer(serializers.ModelSerializer):
             "created_by_ref",
             "linked_contacts",
             "linked_contacts_ref",
+            "has_notification",
+            "created_for_ref",
         )
         read_only_fields = (
             "viewed",
@@ -304,7 +317,8 @@ class ActionSerializer(serializers.ModelSerializer):
     )
     created_by_ref = UserRefSerializer(source="created_by", read_only=True)
     lead_ref = LeadRefSerializer(source="lead", read_only=True)
-    action_type_ref = ActionChoiceSerializer(source="action_type", read_only=True)
+    action_type_ref = ActionChoiceSerializer(
+        source="action_type", read_only=True)
 
     class Meta:
         model = Action
@@ -327,13 +341,15 @@ class LeadSerializer(serializers.ModelSerializer):
 
     def validate_status(self, value):
         if value == lead_constants.LEAD_STATUS_CLOSED:
-            raise serializers.ValidationError({"detail": "Cannot Close Lead by Update"})
+            raise serializers.ValidationError(
+                {"detail": "Cannot Close Lead by Update"})
         return value
 
     account_ref = AccountRefSerializer(source="account", read_only=True)
     created_by_ref = UserRefSerializer(source="created_by", read_only=True)
     claimed_by_ref = UserRefSerializer(source="claimed_by", read_only=True)
-    last_updated_by_ref = UserRefSerializer(source="last_updated_by", read_only=True)
+    last_updated_by_ref = UserRefSerializer(
+        source="last_updated_by", read_only=True)
     forecast_ref = ForecastSerializer(source="forecast", read_only=True)
     actions_ref = ActionSerializer(source="actions", read_only=True, many=True)
     contract = serializers.SerializerMethodField()
@@ -390,9 +406,9 @@ class LeadSerializer(serializers.ModelSerializer):
 
     def get_last_action_taken(self, instance):
         return LeadActivityLogRefSerializer(
-                instance.activity_logs.order_by('-datetime_created')
-                .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
-                .first()).data
+            instance.activity_logs.order_by('-datetime_created')
+            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+            .first()).data
 
 
 class LeadVerboseSerializer(serializers.ModelSerializer):
@@ -400,13 +416,15 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
 
     def validate_status(self, value):
         if value == lead_constants.LEAD_STATUS_CLOSED:
-            raise serializers.ValidationError({"detail": "Cannot Close Lead by Update"})
+            raise serializers.ValidationError(
+                {"detail": "Cannot Close Lead by Update"})
         return value
 
     account_ref = AccountRefSerializer(source="account", read_only=True)
     created_by_ref = UserRefSerializer(source="created_by", read_only=True)
     claimed_by_ref = UserRefSerializer(source="claimed_by", read_only=True)
-    last_updated_by_ref = UserRefSerializer(source="last_updated_by", read_only=True)
+    last_updated_by_ref = UserRefSerializer(
+        source="last_updated_by", read_only=True)
     forecast_ref = ForecastSerializer(source="forecast", read_only=True)
     actions_ref = ActionSerializer(source="actions", read_only=True, many=True)
     contract = serializers.SerializerMethodField()

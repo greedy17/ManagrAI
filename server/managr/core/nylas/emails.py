@@ -24,11 +24,13 @@ def _generate_nylas_basic_auth_token(user):
     """
     password = ""
     if user.email_auth_account is None or user.email_auth_account.access_token is None:
-        raise PermissionDenied(detail="User does not have a Nylas access token")
+        raise PermissionDenied(
+            detail="User does not have a Nylas access token")
 
     access_token = user.email_auth_account.access_token
     auth_string = f"{access_token}:{password}"
-    base64_secret = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
+    base64_secret = base64.b64encode(
+        auth_string.encode("ascii")).decode("utf-8")
     return base64_secret
 
 
@@ -49,13 +51,15 @@ def _handle_nylas_response(response):
             code=response.status_code,
         )
     else:
-        raise APIException(detail="Error from Nylas server", code=response.status_code)
+        raise APIException(detail="Error from Nylas server",
+                           code=response.status_code)
 
 
 def _return_nylas_headers(user):
     """ Function to generate the basic headers required by Nylas
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
-    headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
+    headers = dict(Authorization=(
+        f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
 
 
@@ -101,6 +105,22 @@ def retrieve_messages(user, thread_id, page=1, page_size=10):
     response = requests.get(request_url, params=params, headers=headers)
     json_response = _handle_nylas_response(response)
 
+    return json_response
+
+
+def retrieve_message(user, message_id):
+    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/{message_id}"
+    headers = _return_nylas_headers(user)
+    response = requests.get(request_url, headers=headers)
+    json_response = _handle_nylas_response(response)
+    return json_response
+
+
+def retrieve_thread(user, thread_id):
+    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/{thread_id}"
+    headers = _return_nylas_headers(user)
+    response = requests.get(request_url, headers=headers)
+    json_response = _handle_nylas_response(response)
     return json_response
 
 
@@ -200,6 +220,10 @@ def render_email(
     if len(file_ids) > 0:
         email_info["file_ids"] = file_ids
 
+    # add open email tracking to emails sent
+    email_info['tracking'] = {
+        'opens': True
+    }
     return email_info
 
 
@@ -260,8 +284,13 @@ def send_new_email(
     if response.status_code == 200:
         # Create a Lead/Thread connection
         obj = LeadEmail.objects.create(
-            created_by=sender, lead=lead, thread_id=response.json()["thread_id"],
+            created_by=sender, lead=lead, thread_id=response.json()[
+                "thread_id"],
         )
+        cleaned_contacts = [c['email'] for c in to if c['email']]
+        linked_contacts = lead.linked_contacts.filter(
+            email__in=cleaned_contacts)
+        obj.linked_contacts.set(linked_contacts)
 
         # Emit an EMAIL_SENT event and pass in Lead/Thread record.
         emit_event(lead_constants.EMAIL_SENT, sender, obj)
@@ -305,13 +334,14 @@ def send_new_email_legacy(auth, sender, receipient, message):
         THIS WITH SEND_NEW_EMAIL() ABOVE AND IT WILL WORK.
     """
     token = auth
-    from_info = [sender]  # {'name':'','email':''}
-    to_info = receipient
+    sender = [sender]  # {'name':'','email':''}
+    to = receipient
     subject = message.get("subject", None)
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {"from": from_info, "to": to_info, "subject": subject, "body": body}
+        {"from": sender, "to": to, "subject": subject,
+            "body": body, "tracking": {"opens": True}}
     )
 
     response = requests.post(
