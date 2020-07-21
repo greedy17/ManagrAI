@@ -35,7 +35,7 @@
     </div>
     <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/pencil.svg" alt="icon" />
+        <img class="insight-icon" src="@/assets/images/alarm.svg" alt="icon" />
       </div>
       <div class="insight-info">
         <span class="insight-top">
