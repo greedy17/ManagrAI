@@ -1,5 +1,11 @@
 <template>
   <div class="activity-log-item">
+    <ReminderLogItem
+      :log="log"
+      :collapsed="!expanded"
+      v-if="log.model === 'Reminder'"
+      @item-click="emitToggleCollapse"
+    />
     <NoteLogItem
       :log="log"
       :collapsed="!expanded"
@@ -35,6 +41,7 @@
 
 <script>
 import NoteLogItem from './__NoteLogItem'
+import ReminderLogItem from './__ReminderLogItem'
 import CallNoteLogItem from './__CallNoteLogItem'
 import ActionLogItem from './__ActionLogItem'
 import EmailLogItem from './__EmailLogItem'
@@ -42,7 +49,14 @@ import LeadLogItem from './__LeadLogItem'
 
 export default {
   name: 'ActivityLogItem',
-  components: { ActionLogItem, NoteLogItem, CallNoteLogItem, EmailLogItem, LeadLogItem },
+  components: {
+    ActionLogItem,
+    NoteLogItem,
+    CallNoteLogItem,
+    EmailLogItem,
+    LeadLogItem,
+    ReminderLogItem,
+  },
   props: {
     log: {
       type: Object,

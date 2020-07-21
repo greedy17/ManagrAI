@@ -33,6 +33,18 @@
         <span class="insight-bottom">{{ insights.notes.latest | timeAgo }}</span>
       </div>
     </div>
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+      <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/alarm.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          {{ insights.reminders.count }}
+          {{ 'Reminder' | pluralize(insights.reminders.count) }}
+        </span>
+        <span class="insight-bottom">{{ insights.reminders.latest | timeAgo }}</span>
+      </div>
+    </div>
 
     <div class="insight-container section-shadow" v-if="insights && !apiFailing">
       <div class="icon-container">

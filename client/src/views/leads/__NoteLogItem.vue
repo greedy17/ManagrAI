@@ -1,7 +1,7 @@
 <template>
-  <div class="note">
+  <div class="note" @click="$emit('item-click')">
     <div class="item-list__item item-list__item--hover-effect">
-      <div class="item-list__row" @click="$emit('item-click')">
+      <div class="item-list__row">
         <div class="item-list__row-item--half">
           <img alt="icon" :src="require(`@/assets/images/pencil.svg`)" class="icon" />
         </div>
@@ -21,7 +21,7 @@
         <p>{{ log.meta.content }}</p>
         <p v-if="log.meta.linkedContacts && log.meta.linkedContacts.length">
           Contacts:
-          {{ log.meta.linkedContactsRef.map(c => c.full_name).join(', ') }}
+          {{ log.meta.linkedContacts.map(c => c.full_name).join(', ') }}
         </p>
       </div>
     </div>

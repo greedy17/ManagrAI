@@ -18,6 +18,7 @@ export default class ReminderAPI {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       byLead: ApiFilter.create({ key: 'by_lead' }),
+      byRemindOn: ApiFilter.create({ key: 'by_remind_on' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -42,6 +43,14 @@ export default class ReminderAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'ReminderAPI.create' })
+    }
+  }
+  async delete(noteId) {
+    const url = REMINDERS_ENDPOINT
+    try {
+      await this.client.delete(url + noteId)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'ReminderAPI.delete' })
     }
   }
 }
