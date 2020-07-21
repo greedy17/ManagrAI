@@ -82,7 +82,7 @@ body {
   width: 0px;
 }
 .muted {
-  opacity: 40%;
+  opacity: 0.4;
   color: #2f3035;
   font-family: inherit;
   font-weight: 300;
