@@ -109,11 +109,13 @@ export default {
   &__title {
     display: flex;
     overflow: hidden;
+    justify-content: space-between;
 
     &__text {
-      flex: 1 0 auto;
-    }
-    &__type {
+      max-width: 12vw;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
   &__content {
