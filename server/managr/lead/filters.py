@@ -1,15 +1,18 @@
+import time
+import pytz
+from itertools import chain
+from dateutil.parser import parse
+
 import django_filters
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django_filters.rest_framework import FilterSet
 from django_filters import OrderingFilter
-from itertools import chain
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
-from .models import Lead, Forecast, List, Note, File, CallNote, Reminder
 from django.utils import timezone
-from dateutil.parser import parse
-import time
-import pytz
+
+
+from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -28,7 +31,8 @@ class LeadRatingOrderFiltering(OrderingFilter):
 class LeadFilterSet(FilterSet):
     """
         this filters for rating 1-5
-        on_list is a filter set to only show leads currently on a list or leads that are currently not on a list
+        on_list is a filter set to only show leads currently on a
+         list or leads that are currently not on a list
         is_claimed will return a list of claimed or unclaimed leads
 
     """
@@ -212,4 +216,9 @@ class ReminderFilterSet(FilterSet):
         if value:
             min = parse(value)
             min = min + timezone.timedelta(minutes=5)
-            return qs.filter(datetime_for__gte=min)
+            ns = Notification.objects.filter(
+                notification_type="REMINDER").values_list('resource_id', flat=True)
+        query = Q()
+        for n in ns:
+            query |= Q(id=n)
+        return qs.filter(datetime_for__gte=min).exclude(query)

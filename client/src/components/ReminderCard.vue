@@ -62,8 +62,6 @@ export default {
         this.$router.push({ params: nextRoute.params, name: nextRoute.name })
       }
 
-      // avoid redundant route redirect if on current page
-
       this.toggleNotifications()
     },
   },

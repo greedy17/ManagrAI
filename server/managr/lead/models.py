@@ -262,9 +262,6 @@ class Reminder(BaseNote):
     datetime_for = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False)
     # TODO: - will build this out on a separate branch pb
-    notification = models.ForeignKey(
-        "Notification", on_delete=models.CASCADE, related_name="reminders", null=True
-    )
     # this is a temporary field for a reminder the view status will be handled by notifications in V2
     viewed = models.BooleanField(default=False)
 

@@ -1,9 +1,12 @@
 import kronos
 import requests
+from django.utils import timezone
+from django.db.models import Q
+
 from managr.core.nylas.auth import revoke_all_access_tokens
 from managr.core.models import EmailAuthAccount
 from managr.lead.models import Reminder, Notification
-from django.utils import timezone
+
 
 # Daily, at hour 0, minute 0 (12am)
 @kronos.register("0 0 * * *")
@@ -37,29 +40,30 @@ def create_notifications():
     """ Poll the reminders endpoint and create a notification if the reminder is 5 mins away """
     now = timezone.now()
     remind_time = now+timezone.timedelta(minutes=5)
-    for row in Reminder.objects.filter(datetime_for__lte=remind_time):
-        if row.has_notification:
-            return
-        else:
-            n = Notification.objects.create(
-                notify_at=row.datetime_for,
-                title=row.title,
-                notification_type="REMINDER",
-                resource_id=row.id,
-                user=row.created_by,
-                meta={
-                    'id': str(row.id),
-                    'title': row.title,
-                    'content': row.content,
-                    'linked_contacts': [
-                        {"id": str(c.id), "full_name": c.full_name, }
-                        for c in row.linked_contacts.all()
-                    ],
-                    'leads': [{'id': str(row.created_for.id), 'title': row.created_for.title}]
-                }
+    ns = Notification.objects.filter(
+        notification_type="REMINDER").values_list('resource_id', flat=True)
+    query = Q()
+    for n in ns:
+        query |= Q(id=n)
+
+    for row in Reminder.objects.filter(datetime_for__lte=remind_time).exclude(query):
+        n = Notification.objects.create(
+            notify_at=row.datetime_for,
+            title=row.title,
+            notification_type="REMINDER",
+            resource_id=row.id,
+            user=row.created_by,
+            meta={
+                'id': str(row.id),
+                'title': row.title,
+                'content': row.content,
+                'linked_contacts': [
+                    {"id": str(c.id), "full_name": c.full_name, }
+                    for c in row.linked_contacts.all()
+                ],
+                'leads': [{'id': str(row.created_for.id), 'title': row.created_for.title}]
+            }
 
 
-            )
-            n.save()
-
-        return row
+        )
+        n.save()

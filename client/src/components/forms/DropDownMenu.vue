@@ -41,19 +41,20 @@
 <script>
 /**
  * attrs:
- * @searchable determines if the items are searchable and shows input field
- * @multi determines if select is multi select:
- *        a. if it is it expects v-model to send an array
- *        b. does not close dropdown on select if multi select is enabled
- *        c. displays selected values differently and allows them to be removed on the fly
- *
- *@local enables local sorting for objects required to use sync when passing items :items.sync
  *
  *
+ * @vue-prop {loading} loading state
+ * @vue-prop {items} list of key value pairs for the dropdown content
+ * @vue-prop {displayKey} the key of the display value, if none provided 'key' will be used
  *
+ * @vue-prop {idKey} the key of the id value, if none provided 'id' will be used
+ * @vue-prop {valueKey} the key of the value value, if none provided 'id' will be used
+ * @vue-prop {right} alignment from right
+ * @vue-prop {left} alignment from left
  *
+ * @vue-slot {dd-button} slot to override default icon
  *
- *
+ * @vue-slot-values {classes, toggle} passed back to the slot for re-use
  **/
 
 export default {
@@ -64,10 +65,6 @@ export default {
       default: false,
     },
 
-    selectDelay: {
-      type: Number,
-      default: 0,
-    },
     items: {
       /** list of items */
 
@@ -191,11 +188,6 @@ Display dropdown relative to the component it is triggered by
   display: none; /* chrome safari */
 }
 
-.selected {
-  background-color: lightgreen;
-  color: darkgreen;
-}
-
 .dd-item {
   display: inline-flex;
   overflow: hidden;
@@ -211,62 +203,6 @@ Display dropdown relative to the component it is triggered by
   &:hover {
     cursor: pointer;
     background-color: lighten(gray, 20%);
-  }
-}
-
-.loading-container {
-  display: inline-block;
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-.loading-container div {
-  position: absolute;
-  top: 33px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: darkgray;
-  animation-timing-function: cubic-bezier(0, 1, 1, 0);
-}
-.loading-container div:nth-child(1) {
-  left: 8px;
-  animation: loading-container1 0.6s infinite;
-}
-.loading-container div:nth-child(2) {
-  left: 8px;
-  animation: loading-container2 0.6s infinite;
-}
-.loading-container div:nth-child(3) {
-  left: 32px;
-  animation: loading-container2 0.6s infinite;
-}
-.loading-container div:nth-child(4) {
-  left: 56px;
-  animation: loading-container3 0.6s infinite;
-}
-@keyframes loading-container1 {
-  0% {
-    transform: scale(0);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes loading-container3 {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(0);
-  }
-}
-@keyframes loading-container2 {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(24px, 0);
   }
 }
 </style>
