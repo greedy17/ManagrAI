@@ -199,6 +199,7 @@ export default {
         })
     },
     getKPIs() {
+      this.KPIs = null
       let reps = Object.entries(this.repFilterState)
         .map(([key, value]) => (value === true ? key : null))
         .filter(i => i !== null)
@@ -216,6 +217,7 @@ export default {
   watch: {
     repFilterState() {
       this.refresh(POLLING_INTERVAL)
+      this.getKPIs()
     },
   },
   computed: {
