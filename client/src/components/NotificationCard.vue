@@ -2,9 +2,13 @@
   <div class="notificaion-container">
     <div class="notification-card" :class="{ unviewed: !notification.viewed }">
       <div class="notification-card__title">
-        <span @click="toggleCard" class="notification-card__title__text">{{
-          notification.title
-        }}</span>
+        <span @click="toggleCard" class="notification-card__title__text">
+          {{
+            notification.notificationType !== 'EMAIL_OPENED'
+              ? notification.title
+              : 'Email was opened'
+          }}</span
+        >
         <span class="notification-card__title__type">
           <svg class="icon-notification">
             <use :xlink:href="require('@/assets/images/svg-repo.svg') + '#' + notificationIcon" />
@@ -13,14 +17,19 @@
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
         {{ notification.meta ? notification.meta.content : '' }}
-        <div
-          @click.prevent="goToLead(lead.id)"
-          :key="lead.id"
-          v-for="lead in notification.meta.leads"
-          class="notification-card__content__leads"
-        >
-          {{ lead.title }}
-        </div>
+        <template v-if="notification.meta">
+          <div
+            @click.prevent="goToLead(lead.id)"
+            :key="lead.id"
+            v-for="lead in notification.meta.leads"
+            class="notification-card__content__leads"
+          >
+            {{ lead.title }}
+          </div>
+        </template>
+        <template v-else>
+          {{ notification }}
+        </template>
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
         <span class="notification-card__footer__type">
@@ -50,6 +59,8 @@ export default {
         case NOTIFICATION_TYPES.reminder:
           return 'alarm'
         case NOTIFICATION_TYPES.system:
+          return 'alarm'
+        case NOTIFICATION_TYPES.emailOpened:
           return 'alarm'
         default:
           return 'alarm'

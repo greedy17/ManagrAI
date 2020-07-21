@@ -9,17 +9,21 @@ from django.db.models import F, Q, Count
 from django.utils import timezone
 from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
+from managr.core import constants as core_consts
 
 
 logger = logging.getLogger("managr")
 
 
-def emit_event(account_id, object_id, date):
-    _get_email_info(account_id, object_id, date)
+def emit_event(account_id, object_id, date, action):
+    if action == core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED:
+        _get_email_notification(account_id, object_id, date)
+    elif action == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED:
+        _get_email_metadata_info(account_id, object_id, date)
 
 
 @background(schedule=0)
-def _get_email_info(account_id, object_id, date):
+def _get_email_notification(account_id, object_id, date):
     """
         check if the email is for a lead that the user is claiming
         account_id email account of the user
@@ -100,3 +104,42 @@ def _get_email_info(account_id, object_id, date):
             f"Failed {e}"
         )
         pass
+
+
+@background(schedule=0)
+def _get_email_metadata_info(account_id, object_id, date):
+    user = None
+    try:
+        user = User.objects.get(email_auth_account__account_id=account_id)
+    except User.DoesNotExist as e:
+        logger.exception(
+            f"The user account_id is not in saved on the system they might need to re-auth a token,{account_id}"
+        )
+        return
+    try:
+
+        if user:
+            message = retrieve_message(user, object_id)
+
+            message_contacts = message['to']
+
+            message_contacts = [c['email']
+                                for c in message_contacts if c['email']]
+
+            # retrieve user leads and contacts
+            # create a new leademailaction
+            # create a new notification
+
+            leads = user.claimed_leads.filter(
+                linked_contacts__email__in=message_contacts)
+
+            if leads.count() > 0:
+                meta_contacts = ''.join(message_contacts)
+                meta_body = message['snippet']
+                n = Notification.objects.create(notify_at=timezone.now(
+                ), title=message['subject'], notification_type="EMAIL_OPENED", resource_id=object_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l.id), 'title': l.title} for l in leads]})
+
+                return n
+    except Exception as e:
+        print(e)
+    return

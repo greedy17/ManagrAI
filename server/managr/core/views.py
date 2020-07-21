@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login
 
 from managr.core.nylas.auth import get_access_token, get_account_details
 
+from managr.core import constants as core_consts
 
 from rest_framework import (
     authentication,
@@ -348,10 +349,17 @@ class NylasMessageWebhook(APIView):
     def post(self, request):
 
         data = request.data
-        logger.debug(f'request {request.data}')
-        data_object = data['deltas'][0]['object_data']
-        emit_event(data_object['account_id'], data_object['attributes']
-                   ['thread_id'], data['deltas'][0]['date'])
+        print(data)
+        webhook_object = data['deltas'][0]['object']
+        webhook_type = data['deltas'][0]['type']
+        if webhook_type == 'message.created' and webhook_object == 'message':
+            data_object = data['deltas'][0]['object_data']
+            emit_event(data_object['account_id'], data_object['attributes']
+                       ['thread_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED)
+        elif webhook_type == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED and webhook_object == core_consts.NYLAS_WEBHOOK_OBJECT_METADATA:
+            data_object = data['deltas'][0]['object_data']
+            emit_event(data_object['account_id'], data_object['metadata']
+                       ['message_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED)
 
         return Response()
 
