@@ -4,33 +4,63 @@
       KPIs
     </div>
 
+    <div v-if="KPIs === null" style="margin-top: 1.5rem; margin-bottom: 1rem;">
+      <ComponentLoadingSVG />
+    </div>
+    <div v-else>
+      <div class="daterange-container">
+        <select class="daterange" v-model="dateRange" @change="getKPIs">
+          <option v-for="(preset, i) in dateRangePresets" :value="preset.value" :key="i">
+            {{ preset.label }}
+          </option>
+        </select>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Sold</span>
+        <span class="statistic">
+          {{ KPIs.sold | currency }}
+        </span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Quota</span>
+        <span class="statistic">{{ KPIs.quota | currency }}</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Percent of Quota</span>
+        <span class="statistic">{{ percentOfQuotaKPI }}%</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Shortage</span>
+        <span class="statistic">{{ shortageKPI | currency }}</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Average Contract Value</span>
+        <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Forecast</span>
+        <span class="statistic">{{ KPIs.forecast | currency }}</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Commit</span>
+        <span class="statistic">{{ KPIs.commit | currency }}</span>
+      </div>
+      <div class="single-statistic section-shadow">
+        <span class="title">Upside</span>
+        <span class="statistic">{{ KPIs.upside | currency }}</span>
+      </div>
+    </div>
+
     <div
       class="single-statistic section-shadow"
       v-if="refreshedOnce && apiFailing"
       style="padding: 1rem;"
     >
-      <p>We are unable to retrieve KPIs at this time. Please try again later.</p>
+      <p>We are unable to retrieve Activities at this time. Please try again later.</p>
     </div>
-
     <div v-if="refreshedOnce && !apiFailing">
-      <div class="single-statistic section-shadow">
-        <span class="title">Total Closed Value</span>
-        <span class="statistic">
-          {{ insights ? insights.closedLeads.totalValue : 0 | currency }}</span
-        >
-      </div>
-      <div class="single-statistic section-shadow">
-        <span class="title">Average Contract Value</span>
-        <span class="statistic">
-          {{ insights ? insights.averageContractValue : 0 | currency }}</span
-        >
-      </div>
-      <div class="single-statistic section-shadow">
-        <span class="title">Forecast</span>
-        <span class="statistic"> {{ insights ? insights.forecast : 0 | currency }}</span>
-      </div>
       <div class="statistics-container section-shadow">
-        <span class="title">Statistics</span>
+        <span class="title">Activities</span>
         <div class="graphic-statistic section-shadow">
           <div class="icon-container">
             <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
@@ -89,8 +119,24 @@
 
 <script>
 import LeadActivityLog from '@/services/leadActivityLogs'
+import Forecast from '@/services/forecasts'
 
 const POLLING_INTERVAL = 10000
+
+const dateRangePresets = [
+  { value: Forecast.TODAY_ONWARD, label: 'Today Onward' },
+  { value: Forecast.TODAY, label: 'Today' },
+  { value: Forecast.YESTERDAY, label: 'Yesterday' },
+  { value: Forecast.THIS_WEEK, label: 'This Week' },
+  { value: Forecast.LAST_WEEK, label: 'Last Week' },
+  { value: Forecast.THIS_MONTH, label: 'This Month' },
+  { value: Forecast.LAST_MONTH, label: 'Last Month' },
+  { value: Forecast.THIS_QUARTER, label: 'This Quarter' },
+  { value: Forecast.LAST_QUARTER, label: 'Last Quarter' },
+  { value: Forecast.THIS_YEAR, label: 'This Year' },
+  { value: Forecast.LAST_YEAR, label: 'Last Year' },
+  { value: Forecast.ALL_TIME, label: 'All Time' },
+]
 
 export default {
   name: 'KPIs',
@@ -102,13 +148,17 @@ export default {
   },
   data() {
     return {
+      dateRangePresets,
+      dateRange: Forecast.TODAY_ONWARD,
       insights: null,
       apiFailing: false,
       refreshedOnce: false,
+      KPIs: null,
     }
   },
   created() {
     this.refresh(POLLING_INTERVAL)
+    this.getKPIs()
   },
   destroyed() {
     clearTimeout(this.pollingTimeout)
@@ -148,10 +198,46 @@ export default {
           this.refreshedOnce = true
         })
     },
+    getKPIs() {
+      let reps = Object.entries(this.repFilterState)
+        .map(([key, value]) => (value === true ? key : null))
+        .filter(i => i !== null)
+
+      let data = {
+        dateRangePreset: this.dateRange,
+        representatives: reps,
+      }
+
+      Forecast.api.KPIs(data).then(data => {
+        this.KPIs = data
+      })
+    },
   },
   watch: {
     repFilterState() {
       this.refresh(POLLING_INTERVAL)
+    },
+  },
+  computed: {
+    shortageKPI() {
+      let shortage = this.KPIs.quota - this.KPIs.sold
+      if (shortage < 0) {
+        return 0
+      } else {
+        return shortage
+      }
+    },
+    percentOfQuotaKPI() {
+      if (this.KPIs.quota == 0) {
+        return 100
+      }
+      let percent = (this.KPIs.sold / this.KPIs.quota) * 100
+      let roundedPercentage = Math.round(percent * 10) / 10
+      if (roundedPercentage > 100) {
+        return 100
+      } else {
+        return percent
+      }
     },
   },
 }
@@ -168,6 +254,28 @@ export default {
   height: 3rem;
   padding-left: 7%;
   font-weight: bold;
+}
+
+.daterange-container {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 0;
+
+  select {
+    background-color: rgba($color: $dark-gray-blue, $alpha: 0);
+    border: 0;
+    color: $main-font-gray;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+
+    option {
+      padding-top: 1rem;
+    }
+  }
 }
 
 .single-statistic {
