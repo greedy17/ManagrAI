@@ -23,7 +23,14 @@
       </div>
       <div class="single-statistic section-shadow">
         <span class="title">Quota</span>
-        <span class="statistic">{{ KPIs.quota | currency }}</span>
+        <span class="statistic with-icon" v-if="oneRepSelected">
+          <div class="fifth-wide" />
+          <span class="three-fifth-wide value">{{ KPIs.quota | currency }}</span>
+          <div class="fifth-wide">
+            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+          </div>
+        </span>
+        <span class="statistic" v-else>{{ KPIs.quota | currency }}</span>
       </div>
       <div class="single-statistic section-shadow">
         <span class="title">Percent of Quota</span>
@@ -43,11 +50,27 @@
       </div>
       <div class="single-statistic section-shadow">
         <span class="title">Commit</span>
-        <span class="statistic">{{ KPIs.commit | currency }}</span>
+        <span class="statistic with-icon" v-if="oneRepSelected">
+          <div class="fifth-wide" />
+          <span class="three-fifth-wide value">{{ KPIs.commit | currency }}</span>
+          <div class="fifth-wide">
+            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+          </div>
+        </span>
+        <span class="statistic" v-else>
+          {{ KPIs.commit | currency }}
+        </span>
       </div>
       <div class="single-statistic section-shadow">
         <span class="title">Upside</span>
-        <span class="statistic">{{ KPIs.upside | currency }}</span>
+        <span class="statistic with-icon" v-if="oneRepSelected">
+          <div class="fifth-wide" />
+          <span class="three-fifth-wide value">{{ KPIs.upside | currency }}</span>
+          <div class="fifth-wide">
+            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+          </div>
+        </span>
+        <span class="statistic" v-else>{{ KPIs.upside | currency }}</span>
       </div>
     </div>
 
@@ -241,6 +264,16 @@ export default {
         return percent
       }
     },
+    oneRepSelected() {
+      let reps = Object.entries(this.repFilterState)
+        .map(([key, value]) => (value === true ? key : null))
+        .filter(i => i !== null)
+      if (reps.length === 1) {
+        return reps[0]
+      } else {
+        return false
+      }
+    },
   },
 }
 </script>
@@ -338,6 +371,36 @@ export default {
       font-size: 0.875rem;
       line-height: 1.14;
       color: rgba($color: $main-font-gray, $alpha: 0.4);
+    }
+  }
+}
+
+.with-icon {
+  width: 100%;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  .fifth-wide {
+    width: 20%;
+  }
+
+  .three-fifth-wide {
+    width: 60%;
+  }
+
+  .value {
+    text-align: center;
+  }
+
+  .edit-icon {
+    @include pointer-on-hover;
+    opacity: 0.4;
+    height: 1.2rem;
+    width: 1.2rem;
+
+    &:hover {
+      opacity: 1;
     }
   }
 }
