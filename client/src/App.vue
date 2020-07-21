@@ -81,4 +81,10 @@ body {
 ::-webkit-scrollbar {
   width: 0px;
 }
+.muted {
+  opacity: 40%;
+  color: #2f3035;
+  font-family: inherit;
+  font-weight: 300;
+}
 </style>

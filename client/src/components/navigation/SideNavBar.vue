@@ -4,14 +4,16 @@
     <div class="sidenav" ref="sidenav">
       <div class="content">
         <div class="view-toggle-container">
-          <span class="left" :class="{ bold: false }">Forecast</span>
+          <span class="left" :class="{ bold: selectedView == remindersView }">Reminders</span>
           <ToggleCheckBox
             class="checkbox"
             :checked="selectedView == notificationsView"
             @toggle-view="toggleView"
             :eventToEmit="'toggle-view'"
           />
-          <span class="right" :class="{ bold: false }">Lists</span>
+          <span class="right" :class="{ bold: selectedView == notificationsView }"
+            >Notifications</span
+          >
         </div>
         <NotificationPage v-if="selectedView == notificationsView" />
         <ReminderPage v-if="selectedView == remindersView" />
@@ -184,5 +186,8 @@ export default {
 .view-toggle-container {
   display: flex;
   justify-content: space-between;
+}
+.bold {
+  font-weight: bold;
 }
 </style>

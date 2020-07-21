@@ -1,12 +1,18 @@
 <template>
   <div class="notification-page-container">
-    <small>last checked at {{ lastChecked | dateShortWithTime }} to refresh toggle back</small>
+    <small class="muted">last checked at {{ lastChecked | dateShortWithTime }} </small>
+    <br />
+    <small class="muted"> to refresh toggle back </small>
+
     <template v-if="reminders.list.length > 0">
       <template v-for="(reminder, i) in reminders.list">
         <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
       </template>
     </template>
     <template v-else>
+      <br />
+      <br />
+
       No Upcoming Reminders
     </template>
   </div>
