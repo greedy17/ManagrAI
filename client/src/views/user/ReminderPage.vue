@@ -1,5 +1,6 @@
 <template>
   <div class="notification-page-container">
+    <small>last checked at {{ lastChecked | dateShortWithTime }} to refresh toggle back</small>
     <template v-if="reminders.list.length > 0">
       <template v-for="(reminder, i) in reminders.list">
         <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
@@ -22,6 +23,9 @@ export default {
   components: { ReminderCard },
   data() {
     return {
+      // will not be auto refreshing to cut down on automatic calls
+      // instead will show last checked time and tell user to toggle for refresh
+      lastChecked: moment().format(),
       reminders: CollectionManager.create({
         ModelClass: Reminder,
         filters: {

@@ -8,6 +8,8 @@ from django.db.models.functions import Lower
 from .models import Lead, Forecast, List, Note, File, CallNote, Reminder
 from django.utils import timezone
 from dateutil.parser import parse
+import time
+import pytz
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -209,7 +211,5 @@ class ReminderFilterSet(FilterSet):
     def from_date(self, qs, name, value):
         if value:
             min = parse(value)
-
-            min = min+timezone.timedelta(minutes=5)
-
+            min = min + timezone.timedelta(minutes=5)
             return qs.filter(datetime_for__gte=min)

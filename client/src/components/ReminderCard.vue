@@ -11,14 +11,12 @@
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
         {{ reminder.content }}
-        <!--         <div
-          @click.prevent="goToLead(lead.id)"
-          :key="lead.id"
-          v-for="lead in notification.meta.leads"
+        <div
+          @click.prevent="goToLead(reminder.createdFor)"
           class="notification-card__content__leads"
         >
-          {{ lead.title }}
-        </div> -->
+          {{ reminder.createdForRef.title }}
+        </div>
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
         <span class="notification-card__footer__type">
@@ -48,6 +46,7 @@ export default {
       expand: false,
     }
   },
+  created() {},
   methods: {
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
@@ -57,11 +56,15 @@ export default {
     },
 
     goToLead(id) {
+      let nextRoute = this.$router.resolve({ name: 'LeadsDetail', params: { id: id } }).route
       // avoid redundant route redirect if on current page
-      this.toggleNotifications()
-      if (this.$route.path !== `/leads/${id}`) {
-        this.$router.push({ name: 'LeadsDetail', params: { id: id } })
+      if (this.$route.path !== nextRoute.path) {
+        this.$router.push({ params: nextRoute.params, name: nextRoute.name })
       }
+
+      // avoid redundant route redirect if on current page
+
+      this.toggleNotifications()
     },
   },
 }

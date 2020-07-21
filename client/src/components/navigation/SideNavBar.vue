@@ -181,4 +181,8 @@ export default {
     width: 0vw;
   }
 }
+.view-toggle-container {
+  display: flex;
+  justify-content: space-between;
+}
 </style>
