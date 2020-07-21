@@ -29,7 +29,7 @@
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
         <span class="notification-card__footer__type">
-          {{ notification.notificationType }}
+          {{ formattedNotificationType.toUpperCase() }}
         </span>
       </div>
     </div>
@@ -60,6 +60,20 @@ export default {
           return 'checkmark'
         default:
           return 'alarm'
+      }
+    },
+    formattedNotificationType() {
+      switch (this.notification.notificationType) {
+        case NOTIFICATION_TYPES.email:
+          return 'email'
+        case NOTIFICATION_TYPES.reminder:
+          return 'reminder'
+        case NOTIFICATION_TYPES.system:
+          return 'system'
+        case NOTIFICATION_TYPES.emailOpened:
+          return 'email'
+        default:
+          return 'system'
       }
     },
     showSideNav() {

@@ -339,6 +339,7 @@ class NylasMessageWebhook(APIView):
 
     def get(self, request):
         """ Respond to Nylas verification webhook """
+        print('here')
         challenge = request.query_params.get('challenge', None)
         if challenge:
             return HttpResponse(content=challenge)
@@ -360,6 +361,26 @@ class NylasMessageWebhook(APIView):
             emit_event(data_object['account_id'], data_object['metadata']
                        ['message_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED)
 
+        return Response()
+
+
+class NylasAccountWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Nylas verification webhook """
+        challenge = request.query_params.get('challenge', None)
+        print(challenge)
+        if challenge:
+            return HttpResponse(content=challenge)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+
+        data = request.data
+        print(data)
         return Response()
 
 
