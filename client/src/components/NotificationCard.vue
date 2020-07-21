@@ -3,11 +3,7 @@
     <div class="notification-card" :class="{ unviewed: !notification.viewed }">
       <div class="notification-card__title">
         <span @click="toggleCard" class="notification-card__title__text">
-          {{
-            notification.notificationType !== 'EMAIL_OPENED'
-              ? notification.title
-              : 'Email was opened'
-          }}</span
+          {{ notification.notificationType !== 'EMAIL_OPENED' ? notification.title : 'Read' }}</span
         >
         <span class="notification-card__title__type">
           <svg class="icon-notification">
@@ -61,7 +57,7 @@ export default {
         case NOTIFICATION_TYPES.system:
           return 'alarm'
         case NOTIFICATION_TYPES.emailOpened:
-          return 'alarm'
+          return 'checkmark'
         default:
           return 'alarm'
       }
