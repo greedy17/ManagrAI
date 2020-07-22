@@ -9,7 +9,7 @@ from managr.core.models import EmailAuthAccount, User
 from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
 from managr.core import constants as core_consts
-from managr.lead.models import Notification, LeadEmail
+from managr.lead.models import Notification, LeadEmail, LeadActivityLog
 
 from ..nylas.emails import retrieve_message, retrieve_thread
 
@@ -136,15 +136,22 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
             if kwargs['count'] > 0:
                 already_notified = _check_notification(thread_id)
                 if already_notified:
+                    # find the email object created in the db
                     le = LeadEmail.objects.filter(thread_id=thread_id).first()
-                    le.opened_count += 1
+                    le.opened_count = kwargs['count']
                     le.save()
+                    # find its corresponding log and regenerate it (update)
+                    la = LeadActivityLog.objects.filter(meta__id=str(le.id))
+                    la.update(meta=le.activity_log_meta)
+                    le.save()
+
                     return
 
             message_contacts = message['to']
             message_contacts = [c['email']
                                 for c in message_contacts if c['email']]
-
+# le=LeadEmail.objects.get(thread_id="1t7wekgqqshnb3pgf1l73v11m")
+# la=LeadActivityLog.objects.all().first()
             # retrieve user leads and contacts
             # create a new leademailaction
             # create a new notification
