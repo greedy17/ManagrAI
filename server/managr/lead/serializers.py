@@ -111,6 +111,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
     linked_contacts_ref = ContactSerializer(
         source="linked_contacts", read_only=True, many=True
     )
+    last_action_taken = serializers.SerializerMethodField()
 
     class Meta:
         model = Lead
@@ -126,8 +127,15 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "claimed_by",
             "claimed_by_ref",
             "expected_close_date",
-            "linked_contacts_ref"
+            "linked_contacts_ref",
+            "last_action_taken",
         )
+
+    def get_last_action_taken(self, instance):
+        return LeadActivityLogRefSerializer(
+            instance.activity_logs.order_by('-datetime_created')
+            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+            .first()).data
 
 
 class FileSerializer(serializers.ModelSerializer):

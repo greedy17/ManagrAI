@@ -563,8 +563,6 @@ class ForecastViewSet(
         Produce KPIs for client-side Forecast page's Sidebar:
             - Sold (formerly Total Closed Value)
             - Quota
-            - Percent of Quota (may end up being a client-side computation)
-            - Shortage
             - Average Contract Value
             - Forecast
             - Commit
