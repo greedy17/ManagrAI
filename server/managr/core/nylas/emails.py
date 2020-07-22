@@ -89,7 +89,6 @@ def retrieve_threads(user, to_email=None, any_email=None, page=1, page_size=10):
 
     response = requests.get(request_url, params=params, headers=headers)
     json_response = _handle_nylas_response(response)
-
     return json_response
 
 

@@ -3,7 +3,16 @@
     <div class="item-list__item item-list__item--hover-effect">
       <div class="item-list__row" @click="$emit('item-click')">
         <div class="item-list__row-item--half">
-          <img alt="icon" :src="require(`@/assets/images/email.svg`)" class="icon" />
+          <div class="icon-type">
+            <img alt="icon" :src="require(`@/assets/images/email.svg`)" class="icon" />
+            <small class="muted">
+              <svg class="icon-viewed">
+                <use xlink:href="@/assets/images/eye.svg#eye" />
+              </svg>
+
+              {{ log.meta.openedCount ? log.meta.openedCount : 0 }}
+            </small>
+          </div>
         </div>
         <div class="item-list__row-item--double">
           <strong
@@ -17,6 +26,7 @@
         <div class="item-list__row-item--double">
           <span class="date-text">{{ log.actionTimestamp | dateShortWithTime }}</span>
         </div>
+
         <div class="item-list__row-item--half">
           <LogItemArrowIcon :down="collapsed" />
         </div>
@@ -67,5 +77,17 @@ export default {
 
 .date-text {
   color: $mid-gray;
+}
+.icon-viewed {
+  width: 10px;
+  height: 10px;
+}
+.icon-type {
+  display: flex;
+  justify-content: flex-start;
+  > img {
+    flex: 1 0 auto;
+    margin-left: -3.5rem;
+  }
 }
 </style>
