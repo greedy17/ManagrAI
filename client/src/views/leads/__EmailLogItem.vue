@@ -5,16 +5,16 @@
         <div class="item-list__row-item--half">
           <div class="icon-type">
             <img alt="icon" :src="require(`@/assets/images/email.svg`)" class="icon" />
-            <small class="muted">
-              <svg class="icon-viewed">
-                <use xlink:href="@/assets/images/eye.svg#eye" />
-              </svg>
-
-              {{ log.meta.openedCount ? log.meta.openedCount : 0 }}
-            </small>
           </div>
         </div>
         <div class="item-list__row-item--double">
+          <small class="muted">
+            <svg class="icon-viewed">
+              <use xlink:href="@/assets/images/eye.svg#eye" />
+            </svg>
+
+            {{ log.meta.openedCount ? log.meta.openedCount : 0 }}
+          </small>
           <strong
             >{{
               log.activity == 'LeadEmail.RECEIVED'
@@ -85,9 +85,17 @@ export default {
 .icon-type {
   display: flex;
   justify-content: flex-start;
-  > img {
-    flex: 1 0 auto;
-    margin-left: -3.5rem;
+}
+.item-list__row-item--double {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  > * {
+    width: 100%;
+  }
+  > .muted {
+    font-size: 15px;
   }
 }
 </style>
