@@ -8,13 +8,6 @@
           </div>
         </div>
         <div class="item-list__row-item--double">
-          <small class="muted">
-            <svg class="icon-viewed">
-              <use xlink:href="@/assets/images/eye.svg#eye" />
-            </svg>
-
-            {{ log.meta.openedCount ? log.meta.openedCount : 0 }}
-          </small>
           <strong
             >{{
               log.activity == 'LeadEmail.RECEIVED'
@@ -35,12 +28,22 @@
 
     <div class="box--no-border" v-if="!collapsed">
       <div class="box__content">
-        <p v-if="log.activity == 'LeadEmail.RECEIVED'">
-          {{ log.actionTakenByRef.fullName }} Received an Email From {{ getLinkedContacts }}
-        </p>
-        <p v-if="log.activity == 'LeadEmail.SENT'">
-          {{ log.actionTakenByRef.fullName }} sent an email to {{ getLinkedContacts }}
-        </p>
+        <div class="read-receipt">
+          <span class="muted">
+            Open Count: {{ log.meta.openedCount ? log.meta.openedCount : 0 }} Read Receipts
+          </span>
+          <svg class="icon-viewed">
+            <use xlink:href="@/assets/images/eye.svg#eye" />
+          </svg>
+        </div>
+        <div class="panel-content">
+          <p v-if="log.activity == 'LeadEmail.RECEIVED'">
+            {{ log.actionTakenByRef.fullName }} Received an Email From {{ getLinkedContacts }}
+          </p>
+          <p v-if="log.activity == 'LeadEmail.SENT'">
+            {{ log.actionTakenByRef.fullName }} sent an email to {{ getLinkedContacts }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -74,13 +77,15 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/containers';
+@import '@/styles/variables';
 
 .date-text {
   color: $mid-gray;
 }
 .icon-viewed {
-  width: 10px;
-  height: 10px;
+  width: 25px;
+  height: 25px;
+  fill: rgba(47, 48, 53, 0.4);
 }
 .icon-type {
   display: flex;
@@ -90,12 +95,12 @@ export default {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+}
 
-  > * {
-    width: 100%;
-  }
-  > .muted {
-    font-size: 15px;
-  }
+.read-receipt {
+  display: flex;
+}
+.muted {
+  margin-right: 1rem;
 }
 </style>
