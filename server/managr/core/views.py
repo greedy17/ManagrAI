@@ -141,7 +141,9 @@ class UserViewSet(
             user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        if request_user != user:
+        # if request.data does not include quota/commit/upside,
+        # then user should not be able to update another user's data
+        if not self._is_kpi_update(request) and request_user != user:
             return Response(
                 {"non_field_errors": ("You can only update your own details")},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -156,6 +158,11 @@ class UserViewSet(
         response_data = serializer.data
 
         return Response(response_data)
+
+    def _is_kpi_update(self, request):
+        if request.data.get('quota') or request.data.get('commit') or request.data.get('upside'):
+            return True
+        return False
 
     @action(
         methods=["post"],

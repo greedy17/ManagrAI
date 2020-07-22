@@ -21,17 +21,29 @@
           {{ KPIs.sold | currency }}
         </span>
       </div>
-      <div class="single-statistic section-shadow">
+
+      <div
+        class="single-statistic section-shadow"
+        :class="{ 'kpi-editable': editKPIs.editingQuota }"
+      >
         <span class="title">Quota</span>
-        <span class="statistic with-icon" v-if="oneRepSelected">
+        <span class="statistic with-icon" v-if="oneRepSelected && !editKPIs.editingQuota">
           <div class="fifth-wide" />
           <span class="three-fifth-wide value">{{ KPIs.quota | currency }}</span>
           <div class="fifth-wide">
-            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+            <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editQuota" />
           </div>
         </span>
+        <div v-else-if="oneRepSelected && editKPIs.editingQuota" style="width: 100%;">
+          <form class="kpi-form" @submit.prevent="updateQuota">
+            <input type="number" v-model="editKPIs.tempQuota" />
+            <img class="save" src="@/assets/images/checkmark.svg" @click="updateQuota" />
+            <img class="reset" src="@/assets/images/remove.svg" @click="resetQuota" />
+          </form>
+        </div>
         <span class="statistic" v-else>{{ KPIs.quota | currency }}</span>
       </div>
+
       <div class="single-statistic section-shadow">
         <span class="title">Percent of Quota</span>
         <span class="statistic">{{ percentOfQuotaKPI }}%</span>
@@ -48,28 +60,48 @@
         <span class="title">Forecast</span>
         <span class="statistic">{{ KPIs.forecast | currency }}</span>
       </div>
-      <div class="single-statistic section-shadow">
+
+      <div
+        class="single-statistic section-shadow"
+        :class="{ 'kpi-editable': editKPIs.editingCommit }"
+      >
         <span class="title">Commit</span>
-        <span class="statistic with-icon" v-if="oneRepSelected">
+        <span class="statistic with-icon" v-if="oneRepSelected && !editKPIs.editingCommit">
           <div class="fifth-wide" />
           <span class="three-fifth-wide value">{{ KPIs.commit | currency }}</span>
           <div class="fifth-wide">
-            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+            <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editCommit" />
           </div>
         </span>
-        <span class="statistic" v-else>
-          {{ KPIs.commit | currency }}
-        </span>
+        <div v-else-if="oneRepSelected && editKPIs.editingCommit" style="width: 100%;">
+          <form class="kpi-form" @submit.prevent="updateCommit">
+            <input type="number" v-model="editKPIs.tempCommit" />
+            <img class="save" src="@/assets/images/checkmark.svg" @click="updateCommit" />
+            <img class="reset" src="@/assets/images/remove.svg" @click="resetCommit" />
+          </form>
+        </div>
+        <span class="statistic" v-else>{{ KPIs.commit | currency }}</span>
       </div>
-      <div class="single-statistic section-shadow">
+
+      <div
+        class="single-statistic section-shadow"
+        :class="{ 'kpi-editable': editKPIs.editingUpside }"
+      >
         <span class="title">Upside</span>
-        <span class="statistic with-icon" v-if="oneRepSelected">
+        <span class="statistic with-icon" v-if="oneRepSelected && !editKPIs.editingUpside">
           <div class="fifth-wide" />
           <span class="three-fifth-wide value">{{ KPIs.upside | currency }}</span>
           <div class="fifth-wide">
-            <img src="@/assets/images/pencil.svg" class="edit-icon" />
+            <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editUpside" />
           </div>
         </span>
+        <div v-else-if="oneRepSelected && editKPIs.editingUpside" style="width: 100%;">
+          <form class="kpi-form" @submit.prevent="updateUpside">
+            <input type="number" v-model="editKPIs.tempUpside" />
+            <img class="save" src="@/assets/images/checkmark.svg" @click="updateUpside" />
+            <img class="reset" src="@/assets/images/remove.svg" @click="resetUpside" />
+          </form>
+        </div>
         <span class="statistic" v-else>{{ KPIs.upside | currency }}</span>
       </div>
     </div>
@@ -143,6 +175,7 @@
 <script>
 import LeadActivityLog from '@/services/leadActivityLogs'
 import Forecast from '@/services/forecasts'
+import User from '@/services/users'
 
 const POLLING_INTERVAL = 10000
 
@@ -177,6 +210,14 @@ export default {
       apiFailing: false,
       refreshedOnce: false,
       KPIs: null,
+      editKPIs: {
+        editingQuota: false,
+        tempQuota: 0,
+        editingCommit: false,
+        tempCommit: 0,
+        editingUpside: false,
+        tempUpside: 0,
+      },
     }
   },
   created() {
@@ -223,6 +264,15 @@ export default {
     },
     getKPIs() {
       this.KPIs = null
+      this.editKPIs = {
+        editingQuota: false,
+        tempQuota: 0,
+        editingCommit: false,
+        tempCommit: 0,
+        editingUpside: false,
+        tempUpside: 0,
+      }
+
       let reps = Object.entries(this.repFilterState)
         .map(([key, value]) => (value === true ? key : null))
         .filter(i => i !== null)
@@ -235,6 +285,78 @@ export default {
       Forecast.api.KPIs(data).then(data => {
         this.KPIs = data
       })
+    },
+    editQuota() {
+      // This UX is only available if a single representative is selected.
+      // Therefore this.KPIs.quota represents the single representative's quota.
+      this.editKPIs.tempQuota = this.KPIs.quota
+      this.editKPIs.editingQuota = true
+    },
+    updateQuota() {
+      let data = {
+        quota: this.editKPIs.tempQuota,
+      }
+      User.api
+        .update(this.oneRepSelected, data)
+        .then(response => {
+          this.KPIs.quota = response.data.quota
+          this.resetQuota()
+        })
+        .catch(() => {
+          this.resetQuota()
+        })
+    },
+    resetQuota() {
+      this.editKPIs.editingQuota = false
+      this.editKPIs.tempQuota = 0
+    },
+    editCommit() {
+      // This UX is only available if a single representative is selected.
+      // Therefore this.KPIs.commit represents the single representative's commit.
+      this.editKPIs.tempCommit = this.KPIs.commit
+      this.editKPIs.editingCommit = true
+    },
+    updateCommit() {
+      let data = {
+        commit: this.editKPIs.tempCommit,
+      }
+      User.api
+        .update(this.oneRepSelected, data)
+        .then(response => {
+          this.KPIs.commit = response.data.commit
+          this.resetCommit()
+        })
+        .catch(() => {
+          this.resetCommit()
+        })
+    },
+    resetCommit() {
+      this.editKPIs.editingCommit = false
+      this.editKPIs.tempCommit = 0
+    },
+    editUpside() {
+      // This UX is only available if a single representative is selected.
+      // Therefore this.KPIs.upside represents the single representative's upside.
+      this.editKPIs.tempUpside = this.KPIs.upside
+      this.editKPIs.editingUpside = true
+    },
+    updateUpside() {
+      let data = {
+        upside: this.editKPIs.tempUpside,
+      }
+      User.api
+        .update(this.oneRepSelected, data)
+        .then(response => {
+          this.KPIs.upside = response.data.upside
+          this.resetUpside()
+        })
+        .catch(() => {
+          this.resetUpside()
+        })
+    },
+    resetUpside() {
+      this.editKPIs.editingUpside = false
+      this.editKPIs.tempUpside = 0
     },
   },
   watch: {
@@ -281,6 +403,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/inputs';
 
 .header {
   display: flex;
@@ -402,6 +525,38 @@ export default {
     &:hover {
       opacity: 1;
     }
+  }
+}
+
+.kpi-editable {
+  height: 6rem;
+}
+
+.kpi-form {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 1rem;
+
+  input {
+    @include input-field();
+    margin-left: 1rem;
+    width: 7rem;
+  }
+
+  .save {
+    background-color: $dark-green;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+
+  .reset {
+    background-color: $silver;
+    border-radius: 3px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 </style>
