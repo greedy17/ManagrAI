@@ -342,7 +342,6 @@ class NylasMessageWebhook(APIView):
 
     def get(self, request):
         """ Respond to Nylas verification webhook """
-        print('here')
         challenge = request.query_params.get('challenge', None)
         if challenge:
             return HttpResponse(content=challenge)
