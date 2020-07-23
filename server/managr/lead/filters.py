@@ -149,10 +149,11 @@ class ForecastFilterSet(FilterSet):
                 # then order by lead title
                 if self.request.user.organization.users.filter(id__in=user_list).exists():
                     return queryset.exclude(lead__claimed_by__isnull=True) \
-                                   .filter(lead__claimed_by__in=user_list).order_by(
-                                                                            'lead__expected_close_date',
-                                                                            'lead__title'
-                                                                            )
+                                   .filter(lead__claimed_by__in=user_list) \
+                                   .order_by(
+                                       F('lead__expected_close_date').desc(nulls_last=True),
+                                       'lead__title'
+                                   )
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
                     # return None
