@@ -17,12 +17,16 @@
         @toggle-active-rep="toggleActiveRep"
         @select-all-reps="selectAllReps"
         @deselect-all-reps="deselectAllReps"
+        @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
       />
     </div>
     <div class="lists-container-pane">
       <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
-      <div class="no-reps-selected" v-else-if="!activeReps.length">
+      <div class="lists-container-message" v-else-if="!activeReps.length">
         No Representatives Selected!
+      </div>
+      <div class="lists-container-message" v-else-if="noResults">
+        No Results!
       </div>
       <ListsContainer v-else :lists="lists" />
     </div>
@@ -55,23 +59,23 @@ export default {
       lists: {
         '50/50': CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: '50/50' },
+          filters: { forecast: Forecast.FIFTY_FIFTY, dateRange: Forecast.TODAY_ONWARD },
         }),
         STRONG: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'STRONG' },
+          filters: { forecast: Forecast.STRONG, dateRange: Forecast.TODAY_ONWARD },
         }),
         VERBAL: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'VERBAL' },
+          filters: { forecast: Forecast.VERBAL, dateRange: Forecast.TODAY_ONWARD },
         }),
         FUTURE: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'FUTURE' },
+          filters: { forecast: Forecast.FUTURE, dateRange: Forecast.TODAY_ONWARD },
         }),
         UNFORECASTED: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'NA' },
+          filters: { forecast: Forecast.NA, dateRange: Forecast.TODAY_ONWARD },
         }),
       },
       repFilterState: {
@@ -86,7 +90,10 @@ export default {
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },
-    updateForecastCollections() {
+    updateForecastCollections(dateRange) {
+      if (dateRange) {
+        this.applyDateRangeFilter(dateRange)
+      }
       this.applyFilterByRep()
       this.refresh()
     },
@@ -96,6 +103,11 @@ export default {
       // add string to filters for each of the collections
       Object.keys(this.lists).forEach(key => {
         this.lists[key].filters.byUser = filterString
+      })
+    },
+    applyDateRangeFilter(dateRange) {
+      Object.keys(this.lists).forEach(key => {
+        this.lists[key].filters.dateRange = dateRange
       })
     },
     refresh() {
@@ -146,6 +158,14 @@ export default {
     },
     activeReps() {
       return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
+    },
+    noResults() {
+      for (let forecast in this.lists) {
+        if (this.lists[forecast].list.length) {
+          return false
+        }
+      }
+      return true
     },
   },
 }
@@ -208,7 +228,7 @@ export default {
   background-color: $off-white;
 }
 
-.no-reps-selected {
+.lists-container-message {
   padding-top: 22vh;
   text-align: center;
   color: $gray;

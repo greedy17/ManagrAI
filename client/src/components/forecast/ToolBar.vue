@@ -1,6 +1,6 @@
 <template>
   <div class="toolbar">
-    <KPIs :repFilterState="repFilterState" />
+    <KPIs :repFilterState="repFilterState" @date-range-filter-change="emitDateRangeFilterChange" />
     <div class="filter-container">
       <FilterByRep
         :repFilterState="repFilterState"
@@ -31,6 +31,9 @@ export default {
     },
     emitSelectAllReps(repIDs) {
       this.$emit('select-all-reps', repIDs)
+    },
+    emitDateRangeFilterChange(dateRange) {
+      this.$emit('date-range-filter-change', dateRange)
     },
   },
 }

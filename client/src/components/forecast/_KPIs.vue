@@ -9,7 +9,7 @@
     </div>
     <div v-else>
       <div class="daterange-container">
-        <select class="daterange" v-model="dateRange" @change="getKPIs">
+        <select class="daterange" v-model="dateRange" @change="onDateRangeFilterChange">
           <option v-for="(preset, i) in dateRangePresets" :value="preset.value" :key="i">
             {{ preset.label }}
           </option>
@@ -261,6 +261,10 @@ export default {
         .finally(() => {
           this.refreshedOnce = true
         })
+    },
+    onDateRangeFilterChange() {
+      this.$emit('date-range-filter-change', this.dateRange)
+      this.getKPIs()
     },
     getKPIs() {
       this.KPIs = null
