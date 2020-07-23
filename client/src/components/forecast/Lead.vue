@@ -44,8 +44,8 @@
           <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
         </button>
       </div>
-      <button class="route-to-detail">
-        <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
+      <button class="route-to-detail" @click="routeToLeadDetail">
+        <img src="@/assets/images/keyboard_arrow_right.svg" />
       </button>
     </div>
     <LeadDetails :lead="lead" v-if="showDetails" />
