@@ -155,29 +155,3 @@ class LeadInsightsTestCase(TestCase):
         insights = LeadInsights()
 
         self.assertEqual(insights.action_latest, newer_timestamp)
-
-    def test_total_closed_value(self):
-        insights = LeadInsights()
-        self.assertEqual(insights.total_closed_value, 30000)
-
-    def test_avg_contract_value(self):
-        insights = LeadInsights()
-        self.assertEqual(insights.average_contract_value, 26250)
-
-    def test_avg_contract_value_excludes_zero_amount(self):
-        """Average value should not change, even after adding a lead with a $0 amount."""
-        LeadFactory(amount=0, status=lead_constants.LEAD_STATUS_WAITING)
-        insights = LeadInsights()
-        self.assertEqual(insights.average_contract_value, 26250)
-
-    def test_avg_contract_value_empty_qs(self):
-        insights = LeadInsights(Lead.objects.none())
-        self.assertEqual(insights.average_contract_value, 0)
-
-    def test_forecast(self):
-        insights = LeadInsights()
-        self.assertEqual(insights.forecast, 75000)
-
-    def test_forecast_empty_qs(self):
-        insights = LeadInsights(Lead.objects.none())
-        self.assertEqual(insights.forecast, 0)
