@@ -19,6 +19,9 @@
     </div>
     <div class="lists-container-pane">
       <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
+      <div class="no-reps-selected" v-else-if="!activeReps.length">
+        No Representatives Selected!
+      </div>
       <ListsContainer v-else :lists="lists" />
     </div>
   </div>
@@ -90,6 +93,12 @@ export default {
     },
     refresh() {
       this.loading = true
+      // If no representatives selected, no Leads should be displayed.
+      // Therefore, save a network hit.
+      if (!this.activeReps.length) {
+        this.loading = false
+        return
+      }
       let lists = [
         this.lists['50/50'].refresh(),
         this.lists['STRONG'].refresh(),
@@ -181,5 +190,13 @@ export default {
   width: 83%;
   padding: 0 2% 1% 1%;
   background-color: $off-white;
+}
+
+.no-reps-selected {
+  padding-top: 22vh;
+  text-align: center;
+  color: $gray;
+  font-size: 1rem;
+  font-weight: 600;
 }
 </style>
