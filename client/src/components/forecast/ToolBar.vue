@@ -2,7 +2,12 @@
   <div class="toolbar">
     <KPIs :repFilterState="repFilterState" />
     <div class="filter-container">
-      <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
+      <FilterByRep
+        :repFilterState="repFilterState"
+        @toggle-active-rep="emitToggleActiveRep"
+        @select-all-reps="emitSelectAllReps"
+        @deselect-all-reps="$emit('deselect-all-reps')"
+      />
     </div>
   </div>
 </template>
@@ -23,6 +28,9 @@ export default {
   methods: {
     emitToggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
+    },
+    emitSelectAllReps(repIDs) {
+      this.$emit('select-all-reps', repIDs)
     },
   },
 }

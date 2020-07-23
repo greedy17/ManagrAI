@@ -15,6 +15,8 @@
         class="toolbar"
         :repFilterState="repFilterState"
         @toggle-active-rep="toggleActiveRep"
+        @select-all-reps="selectAllReps"
+        @deselect-all-reps="deselectAllReps"
       />
     </div>
     <div class="lists-container-pane">
@@ -34,6 +36,11 @@ import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
+
+function allRepsReducer(obj, id) {
+  obj[id] = true
+  return obj
+}
 
 export default {
   name: 'Forecast',
@@ -118,6 +125,15 @@ export default {
       } else {
         this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
       }
+      this.updateForecastCollections()
+    },
+    selectAllReps(repIDs) {
+      let allRepsSelected = repIDs.reduce(allRepsReducer, {})
+      this.repFilterState = allRepsSelected
+      this.updateForecastCollections()
+    },
+    deselectAllReps() {
+      this.repFilterState = {}
       this.updateForecastCollections()
     },
   },
