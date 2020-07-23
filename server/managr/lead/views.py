@@ -32,6 +32,7 @@ from managr.core.permissions import (
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from managr.organization.models import Contact, Account
 from managr.lead import constants as lead_constants
+from managr.core.twilio.messages import list_messages
 
 from . import models as lead_models
 from . import filters as lead_filters
@@ -102,6 +103,33 @@ class LeadActivityLogViewSet(
 
         insights = LeadInsights(lead_qs, qs, empty)
         return Response(insights.as_dict)
+
+
+class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    serializer_class = lead_serializers.LeadMessageSerializer
+
+    def get_queryset(self):
+        return lead_models.LeadMessage.objects.for_user(self.request.user)
+
+    @action(
+        methods=["GET"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="list-messages",
+    )
+    def list_messages_from_contact(self, request, *args, **kwargs):
+        user = self.request.user
+        contact = request.query_params.get('contact_phone')
+        if user.message_auth_account:
+            sender = user.message_auth_account.phone_number
+
+            try:
+                message_list = list_messages(sender, contact)
+            except APIException as e:
+                return e
+        return Response(data={"count": user.unviewed_notifications_count})
 
 
 class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):

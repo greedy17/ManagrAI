@@ -92,7 +92,7 @@ ROOT_URLCONF = "managr.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"),],
+        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"), ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -137,9 +137,9 @@ AUTH_USER_MODEL = "core.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 10,},
+        "OPTIONS": {"min_length": 10, },
     },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
 #
@@ -235,7 +235,7 @@ LOGGING = {
     "disable_existing_loggers": True,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue",},
+        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue", },
     },
     "formatters": {
         "verbose": {
@@ -260,10 +260,10 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
+        "django": {"handlers": ["console", "mail_admins"], "level": "INFO", },
         # The logger name matters -- it MUST match the name of the app
         "managr": {
-            "handlers": ["console", "mail_admins",],
+            "handlers": ["console", "mail_admins", ],
             "level": "DEBUG",
             "propagate": True,
         },
@@ -312,3 +312,13 @@ if USE_NYLAS:
     NYLAS_CLIENT_ID = _env_get_required("NYLAS_CLIENT_ID")
     NYLAS_CLIENT_SECRET = _env_get_required("NYLAS_CLIENT_SECRET")
     NYLAS_OAUTH_CALLBACK_URL = _env_get_required("NYLAS_OAUTH_CALLBACK_URL")
+
+
+#
+# Twilio Integration Settings
+#
+USE_TWILIO = os.environ.get("USE_TWILIO") == "True"
+if USE_TWILIO:
+    TWILIO_ACCOUNT_SID = _env_get_required("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = _env_get_required("TWILIO_AUTH_TOKEN")
+    TWILIO_BASE_CALLBACK_URL = _env_get_required("TWILIO_BASE_CALLBACK_URL")

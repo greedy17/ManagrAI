@@ -179,3 +179,11 @@ class LeadEmailActionConsumer(BaseActionConsumer):
     def get_lead(self):
         obj = self.get_object()
         return obj.lead
+
+
+class LeadMessageActionConsumer(BaseActionConsumer):
+    model_class = lead_models.LeadMessage
+
+    def get_lead(self):
+        obj = self.get_object()
+        return obj.lead

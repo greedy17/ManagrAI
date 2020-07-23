@@ -30,6 +30,7 @@ whitenoise = "==3.*"
 django-kronos = "==1.*"
 django-money = "*"
 django-background-tasks = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.7"

@@ -13,13 +13,19 @@ from managr.organization.serializers import (
 from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
-from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount
+from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount, MessageAuthAccount
 from .models import EmailTemplate
 
 
 class EmailAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAuthAccount
+        fields = "__all__"
+
+
+class MessageAuthAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessageAuthAccount
         fields = "__all__"
 
 

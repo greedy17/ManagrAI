@@ -93,6 +93,16 @@ RECEIVED = "RECEIVED"
 EMAIL_SENT = "LeadEmail.SENT"
 EMAIL_RECEIVED = "LeadEmail.RECEIVED"
 
+
+# Message-specific events
+MESSAGE_RECEIVED = "LeadMessage.RECEIVED"
+MESSAGE_SENT = "LeadMessage.SENT"
+MESSAGE_DIRECTION_CHOICES = (
+    (SENT, "Sent", ),
+    (RECEIVED, "Received", ),
+
+)
+
 ACTIVITY_CHOICES = (
     (LEAD_CREATED, "Lead Created",),
     (LEAD_UPDATED, "Lead Updated",),
@@ -117,6 +127,9 @@ ACTIVITY_CHOICES = (
     (ACTION_DELETED, "Action Deleted",),
     (EMAIL_SENT, "Email Sent",),
     (EMAIL_RECEIVED, "Email Received",),
+    (MESSAGE_RECEIVED, "Message Received",),
+    (MESSAGE_SENT, "Message Sent",),
+
 )
 
 

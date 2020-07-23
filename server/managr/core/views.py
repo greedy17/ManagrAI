@@ -28,8 +28,12 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
+
+from managr.organization.models import Organization
+from managr.core.twilio.messages import create_new_account
+
 
 from .models import (
     User,
@@ -38,6 +42,7 @@ from .models import (
     STATE_INVITED,
     EmailAuthAccount,
     EmailTemplate,
+    MessageAuthAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -45,9 +50,10 @@ from .serializers import (
     UserInvitationSerializer,
     EmailTemplateSerializer,
     EmailSerializer,
+    MessageAuthAccountSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
-from managr.organization.models import Organization
+
 
 from .nylas.emails import (
     send_new_email_legacy,
@@ -59,6 +65,8 @@ from .nylas.emails import (
 )
 
 from managr.core.background import emit_event
+from managr.lead import constants as lead_consts
+
 
 logger = logging.getLogger("managr")
 
@@ -284,6 +292,33 @@ class UserViewSet(
 
         return Response(response, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create-twilio-account",
+    )
+    def create_twilio_account(self, request, *args, **kwargs):
+        user = request.user
+        # check to see if the user already has a twilio account
+        message_auth_account = MessageAuthAccount.objects.filter(
+            user=user).exists()
+        if message_auth_account:
+            return Response(data={'non_field_errors': 'User already has a twilio account'})
+        # if not then create the new auth account with the phone number
+        data = request.data
+        phone_number = data.get('phone_number', None)
+        if not phone_number:
+            raise ValidationError(detail="phone_number required")
+
+        account = create_new_account(phone_number)
+        account['user'] = user
+        serializer = MessageuthSerializer(data=account)
+        serializer.is_valid(raise_excpetion=True)
+        serializer.save()
+        print(serializer.data)
+        return Response()
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -335,6 +370,10 @@ class GetFileView(View):
 
 class NylasMessageWebhook(APIView):
     permission_classes = (permissions.AllowAny,)
+    """
+         Nylas will send a special header request we can use to check if
+        it has permissions
+    """
 
     def get(self, request):
         """ Respond to Nylas verification webhook """
@@ -354,6 +393,62 @@ class NylasMessageWebhook(APIView):
                    ['thread_id'], data['deltas'][0]['date'])
 
         return Response()
+
+
+class TwilioMessageWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Twilio webhook """
+        return Response()
+
+    def post(self, request):
+        """
+            this endpointis used for both incoming messages and status messages
+            they share similar objects if the message is outbound we can
+            assume it is the status callback and can use this to create the obj
+        """
+
+        data = request.data
+
+        # find the lead
+        # find the contacts
+        # find the user
+
+        # send message with emitter to background tasks to create the log
+        return Response()
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny, ])
+def receive_incoming_message(request):
+    print(request)
+    # receive message
+
+    data = request.data
+    # get key items
+    recipient = request.data.get('To', None)
+    sender = request.data.get('From', None)
+    body = request.data.get('Body', None)
+    message_id = request.data.get('MessageSid', None)
+
+    # find the user it is associated with
+    # u = User.objects.filter(twilio_account__phone_numer=request.data.)
+    # check if it is associated with a contact
+    # leads = user.claimed_leads.filter(
+    #            linked_contacts__email__in=message_contacts)
+    # !! NOT SURE WHAT TO DO WITH MESSAGES NOT FROM A CONTACT
+    # MAYBE SEND THE MESSAGE TO THE USERS
+    # REAL PHONE NUMBER
+
+    # create a LeadMessage object
+
+    #
+    # emit and event with LeadMessage.RECEIVED to create activity log
+
+    # create the notification with resource id being the leadmessage
+
+    return Response()
 
 
 @api_view(["POST"])
@@ -569,3 +664,12 @@ class EmailTemplateViewset(
 
     def get_queryset(self):
         return EmailTemplate.objects.for_user(self.request.user)
+
+
+class MessageAuthAccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    authentication_class = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = MessageAuthAccount
+
+    def get_queryset(self):
+        return MessageAuthAccount.objects.filter(user=self.request.user)
