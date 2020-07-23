@@ -129,6 +129,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "expected_close_date",
             "linked_contacts_ref",
             "last_action_taken",
+            "closing_amount",
         )
 
     def get_last_action_taken(self, instance):

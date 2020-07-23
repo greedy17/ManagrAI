@@ -14,9 +14,12 @@
       <div v-else class="lead-description">
         No Descriptions
       </div>
-      <span class="lead-amount"> {{ lead.amount | currency }} </span>
+      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">{{
+        lead.closingAmount | currency
+      }}</span>
+      <span class="lead-amount" v-else>{{ lead.amount | currency }}</span>
       <div class="close-date">
-        <span v-if="lead.status === 'CLOSED'">
+        <span v-if="lead.status === Lead.CLOSED">
           Closed:
         </span>
         <span v-else>
@@ -51,6 +54,7 @@
 
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import Lead from '@/services/leads'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
@@ -75,6 +79,7 @@ export default {
   },
   data() {
     return {
+      Lead,
       showDetails: false,
     }
   },
