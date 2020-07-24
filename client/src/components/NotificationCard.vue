@@ -2,9 +2,9 @@
   <div class="notificaion-container">
     <div class="notification-card" :class="{ unviewed: !notification.viewed }">
       <div class="notification-card__title">
-        <span @click="toggleCard" class="notification-card__title__text">{{
-          notification.title
-        }}</span>
+        <span @click="toggleCard" class="notification-card__title__text">
+          {{ notification.notificationType !== 'EMAIL_OPENED' ? notification.title : 'Read' }}</span
+        >
         <span class="notification-card__title__type">
           <svg class="icon-notification">
             <use :xlink:href="require('@/assets/images/svg-repo.svg') + '#' + notificationIcon" />
@@ -13,18 +13,23 @@
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
         {{ notification.meta ? notification.meta.content : '' }}
-        <div
-          @click.prevent="goToLead(lead.id)"
-          :key="lead.id"
-          v-for="lead in notification.meta.leads"
-          class="notification-card__content__leads"
-        >
-          {{ lead.title }}
-        </div>
+        <template v-if="notification.meta">
+          <div
+            @click.prevent="goToLead(lead.id)"
+            :key="lead.id"
+            v-for="lead in notification.meta.leads"
+            class="notification-card__content__leads"
+          >
+            {{ lead.title }}
+          </div>
+        </template>
+        <template v-else>
+          {{ notification }}
+        </template>
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
         <span class="notification-card__footer__type">
-          {{ notification.notificationType }}
+          {{ formattedNotificationType.toUpperCase() }}
         </span>
       </div>
     </div>
@@ -51,8 +56,24 @@ export default {
           return 'alarm'
         case NOTIFICATION_TYPES.system:
           return 'alarm'
+        case NOTIFICATION_TYPES.emailOpened:
+          return 'checkmark'
         default:
           return 'alarm'
+      }
+    },
+    formattedNotificationType() {
+      switch (this.notification.notificationType) {
+        case NOTIFICATION_TYPES.email:
+          return 'email'
+        case NOTIFICATION_TYPES.reminder:
+          return 'reminder'
+        case NOTIFICATION_TYPES.system:
+          return 'system'
+        case NOTIFICATION_TYPES.emailOpened:
+          return 'email'
+        default:
+          return 'system'
       }
     },
     showSideNav() {
@@ -101,11 +122,13 @@ export default {
   &__title {
     display: flex;
     overflow: hidden;
+    justify-content: space-between;
 
     &__text {
-      flex: 1 0 auto;
-    }
-    &__type {
+      max-width: 12vw;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
   &__content {

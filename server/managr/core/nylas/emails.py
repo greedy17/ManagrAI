@@ -89,7 +89,6 @@ def retrieve_threads(user, to_email=None, any_email=None, page=1, page_size=10):
 
     response = requests.get(request_url, params=params, headers=headers)
     json_response = _handle_nylas_response(response)
-
     return json_response
 
 
@@ -274,7 +273,6 @@ def send_new_email(
     # are using a basic auth token here. I think this may be a mistake in the documentation.
     # But, if this fails, this could be why.
     headers = _return_nylas_headers(sender)
-
     response = requests.post(
         f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.SEND_EMAIL_URI}",
         data=data,
