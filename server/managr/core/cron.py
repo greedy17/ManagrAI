@@ -46,7 +46,7 @@ def create_notifications():
     for n in ns:
         query |= Q(id=n)
 
-    for row in Reminder.objects.filter(datetime_for__lte=remind_time).exclude(query):
+    for row in Reminder.objects.filter(datetime_for__lte=remind_time).exclude(query).order_by('-datetime_for'):
         n = Notification.objects.create(
             notify_at=row.datetime_for,
             title=row.title,

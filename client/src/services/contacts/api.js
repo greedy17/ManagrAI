@@ -59,7 +59,7 @@ export default class ContactAPI {
     let data = {
       first_name: firstName,
       last_name: lastName,
-      email,
+      email: email.toLowerCase(),
       phone_number_1: phone,
       account,
       title,
