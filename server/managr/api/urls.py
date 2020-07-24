@@ -34,7 +34,9 @@ urlpatterns = [
     path('get-file/<str:file_id>/', core_views.GetFileView.as_view(),
          name='get_file_from_nylas'),
     path('nylas/callback/messages', core_views.NylasMessageWebhook.as_view(),
-         name="nylas_message_webhook")
+         name="nylas_message_webhook"),
+    path('nylas/callback/accounts', core_views.NylasAccountWebhook.as_view(),
+         name="nylas_account_webhook")
 ]
 
 router.register('users/invite', core_views.UserInvitationView, 'invite-user')

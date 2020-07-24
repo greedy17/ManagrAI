@@ -26,10 +26,11 @@ export default class NotificationAPI {
     try {
       const res = await this.client.get(url, options)
 
-      return {
+      let results = {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),
       }
+      return results
     } catch {
       apiErrorHandler({ apiName: 'Notification.list' })
     }
