@@ -11,6 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql=[("SELECT email FROM organization_contact;")]
+            sql=[("UPDATE organization_contact SET email = LOWER(email);")]
         )
     ]
