@@ -8,19 +8,28 @@ from django.utils import timezone
 from managr.core.models import EmailAuthAccount, User
 from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
-from managr.lead.models import Notification, LeadEmail
+from managr.core import constants as core_consts
+from managr.lead.models import Notification, LeadEmail, LeadActivityLog
 
 from ..nylas.emails import retrieve_message, retrieve_thread
 
 logger = logging.getLogger("managr")
 
 
-def emit_event(account_id, object_id, date):
-    _get_email_info(account_id, object_id, date)
+def _check_notification(thread_id):
+    return Notification.objects.filter(resource_id=thread_id, notification_type="EMAIL_OPENED").exists()
+
+
+def emit_event(account_id, object_id, date, action, **kwargs):
+    if action == core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED:
+        _get_email_notification(account_id, object_id, date)
+    elif action == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED:
+        _get_email_metadata_info(
+            account_id, object_id, date, **{"count": kwargs['count']})
 
 
 @background(schedule=0)
-def _get_email_info(account_id, object_id, date):
+def _get_email_notification(account_id, object_id, date):
     """
         check if the email is for a lead that the user is claiming
         account_id email account of the user
@@ -104,3 +113,57 @@ def _get_email_info(account_id, object_id, date):
         logger.exception(
             f"Failed {e}"
         )
+
+
+@background(schedule=0)
+def _get_email_metadata_info(account_id, object_id, date, **kwargs):
+
+    user = None
+    try:
+        user = User.objects.get(email_auth_account__account_id=account_id)
+    except User.DoesNotExist as e:
+        logger.exception(
+            f"The user account_id is not in saved on the system they might need to re-auth a token,{account_id}"
+        )
+        return
+    try:
+        # get account details if they dont exist to send a system email and revoke the old token
+        if user:
+            message = retrieve_message(user, object_id)
+            # for consistency add thread_id to resource id
+            thread_id = message['thread_id']
+            already_notified = False
+
+            # find the email object created in the db
+            le = LeadEmail.objects.filter(thread_id=thread_id).first()
+            le.opened_count = kwargs['count']
+            le.save()
+            # find its corresponding log and regenerate it (update)
+            la = LeadActivityLog.objects.filter(meta__id=str(le.id))
+            la.update(meta=le.activity_log_meta)
+            le.save()
+
+            already_notified = _check_notification(thread_id)
+            if already_notified:
+                return
+
+            message_contacts = message['to']
+            message_contacts = [c['email']
+                                for c in message_contacts if c['email']]
+
+            # retrieve user leads and contacts
+            # create a new leademailaction
+            # create a new notification
+            #_get_email_metadata_info('2yyyiu5lq221zmm4dvhmng5gc','5ahzrbuw7jdl0rysvs1s5oiz4','1595304936', **{'count':5})
+            # a=LeadEmail.objects.filter(thread_id="asxshviynv3vlwegqg5om2zaq")
+            leads = user.claimed_leads.filter(
+                linked_contacts__email__in=message_contacts)
+
+            if leads.count() > 0:
+                meta_contacts = ''.join(message_contacts)
+                meta_body = message['snippet']
+                n = Notification.objects.create(notify_at=timezone.now(
+                ), title=message['subject'], notification_type="EMAIL_OPENED", resource_id=thread_id, user=user, meta={'content': meta_body, 'linked_contacts': meta_contacts, 'leads': [{'id': str(l.id), 'title': l.title} for l in leads]})
+
+    except Exception as e:
+        logger.exception(f"Error {e}")

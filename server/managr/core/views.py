@@ -11,6 +11,8 @@ from django.contrib.auth import authenticate, login
 
 from managr.core.nylas.auth import get_access_token, get_account_details
 
+from managr.core import constants as core_consts
+
 
 from rest_framework import (
     authentication,
@@ -220,6 +222,8 @@ class UserViewSet(
         """
         user = request.user
         threads = retrieve_threads(user, **request.query_params.dict())
+        # check threads for leademail count and append that
+
         return Response(threads)
 
     @action(
@@ -348,11 +352,40 @@ class NylasMessageWebhook(APIView):
     def post(self, request):
 
         data = request.data
-        logger.debug(f'request {request.data}')
-        data_object = data['deltas'][0]['object_data']
-        emit_event(data_object['account_id'], data_object['attributes']
-                   ['thread_id'], data['deltas'][0]['date'])
+        webhook_object = data['deltas'][0]['object']
+        webhook_type = data['deltas'][0]['type']
+        if webhook_type == 'message.created' and webhook_object == 'message':
+            data_object = data['deltas'][0]['object_data']
+            emit_event(data_object['account_id'], data_object['attributes']
+                       ['thread_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED)
+        elif webhook_type == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED and webhook_object == core_consts.NYLAS_WEBHOOK_OBJECT_METADATA:
+            data_object = data['deltas'][0]['object_data']
 
+            # this message has already been notified we will add a kwargs to check if a notif was sent
+
+            emit_event(data_object['account_id'], data_object['metadata']
+                       ['message_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED, **{"count": data_object['metadata']['count']})
+
+        return Response()
+
+
+class NylasAccountWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Nylas verification webhook """
+        challenge = request.query_params.get('challenge', None)
+        print(challenge)
+        if challenge:
+            return HttpResponse(content=challenge)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+
+        data = request.data
+        print(data)
         return Response()
 
 

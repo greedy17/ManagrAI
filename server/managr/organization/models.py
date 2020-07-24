@@ -141,3 +141,8 @@ class Contact(TimeStampModel):
     def full_name(self):
         """ Property for a user's full name """
         return f'{self.first_name} {self.last_name}'
+
+    def save(self, *args, **kwargs):
+        self.email = self.email.lower()
+
+        return super(Contact, self).save(*args, **kwargs)
