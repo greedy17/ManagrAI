@@ -10,4 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql=[("SELECT email FROM organization_contact;")]
+        )
     ]
