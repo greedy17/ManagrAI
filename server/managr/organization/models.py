@@ -1,6 +1,5 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
-from django.contrib.auth.models import BaseUserManager
 from django.db.models import Sum, Avg
 
 # Create your models here.
