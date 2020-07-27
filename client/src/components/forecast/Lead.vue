@@ -14,18 +14,18 @@
       <div v-else class="lead-description">
         No Descriptions
       </div>
-      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">{{
-        lead.closingAmount | currency
-      }}</span>
+      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">
+        {{ lead.closingAmount | currency }}
+      </span>
       <span class="lead-amount" v-else>{{ lead.amount | currency }}</span>
       <div class="close-date">
-        <span v-if="lead.status === Lead.CLOSED">
-          Closed:
-        </span>
-        <span v-else>
+        <div v-if="lead.status === Lead.CLOSED">
+          Closed On:
+        </div>
+        <div v-else>
           Expected Close:
-        </span>
-        <span> {{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+        <div>{{ lead.expectedCloseDate | dateShort }}</div>
       </div>
       <LeadForecastDropdown
         :inForecastView="true"
@@ -35,8 +35,11 @@
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
       <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
-      <div class="last-action-taken" v-if="lead.lastActionTaken.actionTimestamp">
-        {{ lead.lastActionTaken.actionTimestamp | timeAgo }} - {{ lead.lastActionTaken.activity }}
+      <div class="last-action-taken">
+        <template v-if="lead.lastActionTaken.actionTimestamp">
+          <div>{{ lead.lastActionTaken.activity }}</div>
+          <div>{{ lead.lastActionTaken.actionTimestamp | timeAgo }}</div>
+        </template>
       </div>
       <div class="claimed-by">
         <button>
@@ -194,6 +197,9 @@ export default {
 
     span {
       margin-left: 1rem;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      max-width: 12ch; // this will look for the unicode position of a char and elipse after that char
     }
   }
 }
