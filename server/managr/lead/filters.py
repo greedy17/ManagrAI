@@ -154,7 +154,7 @@ class ForecastFilterSet(FilterSet):
                     return queryset.exclude(lead__claimed_by__isnull=True) \
                                    .filter(lead__claimed_by__in=user_list) \
                                    .order_by(
-                                       F('lead__expected_close_date').desc(nulls_last=True),
+                                       F('lead__expected_close_date').asc(nulls_last=True),
                                        'lead__title'
                                    )
                 else:
