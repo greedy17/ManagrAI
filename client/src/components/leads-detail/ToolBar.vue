@@ -139,7 +139,7 @@
           </div>
           <div class="contact-info-container">
             <span class="contact-name">
-              {{ contact.fullName.length > 0 ? contact.fullName : contact.email }}
+              {{ contact.fullName.trim() ? contact.fullName : contact.email }}
             </span>
             <div class="contact-title" v-if="contact.title">
               <img class="icon" src="@/assets/images/contact.svg" alt="icon" />

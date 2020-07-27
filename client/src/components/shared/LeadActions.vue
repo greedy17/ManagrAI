@@ -44,7 +44,13 @@
             <span class="list-items__item__call-date">
               {{ moment(item.callDate).format('MM/DD/YYYY') }}
             </span>
-            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__created-by">
+              {{
+                item.createdByRef.fullName.trim()
+                  ? item.createdByRef.fullName
+                  : item.createdByRef.email
+              }}
+            </span>
             <span class="list-items__item__datetime-created">
               {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
             </span>
@@ -74,7 +80,13 @@
             <span class="list-items__item__datetime-for">
               {{ moment(item.datetimeFor).format('MM/DD/YYYY') }}
             </span>
-            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__created-by">
+              {{
+                item.createdByRef.fullName.trim()
+                  ? item.createdByRef.fullName
+                  : item.createdByRef.email
+              }}
+            </span>
             <span class="list-items__item__datetime-created">
               {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
             </span>
@@ -101,7 +113,13 @@
             </span>
             <span class="list-items__item__title">{{ item.title }}</span>
             <span class="list-items__item__content">{{ item.content }}</span>
-            <span class="list-items__item__created-by">{{ item.createdByRef.fullName }}</span>
+            <span class="list-items__item__created-by">
+              {{
+                item.createdByRef.fullName.trim()
+                  ? item.createdByRef.fullName
+                  : item.createdByRef.email
+              }}
+            </span>
             <span class="list-items__item__datetime-created">
               {{ moment(item.datetimeCreated).format('MM/DD/YYYY') }}
             </span>

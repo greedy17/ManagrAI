@@ -6,15 +6,30 @@
           <img alt="icon" :src="require(`@/assets/images/claimed.svg`)" class="icon" />
         </div>
         <div class="item-list__row-item--double">
-          <strong v-if="log.action === 'CLAIMED'"
-            >{{ log.actionTakenByRef.fullName }} claimed this lead.</strong
-          >
-          <strong v-if="log.action === 'RELEASED'"
-            >{{ log.actionTakenByRef.fullName }} released this lead.</strong
-          >
-          <strong v-if="log.action === 'UPDATED'"
-            >{{ log.actionTakenByRef.fullName }} made a change.</strong
-          >
+          <strong v-if="log.action === 'CLAIMED'">
+            {{
+              log.actionTakenByRef.fullName.trim()
+                ? log.actionTakenByRef.fullName
+                : log.actionTakenByRef.email
+            }}
+            claimed this lead.
+          </strong>
+          <strong v-if="log.action === 'RELEASED'">
+            {{
+              log.actionTakenByRef.fullName.trim()
+                ? log.actionTakenByRef.fullName
+                : log.actionTakenByRef.email
+            }}
+            released this lead.
+          </strong>
+          <strong v-if="log.action === 'UPDATED'">
+            {{
+              log.actionTakenByRef.fullName.trim()
+                ? log.actionTakenByRef.fullName
+                : log.actionTakenByRef.email
+            }}
+            made a change.
+          </strong>
         </div>
         <div class="item-list__row-item--double">
           <span class="date-text">{{ log.actionTimestamp | dateShortWithTime }}</span>

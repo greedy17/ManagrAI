@@ -14,7 +14,15 @@
       <div class="button-container">
         <button class="claimed-button" v-if="lead.claimedBy">
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
+          <span>
+            {{
+              belongsToCurrentUser
+                ? 'Yours'
+                : lead.claimedByRef.fullName.trim()
+                ? lead.claimedByRef.fullName
+                : lead.claimedByRef.email
+            }}
+          </span>
         </button>
         <button v-else class="claim-button" @click="claimLead">
           <span>Claim</span>

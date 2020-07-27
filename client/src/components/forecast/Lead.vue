@@ -41,7 +41,15 @@
       <div class="claimed-by">
         <button>
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
+          <span>
+            {{
+              belongsToCurrentUser
+                ? 'Yours'
+                : lead.claimedByRef.fullName.trim()
+                ? lead.claimedByRef.fullName
+                : lead.claimedByRef.email
+            }}
+          </span>
         </button>
       </div>
       <button class="route-to-detail" @click="routeToLeadDetail">
