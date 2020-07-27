@@ -37,8 +37,8 @@ export default {
 .nav-link {
   @include disable-text-select();
   @include pointer-on-hover();
-  height: 4rem;
-  width: 3.6rem;
+  height: 4.5rem;
+  width: 5rem;
   display: flex;
   flex-flow: column;
   justify-content: center;

@@ -6,7 +6,7 @@
       </div>
       <div v-if="userIsLoggedIn" class="links">
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
-        <NavLink icon="forecast" :to="'Forecast'">Forecast</NavLink>
+        <NavLink icon="forecast" :to="'Forecast'">Forecast + Deals</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
@@ -146,7 +146,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 4rem;
+  height: 4.5rem;
   display: flex;
   flex-flow: row;
   align-items: center;
