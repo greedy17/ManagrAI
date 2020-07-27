@@ -1,9 +1,5 @@
 <template>
   <div>
-    <div class="header section-shadow">
-      KPIs
-    </div>
-
     <div v-if="KPIs === null" style="margin-top: 1.5rem; margin-bottom: 1rem;">
       <ComponentLoadingSVG />
     </div>
