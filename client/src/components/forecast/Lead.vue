@@ -14,8 +14,19 @@
       <div v-else class="lead-description">
         No Descriptions
       </div>
-      <span class="lead-amount"> {{ lead.amount | currency }} </span>
-      <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
+      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">{{
+        lead.closingAmount | currency
+      }}</span>
+      <span class="lead-amount" v-else>{{ lead.amount | currency }}</span>
+      <div class="close-date">
+        <span v-if="lead.status === Lead.CLOSED">
+          Closed:
+        </span>
+        <span v-else>
+          Expected Close:
+        </span>
+        <span> {{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
       <LeadForecastDropdown
         :inForecastView="true"
         :forecastProp="forecast"
@@ -24,14 +35,17 @@
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
       <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
+      <div class="last-action-taken" v-if="lead.lastActionTaken.actionTimestamp">
+        {{ lead.lastActionTaken.actionTimestamp | timeAgo }} - {{ lead.lastActionTaken.activity }}
+      </div>
       <div class="claimed-by">
         <button>
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
           <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
         </button>
       </div>
-      <button class="route-to-detail">
-        <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
+      <button class="route-to-detail" @click="routeToLeadDetail">
+        <img src="@/assets/images/keyboard_arrow_right.svg" />
       </button>
     </div>
     <LeadDetails :lead="lead" v-if="showDetails" />
@@ -40,6 +54,7 @@
 
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
+import Lead from '@/services/leads'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
@@ -64,6 +79,7 @@ export default {
   },
   data() {
     return {
+      Lead,
       showDetails: false,
     }
   },
@@ -127,8 +143,7 @@ export default {
 }
 
 .lead-description,
-.lead-amount,
-.lead-last-update {
+.lead-amount {
   @include base-font-styles();
   font-size: 11px;
   line-height: 1.45;
@@ -136,7 +151,7 @@ export default {
 }
 
 .lead-description {
-  width: 12.5%;
+  width: 12%;
 
   .primary,
   .secondary {
@@ -148,19 +163,15 @@ export default {
 }
 
 .lead-amount {
-  width: 7.5%;
+  width: 6.5%;
   padding-left: 0.625rem;
 }
 
-.lead-last-update {
-  width: 5%;
-}
-
 .claimed-by {
-  width: 28%;
+  min-width: 10%;
+  margin-left: auto;
   display: flex;
-  align-items: center;
-  padding-left: 2rem;
+  align-items: left;
 
   button {
     @include secondary-button;
@@ -170,6 +181,8 @@ export default {
     display: flex;
     flex-flow: row;
     align-items: center;
+    justify-content: left;
+    width: 100%;
 
     span {
       margin-left: 1rem;
@@ -179,9 +192,21 @@ export default {
 
 .route-to-detail {
   @include secondary-button;
-  margin-left: auto;
+  border: 1px solid $mid-gray;
+  margin-left: 1rem;
   margin-right: 1rem;
   height: 2rem;
   width: 2.5rem;
+}
+
+.close-date {
+  font-size: 0.6875rem;
+  width: 10%;
+  margin-right: 2%;
+}
+
+.last-action-taken {
+  font-size: 0.6875rem;
+  margin-left: 2%;
 }
 </style>

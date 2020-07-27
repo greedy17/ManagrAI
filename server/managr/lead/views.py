@@ -52,6 +52,7 @@ from .models import (
     Notification
 )
 from .insights import LeadInsights
+from .forecast_kpis import ForecastKPIs
 
 
 class LeadActivityLogViewSet(
@@ -576,10 +577,40 @@ class ForecastViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ForecastSerializer
     filter_class = lead_filters.ForecastFilterSet
-    # TODO :- log activity 05/02/20 PB
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="kpis",
+    )
+    def forecast_kpis(self, request, *args, **kwargs):
+        """
+        Produce KPIs for client-side Forecast page's Sidebar:
+            - Sold (formerly Total Closed Value)
+            - Quota
+            - Average Contract Value
+            - Forecast
+            - Commit
+            - Upside
+        """
+
+        # constant to be put through a switcher to determine date range
+        # for query-set filtering
+        date_range_preset = request.data['date_range_preset']
+        repIDs = request.data['representatives']
+        if date_range_preset not in lead_constants.DATE_RANGE_PRESETS:
+            return Response(
+                {"non_field_errors": ("Invalid date_range_preset.",)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        kpis = ForecastKPIs(representatives=repIDs, date_range_preset=date_range_preset)
+
+        return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
 
 class CallNoteViewSet(

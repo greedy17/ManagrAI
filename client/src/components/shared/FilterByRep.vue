@@ -1,6 +1,24 @@
 <template>
   <div class="filter">
-    <span class="title">Filter by Rep</span>
+    <span class="title">
+      <span>Filter by Rep</span>
+      <div class="menu-container">
+        <img
+          src="@/assets/images/more_horizontal.svg"
+          class="trigger-icon"
+          :class="{ 'full-opacity': menuOpen }"
+          @click="menuOpen = !menuOpen"
+        />
+        <div class="menu" v-if="menuOpen">
+          <div class="option" @click="selectAll">
+            Select All
+          </div>
+          <div class="option" @click="deselectAll">
+            Deselect All
+          </div>
+        </div>
+      </div>
+    </span>
     <div v-if="!users.refreshing" class="reps-container">
       <span
         class="rep"
@@ -65,6 +83,7 @@ export default {
           active: true,
         },
       }),
+      menuOpen: false,
     }
   },
   async created() {
@@ -73,6 +92,15 @@ export default {
   methods: {
     toggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
+    },
+    selectAll() {
+      let allIDs = this.users.list.map(u => u.id)
+      this.$emit('select-all-reps', allIDs)
+      this.menuOpen = false
+    },
+    deselectAll() {
+      this.$emit('deselect-all-reps')
+      this.menuOpen = false
     },
   },
   computed: {
@@ -132,5 +160,57 @@ export default {
 .divider {
   border-top: 1px solid $soft-gray;
   margin: 0.3rem 0.5rem;
+}
+
+.title {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  .menu-container {
+    display: flex;
+    flex-flow: row;
+    margin-left: auto;
+
+    .trigger-icon {
+      @include pointer-on-hover;
+      opacity: 0.4;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    .full-opacity {
+      opacity: 1;
+    }
+
+    .menu {
+      box-shadow: 0 4px 16px 0 rgba($color: $black, $alpha: 0.3);
+      opacity: 1;
+      width: 9rem;
+      background-color: white;
+      position: absolute;
+      margin-left: 2rem;
+
+      .option {
+        @include pointer-on-hover;
+        height: 3rem;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+
+        &:hover {
+          background-color: $gray;
+        }
+      }
+
+      .border {
+        border: 1px solid $soft-gray;
+      }
+    }
+  }
 }
 </style>

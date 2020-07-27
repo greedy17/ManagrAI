@@ -73,6 +73,9 @@ class UserSerializer(serializers.ModelSerializer):
             "email_auth_link",
             "email_auth_account",
             "email_auth_account_ref",
+            "quota",
+            "upside",
+            "commit",
             "unviewed_notifications_count",
         )
 
