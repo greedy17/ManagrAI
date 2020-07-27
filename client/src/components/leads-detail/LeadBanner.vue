@@ -27,6 +27,10 @@
         <img class="button-icon" src="@/assets/images/claimed.svg" alt="icon" />
         <span class="button-content">Claim</span>
       </div>
+      <div v-if="!isOwnedByUser && isOwnedByAnother" class="banner-button banner-item">
+        <img class="button-icon" alt="icon" src="@/assets/images/claimed.svg" />
+        <span class="button-content">{{ lead.claimedByRef.fullName }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -160,6 +164,7 @@ export default {
   .button-icon {
     height: 1rem;
     width: 1rem;
+    margin-right: 0.3rem;
   }
 
   &:focus {
@@ -169,6 +174,25 @@ export default {
   &:active {
     border-style: solid;
     border-color: $black;
+  }
+}
+
+.banner-item {
+  font-size: 0.9rem;
+  min-width: 8rem;
+  height: 2rem;
+  border: 1px solid $mid-gray;
+
+  &:active {
+    border: 1px solid $mid-gray;
+  }
+
+  &:hover {
+    cursor: unset;
+  }
+
+  .button-icon {
+    margin-right: 0.5rem;
   }
 }
 </style>

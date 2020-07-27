@@ -4,6 +4,16 @@ import LeadAPI from './api'
 export default class Lead {
   static api = LeadAPI.create(Lead)
 
+  // Lead Statuses
+  static READY = 'READY'
+  static TRIAL = 'TRIAL'
+  static DEMO = 'DEMO'
+  static WAITING = 'WAITING'
+  static CLOSED = 'CLOSED'
+  static LOST = 'LOST'
+  static BOOKED = 'BOOKED'
+  static LEAD = 'LEAD'
+
   constructor({
     id = '',
     title = '',
