@@ -584,6 +584,8 @@ class LeadEmail(TimeStampModel):
 
     thread_id = models.CharField(max_length=128)
 
+    opened_count = models.IntegerField(default=0)
+
     @property
     def activity_log_meta(self):
         """A metadata dict for activity logs"""
@@ -591,6 +593,7 @@ class LeadEmail(TimeStampModel):
             "id": str(self.id),
             "lead": str(self.lead.id),
             "thread_id": self.thread_id,
+            "opened_count": self.opened_count,
             "created_by": str(self.created_by.id),
             "created_by_ref": {
                 "id": str(self.created_by.id),

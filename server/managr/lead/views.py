@@ -152,6 +152,7 @@ class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
+
         return Response(serializer.data)
 
     @action(
@@ -244,7 +245,7 @@ class LeadViewSet(
         contact_list = list()
         for contact in contacts:
             c, created = Contact.objects.for_user(request.user).get_or_create(
-                email=contact["email"], defaults={"account": account}
+                email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
                 c.title = contact.get("title", c.title)

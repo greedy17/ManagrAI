@@ -38,7 +38,9 @@ urlpatterns = [
     path('twilio/callback/messages', core_views.TwilioMessageWebhook.as_view(),
          name="twilio_messages_webhook"),
     path('twilio/callback/messages/received', core_views.receive_incoming_message,
-         name="twilio_messages_webhook_received")
+         name="twilio_messages_webhook_received"),
+    path('nylas/callback/accounts', core_views.NylasAccountWebhook.as_view(),
+         name="nylas_account_webhook")
 ]
 
 router.register('users/invite', core_views.UserInvitationView, 'invite-user')
