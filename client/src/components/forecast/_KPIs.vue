@@ -4,12 +4,27 @@
       <ComponentLoadingSVG />
     </div>
     <div v-else>
-      <div class="daterange-container">
-        <select class="daterange" v-model="dateRange" @change="onDateRangeFilterChange">
-          <option v-for="(preset, i) in dateRangePresets" :value="preset.value" :key="i">
-            {{ preset.label }}
-          </option>
-        </select>
+      <div class="daterange-container section-shadow">
+        <div class="dropdown-container">
+          <select class="daterange" v-model="dateRange" @change="onDateRangeFilterChange">
+            <option v-for="(preset, i) in dateRangePresets" :value="preset.value" :key="i">
+              {{ preset.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="help-box-container">
+          <img
+            class="help-box-icon"
+            src="@/assets/images/help-outline.svg"
+            @mouseenter="showDateRangeHelp = true"
+            @mouseleave="showDateRangeHelp = false"
+          />
+          <div class="help-box" v-if="showDateRangeHelp">
+            You can edit any users' Quota, Commit, and Upside by selecting only that user. If more
+            than one user is selected, all data is aggregated.
+          </div>
+        </div>
       </div>
       <div class="single-statistic section-shadow">
         <span class="title">Sold</span>
@@ -53,7 +68,21 @@
         <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
       </div>
       <div class="single-statistic section-shadow">
-        <span class="title">Forecast</span>
+        <span class="title with-help-box">
+          <span>Forecast</span>
+          <div class="help-box-container">
+            <img
+              class="help-box-icon"
+              src="@/assets/images/help-outline.svg"
+              @mouseenter="showForecastHelp = true"
+              @mouseleave="showForecastHelp = false"
+            />
+            <div class="help-box" v-if="showForecastHelp">
+              Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong (expected
+              close rate of 75%) + Verbal (expected close rate of 100%).
+            </div>
+          </div>
+        </span>
         <span class="statistic">{{ KPIs.forecast | currency }}</span>
       </div>
 
@@ -214,6 +243,8 @@ export default {
         editingUpside: false,
         tempUpside: 0,
       },
+      showDateRangeHelp: false,
+      showForecastHelp: false,
     }
   },
   created() {
@@ -416,23 +447,68 @@ export default {
 
 .daterange-container {
   display: flex;
-  flex-flow: column;
+  flex-flow: row;
   align-items: center;
-  justify-content: center;
   padding: 1.2rem 0;
 
-  select {
-    background-color: rgba($color: $dark-gray-blue, $alpha: 0);
-    border: 0;
-    color: $main-font-gray;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
+  .dropdown-container {
+    box-sizing: border-box;
+    width: 75%;
+    display: flex;
+    flex-flow: row;
+    select {
+      background-color: rgba($color: $dark-gray-blue, $alpha: 0);
+      border: 0;
+      color: $main-font-gray;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-left: auto;
 
-    option {
-      padding-top: 1rem;
+      option {
+        padding-top: 1rem;
+      }
     }
+  }
+}
+
+.help-box-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  flex-grow: 1;
+
+  .help-box-icon {
+    opacity: 0.4;
+    margin-left: auto;
+    margin-right: auto;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .help-box {
+    box-shadow: 0 4px 16px 0 rgba($color: $black, $alpha: 0.3);
+    width: 12rem;
+    background-color: $dark-gray-blue;
+    border-radius: 5px;
+    padding: 0.8rem;
+    color: $white;
+    position: absolute;
+    margin-left: 3rem;
+  }
+}
+
+.with-help-box {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  .help-box-icon {
+    position: absolute;
+    margin-left: 1rem;
   }
 }
 
