@@ -51,13 +51,39 @@ function listSorter(firstForecast, secondForecast) {
   // nulls last
   let firstMoment = moment(firstForecast.leadRef.expectedCloseDate)
   let secondMoment = moment(secondForecast.leadRef.expectedCloseDate)
-  if (firstMoment > secondMoment) {
-    return 1
+  let bothValid = firstMoment.isValid() && secondMoment.isValid()
+  let oneValid = firstMoment.isValid()
+    ? firstMoment
+    : false || secondMoment.isValid()
+    ? secondMoment
+    : false
+
+  if (bothValid) {
+    if (firstMoment > secondMoment) {
+      return 1
+    }
+    if (secondMoment > firstMoment) {
+      return -1
+    }
+    // check by alphabetical beyond this point
+    if (firstForecast.leadRef.title.toLowerCase() > secondForecast.leadRef.title.toLowerCase()) {
+      return 1
+    }
+    if (secondForecast.leadRef.title.toLowerCase() > firstForecast.leadRef.title.toLowerCase()) {
+      return -1
+    }
+    return 0
   }
-  if (secondMoment > firstMoment) {
-    return -1
+
+  if (oneValid) {
+    if (oneValid === firstMoment) {
+      return -1
+    } else {
+      return 1
+    }
   }
-  // check by alphabetical beyond this point
+
+  // beyond this point neither is valid, so sort alphabetically
   if (firstForecast.leadRef.title.toLowerCase() > secondForecast.leadRef.title.toLowerCase()) {
     return 1
   }
