@@ -42,12 +42,15 @@ FORECAST_NA = "NA"
 FORECAST_STRONG = "STRONG"
 FORECAST_FUTURE = "FUTURE"
 FORECAST_VERBAL = "VERBAL"
+FORECAST_CLOSED = "CLOSED"
+
 FORECAST_CHOICES = (
     (FORECAST_FIFTY_FIFTY, "50/50"),
     (FORECAST_NA, "NA"),
     (FORECAST_STRONG, "Strong"),
     (FORECAST_FUTURE, "Future"),
     (FORECAST_VERBAL, "Verbal"),
+    (FORECAST_CLOSED, "Closed"),
 )
 
 # Define constants for the types of model events that can happen.

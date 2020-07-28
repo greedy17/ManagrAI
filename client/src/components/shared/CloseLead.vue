@@ -87,6 +87,7 @@ export default {
         })
         .then(() => {
           this.lead.status = 'CLOSED'
+          this.$parent.$emit('closed-lead')
           this.$parent.$emit('close-modal')
           this.$Alert.alert({
             type: 'success',

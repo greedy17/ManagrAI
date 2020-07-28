@@ -34,7 +34,11 @@
         :disabled="!belongsToCurrentUser"
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
-      <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
+      <LeadStatusDropdown
+        :lead="lead"
+        :disabled="!belongsToCurrentUser"
+        @closed-lead="emitMoveNewlyClosedLead"
+      />
       <div class="last-action-taken">
         <template v-if="lead.lastActionTaken.actionTimestamp">
           <div>{{ lead.lastActionTaken.activity }}</div>
@@ -66,6 +70,7 @@
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import Lead from '@/services/leads'
+import Forecast from '@/services/forecasts'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
@@ -100,6 +105,15 @@ export default {
     },
     routeToLeadDetail() {
       this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    },
+    emitMoveNewlyClosedLead() {
+      let payload = {
+        forecast: this.forecast,
+        from: this.forecast.forecast,
+        to: Forecast.CLOSED,
+      }
+      this.forecast.forecast = Forecast.CLOSED
+      this.$emit('move-lead-in-forecast-list', payload)
     },
   },
   computed: {

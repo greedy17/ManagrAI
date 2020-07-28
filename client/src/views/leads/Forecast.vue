@@ -77,6 +77,10 @@ export default {
           ModelClass: Forecast,
           filters: { forecast: Forecast.NA, dateRange: Forecast.TODAY_ONWARD },
         }),
+        CLOSED: CollectionManager.create({
+          ModelClass: Forecast,
+          filters: { forecast: Forecast.CLOSED, dateRange: Forecast.TODAY_ONWARD },
+        }),
       },
       repFilterState: {
         [this.$store.state.user.id]: true,
@@ -124,6 +128,7 @@ export default {
         this.lists['VERBAL'].refresh(),
         this.lists['FUTURE'].refresh(),
         this.lists['UNFORECASTED'].refresh(),
+        this.lists['CLOSED'].refresh(),
       ]
       Promise.all(lists).then(() => {
         this.loading = false
