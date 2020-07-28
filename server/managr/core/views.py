@@ -134,7 +134,7 @@ class UserViewSet(
         ):
             return User.objects.filter(organization=self.request.user.organization)
         else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            return User.objects.None()
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
