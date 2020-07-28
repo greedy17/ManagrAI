@@ -31,14 +31,14 @@ def _handle_twilio_response(response):
                            code=response.status_code)
 
 
-def send_message(body, sender, recepient):
+def send_message(body, sender, recepient, callback):
     message = client.messages \
         .create(
             body=body,
             from_=sender,
             to=recepient,
             # callback url will return the created message to add to the log
-            status_callback=core_consts.TWILIO_MESSAGE_CALLBACK_URL
+            # status_callback=callback
         )
     return message
 
@@ -48,8 +48,7 @@ def create_new_account(phone_number):
     try:
         incoming_phone_number = client.incoming_phone_numbers \
             .create(phone_number=phone_number,
-                    sms_url=core_consts.TWILIO_MESSAGE_RECEIVED_CALLBACK_URL,
-                    status_callback=core_consts.TWILIO_MESSAGE_CALLBACK_URL,
+                    sms_url=core_consts.TWILIO_MESSAGE_CALLBACK_URL
 
                     )
     except Exception as e:
@@ -58,7 +57,7 @@ def create_new_account(phone_number):
         raise APIException(
             detail=f'Error From Twilio Server, {message}', code=status)
 
-    return incoming_phone_number
+    return incoming_phone_number.__dict__.get('_properties', None)
 
 
 def list_messages(sender, recipient, limit=25):
@@ -89,8 +88,13 @@ def list_messages(sender, recipient, limit=25):
 def list_available_numbers(region="DC", country="US", zipcode=None):
     """ method to retrieve a list of available phone numbers from twilio"""
     try:
-        available_numbers = client.available_phone_numbers(
-            country_code=country, region=region).mobile.list(limit=25)
+        available_numbers = client.available_phone_numbers(country).local.list(
+            in_region=region if region else ""
+        )
+        formatted_data = [dict(capabilities=number.capabilities, friendly_name=number.friendly_name,
+                               is_country=number.iso_country, locality=number.locality,
+                               phone_number=number.phone_number, postal_code=number.postal_code,
+                               region=number.region) for number in available_numbers]
 
     except Exception as e:
         message = e.msg
@@ -98,10 +102,50 @@ def list_available_numbers(region="DC", country="US", zipcode=None):
         raise APIException(
             detail=f'Error From Twilio Server, {message}', code=status)
 
-    return available_numbers
+    return formatted_data
 
 
 #from managr.core.twilio.messages import send_message
 #send_message('test', "+15005550006", "+18572056014")
 # class TwilioException404(APIException):
 #    status_code = 404
+
+
+class TwilioIncomingPhoneNumber:
+
+    def __init__(self, twilioIncomingInstance):
+        self.account_sid = twilioIncomingInstance.account_sid
+        self.address_sid = twilioIncomingInstance.address_sid
+        self.api_version = twilioIncomingInstance.api_version
+        self.beta = twilioIncomingInstance.beta
+        self.bundle_sid = twilioIncomingInstance.bundle_sid
+        self.capabilities = twilioIncomingInstance.capabilities
+        self.date_created = twilioIncomingInstance.date_created
+        self.date_updated = twilioIncomingInstance.date_updated
+        self.emergency_address_sid = twilioIncomingInstance.emergency_address_sid
+        self.emergency_status = twilioIncomingInstance.emergency_status
+        self.friendly_name = twilioIncomingInstance.friendly_name
+        self.identity_sid = twilioIncomingInstance.identity_sid
+        self.origin = twilioIncomingInstance.origin
+        self.phone_number = twilioIncomingInstance.phone_number
+        self.sid = twilioIncomingInstance.sid
+        self.sms_application_sid = twilioIncomingInstance.sms_application_sid
+        self.sms_fallback_method = twilioIncomingInstance.sms_fallback_method
+        self.sms_fallback_url = twilioIncomingInstance.sms_fallback_url
+        self.sms_method = twilioIncomingInstance.sms_method
+        self.sms_url = twilioIncomingInstance.sms_url
+        self.status = twilioIncomingInstance.status
+        self.status_callback = twilioIncomingInstance.status_callback
+        self.status_callback_method = twilioIncomingInstance.status_callback_method
+        self.trunk_sid = twilioIncomingInstance.trunk_sid
+        self.uri = twilioIncomingInstance.uri
+        self.voice_application_sid = twilioIncomingInstance.voice_application_sid
+        self.voice_caller_id_lookup = twilioIncomingInstance.voice_caller_id_lookup
+        self.voice_fallback_method = twilioIncomingInstance.voice_fallback_method
+        self.voice_fallback_url = twilioIncomingInstance.voice_fallback_url
+        self.voice_method = twilioIncomingInstance.voice_method
+        self.voice_receive_mode = twilioIncomingInstance.voice_receive_mode
+        self.voice_url = twilioIncomingInstance.voice_url
+
+    def as_dict(self):
+        return self.__dict__

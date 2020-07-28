@@ -1,58 +1,66 @@
 <template>
   <div class="text-action">
-    <div class="contacts-container">
-      <!--
-        2020-06-16 William: Temporarily disabled.
-      <div
-        v-for="contact in contacts"
-        :key="contact.id"
-        class="contact"
-        :class="{ 'active-contact': contactsToInclude[contact.id] }"
-        @click="toggleContactInclusion(contact.id)"
-      >
-        <img class="contact-img" src="@/assets/images/sara-smith.png" alt="contact image" />
-        <span class="contact-name">{{ contact.fullName }}</span>
-        <div class="contact-phone-number-container">
-          <img class="telephone-icon" src="@/assets/images/telephone.svg" alt="icon" />
-          <span class="contact-phone-number">{{ contact.phone }}</span>
-        </div>
-      </div>
-      -->
+    <div class="message-recipient">
+      <span>To:</span>
+      <DropDownSelect
+        v-if="leadLinkedContactsRef"
+        :items.sync="leadLinkedContacts"
+        displayKey="full_name"
+        valueKey="id"
+        v-model="recipients"
+        multi
+        searchable
+        local
+      />
     </div>
-    <textarea class="note-detail" placeholder="Detail" />
+    <div class="message-content">
+      <textarea class="form__textarea" rows="8" placeholder="Detail" v-model="body" />
+    </div>
+
     <div class="save-button-container">
-      <span class="save-button">Coming Soon!</span>
+      <button class="button" @click="sendMessage">
+        <ComponentLoadingSVG v-if="sendingMessage" />
+        <span v-if="!sendingMessage">Send Email</span>
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-let exampleContacts = [
-  {
-    id: 1,
-    fullName: 'Sara Smith',
-    title: 'COO',
-    phone: '123-456-7890',
-    email: 'sara@samsung.com',
-  },
-  {
-    id: 2,
-    fullName: 'Jake Murray',
-    title: 'CFO',
-    phone: '123-456-7899',
-    email: 'jake@samsung.com',
-  },
-]
-
+import DropDownSelect from '@/components/forms/DropDownSelect'
+import Messages from '@/services/messages'
 export default {
   name: 'TextAction',
+  components: { DropDownSelect },
   data() {
     return {
-      contacts: exampleContacts,
+      contacts: [],
+      body: '',
       contactsToInclude: {},
+      recipients: [],
+      leadLinkedContacts: [],
+      sendingMessage: false,
     }
   },
+  created() {
+    this.leadLinkedContacts = this.leadLinkedContactsRef
+  },
+  computed: {
+    leadLinkedContactsRef: {
+      get() {
+        return this.$attrs.lead.linkedContactsRef
+      },
+    },
+  },
   methods: {
+    async sendMessage() {
+      this.sendingMessage = true
+      // get the ref to avoid having to search the backend again
+      let contactRefs = this.leadLinkedContactsRef.filter(c => this.recipients.includes(c.id))
+
+      await Messages.sendMessage(this.body, contactRefs)
+      this.sendingMessage = false
+    },
     toggleContactInclusion(contactID) {
       // depending on payload status add or remove that key
       // plainObject is used instead of an array because of O(1) lookup
@@ -72,87 +80,18 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/utils';
 
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+
 .text-action {
   width: 100%;
   display: flex;
   flex-flow: column;
-}
-
-.contacts-container {
-  display: flex;
-  flex-flow: column;
-  width: 40%;
-}
-
-.contact {
-  @include pointer-on-hover();
-  border: 2px solid $white;
-  padding: 0.2rem;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-  margin-bottom: 2%;
-}
-
-.contact-img {
-  height: 1.5rem;
-  width: 1.5rem;
-  border-radius: 50%;
-}
-
-.contact-name {
-  @include base-font-styles();
-  margin-left: auto;
-  width: 25%;
-  font-size: 11px;
-  line-height: 1.45;
-  color: $main-font-gray;
-}
-
-.contact-phone-number-container {
-  @include pointer-on-hover();
-  width: 50%;
-  height: 1.5rem;
-  padding: 0.125rem;
-  margin-left: auto;
-  background-color: $soft-gray;
-  border-radius: 5px;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-}
-
-.telephone-icon {
-  height: 1rem;
-  width: 1rem;
-  margin-left: 0.375rem;
-}
-
-.contact-phone-number {
-  @include base-font-styles();
-  margin-left: 0.375rem;
-  font-size: 11px;
-  font-weight: bold;
-  line-height: 1.45;
-  color: $main-font-gray;
-}
-
-.active-contact {
-  border: 2px solid $dark-green;
-}
-
-input {
-  @include input-field();
-  height: 2.5rem;
-}
-
-textarea {
-  @include input-field();
-  resize: none;
-  height: 94%;
-  flex-grow: 1;
-  margin: 2% 0;
-  font-size: 14px;
+  > * {
+    margin: 1rem;
+  }
 }
 
 .save-button-container {
@@ -163,5 +102,15 @@ textarea {
 .save-button {
   @include primary-button();
   margin-left: auto;
+}
+.message-content {
+  display: flex;
+  width: 90%;
+}
+.message-recipient {
+  margin-bottom: 3rem;
+  > .dropdown {
+    width: 80%;
+  }
 }
 </style>

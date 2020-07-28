@@ -121,12 +121,14 @@ class User(AbstractUser, TimeStampModel):
         help_text="The datetime when the magic token is expired.", null=True
     )
     quota = models.PositiveIntegerField(
-                help_text='Target sell amount for some defined timespan '
-                'set by their Organization.',
-                default=0
-            )
-    commit = models.PositiveIntegerField(help_text='Worst-case quota.', default=0)
-    upside = models.PositiveIntegerField(help_text='Optimistic quota.', default=0)
+        help_text='Target sell amount for some defined timespan '
+        'set by their Organization.',
+        default=0
+    )
+    commit = models.PositiveIntegerField(
+        help_text='Worst-case quota.', default=0)
+    upside = models.PositiveIntegerField(
+        help_text='Optimistic quota.', default=0)
 
     objects = UserManager()
 
@@ -244,12 +246,13 @@ class EmailAuthAccount(TimeStampModel):
 class MessageAuthAccount(TimeStampModel):
     account_sid = models.CharField(max_length=128)
     capabilities = JSONField(max_length=128, default=dict)
-    date_created = models.CharField(max_length=128)
-    date_updated = models.CharField(max_length=128)
+    date_created = models.DateTimeField(max_length=128)
+    date_updated = models.DateTimeField(max_length=128)
     friendly_name = models.CharField(max_length=128)
-    identity_sid = models.CharField(max_length=128)
+    identity_sid = models.CharField(max_length=128, null=True)
     origin = models.CharField(max_length=128)
-    sid = models.CharField(max_length=128)
+    sid = models.CharField(max_length=128, null=True)
+    phone_number = models.CharField(max_length=128)
     sms_method = models.CharField(
         max_length=128)
     sms_url = models.CharField(
@@ -266,7 +269,7 @@ class MessageAuthAccount(TimeStampModel):
     )
 
     def __str__(self):
-        return f"{self.email_address}"
+        return f"{self.user.__str__}, {self.friendly_name}"
 
     class Meta:
         ordering = ["datetime_created"]

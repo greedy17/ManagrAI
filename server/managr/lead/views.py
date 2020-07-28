@@ -23,6 +23,8 @@ from rest_framework import (
     viewsets,
 )
 
+
+from managr.utils.numbers import validate_phone_number, format_phone_number
 from managr.core.permissions import (
     IsOrganizationManager,
     IsSuperUser,
@@ -249,9 +251,27 @@ class LeadViewSet(
                 email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
+                phone_1 = contact.get(
+                    "phone_number_1", None)
+                phone_2 = contact.get(
+                    "phone_number_2", None)
+                if phone_1:
+                    try:
+                        validate_phone_number(phone_1)
+                        phone_1 = format_phone_number(phone_1)
+                    except ValueError:
+                        phone_1 = None
+                if phone_2:
+                    try:
+                        validate_phone_number(phone_2)
+                        phone_2 = format_phone_number(phone_2)
+                    except ValueError:
+                        phone_2 = None
+
                 c.title = contact.get("title", c.title)
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
+
                 c.phone_number_1 = contact.get(
                     "phone_number_1", c.phone_number_1)
                 c.phone_number_2 = contact.get(
@@ -608,7 +628,8 @@ class ForecastViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        kpis = ForecastKPIs(representatives=repIDs, date_range_preset=date_range_preset)
+        kpis = ForecastKPIs(representatives=repIDs,
+                            date_range_preset=date_range_preset)
 
         return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
