@@ -16,8 +16,7 @@ export default {
   },
   methods: {
     handleClick() {
-      // NOTE(Bruno 4-15-20): Reports is not built and so is made inactive
-      if (!this.isCurrentRoute && this.to !== 'Reports') {
+      if (!this.isCurrentRoute) {
         this.$router.push({ name: this.to })
       }
     },
