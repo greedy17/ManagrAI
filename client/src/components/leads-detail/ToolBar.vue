@@ -94,7 +94,7 @@
     <div
       v-if="!editExpectedCloseDate"
       class="expected-close-date section-shadow"
-      @click="onEditExpectedCloseDate"
+      @click="editExpectedCloseDate = true"
     >
       <div v-if="!lead.expectedCloseDate">
         Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
@@ -444,16 +444,6 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
-    },
-    onEditExpectedCloseDate() {
-      let date
-      if (this.lead.expectedCloseDate) {
-        date = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
-      } else {
-        date = new Date().toISOString().split('T')[0]
-      }
-      this.tempExpectedCloseDate = date
-      this.editExpectedCloseDate = true
     },
     updateExpectedCloseDate() {
       this.$emit('updated-expected-close-date', this.tempExpectedCloseDate)
