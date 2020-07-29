@@ -7,7 +7,10 @@
         <span>{{ lead.primaryDescription }}</span>
         <span>{{ lead.secondaryDescription }}</span>
       </div>
-      <span class="lead-amount"> {{ lead.amount | currency }} </span>
+      <span v-if="lead.status === Lead.CLOSED" class="lead-amount">
+        {{ lead.closingAmount | currency }}
+      </span>
+      <span v-else class="lead-amount">{{ lead.amount | currency }}</span>
       <span class="lead-last-update"> {{ lead.lastUpdateDate }} </span>
       <LeadForecastDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
       <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
@@ -52,6 +55,7 @@ export default {
   },
   data() {
     return {
+      Lead,
       isClaimed: null,
       rep: null,
     }
