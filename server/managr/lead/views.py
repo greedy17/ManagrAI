@@ -573,17 +573,14 @@ class ForecastViewSet(
             - Upside
         """
 
-        # constant to be put through a switcher to determine date range
-        # for query-set filtering
-        date_range_preset = request.data['date_range_preset']
+        date_range_from = request.data['date_range_from']
+        date_range_to = request.data['date_range_to']
         repIDs = request.data['representatives']
-        if date_range_preset not in lead_constants.DATE_RANGE_PRESETS:
-            return Response(
-                {"non_field_errors": ("Invalid date_range_preset.",)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        kpis = ForecastKPIs(representatives=repIDs, date_range_preset=date_range_preset)
+        kpis = ForecastKPIs(
+                            date_range_from,
+                            date_range_to,
+                            representatives=repIDs,
+                            )
 
         return Response(kpis.as_dict, status=status.HTTP_200_OK)
 

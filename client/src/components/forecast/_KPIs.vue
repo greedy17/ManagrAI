@@ -201,6 +201,7 @@
 import LeadActivityLog from '@/services/leadActivityLogs'
 import Forecast from '@/services/forecasts'
 import User from '@/services/users'
+import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
 
 const POLLING_INTERVAL = 10000
 
@@ -309,8 +310,8 @@ export default {
         .filter(i => i !== null)
 
       let data = {
-        dateRangePreset: this.dateRange,
         representatives: reps,
+        ...dateRangeParamsFromPreset(this.dateRange),
       }
 
       Forecast.api.KPIs(data).then(data => {
