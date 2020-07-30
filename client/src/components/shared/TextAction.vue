@@ -1,28 +1,37 @@
 <template>
   <div class="text-action">
-    <div class="message-recipient">
-      <span>To:</span>
-      <DropDownSelect
-        v-if="leadLinkedContactsRef"
-        :items.sync="leadLinkedContacts"
-        displayKey="full_name"
-        valueKey="id"
-        v-model="recipients"
-        multi
-        searchable
-        local
-      />
-    </div>
-    <div class="message-content">
-      <textarea class="form__textarea" rows="8" placeholder="Detail" v-model="body" />
-    </div>
+    <template v-if="!isTextConnected">
+      <div>
+        <span class="muted">
+          Please Enable Text Integration to use this feature in your settings
+        </span>
+      </div>
+    </template>
+    <template v-else>
+      <div class="message-recipient">
+        <span>To:</span>
+        <DropDownSelect
+          v-if="leadLinkedContactsRef"
+          :items.sync="leadLinkedContacts"
+          displayKey="full_name"
+          valueKey="id"
+          v-model="recipients"
+          multi
+          searchable
+          local
+        />
+      </div>
+      <div class="message-content">
+        <textarea class="form__textarea" rows="8" placeholder="Detail" v-model="body" />
+      </div>
 
-    <div class="save-button-container">
-      <button :disabled="sendingMessage || !isComplete" class="button" @click="sendMessage">
-        <ComponentLoadingSVG v-if="sendingMessage" />
-        <span v-if="!sendingMessage">Send Text</span>
-      </button>
-    </div>
+      <div class="save-button-container">
+        <button :disabled="sendingMessage || !isComplete" class="button" @click="sendMessage">
+          <ComponentLoadingSVG v-if="sendingMessage" />
+          <span v-if="!sendingMessage">Send Text</span>
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -46,6 +55,9 @@ export default {
     this.leadLinkedContacts = this.leadLinkedContactsRef
   },
   computed: {
+    isTextConnected() {
+      return !!this.$store.state.user.textConnected
+    },
     isComplete() {
       return this.body.length > 0 && this.recipients.length > 0
     },

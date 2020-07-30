@@ -510,9 +510,9 @@ class LeadMessageQuerySet(models.QuerySet):
             return self.all()
 
         elif user.organization and user.is_active:
-            return self.filter(created_by=user)
+            return self.filter(lead__account__organization=user.organization_id)
         else:
-            return None
+            return self.none()
 
 
 class LeadMessage(TimeStampModel):

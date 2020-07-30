@@ -71,7 +71,7 @@
               Check for New Messages
             </button>
           </div>
-          <div class="check-email-btn" v-if="activityTabSelected === EMAILS">
+          <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isTextConnected">
             <button
               class="primary-button"
               @click="() => $refs.Emails.refresh()"
@@ -117,7 +117,16 @@
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
-          <LeadEmails :lead="lead" ref="Emails" />
+          <template v-if="!isTextConnected">
+            <div>
+              <span class="muted">
+                <span class="muted">
+                  Please Enable Email Integration to use this feature in your settings
+                </span>
+              </span>
+            </div>
+          </template>
+          <LeadEmails v-else :lead="lead" ref="Emails" />
         </div>
         <div v-show="activityTabSelected === MESSAGES" class="box__content">
           <LeadMessages :lead="lead" ref="Messages" />
@@ -206,6 +215,11 @@ export default {
         },
       }),
     }
+  },
+  computed: {
+    isTextConnected() {
+      return !!this.$store.state.user.textConnected
+    },
   },
   async created() {
     Promise.all([this.retrieveLead(), this.lists.refresh(), this.contacts.refresh()]).then(res => {

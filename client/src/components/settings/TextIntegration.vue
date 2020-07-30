@@ -78,7 +78,7 @@
           </div>
         </div>
         <div class="footer" v-if="!user.textConnected && this.selected">
-          <button @click="onSaveAccount">Save</button>
+          <button class="primary-button" @click="onSaveAccount">Save</button>
         </div>
       </div>
     </div>
@@ -87,7 +87,6 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import Nylas from '@/services/nylas'
 import Messaging, { STATES } from '@/services/messages'
 import DropDownSelect from '@/components/forms/DropDownSelect'
 import User from '@/services/users'
