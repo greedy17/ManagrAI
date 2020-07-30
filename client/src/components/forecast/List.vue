@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import Forecast from '@/services/forecasts'
 import Lead from '@/components/forecast/Lead'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
 
@@ -63,7 +64,13 @@ export default {
       return this.collection.pagination.totalCount
     },
     totalValue() {
-      return this.collection.list.reduce((sum, e) => e.leadRef.amount + sum, 0)
+      return this.collection.list.reduce((sum, forecast) => {
+        if (forecast.forecast === Forecast.CLOSED) {
+          return forecast.leadRef.closingAmount + sum
+        } else {
+          return forecast.leadRef.amount + sum
+        }
+      }, 0)
     },
   },
 }
