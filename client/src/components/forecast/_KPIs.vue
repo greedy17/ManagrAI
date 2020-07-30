@@ -415,7 +415,7 @@ export default {
       if (roundedPercentage > 100) {
         return 100
       } else {
-        return percent
+        return roundedPercentage
       }
     },
     oneRepSelected() {
