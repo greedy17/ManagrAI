@@ -1,5 +1,17 @@
 <template>
-  <div class="lead-messages"></div>
+  <div class="lead-messages">
+    <div class="messages">
+      <div :key="message.id" v-for="message in leadMessages.list" class="message">
+        Message Sent From:
+        {{
+          message.direction == 'SENT'
+            ? message.createdByRef.fullName
+            : 'number associated with ' + message.linkedContactsRef.map(c => c.fullName)
+        }}
+        Message:{{ message.body }} Status:{{ message.status }}
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>

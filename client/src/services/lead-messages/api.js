@@ -1,6 +1,6 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
-const LEAD_MESSAGE_ENDPOINT = '/lead-message/'
+const LEAD_MESSAGE_ENDPOINT = '/lead-messages/'
 
 export default class LeadMessageAPI {
   constructor(cls) {

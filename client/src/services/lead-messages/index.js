@@ -13,17 +13,23 @@ export default class LeadMessage {
     direction = null,
     body = '',
     status = null,
+    lead = null,
+    leadRef = null,
+    datetimeCreated = null,
   } = {}) {
     Object.assign(this, {
       id,
       createdBy,
       createdByRef,
       linkedContacts,
-      linkedContactsRef,
+      linkedContactsRef: linkedContactsRef.map(objectToCamelCase),
       messageId,
       direction,
       body,
       status,
+      lead,
+      leadRef,
+      datetimeCreated,
     })
   }
 
