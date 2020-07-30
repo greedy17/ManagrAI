@@ -32,7 +32,6 @@ class LeadRatingOrderFiltering(OrderingFilter):
 
 class ReminderOrderingFilter(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
-        print('here')
         ordering = request.query_params.get('order_by', None)
         if ordering is not None:
             if ordering.startswith('-'):
@@ -442,4 +441,4 @@ class ReminderFilterSet(FilterSet):
         query = Q()
         for n in ns:
             query |= Q(id=n)
-        return qs.filter(datetime_for__gte=min).exclude(query)
+        return qs.filter(datetime_for__gte=min).exclude(query).order_by('datetime_for')
