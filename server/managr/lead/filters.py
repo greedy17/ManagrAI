@@ -375,7 +375,7 @@ class ListFilterSet(FilterSet):
 
 
 class LeadMessageFilterSet(FilterSet):
-    by_lead = django_filters.CharFilter(field_name="leads")
+    by_lead = django_filters.CharFilter(field_name="lead")
 
     class Meta:
         model = LeadMessage
