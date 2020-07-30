@@ -14,7 +14,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 from managr.lead import constants as lead_constants
-from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification
+from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification, LeadMessage
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -154,16 +154,17 @@ class ForecastFilterSet(FilterSet):
                     return queryset.exclude(lead__claimed_by__isnull=True) \
                                    .filter(lead__claimed_by__in=user_list) \
                                    .order_by(
-                                       F('lead__expected_close_date').desc(nulls_last=True),
+                                       F('lead__expected_close_date').desc(
+                                           nulls_last=True),
                                        'lead__title'
-                                   )
+                    )
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
                     # return None
                     return queryset.none()
             except DjangoValidationError:
                 # if a malformed User Id is sent fail silently and return None
-                return queryset.none()    
+                return queryset.none()
 
     def forecasts_by_date_range(self, queryset, name, value):
         """
@@ -206,9 +207,9 @@ class ForecastFilterSet(FilterSet):
         # this range to encompass the whole day
         today = timezone.now().date()
         return queryset.filter(
-                lead__expected_close_date__gte=today,
-                lead__expected_close_date__lte=today,
-            )
+            lead__expected_close_date__gte=today,
+            lead__expected_close_date__lte=today,
+        )
 
     def _filter_by_YESTERDAY(self, queryset):
         # while this is exact to the date, GTE & LTE are used because
@@ -216,9 +217,9 @@ class ForecastFilterSet(FilterSet):
         # this range to encompass the whole day
         yesterday = timezone.now().date() - timedelta(days=1)
         return queryset.filter(
-                lead__expected_close_date__gte=yesterday,
-                lead__expected_close_date__lte=yesterday,
-            )
+            lead__expected_close_date__gte=yesterday,
+            lead__expected_close_date__lte=yesterday,
+        )
 
     def _filter_by_THIS_WEEK(self, queryset):
         # A week is defined as Monday 12AM - Sunday 11:59PM
@@ -228,9 +229,9 @@ class ForecastFilterSet(FilterSet):
         start_of_week = today - timedelta(days=weekday_integer)
         end_of_week = today + timedelta(days=6 - weekday_integer)
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_week,
-                lead__expected_close_date__lte=end_of_week,
-            )
+            lead__expected_close_date__gte=start_of_week,
+            lead__expected_close_date__lte=end_of_week,
+        )
 
     def _filter_by_LAST_WEEK(self, queryset):
         # A week is defined as Monday 12AM - Sunday 11:59PM
@@ -240,9 +241,9 @@ class ForecastFilterSet(FilterSet):
         start_of_week = a_week_ago - timedelta(days=weekday_integer)
         end_of_week = a_week_ago + timedelta(days=6 - weekday_integer)
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_week,
-                lead__expected_close_date__lte=end_of_week,
-            )
+            lead__expected_close_date__gte=start_of_week,
+            lead__expected_close_date__lte=end_of_week,
+        )
 
     def _filter_by_THIS_MONTH(self, queryset):
         today = timezone.now().date()
@@ -250,11 +251,12 @@ class ForecastFilterSet(FilterSet):
         # e.g. For January it would be (1, 31)
         last_day_of_month = monthrange(today.year, today.month)[1]
         start_of_month = datetime(today.year, today.month, 1).date()
-        end_of_month = datetime(today.year, today.month, last_day_of_month).date()
+        end_of_month = datetime(today.year, today.month,
+                                last_day_of_month).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_month,
-                lead__expected_close_date__lte=end_of_month,
-            )
+            lead__expected_close_date__gte=start_of_month,
+            lead__expected_close_date__lte=end_of_month,
+        )
 
     def _filter_by_LAST_MONTH(self, queryset):
         today = timezone.now().date()
@@ -262,12 +264,14 @@ class ForecastFilterSet(FilterSet):
         # monthrange() returns a tuple as such: (month_integer, last_day_of_month),
         # e.g. For January it would be (1, 31)
         last_day_of_month = monthrange(a_month_ago.year, a_month_ago.month)[1]
-        start_of_month = datetime(a_month_ago.year, a_month_ago.month, 1).date()
-        end_of_month = datetime(a_month_ago.year, a_month_ago.month, last_day_of_month).date()
+        start_of_month = datetime(
+            a_month_ago.year, a_month_ago.month, 1).date()
+        end_of_month = datetime(
+            a_month_ago.year, a_month_ago.month, last_day_of_month).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_month,
-                lead__expected_close_date__lte=end_of_month,
-            )
+            lead__expected_close_date__gte=start_of_month,
+            lead__expected_close_date__lte=end_of_month,
+        )
 
     def _filter_by_THIS_QUARTER(self, queryset):
         # Quarters are:
@@ -290,9 +294,9 @@ class ForecastFilterSet(FilterSet):
             start_of_quarter = datetime(today.year, 8, 1).date()
             end_of_quarter = datetime(today.year, 12, 31).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_quarter,
-                lead__expected_close_date__lte=end_of_quarter,
-            )
+            lead__expected_close_date__gte=start_of_quarter,
+            lead__expected_close_date__lte=end_of_quarter,
+        )
 
     def _filter_by_LAST_QUARTER(self, queryset):
         # Quarters are:
@@ -316,9 +320,9 @@ class ForecastFilterSet(FilterSet):
             start_of_quarter = datetime(today.year, 7, 1).date()
             end_of_quarter = datetime(today.year, 9, 30).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_quarter,
-                lead__expected_close_date__lte=end_of_quarter,
-            )
+            lead__expected_close_date__gte=start_of_quarter,
+            lead__expected_close_date__lte=end_of_quarter,
+        )
 
     def _derive_quarter(self, date):
         if date.month <= 3:
@@ -334,17 +338,17 @@ class ForecastFilterSet(FilterSet):
         today = timezone.now().date()
         start_of_year = datetime(today.year, 1, 1).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_year,
-            )
+            lead__expected_close_date__gte=start_of_year,
+        )
 
     def _filter_by_LAST_YEAR(self, queryset):
         a_year_ago = timezone.now().date() - timedelta(days=365)
         start_of_year = datetime(a_year_ago.year, 1, 1).date()
         end_of_year = datetime(a_year_ago.year, 12, 31).date()
         return queryset.filter(
-                lead__expected_close_date__gte=start_of_year,
-                lead__expected_close_date__lte=end_of_year,
-            )
+            lead__expected_close_date__gte=start_of_year,
+            lead__expected_close_date__lte=end_of_year,
+        )
 
     def _filter_by_ALL_TIME(self, queryset):
         return queryset
@@ -368,6 +372,13 @@ class ListFilterSet(FilterSet):
             )
             return queryset.filter(created_by_id__in=users_in_org)
         return queryset
+
+
+class LeadMessageFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(field_name="leads")
+
+    class Meta:
+        model = LeadMessage
 
 
 class NoteFilterSet(FilterSet):

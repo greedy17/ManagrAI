@@ -112,6 +112,7 @@ class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
     serializer_class = lead_serializers.LeadMessageSerializer
+    filter_class = lead_filters.LeadMessageFilterSet
 
     def get_queryset(self):
         return lead_models.LeadMessage.objects.for_user(self.request.user)

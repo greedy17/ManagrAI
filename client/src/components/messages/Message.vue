@@ -56,12 +56,9 @@
 </template>
 
 <script>
-import ThreadMessage from '@/components/emails/ThreadMessage'
-import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
-
 export default {
   name: 'Message',
-  components: { ThreadMessage, ComponentLoadingSVG },
+  components: {},
   props: {
     message: {
       type: Object,

@@ -1,9 +1,12 @@
 <template>
   <div class="lead-messages">
-    <div class="messages">
+    <div class="messages" v-if="!loading">
       <div :key="message.id" v-for="message in leadMessages.list" class="message">
         <Message :message="message" :lead="lead" />
       </div>
+    </div>
+    <div v-else>
+      <ComponentLoadingSVG />
     </div>
   </div>
 </template>
@@ -28,16 +31,26 @@ export default {
   },
   data() {
     return {
+      loading: true,
       leadMessages: CollectionManager.create({
         ModelClass: LeadMessage,
-        filters: {},
+        filters: {
+          byLead: this.lead.id,
+        },
       }),
     }
   },
-  created() {
-    this.leadMessages.refresh()
+  async created() {
+    this.loading = true
+    await this.refresh()
+    this.loading = false
   },
-  methods: {},
+  methods: {
+    async refresh() {
+      ;(this.loading = true), await this.leadMessages.refresh()
+      this.loading = false
+    },
+  },
 }
 </script>
 

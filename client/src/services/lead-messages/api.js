@@ -17,6 +17,7 @@ export default class LeadMessageAPI {
     const filtersMap = {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      byLead: ApiFilter.create({ key: 'by_lead' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
