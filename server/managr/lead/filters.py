@@ -379,6 +379,7 @@ class LeadMessageFilterSet(FilterSet):
 
     class Meta:
         model = LeadMessage
+        fields = ['by_lead']
 
 
 class NoteFilterSet(FilterSet):
