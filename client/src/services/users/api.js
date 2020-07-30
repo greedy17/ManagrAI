@@ -9,6 +9,7 @@ const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const USERS_ENDPOINT = '/users/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
+const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 
 export default class UserAPI {
   get client() {
@@ -123,5 +124,16 @@ export default class UserAPI {
       .patch(GET_USER_ENDPOINT(id), this.cls.toAPI(data))
       .catch(apiErrorHandler({ apiName: 'UserAPI.update' }))
     return promise
+  }
+  async createMessagingAccount(phoneNumber) {
+    const url = CREATE_MESSAGING_ACCOUNT_ENDPOINT
+    const data = {
+      phone_number: phoneNumber,
+    }
+    try {
+      await this.client.post(url, data)
+    } catch {
+      apiErrorHandler({ apiName: 'UserAPI.Messaging' })
+    }
   }
 }

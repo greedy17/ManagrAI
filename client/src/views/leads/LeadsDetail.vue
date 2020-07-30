@@ -52,7 +52,14 @@
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
             @click="activityTabSelected = EMAILS"
           >
-            Email
+            Emails
+          </div>
+          <div
+            class="box__tab"
+            :class="{ 'box__tab--active': activityTabSelected === MESSAGES }"
+            @click="activityTabSelected = MESSAGES"
+          >
+            Messages
           </div>
 
           <div class="check-email-btn" v-if="activityTabSelected === EMAILS">
@@ -103,6 +110,9 @@
         <div v-show="activityTabSelected === EMAILS" class="box__content">
           <LeadEmails :lead="lead" ref="Emails" />
         </div>
+        <div v-show="activityTabSelected === MESSAGES" class="box__content">
+          <LeadEmails :lead="lead" ref="Messages" />
+        </div>
       </div>
     </div>
 
@@ -132,6 +142,7 @@ import LeadEmails from './_LeadEmails'
 
 const HISTORY = 'HISTORY'
 const EMAILS = 'EMAILS'
+const MESSAGES = 'MESSAGES'
 const EDIT_STATE = 'create'
 const VIEW_STATE = 'view'
 
@@ -171,6 +182,7 @@ export default {
       // Past Activity Area
       HISTORY,
       EMAILS,
+      MESSAGES,
       activityTabSelected: HISTORY,
       showHistoryMenu: false,
       expandedHistoryItems: [],

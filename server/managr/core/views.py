@@ -31,7 +31,7 @@ from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
 from managr.lead import constants as lead_consts
-from managr.lead.models import LeadMessage, Notification
+from managr.lead.models import LeadMessage, Notification, Lead
 from managr.lead.background import emit_event as emit_log_event
 
 from managr.organization.models import Organization, Contact
@@ -289,14 +289,19 @@ class UserViewSet(
         # get the recipient sent as an array (name, phone ) since we have alt phones will only send to phone_number_1
         recipient_contacts = request.data.get('recipients', [])
         recipient_lead = request.data.get('lead')
+        lead = Lead.objects.filter(id=recipient_lead).first()
         recipients = []
+        query = Q()
+
+        # get phone numbers
         for recipient in recipient_contacts:
             phone = recipient.get('phone_number_1', None)
             if phone:
                 recipients.append(phone)
+                query |= Q(phone_number_1=phone)
 
-        # get phone numbers
-
+        contacts_queryset = lead.linked_contacts.all()
+        contacts_object = contacts_queryset.filter(query)
         sender = has_auth_account.phone_number
 
         body = request.data.get('body', None)
@@ -307,11 +312,12 @@ class UserViewSet(
                                has_auth_account.status_callback)
             message_id = msg.sid
 
-            lead_message = LeadMessage.objects.create(created_by=user, lead=recipient_lead,
+            lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
                                                       message_id=message_id,
-                                                      direction=lead_consts.SENT)
-            emit_log_event(lead_consts.MESSAGE_SENT, user, lead_message)
-            # lead_message.linked_contacts.set(contacts_object)
+                                                      direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
+            lead_message.linked_contacts.set(contacts_object)
+            #emit_log_event(lead_consts.MESSAGE_SENT, user, lead_message)
+
         return Response()
 
     @action(
@@ -370,7 +376,6 @@ class UserViewSet(
         serializer = MessageAuthAccountSerializer(data=account)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        print(serializer.data)
         return Response()
 
 
@@ -503,7 +508,8 @@ class TwilioMessageWebhook(APIView):
         contacts_object = Contact.objects.filter(
             Q(phone_number_1=sender) | Q(phone_number_2=sender))
 
-        leads = u.claimed_leads.filter(linked_contacts__in=contacts_object)
+        leads = u.claimed_leads.filter(
+            linked_contacts__in=contacts_object).distinct()
         # !! NOT SURE WHAT TO DO WITH MESSAGES NOT FROM A CONTACT
         # MAYBE SEND THE MESSAGE TO THE USERS
         # REAL PHONE NUMBER
@@ -513,7 +519,7 @@ class TwilioMessageWebhook(APIView):
             for lead in leads:
                 lead_message = LeadMessage.objects.create(created_by=u, lead=lead,
                                                           message_id=message_id,
-                                                          direction=lead_consts.RECEIVED)
+                                                          direction=lead_consts.RECEIVED, body=body, status=lead_consts.MESSAGE_DELIVERED)
 
                 lead_message.linked_contacts.set(contacts_object)
                 lead_message.save()
@@ -533,51 +539,40 @@ class TwilioMessageWebhook(APIView):
         return Response()
 
 
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated, ])
-def send_text_message(request):
-    user = request.user
-    # check if the user has activated their twilio account
-    has_auth_account = user.message_auth_account if user.message_auth_account else None
-    if not has_auth_account:
-        return Response(data="{'non_field_errors': User has not set up twilio}", status=status.HTTP_400_BAD_REQUEST)
-
-    # get the recipient sent as an array (name, phone ) since we have alt phones will only send to phone_number_1
-    recipient_contacts = request.data.get('recipients', [])
-    recipient_lead = request.data.get('lead')
-    recipients = []
-    for recipient in recipient_contacts:
-        phone = recipient.get('phone_number_1', None)
-        if phone:
-            recipients.append(phone)
-
-    # get phone numbers
-
-    sender = has_auth_account.phone_number
-
-    body = request.data.get('body', None)
-    # twilio does not support sending to multiple at once
-    for recipient in recipients:
-        # will add try catch TODO:-PB 07/28
-        msg = send_message(body, sender, recipient,
-                           has_auth_account.status_callback)
-        message_id = msg.sid
-
-        lead_message = LeadMessage.objects.create(created_by=user, lead=recipient_lead,
-                                                  message_id=message_id,
-                                                  direction=lead_consts.SENT)
-        emit_log_event(lead_consts.MESSAGE_SENT, user, lead_message)
-        # lead_message.linked_contacts.set(contacts_object)
-    return Response()
-
-
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated, ])
 def list_available_twilio_numbers(request):
-    data = request.data
-    region = data.get('state', None)
+    region = request.query_params.get('region', None)
     numbers = list_available_numbers(region=region)
     return Response(data=numbers)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny, ])
+def message_status(request):
+    # get the message sid and status
+
+    message_status = request.data.get('MessageStatus', None)
+    message_id = request.data.get('MessageSid', None)
+
+    # find the message in the LeadMessage object
+    message_obj = LeadMessage.objects.filter(message_id=message_id).first()
+
+    # update its status to Delivered/NotDelivered/
+
+    if message_status in lead_consts.MESSAGE_DELIVERED_OPTIONS:
+        message_obj.status = lead_consts.MESSAGE_DELIVERED
+    if message_status in lead_consts.MESSAGE_NOT_DELIVERED_OPTIONS:
+        message_obj.status = lead_consts.MESSAGE_NOT_DELIVERED
+    if message_status in lead_consts.MESSAGE_PENDING_OPTIONS:
+        message_obj.status = lead_consts.MESSAGE_PENDING
+    message_obj.save()
+
+    # emit the event to create the log item only if its status is delivered
+    if message_obj and message_status == lead_consts.TWILIO_MESSAGE_DELIVERED:
+        emit_log_event(lead_consts.MESSAGE_SENT,
+                       message_obj.created_by, message_obj)
+    return Response()
 
 
 @api_view(["POST"])

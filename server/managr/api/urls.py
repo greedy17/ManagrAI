@@ -37,10 +37,10 @@ urlpatterns = [
          name="nylas_message_webhook"),
     path('twilio/callback/messages', core_views.TwilioMessageWebhook.as_view(),
          name="twilio_messages_webhook"),
-    path('twilio/messages/send', core_views.send_text_message,
-         name="twilio_send_text_message"),
     path('twilio/list-available-numbers', core_views.list_available_twilio_numbers,
          name="list_available_twilio_numbers"),
+    path('twilio/callback/messages/status', core_views.message_status,
+         name="twilio_callback_message_status"),
     path('nylas/callback/accounts', core_views.NylasAccountWebhook.as_view(),
          name="nylas_account_webhook")
 

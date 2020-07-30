@@ -71,6 +71,19 @@
         <span class="insight-bottom">{{ insights.emails.latest | timeAgo }}</span>
       </div>
     </div>
+
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+      <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          {{ insights.messages.count }}
+          {{ 'Message' | pluralize(insights.messages.count) }}
+        </span>
+        <span class="insight-bottom">{{ insights.messages.latest | timeAgo }}</span>
+      </div>
+    </div>
   </div>
 </template>
 

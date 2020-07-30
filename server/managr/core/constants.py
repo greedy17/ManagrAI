@@ -17,8 +17,8 @@ SEND_EMAIL_URI = "send"
 USE_TWILIO = settings.USE_TWILIO
 ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID if USE_TWILIO else None
 AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN if USE_TWILIO else None
-TWILIO_MESSAGE_CALLBACK_URL = f'{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages' if USE_TWILIO else None
-TWILIO_MESSAGE_RECEIVED_CALLBACK_URL = f'{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages/received/' if USE_TWILIO else None
+TWILIO_MESSAGE_STATUS_CALLBACK_URL = f'{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages/status/' if USE_TWILIO else None
+TWILIO_MESSAGE_RECEIVED_CALLBACK_URL = f'{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages' if USE_TWILIO else None
 
 
 # OAuth permission scopes to request from Nylas

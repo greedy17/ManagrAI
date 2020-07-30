@@ -4,7 +4,7 @@
       <template v-for="(notification, i) in notifications.list">
         <NotificationCard
           @mark-as-viewed="markAsViewed"
-          :key="notification + '-' + i"
+          :key="notification.id + '-' + i"
           :notification="notification"
         />
       </template>

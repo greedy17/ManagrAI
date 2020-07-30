@@ -53,6 +53,8 @@ class UserSerializer(serializers.ModelSerializer):
     email_auth_account_ref = EmailAuthAccountSerializer(
         source="email_auth_account", read_only=True
     )
+    message_auth_account_ref = MessageAuthAccountSerializer(
+        source="message_auth_account", read_only=True)
 
     class Meta:
         model = User
@@ -73,6 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
             "email_auth_link",
             "email_auth_account",
             "email_auth_account_ref",
+            "message_auth_account",
+            "message_auth_account_ref",
             "quota",
             "upside",
             "commit",
@@ -88,6 +92,7 @@ class UserSerializer(serializers.ModelSerializer):
         "full_name",
         "email_auth_account",
         "is_serviceaccount",
+        "message_auth_account",
     )
 
 

@@ -539,6 +539,10 @@ class LeadMessage(TimeStampModel):
     direction = models.CharField(
         choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True)
 
+    body = models.CharField(max_length=255, blank=True)
+    status = models.CharField(
+        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True)
+
     @property
     def activity_log_meta(self):
         """A metadata dict for activity logs"""

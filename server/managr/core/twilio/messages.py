@@ -32,14 +32,21 @@ def _handle_twilio_response(response):
 
 
 def send_message(body, sender, recepient, callback):
-    message = client.messages \
-        .create(
-            body=body,
-            from_=sender,
-            to=recepient,
-            # callback url will return the created message to add to the log
-            # status_callback=callback
-        )
+    try:
+        message = client.messages \
+            .create(
+                body=body,
+                from_=sender,
+                to=recepient,
+                # callback url will return the created message to add to the log
+                status_callback=callback
+            )
+    except Exception as e:
+        message = e.msg
+        status = e.status
+        raise APIException(
+            detail=f'Error From Twilio Server, {message}', code=status)
+
     return message
 
 
@@ -48,7 +55,10 @@ def create_new_account(phone_number):
     try:
         incoming_phone_number = client.incoming_phone_numbers \
             .create(phone_number=phone_number,
-                    sms_url=core_consts.TWILIO_MESSAGE_CALLBACK_URL
+                    sms_url=core_consts.TWILIO_MESSAGE_RECEIVED_CALLBACK_URL,
+                    status_callback=core_consts.TWILIO_MESSAGE_STATUS_CALLBACK_URL,
+
+
 
                     )
     except Exception as e:

@@ -1,83 +1,57 @@
 <template>
   <div class="dropdown">
-    <div class="dropdown-container">
-      <div @click="toggle" class="dropdown-input-container" :class="{ searchable: isSearchable }">
-        <input
-          class="search"
-          type="text"
-          @input="execUpdateValue($event.target.value)"
-          :disabled="!isSearchable"
-        />
-        <div v-if="!isMulti" class="selected-items">
-          <span v-show="!isMulti && !visible">{{
-            objectSelectedItems ? objectSelectedItems[displayKey] : ''
-          }}</span>
-        </div>
-        <div v-if="isMulti" class="selected-items multi">
-          <span
-            @click.prevent="execUpdateSelected(item[valueKey])"
+    <div @click="toggle" class="dropdown-input-container" :class="{ searchable: isSearchable }">
+      <input
+        class="search"
+        type="text"
+        @input="execUpdateValue($event.target.value)"
+        :disabled="!isSearchable"
+      />
+      <div v-if="!isMulti" class="selected-items">
+        <span v-show="!isMulti && !visible">{{
+          objectSelectedItems ? objectSelectedItems[displayKey] : ''
+        }}</span>
+      </div>
+      <div v-if="isMulti" class="selected-items multi">
+        <span
+          @click.prevent="execUpdateSelected(item[valueKey])"
+          :key="`${item[valueKey]}-${i}`"
+          v-for="(item, i) in objectSelectedItems"
+          class="selected-items__item"
+        >
+          {{ item[displayKey] }}
+        </span>
+      </div>
+    </div>
+
+    <div v-if="visible" class="dropdown-content">
+      <template v-for="(item, i) in items">
+        <slot
+          :classes="'dd-item'"
+          :name="`dd-item-${item[displayKey]}`"
+          :data="item"
+          :selectItem="execUpdateSelected"
+        >
+          <div
             :key="`${item[valueKey]}-${i}`"
-            v-for="(item, i) in objectSelectedItems"
-            class="selected-items__item"
+            @click.prevent="execUpdateSelected(item[valueKey])"
+            class="dd-item"
+            :class="{
+              selected: isMulti
+                ? ~checkIsSelected(item[valueKey])
+                : item[valueKey] == selectedItems,
+            }"
           >
             {{ item[displayKey] }}
-          </span>
-        </div>
-      </div>
-
-      <div
-        v-if="visible && (isLoading || loading)"
-        class="dropdown-content"
-        :style="{
-          right: right > 0 ? `${right}px` : false,
-          left: left > 0 ? `${left}px` : false,
-          display: visible ? 'flex' : 'none',
-        }"
-      >
-        <div class="loading-container">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-      <div
-        v-if="visible && !isLoading && !loading"
-        class="dropdown-content"
-        :style="{
-          right: right > 0 ? `${right}px` : false,
-          left: left > 0 ? `${left}px` : false,
-          display: visible ? 'flex' : 'none',
-        }"
-      >
-        <template v-for="(item, i) in items">
-          <slot
-            :classes="'dd-item'"
-            :name="`dd-item-${item[displayKey]}`"
-            :data="item"
-            :selectItem="execUpdateSelected"
-          >
-            <div
-              :key="`${item[valueKey]}-${i}`"
-              @click.prevent="execUpdateSelected(item[valueKey])"
-              class="dd-item"
-              :class="{
-                selected: isMulti
-                  ? ~checkIsSelected(item[valueKey])
-                  : item[valueKey] == selectedItems,
-              }"
-            >
-              {{ item[displayKey] }}
-            </div>
-          </slot>
-        </template>
-
-        <slot name="dd-pagination" :classes="'dd-item'" :loadMore="onLoadMore">
-          <div v-if="hasNext" @click.prevent="onLoadMore" class="dd-item">
-            +
           </div>
         </slot>
-      </div>
+      </template>
+
+      <slot name="dd-pagination" :classes="'dd-item'" :loadMore="onLoadMore">
+        <div v-if="hasNext" @click.prevent="onLoadMore" class="dd-item">
+          +
+        </div>
+      </slot>
     </div>
   </div>
 </template>
@@ -222,7 +196,7 @@ export default {
       if (this.isLocalFilter) {
         this.isLoading = true
         let results = this.itemList.filter(i => {
-          return i[this.displayKey].toLowerCase().includes(val)
+          return i[this.displayKey].toLowerCase().includes(val.toLowerCase())
         })
 
         this.emitUpdateItems(results)
@@ -288,24 +262,25 @@ export default {
 Display dropdown relative to the component it is triggered by
 */
 .dropdown {
-  position: relative;
   display: inline-block;
-  min-width: 200px;
+  min-width: 100px;
+  width: 100%;
 }
 /* keep content hidden by default until visible is true */
 
 .dropdown-content {
-  position: absolute;
+  position: relative;
+  top: 20px;
   flex-direction: column;
-  justify-content: space-evenly;
+  display: flex;
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   background-color: white;
-  top: 40px;
   left: 2px;
   z-index: 100;
   width: 100%;
   max-height: 400px;
+
   overflow-x: scroll;
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* mozilla */
@@ -320,17 +295,19 @@ Display dropdown relative to the component it is triggered by
 }
 
 .dropdown-input-container {
+  position: relative;
   cursor: pointer;
   &.searchable {
     cursor: default;
   }
   border-radius: 5px;
   padding: 0.5rem 0.5rem;
-  position: relative;
-  width: 100%;
+  width: 90%;
   .search,
   .selected-items {
+    width: 90%;
     position: absolute;
+
     top: 0;
     left: 0;
     -ms-overflow-style: none; /* IE and Edge */
@@ -344,7 +321,6 @@ Display dropdown relative to the component it is triggered by
     border: none;
     min-height: 20px;
     padding-top: 15px;
-    width: 100%;
     &:disabled {
       cursor: pointer;
     }
@@ -383,6 +359,9 @@ Display dropdown relative to the component it is triggered by
   max-height: 20px;
   padding-left: 10px;
   padding-top: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dd-item {

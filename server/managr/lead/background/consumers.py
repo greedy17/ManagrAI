@@ -74,6 +74,7 @@ class BaseActionConsumer:
         obj = self.get_object()
 
         try:
+
             return obj.activity_log_meta
         except AttributeError:
             logger.warning(

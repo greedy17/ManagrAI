@@ -18,9 +18,9 @@
     </div>
 
     <div class="save-button-container">
-      <button class="button" @click="sendMessage">
+      <button :disabled="sendingMessage || !isComplete" class="button" @click="sendMessage">
         <ComponentLoadingSVG v-if="sendingMessage" />
-        <span v-if="!sendingMessage">Send Email</span>
+        <span v-if="!sendingMessage">Send Text</span>
       </button>
     </div>
   </div>
@@ -46,6 +46,9 @@ export default {
     this.leadLinkedContacts = this.leadLinkedContactsRef
   },
   computed: {
+    isComplete() {
+      return this.body.length > 0 && this.recipients.length > 0
+    },
     leadLinkedContactsRef: {
       get() {
         return this.$attrs.lead.linkedContactsRef
@@ -58,7 +61,7 @@ export default {
       // get the ref to avoid having to search the backend again
       let contactRefs = this.leadLinkedContactsRef.filter(c => this.recipients.includes(c.id))
 
-      await Messages.sendMessage(this.body, contactRefs)
+      await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
       this.sendingMessage = false
     },
     toggleContactInclusion(contactID) {

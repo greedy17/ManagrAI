@@ -252,7 +252,7 @@ class MessageAuthAccount(TimeStampModel):
     identity_sid = models.CharField(max_length=128, null=True)
     origin = models.CharField(max_length=128)
     sid = models.CharField(max_length=128, null=True)
-    phone_number = models.CharField(max_length=128)
+    phone_number = models.CharField(max_length=128, blank=True)
     sms_method = models.CharField(
         max_length=128)
     sms_url = models.CharField(
