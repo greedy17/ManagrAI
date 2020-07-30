@@ -108,6 +108,13 @@ export default {
     margin: 1rem;
   }
 }
+::v-deep .dropdown {
+  width: 100px;
+  input[type='text'] {
+    width: 100%;
+    background-color: $soft-gray;
+  }
+}
 
 .save-button-container {
   display: flex;
