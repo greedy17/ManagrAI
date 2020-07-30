@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from managr.lead import constants as lead_constants
 from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification
-from pdb import set_trace
+
 
 class LeadRatingOrderFiltering(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
