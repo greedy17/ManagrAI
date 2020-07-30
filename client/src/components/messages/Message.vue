@@ -4,7 +4,7 @@
       <div class="actions__item-header-icon">
         <img
           alt="icon"
-          :src="require(`@/assets/images/email.svg`)"
+          :src="require(`@/assets/images/message.svg`)"
           :class="{ 'filter-green': isExpanded }"
           class="icon"
         />
@@ -22,10 +22,10 @@
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
         <span
-          :title="message.datetimeCreated | momentDateTimeShort"
+          :title="message.datetimeCreated | dateShortWithTime"
           style="flex: 1; text-align: right;"
         >
-          {{ (message.datetimeCreated * 1000) | timeAgo }}
+          {{ getFriendlyMessageDirection }}
         </span>
       </div>
       <div class="actions__item-header-action"></div>
@@ -33,6 +33,23 @@
 
     <div class="actions__item-header" v-if="isExpanded">
       <div class="actions__item-header-title">{{ message.body }}</div>
+      <br />
+      <div
+        class="actions__item-header-date"
+        style="display: flex; flex-direction: column; align-items: flex-start;"
+      >
+        <span title="date-time-created" style="flex: 1; text-align: right;">
+          {{ message.datetimeCreated | dateShortWithTime }}
+        </span>
+      </div>
+      <div
+        class="actions__item-header-date"
+        style="display: flex; flex-direction: column; align-items: flex-end;"
+      >
+        <span title="status" style="flex: 1; text-align: right;">
+          {{ getFriendlyMessageStatus }}
+        </span>
+      </div>
     </div>
     <div v-if="isExpanded"></div>
   </div>
@@ -70,7 +87,33 @@ export default {
   created() {
     this.isExpanded = this.initiallyExpanded
   },
-  computed: {},
+  computed: {
+    getFriendlyMessageDirection() {
+      switch (this.message.direction) {
+        case 'SENT':
+          return 'outbound'
+        case 'RECEIVED':
+          return 'inbound'
+        default:
+          return 'N/A'
+      }
+    },
+    getFriendlyMessageStatus() {
+      switch (this.message.status) {
+        case 'DELIVERED':
+          return 'This Message was delivered'
+
+        case 'NOT_DELIVERED':
+          return 'Not able to deliver this message'
+
+        case 'MESSAGE_PENDING':
+          return 'This message is still processing'
+
+        default:
+          return 'Devlivery Information unavailable '
+      }
+    },
+  },
   methods: {
     toggleExpanded() {
       if (!this.isExpanded) {
