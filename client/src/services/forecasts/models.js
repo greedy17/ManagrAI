@@ -25,6 +25,7 @@ export default class Forecast {
   static FUTURE = 'FUTURE'
   static UNFORECASTED = 'UNFORECASTED'
   static NA = 'NA'
+  static CLOSED = 'CLOSED'
 
   constructor({
     id = '',

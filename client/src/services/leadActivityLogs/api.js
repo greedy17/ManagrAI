@@ -56,6 +56,8 @@ export default class LeadActivityLogAPI {
       leads: ApiFilter.create({ key: 'leads', extractor: i => i.join(',') }),
       claimedBy: ApiFilter.create({ key: 'claimed_by', extractor: i => i.join(',') }),
       empty: ApiFilter.create({ key: 'empty' }),
+      dateRangeFrom: ApiFilter.create({ key: 'date_range_from' }),
+      dateRangeTo: ApiFilter.create({ key: 'date_range_to' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...filters }),
@@ -66,7 +68,7 @@ export default class LeadActivityLogAPI {
       return objectToCamelCase(response.data)
     } catch (error) {
       apiErrorHandler({
-        apiName: 'LeadActivityLogAPI.list',
+        apiName: 'LeadActivityLogAPI.getInsights',
         enable400Alert,
         enable500Alert,
         rethrowErrors,

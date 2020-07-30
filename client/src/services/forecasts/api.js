@@ -31,7 +31,8 @@ export default class ForecastAPI {
       pageSize: ApiFilter.create({ key: 'page_size' }),
       byUser: ApiFilter.create({ key: 'by_user' }),
       forecast: ApiFilter.create({ key: 'forecast' }),
-      dateRange: ApiFilter.create({ key: 'date_range' }),
+      dateRangeFrom: ApiFilter.create({ key: 'date_range_from' }),
+      dateRangeTo: ApiFilter.create({ key: 'date_range_to' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -71,10 +72,11 @@ export default class ForecastAPI {
     return promise
   }
 
-  KPIs({ representatives, dateRangePreset }) {
+  KPIs({ representatives, dateRangeFrom, dateRangeTo }) {
     let data = {
       representatives,
-      dateRangePreset,
+      dateRangeFrom,
+      dateRangeTo,
     }
     const promise = apiClient()
       .post(KPIS_ENDPOINT, this.cls.toAPI(data))

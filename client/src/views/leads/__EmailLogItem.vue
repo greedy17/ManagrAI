@@ -38,10 +38,20 @@
         </div>
         <div class="panel-content">
           <p v-if="log.activity == 'LeadEmail.RECEIVED'">
-            {{ log.actionTakenByRef.fullName }} Received an Email From {{ getLinkedContacts }}
+            {{
+              log.actionTakenByRef.fullName.trim()
+                ? log.actionTakenByRef.fullName
+                : log.actionTakenByRef.email
+            }}
+            Received an Email From {{ getLinkedContacts }}
           </p>
           <p v-if="log.activity == 'LeadEmail.SENT'">
-            {{ log.actionTakenByRef.fullName }} sent an email to {{ getLinkedContacts }}
+            {{
+              log.actionTakenByRef.fullName.trim()
+                ? log.actionTakenByRef.fullName
+                : log.actionTakenByRef.email
+            }}
+            sent an email to {{ getLinkedContacts }}
           </p>
         </div>
       </div>

@@ -16,8 +16,7 @@ export default {
   },
   methods: {
     handleClick() {
-      // NOTE(Bruno 4-15-20): Reports is not built and so is made inactive
-      if (!this.isCurrentRoute && this.to !== 'Reports') {
+      if (!this.isCurrentRoute) {
         this.$router.push({ name: this.to })
       }
     },
@@ -37,8 +36,8 @@ export default {
 .nav-link {
   @include disable-text-select();
   @include pointer-on-hover();
-  height: 4rem;
-  width: 3.6rem;
+  height: 4.5rem;
+  width: 5rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
