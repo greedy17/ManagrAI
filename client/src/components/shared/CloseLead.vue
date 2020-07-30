@@ -86,7 +86,11 @@ export default {
           return Lead.api.close(this.lead.id, this.amount, response.data.id)
         })
         .then(() => {
-          this.lead.status = 'CLOSED'
+          this.lead.status = Lead.CLOSED
+          if (this.lead.forecastRef) {
+            this.lead.forecastRef.forecast = Lead.CLOSED
+          }
+          this.lead.closingAmount = this.amount
           this.$parent.$emit('closed-lead')
           this.$parent.$emit('close-modal')
           this.$Alert.alert({

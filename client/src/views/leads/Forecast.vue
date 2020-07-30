@@ -14,6 +14,7 @@
       <ToolBar
         class="toolbar"
         :repFilterState="repFilterState"
+        :triggerRefreshKPIs="triggerRefreshKPIs"
         @toggle-active-rep="toggleActiveRep"
         @select-all-reps="selectAllReps"
         @deselect-all-reps="deselectAllReps"
@@ -28,7 +29,7 @@
       <div class="lists-container-message" v-else-if="noResults">
         No Results!
       </div>
-      <ListsContainer v-else :lists="lists" />
+      <ListsContainer v-else :lists="lists" @trigger-refresh-kpis="triggerKPIs" />
     </div>
   </div>
 </template>
@@ -57,6 +58,7 @@ export default {
   data() {
     return {
       loading: true,
+      triggerRefreshKPIs: false,
       lists: {
         '50/50': CollectionManager.create({
           ModelClass: Forecast,
@@ -107,6 +109,10 @@ export default {
     this.updateForecastCollections()
   },
   methods: {
+    triggerKPIs() {
+      this.triggerRefreshKPIs = true
+      setTimeout(() => (this.triggerRefreshKPIs = false), 0)
+    },
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },

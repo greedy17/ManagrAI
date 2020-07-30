@@ -238,6 +238,10 @@ export default {
       required: true,
       type: Object,
     },
+    triggerRefreshKPIs: {
+      required: true,
+      type: Boolean,
+    },
   },
   data() {
     return {
@@ -421,6 +425,12 @@ export default {
       this.insightsLoadingDueToFilterChange = true
       this.refreshActivityStats(POLLING_INTERVAL)
       this.getKPIs()
+    },
+    triggerRefreshKPIs(trigger) {
+      // if it is truthy, then upstream the trigger was switched on
+      if (trigger) {
+        this.getKPIs()
+      }
     },
   },
   computed: {
