@@ -57,7 +57,7 @@ export default {
         case NOTIFICATION_TYPES.system:
           return 'alarm'
         case NOTIFICATION_TYPES.message:
-          return 'email'
+          return 'sms'
         case NOTIFICATION_TYPES.emailOpened:
           return 'checkmark'
         default:

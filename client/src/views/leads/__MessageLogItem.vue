@@ -4,7 +4,7 @@
       <div class="item-list__row" @click="$emit('item-click')">
         <div class="item-list__row-item--half">
           <div class="icon-type">
-            <img alt="icon" :src="require(`@/assets/images/email.svg`)" class="icon" />
+            <img alt="icon" :src="require(`@/assets/images/messages.svg`)" class="icon" />
           </div>
         </div>
         <div class="item-list__row-item--double">
