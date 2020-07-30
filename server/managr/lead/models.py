@@ -543,6 +543,11 @@ class LeadMessage(TimeStampModel):
     status = models.CharField(
         choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True)
 
+    objects = LeadMessageQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
     @property
     def activity_log_meta(self):
         """A metadata dict for activity logs"""
