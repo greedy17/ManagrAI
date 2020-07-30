@@ -15,18 +15,14 @@
         <div v-if="!user.textConnected" class="message-setup">
           <div class="form-group">
             <label>State</label>
-            <div class="dropdown-list">
-              <DropDownSelect
-                v-if="!user.textConnected"
-                :items.sync="statesList"
-                displayKey="name"
-                valueKey="abbreviation"
-                v-model="selectedState"
-                local
-                searchable
-                @input="onSelectedState"
-              />
-            </div>
+            <DropDownList
+              v-if="!user.textConnected"
+              :items="statesList"
+              displayKey="name"
+              valueKey="abbreviation"
+              v-model="selectedState"
+              @selected="onSelectedState"
+            />
           </div>
           <div class="form-group">
             <label>Number</label>
@@ -36,20 +32,18 @@
             >
               No Results
             </div>
-            <div class="dropdown-list">
-              <DropDownSelect
-                v-if="
-                  !user.textConnected &&
-                    showNumbersList &&
-                    !loading &&
-                    availablePhoneNumbers.length > 0
-                "
-                :items="availablePhoneNumbers"
-                v-model="selected"
-                displayKey="phoneNumber"
-                valueKey="phoneNumber"
-              />
-            </div>
+            <DropDownList
+              v-if="
+                !user.textConnected &&
+                  showNumbersList &&
+                  !loading &&
+                  availablePhoneNumbers.length > 0
+              "
+              :items="availablePhoneNumbers"
+              v-model="selected"
+              displayKey="phoneNumber"
+              valueKey="phoneNumber"
+            />
           </div>
           <div class="selected-phone-details">
             <div class="details" v-if="fullSelectedNumberDetails">
@@ -90,10 +84,11 @@ import { mapState, mapActions } from 'vuex'
 import Messaging, { STATES } from '@/services/messages'
 import DropDownSelect from '@/components/forms/DropDownSelect'
 import User from '@/services/users'
+import DropDownList from '@/components/shared/DropDownList'
 
 export default {
   name: 'TextIntegration',
-  components: { DropDownSelect },
+  components: { DropDownSelect, DropDownList },
   data() {
     return {
       filterBy: '',
@@ -154,10 +149,7 @@ export default {
 }
 .message-setup {
   display: flex;
-  flex-direction: row;
-  > * {
-    margin: 1rem;
-  }
+  flex-direction: column;
 }
 .disconnect {
   @include button-danger;
@@ -167,11 +159,11 @@ export default {
   align-items: center;
 }
 
-.box__content {
-}
 .form-group {
   display: flex;
-}
-.dropdown-list {
+  align-items: center;
+  > * {
+    margin: 1rem;
+  }
 }
 </style>
