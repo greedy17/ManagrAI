@@ -30,7 +30,7 @@ class LeadRatingOrderFiltering(OrderingFilter):
         return queryset
 
 
-class LeadMessageOrderingFilter(OrderingFilter):
+class ReminderOrderingFilter(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
         print('here')
         ordering = request.query_params.get('order_by', None)
