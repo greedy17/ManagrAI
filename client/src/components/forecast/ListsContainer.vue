@@ -112,7 +112,7 @@ export default {
   methods: {
     capitalizeWord,
     moveLeadInForecastList(payload) {
-      this.$emit('trigger-get-kpis')
+      this.$emit('trigger-refresh-kpis')
       let { forecast, from, to } = payload
       // clean up 'Unforecasted'/'NA' client/server inconsistency
       to = to == Forecast.NA ? Forecast.UNFORECASTED : to
