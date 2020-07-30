@@ -111,7 +111,7 @@
           <LeadEmails :lead="lead" ref="Emails" />
         </div>
         <div v-show="activityTabSelected === MESSAGES" class="box__content">
-          <LeadEmails :lead="lead" ref="Messages" />
+          <LeadMessages :lead="lead" ref="Messages" />
         </div>
       </div>
     </div>
@@ -139,6 +139,7 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
+import LeadMessages from './_LeadMessages'
 
 const HISTORY = 'HISTORY'
 const EMAILS = 'EMAILS'
@@ -158,6 +159,7 @@ export default {
     LeadHistory,
     LeadEmails,
     DropDownMenu,
+    LeadMessages,
   },
   data() {
     return {
