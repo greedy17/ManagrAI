@@ -2,13 +2,7 @@
   <div class="lead-messages">
     <div class="messages">
       <div :key="message.id" v-for="message in leadMessages.list" class="message">
-        Message Sent From:
-        {{
-          message.direction == 'SENT'
-            ? message.createdByRef.fullName
-            : 'number associated with ' + message.linkedContactsRef.map(c => c.fullName)
-        }}
-        Message:{{ message.body }} Status:{{ message.status }}
+        <Message :message="message" :lead="lead" />
       </div>
     </div>
   </div>
@@ -18,6 +12,7 @@
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import LeadMessage from '@/services/lead-messages'
 import CollectionManager from '@/services/collectionManager'
+import Message from '@/components/messages/Message'
 
 export default {
   name: 'LeadMessages',
@@ -29,6 +24,7 @@ export default {
   },
   components: {
     ComponentLoadingSVG,
+    Message,
   },
   data() {
     return {

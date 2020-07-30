@@ -22,17 +22,17 @@
         style="display: flex; flex-direction: column; align-items: flex-end;"
       >
         <span
-          :title="thread.last_message_timestamp | momentDateTimeShort"
+          :title="message.datetimeCreated | momentDateTimeShort"
           style="flex: 1; text-align: right;"
         >
-          {{ (thread.last_message_timestamp * 1000) | timeAgo }}
+          {{ (message.datetimeCreated * 1000) | timeAgo }}
         </span>
       </div>
       <div class="actions__item-header-action"></div>
     </div>
 
-    <div class="actions__item-header" v-if="!isExpanded">
-      <div class="actions__item-header-title">{{ thread.snippet }}</div>
+    <div class="actions__item-header" v-if="isExpanded">
+      <div class="actions__item-header-title">{{ message.body }}</div>
     </div>
     <div v-if="isExpanded"></div>
   </div>
@@ -46,7 +46,7 @@ export default {
   name: 'Message',
   components: { ThreadMessage, ComponentLoadingSVG },
   props: {
-    mesage: {
+    message: {
       type: Object,
       required: true,
     },
@@ -75,7 +75,6 @@ export default {
     toggleExpanded() {
       if (!this.isExpanded) {
         this.isExpanded = true
-        this.isLoading = true
       } else {
         this.isExpanded = false
       }

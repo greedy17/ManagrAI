@@ -285,7 +285,7 @@ class LeadMessageSerializer(serializers.ModelSerializer):
             "id",
             "created_by", "created_by_ref",
             "lead", "lead_ref", "linked_contacts", "linked_contacts_ref",
-            "message_id", "direction", "status", 'datetime_created',
+            "message_id", "direction", "status", 'datetime_created', "body",
         )
 
 
