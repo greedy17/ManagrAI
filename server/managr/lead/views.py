@@ -115,7 +115,7 @@ class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     filter_class = lead_filters.LeadMessageFilterSet
     filter_backends = (
         DjangoFilterBackend,
-        lead_filters.LeadMessageOrderFiltering,
+        lead_filters.LeadMessageOrderingFilter,
     )
 
     def get_queryset(self):
