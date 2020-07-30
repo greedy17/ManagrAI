@@ -24,7 +24,7 @@ export default class LeadMessageAPI {
     }
     try {
       const res = await this.client.get(LEAD_MESSAGE_ENDPOINT, options)
-      console.log(res)
+
       return {
         ...res,
         results: res.data.results.map(this.cls.fromAPI),
