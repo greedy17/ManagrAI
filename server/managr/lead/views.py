@@ -84,11 +84,13 @@ class LeadActivityLogViewSet(
                                 users.
         """
         # NOTE (Bruno 7-9-2020): self.get_queryset excludes
-        # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following qs instead.
-        qs = LeadActivityLog.objects.for_user(self.request.user)
+        # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following log_qs instead.
+        log_qs = LeadActivityLog.objects.for_user(self.request.user)
         empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
         claimed_by = request.query_params.get("claimed_by")
+        date_range_from = request.query_params.get("date_range_from")
+        date_range_to = request.query_params.get("date_range_to")
 
         # IMPORTANT: For security reasons, first filter leads to
         #            those visible by this user.
@@ -97,11 +99,18 @@ class LeadActivityLogViewSet(
             lead_qs = lead_qs.filter(id__in=leads.split(","))
         if claimed_by:
             lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
+        # date_range_from and date_range_to can be missing, because:
+        # - TODAY_ONWARD means there is no date_range_to
+        # - ALL_TIME means both are missing
+        if date_range_from:
+            lead_qs = lead_qs.filter(expected_close_date__gte=date_range_from)
+        if date_range_to:
+            lead_qs = lead_qs.filter(expected_close_date__lte=date_range_to)
 
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
 
-        insights = LeadInsights(lead_qs, qs, empty)
+        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, empty=empty)
         return Response(insights.as_dict)
 
 
