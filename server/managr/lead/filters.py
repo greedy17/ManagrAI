@@ -30,6 +30,19 @@ class LeadRatingOrderFiltering(OrderingFilter):
         return queryset
 
 
+class LeadMessageOrderingFilter(OrderingFilter):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('order_by', None)
+        if ordering is not None:
+            if ordering.startswith('-'):
+                ordering.strip('-')
+                queryset = queryset.order_by(ordering)
+            else:
+                queryset = queryset.order_by(ordering)
+
+        return queryset
+
+
 class LeadFilterSet(FilterSet):
     """
         this filters for rating 1-5
