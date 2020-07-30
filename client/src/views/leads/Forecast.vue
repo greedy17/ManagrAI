@@ -14,6 +14,7 @@
       <ToolBar
         class="toolbar"
         :repFilterState="repFilterState"
+        :triggerRefreshKPIs="triggerRefreshKPIs"
         @toggle-active-rep="toggleActiveRep"
         @select-all-reps="selectAllReps"
         @deselect-all-reps="deselectAllReps"
@@ -28,7 +29,7 @@
       <div class="lists-container-message" v-else-if="noResults">
         No Results!
       </div>
-      <ListsContainer v-else :lists="lists" />
+      <ListsContainer v-else :lists="lists" @trigger-refresh-kpis="triggerKPIs" />
     </div>
   </div>
 </template>
@@ -40,6 +41,7 @@ import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
+import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
 
 function allRepsReducer(obj, id) {
   obj[id] = true
@@ -56,30 +58,46 @@ export default {
   data() {
     return {
       loading: true,
+      triggerRefreshKPIs: false,
       lists: {
         '50/50': CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.FIFTY_FIFTY, dateRange: Forecast.TODAY_ONWARD },
+          filters: {
+            forecast: Forecast.FIFTY_FIFTY,
+            ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD),
+          },
         }),
         STRONG: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.STRONG, dateRange: Forecast.TODAY_ONWARD },
+          filters: {
+            forecast: Forecast.STRONG,
+            ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD),
+          },
         }),
         VERBAL: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.VERBAL, dateRange: Forecast.TODAY_ONWARD },
+          filters: {
+            forecast: Forecast.VERBAL,
+            ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD),
+          },
         }),
         FUTURE: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.FUTURE, dateRange: Forecast.TODAY_ONWARD },
+          filters: {
+            forecast: Forecast.FUTURE,
+            ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD),
+          },
         }),
         UNFORECASTED: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.NA, dateRange: Forecast.TODAY_ONWARD },
+          filters: { forecast: Forecast.NA, ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD) },
         }),
         CLOSED: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: Forecast.CLOSED, dateRange: Forecast.TODAY_ONWARD },
+          filters: {
+            forecast: Forecast.CLOSED,
+            ...dateRangeParamsFromPreset(Forecast.TODAY_ONWARD),
+          },
         }),
       },
       repFilterState: {
@@ -91,6 +109,10 @@ export default {
     this.updateForecastCollections()
   },
   methods: {
+    triggerKPIs() {
+      this.triggerRefreshKPIs = true
+      setTimeout(() => (this.triggerRefreshKPIs = false), 0)
+    },
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },
@@ -111,7 +133,10 @@ export default {
     },
     applyDateRangeFilter(dateRange) {
       Object.keys(this.lists).forEach(key => {
-        this.lists[key].filters.dateRange = dateRange
+        this.lists[key].filters = {
+          ...this.lists[key].filters,
+          ...dateRangeParamsFromPreset(dateRange),
+        }
       })
     },
     refresh() {

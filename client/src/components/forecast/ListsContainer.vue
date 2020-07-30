@@ -52,11 +52,7 @@ function listSorter(firstForecast, secondForecast) {
   let firstMoment = moment(firstForecast.leadRef.expectedCloseDate)
   let secondMoment = moment(secondForecast.leadRef.expectedCloseDate)
   let bothValid = firstMoment.isValid() && secondMoment.isValid()
-  let oneValid = firstMoment.isValid()
-    ? firstMoment
-    : false || secondMoment.isValid()
-    ? secondMoment
-    : false
+  let oneValid = firstMoment.isValid() || secondMoment.isValid()
 
   if (bothValid) {
     if (firstMoment > secondMoment) {
@@ -76,7 +72,7 @@ function listSorter(firstForecast, secondForecast) {
   }
 
   if (oneValid) {
-    if (oneValid === firstMoment) {
+    if (firstMoment.isValid()) {
       return -1
     } else {
       return 1
@@ -112,6 +108,7 @@ export default {
   methods: {
     capitalizeWord,
     moveLeadInForecastList(payload) {
+      this.$emit('trigger-refresh-kpis')
       let { forecast, from, to } = payload
       // clean up 'Unforecasted'/'NA' client/server inconsistency
       to = to == Forecast.NA ? Forecast.UNFORECASTED : to
