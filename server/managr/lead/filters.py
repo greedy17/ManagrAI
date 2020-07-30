@@ -135,7 +135,7 @@ class LeadFilterSet(FilterSet):
 
 class ForecastFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="forecasts_by_user")
-    date_range_from = django_filters.IsoDateTimeFilter(field_name="lead__expected_close_date", lookup_expr="gte")
+    date_range_from = django_filters.CharFilter(method="filter_by_date_range_from")
     date_range_to = django_filters.IsoDateTimeFilter(field_name="lead__expected_close_date", lookup_expr="lte")
 
     class Meta:
@@ -165,6 +165,14 @@ class ForecastFilterSet(FilterSet):
             except DjangoValidationError:
                 # if a malformed User Id is sent fail silently and return None
                 return queryset.none()    
+
+    def filter_by_date_range_from(self, queryset, name, value):
+        # if the request does not include date_range_to param,
+        # then also include leads without an expected_close_date
+        if not self.request.query_params.get('date_range_to'):
+            return queryset.filter(Q(lead__expected_close_date__gte=value) | Q(lead__expected_close_date__isnull=True))
+        else:
+            return queryset.filter(lead__expected_close_date__gte=value)
 
 
 class ListFilterSet(FilterSet):

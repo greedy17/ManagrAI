@@ -13,8 +13,10 @@ const switcher = {
   [Forecast.LAST_WEEK]: lastWeek,
   [Forecast.THIS_MONTH]: thisMonth,
   [Forecast.LAST_MONTH]: lastMonth,
+  [Forecast.NEXT_MONTH]: nextMonth,
   [Forecast.THIS_QUARTER]: thisQuarter,
   [Forecast.LAST_QUARTER]: lastQuarter,
+  [Forecast.NEXT_QUARTER]: nextQuarter,
   [Forecast.THIS_YEAR]: thisYear,
   [Forecast.LAST_YEAR]: lastYear,
   [Forecast.ALL_TIME]: allTime,
@@ -112,6 +114,22 @@ function lastMonth() {
   }
 }
 
+function nextMonth() {
+  // Need to account for non-consistent month length
+  return {
+    dateRangeFrom: moment()
+      .endOf('month')
+      .add(1, 'days')
+      .startOf('month')
+      .toISOString(),
+    dateRangeTo: moment()
+      .endOf('month')
+      .add(1, 'days')
+      .endOf('month')
+      .toISOString(),
+  }
+}
+
 function thisQuarter() {
   return {
     dateRangeFrom: moment()
@@ -133,6 +151,21 @@ function lastQuarter() {
     dateRangeTo: moment()
       .startOf('quarter')
       .subtract(1, 'days')
+      .endOf('quarter')
+      .toISOString(),
+  }
+}
+
+function nextQuarter() {
+  return {
+    dateRangeFrom: moment()
+      .endOf('quarter')
+      .add(1, 'days')
+      .startOf('quarter')
+      .toISOString(),
+    dateRangeTo: moment()
+      .endOf('quarter')
+      .add(1, 'days')
       .endOf('quarter')
       .toISOString(),
   }
