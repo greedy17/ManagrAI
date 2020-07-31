@@ -1,7 +1,7 @@
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-
+import logging
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
@@ -9,8 +9,7 @@ from django.views import View
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from managr.core.nylas.auth import get_access_token, get_account_details
-from managr.core import constants as core_consts
+
 from rest_framework import (
     authentication,
     filters,
@@ -30,10 +29,13 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+
+from managr.core.nylas.auth import get_access_token, get_account_details
+from managr.core import constants as core_consts
+
+
 from .models import (
     User,
-
-
     EmailAuthAccount,
     EmailTemplate,
 )
@@ -55,6 +57,10 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
+
+from managr.core.background import emit_event
+
+logger = logging.getLogger("managr")
 
 
 def index(request):
@@ -126,7 +132,7 @@ class UserViewSet(
         ):
             return User.objects.filter(organization=self.request.user.organization)
         else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            return User.objects.none()
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
@@ -135,7 +141,9 @@ class UserViewSet(
             user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        if request_user != user:
+        # if request.data does not include quota/commit/upside,
+        # then user should not be able to update another user's data
+        if not self._is_kpi_update(request) and request_user != user:
             return Response(
                 {"non_field_errors": ("You can only update your own details")},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -150,6 +158,11 @@ class UserViewSet(
         response_data = serializer.data
 
         return Response(response_data)
+
+    def _is_kpi_update(self, request):
+        if request.data.get('quota') or request.data.get('commit') or request.data.get('upside'):
+            return True
+        return False
 
     @action(
         methods=["post"],
@@ -214,6 +227,8 @@ class UserViewSet(
         """
         user = request.user
         threads = retrieve_threads(user, **request.query_params.dict())
+        # check threads for leademail count and append that
+
         return Response(threads)
 
     @action(
@@ -325,6 +340,58 @@ class GetFileView(View):
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
+
+
+class NylasMessageWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Nylas verification webhook """
+        challenge = request.query_params.get('challenge', None)
+        if challenge:
+            return HttpResponse(content=challenge)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+
+        data = request.data
+        webhook_object = data['deltas'][0]['object']
+        webhook_type = data['deltas'][0]['type']
+        if webhook_type == 'message.created' and webhook_object == 'message':
+            data_object = data['deltas'][0]['object_data']
+            emit_event(data_object['account_id'], data_object['attributes']
+                       ['thread_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED)
+        elif webhook_type == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED and webhook_object == core_consts.NYLAS_WEBHOOK_OBJECT_METADATA:
+            data_object = data['deltas'][0]['object_data']
+
+            # this message has already been notified we will add a kwargs to check if a notif was sent
+
+            emit_event(data_object['account_id'], data_object['metadata']
+                       ['message_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED, **{"count": data_object['metadata']['count']})
+
+        return Response()
+
+
+class NylasAccountWebhook(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        """ Respond to Nylas verification webhook """
+        challenge = request.query_params.get('challenge', None)
+        print(challenge)
+        if challenge:
+            return HttpResponse(content=challenge)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+
+        data = request.data
+        print(data)
+        return Response()
 
 
 @api_view(["POST"])

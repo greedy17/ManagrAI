@@ -7,18 +7,23 @@
     <div class="page-content">
       <router-view :key="$route.fullPath"></router-view>
     </div>
+
+    <SideNavBar v-if="userIsLoggedIn" />
   </div>
 </template>
 
 <script>
 import VueScrollTo from 'vue-scrollto'
 import NavBar from '@/components/NavBar'
+import SideNavBar from '@/components/navigation/SideNavBar'
+
 import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
   name: 'app',
   components: {
     NavBar,
+    SideNavBar,
   },
   watch: {
     // When route changes, scroll to the top
@@ -26,16 +31,21 @@ export default {
       VueScrollTo.scrollTo('#app', 200)
     },
   },
-  created() {
+  async created() {
     if (this.userIsLoggedIn) {
       this.refreshCurrentUser()
     }
   },
+
   methods: {
     ...mapActions(['refreshCurrentUser']),
+    toggleNotifications() {
+      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
+    },
   },
   computed: {
     ...mapGetters(['userIsLoggedIn']),
+    ...mapGetters(['showSideNav']),
   },
 }
 </script>
@@ -73,5 +83,10 @@ input[type='text'] {
 
 ::-webkit-scrollbar {
   width: 0px;
+}
+.muted {
+  color: rgba(47, 48, 53, 0.4);
+  font-family: inherit;
+  font-weight: 300;
 }
 </style>

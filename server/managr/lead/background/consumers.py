@@ -3,8 +3,9 @@ import logging
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from django.utils import timezone
 
+from django.utils import timezone
+from dateutil.parser import parse
 from managr.core.models import User
 
 from .. import models as lead_models
@@ -144,6 +145,21 @@ class FileActionConsumer(BaseActionConsumer):
 
 class ReminderActionConsumer(BaseActionConsumer):
     model_class = lead_models.Reminder
+
+    def get_meta(self):
+        obj = self.get_object()
+
+        try:
+            rem_meta = obj.activity_log_meta
+            rem_meta['datetime_for'] = obj.datetime_for.strftime(
+                '%Y-%m-%dT%H:%M:%S.%fZ')
+            return rem_meta
+        except AttributeError:
+            logger.warning(
+                f"{self.model_class_name} does not implement a 'activity_log_meta' property. "
+                f"This means LeadActivityLog entries will have no metadata about this model."
+            )
+        return {}
 
     def get_lead(self):
         obj = self.get_object()

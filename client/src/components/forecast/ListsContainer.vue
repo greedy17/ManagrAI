@@ -1,10 +1,33 @@
 <template>
   <div class="lists-container">
     <List
-      v-for="(forecast, index) in FORECASTS"
-      :key="index"
-      :title="capitalizeWord(forecast)"
-      :collection="lists[forecast]"
+      v-if="lists[Forecast.FIFTY_FIFTY].list.length"
+      :title="capitalizeWord(Forecast.FIFTY_FIFTY)"
+      :collection="lists[Forecast.FIFTY_FIFTY]"
+      @move-lead-in-forecast-list="moveLeadInForecastList"
+    />
+    <List
+      v-if="lists[Forecast.STRONG].list.length"
+      :title="capitalizeWord(Forecast.STRONG)"
+      :collection="lists[Forecast.STRONG]"
+      @move-lead-in-forecast-list="moveLeadInForecastList"
+    />
+    <List
+      v-if="lists[Forecast.VERBAL].list.length"
+      :title="capitalizeWord(Forecast.VERBAL)"
+      :collection="lists[Forecast.VERBAL]"
+      @move-lead-in-forecast-list="moveLeadInForecastList"
+    />
+    <List
+      v-if="lists[Forecast.FUTURE].list.length"
+      :title="capitalizeWord(Forecast.FUTURE)"
+      :collection="lists[Forecast.FUTURE]"
+      @move-lead-in-forecast-list="moveLeadInForecastList"
+    />
+    <List
+      v-if="lists[Forecast.UNFORECASTED].list.length"
+      :title="capitalizeWord(Forecast.UNFORECASTED)"
+      :collection="lists[Forecast.UNFORECASTED]"
       @move-lead-in-forecast-list="moveLeadInForecastList"
     />
   </div>
@@ -12,15 +35,8 @@
 
 <script>
 import List from '@/components/forecast/List'
+import Forecast from '@/services/forecasts'
 import { capitalizeWord } from '@/services/utils'
-
-const FIFTY_FIFTY = '50/50'
-const STRONG = 'STRONG'
-const VERBAL = 'VERBAL'
-const FUTURE = 'FUTURE'
-const UNFORECASTED = 'UNFORECASTED'
-
-const FORECASTS = [FIFTY_FIFTY, STRONG, VERBAL, FUTURE, UNFORECASTED]
 
 export default {
   name: 'ListsContainer',
@@ -35,7 +51,7 @@ export default {
   },
   data() {
     return {
-      FORECASTS,
+      Forecast,
     }
   },
   methods: {
@@ -43,8 +59,8 @@ export default {
     moveLeadInForecastList(payload) {
       let { forecast, from, to } = payload
       // clean up 'Unforecasted'/'NA' client/server inconsistency
-      to = to == 'NA' ? 'UNFORECASTED' : to
-      from = from == 'NA' ? 'UNFORECASTED' : from
+      to = to == Forecast.NA ? Forecast.UNFORECASTED : to
+      from = from == Forecast.NA ? Forecast.UNFORECASTED : from
       let { leadRef } = forecast
       // remove from proper collection
       this.lists[from].list = this.lists[from].list.filter(f => f.leadRef.id != leadRef.id)
@@ -62,7 +78,6 @@ export default {
       if (secondForecast.leadRef.title.toLowerCase() > firstForecast.leadRef.title.toLowerCase()) {
         return -1
       }
-      // a must be equal to b
       return 0
     },
   },

@@ -16,6 +16,21 @@ from managr.core import constants as core_consts
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 
+ACCOUNT_TYPE_LIMITED = "LIMITED"
+ACCOUNT_TYPE_MANAGER = "MANAGER"
+ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"),
+                 (ACCOUNT_TYPE_MANAGER, "MANAGER"))
+
+STATE_ACTIVE = "ACTIVE"
+STATE_INACTIVE = "INACTIVE"
+STATE_INVITED = "INVITED"
+STATE_CHOCIES = (
+    (STATE_ACTIVE, "Active"),
+    (STATE_INACTIVE, "Inactive"),
+    (STATE_INVITED, "Invited"),
+)
+
+
 class TimeStampModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime_created = models.DateTimeField(auto_now_add=True)
@@ -109,6 +124,15 @@ class User(AbstractUser, TimeStampModel):
     magic_token_expiration = models.DateTimeField(
         help_text="The datetime when the magic token is expired.", null=True
     )
+    quota = models.PositiveIntegerField(
+        help_text='Target sell amount for some defined timespan '
+        'set by their Organization.',
+        default=0
+    )
+    commit = models.PositiveIntegerField(
+        help_text='Worst-case quota.', default=0)
+    upside = models.PositiveIntegerField(
+        help_text='Optimistic quota.', default=0)
 
     objects = UserManager()
 
@@ -140,6 +164,10 @@ class User(AbstractUser, TimeStampModel):
 
         return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
+    @property
+    def unviewed_notifications_count(self):
+        return self.notifications.filter(viewed=False).count()
+
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
@@ -158,6 +186,9 @@ class User(AbstractUser, TimeStampModel):
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
+
+    def get_contacts_from_leads(self):
+        return self.claimed_leads
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"

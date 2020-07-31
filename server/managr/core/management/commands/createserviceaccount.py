@@ -14,7 +14,6 @@ class Command(BaseCommand):
         email = kwargs['service_email']
 
         password = input("password: ")
-        print(self.style)
         user = User.objects.create_serviceaccount(
             email=email, password=password)
 

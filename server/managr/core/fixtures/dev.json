@@ -10,12 +10,38 @@
       "date_joined": "2020-06-09T17:38:38.084Z",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "email": "testing@thinknimble.com",
+      "email": "test@thinknimble.com",
       "is_serviceaccount": true,
       "is_active": true,
       "organization": "700287d3-4ce6-4803-a236-b18e160729a7",
       "type": "MANAGER",
       "first_name": "Test",
+      "last_name": "User",
+      "phone_number": "",
+      "is_invited": true,
+      "magic_token": "630222a1-48bd-4314-b548-952ddd51376a",
+      "magic_token_expiration": null,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "39d37230-0e1f-476f-88e6-abe46fa3d3e2",
+    "fields": {
+      "password": "pbkdf2_sha256$150000$FXtF6UR1Hg8Q$MYUa42GCygpIFFiSUY5k7dk1VuIg397mU4HlWUjeqfQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "date_joined": "2020-06-09T17:38:38.084Z",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "email": "testing@thinknimble.com",
+      "is_serviceaccount": true,
+      "is_active": true,
+      "organization": "700287d3-4ce6-4803-a236-b18e160729a7",
+      "type": "MANAGER",
+      "first_name": "Testing Email",
       "last_name": "User",
       "phone_number": "",
       "is_invited": true,
@@ -33,6 +59,22 @@
       "last_edited": "2020-06-09T18:30:17.568Z",
       "name": "ABC Corp",
       "state": "ACTIVE"
+    }
+  },
+  {
+    "model": "core.emailauthaccount",
+    "pk": "6afdd958-1f9e-47a8-aeb0-9781a44771a6",
+    "fields": {
+      "datetime_created": "2020-06-09T18:30:17.568Z",
+      "last_edited": "2020-06-09T18:30:17.568Z",
+      "access_token": " SZ8oAJiKGzdC3Y1dRFG1KeNEF5QeM8",
+      "account_id": "2yyyiu5lq221zmm4dvhmng5gc",
+      "email_address": "testing@thinknimble.com",
+      "provider": "gmail",
+      "sync_state": "",
+      "name": "test",
+      "linked_at": "2020-06-09T18:30:17.568Z",
+      "user": "39d37230-0e1f-476f-88e6-abe46fa3d3e2"
     }
   }
 ]

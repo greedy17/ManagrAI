@@ -90,6 +90,18 @@ class LeadInsights:
             return latest_action.action_timestamp
 
     @property
+    def reminder_count(self):
+        return self.log_queryset.filter(activity=lead_constants.REMINDER_CREATED).count()
+
+    @property
+    def reminder_latest(self):
+        latest_reminder = self.log_queryset.filter(
+            activity=lead_constants.REMINDER_CREATED
+        ).first()
+        if latest_reminder is not None:
+            return latest_reminder.action_timestamp
+
+    @property
     def email_count(self):
         return self.log_queryset.filter(activity=lead_constants.EMAIL_SENT).count()
 
@@ -118,16 +130,6 @@ class LeadInsights:
         return self.closed_leads.count()
 
     @property
-    def total_closed_value(self):
-        """Get the total value of closed leads."""
-        return (
-            self.lead_queryset.closed_leads().aggregate(sum=Sum("closing_amount"))[
-                "sum"
-            ]
-            or 0
-        )
-
-    @property
     def forecast(self):
         """Forecast 'open' leads. That is all leads, except CLOSED and LOST."""
         return self.lead_queryset.open_leads().aggregate(sum=Sum("amount"))["sum"] or 0
@@ -141,26 +143,13 @@ class LeadInsights:
         return self.open_leads.aggregate(sum=Sum("amount"))["sum"] or 0
 
     @property
-    def average_contract_value(self):
-        """Get the average contract value.
-
-        For 'closed' leads, use the closing amount. For open leads, just use 'amount'.
-        """
-        nonzero_open_leads_count = self.open_leads.exclude(amount=0).count()
-        average = 0
-        if (self.closed_leads_count + nonzero_open_leads_count) > 0:
-            average = (self.closed_leads_value + self.open_leads_value) / (
-                self.closed_leads_count + nonzero_open_leads_count
-            )
-        return average
-
-    @property
     def as_dict(self):
         return {
-            "calls": {"count": self.call_count, "latest": self.call_latest,},
-            "notes": {"count": self.note_count, "latest": self.note_latest,},
-            "actions": {"count": self.action_count, "latest": self.action_latest,},
-            "emails": {"count": self.email_count, "latest": self.email_latest,},
+            "calls": {"count": self.call_count, "latest": self.call_latest, },
+            "notes": {"count": self.note_count, "latest": self.note_latest, },
+            "reminders": {"count": self.reminder_count, "latest": self.reminder_latest, },
+            "actions": {"count": self.action_count, "latest": self.action_latest, },
+            "emails": {"count": self.email_count, "latest": self.email_latest, },
             "closed_leads": {
                 "count": self.closed_leads_count,
                 "total_value": self.closed_leads_value,
@@ -169,6 +158,4 @@ class LeadInsights:
                 "count": self.open_leads_count,
                 "total_value": self.open_leads_value,
             },
-            "average_contract_value": self.average_contract_value,
-            "forecast": self.forecast,
         }

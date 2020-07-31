@@ -47,8 +47,10 @@ from .models import (
     Reminder,
     Action,
     ActionChoice,
+    Notification
 )
 from .insights import LeadInsights
+from .forecast_kpis import ForecastKPIs
 
 
 class LeadActivityLogViewSet(
@@ -100,6 +102,56 @@ class LeadActivityLogViewSet(
 
         insights = LeadInsights(lead_qs, qs, empty)
         return Response(insights.as_dict)
+
+
+class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    serializer_class = lead_serializers.NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.for_user(self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        """ override to set the notified_at field when an object is gotten"""
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset.filter(notified_at__isnull=True).update(
+            notified_at=timezone.now())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+    @action(
+        methods=["GET"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="unviewed-count",
+    )
+    def get_unviewed_count(self, request, *args, **kwargs):
+        user = self.request.user
+        return Response(data={"count": user.unviewed_notifications_count})
+
+    @action(methods=["POST"], authentication_classes=(authentication.TokenAuthentication,), detail=False, url_path="mark-as-viewed")
+    def mark_as_viewed(self, request, *args, **kwargs):
+        user = self.request.user
+        query = Q()
+        notifications = request.data.get('notifications', None)
+        if not notifications:
+            return ValidationError()
+
+        for notification in notifications:
+            query |= Q(id=notification)
+        notifications_items = Notification.objects.for_user(user).filter(query)
+        for n in notifications_items:
+            n.viewed = True
+            n.save()
+        return Response()
 
 
 class LeadViewSet(
@@ -165,9 +217,10 @@ class LeadViewSet(
         contact_list = list()
         for contact in contacts:
             c, created = Contact.objects.for_user(request.user).get_or_create(
-                email=contact["email"], defaults={"account": account}
+                email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
+                c.title = contact.get("title", c.title)
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
                 c.phone_number_1 = contact.get(
@@ -605,10 +658,40 @@ class ForecastViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ForecastSerializer
     filter_class = lead_filters.ForecastFilterSet
-    # TODO :- log activity 05/02/20 PB
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="kpis",
+    )
+    def forecast_kpis(self, request, *args, **kwargs):
+        """
+        Produce KPIs for client-side Forecast page's Sidebar:
+            - Sold (formerly Total Closed Value)
+            - Quota
+            - Average Contract Value
+            - Forecast
+            - Commit
+            - Upside
+        """
+
+        # constant to be put through a switcher to determine date range
+        # for query-set filtering
+        date_range_preset = request.data['date_range_preset']
+        repIDs = request.data['representatives']
+        if date_range_preset not in lead_constants.DATE_RANGE_PRESETS:
+            return Response(
+                {"non_field_errors": ("Invalid date_range_preset.",)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        kpis = ForecastKPIs(representatives=repIDs, date_range_preset=date_range_preset)
+
+        return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
 
 class CallNoteViewSet(
@@ -662,6 +745,7 @@ class ReminderViewSet(
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ReminderSerializer
+    filter_class = lead_filters.ReminderFilterSet
 
     def get_queryset(self):
         return Reminder.objects.for_user(self.request.user)
@@ -689,6 +773,8 @@ class ReminderViewSet(
                 data=data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
+            emit_event(lead_constants.REMINDER_CREATED,
+                       user, serializer.instance)
             created.append(serializer.data)
             return Response(data=created, status=status.HTTP_201_CREATED)
 
@@ -699,14 +785,24 @@ class ReminderViewSet(
         data = dict(request.data.get("reminders"))
         data.pop("created_for", None)
         data.pop("created_by", None)
-        data["updated_by"] = user
+        data["updated_by"] = user.id
         reminder = self.get_object()
         serializer = self.serializer_class(
             reminder, data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        # check if a notification has been created, if the datetime has been updated and is out of range remove it
+
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        reminder = self.get_object()
+        if reminder.has_notification:
+
+            return Response(data={'non_field_errors': 'Cannot Delete Reminder that has already been executed'}, status=status.HTTP_400_BAD_REQUEST)
+        reminder.delete()
+        return Response(data=None, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["POST"], detail=True, url_path="mark-as-viewed")
     def mark_as_viewed(self, request, *args, **kwargs):

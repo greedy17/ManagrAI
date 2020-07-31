@@ -280,9 +280,6 @@ class Reminder(BaseNote):
     datetime_for = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False)
     # TODO: - will build this out on a separate branch pb
-    notification = models.ForeignKey(
-        "Notification", on_delete=models.CASCADE, related_name="reminders", null=True
-    )
     # this is a temporary field for a reminder the view status will be handled by notifications in V2
     viewed = models.BooleanField(default=False)
 
@@ -298,6 +295,15 @@ class Reminder(BaseNote):
         self.updated_by = user
         self.completed = True
         self.save()
+
+    @property
+    def has_notification(self):
+        return Notification.objects.filter(resource_id=self.id).exists()
+
+    def save(self, *args, **kwargs):
+        # TODO: if a reminder is updated and its datetime for changes then update the notification for that time
+
+        return super(Reminder, self).save(*args, **kwargs)
 
 
 class CallNote(BaseNote):
@@ -384,6 +390,14 @@ class LeadActivityLog(TimeStampModel):
         ordering = ["-action_timestamp", "-datetime_created"]
 
 
+class NotificationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+
+
 class Notification(TimeStampModel):
     """
         Pari: There are various types of notifications (that are not going to be built until V2)
@@ -405,12 +419,24 @@ class Notification(TimeStampModel):
     title = models.CharField(
         max_length=255, null=True, help_text="a title for the notification"
     )
-    action_taken = models.CharField(
+    notification_type = models.CharField(
         max_length=255,
-        choices=lead_constants.NOTIFICATION_ACTION_CHOICES,
-        help_text="a notification can either be viewed or snoozed",
+        choices=lead_constants.NOTIFICATION_TYPE_CHOICES,
         null=True,
+        help_text="type of Notification being created",
     )
+    resource_id = models.CharField(
+        max_length=255, null=True, help_text="Id of the resource if it is an email it will be the thread id")
+
+    viewed = models.BooleanField(blank=False, null=False, default=False)
+    meta = JSONField(help_text="Details about the notification", default=dict)
+    user = models.ForeignKey(
+        'core.User', on_delete=models.SET_NULL, related_name="notifications", null=True)
+
+    objects = NotificationQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-notify_at"]
 
 
 class ActionChoiceQuerySet(models.QuerySet):
@@ -496,12 +522,10 @@ class Action(TimeStampModel):
         }
 
 
-class LeadEmail(models.Model):
+class LeadEmail(TimeStampModel):
     """Tie a lead to a Nylas email thread."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    datetime_created = models.DateTimeField(auto_now_add=True)
-    last_edited = models.DateTimeField(auto_now=True)
 
     created_by = models.ForeignKey(
         "core.User",
@@ -517,8 +541,13 @@ class LeadEmail(models.Model):
         blank=False,
         related_name="email_threads",
     )
+    linked_contacts = models.ManyToManyField(
+        "organization.Contact", related_name="email_activity_logs", blank=True
+    )
 
     thread_id = models.CharField(max_length=128)
+
+    opened_count = models.IntegerField(default=0)
 
     @property
     def activity_log_meta(self):
@@ -527,9 +556,15 @@ class LeadEmail(models.Model):
             "id": str(self.id),
             "lead": str(self.lead.id),
             "thread_id": self.thread_id,
+            "opened_count": self.opened_count,
             "created_by": str(self.created_by.id),
             "created_by_ref": {
                 "id": str(self.created_by.id),
                 "full_name": self.created_by.full_name,
             },
+            "linked_contacts": [
+                {"id": str(c.id), "full_name": c.full_name, }
+                for c in self.linked_contacts.all()
+            ],
+
         }

@@ -22,6 +22,7 @@
     "lodash.throttle": "^4.1.1",
     "luxon": "^1.24.1",
     "moment": "^2.26.0",
+    "moment-timezone": "^0.5.31",
     "pluralize": "^8.0.0",
     "randomcolor": "^0.5.3",
     "v-mask": "^2.2.1",

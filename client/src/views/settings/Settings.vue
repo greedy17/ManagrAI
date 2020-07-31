@@ -41,11 +41,11 @@
       </div>
     </div>
     <div class="page__main-content-area">
-      <EmailIntegration v-if="emailIntegrationActive"></EmailIntegration>
-      <EmailTemplates v-if="emailTemplatesActive"></EmailTemplates>
-      <EmailTest v-if="emailTestActive"></EmailTest>
-      <Profile v-if="profileActive"></Profile>
-      <Password v-if="passwordActive"></Password>
+      <EmailIntegration v-if="emailIntegrationActive" />
+      <EmailTemplates v-if="emailTemplatesActive" />
+      <EmailTest v-if="emailTestActive" />
+      <Profile v-if="profileActive" />
+      <Password v-if="passwordActive" />
     </div>
   </div>
 </template>

@@ -15,10 +15,19 @@
         class="toolbar"
         :repFilterState="repFilterState"
         @toggle-active-rep="toggleActiveRep"
+        @select-all-reps="selectAllReps"
+        @deselect-all-reps="deselectAllReps"
+        @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
       />
     </div>
     <div class="lists-container-pane">
       <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
+      <div class="lists-container-message" v-else-if="!activeReps.length">
+        No Representatives Selected!
+      </div>
+      <div class="lists-container-message" v-else-if="noResults">
+        No Results!
+      </div>
       <ListsContainer v-else :lists="lists" />
     </div>
   </div>
@@ -31,6 +40,11 @@ import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
+
+function allRepsReducer(obj, id) {
+  obj[id] = true
+  return obj
+}
 
 export default {
   name: 'Forecast',
@@ -45,23 +59,23 @@ export default {
       lists: {
         '50/50': CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: '50/50' },
+          filters: { forecast: Forecast.FIFTY_FIFTY, dateRange: Forecast.TODAY_ONWARD },
         }),
         STRONG: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'STRONG' },
+          filters: { forecast: Forecast.STRONG, dateRange: Forecast.TODAY_ONWARD },
         }),
         VERBAL: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'VERBAL' },
+          filters: { forecast: Forecast.VERBAL, dateRange: Forecast.TODAY_ONWARD },
         }),
         FUTURE: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'FUTURE' },
+          filters: { forecast: Forecast.FUTURE, dateRange: Forecast.TODAY_ONWARD },
         }),
         UNFORECASTED: CollectionManager.create({
           ModelClass: Forecast,
-          filters: { forecast: 'NA' },
+          filters: { forecast: Forecast.NA, dateRange: Forecast.TODAY_ONWARD },
         }),
       },
       repFilterState: {
@@ -76,7 +90,10 @@ export default {
     toggleView() {
       this.$router.push({ name: 'LeadsIndex' })
     },
-    updateForecastCollections() {
+    updateForecastCollections(dateRange) {
+      if (dateRange) {
+        this.applyDateRangeFilter(dateRange)
+      }
       this.applyFilterByRep()
       this.refresh()
     },
@@ -88,8 +105,19 @@ export default {
         this.lists[key].filters.byUser = filterString
       })
     },
+    applyDateRangeFilter(dateRange) {
+      Object.keys(this.lists).forEach(key => {
+        this.lists[key].filters.dateRange = dateRange
+      })
+    },
     refresh() {
       this.loading = true
+      // If no representatives selected, no Leads should be displayed.
+      // Therefore, save a network hit.
+      if (!this.activeReps.length) {
+        this.loading = false
+        return
+      }
       let lists = [
         this.lists['50/50'].refresh(),
         this.lists['STRONG'].refresh(),
@@ -111,6 +139,15 @@ export default {
       }
       this.updateForecastCollections()
     },
+    selectAllReps(repIDs) {
+      let allRepsSelected = repIDs.reduce(allRepsReducer, {})
+      this.repFilterState = allRepsSelected
+      this.updateForecastCollections()
+    },
+    deselectAllReps() {
+      this.repFilterState = {}
+      this.updateForecastCollections()
+    },
   },
   computed: {
     isCurrentRoute() {
@@ -121,6 +158,14 @@ export default {
     },
     activeReps() {
       return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
+    },
+    noResults() {
+      for (let forecast in this.lists) {
+        if (this.lists[forecast].list.length) {
+          return false
+        }
+      }
+      return true
     },
   },
 }
@@ -181,5 +226,13 @@ export default {
   width: 83%;
   padding: 0 2% 1% 1%;
   background-color: $off-white;
+}
+
+.lists-container-message {
+  padding-top: 22vh;
+  text-align: center;
+  color: $gray;
+  font-size: 1rem;
+  font-weight: 600;
 }
 </style>

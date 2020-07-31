@@ -1,4 +1,6 @@
 import isPlainObject from 'lodash.isplainobject'
+import moment from 'moment'
+require('moment-timezone')
 /**
  * @module       utils
  * @description  Utility functions.
@@ -26,6 +28,7 @@ const Utils = {
   removeDuplicates,
   capitalizeWord,
   debounce,
+  getTimeZone,
 }
 
 export default Utils
@@ -33,6 +36,12 @@ export default Utils
 /**
  * True/False, the given value is defined.
  **/
+
+export function getTimeZone() {
+  let localDateTime = new Date()
+  let offset = localDateTime.getTimezoneOffset()
+}
+
 export function isDefined(value) {
   return typeof value !== 'undefined'
 }
@@ -67,7 +76,7 @@ export function toCamelCase(value) {
 
   return value
     .split('_')
-    .map(function (word, index) {
+    .map(function(word, index) {
       // Do nothing with the first word
       if (index === 0) {
         return word
@@ -138,7 +147,7 @@ export function isObject(value) {
 
 export function debounce(callback, time) {
   let timer = null
-  return function (...args) {
+  return function(...args) {
     const onComplete = () => {
       callback.apply(this, args)
       timer = null
@@ -156,7 +165,7 @@ export function debounce(callback, time) {
  * Returns a alphabetically sorted array of Objects, sorted by a 'property' (String) and excluding a specified 'exception' (String)
  */
 export function sortAlphabetically(arr, property, exception = null) {
-  arr.sort(function (a, b) {
+  arr.sort(function(a, b) {
     if (a[property] !== exception && b[property] !== exception) {
       var textA = a[property].toUpperCase()
       var textB = b[property].toUpperCase()
