@@ -109,10 +109,12 @@ export default {
   }
 }
 ::v-deep .dropdown {
+  // manually setting input style here
   width: 100px;
   input[type='text'] {
     width: 100%;
     background-color: $soft-gray;
+    border-radius: 5px;
   }
 }
 
