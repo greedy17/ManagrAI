@@ -1,6 +1,10 @@
 <template>
   <div class="toolbar">
-    <KPIs :repFilterState="repFilterState" @date-range-filter-change="emitDateRangeFilterChange" />
+    <KPIs
+      :repFilterState="repFilterState"
+      @date-range-filter-change="emitDateRangeFilterChange"
+      :triggerRefreshKPIs="triggerRefreshKPIs"
+    />
     <div class="filter-container">
       <FilterByRep
         :repFilterState="repFilterState"
@@ -23,6 +27,10 @@ export default {
     repFilterState: {
       required: true,
       type: Object,
+    },
+    triggerRefreshKPIs: {
+      required: true,
+      type: Boolean,
     },
   },
   methods: {
