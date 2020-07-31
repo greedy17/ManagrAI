@@ -218,7 +218,7 @@ export default {
       this.$emit('update:items', items)
     },
 
-    emitSelected(item) {
+    emitSelected() {
       this.$emit('input', this.selectedItems)
     },
 
@@ -264,13 +264,15 @@ Display dropdown relative to the component it is triggered by
 */
 .dropdown {
   display: inline-block;
-  min-width: 100px;
+  width: 100%;
+  position: relative;
+  height: 100%;
 }
 /* keep content hidden by default until visible is true */
 
 .dropdown-content {
-  position: relative;
-  top: 20px;
+  position: absolute;
+  top: 40px;
   flex-direction: column;
   display: flex;
   min-width: 160px;
@@ -280,7 +282,6 @@ Display dropdown relative to the component it is triggered by
   z-index: 100;
   width: 100%;
   max-height: 400px;
-
   overflow-x: scroll;
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* mozilla */
@@ -296,6 +297,8 @@ Display dropdown relative to the component it is triggered by
 
 .dropdown-input-container {
   position: relative;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
   &.searchable {
     cursor: default;
@@ -316,9 +319,10 @@ Display dropdown relative to the component it is triggered by
   }
 
   .search {
+    width: 100%;
+    height: 100%;
     border: none;
-    min-height: 20px;
-    padding-top: 15px;
+    padding-top: 2%;
     &:disabled {
       cursor: pointer;
     }
@@ -326,7 +330,6 @@ Display dropdown relative to the component it is triggered by
 }
 
 .selected-items.multi {
-  width: 100%;
   display: flex;
   overflow-y: scroll;
   max-height: 20px;
@@ -336,8 +339,6 @@ Display dropdown relative to the component it is triggered by
     background-color: purple;
     border-radius: 2px;
     color: white;
-    min-width: 40px;
-
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -354,7 +355,7 @@ Display dropdown relative to the component it is triggered by
   width: 100%;
   display: flex;
   overflow-y: scroll;
-  max-height: 20px;
+  //max-height: 20px;
   padding-left: 10px;
   padding-top: 10px;
   white-space: nowrap;

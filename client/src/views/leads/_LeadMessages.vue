@@ -47,7 +47,8 @@ export default {
   },
   methods: {
     async refresh() {
-      ;(this.loading = true), await this.leadMessages.refresh()
+      this.loading = true
+      await this.leadMessages.refresh()
       this.loading = false
     },
   },

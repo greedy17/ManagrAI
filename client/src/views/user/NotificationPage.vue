@@ -38,6 +38,9 @@ export default {
     async markAsViewed(notificationId) {
       await Notification.api.markAsViewed([notificationId])
     },
+    async getNextPage() {
+      await this.notifications.addNextPage()
+    },
 
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
