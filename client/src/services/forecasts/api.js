@@ -1,8 +1,10 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { objectToCamelCase } from '@/services/utils'
 
 // API Endpoints
 const FORECASTS_ENDPOINT = '/forecasts/'
 const GENERATE_FORECAST_ENDPOINT = uid => `/forecasts/${uid}/`
+const KPIS_ENDPOINT = '/forecasts/kpis/'
 
 export default class ForecastAPI {
   /**
@@ -25,12 +27,12 @@ export default class ForecastAPI {
 
   list({ pagination, filters }) {
     const filtersMap = {
-      // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
-
       byUser: ApiFilter.create({ key: 'by_user' }),
       forecast: ApiFilter.create({ key: 'forecast' }),
+      dateRangeFrom: ApiFilter.create({ key: 'date_range_from' }),
+      dateRangeTo: ApiFilter.create({ key: 'date_range_to' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -67,6 +69,19 @@ export default class ForecastAPI {
       .patch(GENERATE_FORECAST_ENDPOINT(id), data)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'ForecastAPI.update' }))
+    return promise
+  }
+
+  KPIs({ representatives, dateRangeFrom, dateRangeTo }) {
+    let data = {
+      representatives,
+      dateRangeFrom,
+      dateRangeTo,
+    }
+    const promise = apiClient()
+      .post(KPIS_ENDPOINT, this.cls.toAPI(data))
+      .then(response => objectToCamelCase(response.data))
+      .catch(apiErrorHandler({ apiName: 'ForecastAPI.KPIs' }))
     return promise
   }
 }

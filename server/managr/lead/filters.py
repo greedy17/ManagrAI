@@ -2,6 +2,8 @@ import time
 import pytz
 from itertools import chain
 from dateutil.parser import parse
+from datetime import datetime, timedelta
+from calendar import monthrange
 
 import django_filters
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -11,7 +13,7 @@ from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, 
 from django.db.models.functions import Lower
 from django.utils import timezone
 
-
+from managr.lead import constants as lead_constants
 from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification
 
 
@@ -133,6 +135,8 @@ class LeadFilterSet(FilterSet):
 
 class ForecastFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="forecasts_by_user")
+    date_range_from = django_filters.CharFilter(method="filter_by_date_range_from")
+    date_range_to = django_filters.IsoDateTimeFilter(field_name="lead__expected_close_date", lookup_expr="lte")
 
     class Meta:
         model = Forecast
@@ -144,15 +148,31 @@ class ForecastFilterSet(FilterSet):
             value = value.strip()
             user_list = value.split(',')
             try:
+                # exclude unclaimed leads
+                # order by expected_close_date, nulls last
+                # then order by lead title
                 if self.request.user.organization.users.filter(id__in=user_list).exists():
-                    return queryset.filter(lead__claimed_by__in=user_list).order_by('forecast', 'lead__title')
+                    return queryset.exclude(lead__claimed_by__isnull=True) \
+                                   .filter(lead__claimed_by__in=user_list) \
+                                   .order_by(
+                                       F('lead__expected_close_date').asc(nulls_last=True),
+                                       'lead__title'
+                                   )
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
                     # return None
                     return queryset.none()
             except DjangoValidationError:
                 # if a malformed User Id is sent fail silently and return None
-                return queryset.none()
+                return queryset.none()    
+
+    def filter_by_date_range_from(self, queryset, name, value):
+        # if the request does not include date_range_to param,
+        # then also include leads without an expected_close_date
+        if not self.request.query_params.get('date_range_to'):
+            return queryset.filter(Q(lead__expected_close_date__gte=value) | Q(lead__expected_close_date__isnull=True))
+        else:
+            return queryset.filter(lead__expected_close_date__gte=value)
 
 
 class ListFilterSet(FilterSet):

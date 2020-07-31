@@ -1,8 +1,17 @@
 <template>
   <div class="toolbar">
-    <KPIs :repFilterState="repFilterState" />
+    <KPIs
+      :repFilterState="repFilterState"
+      @date-range-filter-change="emitDateRangeFilterChange"
+      :triggerRefreshKPIs="triggerRefreshKPIs"
+    />
     <div class="filter-container">
-      <FilterByRep :repFilterState="repFilterState" @toggle-active-rep="emitToggleActiveRep" />
+      <FilterByRep
+        :repFilterState="repFilterState"
+        @toggle-active-rep="emitToggleActiveRep"
+        @select-all-reps="emitSelectAllReps"
+        @deselect-all-reps="$emit('deselect-all-reps')"
+      />
     </div>
   </div>
 </template>
@@ -19,10 +28,20 @@ export default {
       required: true,
       type: Object,
     },
+    triggerRefreshKPIs: {
+      required: true,
+      type: Boolean,
+    },
   },
   methods: {
     emitToggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
+    },
+    emitSelectAllReps(repIDs) {
+      this.$emit('select-all-reps', repIDs)
+    },
+    emitDateRangeFilterChange(dateRange) {
+      this.$emit('date-range-filter-change', dateRange)
     },
   },
 }

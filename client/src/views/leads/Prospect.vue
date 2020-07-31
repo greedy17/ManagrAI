@@ -9,6 +9,8 @@
         @toggle-unclaimed="toggleUnclaimed"
         @search-filter="filterByLeadTitle"
         @clear-search-filter="clearSearchFilter"
+        @select-all-reps="selectAllReps"
+        @deselect-all-reps="deselectAllReps"
       />
     </div>
     <div class="lists-pane">
@@ -31,6 +33,11 @@ import Account from '@/services/accounts'
 import Lead from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import { apiErrorHandler } from '@/services/api'
+
+function allRepsReducer(obj, id) {
+  obj[id] = true
+  return obj
+}
 
 export default {
   name: 'Prospect',
@@ -184,6 +191,15 @@ export default {
     },
     clearSearchFilter() {
       this.toolbarSearchTerm = ''
+      this.refreshCollections()
+    },
+    selectAllReps(repIDs) {
+      let allRepsSelected = repIDs.reduce(allRepsReducer, {})
+      this.repFilterState = allRepsSelected
+      this.refreshCollections()
+    },
+    deselectAllReps() {
+      this.repFilterState = {}
       this.refreshCollections()
     },
   },

@@ -48,7 +48,12 @@ class LeadInsights:
         lead_ids = self._lead_queryset.values_list("id", flat=True)
         if len(lead_ids) > 0:
             return self._log_queryset.filter(lead__id__in=lead_ids)
-        return self._log_queryset
+
+        # Since no leads selected, then there should be no logs to calculate from.
+        # This is because the client-side UX does not include seeing account-wide
+        # or organization-wide log statistics, but rather the aggregate statistics
+        # of leads that meet claimed_by and date-range filters.
+        return self._log_queryset.none()
 
     @property
     def call_count(self):
@@ -130,41 +135,12 @@ class LeadInsights:
         return self.closed_leads.count()
 
     @property
-    def total_closed_value(self):
-        """Get the total value of closed leads."""
-        return (
-            self.lead_queryset.closed_leads().aggregate(sum=Sum("closing_amount"))[
-                "sum"
-            ]
-            or 0
-        )
-
-    @property
-    def forecast(self):
-        """Forecast 'open' leads. That is all leads, except CLOSED and LOST."""
-        return self.lead_queryset.open_leads().aggregate(sum=Sum("amount"))["sum"] or 0
-
-    @property
     def closed_leads_value(self):
         return self.closed_leads.aggregate(sum=Sum("closing_amount"))["sum"] or 0
 
     @property
     def open_leads_value(self):
         return self.open_leads.aggregate(sum=Sum("amount"))["sum"] or 0
-
-    @property
-    def average_contract_value(self):
-        """Get the average contract value.
-
-        For 'closed' leads, use the closing amount. For open leads, just use 'amount'.
-        """
-        nonzero_open_leads_count = self.open_leads.exclude(amount=0).count()
-        average = 0
-        if (self.closed_leads_count + nonzero_open_leads_count) > 0:
-            average = (self.closed_leads_value + self.open_leads_value) / (
-                self.closed_leads_count + nonzero_open_leads_count
-            )
-        return average
 
     @property
     def as_dict(self):
@@ -182,6 +158,4 @@ class LeadInsights:
                 "count": self.open_leads_count,
                 "total_value": self.open_leads_value,
             },
-            "average_contract_value": self.average_contract_value,
-            "forecast": self.forecast,
         }

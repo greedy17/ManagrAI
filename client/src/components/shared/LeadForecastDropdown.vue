@@ -1,17 +1,24 @@
 <template>
   <div class="forecast-dropdown">
     <select @change="updateForecast" :style="computedStyles" :disabled="disabled || leadIsClosed">
-      <option disabled :selected="forecast == null" :value="null">
-        Select Forecast
-      </option>
-      <option
-        v-for="option in selectableOptions"
-        :selected="option.toUpperCase() === forecast"
-        :key="option"
-        :value="option"
-      >
-        {{ option == 'NA' ? 'Unforecasted' : option }}
-      </option>
+      <template v-if="Forecast.CLOSED == forecast">
+        <option selected>
+          Closed
+        </option>
+      </template>
+      <template v-else>
+        <option disabled :selected="forecast == null" :value="null">
+          Select Forecast
+        </option>
+        <option
+          v-for="option in selectableOptions"
+          :selected="option.toUpperCase() === forecast"
+          :key="option"
+          :value="option"
+        >
+          {{ option == Forecast.NA ? 'Unforecasted' : option }}
+        </option>
+      </template>
     </select>
   </div>
 </template>
@@ -46,6 +53,11 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+  data() {
+    return {
+      Forecast,
+    }
   },
   methods: {
     updateForecast(e) {

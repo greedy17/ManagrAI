@@ -22,6 +22,8 @@
           :unclaimedFilterState="unclaimedFilterState"
           @toggle-active-rep="emitToggleActiveRep"
           @toggle-unclaimed="$emit('toggle-unclaimed')"
+          @select-all-reps="emitSelectAllReps"
+          @deselect-all-reps="$emit('deselect-all-reps')"
         />
       </div>
     </div>
@@ -61,6 +63,9 @@ export default {
     },
     emitToggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
+    },
+    emitSelectAllReps(repIDs) {
+      this.$emit('select-all-reps', repIDs)
     },
     onSearchFilter() {
       this.$emit('search-filter', this.searchTerm)
