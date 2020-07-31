@@ -21,13 +21,10 @@ export default class User {
       emailAuthLink = '',
       emailAuthAccount = {},
       emailAuthAccountRef = {},
-<<<<<<< HEAD
       isStaff = false,
-=======
       quota = null,
       upside = null,
       commit = null,
->>>>>>> develop
     } = user
     Object.assign(this, {
       id,
