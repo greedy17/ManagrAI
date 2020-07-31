@@ -17,6 +17,7 @@ import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
+import ReportsIndex from '@/views/reports/ReportsIndex'
 // import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
@@ -91,6 +92,12 @@ export default new Router({
       path: '/settings',
       name: 'Settings',
       component: Settings,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/reports',
+      name: 'ReportsIndex',
+      component: ReportsIndex,
       beforeEnter: Auth.requireAuth,
     },
     // {

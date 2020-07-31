@@ -11,7 +11,13 @@
         {{ option }}
       </option>
     </select>
-    <Modal v-if="modal.isOpen" dimmed @close-modal="closeModal" :width="50">
+    <Modal
+      v-if="modal.isOpen"
+      dimmed
+      @close-modal="closeModal"
+      @closed-lead="$emit('closed-lead')"
+      :width="50"
+    >
       <CloseLead :lead="lead" />
     </Modal>
   </div>

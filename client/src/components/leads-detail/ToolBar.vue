@@ -79,7 +79,11 @@
         <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
       </a>
     </div>
-    <div v-if="!editAmount" class="amount" @click="onEditAmount">
+    <div v-if="lead.status === Lead.CLOSED" class="amount">
+      Amount:
+      <span>{{ lead.closingAmount | currency }}</span>
+    </div>
+    <div v-else-if="!editAmount" class="amount" @click="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
@@ -91,10 +95,16 @@
         <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
       </form>
     </div>
+
+    <div v-if="lead.status === Lead.CLOSED" class="expected-close-date section-shadow">
+      <div>
+        Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+      </div>
+    </div>
     <div
-      v-if="!editExpectedCloseDate"
+      v-else-if="!editExpectedCloseDate"
       class="expected-close-date section-shadow"
-      @click="onEditExpectedCloseDate"
+      @click="editExpectedCloseDate = true"
     >
       <div v-if="!lead.expectedCloseDate">
         Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
@@ -139,7 +149,7 @@
           </div>
           <div class="contact-info-container">
             <span class="contact-name">
-              {{ contact.fullName.length > 0 ? contact.fullName : contact.email }}
+              {{ contact.fullName.trim() ? contact.fullName : contact.email }}
             </span>
             <div class="contact-title" v-if="contact.title">
               <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
@@ -237,13 +247,15 @@
 </template>
 
 <script>
+import CollectionManager from '@/services/collectionManager'
+import File from '@/services/files'
+import List from '@/services/lists'
+import Contact from '@/services/contacts'
+import Lead from '@/services/leads'
+
 import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
-import CollectionManager from '@/services/collectionManager'
-import List from '@/services/lists'
-import File from '@/services/files'
 import Checkbox from '@/components/leads-new/CheckBox'
-import Contact from '@/services/contacts'
 import ContactCheckBox from '@/components/leads-new/ContactCheckBox'
 import AddContact from '@/components/leads-new/AddContact'
 
@@ -302,6 +314,7 @@ export default {
   },
   data() {
     return {
+      Lead,
       //leads to add to a list
       addToList: [],
       listModal: {
@@ -444,16 +457,6 @@ export default {
     resetAmount() {
       this.tempAmount = this.lead.amount
       this.editAmount = false
-    },
-    onEditExpectedCloseDate() {
-      let date
-      if (this.lead.expectedCloseDate) {
-        date = new Date(this.lead.expectedCloseDate).toISOString().split('T')[0]
-      } else {
-        date = new Date().toISOString().split('T')[0]
-      }
-      this.tempExpectedCloseDate = date
-      this.editExpectedCloseDate = true
     },
     updateExpectedCloseDate() {
       this.$emit('updated-expected-close-date', this.tempExpectedCloseDate)

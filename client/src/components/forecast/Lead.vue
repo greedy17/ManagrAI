@@ -14,18 +14,18 @@
       <div v-else class="lead-description">
         No Descriptions
       </div>
-      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">{{
-        lead.closingAmount | currency
-      }}</span>
+      <span class="lead-amount" v-if="lead.status === Lead.CLOSED">
+        {{ lead.closingAmount | currency }}
+      </span>
       <span class="lead-amount" v-else>{{ lead.amount | currency }}</span>
       <div class="close-date">
-        <span v-if="lead.status === Lead.CLOSED">
-          Closed:
-        </span>
-        <span v-else>
+        <div v-if="lead.status === Lead.CLOSED">
+          Closed On:
+        </div>
+        <div v-else>
           Expected Close:
-        </span>
-        <span> {{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+        <div>{{ lead.expectedCloseDate | dateShort }}</div>
       </div>
       <LeadForecastDropdown
         :inForecastView="true"
@@ -34,14 +34,29 @@
         :disabled="!belongsToCurrentUser"
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
       />
-      <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
-      <div class="last-action-taken" v-if="lead.lastActionTaken.actionTimestamp">
-        {{ lead.lastActionTaken.actionTimestamp | timeAgo }} - {{ lead.lastActionTaken.activity }}
+      <LeadStatusDropdown
+        :lead="lead"
+        :disabled="!belongsToCurrentUser"
+        @closed-lead="emitMoveNewlyClosedLead"
+      />
+      <div class="last-action-taken">
+        <template v-if="lead.lastActionTaken.actionTimestamp">
+          <div>{{ lead.lastActionTaken.activity }}</div>
+          <div>{{ lead.lastActionTaken.actionTimestamp | timeAgo }}</div>
+        </template>
       </div>
       <div class="claimed-by">
         <button>
           <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <span>{{ belongsToCurrentUser ? 'Yours' : lead.claimedByRef.fullName }}</span>
+          <span>
+            {{
+              belongsToCurrentUser
+                ? 'Yours'
+                : lead.claimedByRef.fullName.trim()
+                ? lead.claimedByRef.fullName
+                : lead.claimedByRef.email
+            }}
+          </span>
         </button>
       </div>
       <button class="route-to-detail" @click="routeToLeadDetail">
@@ -55,6 +70,7 @@
 <script>
 import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import Lead from '@/services/leads'
+import Forecast from '@/services/forecasts'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
@@ -89,6 +105,15 @@ export default {
     },
     routeToLeadDetail() {
       this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    },
+    emitMoveNewlyClosedLead() {
+      let payload = {
+        forecast: this.forecast,
+        from: this.forecast.forecast,
+        to: Forecast.CLOSED,
+      }
+      this.forecast.forecast = Forecast.CLOSED
+      this.$emit('move-lead-in-forecast-list', payload)
     },
   },
   computed: {
@@ -186,6 +211,9 @@ export default {
 
     span {
       margin-left: 1rem;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      max-width: 12ch; // this will look for the unicode position of a char and elipse after that char
     }
   }
 }

@@ -48,7 +48,12 @@ class LeadInsights:
         lead_ids = self._lead_queryset.values_list("id", flat=True)
         if len(lead_ids) > 0:
             return self._log_queryset.filter(lead__id__in=lead_ids)
-        return self._log_queryset
+
+        # Since no leads selected, then there should be no logs to calculate from.
+        # This is because the client-side UX does not include seeing account-wide
+        # or organization-wide log statistics, but rather the aggregate statistics
+        # of leads that meet claimed_by and date-range filters.
+        return self._log_queryset.none()
 
     @property
     def call_count(self):
@@ -140,11 +145,6 @@ class LeadInsights:
     @property
     def closed_leads_count(self):
         return self.closed_leads.count()
-
-    @property
-    def forecast(self):
-        """Forecast 'open' leads. That is all leads, except CLOSED and LOST."""
-        return self.lead_queryset.open_leads().aggregate(sum=Sum("amount"))["sum"] or 0
 
     @property
     def closed_leads_value(self):

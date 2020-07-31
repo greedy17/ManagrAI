@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ActionChoice, Lead, List, Reminder, Notification, LeadMessage
+from .models import ActionChoice, Lead, List, Reminder, Notification, LeadMessage, Forecast
 # Register your models here.
 
 
@@ -8,8 +8,13 @@ class CustomActionChoice(admin.ModelAdmin):
     model = ActionChoice
 
 
+class ForecastInline(admin.StackedInline):
+    model = Forecast
+
+
 class CustomLead(admin.ModelAdmin):
     model = Lead
+    inlines = (ForecastInline,)
 
 
 class CustomList(admin.ModelAdmin):
