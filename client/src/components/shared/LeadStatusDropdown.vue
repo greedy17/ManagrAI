@@ -2,13 +2,13 @@
   <div class="status-dropdown">
     <select
       :value="lead.status"
-      :style="computedStyles"
+      :style="{ 'background-color': selectedOptionColor ? selectedOptionColor : '#EFEFF5' }"
       :disabled="disabled || lead.status === 'CLOSED'"
       @change="onChange"
     >
       <option :value="null">---</option>
-      <option v-for="option in statusEnums" :key="option" :value="option.toUpperCase()">
-        {{ option }}
+      <option v-for="option in options.list" :key="option.id" :value="option.id">
+        {{ option.title }}
       </option>
     </select>
     <Modal
@@ -27,7 +27,9 @@
 import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
 import { statusEnums } from '@/services/leads/enumerables'
 import Lead from '@/services/leads'
+import Status from '@/services/statuses'
 import CloseLead from '@/components/shared/CloseLead'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'LeadStatusDropdown',
@@ -44,15 +46,26 @@ export default {
   },
   data() {
     return {
+      selectedOptionColor: null,
       statusEnums,
       modal: {
         isOpen: false,
       },
+      options: CollectionManager.create({ ModelClass: Status }),
     }
+  },
+  async created() {
+    await this.options.refresh()
   },
   methods: {
     onChange({ target: { value } }) {
       if (value != 'CLOSED') {
+        if (value != null) {
+          this.selectedOptionColor = this.options.list.filter(o => o.id == value)[0].color
+        } else {
+          this.selectedOptionColor = '#EFEFF5'
+        }
+
         this.updateStatus(value)
       } else {
         this.modal.isOpen = true
@@ -72,6 +85,9 @@ export default {
   computed: {
     computedStyles() {
       return getStatusPrimaryColor(this.lead.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
+    },
+    getValue() {
+      return this.lead.statusRef ? this.lead.statusRef.title : null
     },
   },
 }

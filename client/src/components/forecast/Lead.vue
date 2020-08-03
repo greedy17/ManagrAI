@@ -39,6 +39,7 @@
         :disabled="!belongsToCurrentUser"
         @closed-lead="emitMoveNewlyClosedLead"
       />
+      <DropDownMenu :items="statusOptions.list" displayKey="title" valueKey="id" />
       <div class="last-action-taken">
         <template v-if="lead.lastActionTaken.actionTimestamp">
           <div>{{ lead.lastActionTaken.activity }}</div>
@@ -99,6 +100,7 @@ export default {
       showDetails: false,
     }
   },
+
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails

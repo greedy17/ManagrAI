@@ -1,6 +1,6 @@
 from django.db import models
 from managr.core.models import UserManager, TimeStampModel
-from django.db.models import Sum, Avg
+from django.db.models import Sum, Avg, Q
 
 from . import constants as org_consts
 # Create your models here.
@@ -154,7 +154,7 @@ class StageQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(organization=user.organization).filter(type=org_consts.STAGE_TYPE_PUBLIC)
+            return self.filter(Q(type='PUBLIC') | Q(organization=user.organization))
         else:
             return self.none()
 
@@ -174,6 +174,8 @@ class Stage(TimeStampModel):
 
     organization = models.ForeignKey(
         'Organization', related_name="stages", blank=False, null=True, on_delete=models.CASCADE)
+
+    objects = StageQuerySet.as_manager()
 
     class Meta:
         ordering = ['-datetime_created']

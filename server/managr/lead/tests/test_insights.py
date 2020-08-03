@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from managr.core.models import User
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Stage
 from managr.organization.factories import AccountFactory, ContactFactory
 
 from ..factories import LeadFactory, CallNoteFactory
@@ -15,7 +15,7 @@ from .. import constants as lead_constants
 
 class LeadInsightsTestCase(TestCase):
     # The fixture provides a test user and org
-    fixtures = ["dev.json"]
+    fixtures = ["dev.json", "fixtures.json"]
 
     def setUp(self):
         self.org = Organization.objects.first()
@@ -27,30 +27,25 @@ class LeadInsightsTestCase(TestCase):
         # Random lead for basic insight testing
         self.lead = LeadFactory(
             amount=25000,
-            status=lead_constants.LEAD_STATUS_WAITING,
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LEAD),
             claimed_by=self.user_1,
         )
 
         # Open and closed leads for KPI testing
         self.open_lead_1 = LeadFactory(
             amount=25000,
-            status=lead_constants.LEAD_STATUS_WAITING,
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LEAD),
             claimed_by=self.user_1,
         )
         self.open_lead_2 = LeadFactory(
             amount=25000,
-            status=lead_constants.LEAD_STATUS_WAITING,
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LEAD),
             claimed_by=self.user_1,
         )
         self.closed_lead_1 = LeadFactory(
             amount=25000,
             closing_amount=30000,
-            status=lead_constants.LEAD_STATUS_CLOSED,
-            claimed_by=self.user_1,
-        )
-        self.lost_lead_1 = LeadFactory(
-            amount=25000,
-            status=lead_constants.LEAD_STATUS_LOST,
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED),
             claimed_by=self.user_1,
         )
 

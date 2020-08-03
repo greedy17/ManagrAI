@@ -22,9 +22,9 @@ from rest_framework import (
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from .models import Organization, Account, Contact
+from .models import Organization, Account, Contact, Stage
 from managr.lead.models import Lead
-from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer
+from .serializers import OrganizationSerializer, OrganizationVerboseSerializer, AccountSerializer, ContactSerializer, StageSerializer
 from .filters import ContactFilterSet
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 
@@ -141,3 +141,13 @@ class ContactViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.Li
                 contacts_removed.append(contact)
 
         return Response(data={'removed_contacts': contacts_removed})
+
+
+class StageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """ endpoint to retrieve all stages for an org """
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (SuperUserCreateOnly, CanEditResourceOrReadOnly,)
+    serializer_class = StageSerializer
+
+    def get_queryset(self):
+        return Stage.objects.for_user(self.request.user)

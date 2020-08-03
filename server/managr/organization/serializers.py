@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Contact
+from .models import Organization, Account, Contact, Stage
 from managr.lead.models import ActionChoice
 
-from djmoney.models.fields import MoneyField, Money
 from rest_framework import (
     status, filters, permissions
 )
@@ -28,6 +27,15 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'name', 'state',
+        )
+
+
+class StageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Stage
+        fields = (
+            '__all__'
         )
 
 
