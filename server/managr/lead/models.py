@@ -27,8 +27,13 @@ class LeadQuerySet(models.QuerySet):
             ]
         )
 
-    def closed_leads(self):
-        return self.filter(status__in=[lead_constants.LEAD_STATUS_CLOSED])
+    def closed_leads(self, date_range_from=None, date_range_to=None):
+        qs = self.filter(status__in=[lead_constants.LEAD_STATUS_CLOSED])
+        if date_range_from:
+            qs = qs.filter(expected_close_date__gte=date_range_from)
+        if date_range_to:
+            qs = qs.filter(expected_close_date__lte=date_range_to)
+        return qs
 
 
 class Lead(TimeStampModel):

@@ -86,31 +86,49 @@ class LeadActivityLogViewSet(
         # NOTE (Bruno 7-9-2020): self.get_queryset excludes
         # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following log_qs instead.
         log_qs = LeadActivityLog.objects.for_user(self.request.user)
+
         empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
         claimed_by = request.query_params.get("claimed_by")
         date_range_from = request.query_params.get("date_range_from")
         date_range_to = request.query_params.get("date_range_to")
+        filter_params = {}
 
         # IMPORTANT: For security reasons, first filter leads to
         #            those visible by this user.
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
             lead_qs = lead_qs.filter(id__in=leads.split(","))
+            filter_params['leads'] = leads.split(",")
+        else:
+            filter_params['leads'] = None
+
         if claimed_by:
             lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
+            filter_params['claimed_by'] = claimed_by.split(",")
+        else:
+            filter_params['claimed_by'] = None
+
         # date_range_from and date_range_to can be missing, because:
         # - TODAY_ONWARD means there is no date_range_to
         # - ALL_TIME means both are missing
         if date_range_from:
-            lead_qs = lead_qs.filter(expected_close_date__gte=date_range_from)
+            log_qs = log_qs.filter(action_timestamp__gte=date_range_from)
+            filter_params['date_range_from'] = date_range_from
+        else:
+            filter_params['date_range_from'] = None
+
         if date_range_to:
-            lead_qs = lead_qs.filter(expected_close_date__lte=date_range_to)
+            log_qs = log_qs.filter(action_timestamp__lte=date_range_to)
+            filter_params['date_range_to'] = date_range_to
+        else:
+            filter_params['date_range_to'] = None
 
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
+        filter_params['empty'] = empty
 
-        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, empty=empty)
+        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params)
         return Response(insights.as_dict)
 
 
