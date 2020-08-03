@@ -1,5 +1,13 @@
 from decimal import (Decimal, ROUND_DOWN, )
+import random
 import re
+
+
+def generate_random_numbers(length=10):
+    value = ''
+    for i in range(10):
+        value += str(random.randint(1, 9))
+    return value
 
 
 def round_decimal(value, quantize='.01'):
@@ -15,6 +23,7 @@ def format_phone_number(value, format="+1(%d%d%d)%w%d%d%d-%d%d%d%d"):
         format = the format you want to conver to 
             ether string literals of the characters you want or %d for digits %w for whitespace 
     """
+
     # final string should have this length - the special % sign
     regex_format_chars = r'(\%[d|w])'
     matches = re.findall(regex_format_chars, format)
