@@ -116,6 +116,11 @@ export default {
     background-color: $soft-gray;
     border-radius: 5px;
   }
+  .selected-items.multi {
+    .selected-items__item {
+      background-color: $dark-green;
+    }
+  }
 }
 
 .save-button-container {
