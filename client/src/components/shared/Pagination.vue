@@ -3,6 +3,7 @@
     <div class="controls">
       <img
         class="arrow"
+        :class="{ 'disabled-arrow': !collection.pagination.hasPrevPage }"
         src="@/assets/images/keyboard-arrow-left.svg"
         @click.prevent="onLeftArrowClick"
       />
@@ -10,7 +11,7 @@
         <span
           v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
           class="page"
-          :class="{ current: collection.pagination.page === n }"
+          :class="{ 'current-page': collection.pagination.page === n }"
           :key="n"
           @click.prevent="onPageClick(n)"
         >
@@ -19,6 +20,7 @@
       </div>
       <img
         class="arrow"
+        :class="{ 'disabled-arrow': !collection.pagination.hasNextPage }"
         src="@/assets/images/keyboard-arrow-right.svg"
         @click.prevent="onRightArrowClick"
       />
@@ -39,25 +41,59 @@ export default {
       required: true,
       type: Object,
     },
+    useCollectionClone: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
-    appendToCollection() {
-      this.collection.addNextPage()
-    },
-    onPageClick(pageNumber) {
+    async onPageClick(pageNumber) {
       if (pageNumber !== this.collection.pagination.page) {
-        this.collection.pagination.page = pageNumber
-        this.collection.refresh()
+        this.$emit('start-loading')
+        let c = this.useCollectionClone ? this.collection.shallowClone() : this.collection
+        c.pagination.page = pageNumber
+        c.refresh()
+          .then(() => {
+            this.collection.pagination = c.pagination
+            this.collection.list = c.list
+          })
+          .finally(() => {
+            this.$emit('end-loading')
+          })
       }
     },
     onLeftArrowClick() {
       if (this.collection.pagination.hasPrevPage) {
-        this.collection.prevPage()
+        this.$emit('start-loading')
+        // a clone is used here in order to leverage collection.refresh
+        // without triggering any collection.refreshing -related renders.
+        let c = this.useCollectionClone ? this.collection.shallowClone() : this.collection
+
+        c.prevPage()
+          .then(() => {
+            this.collection.pagination = c.pagination
+            this.collection.list = c.list
+          })
+          .finally(() => {
+            this.$emit('end-loading')
+          })
       }
     },
     onRightArrowClick() {
       if (this.collection.pagination.hasNextPage) {
-        this.collection.nextPage()
+        this.$emit('start-loading')
+        // a clone is used here in order to leverage collection.refresh
+        // without triggering any collection.refreshing -related renders.
+        let c = this.useCollectionClone ? this.collection.shallowClone() : this.collection
+
+        c.nextPage()
+          .then(() => {
+            this.collection.pagination = c.pagination
+            this.collection.list = c.list
+          })
+          .finally(() => {
+            this.$emit('end-loading')
+          })
       }
     },
   },
@@ -93,11 +129,18 @@ export default {
   }
 }
 
+.disabled-arrow {
+  &:hover {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
 .page {
   margin: 0 0.25rem;
 }
 
-.current {
+.current-page {
   color: $dark-green;
   opacity: 1;
   &:hover {

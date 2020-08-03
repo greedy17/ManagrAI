@@ -39,4 +39,31 @@ const Pagination = {
   },
 }
 
+export const paginationMixin = {
+  data() {
+    return {
+      // this is added in case collection.refreshing cannot be used for conditional render,
+      // such as if it is used somewhere else in UX.
+      pagination: {
+        loading: false,
+      },
+    }
+  },
+  methods: {
+    startPaginationLoading(ref) {
+      // if the ref is not visible in viewport, scroll viewport to it.
+      let top = ref.offsetTop
+      let bounding = ref.getBoundingClientRect()
+      let refVisible =
+        bounding.top >= 0 &&
+        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+
+      if (!refVisible) {
+        window.scrollTo(0, top)
+      }
+      this.pagination.loading = true
+    },
+  },
+}
+
 export default Pagination
