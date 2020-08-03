@@ -52,18 +52,14 @@
           No Opportunities On List
         </span>
       </template>
-      <LoadMoreButton
-        v-if="!collection.refreshing && !!collection.pagination.next"
-        class="load-more-button"
-        :collection="collection"
-      />
+      <Pagination v-if="!collection.refreshing" class="load-more-button" :collection="collection" />
     </div>
   </div>
 </template>
 
 <script>
 import Lead from '@/components/leads-index/Lead'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import Pagination from '@/components/shared/Pagination'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
 
@@ -82,7 +78,7 @@ export default {
   components: {
     Lead,
     Checkbox,
-    LoadMoreButton,
+    Pagination,
     BulkLeadActions,
   },
   data() {
