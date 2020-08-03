@@ -72,7 +72,6 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "django_extensions",
-    "djmoney",
     "background_task",
 ]
 
@@ -319,3 +318,13 @@ if USE_NYLAS:
     NYLAS_CLIENT_ID = _env_get_required("NYLAS_CLIENT_ID")
     NYLAS_CLIENT_SECRET = _env_get_required("NYLAS_CLIENT_SECRET")
     NYLAS_OAUTH_CALLBACK_URL = _env_get_required("NYLAS_OAUTH_CALLBACK_URL")
+
+
+#
+# Twilio Integration Settings
+#
+USE_TWILIO = os.environ.get("USE_TWILIO") == "True"
+if USE_TWILIO:
+    TWILIO_ACCOUNT_SID = _env_get_required("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = _env_get_required("TWILIO_AUTH_TOKEN")
+    TWILIO_BASE_CALLBACK_URL = _env_get_required("TWILIO_BASE_CALLBACK_URL")

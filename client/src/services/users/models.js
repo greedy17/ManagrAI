@@ -19,6 +19,8 @@ export default class User {
       type = null,
       fullName = null,
       emailAuthLink = '',
+      messageAuthAccount = null,
+      messageAuthAccountRef = {},
       emailAuthAccount = {},
       emailAuthAccountRef = {},
       quota = null,
@@ -37,6 +39,8 @@ export default class User {
       type,
       fullName,
       emailAuthLink,
+      messageAuthAccount,
+      messageAuthAccountRef,
       emailAuthAccount,
       emailAuthAccountRef,
       quota,
@@ -64,5 +68,8 @@ export default class User {
 
   get emailConnected() {
     return this.emailAuthAccount && this.emailAuthAccountRef.accessToken
+  }
+  get textConnected() {
+    return this.messageAuthAccount && this.messageAuthAccountRef.phoneNumber
   }
 }

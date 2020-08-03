@@ -7,6 +7,7 @@ from rest_framework import (
     status, filters, permissions
 )
 from rest_framework.response import Response
+from managr.utils.numbers import validate_phone_number
 
 
 class ActionChoiceRefSerializer(serializers.ModelSerializer):
@@ -104,6 +105,22 @@ class ContactSerializer(serializers.ModelSerializer):
             organization=self.context['request'].user.organization)
         if not value in accounts:
             raise PermissionDenied()
+        return value
+
+    def validate_phone_number_1(self, value):
+        if value:
+            try:
+                validate_phone_number(value)
+            except ValueError:
+                raise ValidationError()
+        return value
+
+    def validate_phone_number_2(self, value):
+        if value:
+            try:
+                validate_phone_number(value)
+            except ValueError:
+                raise ValidationError()
         return value
 
     class Meta:

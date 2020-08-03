@@ -138,7 +138,7 @@ export default {
   top: 4rem;
   width: 0rem;
   max-width: 15vw;
-  min-height: 92vh;
+  min-height: 90%;
   > .content {
     display: none;
   }
