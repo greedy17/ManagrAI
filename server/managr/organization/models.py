@@ -2,6 +2,7 @@ from django.db import models
 from managr.core.models import UserManager, TimeStampModel
 from django.db.models import Sum, Avg
 
+from . import constants as org_consts
 # Create your models here.
 
 
@@ -111,7 +112,7 @@ class ContactQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(account__organization=user.organization)
         else:
-            return None
+            return self.none()
 
 
 class Contact(TimeStampModel):
@@ -146,3 +147,33 @@ class Contact(TimeStampModel):
         self.email = self.email.lower()
 
         return super(Contact, self).save(*args, **kwargs)
+
+
+class StageQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization).filter(type=org_consts.STAGE_TYPE_PUBLIC)
+        else:
+            return self.none()
+
+
+class Stage(TimeStampModel):
+    """ 
+        Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
+        There are some static stages available to all organizations and private ones that belong only to certain organizations. 
+    """
+
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=True)
+    color = models.CharField(
+        max_length=255, default="rgb(155,155,155)", help_text="hex code for color or rgba")
+    type = models.CharField(max_length=255, choices=(
+        org_consts.STAGE_TYPES))
+
+    organization = models.ForeignKey(
+        'Organization', related_name="stages", blank=False, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-datetime_created']

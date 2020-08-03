@@ -69,6 +69,9 @@ class Lead(TimeStampModel):
         null=True,
     )
     status_last_update = models.DateTimeField(default=timezone.now, blank=True)
+
+    stages = models.ForeignKey(
+        'organization.Stage', related_name='leads', null=True)
     claimed_by = models.ForeignKey(
         "core.User",
         related_name="claimed_leads",
