@@ -3,7 +3,6 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Organization, Account, Contact
 from managr.lead.models import ActionChoice
 
-from djmoney.models.fields import MoneyField, Money
 from rest_framework import (
     status, filters, permissions
 )
