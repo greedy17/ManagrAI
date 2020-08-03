@@ -16,8 +16,8 @@
         <template v-if="notification.meta">
           <div
             @click.prevent="goToLead(lead.id)"
-            :key="lead.id"
-            v-for="lead in notification.meta.leads"
+            :key="lead.id + '-' + i"
+            v-for="(lead, i) in notification.meta.leads"
             class="notification-card__content__leads"
           >
             {{ lead.title }}
@@ -56,6 +56,8 @@ export default {
           return 'alarm'
         case NOTIFICATION_TYPES.system:
           return 'alarm'
+        case NOTIFICATION_TYPES.message:
+          return 'sms'
         case NOTIFICATION_TYPES.emailOpened:
           return 'checkmark'
         default:
@@ -66,6 +68,8 @@ export default {
       switch (this.notification.notificationType) {
         case NOTIFICATION_TYPES.email:
           return 'email'
+        case NOTIFICATION_TYPES.message:
+          return 'message'
         case NOTIFICATION_TYPES.reminder:
           return 'reminder'
         case NOTIFICATION_TYPES.system:

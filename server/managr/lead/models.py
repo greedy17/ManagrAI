@@ -504,6 +504,70 @@ class Action(TimeStampModel):
         }
 
 
+class LeadMessageQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+
+        elif user.organization and user.is_active:
+            return self.filter(lead__account__organization=user.organization_id)
+        else:
+            return self.none()
+
+
+class LeadMessage(TimeStampModel):
+    """ Tie a lead to a Twilio Message """
+    created_by = models.ForeignKey(
+        "core.User",
+        related_name="created_messages",
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    lead = models.ForeignKey(
+        "Lead",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+        related_name="messages",
+    )
+    linked_contacts = models.ManyToManyField(
+        "organization.Contact", related_name="message_activity_logs", blank=True
+    )
+
+    message_id = models.CharField(max_length=128)
+    direction = models.CharField(
+        choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True)
+
+    body = models.CharField(max_length=255, blank=True)
+    status = models.CharField(
+        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True)
+
+    objects = LeadMessageQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def activity_log_meta(self):
+        """A metadata dict for activity logs"""
+        return {
+            "id": str(self.id),
+            "lead": str(self.lead.id),
+            "message_id": self.message_id,
+            "created_by": str(self.created_by.id),
+            "created_by_ref": {
+                "id": str(self.created_by.id),
+                "full_name": self.created_by.full_name,
+            },
+            "linked_contacts": [
+                {"id": str(c.id), "full_name": c.full_name, }
+                for c in self.linked_contacts.all()
+            ],
+
+        }
+
+
 class LeadEmail(TimeStampModel):
     """Tie a lead to a Nylas email thread."""
 

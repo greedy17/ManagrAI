@@ -11,7 +11,8 @@ from .models import (
     ActionChoice,
     Action,
     CallNote,
-    Notification
+    Notification,
+    LeadMessage
 )
 from managr.organization.serializers import AccountRefSerializer, ContactSerializer
 from managr.core.models import User
@@ -269,6 +270,23 @@ class CallNoteSerializer(serializers.ModelSerializer):
             "linked_contacts": {"required": True},
             "content": {"required": False, "allow_blank": True},
         }
+
+
+class LeadMessageSerializer(serializers.ModelSerializer):
+    created_by_ref = UserRefSerializer(source="created_by", read_only=True)
+    lead_ref = LeadRefSerializer(source="lead", read_only=True)
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
+
+    class Meta:
+        model = LeadMessage
+        fields = (
+            "id",
+            "created_by", "created_by_ref",
+            "lead", "lead_ref", "linked_contacts", "linked_contacts_ref",
+            "message_id", "direction", "status", 'datetime_created', "body",
+        )
 
 
 class LeadActivityLogSerializer(serializers.ModelSerializer):

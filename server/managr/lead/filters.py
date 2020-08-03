@@ -14,10 +14,23 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 from managr.lead import constants as lead_constants
-from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification
+from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification, LeadMessage
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('order_by', None)
+        if ordering is not None:
+            if ordering.startswith('-'):
+                ordering.strip('-')
+                queryset = queryset.order_by(ordering)
+            else:
+                queryset = queryset.order_by(ordering)
+
+        return queryset
+
+
+class ReminderOrderingFilter(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
         ordering = request.query_params.get('order_by', None)
         if ordering is not None:
@@ -135,8 +148,10 @@ class LeadFilterSet(FilterSet):
 
 class ForecastFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="forecasts_by_user")
-    date_range_from = django_filters.CharFilter(method="filter_by_date_range_from")
-    date_range_to = django_filters.IsoDateTimeFilter(field_name="lead__expected_close_date", lookup_expr="lte")
+    date_range_from = django_filters.CharFilter(
+        method="filter_by_date_range_from")
+    date_range_to = django_filters.IsoDateTimeFilter(
+        field_name="lead__expected_close_date", lookup_expr="lte")
 
     class Meta:
         model = Forecast
@@ -155,16 +170,17 @@ class ForecastFilterSet(FilterSet):
                     return queryset.exclude(lead__claimed_by__isnull=True) \
                                    .filter(lead__claimed_by__in=user_list) \
                                    .order_by(
-                                       F('lead__expected_close_date').asc(nulls_last=True),
+                                       F('lead__expected_close_date').asc(
+                                           nulls_last=True),
                                        'lead__title'
-                                   )
+                    )
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
                     # return None
                     return queryset.none()
             except DjangoValidationError:
                 # if a malformed User Id is sent fail silently and return None
-                return queryset.none()    
+                return queryset.none()
 
     def filter_by_date_range_from(self, queryset, name, value):
         # if the request does not include date_range_to param,
@@ -193,6 +209,14 @@ class ListFilterSet(FilterSet):
             )
             return queryset.filter(created_by_id__in=users_in_org)
         return queryset
+
+
+class LeadMessageFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(field_name="lead")
+
+    class Meta:
+        model = LeadMessage
+        fields = ['by_lead']
 
 
 class NoteFilterSet(FilterSet):
@@ -241,4 +265,4 @@ class ReminderFilterSet(FilterSet):
         query = Q()
         for n in ns:
             query |= Q(id=n)
-        return qs.filter(datetime_for__gte=min).exclude(query)
+        return qs.filter(datetime_for__gte=min).exclude(query).order_by('datetime_for')

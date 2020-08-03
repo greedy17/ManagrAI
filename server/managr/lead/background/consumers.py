@@ -74,6 +74,7 @@ class BaseActionConsumer:
         obj = self.get_object()
 
         try:
+
             return obj.activity_log_meta
         except AttributeError:
             logger.warning(
@@ -175,6 +176,14 @@ class ActionActionConsumer(BaseActionConsumer):
 
 class LeadEmailActionConsumer(BaseActionConsumer):
     model_class = lead_models.LeadEmail
+
+    def get_lead(self):
+        obj = self.get_object()
+        return obj.lead
+
+
+class LeadMessageActionConsumer(BaseActionConsumer):
+    model_class = lead_models.LeadMessage
 
     def get_lead(self):
         obj = self.get_object()
