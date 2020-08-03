@@ -21,6 +21,7 @@ const statusToSecondaryColor = {
   lost: '#CACFCC',
   null: '#EFEFF5',
 }
+import Utils from '@/services/utils'
 
 // must account for null status (as is the case on Lead creation)
 function statusSlugger(status) {
@@ -39,4 +40,10 @@ export function getStatusSecondaryColor(status) {
   return {
     backgroundColor: statusToSecondaryColor[sluggedStatus],
   }
+}
+export function getLightenedColor(color) {
+  let type = Utils.getColorType(color)
+
+  if (type == 'hex') return Utils.convertColor(color, 'hex', 'rgba', 0.5)
+  else return color
 }

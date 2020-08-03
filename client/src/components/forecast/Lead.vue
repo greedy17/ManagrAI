@@ -1,6 +1,6 @@
 <template>
   <div class="lead">
-    <div class="lead-header" v-bind:style="headerBackgroundColor">
+    <div class="lead-header" :style="{ 'background-color': headerBackgroundColor }">
       <span class="lead-name" @click="toggleDetails"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
       <div v-if="lead.primaryDescription || lead.secondaryDescription" class="lead-description">
@@ -39,7 +39,7 @@
         :disabled="!belongsToCurrentUser"
         @closed-lead="emitMoveNewlyClosedLead"
       />
-      <DropDownMenu :items="statusOptions.list" displayKey="title" valueKey="id" />
+
       <div class="last-action-taken">
         <template v-if="lead.lastActionTaken.actionTimestamp">
           <div>{{ lead.lastActionTaken.activity }}</div>
@@ -69,13 +69,14 @@
 </template>
 
 <script>
-import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import Lead from '@/services/leads'
 import Forecast from '@/services/forecasts'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 
 export default {
   name: 'Lead',
@@ -120,8 +121,11 @@ export default {
   },
   computed: {
     headerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status)
+      return this.lead.statusRef
+        ? getLightenedColor(this.lead.statusRef.color)
+        : getLightenedColor('#9B9B9B')
     },
+
     belongsToCurrentUser() {
       return this.$store.state.user.id == this.lead.claimedBy
     },

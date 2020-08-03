@@ -1,6 +1,6 @@
 <template>
   <div class="lead">
-    <div class="lead-header" v-bind:style="headerBackgroundColor">
+    <div class="lead-header" v-bind:style="{ 'background-color': headerBackgroundColor }">
       <Checkbox
         class="checkbox"
         :checked="isSelected"
@@ -33,13 +33,13 @@
 </template>
 
 <script>
-import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import Lead from '@/services/leads'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import Checkbox from '@/components/leads-new/CheckBox'
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 
 export default {
   name: 'Lead',
@@ -75,7 +75,9 @@ export default {
   },
   computed: {
     headerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status)
+      return this.lead.statusRef
+        ? getLightenedColor(this.lead.statusRef.color)
+        : getLightenedColor('#9B9B9B')
     },
   },
 }

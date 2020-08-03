@@ -2,12 +2,12 @@
   <div class="status-dropdown">
     <select
       :value="lead.status"
-      :style="{ 'background-color': selectedOptionColor ? selectedOptionColor : '#EFEFF5' }"
-      :disabled="disabled || lead.status === 'CLOSED'"
+      :style="{ 'background-color': getStatusColor }"
+      :disabled="disabled || getIsClosed"
       @change="onChange"
     >
       <option :value="null">---</option>
-      <option v-for="option in options.list" :key="option.id" :value="option.id">
+      <option v-for="option in getStatuses" :key="option.id" :value="option.id">
         {{ option.title }}
       </option>
     </select>
@@ -24,12 +24,10 @@
 </template>
 
 <script>
-import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
 import { statusEnums } from '@/services/leads/enumerables'
 import Lead from '@/services/leads'
-import Status from '@/services/statuses'
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 import CloseLead from '@/components/shared/CloseLead'
-import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'LeadStatusDropdown',
@@ -51,21 +49,13 @@ export default {
       modal: {
         isOpen: false,
       },
-      options: CollectionManager.create({ ModelClass: Status }),
+      options: [],
     }
   },
-  async created() {
-    await this.options.refresh()
-  },
+
   methods: {
     onChange({ target: { value } }) {
       if (value != 'CLOSED') {
-        if (value != null) {
-          this.selectedOptionColor = this.options.list.filter(o => o.id == value)[0].color
-        } else {
-          this.selectedOptionColor = '#EFEFF5'
-        }
-
         this.updateStatus(value)
       } else {
         this.modal.isOpen = true
@@ -83,11 +73,19 @@ export default {
     },
   },
   computed: {
-    computedStyles() {
-      return getStatusPrimaryColor(this.lead.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
+    getStatusColor() {
+      return this.lead.statusRef
+        ? getLightenedColor(this.lead.statusRef.color)
+        : getLightenedColor('#9B9B9B')
+    },
+    getStatuses() {
+      return this.$store.state.stages
     },
     getValue() {
       return this.lead.statusRef ? this.lead.statusRef.title : null
+    },
+    getIsClosed() {
+      return this.lead.statusRef ? this.lead.statusRef.title == 'CLOSED' : false
     },
   },
 }
