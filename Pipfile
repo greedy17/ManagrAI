@@ -28,9 +28,8 @@ requests = "==2.*"
 rollbar = "==0.*"
 whitenoise = "==3.*"
 django-kronos = "==1.*"
-django-money = "*"
-django-background-tasks = "*"
-twilio = "*"
+django-background-tasks = "==1.2.*"
+twilio = "==6.44.*"
 
 [requires]
 python_version = "3.7"
