@@ -290,6 +290,9 @@ class UserViewSet(
         recipient_contacts = request.data.get('recipients', [])
         recipient_lead = request.data.get('lead')
         lead = Lead.objects.filter(id=recipient_lead).first()
+        if lead is None:
+            raise ValidationError(
+                data="{'lead':'Lead Not Found'}", status=status.HTTP_400_BAD_REQUEST)
         recipients = []
         query = Q()
 

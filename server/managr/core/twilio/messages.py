@@ -57,9 +57,6 @@ def create_new_account(phone_number):
             .create(phone_number=phone_number,
                     sms_url=core_consts.TWILIO_MESSAGE_RECEIVED_CALLBACK_URL,
                     status_callback=core_consts.TWILIO_MESSAGE_STATUS_CALLBACK_URL,
-
-
-
                     )
     except Exception as e:
         message = e.msg
@@ -113,12 +110,6 @@ def list_available_numbers(region="DC", country="US", zipcode=None):
             detail=f'Error From Twilio Server, {message}', code=status)
 
     return formatted_data
-
-
-#from managr.core.twilio.messages import send_message
-#send_message('test', "+15005550006", "+18572056014")
-# class TwilioException404(APIException):
-#    status_code = 404
 
 
 class TwilioIncomingPhoneNumber:
