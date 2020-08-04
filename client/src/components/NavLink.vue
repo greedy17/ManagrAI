@@ -38,7 +38,7 @@ export default {
   @include pointer-on-hover();
   height: 4.5rem;
   width: 5rem;
-  display: flex;
+  display: inline-flex;
   flex-flow: column;
   justify-content: center;
   align-items: center;
