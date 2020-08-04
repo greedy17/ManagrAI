@@ -19,7 +19,9 @@
         :accounts="accountsWithLeads"
         :accountsCollection="accounts"
         :isFilteringActive="isFilteringActive"
-        @load-more="addNextPage"
+        @on-left-arrow-click="getPage(accounts.pagination.page - 1)"
+        @on-page-click="getPage"
+        @on-right-arrow-click="getPage(accounts.pagination.page + 1)"
       />
       <ComponentLoadingSVG v-else :style="{ marginTop: '10vh' }" />
     </div>
@@ -27,6 +29,7 @@
 </template>
 
 <script>
+import VueScrollTo from 'vue-scrollto'
 import ToolBar from '@/components/prospect/ToolBar'
 import AccountsContainer from '@/components/prospect/AccountsContainer'
 import Account from '@/services/accounts'
@@ -139,13 +142,13 @@ export default {
       this.unclaimedFilterState = false
       this.refreshCollections()
     },
-    addNextPage() {
-      // this method borrows heavily from CollectionManager.addNextPage
-      // this custom method must be used instead because of the desired UX given the serialized data:
+    getPage(pageNumber) {
+      // this custom method must be used instead of CollectionManager.refresh
+      // because of the desired UX given the serialized data:
       // we must get the next page of accounts to then go through this next page and
       // fetch each account's first page of leads
-
-      this.accounts.loadingNextPage = true
+      VueScrollTo.scrollTo('#nav', 0)
+      this.loading = true
 
       let tempCollection = CollectionManager.create({
         ModelClass: Account,
@@ -153,7 +156,7 @@ export default {
 
       tempCollection.pagination = {
         ...this.accounts.pagination,
-        page: this.accounts.pagination.page + 1,
+        page: pageNumber,
       }
       tempCollection.filters = {
         ...this.accounts.filters,
@@ -169,14 +172,14 @@ export default {
 
           Promise.all(promises).then(() => {
             // here add tempAccountsWithLeads to this.accountsWithLeads
-            this.accountsWithLeads = [...this.accountsWithLeads, ...tempAccountsWithLeads]
+            this.accountsWithLeads = tempAccountsWithLeads
             this.accounts.pagination = collection.pagination
-            this.accounts.loadingNextPage = false
+            this.loading = false
           })
         })
         .catch(error => {
-          this.accounts.loadingNextPage = false
-          apiErrorHandler({ apiName: 'ProspectPage.addNextPage error' })(error)
+          this.loading = false
+          apiErrorHandler({ apiName: 'ProspectPage.getPage' })(error)
         })
     },
     toggleUnclaimed() {

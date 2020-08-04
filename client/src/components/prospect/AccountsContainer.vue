@@ -1,41 +1,43 @@
 <template>
-  <div class="accounts-container">
-    <template v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
-      <br />
-      <span class="no-items-message">
-        Sorry! Your search did not return any results!
-      </span>
-      <br />
-      <br />
-    </template>
-    <div v-if="accounts.length" class="accounts">
-      <Account
-        v-for="accountWithLeads in accounts"
-        :key="accountWithLeads.id"
-        :account="accountWithLeads.account"
-        :collection="accountWithLeads.collection"
-        :isFilteringActive="isFilteringActive"
-        @load-more="$emit('load-more')"
-      />
-      <template v-if="!accountsCollection.refreshing && !!accountsCollection.pagination.next">
-        <button
-          v-if="!accountsCollection.loadingNextPage"
-          class="load-more-button"
-          @click.prevent="$emit('load-more')"
-        >
-          Load More
-        </button>
-        <ComponentLoadingSVG v-else :style="{ margin: '0.5rem auto' }" />
+  <div>
+    <div class="accounts-container" ref="accountsContainer">
+      <template v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
+        <br />
+        <span class="no-items-message">
+          Sorry! Your search did not return any results!
+        </span>
+        <br />
+        <br />
       </template>
+      <div v-if="accounts.length" class="accounts">
+        <Account
+          v-for="accountWithLeads in accounts"
+          :key="accountWithLeads.id"
+          :account="accountWithLeads.account"
+          :collection="accountWithLeads.collection"
+          :isFilteringActive="isFilteringActive"
+        />
+      </div>
+      <span v-else class="no-items-message">
+        No Accounts
+      </span>
     </div>
-    <span v-else class="no-items-message">
-      No Accounts
-    </span>
+    <Pagination
+      v-if="!accountsCollection.refreshing && accounts.length"
+      style="margin-top: 0.5rem; width: 80vw;"
+      :collection="accountsCollection"
+      :model="'Account'"
+      :emit="true"
+      @on-left-arrow-click="$emit('on-left-arrow-click')"
+      @on-page-click="pageNumber => $emit('on-page-click', pageNumber)"
+      @on-right-arrow-click="$emit('on-right-arrow-click')"
+    />
   </div>
 </template>
 
 <script>
 import Account from '@/components/prospect/Account'
+import Pagination from '@/components/shared/Pagination'
 
 export default {
   name: 'AccountsContainer',
@@ -55,6 +57,7 @@ export default {
   },
   components: {
     Account,
+    Pagination,
   },
   computed: {
     zeroLeadsPresent() {
@@ -81,9 +84,5 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 1rem;
-}
-.load-more-button {
-  @include primary-button;
-  margin: 0.5rem auto;
 }
 </style>

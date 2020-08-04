@@ -1,6 +1,11 @@
 <template>
   <div class="list">
-    <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
+    <div
+      ref="listHeader"
+      class="list-header"
+      @click="toggleLeads"
+      :class="{ open: showLeads, closed: !showLeads }"
+    >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title">{{ list.title }}</span>
       <span class="list-length">
@@ -62,10 +67,10 @@
         </div>
         <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
       </template>
-      <LoadMoreButton
-        v-if="!trueList.refreshing && !!trueList.pagination.next"
-        class="load-more-button"
+      <Pagination
+        v-if="!trueList.refreshing"
         :collection="trueList"
+        @start-loading="startPaginationLoading($refs.listHeader)"
       />
     </div>
   </div>
@@ -75,12 +80,14 @@
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
+import Pagination from '@/components/shared/Pagination'
+import { paginationMixin } from '@/services/pagination'
 
 export default {
   name: 'List',
+  mixins: [paginationMixin],
   props: {
     list: {
       // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
@@ -99,7 +106,7 @@ export default {
   },
   components: {
     Lead,
-    LoadMoreButton,
+    Pagination,
     BulkLeadActions,
     Checkbox,
   },
@@ -240,10 +247,6 @@ export default {
       flex: 1;
     }
   }
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 
 .no-items-message {

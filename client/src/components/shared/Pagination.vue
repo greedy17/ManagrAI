@@ -28,7 +28,7 @@
     <div class="statistics">
       Showing {{ collection.pagination.currentPageStart }} -
       {{ collection.pagination.currentPageEnd }} of {{ collection.pagination.totalCount }}
-      {{ 'Opportunity' | pluralize(collection.pagination.totalCount) }}
+      {{ model | pluralize(collection.pagination.totalCount) }}
     </div>
   </div>
 </template>
@@ -37,11 +37,27 @@
 export default {
   name: 'Pagination',
   props: {
+    // the collection to paginate
     collection: {
       required: true,
       type: Object,
     },
+    // if a shallow clone of the collection should be used,
+    // in order to newly leverage collection properties that may already
+    // be tied to UI otherwise
     useCollectionClone: {
+      type: Boolean,
+      default: false,
+    },
+    // case-sensitive string of collection's model, in order to display pluralized
+    model: {
+      type: String,
+      default: 'Opportunity',
+    },
+    // if true, then retrieval of collection data is not done within this component
+    // but rather handled upstream.
+    // this was added because /views/Prospect needed pagination handled differently
+    emit: {
       type: Boolean,
       default: false,
     },
@@ -49,6 +65,10 @@ export default {
   methods: {
     async onPageClick(pageNumber) {
       if (pageNumber !== this.collection.pagination.page) {
+        if (this.emit) {
+          this.$emit('on-page-click', pageNumber)
+          return
+        }
         this.$emit('start-loading')
         let c = this.useCollectionClone ? this.collection.shallowClone() : this.collection
         c.pagination.page = pageNumber
@@ -64,6 +84,10 @@ export default {
     },
     onLeftArrowClick() {
       if (this.collection.pagination.hasPrevPage) {
+        if (this.emit) {
+          this.$emit('on-left-arrow-click')
+          return
+        }
         this.$emit('start-loading')
         // a clone is used here in order to leverage collection.refresh
         // without triggering any collection.refreshing -related renders.
@@ -81,6 +105,10 @@ export default {
     },
     onRightArrowClick() {
       if (this.collection.pagination.hasNextPage) {
+        if (this.emit) {
+          this.$emit('on-right-arrow-click')
+          return
+        }
         this.$emit('start-loading')
         // a clone is used here in order to leverage collection.refresh
         // without triggering any collection.refreshing -related renders.

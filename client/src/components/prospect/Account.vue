@@ -1,6 +1,11 @@
 <template>
   <div class="account" v-if="!isFilteringActive || collection.pagination.totalCount">
-    <div class="header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
+    <div
+      ref="header"
+      class="header"
+      @click="toggleLeads"
+      :class="{ open: showLeads, closed: !showLeads }"
+    >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="account-title">{{ account.name }}</span>
       <span class="leads-count">
@@ -14,12 +19,16 @@
     </div>
     <div class="leads-container" v-if="showLeads">
       <div v-if="collection.pagination.totalCount > 0" class="accLeads">
-        <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
-        <LoadMoreButton
-          v-if="!collection.refreshing && !!collection.pagination.next"
-          class="load-more-button"
-          :collection="collection"
-        />
+        <ComponentLoadingSVG v-if="collection.refreshing" style="margin: 1rem auto;" />
+        <template v-else>
+          <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
+          <Pagination
+            v-if="!collection.refreshing"
+            style="margin-bottom: 1rem;"
+            :collection="collection"
+            @start-loading="startPaginationLoading($refs.header)"
+          />
+        </template>
       </div>
       <div v-else class="no-items-message">No Opportunities for this account</div>
     </div>
@@ -29,10 +38,12 @@
 
 <script>
 import Lead from '@/components/prospect/Lead'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import Pagination from '@/components/shared/Pagination'
+import { paginationMixin } from '@/services/pagination'
 
 export default {
   name: 'Account',
+  mixins: [paginationMixin],
   props: {
     account: {
       type: Object,
@@ -49,7 +60,7 @@ export default {
   },
   components: {
     Lead,
-    LoadMoreButton,
+    Pagination,
   },
   data() {
     return {
@@ -111,8 +122,9 @@ export default {
 }
 
 .leads-container {
-  margin-left: 2%;
+  margin-left: 1%;
   margin-right: 1%;
+  margin-top: 1rem;
 }
 
 .no-items-message {
@@ -120,9 +132,5 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 </style>
