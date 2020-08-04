@@ -41,13 +41,25 @@
         <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
           <span class="list-leads__row__lead">
             <LeadRow
-              :key="'row' + '-' + lead.id"
+              :key="lead.id"
               :lead="lead"
               :isSelected="!!selectedLeads[lead.id]"
               @checkbox-clicked="toggleSelectedLead(lead)"
             >
               <template v-slot:left> </template>
-              <template v-slot:center> </template>
+              <template v-slot:center>
+                <div class="lead-items">
+                  <span class="muted">
+                    Expected Close By: <br />{{ lead.expectedCloseDate | dateShort }}</span
+                  >
+                  <span class="muted">
+                    Last Action On:
+                    <br />
+                    {{ lead.lastActionTaken.actionTimestamp | timeAgo }} -
+                    {{ lead.lastActionTaken.activity }}
+                  </span>
+                </div>
+              </template>
               <template v-slot:right> </template>
             </LeadRow>
             <!--             <Lead
@@ -211,10 +223,22 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-top: 1rem;
 
     &__lead {
       flex: 1;
     }
+  }
+}
+.lead-items {
+  display: flex;
+  align-items: center;
+  > * {
+    width: 150px;
+  }
+  .muted {
+    font-size: 10px;
+    color: black;
   }
 }
 

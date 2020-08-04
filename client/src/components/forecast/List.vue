@@ -10,13 +10,28 @@
       <span class="list-value">{{ totalValue | currency }}</span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <Lead
+      <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
+        <LeadRow :key="lead.id" :lead="lead.leadRef">
+          <template v-slot:left> </template>
+          <template v-slot:center>
+            <div class="lead-items">
+              <span class="muted">
+                Expected Close By: <br />
+                {{ lead.expectedCloseDate | dateShort }}
+              </span>
+            </div>
+          </template>
+          <template v-slot:right> </template>
+        </LeadRow>
+      </div>
+
+      <!--       <Lead
         v-for="forecast in collection.list"
         :key="forecast.id"
         :forecast="forecast"
         :lead.sync="forecast.leadRef"
         @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
-      />
+      /> -->
       <LoadMoreButton
         v-if="!collection.refreshing && !!collection.pagination.next"
         class="load-more-button"
@@ -30,6 +45,7 @@
 import Forecast from '@/services/forecasts'
 import Lead from '@/components/forecast/Lead'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import LeadRow from '@/components/shared/LeadRow'
 
 export default {
   name: 'List',
@@ -46,12 +62,15 @@ export default {
   components: {
     Lead,
     LoadMoreButton,
+    LeadRow,
   },
   data() {
     return {
       showLeads: false,
+      leadsList: this.collection.list ? this.collection.list : [],
     }
   },
+
   methods: {
     toggleLeads() {
       if (this.numOfLeads > 0) {
@@ -109,6 +128,18 @@ export default {
   display: block;
 }
 
+.lead-items {
+  display: flex;
+  align-items: center;
+  > * {
+    width: 150px;
+  }
+  .muted {
+    font-size: 10px;
+    color: black;
+  }
+}
+
 .list-title {
   font-weight: bold;
   width: 20rem;
@@ -125,6 +156,9 @@ export default {
   margin-left: 1%;
   margin-right: 1%;
   padding-top: 0.5rem;
+  &__row {
+    margin-top: 1rem;
+  }
 }
 
 .load-more-button {

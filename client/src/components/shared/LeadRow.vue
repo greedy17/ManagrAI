@@ -1,26 +1,29 @@
 <template>
-  <div class="lead">
-    <div class="lead__container">
+  <div class="lead" @click="showDetails = !showDetails">
+    <div class="lead__container" v-bind:style="{ 'background-color': headerBackgroundColor }">
       <div class="lead__container__left">
-        <span class="title">{{ lead.title }}</span>
-        <span class="rating">{{ lead.rating }}</span>
-
         <slot name="left"></slot>
+        <span class="title">{{ dataLead.title }}</span>
+        <span class="rating">{{ dataLead.rating }}</span>
       </div>
       <div class="lead__container__center">
-        <div v-if="lead.primaryDescription || lead.secondaryDescription" class="description">
-          <div class="primary">{{ lead.primaryDescription || '-Primary Not Set-' }}</div>
-          <div class="secondary">{{ lead.secondaryDescription || '-Secondary Not Set-' }}</div>
+        <div
+          v-if="dataLead.primaryDescription || dataLead.secondaryDescription"
+          class="description"
+        >
+          <div class="primary">{{ dataLead.primaryDescription || '-Primary Not Set-' }}</div>
+          <div class="secondary">{{ dataLead.secondaryDescription || '-Secondary Not Set-' }}</div>
         </div>
         <div v-else class="description">No Descriptions</div>
         <span class="amount">{{
-          lead.statusRef && lead.statusRef.title == Lead.CLOSED
-            ? lead.closingAmount
-            : lead.amount | currency
+          dataLead.statusRef && dataLead.statusRef.title == Lead.CLOSED
+            ? dataLead.closingAmount
+            : dataLead.amount | currency
         }}</span>
+
         <div class="actions">
-          <LeadForecastDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
-          <LeadStatusDropdown :lead="lead" :disabled="!belongsToCurrentUser" />
+          <LeadForecastDropdown :lead="dataLead" :disabled="!belongsToCurrentUser" />
+          <LeadStatusDropdown :lead="dataLead" :disabled="!belongsToCurrentUser" />
         </div>
 
         <slot name="center"></slot>
@@ -31,15 +34,15 @@
           {{
             belongsToCurrentUser
               ? 'You'
-              : lead.claimedByRef.fullName.trim()
-              ? lead.claimedByRef.fullName
-              : lead.claimedByRef.email
+              : dataLead.claimedByRef.fullName.trim()
+              ? dataLead.claimedByRef.fullName
+              : dataLead.claimedByRef.email
           }}
         </span>
         <slot name="right"></slot>
       </div>
     </div>
-    <LeadDetails :lead="lead" v-if="showDetails" />
+    <LeadDetails :lead="dataLead" v-if="showDetails" />
   </div>
 </template>
 
@@ -59,10 +62,6 @@ export default {
       type: Object,
       required: true,
     },
-    isSelected: {
-      type: Boolean,
-      required: true,
-    },
   },
   components: {
     LeadDetails,
@@ -74,7 +73,11 @@ export default {
     return {
       Lead,
       showDetails: false,
+      dataLead: this.lead,
     }
+  },
+  created() {
+    this.dataLead = this.lead
   },
   methods: {
     toggleDetails() {
@@ -86,11 +89,11 @@ export default {
   },
   computed: {
     belongsToCurrentUser() {
-      return this.lead.claimedBy == this.$store.state.user.id
+      return this.dataLead.claimedBy == this.$store.state.user.id
     },
     headerBackgroundColor() {
-      return this.lead.statusRef
-        ? getLightenedColor(this.lead.statusRef.color)
+      return this.dataLead.statusRef
+        ? getLightenedColor(this.dataLead.statusRef.color)
         : getLightenedColor('#9B9B9B')
     },
   },
@@ -102,10 +105,22 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/buttons';
 
+.lead {
+  width: 100%;
+  &:hover {
+    cursor: pointer;
+  }
+}
 .lead__container {
   display: flex;
+  align-items: center;
   width: 100%;
-
+  height: 50px;
+  font-size: 12px;
+  > * {
+    margin: 0.5rem;
+    align-items: center;
+  }
   &__center {
     display: flex;
     flex: 1 0 auto;
@@ -115,7 +130,6 @@ export default {
       justify-content: center;
     }
     .description {
-      background-color: red;
       display: flex;
       flex-direction: column;
       width: 200px;
@@ -124,7 +138,7 @@ export default {
       text-overflow: ellipsis;
     }
     .amount {
-      width: 50px;
+      width: 100px;
     }
   }
   &__left {
@@ -135,13 +149,13 @@ export default {
 
     .title {
       width: 200px;
-      background-color: red;
+      font-size: 14px;
+
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .rating {
-      background-color: green;
     }
   }
   &__right {

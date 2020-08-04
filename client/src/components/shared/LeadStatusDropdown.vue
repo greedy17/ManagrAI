@@ -1,5 +1,5 @@
 <template>
-  <div class="status-dropdown">
+  <div class="status-dropdown" @click.stop.prevent>
     <select
       :value="leadItem.status"
       :style="{ 'background-color': getStatusColor }"

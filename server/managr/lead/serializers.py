@@ -106,6 +106,14 @@ class ListSerializer(serializers.ModelSerializer):
         return obj.leads.count()
 
 
+class ForecastRefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Forecast
+        fields = (
+            'forecast', 'id', 'lead',
+        )
+
+
 class LeadRefSerializer(serializers.ModelSerializer):
     """ serializer for forecast """
 
@@ -115,6 +123,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
     )
     last_action_taken = serializers.SerializerMethodField()
     status_ref = StageSerializer(source="status", read_only=True)
+    forecast_ref = ForecastRefSerializer(source="forecast", read_only=True)
 
     class Meta:
         model = Lead
@@ -134,6 +143,8 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "linked_contacts_ref",
             "last_action_taken",
             "closing_amount",
+            "forecast",
+            "forecast_ref",
         )
 
     def get_last_action_taken(self, instance):

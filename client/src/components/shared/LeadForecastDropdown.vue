@@ -1,5 +1,5 @@
 <template>
-  <div class="forecast-dropdown">
+  <div class="forecast-dropdown" @click.stop.prevent>
     <select @change="updateForecast" :style="computedStyles" :disabled="disabled || leadIsClosed">
       <template v-if="Forecast.CLOSED == forecast">
         <option selected>
