@@ -90,7 +90,7 @@ export default {
           if (this.lead.forecastRef) {
             this.lead.forecastRef.forecast = Lead.CLOSED
           }
-          this.lead.closingAmount = this.amount
+          this.lead.closingAmount = parseFloat(this.amount)
           this.$parent.$emit('closed-lead')
           this.$parent.$emit('close-modal')
           this.$Alert.alert({
