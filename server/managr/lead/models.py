@@ -92,7 +92,8 @@ class Lead(TimeStampModel):
     @property
     def contract_file(self):
         """ property to define contract file if a lead is not closed it has not contract """
-        if self.status == lead_constants.LEAD_STATUS_CLOSED:
+
+        if self.status and self.status.title == lead_constants.LEAD_STATUS_CLOSED:
             try:
                 return File.objects.get(
                     doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id

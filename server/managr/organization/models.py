@@ -177,7 +177,7 @@ class Stage(TimeStampModel):
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
     color = models.CharField(
-        max_length=255, default="rgb(155,155,155)", help_text="hex code for color or rgba")
+        max_length=255, default="#9B9B9B", help_text="hex code for color")
     type = models.CharField(max_length=255, choices=(
         org_consts.STAGE_TYPES))
 

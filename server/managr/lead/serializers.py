@@ -14,6 +14,7 @@ from .models import (
     Notification,
     LeadMessage
 )
+from managr.organization.models import Stage
 from managr.organization.serializers import AccountRefSerializer, ContactSerializer, StageSerializer
 from managr.core.models import User
 from managr.lead import constants as lead_constants
@@ -369,7 +370,10 @@ class LeadSerializer(serializers.ModelSerializer):
     """ verbose seriliazer for leads"""
 
     def validate_status(self, value):
-        if value == lead_constants.LEAD_STATUS_CLOSED:
+        if not value:
+            return value
+        closed = Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED)
+        if value.id == closed.id:
             raise serializers.ValidationError(
                 {"detail": "Cannot Close Lead by Update"})
         return value

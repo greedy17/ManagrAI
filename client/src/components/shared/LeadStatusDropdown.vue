@@ -1,7 +1,7 @@
 <template>
   <div class="status-dropdown">
     <select
-      :value="lead.status"
+      :value="leadItem.status"
       :style="{ 'background-color': getStatusColor }"
       :disabled="disabled || getIsClosed"
       @change="onChange"
@@ -18,7 +18,7 @@
       @closed-lead="$emit('closed-lead')"
       :width="50"
     >
-      <CloseLead :lead="lead" />
+      <CloseLead @closed-lead="updateLeadItem" :lead="leadItem" />
     </Modal>
   </div>
 </template>
@@ -50,13 +50,24 @@ export default {
         isOpen: false,
       },
       options: [],
+      leadItem: this.lead,
     }
   },
-
+  created() {
+    this.leadItem = this.lead
+  },
   methods: {
-    onChange({ target: { value } }) {
-      if (value != 'CLOSED') {
-        this.updateStatus(value)
+    updateLeadItem(val) {
+      let closedStatus = this.getStatuses.find(i => i.title == Lead.CLOSED)
+      this.leadItem = { ...val, statusRef: closedStatus, status: closedStatus.id }
+
+      this.closeModal()
+      this.$emit('closed-lead', this.leadItem)
+    },
+    async onChange({ target: { value } }) {
+      let val = this.getStatuses.find(s => s.id == value)
+      if (!value || val.title != 'CLOSED') {
+        await this.updateStatus(value)
       } else {
         this.modal.isOpen = true
       }
@@ -64,8 +75,7 @@ export default {
     updateStatus(newStatus) {
       let patchData = { status: newStatus }
       Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead.status = lead.status
-        this.lead.statusLastUpdate = lead.statusLastUpdate
+        this.leadItem = { ...lead }
       })
     },
     closeModal() {
@@ -74,18 +84,18 @@ export default {
   },
   computed: {
     getStatusColor() {
-      return this.lead.statusRef
-        ? getLightenedColor(this.lead.statusRef.color)
+      return this.leadItem.statusRef
+        ? getLightenedColor(this.leadItem.statusRef.color)
         : getLightenedColor('#9B9B9B')
     },
     getStatuses() {
       return this.$store.state.stages
     },
     getValue() {
-      return this.lead.statusRef ? this.lead.statusRef.title : null
+      return this.leadItem.statusRef ? this.leadItem.statusRef.title : null
     },
     getIsClosed() {
-      return this.lead.statusRef ? this.lead.statusRef.title == 'CLOSED' : false
+      return this.leadItem.statusRef ? this.leadItem.statusRef.title == 'CLOSED' : false
     },
   },
 }

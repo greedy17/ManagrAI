@@ -64,7 +64,7 @@
         <img src="@/assets/images/keyboard_arrow_right.svg" />
       </button>
     </div>
-    <LeadDetails :lead="lead" v-if="showDetails" />
+    <LeadDetails :leadItem="lead" v-if="showDetails" />
   </div>
 </template>
 
