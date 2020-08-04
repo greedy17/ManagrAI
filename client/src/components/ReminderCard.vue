@@ -79,9 +79,14 @@ export default {
   &__title {
     display: flex;
     overflow: hidden;
+    text-transform: capitalize;
 
     &__text {
       flex: 1 0 auto;
+      max-width: 12vw;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     &__type {
     }

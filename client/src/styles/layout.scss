@@ -7,16 +7,17 @@
 .page {
   padding: 2rem;
   display: flex;
+  > * {
+    padding: 1rem;
+  }
   &__left-nav-bar {
-    flex: 3;
+    max-width: 18vw;
+    min-width: 5rem;
   }
   &__main-content-area {
-    flex: 12;
-    padding: 0 2rem;
+    flex: 1 0 5rem;
   }
   &__main-content-area-with-panel {
-    flex: 9;
-    padding: 0 2rem;
   }
   &__right-panel {
     flex: 3;

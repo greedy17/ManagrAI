@@ -18,12 +18,6 @@
 
     <div class="box__content">
       <div v-if="activeTab == 0">
-        <BulkCustomAction :leads="leads" />
-      </div>
-      <div v-if="activeTab == 1">
-        <BulkNoteAction :leads="leads" />
-      </div>
-      <div v-if="activeTab == 2">
         <ComponentLoadingSVG v-if="lists.refreshing" />
         <template v-else>
           Move all selected Opportunities to the following Lists:
@@ -45,6 +39,12 @@
             <button class="on-bulk-move" @click="onBulkMove">Bulk Move Opportunities</button>
           </div>
         </template>
+      </div>
+      <div v-if="activeTab == 1">
+        <BulkNoteAction :leads="leads" />
+      </div>
+      <div v-if="activeTab == 2">
+        <BulkCustomAction :leads="leads" />
       </div>
       <!-- <div v-if="activeTab == 3">Bulk Email</div> -->
     </div>

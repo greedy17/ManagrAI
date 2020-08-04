@@ -127,6 +127,7 @@ export default {
     display: flex;
     overflow: hidden;
     justify-content: space-between;
+    text-transform: capitalize;
 
     &__text {
       max-width: 12vw;

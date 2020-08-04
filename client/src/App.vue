@@ -72,7 +72,6 @@ body {
 }
 
 .page-content {
-  flex-grow: 1;
 }
 
 .section-shadow {

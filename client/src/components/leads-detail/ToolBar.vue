@@ -693,6 +693,8 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: column;
+  .lead-title {
+  }
 }
 
 .toolbar,
@@ -727,8 +729,9 @@ export default {
 .lead-title {
   @include pointer-on-hover;
   margin-top: 1rem;
-  padding: 0 15%;
   text-align: center;
+  padding: 1rem;
+  word-wrap: break-word;
 }
 
 .title-editable {
