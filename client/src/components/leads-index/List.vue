@@ -75,6 +75,7 @@
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
+import LeadRow from '@/components/shared/LeadRow'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
@@ -102,6 +103,7 @@ export default {
     LoadMoreButton,
     BulkLeadActions,
     Checkbox,
+    LeadRow,
   },
   watch: {
     leadFilters: {

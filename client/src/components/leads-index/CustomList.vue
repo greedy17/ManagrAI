@@ -40,12 +40,22 @@
         </div>
         <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
           <span class="list-leads__row__lead">
-            <Lead
+            <LeadRow
+              :key="'row' + '-' + lead.id"
+              :lead="lead"
+              :isSelected="!!selectedLeads[lead.id]"
+              @checkbox-clicked="toggleSelectedLead(lead)"
+            >
+              <template v-slot:left> </template>
+              <template v-slot:center> </template>
+              <template v-slot:right> </template>
+            </LeadRow>
+            <!--             <Lead
               :key="lead.id"
               :lead="lead"
               :isSelected="!!selectedLeads[lead.id]"
               @checkbox-clicked="toggleSelectedLead(lead)"
-            />
+            /> -->
           </span>
         </div>
         <span v-if="collection.list.length <= 0" class="no-items-message">
@@ -66,6 +76,7 @@ import Lead from '@/components/leads-index/Lead'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
+import LeadRow from '@/components/shared/LeadRow'
 
 export default {
   name: 'CustomList', // such as NoList and AllLeads
@@ -84,6 +95,7 @@ export default {
     Checkbox,
     LoadMoreButton,
     BulkLeadActions,
+    LeadRow,
   },
   data() {
     return {
