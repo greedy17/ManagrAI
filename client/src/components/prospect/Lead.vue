@@ -1,6 +1,6 @@
 <template>
   <div class="lead">
-    <div class="header" v-bind:style="headerBackgroundColor">
+    <div class="header" v-bind:style="{ 'background-color': headerBackgroundColor }">
       <span class="lead-name" @click="routeToLeadDetail"> {{ lead.title }} </span>
       <span class="lead-rating"> {{ lead.rating }} </span>
       <div class="lead-description">
@@ -36,11 +36,10 @@
 </template>
 
 <script>
-import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import Lead from '@/services/leads'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 export default {
   name: 'Lead',
   props: {
@@ -82,7 +81,9 @@ export default {
       return this.lead.claimedBy == this.$store.state.user.id
     },
     headerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status)
+      return this.lead.statusRef
+        ? getLightenedColor(this.lead.statusRef.color)
+        : getLightenedColor('#9B9B9B')
     },
   },
 }

@@ -78,6 +78,8 @@ router.register('actions', lead_views.ActionViewSet, 'actions')
 router.register('files', lead_views.FileViewSet, 'files')
 router.register('notifications',
                 lead_views.NotificationViewSet, 'notificiations')
+router.register('stages',
+                organization_views.StageViewSet, 'stages')
 router.register('lead-messages',
                 lead_views.LeadMessageViewSet, 'lead-messages')
 

@@ -21,14 +21,14 @@ class LeadQuerySet(models.QuerySet):
 
     def open_leads(self):
         return self.exclude(
-            status__in=[
+            status__title__in=[
                 lead_constants.LEAD_STATUS_CLOSED,
                 lead_constants.LEAD_STATUS_LOST,
             ]
         )
 
     def closed_leads(self):
-        return self.filter(status__in=[lead_constants.LEAD_STATUS_CLOSED])
+        return self.filter(status__title__in=[lead_constants.LEAD_STATUS_CLOSED])
 
 
 class Lead(TimeStampModel):
@@ -62,13 +62,11 @@ class Lead(TimeStampModel):
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="leads", blank=True
     )
-    status = models.CharField(
-        max_length=255,
-        choices=lead_constants.LEAD_STATUS_CHOICES,
-        help_text="Status in the sale process",
-        null=True,
-    )
     status_last_update = models.DateTimeField(default=timezone.now, blank=True)
+
+    status = models.ForeignKey(
+        'organization.Stage', related_name='leads', null=True, on_delete=models.SET_NULL)
+
     claimed_by = models.ForeignKey(
         "core.User",
         related_name="claimed_leads",
@@ -94,7 +92,8 @@ class Lead(TimeStampModel):
     @property
     def contract_file(self):
         """ property to define contract file if a lead is not closed it has not contract """
-        if self.status == lead_constants.LEAD_STATUS_CLOSED:
+
+        if self.status and self.status.title == lead_constants.LEAD_STATUS_CLOSED:
             try:
                 return File.objects.get(
                     doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id

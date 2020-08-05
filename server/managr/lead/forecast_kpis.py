@@ -44,7 +44,8 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-        qs_1 = Lead.objects.filter(status=lead_constants.LEAD_STATUS_CLOSED)
+        qs_1 = Lead.objects.filter(
+            status__title=lead_constants.LEAD_STATUS_CLOSED)
         # filter for leads that are claimed by given representatives
         qs_2 = self._add_representatives_filter_to_lead_queryset(qs_1)
         # filter for leads closed within the given date range
@@ -57,7 +58,8 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-        qs_1 = Lead.objects.filter(status=lead_constants.LEAD_STATUS_CLOSED)
+        qs_1 = Lead.objects.filter(
+            status__title=lead_constants.LEAD_STATUS_CLOSED)
         # filter for leads that are claimed by given representatives
         qs_2 = self._add_representatives_filter_to_lead_queryset(qs_1)
         # filter for leads closed within the given date range
@@ -75,27 +77,32 @@ class ForecastKPIs:
         Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 100% 'Verbal' values.
         """
         # filter for leads whose forecast is 50/50
-        temp_1 = Lead.objects.filter(forecast__forecast=lead_constants.FORECAST_FIFTY_FIFTY)
+        temp_1 = Lead.objects.filter(
+            forecast__forecast=lead_constants.FORECAST_FIFTY_FIFTY)
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
-        fifty_fifty_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
+        fifty_fifty_queryset = self._add_date_range_filter_to_lead_queryset(
+            temp_2)
 
         # filter for leads whose forecast is STRONG
-        temp_1 = Lead.objects.filter(forecast__forecast=lead_constants.FORECAST_STRONG)
+        temp_1 = Lead.objects.filter(
+            forecast__forecast=lead_constants.FORECAST_STRONG)
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
         strong_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
         # filter for leads whose forecast is VERBAL
-        temp_1 = Lead.objects.filter(forecast__forecast=lead_constants.FORECAST_VERBAL)
+        temp_1 = Lead.objects.filter(
+            forecast__forecast=lead_constants.FORECAST_VERBAL)
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
         verbal_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
-        fifty_fifty_sum = fifty_fifty_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
+        fifty_fifty_sum = fifty_fifty_queryset.aggregate(sum=Sum("amount"))[
+            "sum"] or 0
         strong_sum = strong_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
         verbal_sum = verbal_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
 

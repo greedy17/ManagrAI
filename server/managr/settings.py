@@ -180,6 +180,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "../client/dist/static")]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# fixtures
+FIXTURE_DIRS = [
+    'organization/fixtures/'
+]
+
+
 # Django Storages configuration
 USE_AWS_STORAGE = os.environ.get("USE_AWS_STORAGE") == "True" or False
 if USE_AWS_STORAGE:
@@ -200,6 +206,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # i.e. 2.5 MB
 # Maximum size in bytes of request data (excluding file uploads) that will be
 # read before a SuspiciousOperation (RequestDataTooBig) is raised.
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # i.e. 100 MB
+
 
 #
 # Email settings
