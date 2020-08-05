@@ -113,7 +113,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
             # if unclaimed
             if only_unclaimed:
-                return instance.leads.filter(claimed_by__isnull=False).count()
+                return instance.leads.filter(claimed_by__isnull=True).count()
 
             # if representatives
             if len(representatives):

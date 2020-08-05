@@ -61,7 +61,9 @@ class AccountFilterSet(FilterSet):
 
         # if unclaimed
         if only_unclaimed:
-            return queryset.filter(leads__claimed_by__isnull=False).distinct()
+            leads = Lead.objects.filter(claimed_by__isnull=True)
+            accounts = {l.account.id for l in leads}
+            return queryset.filter(pk__in=accounts)
 
         # if representatives
         if len(representatives):
