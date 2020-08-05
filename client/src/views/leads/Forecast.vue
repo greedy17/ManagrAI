@@ -41,6 +41,7 @@ import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/services/pagination'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
 
 function allRepsReducer(obj, id) {
@@ -117,6 +118,7 @@ export default {
       this.$router.push({ name: 'LeadsIndex' })
     },
     updateForecastCollections(dateRange) {
+      this.resetPaginationOfCollections()
       if (dateRange) {
         this.applyDateRangeFilter(dateRange)
       }
@@ -177,6 +179,18 @@ export default {
     deselectAllReps() {
       this.repFilterState = {}
       this.updateForecastCollections()
+    },
+    resetPaginationOfCollections() {
+      // When updating collection filter parameters,
+      // may have an error if the pagination parameter stays at
+      // page 2 but the new filter parameters can only yield a single page.
+      // Therefore, reset pagination.
+      this.lists['50/50'].pagination = Pagination.create()
+      this.lists['STRONG'].pagination = Pagination.create()
+      this.lists['VERBAL'].pagination = Pagination.create()
+      this.lists['FUTURE'].pagination = Pagination.create()
+      this.lists['UNFORECASTED'].pagination = Pagination.create()
+      this.lists['CLOSED'].pagination = Pagination.create()
     },
   },
   computed: {
