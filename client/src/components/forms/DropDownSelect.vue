@@ -67,7 +67,7 @@
  *        c. displays selected values differently and allows them to be removed on the fly
  *
  *@local enables local sorting for objects required to use sync when passing items :items.sync
- *
+ *@hide hides the list of selected items when multi is set
  *
  *
  *

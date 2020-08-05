@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 import { objectToCamelCase } from '@thinknimble/tn-utils'
 const SEND_MESSAGE_URI = 'users/send-text-message/'
 const LIST_AVAILABLE_NUMBERS = 'twilio/list-available-numbers'
+const LIST_MESSAGES_URI = 'twilio/list-messages'
 export default {
   async sendMessage(body, recipients, leadId) {
     const url = SEND_MESSAGE_URI
@@ -17,6 +18,13 @@ export default {
     const res = await client.get(url, { params: query })
 
     return res.data.map(n => objectToCamelCase(n))
+  },
+  async listMessages(sender, recipient) {
+    let query = { sender, recipient }
+    const url = LIST_MESSAGES_URI
+    const client = apiClient()
+    const res = await client.get(url, { params: query })
+    return res.data.map(m => objectToCamelCase(m))
   },
 }
 
