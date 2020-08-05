@@ -9,6 +9,7 @@ from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth import login
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
 from managr.core import constants as core_consts
@@ -245,6 +246,38 @@ class EmailAuthAccount(TimeStampModel):
                     }
                 }
             )
+
+
+class MessageAuthAccount(TimeStampModel):
+    account_sid = models.CharField(max_length=128)
+    capabilities = JSONField(max_length=128, default=dict)
+    date_created = models.DateTimeField(max_length=128)
+    date_updated = models.DateTimeField(max_length=128)
+    friendly_name = models.CharField(max_length=128)
+    identity_sid = models.CharField(max_length=128, null=True)
+    origin = models.CharField(max_length=128)
+    sid = models.CharField(max_length=128, null=True)
+    phone_number = models.CharField(max_length=128, blank=True)
+    sms_method = models.CharField(
+        max_length=128)
+    sms_url = models.CharField(
+        max_length=128, help_text="the webhook url for incoming messages")
+    status_callback = models.CharField(
+        max_length=128, help_text="the webhook url for message status")
+    status_callback_method = models.CharField(max_length=128)
+    uri = models.CharField(max_length=128)
+    voice_method = models.CharField(max_length=128)
+    voice_url = models.CharField(max_length=128, null=True)
+    status = models.CharField(max_length=128)
+    user = models.OneToOneField(
+        "User", on_delete=models.CASCADE, related_name="message_auth_account"
+    )
+
+    def __str__(self):
+        return f"{self.user.__str__}, {self.friendly_name}"
+
+    class Meta:
+        ordering = ["datetime_created"]
 
 
 class EmailTemplateQuerySet(models.QuerySet):

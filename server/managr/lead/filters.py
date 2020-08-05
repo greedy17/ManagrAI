@@ -15,7 +15,7 @@ from dateutil.parser import parse
 from django.utils import timezone
 
 from managr.lead import constants as lead_constants
-from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification,  LeadActivityLog
+from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification, LeadMessage, LeadActivityLog
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
@@ -65,6 +65,19 @@ class LeadActivityLogFilterSet(FilterSet):
             #min = timezone.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f%Z')
             min = parse(value)
             return queryset.filter(action_timestamp__lte=min)
+
+
+class ReminderOrderingFilter(OrderingFilter):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('order_by', None)
+        if ordering is not None:
+            if ordering.startswith('-'):
+                ordering.strip('-')
+                queryset = queryset.order_by(ordering)
+            else:
+                queryset = queryset.order_by(ordering)
+
+        return queryset
 
 
 class LeadFilterSet(FilterSet):
@@ -235,6 +248,14 @@ class ListFilterSet(FilterSet):
         return queryset
 
 
+class LeadMessageFilterSet(FilterSet):
+    by_lead = django_filters.CharFilter(field_name="lead")
+
+    class Meta:
+        model = LeadMessage
+        fields = ['by_lead']
+
+
 class NoteFilterSet(FilterSet):
     by_lead = django_filters.CharFilter(field_name="created_for")
 
@@ -281,4 +302,4 @@ class ReminderFilterSet(FilterSet):
         query = Q()
         for n in ns:
             query |= Q(id=n)
-        return qs.filter(datetime_for__gte=min).exclude(query)
+        return qs.filter(datetime_for__gte=min).exclude(query).order_by('datetime_for')

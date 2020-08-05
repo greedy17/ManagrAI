@@ -23,6 +23,8 @@ from rest_framework import (
     viewsets,
 )
 
+
+from managr.utils.numbers import validate_phone_number, format_phone_number
 from managr.core.permissions import (
     IsOrganizationManager,
     IsSuperUser,
@@ -31,6 +33,7 @@ from managr.core.permissions import (
 )
 from managr.organization.models import Contact, Account
 from managr.lead import constants as lead_constants
+from managr.core.twilio.messages import list_messages
 
 from . import models as lead_models
 from . import filters as lead_filters
@@ -109,8 +112,37 @@ class LeadActivityLogViewSet(
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
 
-        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, empty=empty)
+        insights = LeadInsights(lead_queryset=lead_qs,
+                                log_queryset=log_qs, empty=empty)
         return Response(insights.as_dict)
+
+
+class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    serializer_class = lead_serializers.LeadMessageSerializer
+    filter_class = lead_filters.LeadMessageFilterSet
+
+    def get_queryset(self):
+        return lead_models.LeadMessage.objects.for_user(self.request.user)
+
+    @action(
+        methods=["GET"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="list-messages",
+    )
+    def list_messages_from_contact(self, request, *args, **kwargs):
+        user = self.request.user
+        contact = request.query_params.get('contact_phone')
+        if user.message_auth_account:
+            sender = user.message_auth_account.phone_number
+
+            try:
+                message_list = list_messages(sender, contact)
+            except APIException as e:
+                return e
+        return Response(data={"count": user.unviewed_notifications_count})
 
 
 class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -229,9 +261,27 @@ class LeadViewSet(
                 email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
+                phone_1 = contact.get(
+                    "phone_number_1", None)
+                phone_2 = contact.get(
+                    "phone_number_2", None)
+                if phone_1:
+                    try:
+                        validate_phone_number(phone_1)
+                        phone_1 = format_phone_number(phone_1)
+                    except ValueError:
+                        phone_1 = None
+                if phone_2:
+                    try:
+                        validate_phone_number(phone_2)
+                        phone_2 = format_phone_number(phone_2)
+                    except ValueError:
+                        phone_2 = None
+
                 c.title = contact.get("title", c.title)
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
+
                 c.phone_number_1 = contact.get(
                     "phone_number_1", c.phone_number_1)
                 c.phone_number_2 = contact.get(
@@ -695,10 +745,10 @@ class ForecastViewSet(
         date_range_to = request.data['date_range_to']
         repIDs = request.data['representatives']
         kpis = ForecastKPIs(
-                            date_range_from,
-                            date_range_to,
-                            representatives=repIDs,
-                            )
+            date_range_from,
+            date_range_to,
+            representatives=repIDs,
+        )
 
         return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
@@ -755,6 +805,10 @@ class ReminderViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ReminderSerializer
     filter_class = lead_filters.ReminderFilterSet
+    filter_backends = (
+        DjangoFilterBackend,
+        lead_filters.ReminderOrderingFilter,
+    )
 
     def get_queryset(self):
         return Reminder.objects.for_user(self.request.user)

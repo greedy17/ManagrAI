@@ -4,6 +4,7 @@ from factory.django import DjangoModelFactory
 
 from managr.core.models import User
 from managr.lead.factories import LeadFactory
+from managr.utils.numbers import generate_random_numbers
 
 from .models import Account, Contact, Organization
 
@@ -25,8 +26,8 @@ class ContactFactory(DjangoModelFactory):
     last_name = factory.Faker('last_name')
     title = "Employee"
     email = factory.Faker('email')
-    phone_number_1 = factory.Faker('phone_number')
-    phone_number_2 = factory.Faker('phone_number')
+    phone_number_1 = generate_random_numbers()
+    phone_number_2 = generate_random_numbers()
 
     class Meta:
         model = Contact

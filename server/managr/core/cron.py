@@ -1,3 +1,4 @@
+import logging
 import kronos
 import requests
 from django.utils import timezone
@@ -7,6 +8,7 @@ from managr.core.nylas.auth import revoke_all_access_tokens
 from managr.core.models import EmailAuthAccount
 from managr.lead.models import Reminder, Notification
 
+logger = logging.getLogger("managr")
 
 # Daily, at hour 0, minute 0 (12am)
 @kronos.register("0 0 * * *")
@@ -47,23 +49,29 @@ def create_notifications():
         query |= Q(id=n)
 
     for row in Reminder.objects.filter(datetime_for__lte=remind_time).exclude(query).order_by('-datetime_for'):
-        n = Notification.objects.create(
-            notify_at=row.datetime_for,
-            title=row.title,
-            notification_type="REMINDER",
-            resource_id=row.id,
-            user=row.created_by,
-            meta={
-                'id': str(row.id),
-                'title': row.title,
-                'content': row.content,
-                'linked_contacts': [
-                    {"id": str(c.id), "full_name": c.full_name, }
-                    for c in row.linked_contacts.all()
-                ],
-                'leads': [{'id': str(row.created_for.id), 'title': row.created_for.title}]
-            }
+        if row.created_for:
+            n = Notification.objects.create(
+                notify_at=row.datetime_for,
+                title=row.title,
+                notification_type="REMINDER",
+                resource_id=row.id,
+                user=row.created_by,
+                meta={
+                    'id': str(row.id),
+                    'title': row.title,
+                    'content': row.content,
+                    'linked_contacts': [
+                        {"id": str(c.id), "full_name": c.full_name, }
+                        for c in row.linked_contacts.all()
+                    ],
+                    'leads': [{'id': str(row.created_for.id), 'title': row.created_for.title}]
+                }
 
 
-        )
-        n.save()
+            )
+            n.save()
+        else:
+
+            logger.exception(
+                f"The Reminder with id {row.id} does not reference a lead"
+            )
