@@ -32,7 +32,7 @@ from managr.core.permissions import (
     CanEditResourceOrReadOnly,
 )
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from managr.organization.models import Contact, Account
+from managr.organization.models import Contact, Account, Stage
 from managr.lead import constants as lead_constants
 from managr.core.twilio.messages import list_messages
 
@@ -339,6 +339,7 @@ class LeadViewSet(
 
         # if updating status, also update status_last_update
         if "status" in data:
+
             data["status_last_update"] = timezone.now()
 
         # make sure the user that created the lead is not updated as well
@@ -415,7 +416,8 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = lead_constants.LEAD_STATUS_CLOSED
+        lead.status = Stage.objects.get(
+            title=lead_constants.LEAD_STATUS_CLOSED)
         lead.closing_amount = closing_amount
         lead.expected_close_date = timezone.now()
         lead.forecast.forecast = lead_constants.FORECAST_CLOSED

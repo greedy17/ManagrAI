@@ -21,7 +21,7 @@
           v-for="forecast in collection.list"
           :key="forecast.id"
           :forecast="forecast"
-          :lead="forecast.leadRef"
+          :lead.sync="forecast.leadRef"
           @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
         />
         <Pagination

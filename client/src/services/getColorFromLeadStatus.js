@@ -1,3 +1,5 @@
+import Utils from './utils'
+
 const statusToPrimaryColor = {
   lead: '#1C1F1D',
   ready: '#FAB900',
@@ -6,7 +8,7 @@ const statusToPrimaryColor = {
   trial: 'rgba(165, 55, 253, 1)',
   waiting: '#9596B3',
   closed: '#2F9E54',
-  lost: '#1C1F1D',
+  lost: '#1C1F1C',
   null: '#9596B4',
 }
 
@@ -23,20 +25,10 @@ const statusToSecondaryColor = {
 }
 
 // must account for null status (as is the case on Lead creation)
-function statusSlugger(status) {
-  return status ? status.toLowerCase() : null
-}
 
-export function getStatusPrimaryColor(status) {
-  let sluggedStatus = statusSlugger(status)
-  return {
-    backgroundColor: statusToPrimaryColor[sluggedStatus],
+export function getLightenedColor(color) {
+  if (color) {
+    return Utils.convertToRgba(color, 0.7)
   }
-}
-
-export function getStatusSecondaryColor(status) {
-  let sluggedStatus = statusSlugger(status)
-  return {
-    backgroundColor: statusToSecondaryColor[sluggedStatus],
-  }
+  return null
 }

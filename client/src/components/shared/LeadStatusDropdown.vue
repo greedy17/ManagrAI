@@ -1,14 +1,14 @@
 <template>
   <div class="status-dropdown">
     <select
-      :value="lead.status"
-      :style="computedStyles"
-      :disabled="disabled || lead.status === 'CLOSED'"
+      :value="leadItem.status"
+      :style="{ 'background-color': getStatusColor }"
+      :disabled="disabled || getIsClosed"
       @change="onChange"
     >
       <option :value="null">---</option>
-      <option v-for="option in statusEnums" :key="option" :value="option.toUpperCase()">
-        {{ option }}
+      <option v-for="option in getStatuses" :key="option.id" :value="option.id">
+        {{ option.title }}
       </option>
     </select>
     <Modal
@@ -18,15 +18,15 @@
       @closed-lead="$emit('closed-lead')"
       :width="50"
     >
-      <CloseLead :lead="lead" />
+      <CloseLead @closed-lead="updateLeadItem" :lead="leadItem" />
     </Modal>
   </div>
 </template>
 
 <script>
-import { getStatusPrimaryColor } from '@/services/getColorFromLeadStatus'
 import { statusEnums } from '@/services/leads/enumerables'
 import Lead from '@/services/leads'
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 import CloseLead from '@/components/shared/CloseLead'
 
 export default {
@@ -44,16 +44,30 @@ export default {
   },
   data() {
     return {
+      selectedOptionColor: null,
       statusEnums,
       modal: {
         isOpen: false,
       },
+      options: [],
+      leadItem: this.lead,
     }
   },
+  created() {
+    this.leadItem = this.lead
+  },
   methods: {
-    onChange({ target: { value } }) {
-      if (value != 'CLOSED') {
-        this.updateStatus(value)
+    updateLeadItem(val) {
+      let closedStatus = this.getStatuses.find(i => i.title == Lead.CLOSED)
+      this.leadItem = { ...val, statusRef: closedStatus, status: closedStatus.id }
+
+      this.closeModal()
+      this.$emit('closed-lead', this.leadItem)
+    },
+    async onChange({ target: { value } }) {
+      let val = this.getStatuses.find(s => s.id == value)
+      if (!value || val.title != 'CLOSED') {
+        await this.updateStatus(value)
       } else {
         this.modal.isOpen = true
       }
@@ -61,8 +75,7 @@ export default {
     updateStatus(newStatus) {
       let patchData = { status: newStatus }
       Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.lead.status = lead.status
-        this.lead.statusLastUpdate = lead.statusLastUpdate
+        this.leadItem = { ...lead }
       })
     },
     closeModal() {
@@ -70,8 +83,19 @@ export default {
     },
   },
   computed: {
-    computedStyles() {
-      return getStatusPrimaryColor(this.lead.status) // returns a plain-object with the key/val of backgroundColor: '#<HEX>'
+    getStatusColor() {
+      return this.leadItem.statusRef
+        ? getLightenedColor(this.leadItem.statusRef.color)
+        : getLightenedColor('#9B9B9B')
+    },
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getValue() {
+      return this.leadItem.statusRef ? this.leadItem.statusRef.title : null
+    },
+    getIsClosed() {
+      return this.leadItem.statusRef ? this.leadItem.statusRef.title == 'CLOSED' : false
     },
   },
 }

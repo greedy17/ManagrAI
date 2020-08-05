@@ -1,7 +1,7 @@
 import json
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Contact
+from .models import Organization, Account, Contact, Stage
 from managr.lead.models import ActionChoice
 
 from rest_framework import (
@@ -29,6 +29,15 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'name', 'state',
+        )
+
+
+class StageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Stage
+        fields = (
+            '__all__'
         )
 
 
