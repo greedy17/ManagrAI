@@ -13,7 +13,7 @@
           objectSelectedItems ? objectSelectedItems[displayKey] : ''
         }}</span>
       </div>
-      <div v-if="isMulti" class="selected-items multi">
+      <div v-if="isMulti && !isHidden" class="selected-items multi">
         <span
           @click.prevent="execUpdateSelected(item[valueKey])"
           :key="`${item[valueKey]}-${i}`"
@@ -159,6 +159,9 @@ export default {
     },
     isLocalFilter() {
       return this.$attrs.hasOwnProperty('local')
+    },
+    isHidden() {
+      return this.$attrs.hasOwnProperty('hidden')
     },
   },
   created() {

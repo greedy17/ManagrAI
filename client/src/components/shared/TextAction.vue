@@ -9,17 +9,33 @@
     </template>
     <template v-else>
       <div class="message-recipient">
-        <span>To:</span>
-        <DropDownSelect
-          v-if="leadLinkedContactsRef"
-          :items.sync="leadLinkedContacts"
-          displayKey="full_name"
-          valueKey="id"
-          v-model="recipients"
-          multi
-          searchable
-          local
-        />
+        <div class="selected-recipients">
+          <span>To:</span>
+          <div class="contacts">
+            <div
+              :key="c.id"
+              v-for="c in this.leadLinkedContactsRef.filter(c => recipients.includes(c.id))"
+            >
+              <div class="selected-recipients__contact">
+                <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
+                <span>{{ c.full_name }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown-search">
+            <DropDownSelect
+              v-if="leadLinkedContactsRef"
+              :items.sync="leadLinkedContacts"
+              displayKey="full_name"
+              valueKey="id"
+              v-model="recipients"
+              multi
+              searchable
+              local
+              hidden
+            />
+          </div>
+        </div>
       </div>
       <div class="message-content">
         <textarea class="form__textarea" rows="8" placeholder="Detail" v-model="body" />
@@ -108,6 +124,9 @@ export default {
     margin: 1rem;
   }
 }
+.dropdown-search {
+  width: 100px;
+}
 ::v-deep .dropdown {
   // manually setting input style here
 
@@ -115,6 +134,7 @@ export default {
     width: 100%;
     background-color: $soft-gray;
     border-radius: 5px;
+    height: 20px;
   }
   .selected-items.multi {
     .selected-items__item {
@@ -141,5 +161,36 @@ export default {
   > .dropdown {
     width: 80%;
   }
+}
+.selected-recipients {
+  display: flex;
+
+  .contacts {
+    display: flex;
+    max-width: 50rem;
+    overflow-x: scroll;
+  }
+
+  &__contact {
+    display: flex;
+    margin: 0rem 1rem;
+    align-items: center;
+    background-color: rgba($color: $light-gray-blue, $alpha: 0.2);
+    border-radius: 10px;
+    padding-left: 0.5rem;
+    padding-right: 1rem;
+    border-radius: 0.3rem;
+
+    max-width: 10rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.image {
+  height: 1.4rem;
+  width: 1.4rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
 }
 </style>
