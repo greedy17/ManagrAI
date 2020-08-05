@@ -193,6 +193,20 @@
               </span>
             </div>
           </div>
+
+          <div class="graphic-statistic section-shadow">
+            <div class="icon-container">
+              <img class="icon" src="@/assets/images/messages.svg" alt="icon" />
+            </div>
+            <div class="information">
+              <span class="top">
+                {{ insights && insights.messages.count
+                }}{{ ' Message' | pluralize(insights.messages.count) }}
+              </span>
+              <span class="bottom"> </span>
+            </div>
+          </div>
+
           <div class="graphic-statistic section-shadow">
             <div class="icon-container">
               <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />

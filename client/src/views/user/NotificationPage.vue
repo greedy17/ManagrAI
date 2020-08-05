@@ -1,11 +1,14 @@
 <template>
   <div class="notification-page-container">
-    <template v-if="notifications.list.length > 0">
-      <template v-for="(notification, i) in notifications.list">
+    <template v-if="notifications.list.length > 0 && datedNotifications">
+      <template v-for="(value, key) in datedNotifications">
+        <span class="muted" :key="key">{{ key }}</span>
+
         <NotificationCard
+          v-for="(item, i) in value"
           @mark-as-viewed="markAsViewed"
-          :key="notification.id + '-' + i"
-          :notification="notification"
+          :key="item.id"
+          :notification="item"
         />
       </template>
     </template>
@@ -19,6 +22,7 @@
 import NotificationCard from '@/components/NotificationCard'
 import Notification from '@/services/notifications/'
 import CollectionManager from '@/services/collectionManager'
+import moment from 'moment'
 
 const POLLING_INTERVAL = 10000
 export default {
@@ -30,6 +34,32 @@ export default {
 
       pollingTimeout: null,
     }
+  },
+  computed: {
+    datedNotifications() {
+      if (this.notifications.list.length <= 0) {
+        return null
+      }
+      return this.notifications.list.reduce((acc, curr) => {
+        let today = moment()
+
+        let formatted = moment(curr.notifyAt)
+
+        if (!acc['today']) {
+          acc['today'] = []
+        }
+        if (today.isSame(formatted, 'day')) {
+          acc['today'].push(curr)
+          return acc
+        } else if (formatted.isSame(acc[moment(curr.notifyAt)], 'day')) {
+          acc[moment(curr.notifyAt).format('MMMM Do YYYY')].push(curr)
+          return acc
+        } else {
+          acc[moment(curr.notifyAt).format('MMMM Do YYYY')] = [curr]
+          return acc
+        }
+      }, {})
+    },
   },
   async created() {
     await this.refresh(POLLING_INTERVAL)
@@ -69,4 +99,10 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
+.muted {
+  text-transform: capitalize;
+}
+</style>

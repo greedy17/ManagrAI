@@ -4,26 +4,37 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title">{{ title }}</span>
       <span class="list-length">
-        {{ numOfLeads }}
-        {{ numOfLeads > 1 || numOfLeads === 0 ? 'Opportunities' : 'Opportunity' }}
+        {{ leadCount }}
+        {{ leadCount > 1 || leadCount === 0 ? 'Opportunities' : 'Opportunity' }}
+      </span>
+      <span class="icon" v-if="isOwner">
+        <svg
+          width="50px"
+          height="50px"
+          class="icon"
+          viewBox="0 0 30 30"
+          v-if="isOwner"
+          @click.stop="$emit('delete-list')"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#remove" />
+        </svg>
       </span>
     </div>
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing" />
       <template v-else>
-        <div class="list-leads__row" v-if="collection.list.length">
+        <div class="list-leads__row" v-if="collection.length">
           <span
             class="list-leads__row__lead"
             :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
           >
             <Checkbox
-              :style="{ marginLeft: '1rem' }"
-              :checked="allLeadsSelected"
-              @checkbox-clicked="toggleAllSelected"
+              @checkbox-clicked="toggleAllLeads"
+              :checked="leadCount == checkedLeads.length"
             />
 
             <span :style="{ marginLeft: '0.75rem' }">Select All</span>
-            <button class="bulk-action-button" v-if="!noLeadsSelected" @click="onBulkAction">
+            <button class="bulk-action-button" v-if="checkedLeads.length > 0" @click="onBulkAction">
               Take Action
             </button>
             <button class="bulk-action-button" :style="{ visibility: 'hidden' }" v-else>
@@ -31,22 +42,22 @@
             </button>
             <Modal v-if="modal.isOpen" dimmed @close-modal="onCloseModal" :includeMargin="false">
               <BulkLeadActions
-                :leads="Object.values(selectedLeads)"
+                :leads="checkedLeads"
                 @bulk-move-success="onBulkMoveSuccess"
                 @bulk-success="onCloseModal"
               />
             </Modal>
           </span>
         </div>
-        <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
+        <div :key="lead.id" class="list-leads__row" v-for="lead in collection">
           <span class="list-leads__row__lead">
-            <LeadRow
-              :key="lead.id"
-              :lead="lead"
-              :isSelected="!!selectedLeads[lead.id]"
-              @checkbox-clicked="toggleSelectedLead(lead)"
-            >
-              <template v-slot:left> </template>
+            <LeadRow :key="lead.id" :lead="lead">
+              <template v-slot:left>
+                <Checkbox
+                  :checked="!!~checkedLeads.findIndex(l => l == lead.id)"
+                  @checkbox-clicked="toggleCheckedLead(lead.id)"
+                />
+              </template>
               <template v-slot:center>
                 <div class="lead-items">
                   <span class="muted">
@@ -62,23 +73,17 @@
               </template>
               <template v-slot:right> </template>
             </LeadRow>
-            <!--             <Lead
-              :key="lead.id"
-              :lead="lead"
-              :isSelected="!!selectedLeads[lead.id]"
-              @checkbox-clicked="toggleSelectedLead(lead)"
-            /> -->
           </span>
         </div>
-        <span v-if="collection.list.length <= 0" class="no-items-message">
+        <span v-if="collection.length <= 0" class="no-items-message">
           No Opportunities On List
         </span>
       </template>
-      <LoadMoreButton
+      <!--       <LoadMoreButton
         v-if="!collection.refreshing && !!collection.pagination.next"
         class="load-more-button"
         :collection="collection"
-      />
+      /> -->
     </div>
   </div>
 </template>
@@ -94,12 +99,20 @@ export default {
   name: 'CustomList', // such as NoList and AllLeads
   props: {
     collection: {
-      type: Object,
+      type: Array,
       required: true,
     },
     title: {
       type: String,
       required: true,
+    },
+    leadCount: {
+      type: Number,
+      required: false,
+    },
+    isOwner: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {
@@ -112,18 +125,21 @@ export default {
   data() {
     return {
       showLeads: false,
-      selectedLeads: {},
+
+      checkedLeads: [],
       modal: {
         isOpen: false,
       },
     }
   },
+  created() {},
   methods: {
     toggleLeads() {
       this.showLeads = !this.showLeads
+      this.$emit('get-leads', this.showLeads)
     },
     onCloseModal() {
-      this.selectedLeads = {}
+      this.checkedLeads = []
       this.modal.isOpen = false
     },
     onBulkMoveSuccess() {
@@ -133,37 +149,20 @@ export default {
     onBulkAction() {
       this.modal.isOpen = true
     },
-    toggleSelectedLead(lead) {
-      if (this.selectedLeads[lead.id]) {
-        let copy = { ...this.selectedLeads }
-        delete copy[lead.id]
-        this.selectedLeads = copy
-      } else {
-        this.selectedLeads = { ...this.selectedLeads, [lead.id]: lead }
-      }
+    toggleAllLeads() {
+      this.checkedLeads = []
+      this.checkedLeads = this.collection.list.map(l => l.id)
     },
-    toggleAllSelected() {
-      if (this.allLeadsSelected) {
-        this.selectedLeads = {}
+    toggleCheckedLead(leadId) {
+      let index = this.checkedLeads.findIndex(l => l == leadId)
+      if (index != -1) {
+        this.checkedLeads = this.checkedLeads.splice(index, 1)
       } else {
-        this.selectedLeads = this.collection.list.reduce((acc, lead) => {
-          acc[lead.id] = lead
-          return acc
-        }, {})
+        this.checkedLeads.push(leadId)
       }
     },
   },
-  computed: {
-    numOfLeads() {
-      return this.collection.pagination.totalCount
-    },
-    allLeadsSelected() {
-      return Object.keys(this.selectedLeads).length == this.collection.list.length
-    },
-    noLeadsSelected() {
-      return !Object.keys(this.selectedLeads).length
-    },
-  },
+  computed: {},
 }
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <div class="forecast-dropdown" @click.stop.prevent>
-    <select @change="updateForecast" :style="computedStyles" :disabled="disabled || leadIsClosed">
+    <select @change="updateForecast" :style="computedStyles" :disabled="disabled">
       <template v-if="Forecast.CLOSED == forecast">
         <option selected>
           Closed
@@ -124,9 +124,7 @@ export default {
         return this.lead.forecastRef ? this.lead.forecastRef.forecast : null
       }
     },
-    leadIsClosed() {
-      return this.lead.status && this.lead.status.toUpperCase() == 'CLOSED'
-    },
+
     computedStyles() {
       if (this.transparent) {
         return {

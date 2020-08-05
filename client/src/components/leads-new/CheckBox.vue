@@ -1,5 +1,5 @@
 <template>
-  <div class="checkbox" @click="handleClick">
+  <div class="checkbox" @click.stop.prevent="handleClick">
     <img v-if="checked" alt="checked" src="@/assets/images/check-box-checked.svg" />
     <img v-else alt="empty" src="@/assets/images/check-box-empty.svg" />
   </div>

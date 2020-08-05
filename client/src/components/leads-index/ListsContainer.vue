@@ -1,15 +1,27 @@
 <template>
   <div class="lists-container">
     <div v-if="!loading" class="tab-content">
-      <List
+      <!--       <List
         :isOwner="isOwner"
-        @delete-list="emitDeleteList($event, index)"
+       
         @remove-from-list="$emit('remove-from-list', $event)"
         v-for="(list, index) in listsCollection.list"
         :key="list.id"
         :list="list"
         :leadFilters="listsCollection.filters"
         @refresh-collections="$emit('refresh-collections')"
+      /> -->
+
+      <CustomList
+        @delete-list="emitDeleteList(list.id, index)"
+        v-for="(list, index) in listsCollection.list"
+        :collection="leadsFromList.list"
+        :key="index"
+        :title="list.title"
+        @get-leads="onGetLeads($event, list.id)"
+        @refresh-collections="$emit('refresh-collections')"
+        :leadCount="leadsFromList.pagination.totalCount"
+        :isOwner="true"
       />
       <LoadMoreButton
         v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
@@ -17,16 +29,18 @@
         :collection="listsCollection"
       />
       <CustomList
-        :collection="noListLeadsCollection"
+        :collection="noListLeadsCollection.list"
         key="No List"
         title="No List"
         @refresh-collections="$emit('refresh-collections')"
+        :leadCount="noListLeadsCollection.pagination.totalCount"
       />
       <CustomList
-        :collection="allLeadsCollection"
+        :collection="allLeadsCollection.list"
         key="All Opportunities"
         title="All Opportunities"
         @refresh-collections="$emit('refresh-collections')"
+        :leadCount="allLeadsCollection.pagination.totalCount"
       />
       <CreateList @list-created="emitListCreated" />
     </div>
@@ -41,7 +55,8 @@ import List from '@/components/leads-index/List'
 import CustomList from '@/components/leads-index/CustomList'
 import CreateList from '@/components/leads-index/CreateList'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
-
+import LeadModel from '@/services/leads'
+import CollectionManager from '@/services/collectionManager'
 export default {
   name: 'ListsContainer',
   components: {
@@ -76,14 +91,36 @@ export default {
       type: Boolean,
       default: false,
     },
+    filters: {
+      type: Object,
+      default: () => {},
+    },
     isOwner: {
       // determines if CRUD is available
       type: Boolean,
       default: false,
     },
   },
-
+  data() {
+    return {
+      leadsFromList: CollectionManager.create({
+        ModelClass: LeadModel,
+        filters: {},
+      }),
+    }
+  },
   methods: {
+    async onGetLeads(show, listId) {
+      if (show) {
+        this.leadsFromList.filters = {
+          byList: listId,
+          byRating: this.filters.byRating ? this.filters.byRating : null,
+          byStatus: this.filters.byStatus ? this.filters.byStatus : null,
+        }
+      }
+
+      await this.leadsFromList.refresh()
+    },
     emitDeleteList(listId, i) {
       this.$emit('delete-list', { id: listId, index: i })
     },

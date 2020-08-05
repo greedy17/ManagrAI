@@ -22,8 +22,14 @@
         }}</span>
 
         <div class="actions">
-          <LeadForecastDropdown :lead="dataLead" :disabled="!belongsToCurrentUser" />
-          <LeadStatusDropdown :lead="dataLead" :disabled="!belongsToCurrentUser" />
+          <LeadForecastDropdown
+            :lead="dataLead"
+            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+          />
+          <LeadStatusDropdown
+            :lead="dataLead"
+            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+          />
         </div>
 
         <slot name="center"></slot>
@@ -88,6 +94,12 @@ export default {
     },
   },
   computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED)
+    },
     belongsToCurrentUser() {
       return this.dataLead.claimedBy == this.$store.state.user.id
     },

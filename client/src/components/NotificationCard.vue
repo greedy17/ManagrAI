@@ -43,8 +43,7 @@ export default {
   name: 'NotificationCard',
   props: {
     notification: {
-      type: [Object, null],
-      default: null,
+      type: Object,
     },
   },
   computed: {

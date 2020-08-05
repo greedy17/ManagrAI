@@ -10,17 +10,21 @@
         @click="showEditForm = true"
       />
     </div>
-    <div class="container background-color">
-      <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
-      <span>{{ contact.title || 'N/A' }}</span>
-    </div>
-    <div class="container background-color">
-      <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
-      <span class="contact-phone-number">{{ contact.phoneNumber1 | VMask('(###) ###-####') }}</span>
-    </div>
-    <div class="container background-color">
-      <img class="icon" src="@/assets/images/email.svg" alt="icon" />
-      <span class="contact-email">{{ contact.email }}</span>
+    <div class="info">
+      <div class="container background-color">
+        <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
+        <span>{{ contact.title || 'N/A' }}</span>
+      </div>
+      <div class="container background-color">
+        <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+        <span class="contact-phone-number">{{
+          contact.phoneNumber1 | VMask('+1(###) ###-####')
+        }}</span>
+      </div>
+      <div class="container background-color">
+        <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+        <span class="contact-email">{{ contact.email }}</span>
+      </div>
     </div>
   </div>
   <div v-else class="edit-contact-form">
@@ -103,11 +107,10 @@ export default {
 .contact-information {
   @include base-font-styles();
   display: flex;
-  flex-flow: column;
+  flex-direction: column;
   box-sizing: border-box;
   padding-left: 0.5rem;
   margin-bottom: 1rem;
-  width: 20rem;
 }
 
 .container {
@@ -119,6 +122,10 @@ export default {
   padding-left: 0.5rem;
   border-radius: 0.3rem;
   height: 2rem;
+  > span {
+    flex: 1 0 auto;
+    word-wrap: break-word;
+  }
 
   .contact-name {
     padding-right: 0;

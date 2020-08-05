@@ -107,9 +107,8 @@ export default {
       }
     },
     onBulkMove() {
-      let selectedLeads = this.leads.map(l => l.id)
       let selectedLists = Object.keys(this.selectedLists)
-      List.api.bulkUpdate(selectedLeads, selectedLists).then(() => {
+      List.api.bulkUpdate(this.leads, selectedLists).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,

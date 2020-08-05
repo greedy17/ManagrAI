@@ -25,6 +25,7 @@
         @remove-from-list="removeFromList"
         :isOwner="true"
         @refresh-collections="refreshCollections"
+        :filters="currentFilters"
       />
     </div>
   </div>

@@ -25,13 +25,6 @@
         </LeadRow>
       </div>
 
-      <!--       <Lead
-        v-for="forecast in collection.list"
-        :key="forecast.id"
-        :forecast="forecast"
-        :lead.sync="forecast.leadRef"
-        @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
-      /> -->
       <LoadMoreButton
         v-if="!collection.refreshing && !!collection.pagination.next"
         class="load-more-button"

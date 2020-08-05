@@ -46,6 +46,7 @@ export default class LeadAPI {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
     }
 
+    console.log(filters)
     const promise = apiClient()
       .get(LEADS_ENDPOINT, options)
       .then(response => response.data)
