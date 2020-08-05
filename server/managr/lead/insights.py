@@ -35,14 +35,14 @@ class LeadInsights:
 
     @property
     def lead_queryset(self):
-        if self._filter_params['empty']:
+        if self._filter_params.get('empty'):
             return self._lead_queryset.none()
         return self._lead_queryset
 
     @property
     def log_queryset(self):
         """Filter the log queryset by leads, if applicable."""
-        if self._filter_params['empty']:
+        if self._filter_params.get('empty'):
             return self._log_queryset.none()
 
         lead_ids = self._lead_queryset.values_list("id", flat=True)
@@ -137,8 +137,8 @@ class LeadInsights:
     @property
     def closed_leads(self):
         return self.lead_queryset.closed_leads(
-                                    date_range_from=self._filter_params['date_range_from'],
-                                    date_range_to=self._filter_params['date_range_to']
+                                    date_range_from=self._filter_params.get('date_range_from'),
+                                    date_range_to=self._filter_params.get('date_range_to')
                                 )
 
     @property
