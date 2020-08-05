@@ -1,6 +1,8 @@
 from django.db import models
-from managr.core.models import UserManager, TimeStampModel
 from django.db.models import Sum, Avg
+
+from managr.core.models import UserManager, TimeStampModel
+from managr.utils.numbers import format_phone_number
 
 # Create your models here.
 
@@ -140,5 +142,9 @@ class Contact(TimeStampModel):
 
     def save(self, *args, **kwargs):
         self.email = self.email.lower()
+        self.phone_number_1 = format_phone_number(
+            self.phone_number_1, format="+1%d%d%d%d%d%d%d%d%d%d") if self.phone_number_1 else ''
+        self.phone_number_2 = format_phone_number(
+            self.phone_number_2, format="+1%d%d%d%d%d%d%d%d%d%d") if self.phone_number_2 else ''
 
         return super(Contact, self).save(*args, **kwargs)

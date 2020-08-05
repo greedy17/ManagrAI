@@ -52,10 +52,26 @@
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
             @click="activityTabSelected = EMAILS"
           >
-            Email
+            Emails
+          </div>
+          <div
+            class="box__tab"
+            :class="{ 'box__tab--active': activityTabSelected === MESSAGES }"
+            @click="activityTabSelected = MESSAGES"
+          >
+            Messages
           </div>
 
-          <div class="check-email-btn" v-if="activityTabSelected === EMAILS">
+          <div class="check-email-btn" v-if="activityTabSelected === MESSAGES">
+            <button
+              class="primary-button"
+              @click="() => $refs.Messages.refresh()"
+              :disabled="$refs.MESSAGES && $refs.Emails.loading"
+            >
+              Check for New Messages
+            </button>
+          </div>
+          <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isTextConnected">
             <button
               class="primary-button"
               @click="() => $refs.Emails.refresh()"
@@ -101,7 +117,19 @@
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
-          <LeadEmails :lead="lead" ref="Emails" />
+          <template v-if="!isTextConnected">
+            <div>
+              <span class="muted">
+                <span class="muted">
+                  Please Enable Email Integration to use this feature in your settings
+                </span>
+              </span>
+            </div>
+          </template>
+          <LeadEmails v-else :lead="lead" ref="Emails" />
+        </div>
+        <div v-show="activityTabSelected === MESSAGES" class="box__content">
+          <LeadMessages :lead="lead" ref="Messages" />
         </div>
       </div>
     </div>
@@ -129,9 +157,11 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
+import LeadMessages from './_LeadMessages'
 
 const HISTORY = 'HISTORY'
 const EMAILS = 'EMAILS'
+const MESSAGES = 'MESSAGES'
 const EDIT_STATE = 'create'
 const VIEW_STATE = 'view'
 
@@ -147,6 +177,7 @@ export default {
     LeadHistory,
     LeadEmails,
     DropDownMenu,
+    LeadMessages,
   },
   data() {
     return {
@@ -171,6 +202,7 @@ export default {
       // Past Activity Area
       HISTORY,
       EMAILS,
+      MESSAGES,
       activityTabSelected: HISTORY,
       showHistoryMenu: false,
       expandedHistoryItems: [],
@@ -183,6 +215,11 @@ export default {
         },
       }),
     }
+  },
+  computed: {
+    isTextConnected() {
+      return !!this.$store.state.user.textConnected
+    },
   },
   async created() {
     Promise.all([this.retrieveLead(), this.lists.refresh(), this.contacts.refresh()]).then(res => {

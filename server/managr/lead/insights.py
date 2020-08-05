@@ -119,6 +119,18 @@ class LeadInsights:
             return latest_action.action_timestamp
 
     @property
+    def message_count(self):
+        return self.log_queryset.filter(activity=lead_constants.MESSAGE_SENT).count()
+
+    @property
+    def message_latest(self):
+        latest_action = self.log_queryset.filter(
+            activity=lead_constants.MESSAGE_SENT
+        ).first()
+        if latest_action is not None:
+            return latest_action.action_timestamp
+
+    @property
     def open_leads(self):
         return self.lead_queryset.open_leads()
 
@@ -153,6 +165,7 @@ class LeadInsights:
             "reminders": {"count": self.reminder_count, "latest": self.reminder_latest, },
             "actions": {"count": self.action_count, "latest": self.action_latest, },
             "emails": {"count": self.email_count, "latest": self.email_latest, },
+            "messages": {"count": self.message_count, "latest": self.message_latest, },
             "closed_leads": {
                 "count": self.closed_leads_count,
                 "total_value": self.closed_leads_value,

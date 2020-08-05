@@ -4,7 +4,7 @@
       <template v-for="(notification, i) in notifications.list">
         <NotificationCard
           @mark-as-viewed="markAsViewed"
-          :key="notification + '-' + i"
+          :key="notification.id + '-' + i"
           :notification="notification"
         />
       </template>
@@ -37,6 +37,9 @@ export default {
   methods: {
     async markAsViewed(notificationId) {
       await Notification.api.markAsViewed([notificationId])
+    },
+    async getNextPage() {
+      await this.notifications.addNextPage()
     },
 
     async refresh(repeat) {
