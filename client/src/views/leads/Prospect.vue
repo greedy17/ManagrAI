@@ -111,11 +111,13 @@ export default {
       this.updateAccounts()
     },
     selectAllReps(repIDs) {
+      this.unclaimedFilterState = false
       let allRepsSelected = repIDs.reduce(allRepsReducer, {})
       this.repFilterState = allRepsSelected
       this.updateAccounts()
     },
     deselectAllReps() {
+      this.unclaimedFilterState = false
       this.repFilterState = {}
       this.updateAccounts()
     },
