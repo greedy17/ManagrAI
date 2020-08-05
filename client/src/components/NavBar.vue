@@ -8,7 +8,7 @@
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
         <NavLink icon="forecast" :to="'Forecast'">Forecast + Deals</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
-        <NavLink icon="reports" :to="'ReportsIndex'">Reports</NavLink>
+        <NavLink icon="reports" :to="'GenerateReport'">Reports</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
 

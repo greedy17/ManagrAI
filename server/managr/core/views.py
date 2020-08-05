@@ -1,4 +1,5 @@
 import requests
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 import logging
@@ -21,7 +22,6 @@ from rest_framework import (
     views,
     viewsets,
 )
-from rest_framework import viewsets, mixins, generics, status, filters, permissions
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -133,6 +133,11 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    )
+    ordering = ('last_name', 'first_name', 'email')
     filter_fields = ("organization",)
 
     def get_queryset(self):

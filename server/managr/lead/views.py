@@ -236,7 +236,7 @@ class LeadViewSet(
         lead_filters.LeadRatingOrderFiltering,
     )
     filter_class = lead_filters.LeadFilterSet
-    ordering = ("rating",)
+    ordering = ("rating", "expected_close_date")
     search_fields = ("title",)
 
     def get_queryset(self):
