@@ -27,7 +27,6 @@ class SendEmailTestCase(TestCase):
         # Random lead for basic insight testing
         self.lead = LeadFactory(
             amount=25000,
-            status=lead_constants.LEAD_STATUS_WAITING,
             claimed_by=self.user,
 
         )
