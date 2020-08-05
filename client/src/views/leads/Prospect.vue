@@ -29,6 +29,7 @@ import AccountsContainer from '@/components/prospect/AccountsContainer'
 
 import Account from '@/services/accounts'
 import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/services/pagination'
 import { objectToSnakeCase } from '@/services/utils'
 
 function allRepsReducer(obj, id) {
@@ -61,8 +62,12 @@ export default {
   },
   methods: {
     updateAccounts() {
+      this.resetPagination()
       this.applyAccountLevelFilters()
       this.accounts.refresh()
+    },
+    resetPagination() {
+      this.accounts.pagination = Pagination.create()
     },
     applyAccountLevelFilters() {
       if (this.byParamsIsRedundant) {
