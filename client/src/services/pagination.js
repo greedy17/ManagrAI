@@ -1,3 +1,5 @@
+import VueScrollTo from 'vue-scrollto'
+
 const PaginationDefaults = {
   page: 1,
   totalCount: null,
@@ -36,6 +38,25 @@ const Pagination = {
   },
   get currentPageEnd() {
     return Math.min(this.page > 1 ? this.page * this.size : this.size, this.totalCount)
+  },
+}
+
+export const paginationMixin = {
+  data() {
+    return {
+      // this is added in case collection.refreshing cannot be used for conditional render,
+      // such as if it is used somewhere else in UX.
+      pagination: {
+        loading: false,
+      },
+    }
+  },
+  methods: {
+    startPaginationLoading(ref) {
+      ref = ref || document.getElementById('nav')
+      VueScrollTo.scrollTo(ref, 0)
+      this.pagination.loading = true
+    },
   },
 }
 

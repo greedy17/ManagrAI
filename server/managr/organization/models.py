@@ -105,10 +105,6 @@ class Account(TimeStampModel):
     class Meta:
         ordering = ['-datetime_created']
 
-    @property
-    def lead_count(self):
-        return self.leads.count()
-
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):

@@ -100,10 +100,9 @@ export default {
           let updatedLead = {
             ...this.lead,
             forecastRef: this.lead.forecastRef ? Lead.CLOSED : null,
-            closingAmount: this.amount,
+            closingAmount: parseFloat(this.amount),
           }
           this.$emit('closed-lead', updatedLead)
-
           this.$Alert.alert({
             type: 'success',
             timeout: 3000,
