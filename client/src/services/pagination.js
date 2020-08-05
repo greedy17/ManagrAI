@@ -1,3 +1,5 @@
+import VueScrollTo from 'vue-scrollto'
+
 const PaginationDefaults = {
   page: 1,
   totalCount: null,
@@ -51,16 +53,8 @@ export const paginationMixin = {
   },
   methods: {
     startPaginationLoading(ref) {
-      // if the ref is not visible in viewport, scroll viewport to it.
-      let top = ref.offsetTop
-      let bounding = ref.getBoundingClientRect()
-      let refVisible =
-        bounding.top >= 0 &&
-        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-
-      if (!refVisible) {
-        window.scrollTo(0, top)
-      }
+      ref = ref || document.getElementById('nav')
+      VueScrollTo.scrollTo(ref, 0)
       this.pagination.loading = true
     },
   },

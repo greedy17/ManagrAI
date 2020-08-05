@@ -1,37 +1,28 @@
 <template>
   <div>
-    <div class="accounts-container" ref="accountsContainer">
-      <template v-if="accounts.length && isFilteringActive && zeroLeadsPresent">
-        <br />
-        <span class="no-items-message">
-          Sorry! Your search did not return any results!
-        </span>
-        <br />
-        <br />
-      </template>
-      <div v-if="accounts.length" class="accounts">
+    <ComponentLoadingSVG v-if="accounts.refreshing" style="margin-top: 10vh;" />
+    <div v-else-if="!accounts.list.length && isFilteringActive" class="lists-container-message">
+      No Results!
+    </div>
+    <div v-else-if="!accounts.list.length" class="lists-container-message">
+      No Accounts
+    </div>
+    <template v-else>
+      <div class="accounts-container" ref="accountsContainer">
         <Account
-          v-for="accountWithLeads in accounts"
-          :key="accountWithLeads.id"
-          :account="accountWithLeads.account"
-          :collection="accountWithLeads.collection"
-          :isFilteringActive="isFilteringActive"
+          v-for="account in accounts.list"
+          :key="account.id"
+          :account="account"
+          :leadFilters="leadFilters"
         />
       </div>
-      <span v-else class="no-items-message">
-        No Accounts
-      </span>
-    </div>
-    <Pagination
-      v-if="!accountsCollection.refreshing && accounts.length"
-      style="margin-top: 0.5rem; width: 80vw;"
-      :collection="accountsCollection"
-      :model="'Account'"
-      :emit="true"
-      @on-left-arrow-click="$emit('on-left-arrow-click')"
-      @on-page-click="pageNumber => $emit('on-page-click', pageNumber)"
-      @on-right-arrow-click="$emit('on-right-arrow-click')"
-    />
+      <Pagination
+        style="margin-top: 0.5rem; width: 80vw;"
+        :collection="accounts"
+        :model="'Account'"
+        @start-loading="startPaginationLoading()"
+      />
+    </template>
   </div>
 </template>
 
@@ -39,14 +30,17 @@
 import Account from '@/components/prospect/Account'
 import Pagination from '@/components/shared/Pagination'
 
+import { paginationMixin } from '@/services/pagination'
+
 export default {
   name: 'AccountsContainer',
+  mixins: [paginationMixin],
   props: {
     accounts: {
-      type: Array,
+      type: Object,
       required: true,
     },
-    accountsCollection: {
+    leadFilters: {
       type: Object,
       required: true,
     },
@@ -58,11 +52,6 @@ export default {
   components: {
     Account,
     Pagination,
-  },
-  computed: {
-    zeroLeadsPresent() {
-      return !this.accounts.filter(a => a.collection.pagination.totalCount > 0).length
-    },
   },
 }
 </script>
@@ -79,10 +68,12 @@ export default {
   padding-bottom: 1vh;
   width: 80vw;
 }
-.no-items-message {
-  font-weight: bold;
-  align-self: center;
-  width: 25%;
-  margin-left: 1rem;
+
+.lists-container-message {
+  padding-top: 22vh;
+  text-align: center;
+  color: $gray;
+  font-size: 1rem;
+  font-weight: 600;
 }
 </style>

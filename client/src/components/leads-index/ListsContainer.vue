@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="lists-container" ref="listsContainer">
+    <div class="lists-container">
       <div v-if="!loading" class="tab-content">
         <List
           :isOwner="isOwner"
@@ -35,7 +35,7 @@
       style="margin-top: 0.5rem;"
       :collection="listsCollection"
       :model="'List'"
-      @start-loading="startPaginationLoading($refs.listsContainer)"
+      @start-loading="startPaginationLoading()"
     />
   </div>
 </template>
@@ -45,6 +45,7 @@ import List from '@/components/leads-index/List'
 import CustomList from '@/components/leads-index/CustomList'
 import CreateList from '@/components/leads-index/CreateList'
 import Pagination from '@/components/shared/Pagination'
+
 import { paginationMixin } from '@/services/pagination'
 
 export default {

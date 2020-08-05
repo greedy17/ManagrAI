@@ -24,10 +24,10 @@ export default class AccountAPI {
 
   list({ pagination, filters }) {
     const filtersMap = {
-      // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       ordering: ApiFilter.create({ key: 'ordering' }),
+      byParams: ApiFilter.create({ key: 'by_params' }),
     }
 
     const options = {

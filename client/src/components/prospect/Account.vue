@@ -1,5 +1,5 @@
 <template>
-  <div class="account" v-if="!isFilteringActive || collection.pagination.totalCount">
+  <div class="account">
     <div
       ref="header"
       class="header"
@@ -9,36 +9,32 @@
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="account-title">{{ account.name }}</span>
       <span class="leads-count">
-        {{ collection.pagination.totalCount }}
-        {{
-          collection.pagination.totalCount > 1 || collection.pagination.totalCount === 0
-            ? 'Opportunities'
-            : 'Opportunity'
-        }}
+        {{ account.leadCount }}
+        {{ 'Opportunity' | pluralize(account.leadCount) }}
       </span>
     </div>
     <div class="leads-container" v-if="showLeads">
-      <div v-if="collection.pagination.totalCount > 0" class="accLeads">
-        <ComponentLoadingSVG v-if="collection.refreshing" style="margin: 1rem auto;" />
-        <template v-else>
-          <Lead v-for="lead in collection.list" :key="lead.id" :lead="lead" />
-          <Pagination
-            v-if="!collection.refreshing"
-            style="margin-bottom: 1rem;"
-            :collection="collection"
-            @start-loading="startPaginationLoading($refs.header)"
-          />
-        </template>
+      <ComponentLoadingSVG v-if="leads.refreshing" style="margin: 1rem auto;" />
+      <div v-else-if="leads.pagination.totalCount > 0" class="accLeads">
+        <Lead v-for="lead in leads.list" :key="lead.id" :lead="lead" />
+        <Pagination
+          v-if="!leads.refreshing"
+          style="margin-bottom: 1rem;"
+          :collection="leads"
+          @start-loading="startPaginationLoading($refs.header)"
+        />
       </div>
       <div v-else class="no-items-message">No Opportunities for this account</div>
     </div>
   </div>
-  <div v-else></div>
 </template>
 
 <script>
 import Lead from '@/components/prospect/Lead'
 import Pagination from '@/components/shared/Pagination'
+
+import CollectionManager from '@/services/collectionManager'
+import LeadModel from '@/services/leads'
 import { paginationMixin } from '@/services/pagination'
 
 export default {
@@ -49,12 +45,8 @@ export default {
       type: Object,
       required: true,
     },
-    collection: {
+    leadFilters: {
       type: Object,
-      required: true,
-    },
-    isFilteringActive: {
-      type: Boolean,
       required: true,
     },
   },
@@ -65,10 +57,29 @@ export default {
   data() {
     return {
       showLeads: false,
+      madeInitialRetrieval: false,
+      leads: CollectionManager.create({
+        ModelClass: LeadModel,
+        filters: { byAccount: this.account.id, ...this.leadFilters },
+      }),
     }
+  },
+  watch: {
+    leadFilters: {
+      deep: true,
+      async handler() {
+        this.madeInitialRetrieval = false
+        this.showLeads = false
+      },
+    },
   },
   methods: {
     toggleLeads() {
+      if (!this.madeInitialRetrieval) {
+        this.leads.refresh().finally(() => {
+          this.madeInitialRetrieval = true
+        })
+      }
       this.showLeads = !this.showLeads
     },
   },
@@ -128,9 +139,9 @@ export default {
 }
 
 .no-items-message {
-  font-weight: bold;
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
+  margin-bottom: 1rem;
 }
 </style>

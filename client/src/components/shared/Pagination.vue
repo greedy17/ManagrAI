@@ -54,21 +54,10 @@ export default {
       type: String,
       default: 'Opportunity',
     },
-    // if true, then retrieval of collection data is not done within this component
-    // but rather handled upstream.
-    // this was added because /views/Prospect needed pagination handled differently
-    emit: {
-      type: Boolean,
-      default: false,
-    },
   },
   methods: {
     async onPageClick(pageNumber) {
       if (pageNumber !== this.collection.pagination.page) {
-        if (this.emit) {
-          this.$emit('on-page-click', pageNumber)
-          return
-        }
         this.$emit('start-loading')
         let c = this.useCollectionClone ? this.collection.shallowClone() : this.collection
         c.pagination.page = pageNumber
@@ -84,10 +73,6 @@ export default {
     },
     onLeftArrowClick() {
       if (this.collection.pagination.hasPrevPage) {
-        if (this.emit) {
-          this.$emit('on-left-arrow-click')
-          return
-        }
         this.$emit('start-loading')
         // a clone is used here in order to leverage collection.refresh
         // without triggering any collection.refreshing -related renders.
@@ -105,10 +90,6 @@ export default {
     },
     onRightArrowClick() {
       if (this.collection.pagination.hasNextPage) {
-        if (this.emit) {
-          this.$emit('on-right-arrow-click')
-          return
-        }
         this.$emit('start-loading')
         // a clone is used here in order to leverage collection.refresh
         // without triggering any collection.refreshing -related renders.
