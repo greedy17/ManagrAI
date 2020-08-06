@@ -1,5 +1,4 @@
 import requests
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 import logging
@@ -133,11 +132,6 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.OrderingFilter,
-    )
-    ordering = ('last_name', 'first_name', 'email')
     filter_fields = ("organization",)
 
     def get_queryset(self):

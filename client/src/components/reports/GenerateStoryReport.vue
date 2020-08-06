@@ -57,7 +57,6 @@ export default {
         ModelClass: User,
         filters: {
           byUser: this.$store.state.user.id,
-          ordering: 'last_name, first_name, email',
         },
       }),
       leads: CollectionManager.create({
