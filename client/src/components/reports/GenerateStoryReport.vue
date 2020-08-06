@@ -85,9 +85,17 @@ export default {
     },
     generateReport() {
       StoryReport.api.create(this.selectedLead).then(() => {
-        // alert email to be sent when generated
-        // clear form
+        this.clearForm()
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: `Report being generated! You will receive an email once the report is accessible.`,
+        })
       })
+    },
+    clearForm() {
+      this.selectedLead = null
+      this.selectedRepresentative = null
     },
   },
   watch: {

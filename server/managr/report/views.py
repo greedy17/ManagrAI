@@ -60,9 +60,6 @@ class StoryReportViewSet(
 
 
 # postman POST.create endpoint
-# alert on StoryReport.api.create
-# clear form ^^
-# report = StoryReport.objects.create( )
 # build generate_report_data(report) => data & datetime_generated
 # explore async & triggering email
 # postman GET.detail endpoint

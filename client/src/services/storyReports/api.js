@@ -30,6 +30,7 @@ export default class StoryReportAPI {
     const promise = apiClient()
       .post(STORY_REPORTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'StoryReportAPI.create' }))
+      .then(response => this.cls.fromAPI(response.data))
     return promise
   }
 }
