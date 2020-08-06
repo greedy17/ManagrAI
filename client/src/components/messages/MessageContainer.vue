@@ -4,6 +4,7 @@
       <h4>{{ direction }}</h4>
     </div>
     <div class="messages">
+      <div v-if="messages.length < 1" class="muted">No Messages {{ direction }}</div>
       <div :key="message.sid" v-for="message in messages">
         <Message :message="message" />
         <div class="divider"></div>
