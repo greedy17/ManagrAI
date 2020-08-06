@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-messages">
+  <div class="lead-messages" v-if="!!isTextConnected">
     <div class="messages" v-if="!loading">
       <div class="tab">
         <div class="tab__header">
@@ -32,14 +32,15 @@
           </template>
         </div>
       </div>
-
-      <!--       <div :key="message.id" v-for="message in leadMessages.list" class="message">
-        <Message :message="message" :lead="lead" />
-      </div> -->
     </div>
     <div v-else>
       <ComponentLoadingSVG />
     </div>
+  </div>
+  <div v-else class="lead-messages">
+    <span class="muted">
+      Please Enable Text Integration in your account settings
+    </span>
   </div>
 </template>
 

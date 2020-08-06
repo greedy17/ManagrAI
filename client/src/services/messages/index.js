@@ -3,6 +3,7 @@ import { objectToCamelCase } from '@thinknimble/tn-utils'
 const SEND_MESSAGE_URI = 'users/send-text-message/'
 const LIST_AVAILABLE_NUMBERS = 'twilio/list-available-numbers'
 const LIST_MESSAGES_URI = 'twilio/list-messages'
+
 export default {
   async sendMessage(body, recipients, leadId) {
     const url = SEND_MESSAGE_URI

@@ -16,7 +16,10 @@
               :key="c.id"
               v-for="c in this.leadLinkedContactsRef.filter(c => recipients.includes(c.id))"
             >
-              <div class="selected-recipients__contact">
+              <div
+                class="selected-recipients__contact"
+                :class="{ invalid: ~invalidSelectedContacts.findIndex(i => i.id == c.id) }"
+              >
                 <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
                 <span>{{ c.full_name }}</span>
               </div>
@@ -82,14 +85,38 @@ export default {
         return this.$attrs.lead.linkedContactsRef
       },
     },
+    invalidSelectedContacts() {
+      //gets selected contacts that have no phone number
+      return this.leadLinkedContactsRef.filter(
+        c => this.recipients.includes(c.id) && c.phone_number_1.length < 1,
+      )
+    },
   },
   methods: {
+    resetText() {
+      this.recipients = []
+      this.body = ''
+    },
     async sendMessage() {
       this.sendingMessage = true
       // get the ref to avoid having to search the backend again
       let contactRefs = this.leadLinkedContactsRef.filter(c => this.recipients.includes(c.id))
+      this.sendingMessage = false
+      if (this.invalidSelectedContacts.length > 0) {
+        let invalidContacts = this.invalidSelectedContacts.map(c => c.full_name).join(', ')
+        this.$Alert.alert({
+          type: 'error',
+          message: `<h4> Cannot Send Message to the following contact(s) <strong>${invalidContacts}<strong> because of invalid phone number please remove contacts</h4>`,
+          timeout: 5000,
+        })
+
+        return
+      }
 
       await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
+
+      this.resetText()
+
       this.sendingMessage = false
     },
     toggleContactInclusion(contactID) {
@@ -186,6 +213,10 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+.invalid {
+  background-color: rgba(230, 0, 0, 0.4);
+  color: rgba(240, 0, 15, 1);
 }
 .image {
   height: 1.4rem;

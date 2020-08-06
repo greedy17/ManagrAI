@@ -50,6 +50,19 @@ def send_message(body, sender, recepient, callback):
     return message
 
 
+def disconnect_twilio_number(pn):
+    """ deletes phone number associated with pn """
+    try:
+        incoming_phone_number = client.incoming_phone_numbers(pn).delete()
+    except Exception as e:
+        message = e.msg
+        status = e.status
+        raise APIException(
+            detail=f'Error From Twilio Server, {message}', code=status)
+
+    return incoming_phone_number
+
+
 def create_new_account(phone_number):
     # status_callback_method and sms_method are set to POST by default but can be changed
     try:

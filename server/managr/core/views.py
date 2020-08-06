@@ -38,7 +38,7 @@ from managr.lead.background import emit_event as emit_log_event
 
 from managr.organization.models import Organization, Contact
 
-from managr.core.twilio.messages import create_new_account, list_available_numbers, send_message, list_messages
+from managr.core.twilio.messages import create_new_account, list_available_numbers, send_message, list_messages, disconnect_twilio_number
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
 
@@ -381,6 +381,30 @@ class UserViewSet(
         serializer = MessageAuthAccountSerializer(data=account)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-twilio-account",
+    )
+    def remove_twilio_account(self, request, *args, **kwargs):
+        user = request.user
+        # check to see if the user already has a twilio account
+        message_auth_account = MessageAuthAccount.objects.filter(
+            user=user)
+
+        if not message_auth_account.exists():
+            return Response(data={'non_field_errors': 'User does not have an active messaging account'})
+        # if not then create the new auth account with the phone number
+        phone_id = message_auth_account.first().sid
+        try:
+            disconnect_twilio_number(phone_id)
+        except APIException as e:
+            return Response(status.HTTP_400_BAD_REQUEST)
+
+        message_auth_account.delete()
         return Response()
 
 
