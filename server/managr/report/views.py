@@ -61,7 +61,6 @@ class StoryReportViewSet(
 
 # build generate_report_data(report) => data & datetime_generated
 # explore async & triggering email
-# postman GET.detail endpoint
 # build skeleton of /story-report/:id
 # tests
 # explore graph libraries / LOE analysis on report design
