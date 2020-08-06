@@ -130,7 +130,7 @@ export default {
   }
   display: flex;
   align-items: center;
-  width: 100%;
+
   height: 50px;
   font-size: 12px;
   > * {
@@ -139,44 +139,47 @@ export default {
   }
   &__center {
     display: flex;
-    flex: 1 0 auto;
-
+    width: 33.3%;
     .actions {
       display: flex;
       justify-content: center;
+      width: 10%;
     }
     .description {
       display: flex;
       flex-direction: column;
-      width: 200px;
+
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      width: 10%;
     }
     .amount {
-      width: 100px;
+      width: 10%;
     }
   }
   &__left {
     display: flex;
-    width: 300px;
+    width: 33.3%;
+
     justify-self: flex-start;
     justify-content: space-between;
 
     .title {
-      width: 200px;
       font-size: 14px;
-
+      width: 10%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .rating {
+      width: 10%;
     }
   }
   &__right {
     display: flex;
     justify-self: flex-end;
+    width: 33.3%;
   }
 }
 </style>
