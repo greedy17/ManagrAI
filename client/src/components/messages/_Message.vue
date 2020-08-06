@@ -6,6 +6,9 @@
     <span class="message__body">
       {{ message.body }}
     </span>
+    <span class="muted message-status">
+      {{ message.status }}
+    </span>
   </div>
 </template>
 
@@ -27,33 +30,7 @@ export default {
     return {}
   },
   created() {},
-  computed: {
-    /*     getFriendlyMessageDirection() {
-      switch (this.message.direction) {
-        case 'SENT':
-          return 'outbound'
-        case 'RECEIVED':
-          return 'inbound'
-        default:
-          return 'N/A'
-      }
-    },
-    getFriendlyMessageStatus() {
-      switch (this.message.status) {
-        case 'DELIVERED':
-          return 'This Message was delivered'
 
-        case 'NOT_DELIVERED':
-          return 'Not able to deliver this message'
-
-        case 'MESSAGE_PENDING':
-          return 'This message is still processing'
-
-        default:
-          return 'Devlivery Information unavailable '
-      }
-    }, */
-  },
   methods: {},
 }
 </script>
@@ -72,5 +49,8 @@ export default {
 }
 .muted {
   font-size: 10px;
+}
+.message-status {
+  text-align: right;
 }
 </style>
