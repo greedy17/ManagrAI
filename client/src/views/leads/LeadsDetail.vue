@@ -4,7 +4,7 @@
   </div>
   <div v-else class="page">
     <div class="page__left-nav-bar">
-      <ToolBar
+      <!--       <ToolBar
         :lead="lead"
         :lists="lists"
         :leadContacts="contacts"
@@ -12,7 +12,20 @@
         @updated-amount="updateAmount"
         @updated-expected-close-date="updateExpectedCloseDate"
         @updated-title="updateTitle"
-      />
+      /> -->
+      <SideNavToolbar>
+        <template v-slot:toolbar>
+          <ToolBar
+            :lead="lead"
+            :lists="lists"
+            :leadContacts="contacts"
+            @updated-rating="updateRating"
+            @updated-amount="updateAmount"
+            @updated-expected-close-date="updateExpectedCloseDate"
+            @updated-title="updateTitle"
+          />
+        </template>
+      </SideNavToolbar>
     </div>
     <div class="page__main-content-area">
       <LeadBanner
@@ -133,10 +146,10 @@
         </div>
       </div>
     </div>
-
+    <!-- 
     <div class="page__right-panel">
       <LeadInsights :lead="lead" />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -147,6 +160,7 @@ import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import DropDownMenu from '@/components/forms/DropDownMenu'
+import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
@@ -178,6 +192,7 @@ export default {
     LeadEmails,
     DropDownMenu,
     LeadMessages,
+    SideNavToolbar,
   },
   data() {
     return {

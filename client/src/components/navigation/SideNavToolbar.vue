@@ -1,62 +1,27 @@
 <template>
   <div class="sidenav-container">
     <div class="sidenav" ref="sidenav">
+      <span @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)">T</span>
       <div class="content">
-        <div class="view-toggle-container">
-          <span class="left" :class="{ bold: selectedView == remindersView }">Reminders</span>
-          <ToggleCheckBox
-            class="checkbox"
-            :checked="selectedView == notificationsView"
-            @toggle-view="toggleView"
-            :eventToEmit="'toggle-view'"
-          />
-          <span class="right" :class="{ bold: selectedView == notificationsView }"
-            >Notifications</span
-          >
-        </div>
-        <NotificationPage v-if="selectedView == notificationsView" />
-        <ReminderPage v-if="selectedView == remindersView" />
+        <slot name="toolbar"></slot>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import NotificationPage from '@/views/user/NotificationPage'
-import ReminderPage from '@/views/user/ReminderPage'
-import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
-
 import { mapGetters } from 'vuex'
-const VIEW_OPTION_REMINDERS = 'REMINDERS'
-const VIEW_OPTION_NOTIFICATIONS = 'NOTIFICATIONS'
-const VIEW_OPTIONS = {
-  notifications: VIEW_OPTION_NOTIFICATIONS,
-  reminders: VIEW_OPTION_REMINDERS,
-}
+
 export default {
-  name: 'SideNavBar',
-  components: { NotificationPage, ToggleCheckBox, ReminderPage },
+  name: 'SideNavToolbar',
+  components: {},
   props: {},
   data() {
     return {
       triggerElements: [],
-      viewOptions: VIEW_OPTIONS,
-      remindersView: VIEW_OPTION_REMINDERS,
-      notificationsView: VIEW_OPTION_NOTIFICATIONS,
-      selectedView: VIEW_OPTION_NOTIFICATIONS,
     }
   },
   methods: {
-    toggleView(event) {
-      if (event) {
-        this.selectedView = this.viewOptions.notifications
-      } else {
-        this.selectedView = this.viewOptions.reminders
-      }
-    },
-    toggleNotifications() {
-      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
-    },
     removeEvent() {
       /*
         Remove the event listener if the toggle is no longer visible to reduce the events triggered
@@ -69,19 +34,27 @@ export default {
        * if the click is on the side-nav or on any of its triggers then
        * do not close the modal
        */
-      for (let i = 0; i < this.triggerElements.length; i++) {
-        if (!this.triggerElements[i].contains(e.target) && !this.$el.contains(e.target)) {
+      if (this.triggerElements.length > 0) {
+        for (let i = 0; i < this.triggerElements.length; i++) {
+          if (!this.triggerElements[i].contains(e.target) && !this.$el.contains(e.target)) {
+            // if the modal is hidden remove the event listener
+            this.removeEvent()
+            this.$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', false)
+          }
+        }
+      } else {
+        if (!this.$el.contains(e.target)) {
           // if the modal is hidden remove the event listener
           this.removeEvent()
-          this.$store.commit('TOGGLE_SIDE_NAV', false)
+          this.$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', false)
         }
       }
     },
   },
   computed: {
-    ...mapGetters(['showSideNav', 'listenToSideNav']),
+    ...mapGetters(['showToolbarNav']),
     show() {
-      return this.showSideNav
+      return this.showToolbarNav
     },
   },
   mounted() {
@@ -108,13 +81,13 @@ export default {
       immediate: true,
       handler(val) {
         if (val) {
+          console.log(val)
           window.addEventListener('click', this.closeNavBarEvent)
         }
         if (this.$refs.sidenav) {
           if (val) {
             this.$refs.sidenav.classList.remove('close')
             this.$refs.sidenav.classList.add('expanded')
-            this.$store.commit('TOGGLE_SIDE_NAV_LISTENER', true)
           } else {
             this.$refs.sidenav.classList.remove('expanded')
             this.$refs.sidenav.classList.add('close')
@@ -133,7 +106,7 @@ export default {
   padding: 1rem;
   background-color: transparent;
   position: absolute;
-  right: 0px;
+  left: 0px;
   top: 5rem;
   width: 0rem;
   max-width: 15rem;

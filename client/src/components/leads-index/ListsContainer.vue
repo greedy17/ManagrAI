@@ -6,7 +6,7 @@
           This set of lists contains custom created lists by a user and will populate the count based on that list
           if the total count is not yet available, the total count becomes available when the user toggles the list
         -->
-        <CustomList
+        <List
           @delete-list="emitDeleteList(list.id, index)"
           v-for="(list, index) in listsCollection.list"
           :collection="leadsFromList"
@@ -25,14 +25,14 @@
           This set of lists contains all opportunities and ones not on lists by a user and will populate the count based on that list
           if the total count of the collection
         -->
-        <CustomList
+        <List
           :collection="noListLeadsCollection"
           key="No List"
           title="No List"
           @refresh-collections="$emit('refresh-collections')"
           :leadCount="noListLeadsCollection.pagination.totalCount"
         />
-        <CustomList
+        <List
           :collection="allLeadsCollection"
           key="All Opportunities"
           title="All Opportunities"
@@ -57,7 +57,7 @@
 
 <script>
 import List from '@/components/leads-index/List'
-import CustomList from '@/components/leads-index/CustomList'
+
 import CreateList from '@/components/leads-index/CreateList'
 
 import LeadModel from '@/services/leads'
@@ -73,7 +73,6 @@ export default {
     List,
     CreateList,
     Pagination,
-    CustomList,
   },
   props: {
     loading: {

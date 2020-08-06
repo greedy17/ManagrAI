@@ -1,6 +1,10 @@
 <template>
-  <div class="lead" @click="showDetails = !showDetails">
-    <div class="lead__container" v-bind:style="{ 'background-color': headerBackgroundColor }">
+  <div class="lead">
+    <div
+      @click="showDetails = !showDetails"
+      class="lead__container"
+      v-bind:style="{ 'background-color': headerBackgroundColor }"
+    >
       <div class="lead__container__left">
         <slot name="left"></slot>
         <span class="title">{{ dataLead.title }}</span>
@@ -119,11 +123,11 @@ export default {
 
 .lead {
   width: 100%;
+}
+.lead__container {
   &:hover {
     cursor: pointer;
   }
-}
-.lead__container {
   display: flex;
   align-items: center;
   width: 100%;

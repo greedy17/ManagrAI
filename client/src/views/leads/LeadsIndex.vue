@@ -1,6 +1,17 @@
 <template>
-  <div class="leads-index">
-    <div class="toolbar-pane">
+  <div class="page">
+    <div class="page__left-nav-bar">
+      <SideNavToolbar>
+        <template v-slot:toolbar>
+          <ToolBar
+            class="toolbar"
+            @update-filter="updateFilters"
+            :currentFilters="currentFilters"
+          />
+        </template>
+      </SideNavToolbar>
+    </div>
+    <div class="page__main-content-area">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -11,9 +22,6 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar class="toolbar" @update-filter="updateFilters" :currentFilters="currentFilters" />
-    </div>
-    <div class="lists-container-pane">
       <ListsContainer
         :loading="loading"
         :noListLeadsCollection="myLeadsNoList"
@@ -35,6 +43,7 @@
 import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
+import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
 import Lead from '@/services/leads'
 import List from '@/services/lists'
@@ -46,6 +55,7 @@ export default {
     ToolBar,
     ToggleCheckBox,
     ListsContainer,
+    SideNavToolbar,
   },
   data() {
     return {
@@ -145,24 +155,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
-
-.leads-index {
-  display: flex;
-  flex-flow: row;
-  padding-top: 2%;
-}
-
-.toolbar-pane {
-  width: 17%;
-  padding: 0% 1% 1% 1%;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-
-  .toolbar {
-    margin-left: auto;
-  }
-}
+@import '@/styles/layout';
 
 .view-toggle-container {
   @include base-font-styles();
@@ -171,7 +164,6 @@ export default {
   flex-flow: row;
   align-items: center;
   justify-content: center;
-  width: 78%;
   margin: 0 0 1rem auto;
 
   .left,
@@ -191,11 +183,5 @@ export default {
   .bold {
     font-weight: bold;
   }
-}
-
-.lists-container-pane {
-  width: 83%;
-  padding: 0 2% 1% 1%;
-  background-color: $off-white;
 }
 </style>

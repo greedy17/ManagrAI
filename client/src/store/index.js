@@ -15,6 +15,7 @@ const state = {
   showSideNav: false,
   listenToSideNav: false,
   stages: null,
+  showToolbarNav: false,
 }
 
 const mutations = {
@@ -34,6 +35,9 @@ const mutations = {
   },
   TOGGLE_SIDE_NAV(state, show) {
     state.showSideNav = show
+  },
+  TOGGLE_SIDE_TOOLBAR_NAV(state, show) {
+    state.showToolbarNav = show
   },
   TOGGLE_SIDE_NAV_LISTENER(state, listen) {
     state.listenToSideNav = listen
@@ -86,6 +90,9 @@ const getters = {
   },
   showSideNav: state => {
     return state.showSideNav
+  },
+  showToolbarNav: state => {
+    return state.showToolbarNav
   },
   listenToSideNav: state => {
     return state.listenToSideNav

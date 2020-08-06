@@ -5,22 +5,11 @@
 //  main-content-area-with-panel.
 
 .page {
-  padding: 2rem;
   display: flex;
-  > * {
-    padding: 1rem;
-  }
-  &__left-nav-bar {
-    max-width: 18vw;
-    min-width: 5rem;
-  }
+  justify-content: center;
   &__main-content-area {
-    flex: 1 0 5rem;
-  }
-  &__main-content-area-with-panel {
-  }
-  &__right-panel {
-    flex: 3;
+    width: 60vw;
+    min-width: 60rem;
   }
 }
 

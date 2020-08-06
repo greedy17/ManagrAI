@@ -7,40 +7,39 @@
       :class="{ open: showLeads, closed: !showLeads }"
     >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title">{{ list.title }}</span>
+      <span class="list-title">{{ title }}</span>
       <span class="list-length">
-        {{ numOfLeads }}
-        {{ numOfLeads > 1 || numOfLeads === 0 ? 'Opportunities' : 'Opportunity' }}
+        {{ leadCount }}
+        {{ leadCount > 1 || leadCount === 0 ? 'Opportunities' : 'Opportunity' }}
       </span>
-      <span class="icon">
+      <span class="icon" v-if="isOwner">
         <svg
           width="50px"
           height="50px"
           class="icon"
           viewBox="0 0 30 30"
           v-if="isOwner"
-          @click.stop="$emit('delete-list', list.id)"
+          @click.stop="$emit('delete-list')"
         >
           <use xlink:href="@/assets/images/svg-repo.svg#remove" />
         </svg>
       </span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <ComponentLoadingSVG v-if="trueList.refreshing" />
+      <ComponentLoadingSVG v-if="collection.refreshing || pagination.loading" />
       <template v-else>
-        <div class="list-leads__row" v-if="trueList.list.length">
+        <div class="list-leads__row" v-if="collectionList.length">
           <span
             class="list-leads__row__lead"
             :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
           >
             <Checkbox
-              :style="{ marginLeft: '1rem' }"
-              :checked="allLeadsSelected"
-              @checkbox-clicked="toggleAllSelected"
+              @checkbox-clicked="toggleAllLeads"
+              :checked="leadCount == checkedLeads.length"
             />
 
             <span :style="{ marginLeft: '0.75rem' }">Select All</span>
-            <button class="bulk-action-button" v-if="!noLeadsSelected" @click="onBulkAction">
+            <button class="bulk-action-button" v-if="checkedLeads.length > 0" @click="onBulkAction">
               Take Action
             </button>
             <button class="bulk-action-button" :style="{ visibility: 'hidden' }" v-else>
@@ -48,142 +47,133 @@
             </button>
             <Modal v-if="modal.isOpen" dimmed @close-modal="onCloseModal" :includeMargin="false">
               <BulkLeadActions
-                :leads="Object.values(selectedLeads)"
-                @bulk-move-success="$emit('refresh-collections')"
+                :leads="checkedLeads"
+                @bulk-move-success="onBulkMoveSuccess"
                 @bulk-success="onCloseModal"
               />
             </Modal>
           </span>
         </div>
-        <div :key="lead.id" class="list-leads__row" v-for="lead in trueList.list">
+        <div :key="lead.id" class="list-leads__row" v-for="lead in collectionList">
           <span class="list-leads__row__lead">
-            <Lead
-              :key="lead.id"
-              :lead="lead"
-              :isSelected="!!selectedLeads[lead.id]"
-              @checkbox-clicked="toggleSelectedLead(lead)"
-            />
+            <LeadRow :key="lead.id" :lead="lead">
+              <template v-slot:left>
+                <Checkbox
+                  :checked="!!~checkedLeads.findIndex(l => l == lead.id)"
+                  @checkbox-clicked="toggleCheckedLead(lead.id)"
+                />
+              </template>
+              <template v-slot:center>
+                <div class="lead-items">
+                  <span class="muted">
+                    Expected Close By: <br />{{ lead.expectedCloseDate | dateShort }}</span
+                  >
+                  <span class="muted">
+                    Last Action On:
+                    <br />
+                    {{ lead.lastActionTaken.actionTimestamp | timeAgo }} -
+                    {{ lead.lastActionTaken.activity }}
+                  </span>
+                </div>
+              </template>
+              <template v-slot:right> </template>
+            </LeadRow>
           </span>
         </div>
-        <span v-if="trueList.list.length <= 0" class="no-items-message">No Leads On List</span>
+        <span v-if="collectionList.length <= 0" class="no-items-message">
+          No Opportunities On List
+        </span>
       </template>
       <Pagination
-        v-if="!trueList.refreshing"
-        :collection="trueList"
+        v-if="!collection.refreshing"
+        :collection="collection"
+        :useCollectionClone="true"
         @start-loading="startPaginationLoading($refs.listHeader)"
+        @end-loading="pagination.loading = false"
       />
     </div>
   </div>
 </template>
 
 <script>
-import LeadModel from '@/services/leads'
-import CollectionManager from '@/services/collectionManager'
 import Lead from '@/components/leads-index/Lead'
-import LeadRow from '@/components/shared/LeadRow'
-
+import Pagination from '@/components/shared/Pagination'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
-import Pagination from '@/components/shared/Pagination'
+import LeadRow from '@/components/shared/LeadRow'
 import { paginationMixin } from '@/services/pagination'
 
 export default {
-  name: 'List',
+  name: 'List', // such as NoList and AllLeads
   mixins: [paginationMixin],
   props: {
-    list: {
-      // the prop 'list' is a shell: it only includes id, title, and leadCount. It is used to retrieve the trueList
+    collection: {
       type: Object,
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+    },
+    leadCount: {
+      type: Number,
+      required: false,
+    },
     isOwner: {
-      // determines if CRUD is available
       type: Boolean,
       default: false,
-    },
-    leadFilters: {
-      type: Object,
-      default: () => {},
     },
   },
   components: {
     Lead,
+    Checkbox,
     Pagination,
     BulkLeadActions,
-    Checkbox,
     LeadRow,
-  },
-  watch: {
-    leadFilters: {
-      deep: true,
-      async handler() {
-        this.madeInitialRetrieval = false
-        this.showLeads = false
-      },
-    },
   },
   data() {
     return {
       showLeads: false,
-      madeInitialRetrieval: false,
-      trueList: CollectionManager.create({
-        ModelClass: LeadModel,
-        filters: { byList: this.list.id, ...this.leadFilters },
-      }),
-      selectedLeads: {},
+
+      checkedLeads: [],
       modal: {
         isOpen: false,
       },
     }
   },
+  created() {},
   methods: {
+    toggleLeads() {
+      this.showLeads = !this.showLeads
+      this.$emit('get-leads', this.showLeads)
+    },
+    onCloseModal() {
+      this.checkedLeads = []
+      this.modal.isOpen = false
+    },
+    onBulkMoveSuccess() {
+      this.$emit('refresh-collections')
+      this.onCloseModal()
+    },
     onBulkAction() {
       this.modal.isOpen = true
     },
-    toggleSelectedLead(lead) {
-      if (this.selectedLeads[lead.id]) {
-        let copy = { ...this.selectedLeads }
-        delete copy[lead.id]
-        this.selectedLeads = copy
+    toggleAllLeads() {
+      this.checkedLeads = []
+      this.checkedLeads = this.collectionList.map(l => l.id)
+    },
+    toggleCheckedLead(leadId) {
+      let index = this.checkedLeads.findIndex(l => l == leadId)
+      if (index != -1) {
+        this.checkedLeads = this.checkedLeads.splice(index, 1)
       } else {
-        this.selectedLeads = { ...this.selectedLeads, [lead.id]: lead }
+        this.checkedLeads.push(leadId)
       }
-    },
-    toggleAllSelected() {
-      if (this.allLeadsSelected) {
-        this.selectedLeads = {}
-      } else {
-        this.selectedLeads = this.trueList.list.reduce((acc, lead) => {
-          acc[lead.id] = lead
-          return acc
-        }, {})
-      }
-    },
-    toggleLeads() {
-      if (!this.madeInitialRetrieval) {
-        // do not filter by user on lists
-        this.trueList.filters = { byList: this.list.id, ...this.leadFilters }
-        delete this.trueList.filters.byUser
-        this.trueList.refresh().then(() => {
-          this.madeInitialRetrieval = true
-        })
-      }
-      this.showLeads = !this.showLeads
-    },
-    onCloseModal() {
-      this.selectedLeads = {}
-      this.modal.isOpen = false
     },
   },
   computed: {
-    numOfLeads() {
-      return this.list.leadCount
-    },
-    allLeadsSelected() {
-      return Object.keys(this.selectedLeads).length == this.trueList.list.length
-    },
-    noLeadsSelected() {
-      return !Object.keys(this.selectedLeads).length
+    collectionList() {
+      return this.collection.list
     },
   },
 }
@@ -245,10 +235,22 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-top: 1rem;
 
     &__lead {
       flex: 1;
     }
+  }
+}
+.lead-items {
+  display: flex;
+  align-items: center;
+  > * {
+    width: 150px;
+  }
+  .muted {
+    font-size: 10px;
+    color: black;
   }
 }
 
