@@ -140,10 +140,10 @@ export default {
   &__center {
     display: flex;
     width: 33.3%;
+    overflow-y: scroll;
     .actions {
       display: flex;
       justify-content: center;
-      width: 10%;
     }
     .description {
       display: flex;
@@ -152,34 +152,33 @@ export default {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      width: 10%;
     }
     .amount {
-      width: 10%;
     }
   }
   &__left {
     display: flex;
     width: 33.3%;
+    overflow-y: scroll;
 
     justify-self: flex-start;
     justify-content: space-between;
 
     .title {
       font-size: 14px;
-      width: 10%;
+
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .rating {
-      width: 10%;
     }
   }
   &__right {
     display: flex;
     justify-self: flex-end;
     width: 33.3%;
+    overflow-y: scroll;
   }
 }
 </style>
