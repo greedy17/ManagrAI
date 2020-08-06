@@ -2,28 +2,42 @@
   <div>
     <div class="lists-container">
       <div v-if="!loading" class="tab-content">
+        <!-- 
+          This set of lists contains custom created lists by a user and will populate the count based on that list
+          if the total count is not yet available, the total count becomes available when the user toggles the list
+        -->
         <CustomList
           @delete-list="emitDeleteList(list.id, index)"
           v-for="(list, index) in listsCollection.list"
-          :collection="leadsFromList.list"
-          :key="index"
+          :collection="leadsFromList"
+          :key="list.leadCount"
           :title="list.title"
           @get-leads="onGetLeads($event, list.id)"
           @refresh-collections="$emit('refresh-collections')"
-          :leadCount="leadsFromList.pagination.totalCount"
+          :leadCount="
+            leadsFromList.pagination.totalCount
+              ? leadsFromList.pagination.totalCount
+              : list.leadCount
+          "
           :isOwner="true"
         />
+        <!-- 
+          This set of lists contains all opportunities and ones not on lists by a user and will populate the count based on that list
+          if the total count of the collection
+        -->
         <CustomList
           :collection="noListLeadsCollection"
           key="No List"
           title="No List"
           @refresh-collections="$emit('refresh-collections')"
+          :leadCount="noListLeadsCollection.pagination.totalCount"
         />
         <CustomList
           :collection="allLeadsCollection"
           key="All Opportunities"
           title="All Opportunities"
           @refresh-collections="$emit('refresh-collections')"
+          :leadCount="allLeadsCollection.pagination.totalCount"
         />
         <CreateList @list-created="emitListCreated" />
       </div>

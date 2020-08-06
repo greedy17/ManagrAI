@@ -39,20 +39,6 @@
           @start-loading="startPaginationLoading($refs.listHeader)"
         />
       </template>
-      <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
-        <LeadRow :key="lead.id" :lead="lead.leadRef">
-          <template v-slot:left> </template>
-          <template v-slot:center>
-            <div class="lead-items">
-              <span class="muted">
-                Expected Close By: <br />
-                {{ lead.expectedCloseDate | dateShort }}
-              </span>
-            </div>
-          </template>
-          <template v-slot:right> </template>
-        </LeadRow>
-      </div>
     </div>
   </div>
 </template>

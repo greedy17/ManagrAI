@@ -28,7 +28,7 @@
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing || pagination.loading" />
       <template v-else>
-        <div class="list-leads__row" v-if="collection.length">
+        <div class="list-leads__row" v-if="collectionList.length">
           <span
             class="list-leads__row__lead"
             :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
@@ -54,7 +54,7 @@
             </Modal>
           </span>
         </div>
-        <div :key="lead.id" class="list-leads__row" v-for="lead in collection">
+        <div :key="lead.id" class="list-leads__row" v-for="lead in collectionList">
           <span class="list-leads__row__lead">
             <LeadRow :key="lead.id" :lead="lead">
               <template v-slot:left>
@@ -80,7 +80,7 @@
             </LeadRow>
           </span>
         </div>
-        <span v-if="collection.length <= 0" class="no-items-message">
+        <span v-if="collectionList.length <= 0" class="no-items-message">
           No Opportunities On List
         </span>
       </template>
@@ -108,7 +108,7 @@ export default {
   mixins: [paginationMixin],
   props: {
     collection: {
-      type: Array,
+      type: Object,
       required: true,
     },
     title: {
@@ -160,7 +160,7 @@ export default {
     },
     toggleAllLeads() {
       this.checkedLeads = []
-      this.checkedLeads = this.collection.list.map(l => l.id)
+      this.checkedLeads = this.collectionList.map(l => l.id)
     },
     toggleCheckedLead(leadId) {
       let index = this.checkedLeads.findIndex(l => l == leadId)
@@ -171,7 +171,11 @@ export default {
       }
     },
   },
-  computed: {},
+  computed: {
+    collectionList() {
+      return this.collection.list
+    },
+  },
 }
 </script>
 
