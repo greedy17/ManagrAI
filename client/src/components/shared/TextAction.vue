@@ -14,12 +14,18 @@
           <div class="contacts">
             <div
               :key="c.id"
-              v-for="c in this.leadLinkedContactsRef.filter(c => recipients.includes(c.id))"
+              v-for="(c, index) in this.leadLinkedContactsRef.filter(c =>
+                recipients.includes(c.id),
+              )"
             >
               <div
                 class="selected-recipients__contact"
                 :class="{ invalid: ~invalidSelectedContacts.findIndex(i => i.id == c.id) }"
+                @click="removeRecipient(index)"
               >
+                <svg class="icon-remove" viewBox="0 0 24 24">
+                  <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
                 <img class="image" src="@/assets/images/sara-smith.png" alt="contact image" />
                 <span>{{ c.full_name }}</span>
               </div>
@@ -93,6 +99,9 @@ export default {
     },
   },
   methods: {
+    removeRecipient(i) {
+      this.recipients.splice(i, 1)
+    },
     resetText() {
       this.recipients = []
       this.body = ''
@@ -199,13 +208,20 @@ export default {
   }
 
   &__contact {
+    &:hover {
+      cursor: pointer;
+    }
+    > .icon-remove {
+      width: 10px;
+      height: 10px;
+    }
     display: flex;
     margin: 0rem 1rem;
     align-items: center;
     background-color: rgba($color: $light-gray-blue, $alpha: 0.2);
     border-radius: 10px;
-    padding-left: 0.5rem;
-    padding-right: 1rem;
+
+    padding: 0.2rem 1rem;
     border-radius: 0.3rem;
 
     max-width: 10rem;

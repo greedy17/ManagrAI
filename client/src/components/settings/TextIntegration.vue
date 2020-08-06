@@ -91,9 +91,10 @@
               </div>
               <div class="body">
                 <p>
-                  Disconnecting your number will result in a loss of data related to this number,
-                  This Chnage is permanent and not undoable, click Agree to Disconnect or Cancel to
-                  return to the menu
+                  Change Copy: Are you sure you want to disconnect this number? Disconnecting your
+                  number will result in a loss of data related to this number. This change is
+                  permanent and cannot be undone. Click "Agree" to disconnect the number, or
+                  "Cancel" to return to the menu!
                 </p>
               </div>
               <div class="footer">
