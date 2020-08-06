@@ -1,7 +1,17 @@
-from django.db import models
-from managr.core.models import UserManager, TimeStampModel
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from . import constants as org_consts
+from managr.utils.numbers import format_phone_number
 from django.db.models import Sum, Avg
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
+
+from django.db.models import Sum, Avg, Q
+
+from managr.core.models import UserManager, TimeStampModel
+<< << << < HEAD
+== == == =
+
+
+>>>>>> > develop
 
 # Create your models here.
 
@@ -100,10 +110,6 @@ class Account(TimeStampModel):
     class Meta:
         ordering = ['-datetime_created']
 
-    @property
-    def lead_count(self):
-        return self.leads.count()
-
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -112,7 +118,7 @@ class ContactQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(account__organization=user.organization)
         else:
-            return None
+            return self.none()
 
 
 class Contact(TimeStampModel):
@@ -146,4 +152,41 @@ class Contact(TimeStampModel):
     def save(self, *args, **kwargs):
         self.email = BaseUserManager.normalize_email(self.email).lower()
 
+        self.phone_number_1 = format_phone_number(
+            self.phone_number_1, format="+1%d%d%d%d%d%d%d%d%d%d") if self.phone_number_1 else ''
+        self.phone_number_2 = format_phone_number(
+            self.phone_number_2, format="+1%d%d%d%d%d%d%d%d%d%d") if self.phone_number_2 else ''
+
         return super(Contact, self).save(*args, **kwargs)
+
+
+class StageQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(Q(type='PUBLIC') | Q(organization=user.organization))
+        else:
+            return self.none()
+
+
+class Stage(TimeStampModel):
+    """ 
+        Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
+        There are some static stages available to all organizations and private ones that belong only to certain organizations. 
+    """
+
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=True)
+    color = models.CharField(
+        max_length=255, default="#9B9B9B", help_text="hex code for color")
+    type = models.CharField(max_length=255, choices=(
+        org_consts.STAGE_TYPES))
+
+    organization = models.ForeignKey(
+        'Organization', related_name="stages", blank=False, null=True, on_delete=models.CASCADE)
+
+    objects = StageQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['-datetime_created']

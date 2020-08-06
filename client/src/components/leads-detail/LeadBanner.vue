@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-banner" :style="bannerBackgroundColor">
+  <div class="lead-banner" :style="{ 'background-color': bannerBackgroundColor }">
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
       <LeadForecastDropdown
@@ -40,10 +40,9 @@
 </template>
 
 <script>
-import { getStatusSecondaryColor } from '@/services/getColorFromLeadStatus'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
-
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 export default {
   name: 'LeadBanner',
   props: {
@@ -69,7 +68,9 @@ export default {
   },
   computed: {
     bannerBackgroundColor() {
-      return getStatusSecondaryColor(this.lead.status && this.lead.status.toLowerCase())
+      return this.lead.statusRef
+        ? getLightenedColor(this.lead.statusRef.color)
+        : getLightenedColor('#9B9B9B')
     },
     isOwnedByUser() {
       return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id

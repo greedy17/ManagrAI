@@ -28,6 +28,13 @@
         >
           Email Test
         </div> -->
+        <div
+          class="toolbar__row"
+          @click="toggleActivePage('textIntegration')"
+          :class="{ toolbar__active: textIntegrationActive }"
+        >
+          Text Integration
+        </div>
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
@@ -43,7 +50,7 @@
     <div class="page__main-content-area">
       <EmailIntegration v-if="emailIntegrationActive" />
       <EmailTemplates v-if="emailTemplatesActive" />
-      <EmailTest v-if="emailTestActive" />
+      <TextIntegration v-if="textIntegrationActive" />
       <Profile v-if="profileActive" />
       <Password v-if="passwordActive" />
     </div>
@@ -51,7 +58,7 @@
 </template>
 
 <script>
-import EmailTest from '@/components/settings/EmailTest'
+import TextIntegration from '@/components/settings/TextIntegration'
 import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
 import Profile from '@/components/settings/Profile'
@@ -62,7 +69,7 @@ export default {
   components: {
     EmailIntegration,
     EmailTemplates,
-    EmailTest,
+    TextIntegration,
     Profile,
     Password,
   },
@@ -70,7 +77,7 @@ export default {
     return {
       emailIntegrationActive: true,
       emailTemplatesActive: false,
-      emailTestActive: false,
+      textIntegrationActive: false,
       profileActive: false,
       passwordActive: false,
     }
@@ -79,12 +86,12 @@ export default {
     toggleActivePage(pageToActivate) {
       this.emailIntegrationActive = false
       this.emailTemplatesActive = false
-      this.emailTestActive = false
+      this.textIntegrationActive = false
       this.profileActive = false
       this.passwordActive = false
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
-      if (pageToActivate === 'emailTest') this.emailTestActive = true
+      if (pageToActivate === 'textIntegration') this.textIntegrationActive = true
       if (pageToActivate === 'profile') this.profileActive = true
       if (pageToActivate === 'password') this.passwordActive = true
     },

@@ -1,0 +1,41 @@
+[
+  {
+    "model": "organization.stage",
+    "pk": "6407b7a1-a877-44e2-979d-1effafec5035",
+    "fields": {
+      "title": "LEAD",
+      "description": "Defines an Opportunity as a Lead",
+      "type": "PUBLIC",
+      "organization": null,
+      "color": "#1C1F1D",
+      "datetime_created": "2020-08-03 11:39:23.632256Z",
+      "last_edited": "2020-08-03 11:39:23.632256Z"
+    }
+  },
+  {
+    "model": "organization.stage",
+    "pk": "fe89a6fd-f049-4b23-a059-86d45c12b14b",
+    "fields": {
+      "title": "CLOSED",
+      "description": "Defines an opportunity as closed",
+      "type": "PUBLIC",
+      "organization": null,
+      "color": "#2F9E54",
+      "datetime_created": "2020-08-03 11:39:23.632256Z",
+      "last_edited": "2020-08-03 11:39:23.632256Z"
+    }
+  },
+  {
+    "model": "organization.stage",
+    "pk": "36be069d-7d39-4b7f-a339-aa7c0a27085d",
+    "fields": {
+      "title": "LOST",
+      "description": "Defines an opportunity as closed",
+      "type": "PUBLIC",
+      "organization": null,
+      "color": "#4C4949",
+      "datetime_created": "2020-08-03 11:39:23.632256Z",
+      "last_edited": "2020-08-03 11:39:23.632256Z"
+    }
+  }
+]

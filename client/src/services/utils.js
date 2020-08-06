@@ -29,6 +29,7 @@ const Utils = {
   capitalizeWord,
   debounce,
   getTimeZone,
+  convertToRgba,
 }
 
 export default Utils
@@ -240,4 +241,54 @@ export function removeDuplicates(array) {
     }
   }, [])
   return errorFields
+}
+
+function convertToRgba(color, opacity = 1) {
+  let red = ''
+  let green = ''
+  let blue = ''
+
+  color = color.replace('#', '')
+  if (color.length != 3) {
+    for (let i = 0; i < color.length; i++) {
+      if (i < 2) {
+        red += color.substr(i, 1)
+      }
+      if (i > 1 && i < 4) {
+        green += color.substr(i, 1)
+      }
+      if (i > 3 && i < 6) {
+        blue += color.substr(i, 1)
+      }
+    }
+  } else {
+    // 3 digit hex codes are considered shorthand for 6 digit hex code
+    for (let i = 0; i < color.length; i++) {
+      if (i == 0) {
+        red += color.substr(i, 1)
+      }
+      if (i > 0 && i < 2) {
+        green += color.substr(i, 1)
+      }
+      if (i > 1 && i < 3) {
+        blue += color.substr(i, 1)
+      }
+    }
+  }
+  if (red) {
+    red = parseInt(red, 16)
+  } else {
+    red = 0
+  }
+  if (green) {
+    green = parseInt(green, 16)
+  } else {
+    green = 0
+  }
+  if (blue) {
+    blue = parseInt(blue, 16)
+  } else {
+    blue = 0
+  }
+  return `rgba(${red}, ${green}, ${blue}, ${opacity})`
 }

@@ -21,16 +21,14 @@
       <div class="filter-options">
         <div
           class="option"
-          @click="emitUpdateFilter({ key: 'byStatus', value: status })"
-          v-for="status in statusEnums"
-          :key="status"
+          @click="emitUpdateFilter({ key: 'byStatus', value: status.id })"
+          v-for="status in getStatuses"
+          :key="status.id"
           :class="{
-            active: currentFilters.byStatus
-              ? currentFilters.byStatus.toLowerCase() == status.toLowerCase()
-              : false,
+            active: currentFilters.byStatus ? currentFilters.byStatus == status.id : false,
           }"
         >
-          {{ status }}
+          {{ status.title.toLowerCase() }}
         </div>
       </div>
     </div>
@@ -56,6 +54,11 @@ export default {
       statusEnums,
       forecastEnums,
     }
+  },
+  computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
   },
   methods: {
     emitUpdateFilter(item) {
@@ -135,6 +138,7 @@ export default {
       margin: 0.5rem;
       cursor: pointer;
       max-width: 6rem;
+      text-transform: capitalize;
     }
   }
 }

@@ -111,4 +111,8 @@ export default class CollectionManager {
       this.loadingNextPage = false
     }
   }
+
+  shallowClone() {
+    return new CollectionManager(this)
+  }
 }

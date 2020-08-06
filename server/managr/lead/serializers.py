@@ -11,9 +11,11 @@ from .models import (
     ActionChoice,
     Action,
     CallNote,
-    Notification
+    Notification,
+    LeadMessage
 )
-from managr.organization.serializers import AccountRefSerializer, ContactSerializer
+from managr.organization.models import Stage
+from managr.organization.serializers import AccountRefSerializer, ContactSerializer, StageSerializer
 from managr.core.models import User
 from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator
@@ -112,6 +114,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
         source="linked_contacts", read_only=True, many=True
     )
     last_action_taken = serializers.SerializerMethodField()
+    status_ref = StageSerializer(source="status", read_only=True)
 
     class Meta:
         model = Lead
@@ -124,6 +127,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "primary_description",
             "secondary_description",
             "status",
+            "status_ref",
             "claimed_by",
             "claimed_by_ref",
             "expected_close_date",
@@ -271,6 +275,23 @@ class CallNoteSerializer(serializers.ModelSerializer):
         }
 
 
+class LeadMessageSerializer(serializers.ModelSerializer):
+    created_by_ref = UserRefSerializer(source="created_by", read_only=True)
+    lead_ref = LeadRefSerializer(source="lead", read_only=True)
+    linked_contacts_ref = ContactSerializer(
+        source="linked_contacts", read_only=True, many=True
+    )
+
+    class Meta:
+        model = LeadMessage
+        fields = (
+            "id",
+            "created_by", "created_by_ref",
+            "lead", "lead_ref", "linked_contacts", "linked_contacts_ref",
+            "message_id", "direction", "status", 'datetime_created', "body",
+        )
+
+
 class LeadActivityLogSerializer(serializers.ModelSerializer):
     action_taken_by_ref = UserRefSerializer(source="action_taken_by")
     lead_ref = LeadRefSerializer(source="lead")
@@ -349,7 +370,10 @@ class LeadSerializer(serializers.ModelSerializer):
     """ verbose seriliazer for leads"""
 
     def validate_status(self, value):
-        if value == lead_constants.LEAD_STATUS_CLOSED:
+        if not value:
+            return value
+        closed = Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED)
+        if value.id == closed.id:
             raise serializers.ValidationError(
                 {"detail": "Cannot Close Lead by Update"})
         return value
@@ -367,6 +391,7 @@ class LeadSerializer(serializers.ModelSerializer):
     )
     files_ref = FileSerializer(source="files", read_only=True, many=True)
     last_action_taken = serializers.SerializerMethodField()
+    status_ref = StageSerializer(source="status", read_only=True)
 
     class Meta:
         model = Lead
@@ -380,6 +405,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "secondary_description",
             "rating",
             "status",
+            "status_ref",
             "status_last_update",
             "account",
             "account_ref",

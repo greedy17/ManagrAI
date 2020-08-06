@@ -6,5 +6,6 @@ routes = {
     "CallNote": consumers.CallNoteActionConsumer,
     "Action": consumers.ActionActionConsumer,
     "LeadEmail": consumers.LeadEmailActionConsumer,
-    "Reminder": consumers.ReminderActionConsumer
+    "Reminder": consumers.ReminderActionConsumer,
+    "LeadMessage": consumers.LeadMessageActionConsumer,
 }

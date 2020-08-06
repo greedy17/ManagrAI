@@ -30,6 +30,12 @@
       v-if="log.model === 'LeadEmail'"
       @item-click="emitToggleCollapse"
     />
+    <MessageLogItem
+      :log="log"
+      :collapsed="!expanded"
+      v-if="log.model === 'LeadMessage'"
+      @item-click="emitToggleCollapse"
+    />
     <LeadLogItem
       :log="log"
       :collapsed="!expanded"
@@ -45,6 +51,7 @@ import ReminderLogItem from './__ReminderLogItem'
 import CallNoteLogItem from './__CallNoteLogItem'
 import ActionLogItem from './__ActionLogItem'
 import EmailLogItem from './__EmailLogItem'
+import MessageLogItem from './__MessageLogItem'
 import LeadLogItem from './__LeadLogItem'
 
 export default {
@@ -56,6 +63,7 @@ export default {
     EmailLogItem,
     LeadLogItem,
     ReminderLogItem,
+    MessageLogItem,
   },
   props: {
     log: {
