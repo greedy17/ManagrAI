@@ -67,7 +67,11 @@
     "fields": {
       "datetime_created": "2020-06-09T18:30:17.568Z",
       "last_edited": "2020-06-09T18:30:17.568Z",
+<<<<<<< Updated upstream
       "access_token": " SZ8oAJiKGzdC3Y1dRFG1KeNEF5QeM8",
+=======
+      "access_token": "5RoflrcYLEn2hV54R19Ud1y9XU4x8H",
+>>>>>>> Stashed changes
       "account_id": "2yyyiu5lq221zmm4dvhmng5gc",
       "email_address": "testing@thinknimble.com",
       "provider": "gmail",
