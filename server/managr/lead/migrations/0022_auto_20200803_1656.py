@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('lead', '0021_auto_20200728_0050'),
+        ('organization', '0003_stage'),
     ]
 
     operations = [

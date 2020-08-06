@@ -24,7 +24,7 @@
         {{ lead.lastActionTaken.actionTimestamp | timeAgo }} - {{ lead.lastActionTaken.activity }}
       </div>
       <button class="route-to-detail">
-        <img src="@/assets/images/keyboard_arrow_right.svg" @click="routeToLeadDetail" />
+        <img src="@/assets/images/keyboard-arrow-right.svg" @click="routeToLeadDetail" />
       </button>
     </div>
 

@@ -61,7 +61,7 @@
         </button>
       </div>
       <button class="route-to-detail" @click="routeToLeadDetail">
-        <img src="@/assets/images/keyboard_arrow_right.svg" />
+        <img src="@/assets/images/keyboard-arrow-right.svg" />
       </button>
     </div>
     <LeadDetails :lead="lead" v-if="showDetails" />

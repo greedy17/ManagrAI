@@ -15,7 +15,7 @@ from .. import constants as lead_constants
 
 class LeadInsightsTestCase(TestCase):
     # The fixture provides a test user and org
-    fixtures = ["dev.json", "fixtures.json"]
+    fixtures = ["dev.json", "fixture.json"]
 
     def setUp(self):
         self.org = Organization.objects.first()

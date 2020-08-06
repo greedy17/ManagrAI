@@ -1,52 +1,43 @@
 <template>
-  <div class="lists-container">
-    <div v-if="!loading" class="tab-content">
-      <!--       <List
-        :isOwner="isOwner"
-       
-        @remove-from-list="$emit('remove-from-list', $event)"
-        v-for="(list, index) in listsCollection.list"
-        :key="list.id"
-        :list="list"
-        :leadFilters="listsCollection.filters"
-        @refresh-collections="$emit('refresh-collections')"
-      /> -->
-
-      <CustomList
-        @delete-list="emitDeleteList(list.id, index)"
-        v-for="(list, index) in listsCollection.list"
-        :collection="leadsFromList.list"
-        :key="index"
-        :title="list.title"
-        @get-leads="onGetLeads($event, list.id)"
-        @refresh-collections="$emit('refresh-collections')"
-        :leadCount="leadsFromList.pagination.totalCount"
-        :isOwner="true"
-      />
-      <LoadMoreButton
-        v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
-        class="load-more-button"
-        :collection="listsCollection"
-      />
-      <CustomList
-        :collection="noListLeadsCollection.list"
-        key="No List"
-        title="No List"
-        @refresh-collections="$emit('refresh-collections')"
-        :leadCount="noListLeadsCollection.pagination.totalCount"
-      />
-      <CustomList
-        :collection="allLeadsCollection.list"
-        key="All Opportunities"
-        title="All Opportunities"
-        @refresh-collections="$emit('refresh-collections')"
-        :leadCount="allLeadsCollection.pagination.totalCount"
-      />
-      <CreateList @list-created="emitListCreated" />
+  <div>
+    <div class="lists-container">
+      <div v-if="!loading" class="tab-content">
+        <CustomList
+          @delete-list="emitDeleteList(list.id, index)"
+          v-for="(list, index) in listsCollection.list"
+          :collection="leadsFromList.list"
+          :key="index"
+          :title="list.title"
+          @get-leads="onGetLeads($event, list.id)"
+          @refresh-collections="$emit('refresh-collections')"
+          :leadCount="leadsFromList.pagination.totalCount"
+          :isOwner="true"
+        />
+        <CustomList
+          :collection="noListLeadsCollection"
+          key="No List"
+          title="No List"
+          @refresh-collections="$emit('refresh-collections')"
+        />
+        <CustomList
+          :collection="allLeadsCollection"
+          key="All Opportunities"
+          title="All Opportunities"
+          @refresh-collections="$emit('refresh-collections')"
+        />
+        <CreateList @list-created="emitListCreated" />
+      </div>
+      <div v-else class="tab-content">
+        <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
+      </div>
     </div>
-    <div v-else class="tab-content">
-      <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
-    </div>
+    <Pagination
+      v-if="!listsCollection.refreshing"
+      style="margin-top: 0.5rem;"
+      :collection="listsCollection"
+      :model="'List'"
+      @start-loading="startPaginationLoading()"
+    />
   </div>
 </template>
 
@@ -54,15 +45,20 @@
 import List from '@/components/leads-index/List'
 import CustomList from '@/components/leads-index/CustomList'
 import CreateList from '@/components/leads-index/CreateList'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+
 import LeadModel from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/components/shared/Pagination'
+
+import { paginationMixin } from '@/services/pagination'
+
 export default {
   name: 'ListsContainer',
+  mixins: [paginationMixin],
   components: {
     List,
     CreateList,
-    LoadMoreButton,
+    Pagination,
     CustomList,
   },
   props: {
@@ -240,9 +236,5 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 </style>

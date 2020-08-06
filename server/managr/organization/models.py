@@ -2,9 +2,12 @@ from django.db import models
 
 from django.db.models import Sum, Avg, Q
 
-from managr.core.models import UserManager, TimeStampModel
+
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db.models import Sum, Avg
 from managr.utils.numbers import format_phone_number
 
+from managr.core.models import UserManager, TimeStampModel
 from . import constants as org_consts
 
 
@@ -105,10 +108,6 @@ class Account(TimeStampModel):
     class Meta:
         ordering = ['-datetime_created']
 
-    @property
-    def lead_count(self):
-        return self.leads.count()
-
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -149,7 +148,7 @@ class Contact(TimeStampModel):
         return f'{self.first_name} {self.last_name}'
 
     def save(self, *args, **kwargs):
-        self.email = self.email.lower()
+        self.email = BaseUserManager.normalize_email(self.email).lower()
         self.phone_number_1 = format_phone_number(
             self.phone_number_1, format="+1%d%d%d%d%d%d%d%d%d%d") if self.phone_number_1 else ''
         self.phone_number_2 = format_phone_number(

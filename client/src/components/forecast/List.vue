@@ -1,6 +1,11 @@
 <template>
   <div class="list">
-    <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
+    <div
+      ref="listHeader"
+      class="list-header"
+      @click="toggleLeads"
+      :class="{ open: showLeads, closed: !showLeads }"
+    >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title"> {{ title }} </span>
       <span class="list-length">
@@ -9,7 +14,31 @@
       </span>
       <span class="list-value">{{ totalValue | currency }}</span>
     </div>
+
     <div class="list-leads" v-if="showLeads">
+      <ComponentLoadingSVG v-if="collection.refreshing" style="margin: 1rem auto;" />
+      <template v-else>
+        <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
+          <LeadRow :key="lead.id" :lead="lead.leadRef">
+            <template v-slot:left> </template>
+            <template v-slot:center>
+              <div class="lead-items">
+                <span class="muted">
+                  Expected Close By: <br />
+                  {{ lead.expectedCloseDate | dateShort }}
+                </span>
+              </div>
+            </template>
+            <template v-slot:right> </template>
+          </LeadRow>
+        </div>
+        <Pagination
+          v-if="!collection.refreshing"
+          style="margin-bottom: 1rem;"
+          :collection="collection"
+          @start-loading="startPaginationLoading($refs.listHeader)"
+        />
+      </template>
       <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
         <LeadRow :key="lead.id" :lead="lead.leadRef">
           <template v-slot:left> </template>
@@ -24,12 +53,6 @@
           <template v-slot:right> </template>
         </LeadRow>
       </div>
-
-      <LoadMoreButton
-        v-if="!collection.refreshing && !!collection.pagination.next"
-        class="load-more-button"
-        :collection="collection"
-      />
     </div>
   </div>
 </template>
@@ -39,9 +62,12 @@ import Forecast from '@/services/forecasts'
 import Lead from '@/components/forecast/Lead'
 import LoadMoreButton from '@/components/shared/LoadMoreButton'
 import LeadRow from '@/components/shared/LeadRow'
+import Pagination from '@/components/shared/Pagination'
+import { paginationMixin } from '@/services/pagination'
 
 export default {
   name: 'List',
+  mixins: [paginationMixin],
   props: {
     collection: {
       type: Object,
@@ -56,6 +82,7 @@ export default {
     Lead,
     LoadMoreButton,
     LeadRow,
+    Pagination,
   },
   data() {
     return {
@@ -152,9 +179,5 @@ export default {
   &__row {
     margin-top: 1rem;
   }
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 </style>
