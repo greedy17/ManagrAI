@@ -5,6 +5,7 @@ from managr.core import views as core_views
 
 from managr.lead import views as lead_views
 from managr.organization import views as organization_views
+from managr.report import views as report_views
 
 
 app_name = 'api'
@@ -82,5 +83,7 @@ router.register('stages',
                 organization_views.StageViewSet, 'stages')
 router.register('lead-messages',
                 lead_views.LeadMessageViewSet, 'lead-messages')
+router.register('story-reports',
+                report_views.StoryReportViewSet, 'story-reports')
 
 urlpatterns += router.urls

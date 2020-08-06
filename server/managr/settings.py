@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "managr.api",
     "managr.lead",
     "managr.organization",
+    "managr.report",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
