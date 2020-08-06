@@ -1,6 +1,11 @@
 <template>
   <div class="list">
-    <div class="list-header" @click="toggleLeads" :class="{ open: showLeads, closed: !showLeads }">
+    <div
+      ref="listHeader"
+      class="list-header"
+      @click="toggleLeads"
+      :class="{ open: showLeads, closed: !showLeads }"
+    >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
       <span class="list-title">{{ title }}</span>
       <span class="list-length">
@@ -9,7 +14,7 @@
       </span>
     </div>
     <div class="list-leads" v-if="showLeads">
-      <ComponentLoadingSVG v-if="collection.refreshing" />
+      <ComponentLoadingSVG v-if="collection.refreshing || pagination.loading" />
       <template v-else>
         <div class="list-leads__row" v-if="collection.list.length">
           <span
@@ -52,10 +57,12 @@
           No Opportunities On List
         </span>
       </template>
-      <LoadMoreButton
-        v-if="!collection.refreshing && !!collection.pagination.next"
-        class="load-more-button"
+      <Pagination
+        v-if="!collection.refreshing"
         :collection="collection"
+        :useCollectionClone="true"
+        @start-loading="startPaginationLoading($refs.listHeader)"
+        @end-loading="pagination.loading = false"
       />
     </div>
   </div>
@@ -63,12 +70,14 @@
 
 <script>
 import Lead from '@/components/leads-index/Lead'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import Pagination from '@/components/shared/Pagination'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
+import { paginationMixin } from '@/services/pagination'
 
 export default {
   name: 'CustomList', // such as NoList and AllLeads
+  mixins: [paginationMixin],
   props: {
     collection: {
       type: Object,
@@ -82,7 +91,7 @@ export default {
   components: {
     Lead,
     Checkbox,
-    LoadMoreButton,
+    Pagination,
     BulkLeadActions,
   },
   data() {
@@ -204,10 +213,6 @@ export default {
       flex: 1;
     }
   }
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 
 .no-items-message {
