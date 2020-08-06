@@ -9,7 +9,12 @@ export default {
     const url = SEND_MESSAGE_URI
     const client = apiClient()
     const data = { body: body, recipients: recipients, lead: leadId }
-    await client.post(url, data)
+    try {
+      await client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Message.SendAPI' })
+      throw e
+    }
   },
   async listAvailablePhoneNumbers(state) {
     let query = { region: state }

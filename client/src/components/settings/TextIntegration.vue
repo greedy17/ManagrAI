@@ -80,7 +80,7 @@
             Save
           </button>
           <button v-if="user.textConnected" class="primary-button" @click="onShowDeleteModal">
-            Disconnect
+            x Disconnect
           </button>
           <Modal v-if="showDeleteModal" dimmed :width="40" @close-modal="onHideDeleteModal">
             <template v-if="!loading">
@@ -91,11 +91,15 @@
               </div>
               <div class="body">
                 <p>
-                  Change Copy: Are you sure you want to disconnect this number? Disconnecting your
-                  number will result in a loss of data related to this number. This change is
-                  permanent and cannot be undone. Click "Agree" to disconnect the number, or
-                  "Cancel" to return to the menu!
+                  Are you sure you want to disconnect this number?
+                  <br />
+                  Disconnecting your number will result in a loss of data related to this number.
+                  This change is permanent and cannot be undone.
+                  <br />
                 </p>
+                <h5>
+                  Click "Agree" to disconnect the number, or "Cancel" to return to the menu!
+                </h5>
               </div>
               <div class="footer">
                 <button v-if="user.textConnected" class="primary-button" @click="onDisconnectAgree">
@@ -223,5 +227,9 @@ export default {
 }
 .footer {
   display: flex;
+  padding: 0.5rem;
+}
+.primary-button {
+  @include button-danger;
 }
 </style>

@@ -314,15 +314,17 @@ class UserViewSet(
         for recipient in recipients:
             # not sending to contacts from query set because one number may be linked to multiple contacts
             # will add try catch TODO:-PB 07/28
-            msg = send_message(body, sender, recipient,
-                               has_auth_account.status_callback)
-            message_id = msg.sid
+            try:
+                msg = send_message(body, sender, recipient,
+                                   has_auth_account.status_callback)
+                message_id = msg.sid
 
-            lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
-                                                      message_id=message_id,
-                                                      direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
-            lead_message.linked_contacts.set(contacts_object)
-
+                lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
+                                                          message_id=message_id,
+                                                          direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
+                lead_message.linked_contacts.set(contacts_object)
+            except APIException as e:
+                return Response({'detail': {'invalid_phone': recipient}}, status=status.HTTP_400_BAD_REQUEST)
         return Response()
 
     @action(

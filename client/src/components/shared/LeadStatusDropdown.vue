@@ -8,7 +8,7 @@
     >
       <option :value="null">---</option>
       <option v-for="option in getStatuses" :key="option.id" :value="option.id">
-        {{ option.title }}
+        {{ option.title.toLowerCase() }}
       </option>
     </select>
     <Modal
@@ -121,6 +121,7 @@ export default {
     font-size: 10px;
     font-weight: bold;
     border: unset;
+    text-transform: capitalize;
 
     &:focus {
       outline: none;

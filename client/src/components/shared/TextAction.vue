@@ -121,8 +121,19 @@ export default {
 
         return
       }
-
-      await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
+      try {
+        await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
+      } catch (e) {
+        let { response } = { ...e }
+        console.log(response)
+        if (response.status == 400) {
+          this.$Alert.alert({
+            type: 'error',
+            message: `<h4> Cannot Send Message to the following contact(s) <strong>${response.data.detail.invalid_phone}<strong> because of invalid phone number please remove contacts</h4>`,
+            timeout: 5000,
+          })
+        }
+      }
 
       this.resetText()
 
