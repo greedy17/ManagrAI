@@ -2,6 +2,20 @@
   <div class="page">
     <div class="page__left-nav-bar">
       <SideNavToolbar>
+        <template v-slot:trigger>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)">
+                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Details
+            </template>
+          </Tooltip>
+        </template>
         <template v-slot:toolbar>
           <ToolBar
             class="toolbar"
@@ -44,10 +58,12 @@ import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
+import Tooltip from '@/components/shared/Tooltip'
 
 import Lead from '@/services/leads'
 import List from '@/services/lists'
 import CollectionManager from '@/services/collectionManager'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'LeadsIndex',
@@ -56,6 +72,7 @@ export default {
     ToggleCheckBox,
     ListsContainer,
     SideNavToolbar,
+    Tooltip,
   },
   data() {
     return {
@@ -86,6 +103,7 @@ export default {
     this.refreshCollections()
   },
   computed: {
+    ...mapGetters(['showToolbarNav']),
     isCurrentRoute() {
       return this.$route.name == 'LeadsIndex'
     },

@@ -494,7 +494,6 @@ export default {
   flex-flow: column;
   justify-content: center;
   height: 3rem;
-  padding-left: 7%;
   font-weight: bold;
 }
 

@@ -55,8 +55,6 @@ export default {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-  width: 78%;
-  min-width: 20rem;
 
   height: auto;
   display: flex;

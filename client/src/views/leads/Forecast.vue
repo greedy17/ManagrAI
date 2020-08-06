@@ -1,6 +1,35 @@
 <template>
-  <div class="leads-index">
-    <div class="toolbar-pane">
+  <div class="page">
+    <div class="page__left-nav-bar">
+      <SideNavToolbar>
+        <template v-slot:trigger>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)">
+                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Details
+            </template>
+          </Tooltip>
+        </template>
+        <template v-slot:toolbar>
+          <ToolBar
+            :repFilterState="repFilterState"
+            :triggerRefreshKPIs="triggerRefreshKPIs"
+            @toggle-active-rep="toggleActiveRep"
+            @select-all-reps="selectAllReps"
+            @deselect-all-reps="deselectAllReps"
+            @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
+          />
+        </template>
+      </SideNavToolbar>
+    </div>
+
+    <div class="page__main-content-area">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -11,17 +40,7 @@
         />
         <span class="right" :class="{ bold: !isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar
-        class="toolbar"
-        :repFilterState="repFilterState"
-        :triggerRefreshKPIs="triggerRefreshKPIs"
-        @toggle-active-rep="toggleActiveRep"
-        @select-all-reps="selectAllReps"
-        @deselect-all-reps="deselectAllReps"
-        @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
-      />
-    </div>
-    <div class="lists-container-pane">
+
       <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
       <div class="lists-container-message" v-else-if="!activeReps.length">
         No Representatives Selected!
@@ -36,13 +55,15 @@
 
 <script>
 import ToolBar from '@/components/forecast/ToolBar'
+import Tooltip from '@/components/shared/Tooltip'
 import ListsContainer from '@/components/forecast/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
-
+import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
 import Pagination from '@/services/pagination'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
+import { mapGetters } from 'vuex'
 
 function allRepsReducer(obj, id) {
   obj[id] = true
@@ -55,6 +76,8 @@ export default {
     ToolBar,
     ToggleCheckBox,
     ListsContainer,
+    SideNavToolbar,
+    Tooltip,
   },
   data() {
     return {
@@ -194,6 +217,7 @@ export default {
     },
   },
   computed: {
+    ...mapGetters(['showToolbarNav']),
     isCurrentRoute() {
       return this.$route.name == 'Forecast'
     },
@@ -218,7 +242,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
-
+@import '@/styles/layout';
 .leads-index {
   display: flex;
   flex-flow: row;
@@ -244,7 +268,6 @@ export default {
   flex-flow: row;
   align-items: center;
   justify-content: center;
-  width: 78%;
   margin: 0 0 1rem auto;
 
   .left,
@@ -265,7 +288,6 @@ export default {
     font-weight: bold;
   }
 }
-
 .lists-container-pane {
   width: 83%;
   padding: 0 2% 1% 1%;

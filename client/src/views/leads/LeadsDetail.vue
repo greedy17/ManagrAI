@@ -4,18 +4,38 @@
   </div>
   <div v-else class="page">
     <div class="page__left-nav-bar">
-      <!--       <ToolBar
-        :lead="lead"
-        :lists="lists"
-        :leadContacts="contacts"
-        @updated-rating="updateRating"
-        @updated-amount="updateAmount"
-        @updated-expected-close-date="updateExpectedCloseDate"
-        @updated-title="updateTitle"
-      /> -->
+      <!--        -->
       <SideNavToolbar>
+        <template v-slot:trigger>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span @click="toggleSideToolbar('details')">
+                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Details
+            </template>
+          </Tooltip>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span @click="toggleSideToolbar('insights')">
+                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+                  <use xlink:href="@/assets/images/cloud.svg#cloud" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Insights
+            </template>
+          </Tooltip>
+        </template>
         <template v-slot:toolbar>
+          <LeadInsights v-if="showToolbarNav && selectedToolbarView == 'insights'" :lead="lead" />
           <ToolBar
+            v-if="showToolbarNav && selectedToolbarView == 'details'"
             :lead="lead"
             :lists="lists"
             :leadContacts="contacts"
@@ -148,7 +168,7 @@
     </div>
     <!-- 
     <div class="page__right-panel">
-      <LeadInsights :lead="lead" />
+      
     </div> -->
   </div>
 </template>
@@ -161,7 +181,7 @@ import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import DropDownMenu from '@/components/forms/DropDownMenu'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
-
+import Tooltip from '@/components/shared/Tooltip'
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
 import List from '@/services/lists'
@@ -172,7 +192,7 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 import LeadHistory from './_LeadHistory'
 import LeadEmails from './_LeadEmails'
 import LeadMessages from './_LeadMessages'
-
+import { mapGetters } from 'vuex'
 const HISTORY = 'HISTORY'
 const EMAILS = 'EMAILS'
 const MESSAGES = 'MESSAGES'
@@ -193,6 +213,7 @@ export default {
     DropDownMenu,
     LeadMessages,
     SideNavToolbar,
+    Tooltip,
   },
   data() {
     return {
@@ -223,6 +244,7 @@ export default {
       expandedHistoryItems: [],
       historySearchTerm: '',
       activityLogLoading: false,
+      selectedToolbarView: 'details',
       history: CollectionManager.create({
         ModelClass: LeadActivityLog,
         filters: {
@@ -232,6 +254,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['showToolbarNav']),
     isTextConnected() {
       return !!this.$store.state.user.textConnected
     },
@@ -245,6 +268,13 @@ export default {
     })
   },
   methods: {
+    toggleSideToolbar(option) {
+      this.selectedToolbarView = option
+
+      if (!this.showToolbarNav) {
+        this.$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', true)
+      }
+    },
     moreActionsAction(selected) {
       // TODO: PB Change this to be static with an enum type list (django style) 07/20
 

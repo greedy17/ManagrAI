@@ -1,7 +1,8 @@
 <template>
   <div class="sidenav-container">
     <div class="sidenav" ref="sidenav">
-      <span @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)">T</span>
+      <slot name="trigger"></slot>
+
       <div class="content">
         <slot name="toolbar"></slot>
       </div>
@@ -11,10 +12,11 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import Tooltip from '@/components/shared/Tooltip'
 
 export default {
   name: 'SideNavToolbar',
-  components: {},
+  components: { Tooltip },
   props: {},
   data() {
     return {
@@ -81,7 +83,6 @@ export default {
       immediate: true,
       handler(val) {
         if (val) {
-          console.log(val)
           window.addEventListener('click', this.closeNavBarEvent)
         }
         if (this.$refs.sidenav) {
@@ -143,6 +144,7 @@ export default {
   }
   100% {
     width: 15rem;
+    background-color: lighten($soft-gray, 5%);
   }
 }
 @keyframes closemenu {

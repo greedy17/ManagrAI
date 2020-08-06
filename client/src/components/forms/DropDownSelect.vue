@@ -291,7 +291,7 @@ Display dropdown relative to the component it is triggered by
 }
 
 .selected {
-  background-color: lightgreen;
+  background-color: #e5f2ea;
   color: darkgreen;
 }
 

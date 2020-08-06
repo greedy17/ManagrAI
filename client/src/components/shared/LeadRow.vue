@@ -130,17 +130,18 @@ export default {
   }
   display: flex;
   align-items: center;
-
   height: 50px;
   font-size: 12px;
   > * {
-    margin: 0.5rem;
     align-items: center;
   }
   &__center {
     display: flex;
-    width: 33.3%;
     overflow-y: scroll;
+    flex: 1 0 auto;
+    > * {
+      margin: 0rem 0.2rem;
+    }
     .actions {
       display: flex;
       justify-content: center;
@@ -148,37 +149,36 @@ export default {
     .description {
       display: flex;
       flex-direction: column;
-
+      width: 5rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .amount {
+      width: 4rem;
     }
   }
   &__left {
     display: flex;
-    width: 33.3%;
-    overflow-y: scroll;
-
     justify-self: flex-start;
     justify-content: space-between;
+    margin: 0 0.2rem;
 
     .title {
       font-size: 14px;
-
+      width: 10rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .rating {
+      width: 3rem;
     }
   }
   &__right {
     display: flex;
     justify-self: flex-end;
-    width: 33.3%;
-    overflow-y: scroll;
+    margin-right: 0.2rem;
   }
 }
 </style>

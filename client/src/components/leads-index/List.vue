@@ -33,12 +33,14 @@
             class="list-leads__row__lead"
             :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
           >
-            <Checkbox
-              @checkbox-clicked="toggleAllLeads"
-              :checked="leadCount == checkedLeads.length"
-            />
+            <div class="lead-select">
+              <Checkbox
+                @checkbox-clicked="toggleAllLeads"
+                :checked="leadCount == checkedLeads.length"
+              />
+            </div>
 
-            <span :style="{ marginLeft: '0.75rem' }">Select All</span>
+            <span>Select All</span>
             <button class="bulk-action-button" v-if="checkedLeads.length > 0" @click="onBulkAction">
               Take Action
             </button>
@@ -58,10 +60,12 @@
           <span class="list-leads__row__lead">
             <LeadRow :key="lead.id" :lead="lead">
               <template v-slot:left>
-                <Checkbox
-                  :checked="!!~checkedLeads.findIndex(l => l == lead.id)"
-                  @checkbox-clicked="toggleCheckedLead(lead.id)"
-                />
+                <div class="lead-select">
+                  <Checkbox
+                    :checked="!!~checkedLeads.findIndex(l => l == lead.id)"
+                    @checkbox-clicked="toggleCheckedLead(lead.id)"
+                  />
+                </div>
               </template>
               <template v-slot:center>
                 <div class="lead-items">
@@ -264,5 +268,8 @@ export default {
 .bulk-action-button {
   @include primary-button;
   margin-left: 1rem;
+}
+.lead-select {
+  margin: 0.5rem;
 }
 </style>
