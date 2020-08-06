@@ -59,7 +59,6 @@ class StoryReportViewSet(
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)
 
 
-# postman POST.create endpoint
 # build generate_report_data(report) => data & datetime_generated
 # explore async & triggering email
 # postman GET.detail endpoint

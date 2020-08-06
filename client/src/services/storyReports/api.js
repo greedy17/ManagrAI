@@ -2,7 +2,7 @@ import { apiClient, apiErrorHandler } from '@/services/api'
 
 // API Endpoints
 const STORY_REPORTS_ENDPOINT = '/story-reports/'
-
+const GENERATE_STORY_REPORT_ENDPOINT = id => STORY_REPORTS_ENDPOINT + id + '/'
 export default class StoryReportAPI {
   /**
    * Instantiate a new `StoryReportAPI`
@@ -31,6 +31,14 @@ export default class StoryReportAPI {
       .post(STORY_REPORTS_ENDPOINT, data)
       .catch(apiErrorHandler({ apiName: 'StoryReportAPI.create' }))
       .then(response => this.cls.fromAPI(response.data))
+    return promise
+  }
+
+  retrieve(id) {
+    const promise = apiClient()
+      .get(GENERATE_STORY_REPORT_ENDPOINT(id))
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'StoryReportAPI.retrieve' }))
     return promise
   }
 }
