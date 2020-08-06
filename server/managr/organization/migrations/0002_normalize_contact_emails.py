@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql=[("UPDATE organization_contact SET email = LOWER(email);")]
+            sql=[("UPDATE organization_contact SET email = REPLACE(LOWER(email),' ','');"),
+                 ]
         )
     ]
