@@ -14,7 +14,15 @@ from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
 
-from .models import User,  EmailAuthAccount, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount, MessageAuthAccount
+from .models import (
+    User,
+    EmailAuthAccount,
+    STATE_ACTIVE,
+    STATE_INACTIVE,
+    STATE_INVITED,
+    EmailAuthAccount,
+    MessageAuthAccount,
+)
 from .models import EmailTemplate
 
 
@@ -55,7 +63,8 @@ class UserSerializer(serializers.ModelSerializer):
         source="email_auth_account", read_only=True
     )
     message_auth_account_ref = MessageAuthAccountSerializer(
-        source="message_auth_account", read_only=True)
+        source="message_auth_account", read_only=True
+    )
 
     class Meta:
         model = User
@@ -93,11 +102,7 @@ class UserSerializer(serializers.ModelSerializer):
         "full_name",
         "email_auth_account",
         "is_serviceaccount",
-        << << << < HEAD
-        "is_staff"
-        == == == =
-        "message_auth_account",
-        >>>>>> > develop
+        "is_staff" "message_auth_account",
     )
 
 
@@ -178,8 +183,7 @@ class EmailSerializer(serializers.Serializer):
         child=ContactDictField(), required=False, allow_null=True
     )
 
-    reply_to_message_id = serializers.CharField(
-        allow_blank=True, required=False)
+    reply_to_message_id = serializers.CharField(allow_blank=True, required=False)
     file_ids = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=False
     )
