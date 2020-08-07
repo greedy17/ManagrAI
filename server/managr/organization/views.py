@@ -1,14 +1,16 @@
+import copy
+
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.db import transaction
 from django.db import IntegrityError
-from rest_framework.authtoken.models import Token
+
 from django.core.exceptions import ValidationError as V
 from django.core import serializers
 from django.template.exceptions import TemplateDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-import copy
+
 from rest_framework import (
     authentication,
     filters,
@@ -19,10 +21,12 @@ from rest_framework import (
     views,
     viewsets,
 )
+
 from rest_framework import viewsets, mixins, generics, status, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 from managr.lead.models import Lead
 
@@ -37,8 +41,9 @@ from managr.core.permissions import (
     IsExternalIntegrationAccount,
 )
 
+
 from .models import Organization, Account, Contact, Stage
-from .models import Organization, Account, Contact
+
 from .serializers import (
     OrganizationSerializer,
     OrganizationVerboseSerializer,

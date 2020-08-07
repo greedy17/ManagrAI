@@ -842,11 +842,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         # therefore selecting the first email that is of type service_account
 
         try:
-            ea = EmailAuthAccount.objects.filter(
-                user__is_serviceaccount=True,
-                user__service_for=core_consts.SERVICE_TYPE_EMAIL,
-            ).first()
-
+            ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
         except EmailAuthAccount.DoesNotExist:
             # currently passing if there is an error, when we are ready we will require this
             pass
