@@ -31,6 +31,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
+from managr.utils.numbers import format_phone_number
 
 from managr.lead import constants as lead_consts
 from managr.lead.models import LeadMessage, Notification, Lead
@@ -38,7 +39,13 @@ from managr.lead.background import emit_event as emit_log_event
 
 from managr.organization.models import Organization, Contact
 
-from managr.core.twilio.messages import create_new_account, list_available_numbers, send_message
+from managr.core.twilio.messages import (
+    create_new_account,
+    list_available_numbers,
+    send_message,
+    list_messages,
+    disconnect_twilio_number,
+)
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
 from managr.core.background import emit_event
@@ -147,8 +154,7 @@ class UserViewSet(
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
         request_user = request.user
-        serializer = self.serializer_class(
-            user, data=request.data, partial=True)
+        serializer = self.serializer_class(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         # if request.data does not include quota/commit/upside,
@@ -170,7 +176,11 @@ class UserViewSet(
         return Response(response_data)
 
     def _is_kpi_update(self, request):
-        if request.data.get('quota') or request.data.get('commit') or request.data.get('upside'):
+        if (
+            request.data.get("quota")
+            or request.data.get("commit")
+            or request.data.get("upside")
+        ):
             return True
         return False
 
@@ -264,8 +274,7 @@ class UserViewSet(
         """
         Sends an email from the requesting user's email address
         """
-        serializer = EmailSerializer(
-            data=request.data, context={"request": request})
+        serializer = EmailSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.send()
 
@@ -280,23 +289,29 @@ class UserViewSet(
     def send_text_message(self, request, *args, **kwargs):
         user = request.user
         # check if the user has activated their twilio account
-        has_auth_account = user.message_auth_account if user.message_auth_account else None
+        has_auth_account = (
+            user.message_auth_account if user.message_auth_account else None
+        )
         if not has_auth_account:
-            return Response(data="{'non_field_errors': User has not set up twilio}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data="{'non_field_errors': User has not set up twilio}",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # get the recipient sent as an array (name, phone ) since we have alt phones will only send to phone_number_1
-        recipient_contacts = request.data.get('recipients', [])
-        recipient_lead = request.data.get('lead')
+        recipient_contacts = request.data.get("recipients", [])
+        recipient_lead = request.data.get("lead")
         lead = Lead.objects.filter(id=recipient_lead).first()
         if lead is None:
             raise ValidationError(
-                data="{'lead':'Lead Not Found'}", status=status.HTTP_400_BAD_REQUEST)
+                data="{'lead':'Lead Not Found'}", status=status.HTTP_400_BAD_REQUEST
+            )
         recipients = []
         query = Q()
 
         # get phone numbers
         for recipient in recipient_contacts:
-            phone = recipient.get('phone_number_1', None)
+            phone = recipient.get("phone_number_1", None)
             if phone:
                 recipients.append(phone)
                 query |= Q(phone_number_1=phone)
@@ -305,20 +320,31 @@ class UserViewSet(
         contacts_object = contacts_queryset.filter(query)
         sender = has_auth_account.phone_number
 
-        body = request.data.get('body', None)
+        body = request.data.get("body", None)
         # twilio does not support sending to multiple at once
         for recipient in recipients:
             # not sending to contacts from query set because one number may be linked to multiple contacts
             # will add try catch TODO:-PB 07/28
-            msg = send_message(body, sender, recipient,
-                               has_auth_account.status_callback)
-            message_id = msg.sid
+            try:
+                msg = send_message(
+                    body, sender, recipient, has_auth_account.status_callback
+                )
+                message_id = msg.sid
 
-            lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
-                                                      message_id=message_id,
-                                                      direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
-            lead_message.linked_contacts.set(contacts_object)
-
+                lead_message = LeadMessage.objects.create(
+                    created_by=user,
+                    lead=lead,
+                    message_id=message_id,
+                    direction=lead_consts.SENT,
+                    body=body,
+                    status=lead_consts.MESSAGE_PENDING,
+                )
+                lead_message.linked_contacts.set(contacts_object)
+            except APIException as e:
+                return Response(
+                    {"detail": {"invalid_phone": recipient}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return Response()
 
     @action(
@@ -329,8 +355,7 @@ class UserViewSet(
     )
     def preview_email(self, request, *args, **kwargs):
         """Render the email based on provided context and return the result."""
-        serializer = EmailSerializer(
-            data=request.data, context={"request": request})
+        serializer = EmailSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         preview_data = serializer.preview()
         return Response(preview_data, status=status.HTTP_200_OK)
@@ -348,8 +373,7 @@ class UserViewSet(
         """
         user = request.user
         file_object = request.FILES["file"]
-        response = return_file_id_from_nylas(
-            user=user, file_object=file_object)
+        response = return_file_id_from_nylas(user=user, file_object=file_object)
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -362,21 +386,49 @@ class UserViewSet(
     def create_twilio_account(self, request, *args, **kwargs):
         user = request.user
         # check to see if the user already has a twilio account
-        message_auth_account = MessageAuthAccount.objects.filter(
-            user=user).exists()
+        message_auth_account = MessageAuthAccount.objects.filter(user=user).first()
         if message_auth_account:
-            return Response(data={'non_field_errors': 'User already has a twilio account'})
+            return Response(
+                data={"non_field_errors": "User already has a twilio account"}
+            )
         # if not then create the new auth account with the phone number
         data = request.data
-        phone_number = data.get('phone_number', None)
+        phone_number = data.get("phone_number", None)
         if not phone_number:
             raise ValidationError(detail="phone_number required")
 
         account = create_new_account(phone_number)
-        account['user'] = user.id
+        account["user"] = user.id
         serializer = MessageAuthAccountSerializer(data=account)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-twilio-account",
+    )
+    def remove_twilio_account(self, request, *args, **kwargs):
+        user = request.user
+        # check to see if the user already has a twilio account
+        message_auth_account = MessageAuthAccount.objects.filter(user=user)
+
+        if not message_auth_account.exists():
+            return Response(
+                data={
+                    "non_field_errors": "User does not have an active messaging account"
+                }
+            )
+        # if not then create the new auth account with the phone number
+        phone_id = message_auth_account.first().sid
+        try:
+            disconnect_twilio_number(phone_id)
+        except APIException as e:
+            return Response(status.HTTP_400_BAD_REQUEST)
+
+        message_auth_account.delete()
         return Response()
 
 
@@ -403,7 +455,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated, ]
+    [permissions.IsAuthenticated,]
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
@@ -437,7 +489,7 @@ class NylasMessageWebhook(APIView):
 
     def get(self, request):
         """ Respond to Nylas verification webhook """
-        challenge = request.query_params.get('challenge', None)
+        challenge = request.query_params.get("challenge", None)
         if challenge:
             return HttpResponse(content=challenge)
 
@@ -447,19 +499,31 @@ class NylasMessageWebhook(APIView):
     def post(self, request):
 
         data = request.data
-        webhook_object = data['deltas'][0]['object']
-        webhook_type = data['deltas'][0]['type']
-        if webhook_type == 'message.created' and webhook_object == 'message':
-            data_object = data['deltas'][0]['object_data']
-            emit_event(data_object['account_id'], data_object['attributes']
-                       ['thread_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED)
-        elif webhook_type == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED and webhook_object == core_consts.NYLAS_WEBHOOK_OBJECT_METADATA:
-            data_object = data['deltas'][0]['object_data']
+        webhook_object = data["deltas"][0]["object"]
+        webhook_type = data["deltas"][0]["type"]
+        if webhook_type == "message.created" and webhook_object == "message":
+            data_object = data["deltas"][0]["object_data"]
+            emit_event(
+                data_object["account_id"],
+                data_object["attributes"]["thread_id"],
+                data["deltas"][0]["date"],
+                core_consts.NYLAS_WEBHOOK_TYPE_MSG_CREATED,
+            )
+        elif (
+            webhook_type == core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED
+            and webhook_object == core_consts.NYLAS_WEBHOOK_OBJECT_METADATA
+        ):
+            data_object = data["deltas"][0]["object_data"]
 
             # this message has already been notified we will add a kwargs to check if a notif was sent
 
-            emit_event(data_object['account_id'], data_object['metadata']
-                       ['message_id'], data['deltas'][0]['date'], core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED, **{"count": data_object['metadata']['count']})
+            emit_event(
+                data_object["account_id"],
+                data_object["metadata"]["message_id"],
+                data["deltas"][0]["date"],
+                core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED,
+                **{"count": data_object["metadata"]["count"]}
+            )
 
         return Response()
 
@@ -469,7 +533,7 @@ class NylasAccountWebhook(APIView):
 
     def get(self, request):
         """ Respond to Nylas verification webhook """
-        challenge = request.query_params.get('challenge', None)
+        challenge = request.query_params.get("challenge", None)
         if challenge:
             return HttpResponse(content=challenge)
 
@@ -495,22 +559,21 @@ class TwilioMessageWebhook(APIView):
         """
         # receive message
 
-    # get key items
-        recipient = request.data.get('To', None)
-        sender = request.data.get('From', None)
-        body = request.data.get('Body', None)
-        message_id = request.data.get('MessageSid', None)
+        # get key items
+        recipient = request.data.get("To", None)
+        sender = request.data.get("From", None)
+        body = request.data.get("Body", None)
+        message_id = request.data.get("MessageSid", None)
 
         # find the user it is associated with
-        u = User.objects.filter(
-            message_auth_account__phone_number=recipient).first()
+        u = User.objects.filter(message_auth_account__phone_number=recipient).first()
         # check if it is associated with a contact
 
         contacts_object = Contact.objects.filter(
-            Q(phone_number_1=sender) | Q(phone_number_2=sender))
+            Q(phone_number_1=sender) | Q(phone_number_2=sender)
+        )
 
-        leads = u.claimed_leads.filter(
-            linked_contacts__in=contacts_object).distinct()
+        leads = u.claimed_leads.filter(linked_contacts__in=contacts_object).distinct()
         # !! NOT SURE WHAT TO DO WITH MESSAGES NOT FROM A CONTACT
         # MAYBE SEND THE MESSAGE TO THE USERS
         # REAL PHONE NUMBER
@@ -518,43 +581,96 @@ class TwilioMessageWebhook(APIView):
         # create a LeadMessage object
         if leads.count() > 0:
             for lead in leads:
-                lead_message = LeadMessage.objects.create(created_by=u, lead=lead,
-                                                          message_id=message_id,
-                                                          direction=lead_consts.RECEIVED, body=body, status=lead_consts.MESSAGE_DELIVERED)
+                lead_message = LeadMessage.objects.create(
+                    created_by=u,
+                    lead=lead,
+                    message_id=message_id,
+                    direction=lead_consts.RECEIVED,
+                    body=body,
+                    status=lead_consts.MESSAGE_DELIVERED,
+                )
 
                 lead_message.linked_contacts.set(contacts_object)
                 lead_message.save()
 
-        #
-        # emit and event with LeadMessage.RECEIVED to create activity log
+                #
+                # emit and event with LeadMessage.RECEIVED to create activity log
                 emit_log_event(lead_consts.MESSAGE_RECEIVED, u, lead_message)
-        # create the notification with resource id being the leadmessage
-        # no need to emit an event for this as the notification has no async actions
-            contacts = [dict(first_name=contact.first_name, last_name=contact.last_name, email=contact.email)
-                        for contact in contacts_object]
-            Notification.objects.create(notify_at=timezone.now(),
-                                        title="Message Received", notification_type="MESSAGE", resource_id=str(lead_message.id), user=u,
-                                        meta={'content': body, 'linked_contacts': contacts, "leads": [
-                                            {'id': str(l.id), 'title': l.title} for l in leads]}
-                                        )
+            # create the notification with resource id being the leadmessage
+            # no need to emit an event for this as the notification has no async actions
+            contacts = [
+                dict(
+                    first_name=contact.first_name,
+                    last_name=contact.last_name,
+                    email=contact.email,
+                )
+                for contact in contacts_object
+            ]
+            Notification.objects.create(
+                notify_at=timezone.now(),
+                title="Message Received",
+                notification_type="MESSAGE",
+                resource_id=str(lead_message.id),
+                user=u,
+                meta={
+                    "content": body,
+                    "linked_contacts": contacts,
+                    "leads": [{"id": str(l.id), "title": l.title} for l in leads],
+                },
+            )
         return Response()
 
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated, ])
+@permission_classes(
+    [permissions.IsAuthenticated,]
+)
 def list_available_twilio_numbers(request):
-    region = request.query_params.get('region', None)
+    region = request.query_params.get("region", None)
     numbers = list_available_numbers(region=region)
     return Response(data=numbers)
 
 
+@api_view(["GET"])
+@permission_classes(
+    [permissions.IsAuthenticated,]
+)
+def list_twilio_messages(request):
+
+    # get to
+    sender = request.query_params.get("sender", None)
+    recipient = request.query_params.get("recipient", None)
+    if not sender or not recipient:
+        raise ValidationError()
+
+    formatted_sender = format_phone_number(sender, format="+1%d%d%d%d%d%d%d%d%d%d")
+    formatted_recipient = format_phone_number(
+        recipient, format="+1%d%d%d%d%d%d%d%d%d%d"
+    )
+    user = request.user
+    if user.message_auth_account:
+        message_number = user.message_auth_account.phone_number
+        if message_number == formatted_sender or message_number == formatted_recipient:
+            return Response(data=list_messages(formatted_sender, formatted_recipient))
+    # get from
+    # make sure one of them is a message auth account
+    return Response(
+        data={
+            "non_field_errors": "User does not have an auth account associated with the phone numebrs provided"
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny, ])
+@permission_classes(
+    [permissions.AllowAny,]
+)
 def message_status(request):
     # get the message sid and status
 
-    message_status = request.data.get('MessageStatus', None)
-    message_id = request.data.get('MessageSid', None)
+    message_status = request.data.get("MessageStatus", None)
+    message_id = request.data.get("MessageSid", None)
 
     # find the message in the LeadMessage object
     message_obj = LeadMessage.objects.filter(message_id=message_id).first()
@@ -571,14 +687,13 @@ def message_status(request):
 
     # emit the event to create the log item only if its status is delivered
     if message_obj and message_status == lead_consts.TWILIO_MESSAGE_DELIVERED:
-        emit_log_event(lead_consts.MESSAGE_SENT,
-                       message_obj.created_by, message_obj)
+        emit_log_event(lead_consts.MESSAGE_SENT, message_obj.created_by, message_obj)
     return Response()
 
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated, ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     """Nylas OAuth callback.
@@ -614,8 +729,7 @@ def email_auth_token(request):
     code = request.data.get("code", None)
 
     if not magic_token or not code:
-        raise ValidationError(
-            {"detail": "Code or magic_token parameter missing"})
+        raise ValidationError({"detail": "Code or magic_token parameter missing"})
 
     if magic_token == str(u.magic_token) and not u.magic_token_expired:
         # check the user making the request is the same as the one
@@ -653,8 +767,7 @@ def email_auth_token(request):
                     )
 
         else:
-            raise ValidationError(
-                {"detail": {"code": "code is a required field"}})
+            raise ValidationError({"detail": {"code": "code is a required field"}})
     else:
         return Response(
             data={
@@ -730,7 +843,10 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         try:
             ea = EmailAuthAccount.objects.filter(
-                user__is_serviceaccount=True, user__service_for=core_consts.SERVICE_TYPE_EMAIL).first()
+                user__is_serviceaccount=True,
+                user__service_for=core_consts.SERVICE_TYPE_EMAIL,
+            ).first()
+
         except EmailAuthAccount.DoesNotExist:
             # currently passing if there is an error, when we are ready we will require this
             pass
@@ -753,8 +869,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             token = ea.access_token
             sender = {"email": ea.email_address, "name": "Managr"}
             recipient = [
-                {"email": response_data["email"],
-                    "name": response_data["first_name"]}
+                {"email": response_data["email"], "name": response_data["first_name"]}
             ]
             message = {
                 "subject": "Invitation To Join",

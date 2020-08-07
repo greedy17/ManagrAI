@@ -1,6 +1,6 @@
 <template>
   <div class="box__content">
-    <template v-if="!isTextConnected">
+    <template v-if="!isEmailConnected">
       <div>
         <span class="muted">
           <span class="muted">
@@ -20,8 +20,8 @@ export default {
   name: 'EmailAction',
   components: { EmailCompose },
   computed: {
-    isTextConnected() {
-      return !!this.$store.state.user.textConnected
+    isEmailConnected() {
+      return !!this.$store.state.user.emailConnected
     },
   },
   props: {

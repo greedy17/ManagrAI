@@ -10,6 +10,7 @@ const CHECK_STATUS_ENDPOINT = '/account-status/'
 const USERS_ENDPOINT = '/users/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
+const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 
 export default class UserAPI {
   get client() {
@@ -132,6 +133,14 @@ export default class UserAPI {
     }
     try {
       await this.client.post(url, data)
+    } catch {
+      apiErrorHandler({ apiName: 'UserAPI.Messaging' })
+    }
+  }
+  async deleteMessagingAccount() {
+    const url = DELETE_MESSAGE_ACCOUNT_URI
+    try {
+      await this.client.post(url)
     } catch {
       apiErrorHandler({ apiName: 'UserAPI.Messaging' })
     }

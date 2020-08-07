@@ -274,7 +274,7 @@ class MessageAuthAccount(TimeStampModel):
     )
 
     def __str__(self):
-        return f"{self.user.__str__}, {self.friendly_name}"
+        return f"{self.user.full_name}, {self.friendly_name}"
 
     class Meta:
         ordering = ["datetime_created"]

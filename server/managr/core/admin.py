@@ -3,7 +3,7 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
-from .models import User, EmailAuthAccount, EmailTemplate
+from .models import User, EmailAuthAccount, EmailTemplate, MessageAuthAccount
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -11,8 +11,16 @@ class EmailAuthAccForm(forms.ModelForm):
 
     class Meta:
         model = EmailAuthAccount
-        fields = ("access_token", "account_id", "email_address",
-                  "provider", "sync_state", "name", "user", "linked_at",)
+        fields = (
+            "access_token",
+            "account_id",
+            "email_address",
+            "provider",
+            "sync_state",
+            "name",
+            "user",
+            "linked_at",
+        )
 
 
 class CustomUserAdmin(UserAdmin):
@@ -44,8 +52,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": (
-            "email", "password1", "password2",), }),
+        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),}),
     )
 
     list_display = ("email", "first_name", "last_name")
@@ -72,3 +79,4 @@ class CustomEmailAuthAccount(admin.ModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
 admin.site.register(EmailTemplate)
+admin.site.register(MessageAuthAccount)

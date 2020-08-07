@@ -13,7 +13,7 @@
           objectSelectedItems ? objectSelectedItems[displayKey] : ''
         }}</span>
       </div>
-      <div v-if="isMulti" class="selected-items multi">
+      <div v-if="isMulti && !isHidden" class="selected-items multi">
         <span
           @click.prevent="execUpdateSelected(item[valueKey])"
           :key="`${item[valueKey]}-${i}`"
@@ -67,7 +67,7 @@
  *        c. displays selected values differently and allows them to be removed on the fly
  *
  *@local enables local sorting for objects required to use sync when passing items :items.sync
- *
+ *@hide hides the list of selected items when multi is set
  *
  *
  *
@@ -159,6 +159,9 @@ export default {
     },
     isLocalFilter() {
       return this.$attrs.hasOwnProperty('local')
+    },
+    isHidden() {
+      return this.$attrs.hasOwnProperty('hidden')
     },
   },
   created() {

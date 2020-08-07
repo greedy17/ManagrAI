@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
+import Status from '@/services/statuses'
 
 Vue.use(Vuex)
 
@@ -13,9 +14,13 @@ const state = {
   token: null,
   showSideNav: false,
   listenToSideNav: false,
+  stages: null,
 }
 
 const mutations = {
+  UPDATE_STAGES: (state, payload) => {
+    state.stages = payload
+  },
   UPDATE_USER: (state, payload) => {
     state.user = payload
   },
@@ -36,6 +41,13 @@ const mutations = {
 }
 
 const actions = {
+  async updateStages({ state, commit }) {
+    if (!state.token) return null
+
+    const res = await Status.api.list({})
+
+    commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)
   },

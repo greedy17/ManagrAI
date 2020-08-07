@@ -62,15 +62,6 @@
             Messages
           </div>
 
-          <div class="check-email-btn" v-if="activityTabSelected === MESSAGES">
-            <button
-              class="primary-button"
-              @click="() => $refs.Messages.refresh()"
-              :disabled="$refs.MESSAGES && $refs.Emails.loading"
-            >
-              Check for New Messages
-            </button>
-          </div>
           <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isTextConnected">
             <button
               class="primary-button"

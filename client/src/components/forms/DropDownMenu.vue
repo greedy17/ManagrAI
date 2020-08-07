@@ -58,7 +58,7 @@
  **/
 
 export default {
-  name: 'DropDownSelect',
+  name: 'DropDownMenu',
   props: {
     loading: {
       type: Boolean,
