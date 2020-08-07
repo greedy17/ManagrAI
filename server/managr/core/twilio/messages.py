@@ -50,6 +50,19 @@ def send_message(body, sender, recepient, callback):
     return message
 
 
+def disconnect_twilio_number(pn):
+    """ deletes phone number associated with pn """
+    try:
+        incoming_phone_number = client.incoming_phone_numbers(pn).delete()
+    except Exception as e:
+        message = e.msg
+        status = e.status
+        raise APIException(
+            detail=f'Error From Twilio Server, {message}', code=status)
+
+    return incoming_phone_number
+
+
 def create_new_account(phone_number):
     # status_callback_method and sms_method are set to POST by default but can be changed
     try:
@@ -77,19 +90,23 @@ def list_messages(sender, recipient, limit=25):
 
     """
     # TODO:- Pari Will have to work on pagination 07/23/20
+    # TODO:- Pari Will have create class and serializer to class when we decide if we are using convos or not 08/05/20
+
     try:
         messages = client.messages.list(
             from_=sender,
             to=recipient,
             limit=limit,
         )
+
     except Exception as e:
         message = e.msg
         status = e.status
         raise APIException(
             detail=f'Error From Twilio Server, {message}', code=status)
-
-    return messages
+    formatted_messages = [message.__dict__['_properties']
+                          for message in messages]
+    return formatted_messages
 
 
 def list_available_numbers(region="DC", country="US", zipcode=None):
@@ -150,3 +167,7 @@ class TwilioIncomingPhoneNumber:
 
     def as_dict(self):
         return self.__dict__
+
+#from managr.core.twilio.messages import list_messages
+# u=User.objects.get(email="testing@thinknimble.com")
+#ma = u.message_auth_account

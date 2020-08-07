@@ -56,6 +56,12 @@
 </template>
 
 <script>
+/***
+ *
+ * Special component for rendering message from LeadMessage object rather than twilio
+ *
+ *
+ */
 export default {
   name: 'Message',
   components: {},

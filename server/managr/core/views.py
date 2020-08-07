@@ -30,13 +30,15 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
+from managr.utils.numbers import format_phone_number
+
 from managr.lead import constants as lead_consts
 from managr.lead.models import LeadMessage, Notification, Lead
 from managr.lead.background import emit_event as emit_log_event
 
 from managr.organization.models import Organization, Contact
 
-from managr.core.twilio.messages import create_new_account, list_available_numbers, send_message
+from managr.core.twilio.messages import create_new_account, list_available_numbers, send_message, list_messages, disconnect_twilio_number
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
 
@@ -312,15 +314,17 @@ class UserViewSet(
         for recipient in recipients:
             # not sending to contacts from query set because one number may be linked to multiple contacts
             # will add try catch TODO:-PB 07/28
-            msg = send_message(body, sender, recipient,
-                               has_auth_account.status_callback)
-            message_id = msg.sid
+            try:
+                msg = send_message(body, sender, recipient,
+                                   has_auth_account.status_callback)
+                message_id = msg.sid
 
-            lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
-                                                      message_id=message_id,
-                                                      direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
-            lead_message.linked_contacts.set(contacts_object)
-
+                lead_message = LeadMessage.objects.create(created_by=user, lead=lead,
+                                                          message_id=message_id,
+                                                          direction=lead_consts.SENT, body=body, status=lead_consts.MESSAGE_PENDING)
+                lead_message.linked_contacts.set(contacts_object)
+            except APIException as e:
+                return Response({'detail': {'invalid_phone': recipient}}, status=status.HTTP_400_BAD_REQUEST)
         return Response()
 
     @action(
@@ -379,6 +383,30 @@ class UserViewSet(
         serializer = MessageAuthAccountSerializer(data=account)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-twilio-account",
+    )
+    def remove_twilio_account(self, request, *args, **kwargs):
+        user = request.user
+        # check to see if the user already has a twilio account
+        message_auth_account = MessageAuthAccount.objects.filter(
+            user=user)
+
+        if not message_auth_account.exists():
+            return Response(data={'non_field_errors': 'User does not have an active messaging account'})
+        # if not then create the new auth account with the phone number
+        phone_id = message_auth_account.first().sid
+        try:
+            disconnect_twilio_number(phone_id)
+        except APIException as e:
+            return Response(status.HTTP_400_BAD_REQUEST)
+
+        message_auth_account.delete()
         return Response()
 
 
@@ -548,6 +576,33 @@ def list_available_twilio_numbers(request):
     region = request.query_params.get('region', None)
     numbers = list_available_numbers(region=region)
     return Response(data=numbers)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated, ])
+def list_twilio_messages(request):
+
+    # get to
+    sender = request.query_params.get('sender', None)
+    recipient = request.query_params.get('recipient', None)
+    if not sender or not recipient:
+        raise ValidationError()
+
+    formatted_sender = format_phone_number(
+        sender, format="+1%d%d%d%d%d%d%d%d%d%d")
+    formatted_recipient = format_phone_number(
+        recipient, format="+1%d%d%d%d%d%d%d%d%d%d")
+    if sender and recipient and MessageAuthAccount.objects.filter(phone_number__in=[formatted_sender, formatted_recipient]).exists():
+        return Response(data=list_messages(formatted_sender, formatted_recipient))
+
+    # get from
+    # make sure one of them is a message auth account
+    return Response(
+        data={
+            "non_field_errors": "User does not have an auth account associated with the phone numebrs provided"
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
 
 
 @api_view(["POST"])
