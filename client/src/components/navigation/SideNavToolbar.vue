@@ -12,11 +12,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Tooltip from '@/components/shared/Tooltip'
 
 export default {
   name: 'SideNavToolbar',
-  components: { Tooltip },
+  components: {},
   props: {},
   data() {
     return {

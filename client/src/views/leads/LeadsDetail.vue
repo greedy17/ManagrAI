@@ -9,8 +9,8 @@
         <template v-slot:trigger>
           <Tooltip>
             <template v-slot:tooltip-target>
-              <span @click="toggleSideToolbar('details')">
-                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+              <span class="toggle-icon" @click="toggleSideToolbar('details')">
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
                   <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
                 </svg>
               </span>
@@ -21,8 +21,8 @@
           </Tooltip>
           <Tooltip>
             <template v-slot:tooltip-target>
-              <span @click="toggleSideToolbar('insights')">
-                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+              <span class="toggle-icon" @click="toggleSideToolbar('insights')">
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
                   <use xlink:href="@/assets/images/cloud.svg#cloud" />
                 </svg>
               </span>
@@ -453,6 +453,11 @@ export default {
       @include input-field;
       width: inherit;
     }
+  }
+}
+.toggle-icon {
+  &:hover {
+    cursor: pointer;
   }
 }
 .dd-icon {

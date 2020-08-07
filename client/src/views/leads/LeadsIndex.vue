@@ -5,8 +5,11 @@
         <template v-slot:trigger>
           <Tooltip>
             <template v-slot:tooltip-target>
-              <span @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)">
-                <svg width="50px" height="50px" class="icon" viewBox="0 0 30 30">
+              <span
+                class="toggle-icon"
+                @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+              >
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
                   <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
                 </svg>
               </span>
@@ -200,6 +203,11 @@ export default {
 
   .bold {
     font-weight: bold;
+  }
+}
+.toggle-icon {
+  &:hover {
+    cursor: pointer;
   }
 }
 </style>
