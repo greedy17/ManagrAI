@@ -124,11 +124,7 @@ class AccountViewSet(
             many=isinstance(request.data, list),
         )
         serializer.is_valid(raise_exception=True)
-        if user.type != core_consts.ACCOUNT_TYPE_MANAGER:
-            return Response(
-                {"non_field_errors": ("Not Authorized")},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+
         self.perform_create(serializer)
         response_data = serializer.data
         return Response(response_data)
