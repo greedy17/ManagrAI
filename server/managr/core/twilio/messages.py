@@ -1,4 +1,3 @@
-
 from twilio.rest import Client
 
 from django.conf import settings
@@ -27,25 +26,22 @@ def _handle_twilio_response(response):
             code=response.status_code,
         )
     else:
-        raise APIException(detail="Error from Twilio server",
-                           code=response.status_code)
+        raise APIException(detail="Error from Twilio server", code=response.status_code)
 
 
 def send_message(body, sender, recepient, callback):
     try:
-        message = client.messages \
-            .create(
-                body=body,
-                from_=sender,
-                to=recepient,
-                # callback url will return the created message to add to the log
-                status_callback=callback
-            )
+        message = client.messages.create(
+            body=body,
+            from_=sender,
+            to=recepient,
+            # callback url will return the created message to add to the log
+            status_callback=callback,
+        )
     except Exception as e:
         message = e.msg
         status = e.status
-        raise APIException(
-            detail=f'Error From Twilio Server, {message}', code=status)
+        raise APIException(detail=f"Error From Twilio Server, {message}", code=status)
 
     return message
 
@@ -57,8 +53,7 @@ def disconnect_twilio_number(pn):
     except Exception as e:
         message = e.msg
         status = e.status
-        raise APIException(
-            detail=f'Error From Twilio Server, {message}', code=status)
+        raise APIException(detail=f"Error From Twilio Server, {message}", code=status)
 
     return incoming_phone_number
 
@@ -66,18 +61,17 @@ def disconnect_twilio_number(pn):
 def create_new_account(phone_number):
     # status_callback_method and sms_method are set to POST by default but can be changed
     try:
-        incoming_phone_number = client.incoming_phone_numbers \
-            .create(phone_number=phone_number,
-                    sms_url=core_consts.TWILIO_MESSAGE_RECEIVED_CALLBACK_URL,
-                    status_callback=core_consts.TWILIO_MESSAGE_STATUS_CALLBACK_URL,
-                    )
+        incoming_phone_number = client.incoming_phone_numbers.create(
+            phone_number=phone_number,
+            sms_url=core_consts.TWILIO_MESSAGE_RECEIVED_CALLBACK_URL,
+            status_callback=core_consts.TWILIO_MESSAGE_STATUS_CALLBACK_URL,
+        )
     except Exception as e:
         message = e.msg
         status = e.status
-        raise APIException(
-            detail=f'Error From Twilio Server, {message}', code=status)
+        raise APIException(detail=f"Error From Twilio Server, {message}", code=status)
 
-    return incoming_phone_number.__dict__.get('_properties', None)
+    return incoming_phone_number.__dict__.get("_properties", None)
 
 
 def list_messages(sender, recipient, limit=25):
@@ -93,19 +87,13 @@ def list_messages(sender, recipient, limit=25):
     # TODO:- Pari Will have create class and serializer to class when we decide if we are using convos or not 08/05/20
 
     try:
-        messages = client.messages.list(
-            from_=sender,
-            to=recipient,
-            limit=limit,
-        )
+        messages = client.messages.list(from_=sender, to=recipient, limit=limit,)
 
     except Exception as e:
         message = e.msg
         status = e.status
-        raise APIException(
-            detail=f'Error From Twilio Server, {message}', code=status)
-    formatted_messages = [message.__dict__['_properties']
-                          for message in messages]
+        raise APIException(detail=f"Error From Twilio Server, {message}", code=status)
+    formatted_messages = [message.__dict__["_properties"] for message in messages]
     return formatted_messages
 
 
@@ -115,22 +103,28 @@ def list_available_numbers(region="DC", country="US", zipcode=None):
         available_numbers = client.available_phone_numbers(country).local.list(
             in_region=region if region else ""
         )
-        formatted_data = [dict(capabilities=number.capabilities, friendly_name=number.friendly_name,
-                               is_country=number.iso_country, locality=number.locality,
-                               phone_number=number.phone_number, postal_code=number.postal_code,
-                               region=number.region) for number in available_numbers]
+        formatted_data = [
+            dict(
+                capabilities=number.capabilities,
+                friendly_name=number.friendly_name,
+                is_country=number.iso_country,
+                locality=number.locality,
+                phone_number=number.phone_number,
+                postal_code=number.postal_code,
+                region=number.region,
+            )
+            for number in available_numbers
+        ]
 
     except Exception as e:
         message = e.msg
         status = e.status
-        raise APIException(
-            detail=f'Error From Twilio Server, {message}', code=status)
+        raise APIException(detail=f"Error From Twilio Server, {message}", code=status)
 
     return formatted_data
 
 
 class TwilioIncomingPhoneNumber:
-
     def __init__(self, twilioIncomingInstance):
         self.account_sid = twilioIncomingInstance.account_sid
         self.address_sid = twilioIncomingInstance.address_sid
@@ -168,6 +162,7 @@ class TwilioIncomingPhoneNumber:
     def as_dict(self):
         return self.__dict__
 
-#from managr.core.twilio.messages import list_messages
+
+# from managr.core.twilio.messages import list_messages
 # u=User.objects.get(email="testing@thinknimble.com")
-#ma = u.message_auth_account
+# ma = u.message_auth_account

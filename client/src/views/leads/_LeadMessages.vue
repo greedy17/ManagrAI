@@ -104,19 +104,37 @@ export default {
   methods: {
     async getInboundMessages() {
       this.loading = true
-      this.inbound = await Messaging.listMessages(
-        this.activeTabContact.phone_number_1,
-        this.isTextConnected,
-      )
-      this.loading = false
+      try {
+        this.inbound = await Messaging.listMessages(
+          this.activeTabContact.phone_number_1,
+          this.isTextConnected,
+        )
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          message: `<h4> There was an error retrieving these messages</h4>`,
+          timeout: 5000,
+        })
+      } finally {
+        this.loading = false
+      }
     },
     async getOutbountMessages() {
       this.loading = true
-      this.outbound = await Messaging.listMessages(
-        this.isTextConnected,
-        this.activeTabContact.phone_number_1,
-      )
-      this.loading = false
+      try {
+        this.outbound = await Messaging.listMessages(
+          this.isTextConnected,
+          this.activeTabContact.phone_number_1,
+        )
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          message: `<h4> There was an error retrieving these messages</h4>`,
+          timeout: 5000,
+        })
+      } finally {
+        this.loading = false
+      }
     },
     async updateActiveTab(index) {
       if (this.activeTab != index) {

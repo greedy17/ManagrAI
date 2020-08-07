@@ -125,7 +125,6 @@ export default {
         await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
       } catch (e) {
         let { response } = { ...e }
-        console.log(response)
         if (response.status == 400) {
           this.$Alert.alert({
             type: 'error',
