@@ -110,7 +110,7 @@ export default {
   top: 5rem;
   width: 0rem;
   max-width: 15rem;
-  min-height: 90%;
+  height: 80%;
   > .content {
     display: none;
   }
@@ -134,6 +134,8 @@ export default {
 
   > .content {
     display: block;
+    height: 90%;
+    overflow-y: scroll;
   }
 }
 
