@@ -103,5 +103,18 @@
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
+  },
+  {
+    "model": "organization.stage",
+    "pk": "34066d79-824b-4541-9f4e-6be1a9f602bb",
+    "fields": {
+      "title": "LEAD",
+      "description": "Defines an opportunity as closed",
+      "type": "PUBLIC",
+      "organization": null,
+      "color": "#FAFAFA",
+      "datetime_created": "2020-08-03 11:39:23.632256Z",
+      "last_edited": "2020-08-03 11:39:23.632256Z"
+    }
   }
 ]
