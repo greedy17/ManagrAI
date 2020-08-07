@@ -16,12 +16,13 @@ def round_decimal(value, quantize='.01'):
         return Decimal(value).quantize(Decimal(quantize), rounding=ROUND_DOWN)
 
 
-def format_phone_number(value, format="+1(%d%d%d)%w%d%d%d-%d%d%d%d"):
+def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
     """ 
         format phone number (numbers only) 
         value = 10 or 11 digit phone number 
         format = the format you want to conver to 
             ether string literals of the characters you want or %d for digits %w for whitespace 
+        example +1(%d%d%d)%w%d%d%d-%d%d%d%d"
     """
 
     # final string should have this length - the special % sign

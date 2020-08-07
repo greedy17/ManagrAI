@@ -7,7 +7,7 @@ from .models import Organization, Account,  Contact, Stage
 
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
-    list_display = ('name',)
+    list_display = ('name', 'message_auth_count',)
 
 
 class CustomAccount(admin.ModelAdmin):
