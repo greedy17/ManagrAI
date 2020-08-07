@@ -71,7 +71,7 @@
           <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
         </div>
         <div class="single-statistic section-shadow">
-          <span class="title with-help-box">
+          <span class="title">
             <span>Forecast</span>
             <div class="help-box-container">
               <img
@@ -559,7 +559,7 @@ export default {
   align-items: center;
 
   .help-box-icon {
-    position: absolute;
+    position: relative;
     margin-left: 1rem;
   }
 }

@@ -330,7 +330,7 @@ class UserViewSet(
             # will add try catch TODO:-PB 07/28
             try:
                 msg = send_message(
-                    body, sender, recipient, has_auth_account.status_callback
+                    body, sender, recipient, has_auth_account.status_callback,
                 )
                 message_id = msg.sid
 
@@ -685,7 +685,7 @@ def list_twilio_messages(request):
 )
 def message_status(request):
     # get the message sid and status
-
+    print("here")
     message_status = request.data.get("MessageStatus", None)
     message_id = request.data.get("MessageSid", None)
 
@@ -693,7 +693,8 @@ def message_status(request):
     message_obj = LeadMessage.objects.filter(message_id=message_id).first()
 
     # update its status to Delivered/NotDelivered/
-
+    if not message_status or not message_id:
+        raise ValidationError()
     if message_status in lead_consts.MESSAGE_DELIVERED_OPTIONS:
         message_obj.status = lead_consts.MESSAGE_DELIVERED
     if message_status in lead_consts.MESSAGE_NOT_DELIVERED_OPTIONS:

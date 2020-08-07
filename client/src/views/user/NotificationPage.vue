@@ -2,7 +2,10 @@
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0 && datedNotifications">
       <template v-for="(value, key) in datedNotifications">
-        <span class="muted" :key="key">{{ key }}</span>
+        <span class="muted" :key="key"
+          >{{ key }}
+          <br />
+        </span>
 
         <NotificationCard
           v-for="(item, i) in value"

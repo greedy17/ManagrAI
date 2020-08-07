@@ -7,7 +7,7 @@
         v-if="editable"
         class="edit-contact-icon"
         src="@/assets/images/more_horizontal.svg"
-        @click="showEditForm = true"
+        @click.stop.prevent="showEditForm = true"
       />
     </div>
     <div class="info">

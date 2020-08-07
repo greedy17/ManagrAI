@@ -44,16 +44,14 @@ class Lead(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.PositiveIntegerField(
-        help_text="This field is editable", default=0)
+    amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
     )
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
-    rating = models.IntegerField(
-        choices=lead_constants.LEAD_RATING_CHOICES, default=1)
+    rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
         "organization.Account",
         related_name="leads",
@@ -70,7 +68,8 @@ class Lead(TimeStampModel):
     status_last_update = models.DateTimeField(default=timezone.now, blank=True)
 
     status = models.ForeignKey(
-        'organization.Stage', related_name='leads', null=True, on_delete=models.SET_NULL)
+        "organization.Stage", related_name="leads", null=True, on_delete=models.SET_NULL
+    )
 
     claimed_by = models.ForeignKey(
         "core.User",
@@ -130,8 +129,7 @@ class ListQuerySet(models.QuerySet):
 
 class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
-    created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey("core.User", null=True, on_delete=models.SET_NULL)
     leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
@@ -245,7 +243,7 @@ class BaseNote(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -348,10 +346,7 @@ class LeadActivityLog(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "Lead",
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name="activity_logs",
+        "Lead", null=True, on_delete=models.SET_NULL, related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -412,12 +407,16 @@ class Notification(TimeStampModel):
         help_text="type of Notification being created",
     )
     resource_id = models.CharField(
-        max_length=255, null=True, help_text="Id of the resource if it is an email it will be the thread id")
+        max_length=255,
+        null=True,
+        help_text="Id of the resource if it is an email it will be the thread id",
+    )
 
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
     user = models.ForeignKey(
-        'core.User', on_delete=models.SET_NULL, related_name="notifications", null=True)
+        "core.User", on_delete=models.SET_NULL, related_name="notifications", null=True
+    )
 
     objects = NotificationQuerySet.as_manager()
 
@@ -502,7 +501,7 @@ class Action(TimeStampModel):
             },
             "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
             "linked_contacts_ref": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -521,6 +520,7 @@ class LeadMessageQuerySet(models.QuerySet):
 
 class LeadMessage(TimeStampModel):
     """ Tie a lead to a Twilio Message """
+
     created_by = models.ForeignKey(
         "core.User",
         related_name="created_messages",
@@ -541,11 +541,13 @@ class LeadMessage(TimeStampModel):
 
     message_id = models.CharField(max_length=128)
     direction = models.CharField(
-        choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True)
+        choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True
+    )
 
     body = models.CharField(max_length=255, blank=True)
     status = models.CharField(
-        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True)
+        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True
+    )
 
     objects = LeadMessageQuerySet.as_manager()
 
@@ -565,10 +567,9 @@ class LeadMessage(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
-
         }
 
 
@@ -613,8 +614,7 @@ class LeadEmail(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
-
         }

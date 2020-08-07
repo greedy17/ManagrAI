@@ -76,7 +76,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['Action', 'Note', 'Lists'],
+      tabs: ['Lists', 'Note', 'Action'],
       // for bulk movement:
       lists: CollectionManager.create({
         ModelClass: List,

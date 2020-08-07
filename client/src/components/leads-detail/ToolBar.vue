@@ -79,11 +79,11 @@
         <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
       </a>
     </div>
-    <div v-if="lead.status === Lead.CLOSED" class="amount">
+    <div v-if="lead.statusRef.title === Lead.CLOSED" class="amount">
       Amount:
       <span>{{ lead.closingAmount | currency }}</span>
     </div>
-    <div v-else-if="!editAmount" class="amount" @click="onEditAmount">
+    <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
@@ -91,12 +91,12 @@
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
         <input v-model="tempAmount" type="number" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
-        <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
+        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
       </form>
     </div>
 
-    <div v-if="lead.status === Lead.CLOSED" class="expected-close-date section-shadow">
+    <div v-if="lead.statusRef.title === Lead.CLOSED" class="expected-close-date section-shadow">
       <div>
         Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
@@ -104,7 +104,7 @@
     <div
       v-else-if="!editExpectedCloseDate"
       class="expected-close-date section-shadow"
-      @click="editExpectedCloseDate = true"
+      @click.stop.prevent="editExpectedCloseDate = true"
     >
       <div v-if="!lead.expectedCloseDate">
         Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>

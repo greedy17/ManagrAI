@@ -12,6 +12,9 @@
         </span>
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
+        <span class="muted">
+          {{ notification.notifyAt | dateShortWithTime }}
+        </span>
         {{ notification.meta ? notification.meta.content : '' }}
         <template v-if="notification.meta">
           <div
