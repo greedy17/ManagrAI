@@ -54,6 +54,9 @@
         @lead-released="releaseLead"
         @lead-claimed="claimLead"
       />
+      <h3>
+        {{ lead.title }}
+      </h3>
       <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
       </div>

@@ -50,6 +50,11 @@
           }}
         </span>
         <slot name="right"></slot>
+        <span class="go-to" @click="routeToLeadDetail()">
+          <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
       </div>
     </div>
     <LeadDetails :lead="dataLead" v-if="showDetails" />
@@ -150,9 +155,11 @@ export default {
       display: flex;
       flex-direction: column;
       width: 5rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      > * {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
     .amount {
       width: 4rem;
@@ -179,6 +186,8 @@ export default {
     display: flex;
     justify-self: flex-end;
     margin-right: 0.2rem;
+    .go-to {
+    }
   }
 }
 </style>

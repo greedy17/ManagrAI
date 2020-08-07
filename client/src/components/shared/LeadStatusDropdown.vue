@@ -85,7 +85,7 @@ export default {
   computed: {
     getStatusColor() {
       return this.leadItem.statusRef
-        ? getLightenedColor(this.leadItem.statusRef.color)
+        ? getLightenedColor(this.leadItem.statusRef.color, 0.9)
         : getLightenedColor('#9B9B9B')
     },
     getStatuses() {

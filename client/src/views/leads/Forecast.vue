@@ -275,13 +275,20 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  justify-content: center;
-  margin: 0 0 1rem auto;
+  margin: 1rem 0;
+  width: 10rem;
+
+  .checkbox-container {
+    display: flex;
+    flex-flow: row;
+    width: 20rem;
+    justify-content: flex-start;
+  }
 
   .left,
   .right {
     width: 4rem;
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .left {
@@ -289,13 +296,18 @@ export default {
   }
 
   .checkbox {
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .bold {
     font-weight: bold;
   }
+
+  .centered {
+    margin: 0 auto;
+  }
 }
+
 .lists-container-pane {
   width: 83%;
   padding: 0 2% 1% 1%;

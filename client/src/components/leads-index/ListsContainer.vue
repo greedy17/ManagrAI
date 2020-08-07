@@ -169,6 +169,7 @@ export default {
   flex-flow: row;
   align-items: center;
   margin: 1rem 0;
+  width: 10rem;
 
   .checkbox-container {
     display: flex;
@@ -180,7 +181,7 @@ export default {
   .left,
   .right {
     width: 4rem;
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .left {
@@ -188,7 +189,7 @@ export default {
   }
 
   .checkbox {
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .bold {

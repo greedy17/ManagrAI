@@ -105,7 +105,7 @@ export default {
 .sidenav {
   padding: 1rem;
   background-color: transparent;
-  position: absolute;
+  position: fixed;
   left: 0px;
   top: 5rem;
   width: 0rem;
