@@ -5,14 +5,14 @@
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div> -->
-    <div class="lead-title" v-if="!editTitle" @click="onEditTitle">
+    <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
       <h2>{{ lead.title }}</h2>
     </div>
     <div v-else class="title-editable">
       <form class="title-form" @submit.prevent="updateTitle">
         <input v-model="tempTitle" type="text" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click="updateTitle" />
-        <img class="reset" src="@/assets/images/remove.svg" @click="resetTitle" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
+        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
       </form>
     </div>
     <div class="rating">

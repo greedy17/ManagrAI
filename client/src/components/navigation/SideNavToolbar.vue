@@ -113,6 +113,11 @@ export default {
   height: 80%;
   > .content {
     display: none;
+    height: 80%;
+    overflow-y: scroll;
+    > * {
+      display: none;
+    }
   }
 }
 
@@ -121,7 +126,12 @@ export default {
   animation-duration: 1s;
   animation-iteration-count: 1;
   > .content {
-    display: none;
+    animation: closecontent forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    > * {
+      display: none;
+    }
   }
 }
 
@@ -133,12 +143,62 @@ export default {
   animation-iteration-count: 1;
 
   > .content {
+    animation: expandcontent forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
     display: block;
-    height: 90%;
-    overflow-y: scroll;
+
+    > * {
+      display: block;
+    }
   }
 }
+@keyframes expandcontent {
+  0% {
+    width: 0%;
+    background-color: rgba(238, 238, 238, 0);
+  }
+  10% {
+    width: 10%;
+    background-color: rgba(238, 238, 238, 0.1);
+  }
+  20% {
+    width: 20%;
+    background-color: rgba(238, 238, 238, 0.2);
+  }
+  30% {
+    width: 30%;
+    background-color: rgba(238, 238, 238, 0.3);
+  }
+  40% {
+    width: 40%;
+    background-color: rgba(238, 238, 238, 0.4);
+  }
 
+  50% {
+    width: 50%;
+    background-color: rgba(238, 238, 238, 0.5);
+  }
+  100% {
+    width: 100%;
+    background-color: rgba(238, 238, 238, 1);
+  }
+}
+@keyframes closecontent {
+  0% {
+    width: 15rem;
+    background-color: rgba(238, 238, 238, 1);
+  }
+  50% {
+    width: 5rem;
+    background-color: rgba(238, 238, 238, 0.5);
+  }
+  100% {
+    width: 0rem;
+    background-color: rgba(238, 238, 238, 0);
+    display: none;
+  }
+}
 @keyframes expandmenu {
   0% {
     width: 0rem;

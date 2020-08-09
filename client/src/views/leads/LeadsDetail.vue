@@ -48,15 +48,18 @@
       </SideNavToolbar>
     </div>
     <div class="page__main-content-area">
+      <div class="lead-header">
+        <h3>
+          {{ lead.title }}
+        </h3>
+      </div>
       <LeadBanner
         :lead="lead"
         @lead-reset="resetLead"
         @lead-released="releaseLead"
         @lead-claimed="claimLead"
       />
-      <h3>
-        {{ lead.title }}
-      </h3>
+
       <div v-if="lead" class="container">
         <LeadActions :lead="lead" />
       </div>
@@ -470,5 +473,9 @@ export default {
   &:hover {
     cursor: pointer;
   }
+}
+.lead-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 </style>

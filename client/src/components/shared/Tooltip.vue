@@ -11,7 +11,7 @@
 export default {}
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 /* Tooltip container */
 .tooltip {
   position: relative;
@@ -22,15 +22,15 @@ export default {}
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 120px;
-  background-color: black;
+  background-color: #484a6e;
   color: #fff;
   text-align: center;
   padding: 5px 0;
   border-radius: 6px;
 
   /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 1;
+  position: fixed;
+  z-index: 100;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */

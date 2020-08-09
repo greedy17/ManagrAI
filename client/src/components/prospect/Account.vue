@@ -16,7 +16,7 @@
     <div class="leads-container" v-if="showLeads">
       <ComponentLoadingSVG v-if="leads.refreshing" style="margin: 1rem auto;" />
       <div v-else-if="leads.pagination.totalCount > 0" class="accLeads">
-        <Lead v-for="lead in leads.list" :key="lead.id" :lead="lead" />
+        <LeadRow v-for="lead in leads.list" :key="lead.id" :lead="lead"> </LeadRow>
         <Pagination
           v-if="!leads.refreshing"
           style="margin-bottom: 1rem;"
@@ -32,6 +32,7 @@
 <script>
 import Lead from '@/components/prospect/Lead'
 import Pagination from '@/components/shared/Pagination'
+import LeadRow from '@/components/shared/LeadRow'
 
 import CollectionManager from '@/services/collectionManager'
 import LeadModel from '@/services/leads'
@@ -53,6 +54,7 @@ export default {
   components: {
     Lead,
     Pagination,
+    LeadRow,
   },
   data() {
     return {

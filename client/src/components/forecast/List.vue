@@ -27,6 +27,12 @@
                   Expected Close By: <br />
                   {{ lead.expectedCloseDate | dateShort }}
                 </span>
+                <span class="muted">
+                  Last Action On:
+                  <br />
+                  {{ lead.leadRef.lastActionTaken.actionTimestamp | timeAgo }} -
+                  {{ lead.leadRef.lastActionTaken.activity }}
+                </span>
               </div>
             </template>
             <template v-slot:right> </template>
