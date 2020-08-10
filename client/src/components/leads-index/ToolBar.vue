@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
+import { forecastEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
 
 export default {
@@ -51,7 +51,6 @@ export default {
   },
   data() {
     return {
-      statusEnums,
       forecastEnums,
     }
   },
@@ -76,7 +75,7 @@ export default {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-  width: 78%;
+
   height: auto;
   display: flex;
   flex-flow: column;

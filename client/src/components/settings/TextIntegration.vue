@@ -84,11 +84,6 @@
           </button>
           <Modal v-if="showDeleteModal" dimmed :width="40" @close-modal="onHideDeleteModal">
             <template v-if="!loading">
-              <div class="header">
-                <div class="header__title">
-                  Are You Sure You Want To Continue
-                </div>
-              </div>
               <div class="body">
                 <p>
                   Are you sure you want to disconnect this number?

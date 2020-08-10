@@ -53,6 +53,7 @@
 import NavLink from '@/components/NavLink'
 import Notification from '@/services/notifications/'
 import DropDownMenu from '@/components/forms/DropDownMenu'
+import polling from '@/services/polling'
 const POLLING_INTERVAL = 10000
 export default {
   name: 'NavBar',
@@ -71,6 +72,7 @@ export default {
   async created() {
     if (this.userIsLoggedIn) {
       const count = await Notification.api.getUnviewedCount({})
+      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
       this.unViewedCount = count.count
       await this.refresh(POLLING_INTERVAL)
     }
@@ -95,6 +97,7 @@ export default {
       try {
         const count = await Notification.api.getUnviewedCount({})
         this.unViewedCount = count.count
+        await this.$store.dispatch('updatePollingData')
 
         if (repeat) {
           this.polllingTimeout = setTimeout(async () => {
@@ -110,6 +113,7 @@ export default {
         }
       }
     },
+
     toggleUserMenu() {
       this.showMenus.user = !this.showMenus.user
       if (this.showMenus.user) {
@@ -129,8 +133,14 @@ export default {
       this.toggleUserMenu()
     },
   },
-
+  watch: {},
   computed: {
+    shouldRefreshPolling() {
+      return this.$store.getters.updatePollingData
+    },
+    itemsToRefresh() {
+      return this.$store.getters.pollingDataToUpdate
+    },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },

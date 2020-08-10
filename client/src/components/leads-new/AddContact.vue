@@ -42,7 +42,7 @@
         class="phone input"
         tabindex="0"
         placeholder="Phone"
-        v-mask="'(###) ###-####'"
+        v-mask="'+1(###) ###-####'"
       />
     </div>
     <div v-if="isEditForm" style="display: flex; flex-flow: row;">
