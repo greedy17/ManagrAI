@@ -151,7 +151,6 @@ export default {
 @import '@/styles/mixins/utils';
 
 .insights {
-  width: 16rem;
   height: auto;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px $soft-gray;

@@ -1,6 +1,34 @@
 <template>
-  <div class="leads-index">
-    <div class="toolbar-pane">
+  <div class="page">
+    <div class="page__left-nav-bar">
+      <SideNavToolbar>
+        <template v-slot:trigger>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span
+                class="toggle-icon"
+                @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+              >
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
+                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Details
+            </template>
+          </Tooltip>
+        </template>
+        <template v-slot:toolbar>
+          <ToolBar
+            class="toolbar"
+            @update-filter="updateFilters"
+            :currentFilters="currentFilters"
+          />
+        </template>
+      </SideNavToolbar>
+    </div>
+    <div class="page__main-content-area">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -11,9 +39,6 @@
         />
         <span class="right" :class="{ bold: isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar class="toolbar" @update-filter="updateFilters" :currentFilters="currentFilters" />
-    </div>
-    <div class="lists-container-pane">
       <ListsContainer
         :loading="loading"
         :noListLeadsCollection="myLeadsNoList"
@@ -25,6 +50,7 @@
         @remove-from-list="removeFromList"
         :isOwner="true"
         @refresh-collections="refreshCollections"
+        :filters="currentFilters"
       />
     </div>
   </div>
@@ -34,10 +60,13 @@
 import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
+import SideNavToolbar from '@/components/navigation/SideNavToolbar'
+import Tooltip from '@/components/shared/Tooltip'
 
 import Lead from '@/services/leads'
 import List from '@/services/lists'
 import CollectionManager from '@/services/collectionManager'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'LeadsIndex',
@@ -45,6 +74,8 @@ export default {
     ToolBar,
     ToggleCheckBox,
     ListsContainer,
+    SideNavToolbar,
+    Tooltip,
   },
   data() {
     return {
@@ -75,6 +106,7 @@ export default {
     this.refreshCollections()
   },
   computed: {
+    ...mapGetters(['showToolbarNav']),
     isCurrentRoute() {
       return this.$route.name == 'LeadsIndex'
     },
@@ -144,24 +176,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
-
-.leads-index {
-  display: flex;
-  flex-flow: row;
-  padding-top: 2%;
-}
-
-.toolbar-pane {
-  width: 17%;
-  padding: 0% 1% 1% 1%;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-
-  .toolbar {
-    margin-left: auto;
-  }
-}
+@import '@/styles/layout';
 
 .view-toggle-container {
   @include base-font-styles();
@@ -169,14 +184,20 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  justify-content: center;
-  width: 78%;
-  margin: 0 0 1rem auto;
+  margin: 1rem 0;
+  width: 10rem;
+
+  .checkbox-container {
+    display: flex;
+    flex-flow: row;
+    width: 20rem;
+    justify-content: flex-start;
+  }
 
   .left,
   .right {
     width: 4rem;
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .left {
@@ -184,17 +205,21 @@ export default {
   }
 
   .checkbox {
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .bold {
     font-weight: bold;
   }
+
+  .centered {
+    margin: 0 auto;
+  }
 }
 
-.lists-container-pane {
-  width: 83%;
-  padding: 0 2% 1% 1%;
-  background-color: $off-white;
+.toggle-icon {
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>

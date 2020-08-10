@@ -30,7 +30,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
-from managr.utils.numbers import format_phone_number
+from managr.utils.numbers import format_phone_number, validate_phone_number
 
 from managr.lead import constants as lead_consts
 from managr.lead.models import LeadMessage, Notification, Lead
@@ -330,7 +330,7 @@ class UserViewSet(
             # will add try catch TODO:-PB 07/28
             try:
                 msg = send_message(
-                    body, sender, recipient, has_auth_account.status_callback
+                    body, sender, recipient, has_auth_account.status_callback,
                 )
                 message_id = msg.sid
 
@@ -525,7 +525,7 @@ class NylasMessageWebhook(APIView):
                 data_object["metadata"]["message_id"],
                 data["deltas"][0]["date"],
                 core_consts.NYLAS_WEBHOOK_TYPE_MSG_OPENED,
-                **{"count": data_object["metadata"]["count"]}
+                **{"count": data_object["metadata"]["count"]},
             )
 
         return Response()
@@ -645,6 +645,20 @@ def list_twilio_messages(request):
     recipient = request.query_params.get("recipient", None)
     if not sender or not recipient:
         raise ValidationError()
+    try:
+        validate_phone_number(sender)
+    except ValueError:
+        return Response(
+            {"detail": {"invalid_phone": f"{sender} is an invalid phone number"}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        validate_phone_number(recipient)
+    except ValueError:
+        return Response(
+            {"detail": {"invalid_phone": f"{recipient} is an invalid phone number"}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     formatted_sender = format_phone_number(sender, format="+1%d%d%d%d%d%d%d%d%d%d")
     formatted_recipient = format_phone_number(
@@ -671,7 +685,6 @@ def list_twilio_messages(request):
 )
 def message_status(request):
     # get the message sid and status
-
     message_status = request.data.get("MessageStatus", None)
     message_id = request.data.get("MessageSid", None)
 
@@ -679,7 +692,8 @@ def message_status(request):
     message_obj = LeadMessage.objects.filter(message_id=message_id).first()
 
     # update its status to Delivered/NotDelivered/
-
+    if not message_status or not message_id:
+        raise ValidationError()
     if message_status in lead_consts.MESSAGE_DELIVERED_OPTIONS:
         message_obj.status = lead_consts.MESSAGE_DELIVERED
     if message_status in lead_consts.MESSAGE_NOT_DELIVERED_OPTIONS:

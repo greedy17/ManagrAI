@@ -12,6 +12,9 @@
         </span>
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
+        <span class="muted">
+          {{ notification.notifyAt | dateShortWithTime }}
+        </span>
         {{ notification.meta ? notification.meta.content : '' }}
         <template v-if="notification.meta">
           <div
@@ -43,8 +46,7 @@ export default {
   name: 'NotificationCard',
   props: {
     notification: {
-      type: [Object, null],
-      default: null,
+      type: Object,
     },
   },
   computed: {
@@ -127,6 +129,7 @@ export default {
     display: flex;
     overflow: hidden;
     justify-content: space-between;
+    text-transform: capitalize;
 
     &__text {
       max-width: 12vw;

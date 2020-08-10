@@ -20,7 +20,7 @@
       "description": "Defines an Opportunity as a Lead",
       "type": "PUBLIC",
       "organization": null,
-      "color": "#FFE499",
+      "color": "#F9CD53",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
@@ -33,7 +33,7 @@
       "description": "Defines an opportunity as ready",
       "type": "PUBLIC",
       "organization": null,
-      "color": "#FFB5B8",
+      "color": "#FA646A",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
@@ -46,7 +46,7 @@
       "description": "Defines an opportunity as ready",
       "type": "PUBLIC",
       "organization": null,
-      "color": "#8AC4F3",
+      "color": "#5FA9E5",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
@@ -72,7 +72,7 @@
       "description": "Defines an opportunity as ready",
       "type": "PUBLIC",
       "organization": null,
-      "color": "#EFF0F5",
+      "color": "#9596B4",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
@@ -112,7 +112,7 @@
       "description": "Defines an opportunity as closed",
       "type": "PUBLIC",
       "organization": null,
-      "color": "#FAFAFA",
+      "color": "#484A6E",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }

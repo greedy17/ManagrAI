@@ -114,6 +114,9 @@ export default {
   font-size: 0.875rem;
   line-height: 1.14;
   color: $main-font-gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .lead-rating {

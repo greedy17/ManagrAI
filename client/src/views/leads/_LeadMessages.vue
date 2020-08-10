@@ -85,6 +85,7 @@ export default {
     this.loading = true
     await this.refresh()
     this.loading = false
+
     if (this.isTextConnected) {
       await this.getInboundMessages()
       await this.getOutbountMessages()
@@ -105,6 +106,9 @@ export default {
     async getInboundMessages() {
       this.loading = true
       try {
+        if (!this.activeTabContact.phone_number_1) {
+          return
+        }
         this.inbound = await Messaging.listMessages(
           this.activeTabContact.phone_number_1,
           this.isTextConnected,
@@ -121,7 +125,11 @@ export default {
     },
     async getOutbountMessages() {
       this.loading = true
+
       try {
+        if (!this.activeTabContact.phone_number_1) {
+          return
+        }
         this.outbound = await Messaging.listMessages(
           this.isTextConnected,
           this.activeTabContact.phone_number_1,

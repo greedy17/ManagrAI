@@ -58,7 +58,7 @@ ul {
 
   border-radius: 5px;
   flex-direction: column;
-  max-height: 30rem;
+  height: 30rem;
   overflow-y: scroll;
   box-shadow: 0px 0px 8px 2px $off-white inset;
   .direction {

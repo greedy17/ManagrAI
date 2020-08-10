@@ -14,16 +14,30 @@
       </span>
       <span class="list-value">{{ totalValue | currency }}</span>
     </div>
+
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing" style="margin: 1rem auto;" />
       <template v-else>
-        <Lead
-          v-for="forecast in collection.list"
-          :key="forecast.id"
-          :forecast="forecast"
-          :lead.sync="forecast.leadRef"
-          @move-lead-in-forecast-list="ePayload => $emit('move-lead-in-forecast-list', ePayload)"
-        />
+        <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
+          <LeadRow :key="lead.id" :lead="lead.leadRef">
+            <template v-slot:left> </template>
+            <template v-slot:center>
+              <div class="lead-items">
+                <span class="muted">
+                  Expected Close By: <br />
+                  {{ lead.expectedCloseDate | dateShort }}
+                </span>
+                <span class="muted">
+                  Last Action On:
+                  <br />
+                  {{ lead.leadRef.lastActionTaken.actionTimestamp | timeAgo }} -
+                  {{ lead.leadRef.lastActionTaken.activity }}
+                </span>
+              </div>
+            </template>
+            <template v-slot:right> </template>
+          </LeadRow>
+        </div>
         <Pagination
           v-if="!collection.refreshing"
           style="margin-bottom: 1rem;"
@@ -38,6 +52,8 @@
 <script>
 import Forecast from '@/services/forecasts'
 import Lead from '@/components/forecast/Lead'
+import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import LeadRow from '@/components/shared/LeadRow'
 import Pagination from '@/components/shared/Pagination'
 import { paginationMixin } from '@/services/pagination'
 
@@ -56,13 +72,17 @@ export default {
   },
   components: {
     Lead,
+    LoadMoreButton,
+    LeadRow,
     Pagination,
   },
   data() {
     return {
       showLeads: false,
+      leadsList: this.collection.list ? this.collection.list : [],
     }
   },
+
   methods: {
     toggleLeads() {
       if (this.numOfLeads > 0) {
@@ -120,6 +140,18 @@ export default {
   display: block;
 }
 
+.lead-items {
+  display: flex;
+  align-items: center;
+  > * {
+    width: 150px;
+  }
+  .muted {
+    font-size: 10px;
+    color: black;
+  }
+}
+
 .list-title {
   font-weight: bold;
   width: 20rem;
@@ -136,5 +168,8 @@ export default {
   margin-left: 1%;
   margin-right: 1%;
   padding-top: 0.5rem;
+  &__row {
+    margin-top: 1rem;
+  }
 }
 </style>
