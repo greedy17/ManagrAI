@@ -118,6 +118,7 @@ export default {
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
           this.$store.dispatch('updateStages')
+          this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
           if (this.$route.query.redirect) {
             this.$router.push(this.$route.query.redirect)
           } else {

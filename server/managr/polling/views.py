@@ -35,13 +35,23 @@ from managr.core.permissions import (
     IsSalesPerson,
     CanEditResourceOrReadOnly,
 )
-from managr.lead.models import Notification
+from managr.lead.models import Notification, LeadActivityLog
 
 POLLING_ITEM_NOTIFICATION = Notification
-
+POLLING_ITEM_LEAD_ACTIVITY_LOG = LeadActivityLog
+POLLING_ITEM_NOTFICIATION_COUNT = "NOTIFICATIONCOUNT"
 POLLING_ITEMS = (POLLING_ITEM_NOTIFICATION,)
 
 # Create your views here.
+
+
+def _list_polling_counts_lead_activity_log(user, last_checked, lead_id=None):
+    """ helper method for updating lead activity log """
+    return (
+        POLLING_ITEM_LEAD_ACTIVITY_LOG.objects.for_user(user)
+        .filter(lead__id=lead_id, last_edited__gte=last_checked)
+        .count()
+    )
 
 
 @api_view(["post"])
@@ -60,19 +70,35 @@ def list_polling_counts(request):
 
     now = timezone.now()
     items = dict()
+    args = None
     if not items_to_return:
         return Response()
 
     for item in items_to_return:
-        for model in POLLING_ITEMS:
-            if item.lower() == model.__name__.lower():
-
-                data = (
-                    model.objects.for_user(request.user)
-                    .filter(last_edited__gte=last_checked_at)
-                    .count()
-                )
-                items[item] = {"count": data, "last_check": now}
+        # certain items have extra attrs like lead_activity so try and split the item
+        try:
+            item, args = item.split(":")
+        except ValueError as e:
+            # item is not splittable so ignore it
+            pass
+        if item.lower() == POLLING_ITEM_NOTIFICATION.__name__.lower():
+            data = (
+                POLLING_ITEM_NOTIFICATION.objects.for_user(request.user)
+                .filter(last_edited__gte=last_checked_at)
+                .count()
+            )
+            items[item] = {"count": data, "last_check": now}
+        if item.lower() == POLLING_ITEM_LEAD_ACTIVITY_LOG.__name__.lower():
+            data = _list_polling_counts_lead_activity_log(
+                request.user, last_checked_at, args
+            )
+            items[item] = {"count": data, "last_check": now}
+        if item.lower() == POLLING_ITEM_NOTFICIATION_COUNT.lower():
+            data = {
+                "count": request.user.unviewed_notifications_count,
+                "last_check": now,
+            }
+            items[item] = {"count": data, "last_check": now}
 
     return Response({"items": items, "last_check": now})
 

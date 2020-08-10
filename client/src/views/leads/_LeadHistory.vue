@@ -38,8 +38,6 @@ import CollectionManager from '@/services/collectionManager'
 
 import ActivityLogItem from './_ActivityLogItem'
 
-const POLLING_INTERVAL = 2000
-
 export default {
   name: 'LeadHistory',
   props: {
@@ -67,48 +65,41 @@ export default {
     return {
       refreshedOnce: false,
       apiFailing: false,
+      hasNextPageData: false,
     }
   },
+  watch: {
+    async shouldRefreshPolling(val) {
+      if (val) {
+        if (
+          this.$store.getters.pollingDataToUpdate.includes(`leadActivityLog:${this.lead.id}`) &&
+          !this.hasNextPageData
+        ) {
+          await this.history.refresh()
+        }
+      }
+    },
+  },
   created() {
-    this.refresh(POLLING_INTERVAL)
+    this.$store.commit('UPDATE_ITEMS_TO_POLL', `leadActivityLog:${this.lead.id}`)
+    this.history.refresh()
+  },
+  computed: {
+    shouldRefreshPolling() {
+      return this.$store.getters.updatePollingData
+    },
   },
   destroyed() {
     clearTimeout(this.pollingTimeout)
+    this.$store.commit('REMOVE_ITEMS_FROM_POLL', `leadActivityLog:${this.lead.id}`)
   },
   methods: {
-    refresh(repeat) {
-      clearTimeout(this.pollingTimeout)
-      // Since we're polling, we want to suppress the default error handling,
-      // because that produces a lot of error alert boxes. Instead, we set an
-      // apiFailing flag, so we can show a custom error message.
-      this.history
-        .refresh({
-          enable400Alert: false,
-          enable500Alert: false,
-        })
-        .then(() => {
-          this.apiFailing = false
-          if (repeat) {
-            this.pollingTimeout = setTimeout(() => this.refresh(POLLING_INTERVAL), repeat)
-          }
-        })
-        .catch(error => {
-          this.apiFailing = true
-          if (repeat) {
-            // Repeat with exponential back-off as long as calls are failing
-            this.pollingTimeout = setTimeout(() => this.refresh(repeat * 2), repeat * 2)
-          }
-        })
-        .finally(() => {
-          this.refreshedOnce = true
-        })
-    },
     addPage() {
       // TODO: This conflicts with polling, so we'll have to figure
       //       out how to handle that. For now, we disable polling
       //       if the user loads the next page, because they are
       //       looking for something old, not new.
-      clearTimeout(this.pollingTimeout)
+      this.hasNextPageData = true
       this.history.addNextPage()
     },
   },

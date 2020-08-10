@@ -14,6 +14,12 @@
           :notification="item"
         />
       </template>
+      <Pagination
+        v-if="!notifications.refreshing"
+        style="margin-bottom: 1rem;"
+        :collection="notifications"
+        @start-loading="hasNextPageData = true"
+      />
     </template>
     <template v-else>
       No Notifications
@@ -26,22 +32,27 @@ import NotificationCard from '@/components/NotificationCard'
 import Notification from '@/services/notifications/'
 import CollectionManager from '@/services/collectionManager'
 import moment from 'moment'
+import Pagination from '@/components/shared/Pagination'
 
-const POLLING_INTERVAL = 10000
 export default {
   name: 'NotificationPage',
-  components: { NotificationCard },
+  components: { NotificationCard, Pagination },
   data() {
     return {
       notifications: CollectionManager.create({ ModelClass: Notification }),
-
+      hasNextPageData: false,
       pollingTimeout: null,
     }
   },
   watch: {
     async shouldRefreshPolling(val) {
       if (val) {
-        await this.notifications.refresh()
+        if (
+          this.$store.getters.pollingDataToUpdate.includes('notification') &&
+          !this.hasNextPageData
+        ) {
+          await this.notifications.refresh()
+        }
       }
     },
   },
@@ -80,9 +91,6 @@ export default {
   methods: {
     async markAsViewed(notificationId) {
       await Notification.api.markAsViewed([notificationId])
-    },
-    async getNextPage() {
-      await this.notifications.addNextPage()
     },
   },
 

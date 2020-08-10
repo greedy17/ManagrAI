@@ -73,6 +73,7 @@ export default {
     if (this.userIsLoggedIn) {
       const count = await Notification.api.getUnviewedCount({})
       this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
+      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
       this.unViewedCount = count.count
       await this.refresh(POLLING_INTERVAL)
     }
@@ -130,10 +131,19 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      this.$store.commit('CLEAR_POLLING_DATA')
       this.toggleUserMenu()
     },
   },
-  watch: {},
+  watch: {
+    shouldRefreshPolling(val) {
+      if (val) {
+        if (this.$store.getters.pollingDataToUpdate.includes('notificationCount')) {
+          this.unViewedCount = this.$store.state.pollingData.notificationCount.count
+        }
+      }
+    },
+  },
   computed: {
     shouldRefreshPolling() {
       return this.$store.getters.updatePollingData
