@@ -62,7 +62,6 @@ const mutations = {
     let hasItemsToUpdate = false
     state.itemsFromPollToUpdate = []
     for (const [key, value] of Object.entries(currentPollingData.items)) {
-      console.log(key, payload.items[key].count, value.count)
       if (payload.items[key]) {
         if (payload.items[key].count != value.count) {
           state.itemsFromPollToUpdate.push(key)
