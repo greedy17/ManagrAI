@@ -96,6 +96,20 @@ class Organization(TimeStampModel):
         """ returns a count of how many message auth phone numbers an org has """
         return self.users.filter(message_auth_account__isnull=False).count()
 
+    @property
+    def org_token(self):
+        if self.is_externalsyncenabled:
+            integration = self.users.filter(
+                type=core_consts.ACCOUNT_TYPE_INTEGRATION
+            ).first()
+            if integration:
+                if integration.is_active and integration.is_invited:
+                    auth_token, token_created = Token.objects.get_or_create(
+                        user=integration
+                    )
+                    token = json.loads(serializers.serialize("json", [auth_token,]))
+                    return token[0]["pk"]
+
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
