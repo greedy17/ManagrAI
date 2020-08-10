@@ -57,7 +57,7 @@ export default {
         let today = moment()
 
         let formatted = moment(curr.notifyAt)
-        console.log(acc)
+
         if (!acc['today']) {
           acc['today'] = []
         }

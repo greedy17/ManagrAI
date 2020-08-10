@@ -685,7 +685,6 @@ def list_twilio_messages(request):
 )
 def message_status(request):
     # get the message sid and status
-    print("here")
     message_status = request.data.get("MessageStatus", None)
     message_id = request.data.get("MessageSid", None)
 
