@@ -9,6 +9,16 @@ from rest_framework.authtoken.models import Token
 
 from managr.utils.numbers import format_phone_number
 
+from django.db.models import Sum, Avg, Q
+
+
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db.models import Sum, Avg
+from managr.utils.numbers import format_phone_number
+
+from managr.core.models import UserManager, TimeStampModel
+from . import constants as org_consts
+
 
 from managr.core.models import UserManager, TimeStampModel
 from managr.core import constants as core_consts
@@ -190,7 +200,6 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
-
         return super(Contact, self).save(*args, **kwargs)
 
 

@@ -28,7 +28,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
+
 from managr.lead.models import Lead
+
 
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from managr.core import constants as core_consts
@@ -323,6 +325,11 @@ class ContactViewSet(
 class StageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     """ endpoint to retrieve all stages for an org """
 
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (
+        SuperUserCreateOnly,
+        CanEditResourceOrReadOnly,
+    )
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (
         SuperUserCreateOnly,

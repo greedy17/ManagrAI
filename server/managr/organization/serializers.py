@@ -43,8 +43,6 @@ class StageSerializer(serializers.ModelSerializer):
         model = Stage
         fields = "__all__"
 
-
-class StageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stage
         fields = "__all__"
@@ -52,7 +50,8 @@ class StageSerializer(serializers.ModelSerializer):
 
 class AccountRefSerializer(serializers.ModelSerializer):
     """
-        Read only serializer for ref of the Account used for the AccountSerializer
+        Read only serializer for ref of the Account 
+        used for the AccountSerializer
     """
 
     class Meta:
@@ -115,6 +114,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
     lead_count = serializers.SerializerMethodField()
 
+    lead_count = serializers.SerializerMethodField()
+
     def to_internal_value(self, data):
         """ Backend Setting organization by default """
         internal_data = super().to_internal_value(data)
@@ -143,6 +144,7 @@ class AccountSerializer(serializers.ModelSerializer):
     def get_lead_count(self, instance):
         request = self.context.get("request")
         by_params = request.GET.get("by_params", None)
+
         if by_params:
             params = json.loads(by_params)
             only_unclaimed = params.get("only_unclaimed", False)
