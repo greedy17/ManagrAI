@@ -38,7 +38,17 @@ export default {
       pollingTimeout: null,
     }
   },
+  watch: {
+    async shouldRefreshPolling(val) {
+      if (val) {
+        await this.notifications.refresh()
+      }
+    },
+  },
   computed: {
+    shouldRefreshPolling() {
+      return this.$store.getters.updatePollingData
+    },
     datedNotifications() {
       if (this.notifications.list.length <= 0) {
         return null
@@ -47,7 +57,7 @@ export default {
         let today = moment()
 
         let formatted = moment(curr.notifyAt)
-
+        console.log(acc)
         if (!acc['today']) {
           acc['today'] = []
         }
@@ -65,7 +75,7 @@ export default {
     },
   },
   async created() {
-    await this.refresh(POLLING_INTERVAL)
+    await this.notifications.refresh()
   },
   methods: {
     async markAsViewed(notificationId) {
@@ -73,26 +83,6 @@ export default {
     },
     async getNextPage() {
       await this.notifications.addNextPage()
-    },
-
-    async refresh(repeat) {
-      clearTimeout(this.pollingTimeout)
-      try {
-        await this.notifications.refresh()
-
-        if (repeat) {
-          this.polllingTimeout = setTimeout(async () => {
-            this.refresh(POLLING_INTERVAL)
-          }, repeat)
-        }
-      } catch (e) {
-        this.apiFailing = true
-        if (repeat) {
-          this.pollingTimeout = setTimeout(async () => {
-            this.refresh(repeat * 2)
-          }, repeat * 2)
-        }
-      }
     },
   },
 
