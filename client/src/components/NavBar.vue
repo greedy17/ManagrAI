@@ -30,7 +30,12 @@
           </DropDownMenu>
         </div>
 
-        <span ref="notification-trigger" class="right__items" @click.prevent="toggleNotifications">
+        <span
+          v-if="userIsLoggedIn"
+          ref="notification-trigger"
+          class="right__items"
+          @click.prevent="toggleNotifications"
+        >
           {{ unViewedCount > 0 ? unViewedCount : '' }}
           <svg
             v-if="userIsLoggedIn"
