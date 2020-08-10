@@ -19,6 +19,7 @@
         style="margin-bottom: 1rem;"
         :collection="notifications"
         @start-loading="hasNextPageData = true"
+        model="Notification"
       />
     </template>
     <template v-else>
