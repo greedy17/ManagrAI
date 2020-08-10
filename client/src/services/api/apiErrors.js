@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import store from '../../store'
+
 /**
  * This function accepts any type of value and reduces it to a single
  * string. This is particularly useful for translating objects with
@@ -36,7 +38,7 @@ export function apiErrorHandler({
     console.log(`${apiName} Error:`, error)
 
     // Show error to user
-    if (response && response.status >= 400 && response.status < 500) {
+    if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
       // Handle 4xx errors (probably bad user input)
       const { data } = response
       let message = '<div>Error...</div>'
@@ -68,6 +70,15 @@ export function apiErrorHandler({
       Vue.prototype.$Alert.alert({
         type: 'error',
         message: '<div>Error...</div>' + '<div>Something went wrong! Please try again later.</div>',
+        timeout: 3000,
+      })
+    }
+    if (response && response.status === 401) {
+      // Logs out a user if there is a 401 error
+      store.commit('LOGOUT_USER')
+      Vue.prototype.$Alert.alert({
+        type: 'error',
+        message: '<div>Error...</div>' + '<div>Invalid Token Please Login Again.</div>',
         timeout: 3000,
       })
     }
