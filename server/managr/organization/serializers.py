@@ -1,13 +1,14 @@
+import json
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Contact
+from .models import Organization, Account, Contact, Stage
 from managr.lead.models import ActionChoice
 
-from djmoney.models.fields import MoneyField, Money
 from rest_framework import (
     status, filters, permissions
 )
 from rest_framework.response import Response
+from managr.utils.numbers import validate_phone_number
 
 
 class ActionChoiceRefSerializer(serializers.ModelSerializer):
@@ -28,6 +29,15 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'name', 'state',
+        )
+
+
+class StageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Stage
+        fields = (
+            '__all__'
         )
 
 
@@ -73,6 +83,7 @@ class AccountSerializer(serializers.ModelSerializer):
         Only Organization Managers can add, update, delete accounts
         Other users can list  
     """
+    lead_count = serializers.SerializerMethodField()
 
     def to_internal_value(self, data):
         """ Backend Setting organization by default """
@@ -88,6 +99,37 @@ class AccountSerializer(serializers.ModelSerializer):
                   'organization', 'state', 'lead_count',)
         read_only_fields = ('state', 'organization',)
 
+    def get_lead_count(self, instance):
+        request = self.context.get('request')
+        by_params = request.GET.get('by_params', None)
+        if by_params:
+            params = json.loads(by_params)
+            only_unclaimed = params.get('only_unclaimed', False)
+            representatives = params.get('representatives', [])
+            search_term = params.get('search_term', '')
+
+            # if search term and unclaimed
+            if search_term and only_unclaimed:
+                return instance.leads.filter(title__icontains=search_term, claimed_by__isnull=True).count()
+
+            # if search term and representatives
+            if search_term and len(representatives):
+                return instance.leads.filter(title__icontains=search_term, claimed_by__in=representatives).count()
+
+            # if search only
+            if search_term:
+                return instance.leads.filter(title__icontains=search_term).count()
+
+            # if unclaimed
+            if only_unclaimed:
+                return instance.leads.filter(claimed_by__isnull=True).count()
+
+            # if representatives
+            if len(representatives):
+                return instance.leads.filter(claimed_by__in=representatives).count()
+
+        return instance.leads.count()
+
 
 class ContactSerializer(serializers.ModelSerializer):
 
@@ -96,6 +138,22 @@ class ContactSerializer(serializers.ModelSerializer):
             organization=self.context['request'].user.organization)
         if not value in accounts:
             raise PermissionDenied()
+        return value
+
+    def validate_phone_number_1(self, value):
+        if value:
+            try:
+                validate_phone_number(value)
+            except ValueError:
+                raise ValidationError()
+        return value
+
+    def validate_phone_number_2(self, value):
+        if value:
+            try:
+                validate_phone_number(value)
+            except ValueError:
+                raise ValidationError()
         return value
 
     class Meta:

@@ -23,6 +23,8 @@ from rest_framework import (
     viewsets,
 )
 
+
+from managr.utils.numbers import validate_phone_number, format_phone_number
 from managr.core.permissions import (
     IsOrganizationManager,
     IsSuperUser,
@@ -30,8 +32,9 @@ from managr.core.permissions import (
     CanEditResourceOrReadOnly,
 )
 from managr.core.models import ACCOUNT_TYPE_MANAGER
-from managr.organization.models import Contact, Account
+from managr.organization.models import Contact, Account, Stage
 from managr.lead import constants as lead_constants
+from managr.core.twilio.messages import list_messages
 
 from . import models as lead_models
 from . import filters as lead_filters
@@ -86,32 +89,78 @@ class LeadActivityLogViewSet(
         # NOTE (Bruno 7-9-2020): self.get_queryset excludes
         # ACTIVITIES_TO_EXCLUDE_FROM_HISTORY, hence the following log_qs instead.
         log_qs = LeadActivityLog.objects.for_user(self.request.user)
+
         empty = request.query_params.get("empty")
         leads = request.query_params.get("leads")
         claimed_by = request.query_params.get("claimed_by")
         date_range_from = request.query_params.get("date_range_from")
         date_range_to = request.query_params.get("date_range_to")
+        filter_params = {}
 
         # IMPORTANT: For security reasons, first filter leads to
         #            those visible by this user.
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
             lead_qs = lead_qs.filter(id__in=leads.split(","))
+            filter_params['leads'] = leads.split(",")
+        else:
+            filter_params['leads'] = None
+
         if claimed_by:
             lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
+            filter_params['claimed_by'] = claimed_by.split(",")
+        else:
+            filter_params['claimed_by'] = None
+
         # date_range_from and date_range_to can be missing, because:
         # - TODAY_ONWARD means there is no date_range_to
         # - ALL_TIME means both are missing
         if date_range_from:
-            lead_qs = lead_qs.filter(expected_close_date__gte=date_range_from)
+            log_qs = log_qs.filter(action_timestamp__gte=date_range_from)
+            filter_params['date_range_from'] = date_range_from
+        else:
+            filter_params['date_range_from'] = None
+
         if date_range_to:
-            lead_qs = lead_qs.filter(expected_close_date__lte=date_range_to)
+            log_qs = log_qs.filter(action_timestamp__lte=date_range_to)
+            filter_params['date_range_to'] = date_range_to
+        else:
+            filter_params['date_range_to'] = None
 
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
+        filter_params['empty'] = empty
 
-        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, empty=empty)
+        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params)
         return Response(insights.as_dict)
+
+
+class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    serializer_class = lead_serializers.LeadMessageSerializer
+    filter_class = lead_filters.LeadMessageFilterSet
+
+    def get_queryset(self):
+        return lead_models.LeadMessage.objects.for_user(self.request.user)
+
+    @action(
+        methods=["GET"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="list-messages",
+    )
+    def list_messages_from_contact(self, request, *args, **kwargs):
+        user = self.request.user
+        contact = request.query_params.get('contact_phone')
+        if user.message_auth_account:
+            sender = user.message_auth_account.phone_number
+
+            try:
+                message_list = list_messages(sender, contact)
+            except APIException as e:
+                return e
+        return Response(data={"count": user.unviewed_notifications_count})
 
 
 class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -230,9 +279,27 @@ class LeadViewSet(
                 email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
+                phone_1 = contact.get(
+                    "phone_number_1", None)
+                phone_2 = contact.get(
+                    "phone_number_2", None)
+                if phone_1:
+                    try:
+                        validate_phone_number(phone_1)
+                        phone_1 = format_phone_number(phone_1)
+                    except ValueError:
+                        phone_1 = None
+                if phone_2:
+                    try:
+                        validate_phone_number(phone_2)
+                        phone_2 = format_phone_number(phone_2)
+                    except ValueError:
+                        phone_2 = None
+
                 c.title = contact.get("title", c.title)
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
+
                 c.phone_number_1 = contact.get(
                     "phone_number_1", c.phone_number_1)
                 c.phone_number_2 = contact.get(
@@ -272,6 +339,7 @@ class LeadViewSet(
 
         # if updating status, also update status_last_update
         if "status" in data:
+
             data["status_last_update"] = timezone.now()
 
         # make sure the user that created the lead is not updated as well
@@ -348,7 +416,8 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = lead_constants.LEAD_STATUS_CLOSED
+        lead.status = Stage.objects.get(
+            title=lead_constants.LEAD_STATUS_CLOSED)
         lead.closing_amount = closing_amount
         lead.expected_close_date = timezone.now()
         lead.forecast.forecast = lead_constants.FORECAST_CLOSED
@@ -586,10 +655,10 @@ class ForecastViewSet(
         date_range_to = request.data['date_range_to']
         repIDs = request.data['representatives']
         kpis = ForecastKPIs(
-                            date_range_from,
-                            date_range_to,
-                            representatives=repIDs,
-                            )
+            date_range_from,
+            date_range_to,
+            representatives=repIDs,
+        )
 
         return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
@@ -646,6 +715,10 @@ class ReminderViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.ReminderSerializer
     filter_class = lead_filters.ReminderFilterSet
+    filter_backends = (
+        DjangoFilterBackend,
+        lead_filters.ReminderOrderingFilter,
+    )
 
     def get_queryset(self):
         return Reminder.objects.for_user(self.request.user)

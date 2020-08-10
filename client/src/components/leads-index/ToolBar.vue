@@ -21,16 +21,14 @@
       <div class="filter-options">
         <div
           class="option"
-          @click="emitUpdateFilter({ key: 'byStatus', value: status })"
-          v-for="status in statusEnums"
-          :key="status"
+          @click="emitUpdateFilter({ key: 'byStatus', value: status.id })"
+          v-for="status in getStatuses"
+          :key="status.id"
           :class="{
-            active: currentFilters.byStatus
-              ? currentFilters.byStatus.toLowerCase() == status.toLowerCase()
-              : false,
+            active: currentFilters.byStatus ? currentFilters.byStatus == status.id : false,
           }"
         >
-          {{ status }}
+          {{ status.title.toLowerCase() }}
         </div>
       </div>
     </div>
@@ -38,7 +36,7 @@
 </template>
 
 <script>
-import { forecastEnums, statusEnums } from '@/services/leads/enumerables'
+import { forecastEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
 
 export default {
@@ -53,9 +51,13 @@ export default {
   },
   data() {
     return {
-      statusEnums,
       forecastEnums,
     }
+  },
+  computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
   },
   methods: {
     emitUpdateFilter(item) {
@@ -73,7 +75,7 @@ export default {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-  width: 78%;
+
   height: auto;
   display: flex;
   flex-flow: column;
@@ -135,6 +137,7 @@ export default {
       margin: 0.5rem;
       cursor: pointer;
       max-width: 6rem;
+      text-transform: capitalize;
     }
   }
 }

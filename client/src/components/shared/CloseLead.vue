@@ -1,44 +1,50 @@
 <template>
   <div class="close-lead">
-    <h1><span class="emoji">🎉</span>Congrats on the Deal! - Go Ring the Bell!</h1>
-    <!-- client side validations -->
-    <div class="errors" v-if="isFormValid !== null && !isFormValid">
-      No field may be blank.
+    <div class="loading" v-if="loading">
+      <ComponentLoadingSVG />
     </div>
-    <!-- form -->
-    <form @submit.prevent="closeLead">
-      <div class="form-field">
-        <label>Final Contract Amount</label>
-        <div class="flex-container bordered">
-          <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-          <input v-model="amount" type="number" placeholder="Final Dollar Amount" />
+    <template v-if="!loading">
+      <h1><span class="emoji">🎉</span>Congrats on the Deal! - Go Ring the Bell!</h1>
+      <!-- client side validations -->
+      <div class="errors" v-if="isFormValid !== null && !isFormValid">
+        No field may be blank.
+      </div>
+      <!-- form -->
+      <form @submit.prevent="closeLead">
+        <div class="form-field">
+          <label>Final Contract Amount</label>
+          <div class="flex-container bordered">
+            <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
+            <input v-model="amount" type="number" placeholder="Final Dollar Amount" />
+          </div>
         </div>
-      </div>
-      <div class="form-field">
-        <label>Final Contract</label>
-        <div class="flex-container">
-          <input ref="upload" type="file" :style="{ display: 'none' }" @change="onFileChosen" />
-          <button type="button" class="upload-button" @click.prevent="chooseFile">
-            <img class="icon" alt="icon" src="@/assets/images/add.svg" />
-            Choose File
-          </button>
-          <span v-if="file" class="file-name">{{ file.name }}</span>
+        <div class="form-field">
+          <label>Final Contract</label>
+          <div class="flex-container">
+            <input ref="upload" type="file" :style="{ display: 'none' }" @change="onFileChosen" />
+            <button type="button" class="upload-button" @click.prevent="chooseFile">
+              <img class="icon" alt="icon" src="@/assets/images/add.svg" />
+              Choose File
+            </button>
+            <span v-if="file" class="file-name">{{ file.name }}</span>
+          </div>
         </div>
-      </div>
-      <div class="form-field">
-        <label>Close Note</label>
-        <textarea v-model="note" class="bordered" placeholder="Input note" />
-      </div>
-      <div class="cta-container">
-        <button type="submit" class="cta">Close Opportunity</button>
-      </div>
-    </form>
+        <div class="form-field">
+          <label>Close Note</label>
+          <textarea v-model="note" class="bordered" placeholder="Input note" />
+        </div>
+        <div class="cta-container">
+          <button type="submit" class="cta">Close Opportunity</button>
+        </div>
+      </form>
+    </template>
   </div>
 </template>
 
 <script>
 import File from '@/services/files'
 import Lead from '@/services/leads'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 
 export default {
   name: 'CloseLead',
@@ -48,6 +54,9 @@ export default {
       required: true,
     },
   },
+  components: {
+    ComponentLoadingSVG,
+  },
   data() {
     return {
       amount: '',
@@ -56,6 +65,7 @@ export default {
       errors: {},
       isFormValid: null,
       success: null,
+      loading: false,
     }
   },
   methods: {
@@ -79,6 +89,7 @@ export default {
         return
       }
 
+      this.loading = true
       // proceed to close the lead, first uploading the contract
       File.api
         .create(this.file, this.lead.id)
@@ -86,18 +97,18 @@ export default {
           return Lead.api.close(this.lead.id, this.amount, response.data.id)
         })
         .then(() => {
-          this.lead.status = Lead.CLOSED
-          if (this.lead.forecastRef) {
-            this.lead.forecastRef.forecast = Lead.CLOSED
+          let updatedLead = {
+            ...this.lead,
+            forecastRef: this.lead.forecastRef ? Lead.CLOSED : null,
+            closingAmount: parseFloat(this.amount),
           }
-          this.lead.closingAmount = this.amount
-          this.$parent.$emit('closed-lead')
-          this.$parent.$emit('close-modal')
+          this.$emit('closed-lead', updatedLead)
           this.$Alert.alert({
             type: 'success',
             timeout: 3000,
             message: 'Success! Opportunity closed!',
           })
+          this.loading = false
         })
     },
     clientSideValidations() {
@@ -131,6 +142,12 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.loading {
+  position: absolute;
+  width: 100%;
+  height: 200px;
+  z-index: 1000;
+}
 .close-lead {
   @include base-font-styles();
   display: flex;

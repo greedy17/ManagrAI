@@ -28,11 +28,9 @@ export default class LeadAPI {
 
   list({ pagination, filters }) {
     const filtersMap = {
-      // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       search: ApiFilter.create({ key: 'search' }),
-
       onList: ApiFilter.create({ key: 'on_list' }),
       byList: ApiFilter.create({ key: 'by_list' }),
       byRating: ApiFilter.create({ key: 'by_rating' }),

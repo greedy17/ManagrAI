@@ -1,6 +1,38 @@
 <template>
-  <div class="leads-index">
-    <div class="toolbar-pane">
+  <div class="page">
+    <div class="page__left-nav-bar">
+      <SideNavToolbar>
+        <template v-slot:trigger>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span
+                class="toggle-icon"
+                @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+              >
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
+                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
+                </svg>
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Details
+            </template>
+          </Tooltip>
+        </template>
+        <template v-slot:toolbar>
+          <ToolBar
+            :repFilterState="repFilterState"
+            :triggerRefreshKPIs="triggerRefreshKPIs"
+            @toggle-active-rep="toggleActiveRep"
+            @select-all-reps="selectAllReps"
+            @deselect-all-reps="deselectAllReps"
+            @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
+          />
+        </template>
+      </SideNavToolbar>
+    </div>
+
+    <div class="page__main-content-area">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -11,17 +43,7 @@
         />
         <span class="right" :class="{ bold: !isCurrentRoute }">Lists</span>
       </div>
-      <ToolBar
-        class="toolbar"
-        :repFilterState="repFilterState"
-        :triggerRefreshKPIs="triggerRefreshKPIs"
-        @toggle-active-rep="toggleActiveRep"
-        @select-all-reps="selectAllReps"
-        @deselect-all-reps="deselectAllReps"
-        @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
-      />
-    </div>
-    <div class="lists-container-pane">
+
       <ComponentLoadingSVG v-if="loading" :style="{ marginTop: '10vh' }" />
       <div class="lists-container-message" v-else-if="!activeReps.length">
         No Representatives Selected!
@@ -36,12 +58,16 @@
 
 <script>
 import ToolBar from '@/components/forecast/ToolBar'
+import Tooltip from '@/components/shared/Tooltip'
+
 import ListsContainer from '@/components/forecast/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
-
+import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/services/pagination'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
+import { mapGetters } from 'vuex'
 
 function allRepsReducer(obj, id) {
   obj[id] = true
@@ -54,6 +80,8 @@ export default {
     ToolBar,
     ToggleCheckBox,
     ListsContainer,
+    SideNavToolbar,
+    Tooltip,
   },
   data() {
     return {
@@ -117,6 +145,7 @@ export default {
       this.$router.push({ name: 'LeadsIndex' })
     },
     updateForecastCollections(dateRange) {
+      this.resetPaginationOfCollections()
       if (dateRange) {
         this.applyDateRangeFilter(dateRange)
       }
@@ -178,8 +207,21 @@ export default {
       this.repFilterState = {}
       this.updateForecastCollections()
     },
+    resetPaginationOfCollections() {
+      // When updating collection filter parameters,
+      // may have an error if the pagination parameter stays at
+      // page 2 but the new filter parameters can only yield a single page.
+      // Therefore, reset pagination.
+      this.lists['50/50'].pagination = Pagination.create()
+      this.lists['STRONG'].pagination = Pagination.create()
+      this.lists['VERBAL'].pagination = Pagination.create()
+      this.lists['FUTURE'].pagination = Pagination.create()
+      this.lists['UNFORECASTED'].pagination = Pagination.create()
+      this.lists['CLOSED'].pagination = Pagination.create()
+    },
   },
   computed: {
+    ...mapGetters(['showToolbarNav']),
     isCurrentRoute() {
       return this.$route.name == 'Forecast'
     },
@@ -204,7 +246,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
-
+@import '@/styles/layout';
 .leads-index {
   display: flex;
   flex-flow: row;
@@ -222,21 +264,31 @@ export default {
     margin-left: auto;
   }
 }
-
+.toggle-icon {
+  &:hover {
+    cursor: pointer;
+  }
+}
 .view-toggle-container {
   @include base-font-styles();
   font-size: 0.825rem;
   display: flex;
   flex-flow: row;
   align-items: center;
-  justify-content: center;
-  width: 78%;
-  margin: 0 0 1rem auto;
+  margin: 1rem 0;
+  width: 10rem;
+
+  .checkbox-container {
+    display: flex;
+    flex-flow: row;
+    width: 20rem;
+    justify-content: flex-start;
+  }
 
   .left,
   .right {
     width: 4rem;
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .left {
@@ -244,11 +296,15 @@ export default {
   }
 
   .checkbox {
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .bold {
     font-weight: bold;
+  }
+
+  .centered {
+    margin: 0 auto;
   }
 }
 

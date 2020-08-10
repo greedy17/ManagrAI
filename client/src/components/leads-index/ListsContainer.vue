@@ -1,54 +1,78 @@
 <template>
-  <div class="lists-container">
-    <div v-if="!loading" class="tab-content">
-      <List
-        :isOwner="isOwner"
-        @delete-list="emitDeleteList($event, index)"
-        @remove-from-list="$emit('remove-from-list', $event)"
-        v-for="(list, index) in listsCollection.list"
-        :key="list.id"
-        :list="list"
-        :leadFilters="listsCollection.filters"
-        @refresh-collections="$emit('refresh-collections')"
-      />
-      <LoadMoreButton
-        v-if="!listsCollection.refreshing && !!listsCollection.pagination.next"
-        class="load-more-button"
-        :collection="listsCollection"
-      />
-      <CustomList
-        :collection="noListLeadsCollection"
-        key="No List"
-        title="No List"
-        @refresh-collections="$emit('refresh-collections')"
-      />
-      <CustomList
-        :collection="allLeadsCollection"
-        key="All Opportunities"
-        title="All Opportunities"
-        @refresh-collections="$emit('refresh-collections')"
-      />
-      <CreateList @list-created="emitListCreated" />
+  <div>
+    <div class="lists-container">
+      <div v-if="!loading" class="tab-content">
+        <!-- 
+          This set of lists contains custom created lists by a user and will populate the count based on that list
+          if the total count is not yet available, the total count becomes available when the user toggles the list
+        -->
+        <List
+          @delete-list="emitDeleteList(list.id, index)"
+          v-for="(list, index) in listsCollection.list"
+          :collection="leadsFromList"
+          :key="list.leadCount"
+          :title="list.title"
+          @get-leads="onGetLeads($event, list.id)"
+          @refresh-collections="$emit('refresh-collections')"
+          :leadCount="
+            leadsFromList.pagination.totalCount
+              ? leadsFromList.pagination.totalCount
+              : list.leadCount
+          "
+          :isOwner="true"
+        />
+        <!-- 
+          This set of lists contains all opportunities and ones not on lists by a user and will populate the count based on that list
+          if the total count of the collection
+        -->
+        <List
+          :collection="noListLeadsCollection"
+          key="No List"
+          title="No List"
+          @refresh-collections="$emit('refresh-collections')"
+          :leadCount="noListLeadsCollection.pagination.totalCount"
+        />
+        <List
+          :collection="allLeadsCollection"
+          key="All Opportunities"
+          title="All Opportunities"
+          @refresh-collections="$emit('refresh-collections')"
+          :leadCount="allLeadsCollection.pagination.totalCount"
+        />
+        <CreateList @list-created="emitListCreated" />
+      </div>
+      <div v-else class="tab-content">
+        <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
+      </div>
     </div>
-    <div v-else class="tab-content">
-      <ComponentLoadingSVG :style="{ marginTop: '5vh', marginBottom: '5vh' }" />
-    </div>
+    <Pagination
+      v-if="!listsCollection.refreshing"
+      style="margin-top: 0.5rem;"
+      :collection="listsCollection"
+      :model="'List'"
+      @start-loading="startPaginationLoading()"
+    />
   </div>
 </template>
 
 <script>
 import List from '@/components/leads-index/List'
-import CustomList from '@/components/leads-index/CustomList'
+
 import CreateList from '@/components/leads-index/CreateList'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+
+import LeadModel from '@/services/leads'
+import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/components/shared/Pagination'
+
+import { paginationMixin } from '@/services/pagination'
 
 export default {
   name: 'ListsContainer',
+  mixins: [paginationMixin],
   components: {
     List,
     CreateList,
-    LoadMoreButton,
-    CustomList,
+    Pagination,
   },
   props: {
     loading: {
@@ -76,14 +100,36 @@ export default {
       type: Boolean,
       default: false,
     },
+    filters: {
+      type: Object,
+      default: () => {},
+    },
     isOwner: {
       // determines if CRUD is available
       type: Boolean,
       default: false,
     },
   },
-
+  data() {
+    return {
+      leadsFromList: CollectionManager.create({
+        ModelClass: LeadModel,
+        filters: {},
+      }),
+    }
+  },
   methods: {
+    async onGetLeads(show, listId) {
+      if (show) {
+        this.leadsFromList.filters = {
+          byList: listId,
+          byRating: this.filters.byRating ? this.filters.byRating : null,
+          byStatus: this.filters.byStatus ? this.filters.byStatus : null,
+        }
+      }
+
+      await this.leadsFromList.refresh()
+    },
     emitDeleteList(listId, i) {
       this.$emit('delete-list', { id: listId, index: i })
     },
@@ -123,6 +169,7 @@ export default {
   flex-flow: row;
   align-items: center;
   margin: 1rem 0;
+  width: 10rem;
 
   .checkbox-container {
     display: flex;
@@ -134,7 +181,7 @@ export default {
   .left,
   .right {
     width: 4rem;
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .left {
@@ -142,7 +189,7 @@ export default {
   }
 
   .checkbox {
-    margin: 0 auto;
+    margin: 0 1rem;
   }
 
   .bold {
@@ -203,9 +250,5 @@ export default {
   align-self: center;
   width: 25%;
   margin-left: 0.75rem;
-}
-
-.load-more-button {
-  margin: 0.5rem auto;
 }
 </style>

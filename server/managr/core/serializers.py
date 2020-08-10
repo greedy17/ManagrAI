@@ -13,13 +13,19 @@ from managr.organization.serializers import (
 from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
-from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount
+from .models import User, STATE_ACTIVE, STATE_INACTIVE, STATE_INVITED, EmailAuthAccount, MessageAuthAccount
 from .models import EmailTemplate
 
 
 class EmailAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAuthAccount
+        fields = "__all__"
+
+
+class MessageAuthAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessageAuthAccount
         fields = "__all__"
 
 
@@ -47,6 +53,8 @@ class UserSerializer(serializers.ModelSerializer):
     email_auth_account_ref = EmailAuthAccountSerializer(
         source="email_auth_account", read_only=True
     )
+    message_auth_account_ref = MessageAuthAccountSerializer(
+        source="message_auth_account", read_only=True)
 
     class Meta:
         model = User
@@ -67,6 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
             "email_auth_link",
             "email_auth_account",
             "email_auth_account_ref",
+            "message_auth_account",
+            "message_auth_account_ref",
             "quota",
             "upside",
             "commit",
@@ -82,6 +92,7 @@ class UserSerializer(serializers.ModelSerializer):
         "full_name",
         "email_auth_account",
         "is_serviceaccount",
+        "message_auth_account",
     )
 
 

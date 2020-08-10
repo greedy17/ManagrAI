@@ -9,19 +9,19 @@
             </option>
           </select>
         </div>
-
-        <div class="help-box-container">
-          <img
-            class="help-box-icon"
-            src="@/assets/images/help-outline.svg"
-            @mouseenter="showDateRangeHelp = true"
-            @mouseleave="showDateRangeHelp = false"
-          />
-          <div class="help-box" v-if="showDateRangeHelp">
+        <Tooltip>
+          <template v-slot:tooltip-target>
+            <span class="toggle-icon" @click="toggleSideToolbar('details')">
+              <svg width="20px" height="20px" viewBox="0 0 15 15">
+                <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+              </svg>
+            </span>
+          </template>
+          <template v-slot:tooltip-content>
             You can edit any users' Quota, Commit, and Upside by selecting only that user. If more
             than one user is selected, all data is aggregated.
-          </div>
-        </div>
+          </template>
+        </Tooltip>
       </div>
       <template v-if="KPIs === null">
         <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
@@ -45,14 +45,26 @@
             <div class="fifth-wide" />
             <span class="three-fifth-wide value">{{ KPIs.quota | currency }}</span>
             <div class="fifth-wide">
-              <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editQuota" />
+              <img
+                src="@/assets/images/pencil.svg"
+                class="edit-icon"
+                @click.stop.prevent="editQuota"
+              />
             </div>
           </span>
           <div v-else-if="oneRepSelected && editKPIs.editingQuota" style="width: 100%;">
             <form class="kpi-form" @submit.prevent="updateQuota">
               <input type="number" v-model="editKPIs.tempQuota" />
-              <img class="save" src="@/assets/images/checkmark.svg" @click="updateQuota" />
-              <img class="reset" src="@/assets/images/remove.svg" @click="resetQuota" />
+              <img
+                class="save"
+                src="@/assets/images/checkmark.svg"
+                @click.stop.prevent="updateQuota"
+              />
+              <img
+                class="reset"
+                src="@/assets/images/remove.svg"
+                @click.stop.prevent="resetQuota"
+              />
             </form>
           </div>
           <span class="statistic" v-else>{{ KPIs.quota | currency }}</span>
@@ -71,20 +83,21 @@
           <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
         </div>
         <div class="single-statistic section-shadow">
-          <span class="title with-help-box">
+          <span class="title">
             <span>Forecast</span>
-            <div class="help-box-container">
-              <img
-                class="help-box-icon"
-                src="@/assets/images/help-outline.svg"
-                @mouseenter="showForecastHelp = true"
-                @mouseleave="showForecastHelp = false"
-              />
-              <div class="help-box" v-if="showForecastHelp">
+            <Tooltip>
+              <template v-slot:tooltip-target>
+                <span class="toggle-icon" @click="toggleSideToolbar('details')">
+                  <svg width="20px" height="20px" viewBox="0 0 15 15">
+                    <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+                  </svg>
+                </span>
+              </template>
+              <template v-slot:tooltip-content>
                 Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong
                 (expected close rate of 75%) + Verbal (expected close rate of 100%).
-              </div>
-            </div>
+              </template>
+            </Tooltip>
           </span>
           <span class="statistic">{{ KPIs.forecast | currency }}</span>
         </div>
@@ -98,14 +111,26 @@
             <div class="fifth-wide" />
             <span class="three-fifth-wide value">{{ KPIs.commit | currency }}</span>
             <div class="fifth-wide">
-              <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editCommit" />
+              <img
+                src="@/assets/images/pencil.svg"
+                class="edit-icon"
+                @click.stop.prevent="editCommit"
+              />
             </div>
           </span>
           <div v-else-if="oneRepSelected && editKPIs.editingCommit" style="width: 100%;">
             <form class="kpi-form" @submit.prevent="updateCommit">
               <input type="number" v-model="editKPIs.tempCommit" />
-              <img class="save" src="@/assets/images/checkmark.svg" @click="updateCommit" />
-              <img class="reset" src="@/assets/images/remove.svg" @click="resetCommit" />
+              <img
+                class="save"
+                src="@/assets/images/checkmark.svg"
+                @click.stop.prevent="updateCommit"
+              />
+              <img
+                class="reset"
+                src="@/assets/images/remove.svg"
+                @click.stop.prevent="resetCommit"
+              />
             </form>
           </div>
           <span class="statistic" v-else>{{ KPIs.commit | currency }}</span>
@@ -120,14 +145,26 @@
             <div class="fifth-wide" />
             <span class="three-fifth-wide value">{{ KPIs.upside | currency }}</span>
             <div class="fifth-wide">
-              <img src="@/assets/images/pencil.svg" class="edit-icon" @click="editUpside" />
+              <img
+                src="@/assets/images/pencil.svg"
+                class="edit-icon"
+                @click.stop.prevent="editUpside"
+              />
             </div>
           </span>
           <div v-else-if="oneRepSelected && editKPIs.editingUpside" style="width: 100%;">
             <form class="kpi-form" @submit.prevent="updateUpside">
               <input type="number" v-model="editKPIs.tempUpside" />
-              <img class="save" src="@/assets/images/checkmark.svg" @click="updateUpside" />
-              <img class="reset" src="@/assets/images/remove.svg" @click="resetUpside" />
+              <img
+                class="save"
+                src="@/assets/images/checkmark.svg"
+                @click.stop.prevent="updateUpside"
+              />
+              <img
+                class="reset"
+                src="@/assets/images/remove.svg"
+                @click.stop.prevent="resetUpside"
+              />
             </form>
           </div>
           <span class="statistic" v-else>{{ KPIs.upside | currency }}</span>
@@ -193,6 +230,20 @@
               </span>
             </div>
           </div>
+
+          <div class="graphic-statistic section-shadow">
+            <div class="icon-container">
+              <img class="icon" src="@/assets/images/messages.svg" alt="icon" />
+            </div>
+            <div class="information">
+              <span class="top">
+                {{ insights && insights.messages.count
+                }}{{ ' Message' | pluralize(insights.messages.count) }}
+              </span>
+              <span class="bottom"> </span>
+            </div>
+          </div>
+
           <div class="graphic-statistic section-shadow">
             <div class="icon-container">
               <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
@@ -213,6 +264,7 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 import Forecast from '@/services/forecasts'
 import User from '@/services/users'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
+import Tooltip from '@/components/shared/Tooltip'
 
 const POLLING_INTERVAL = 10000
 
@@ -245,6 +297,7 @@ export default {
       type: Boolean,
     },
   },
+  components: { Tooltip },
   data() {
     return {
       dateRangePresets,
@@ -480,7 +533,6 @@ export default {
   flex-flow: column;
   justify-content: center;
   height: 3rem;
-  padding-left: 7%;
   font-weight: bold;
 }
 
@@ -546,7 +598,7 @@ export default {
   align-items: center;
 
   .help-box-icon {
-    position: absolute;
+    position: relative;
     margin-left: 1rem;
   }
 }

@@ -21,14 +21,19 @@ class LeadQuerySet(models.QuerySet):
 
     def open_leads(self):
         return self.exclude(
-            status__in=[
+            status__title__in=[
                 lead_constants.LEAD_STATUS_CLOSED,
                 lead_constants.LEAD_STATUS_LOST,
             ]
         )
 
-    def closed_leads(self):
-        return self.filter(status__in=[lead_constants.LEAD_STATUS_CLOSED])
+    def closed_leads(self, date_range_from=None, date_range_to=None):
+        qs = self.filter(status__title__in=[lead_constants.LEAD_STATUS_CLOSED])
+        if date_range_from:
+            qs = qs.filter(expected_close_date__gte=date_range_from)
+        if date_range_to:
+            qs = qs.filter(expected_close_date__lte=date_range_to)
+        return qs
 
 
 class Lead(TimeStampModel):
@@ -39,16 +44,14 @@ class Lead(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.PositiveIntegerField(
-        help_text="This field is editable", default=0)
+    amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
     )
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
-    rating = models.IntegerField(
-        choices=lead_constants.LEAD_RATING_CHOICES, default=1)
+    rating = models.IntegerField(choices=lead_constants.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
         "organization.Account",
         related_name="leads",
@@ -62,13 +65,12 @@ class Lead(TimeStampModel):
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="leads", blank=True
     )
-    status = models.CharField(
-        max_length=255,
-        choices=lead_constants.LEAD_STATUS_CHOICES,
-        help_text="Status in the sale process",
-        null=True,
-    )
     status_last_update = models.DateTimeField(default=timezone.now, blank=True)
+
+    status = models.ForeignKey(
+        "organization.Stage", related_name="leads", null=True, on_delete=models.SET_NULL
+    )
+
     claimed_by = models.ForeignKey(
         "core.User",
         related_name="claimed_leads",
@@ -94,7 +96,8 @@ class Lead(TimeStampModel):
     @property
     def contract_file(self):
         """ property to define contract file if a lead is not closed it has not contract """
-        if self.status == lead_constants.LEAD_STATUS_CLOSED:
+
+        if self.status and self.status.title == lead_constants.LEAD_STATUS_CLOSED:
             try:
                 return File.objects.get(
                     doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id
@@ -126,8 +129,7 @@ class ListQuerySet(models.QuerySet):
 
 class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
-    created_by = models.ForeignKey(
-        "core.User", null=True, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey("core.User", null=True, on_delete=models.SET_NULL)
     leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
@@ -241,7 +243,7 @@ class BaseNote(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -344,10 +346,7 @@ class LeadActivityLog(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "Lead",
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name="activity_logs",
+        "Lead", null=True, on_delete=models.SET_NULL, related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -408,12 +407,16 @@ class Notification(TimeStampModel):
         help_text="type of Notification being created",
     )
     resource_id = models.CharField(
-        max_length=255, null=True, help_text="Id of the resource if it is an email it will be the thread id")
+        max_length=255,
+        null=True,
+        help_text="Id of the resource if it is an email it will be the thread id",
+    )
 
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
     user = models.ForeignKey(
-        'core.User', on_delete=models.SET_NULL, related_name="notifications", null=True)
+        "core.User", on_delete=models.SET_NULL, related_name="notifications", null=True
+    )
 
     objects = NotificationQuerySet.as_manager()
 
@@ -498,7 +501,73 @@ class Action(TimeStampModel):
             },
             "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
             "linked_contacts_ref": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
+                for c in self.linked_contacts.all()
+            ],
+        }
+
+
+class LeadMessageQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+
+        elif user.organization and user.is_active:
+            return self.filter(lead__account__organization=user.organization_id)
+        else:
+            return self.none()
+
+
+class LeadMessage(TimeStampModel):
+    """ Tie a lead to a Twilio Message """
+
+    created_by = models.ForeignKey(
+        "core.User",
+        related_name="created_messages",
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    lead = models.ForeignKey(
+        "Lead",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+        related_name="messages",
+    )
+    linked_contacts = models.ManyToManyField(
+        "organization.Contact", related_name="message_activity_logs", blank=True
+    )
+
+    message_id = models.CharField(max_length=128)
+    direction = models.CharField(
+        choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True
+    )
+
+    body = models.CharField(max_length=255, blank=True)
+    status = models.CharField(
+        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True
+    )
+
+    objects = LeadMessageQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def activity_log_meta(self):
+        """A metadata dict for activity logs"""
+        return {
+            "id": str(self.id),
+            "lead": str(self.lead.id),
+            "message_id": self.message_id,
+            "created_by": str(self.created_by.id),
+            "created_by_ref": {
+                "id": str(self.created_by.id),
+                "full_name": self.created_by.full_name,
+            },
+            "linked_contacts": [
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -545,8 +614,7 @@ class LeadEmail(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name, }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
-
         }

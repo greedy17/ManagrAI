@@ -55,10 +55,11 @@ export default {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-  width: 78%;
+  width: 15rem;
   height: auto;
   display: flex;
   flex-flow: column;
+  max-width: 15rem;
 }
 
 .toolbar,

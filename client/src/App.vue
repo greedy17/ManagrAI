@@ -53,6 +53,7 @@ export default {
 <style lang="scss">
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/inputs';
 
 body {
   overflow-y: scroll;
@@ -71,7 +72,6 @@ body {
 }
 
 .page-content {
-  flex-grow: 1;
 }
 
 .section-shadow {

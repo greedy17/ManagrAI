@@ -71,6 +71,19 @@
         <span class="insight-bottom">{{ insights.emails.latest | timeAgo }}</span>
       </div>
     </div>
+
+    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+      <div class="icon-container">
+        <img class="insight-icon" src="@/assets/images/messages.svg" alt="icon" />
+      </div>
+      <div class="insight-info">
+        <span class="insight-top">
+          {{ insights.messages.count }}
+          {{ 'Message' | pluralize(insights.messages.count) }}
+        </span>
+        <span class="insight-bottom">{{ insights.messages.latest | timeAgo }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -138,7 +151,6 @@ export default {
 @import '@/styles/mixins/utils';
 
 .insights {
-  width: 16rem;
   height: auto;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   border: solid 1px $soft-gray;

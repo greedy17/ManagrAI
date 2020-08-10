@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from managr.utils.misc import get_site_url
+
 USE_NYLAS = settings.USE_NYLAS
 NYLAS_CLIENT_ID = settings.NYLAS_CLIENT_ID if USE_NYLAS else None
 NYLAS_CLIENT_SECRET = settings.NYLAS_CLIENT_SECRET if USE_NYLAS else None
@@ -11,6 +13,22 @@ EMAIL_AUTH_TOKEN_REVOKE_URI = "oauth/revoke"
 EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
 
+
+USE_TWILIO = settings.USE_TWILIO
+ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID if USE_TWILIO else None
+AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN if USE_TWILIO else None
+TWILIO_MESSAGE_STATUS_CALLBACK_URL = (
+    f"{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages/status"
+    if USE_TWILIO
+    else None
+)
+TWILIO_MESSAGE_RECEIVED_CALLBACK_URL = (
+    f"{settings.TWILIO_BASE_CALLBACK_URL}/api/twilio/callback/messages"
+    if USE_TWILIO
+    else None
+)
+
+
 # OAuth permission scopes to request from Nylas
 SCOPE_EMAIL_READ_ONLY = "email.read_only"
 SCOPE_EMAIL_SEND = "email.send"
@@ -20,19 +38,17 @@ ALL_SCOPES = [
 ]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
-NYLAS_WEBHOOK_TYPE_MSG_CREATED = 'message.created'
-NYLAS_WEBHOOK_TYPE_MSG_OPENED = 'message.opened'
-NYLAS_WEBHOOK_OBJECT_MESSAGE = 'message'
-NYLAS_WEBHOOK_OBJECT_METADATA = 'metadata'
+NYLAS_WEBHOOK_TYPE_MSG_CREATED = "message.created"
+NYLAS_WEBHOOK_TYPE_MSG_OPENED = "message.opened"
+NYLAS_WEBHOOK_OBJECT_MESSAGE = "message"
+NYLAS_WEBHOOK_OBJECT_METADATA = "metadata"
 NYLAS_WEBHOOK_TYPES = (
-    (NYLAS_WEBHOOK_TYPE_MSG_CREATED, 'Message Created',),
-    (NYLAS_WEBHOOK_TYPE_MSG_OPENED, 'Message Opened',),
-
+    (NYLAS_WEBHOOK_TYPE_MSG_CREATED, "Message Created",),
+    (NYLAS_WEBHOOK_TYPE_MSG_OPENED, "Message Opened",),
 )
 NYLAS_WEBHOOK_OBJECTS = (
-    (NYLAS_WEBHOOK_OBJECT_MESSAGE, 'message'),
-    (NYLAS_WEBHOOK_OBJECT_METADATA, 'metadata'),
-
+    (NYLAS_WEBHOOK_OBJECT_MESSAGE, "message"),
+    (NYLAS_WEBHOOK_OBJECT_METADATA, "metadata"),
 )
 
 

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "managr.api",
     "managr.lead",
     "managr.organization",
+    "managr.polling",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -72,7 +73,6 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "django_extensions",
-    "djmoney",
     "background_task",
 ]
 
@@ -181,6 +181,10 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "../client/dist/static")]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# fixtures
+FIXTURE_DIRS = ["organization/fixtures/"]
+
+
 # Django Storages configuration
 USE_AWS_STORAGE = os.environ.get("USE_AWS_STORAGE") == "True" or False
 if USE_AWS_STORAGE:
@@ -201,6 +205,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # i.e. 2.5 MB
 # Maximum size in bytes of request data (excluding file uploads) that will be
 # read before a SuspiciousOperation (RequestDataTooBig) is raised.
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # i.e. 100 MB
+
 
 #
 # Email settings
@@ -312,3 +317,13 @@ if USE_NYLAS:
     NYLAS_CLIENT_ID = _env_get_required("NYLAS_CLIENT_ID")
     NYLAS_CLIENT_SECRET = _env_get_required("NYLAS_CLIENT_SECRET")
     NYLAS_OAUTH_CALLBACK_URL = _env_get_required("NYLAS_OAUTH_CALLBACK_URL")
+
+
+#
+# Twilio Integration Settings
+#
+USE_TWILIO = os.environ.get("USE_TWILIO") == "True"
+if USE_TWILIO:
+    TWILIO_ACCOUNT_SID = _env_get_required("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = _env_get_required("TWILIO_AUTH_TOKEN")
+    TWILIO_BASE_CALLBACK_URL = _env_get_required("TWILIO_BASE_CALLBACK_URL")

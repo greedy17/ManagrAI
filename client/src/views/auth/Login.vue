@@ -117,6 +117,7 @@ export default {
           delete userData.token
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
+          this.$store.dispatch('updateStages')
           if (this.$route.query.redirect) {
             this.$router.push(this.$route.query.redirect)
           } else {
