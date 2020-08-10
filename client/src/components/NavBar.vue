@@ -72,9 +72,10 @@ export default {
   async created() {
     if (this.userIsLoggedIn) {
       const count = await Notification.api.getUnviewedCount({})
+      this.unViewedCount = count.count
       this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
       this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
-      this.unViewedCount = count.count
+
       await this.refresh(POLLING_INTERVAL)
     }
   },
@@ -137,7 +138,7 @@ export default {
     shouldRefreshPolling(val) {
       if (val) {
         if (this.$store.getters.pollingDataToUpdate.includes('notificationCount')) {
-          this.unViewedCount = this.$store.state.pollingData.notificationCount.count
+          this.unViewedCount = this.$store.state.pollingData.items.notificationCount.count
         }
       }
     },

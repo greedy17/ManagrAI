@@ -92,13 +92,15 @@ def list_polling_counts(request):
             data = _list_polling_counts_lead_activity_log(
                 request.user, last_checked_at, args
             )
-            items[item] = {"count": data, "last_check": now}
+            key = f"{item}:{args}"
+
+            items[key] = {"count": data, "last_check": now}
         if item.lower() == POLLING_ITEM_NOTFICIATION_COUNT.lower():
             data = {
                 "count": request.user.unviewed_notifications_count,
                 "last_check": now,
             }
-            items[item] = {"count": data, "last_check": now}
+            items[item] = data
 
     return Response({"items": items, "last_check": now})
 
