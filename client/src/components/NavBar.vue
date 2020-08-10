@@ -96,8 +96,6 @@ export default {
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
       try {
-        const count = await Notification.api.getUnviewedCount({})
-        this.unViewedCount = count.count
         await this.$store.dispatch('updatePollingData')
 
         if (repeat) {
