@@ -61,30 +61,6 @@ export default {
     shouldRefreshPolling() {
       return this.$store.getters.updatePollingData
     },
-    datedNotifications() {
-      if (this.notifications.list.length <= 0) {
-        return null
-      }
-      return this.notifications.list.reduce((acc, curr) => {
-        let today = moment()
-
-        let formatted = moment(curr.notifyAt)
-
-        if (!acc['today']) {
-          acc['today'] = []
-        }
-        if (today.isSame(formatted, 'day')) {
-          acc['today'].push(curr)
-          return acc
-        } else if (formatted.isSame(acc[moment(curr.notifyAt).format('MM-DD-YYYY')], 'day')) {
-          acc[moment(curr.notifyAt).format('MM-DD-YYYY')].push(curr)
-          return acc
-        } else {
-          acc[moment(curr.notifyAt).format('MM-DD-YYYY')] = [curr]
-          return acc
-        }
-      }, {})
-    },
   },
   async created() {
     await this.notifications.refresh()
@@ -98,7 +74,6 @@ export default {
         return null
       }
       return list.reduce((acc, curr) => {
-        debugger
         let today = moment()
         let yesterday = moment().subtract(1, 'day')
         let thisWeek = moment().startOf('week')
