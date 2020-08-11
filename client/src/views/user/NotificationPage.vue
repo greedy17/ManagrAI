@@ -1,7 +1,7 @@
 <template>
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0 && datedNotifications">
-      <template v-for="(value, key) in datedNotifications">
+      <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
         <span class="muted" :key="key"
           >{{ key }}
           <br />
@@ -76,11 +76,11 @@ export default {
         if (today.isSame(formatted, 'day')) {
           acc['today'].push(curr)
           return acc
-        } else if (formatted.isSame(acc[moment(curr.notifyAt)], 'day')) {
-          acc[moment(curr.notifyAt).format('MMMM Do YYYY')].push(curr)
+        } else if (formatted.isSame(acc[moment(curr.notifyAt).format('MM-DD-YYYY')], 'day')) {
+          acc[moment(curr.notifyAt).format('MM-DD-YYYY')].push(curr)
           return acc
         } else {
-          acc[moment(curr.notifyAt).format('MMMM Do YYYY')] = [curr]
+          acc[moment(curr.notifyAt).format('MM-DD-YYYY')] = [curr]
           return acc
         }
       }, {})
@@ -92,6 +92,52 @@ export default {
   methods: {
     async markAsViewed(notificationId) {
       await Notification.api.markAsViewed([notificationId])
+    },
+    formattedNotifications(list) {
+      if (list.length <= 0) {
+        return null
+      }
+      return list.reduce((acc, curr) => {
+        debugger
+        let today = moment()
+        let yesterday = moment().subtract(1, 'day')
+        let thisWeek = moment().startOf('week')
+        let lastWeek = moment()
+          .subtract(1, 'weeks')
+          .startOf('week')
+        let formatted = moment(curr.notifiedAt)
+        if (!acc['today']) {
+          acc['today'] = []
+        }
+        if (!acc['yesterday']) {
+          acc['yesterday'] = []
+        }
+        if (!acc['this week']) {
+          acc['this week'] = []
+        }
+        if (!acc['last week']) {
+          acc['last week'] = []
+        }
+        if (!acc['previous weeks']) {
+          acc['previous weeks'] = []
+        }
+        if (today.isSame(formatted, 'day')) {
+          acc['today'].push(curr)
+          return acc
+        } else if (yesterday.isSame(formatted, 'day')) {
+          acc['yesterday'].push(curr)
+          return acc
+        } else if (formatted.isSame(thisWeek, 'week')) {
+          acc['this week'].push(curr)
+          return acc
+        } else if (formatted.isSame(lastWeek, 'week')) {
+          acc['last week'].push(curr)
+          return acc
+        } else if (formatted.isBefore(lastWeek, 'week')) {
+          acc['previous weeks'].push(curr)
+          return acc
+        }
+      }, {})
     },
   },
 
