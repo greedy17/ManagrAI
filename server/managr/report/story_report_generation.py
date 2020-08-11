@@ -246,3 +246,7 @@ class RepresentativeDataGenerator:
         self._lead = story_report.lead
         self._representative = self._lead.claimed_by
         self._organization = self._representative.organization
+
+# since need to produce averages for 'days to' ... 
+# just return an array of each timestamp (each array for all closed leads)
+# can compute in client-side... or once have array then compute it here ?
