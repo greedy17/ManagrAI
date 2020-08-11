@@ -1,6 +1,6 @@
 <template>
   <div class="notification-page-container">
-    <template v-if="notifications.list.length > 0 && datedNotifications">
+    <template v-if="notifications.list.length > 0">
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
         <span class="muted" :key="key"
           >{{ key }}
