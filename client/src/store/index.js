@@ -83,6 +83,7 @@ const mutations = {
   LOGOUT_USER(state) {
     state.token = null
     state.user = null
+    state.stages = []
   },
   TOGGLE_SIDE_NAV(state, show) {
     state.showSideNav = show
