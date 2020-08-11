@@ -44,7 +44,6 @@ class StoryReportViewSet(
         return StoryReport.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        print('*** HIT StoryReportViewSet CREATE ***')
         generated_by = request.user
         lead = request.data.get('lead')
         if not lead:
@@ -62,5 +61,5 @@ class StoryReportViewSet(
 # build generate_report_data(report) => data & datetime_generated
 # explore async & triggering email
 # build skeleton of /story-report/:id
-# tests
+# tests (e.g. structure/contents of JSON Field)
 # explore graph libraries / LOE analysis on report design
