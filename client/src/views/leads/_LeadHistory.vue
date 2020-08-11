@@ -71,8 +71,6 @@ export default {
   watch: {
     async shouldRefreshPolling(val) {
       if (val) {
-        console.log(val)
-        console.log(this.$store.getters.pollingDataToUpdate)
         if (
           this.$store.getters.pollingDataToUpdate.includes(`leadActivityLog:${this.lead.id}`) &&
           !this.hasNextPageData

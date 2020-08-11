@@ -79,7 +79,7 @@
         <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
       </a>
     </div>
-    <div v-if="lead.statusRef.title === Lead.CLOSED" class="amount">
+    <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
       Amount:
       <span>{{ lead.closingAmount | currency }}</span>
     </div>
@@ -96,7 +96,10 @@
       </form>
     </div>
 
-    <div v-if="lead.statusRef.title === Lead.CLOSED" class="expected-close-date section-shadow">
+    <div
+      v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
+      class="expected-close-date section-shadow"
+    >
       <div>
         Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
@@ -360,7 +363,7 @@ export default {
       selectedLists: {},
     }
   },
-
+  created() {},
   computed: {
     usersLists() {
       return this.myLists.list
