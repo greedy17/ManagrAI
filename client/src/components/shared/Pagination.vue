@@ -5,7 +5,7 @@
         class="arrow"
         :class="{ 'disabled-arrow': !collection.pagination.hasPrevPage }"
         src="@/assets/images/keyboard-arrow-left.svg"
-        @click.prevent="onLeftArrowClick"
+        @click.stop.prevent="onLeftArrowClick"
       />
       <div class="pages">
         <span
@@ -13,7 +13,7 @@
           class="page"
           :class="{ 'current-page': collection.pagination.page === n }"
           :key="n"
-          @click.prevent="onPageClick(n)"
+          @click.stop.prevent="onPageClick(n)"
         >
           {{ n }}
         </span>
@@ -22,7 +22,7 @@
         class="arrow"
         :class="{ 'disabled-arrow': !collection.pagination.hasNextPage }"
         src="@/assets/images/keyboard-arrow-right.svg"
-        @click.prevent="onRightArrowClick"
+        @click.stop.prevent="onRightArrowClick"
       />
     </div>
     <div class="statistics">
@@ -117,6 +117,8 @@ export default {
   flex-flow: row;
   align-items: center;
   font-size: 0.875rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .controls {
@@ -127,6 +129,11 @@ export default {
 
 .pages {
   margin: 0 0.5rem;
+  padding-top: 0.5rem;
+  max-width: 50px;
+  display: flex;
+  align-items: center;
+  overflow: scroll;
 }
 
 .arrow,
