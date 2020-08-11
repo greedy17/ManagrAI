@@ -5,6 +5,7 @@ from managr.lead.models import ActionChoice, Action
 from managr.organization.models import Contact
 from managr.organization.serializers import ContactSerializer
 
+
 def generate_story_report_data(story_report):
     """
     Given an instance of StoryReport, generate the report's
@@ -38,16 +39,6 @@ def generate_story_report_data(story_report):
 # -x- days booked to demo
 # -x- days from demo to closed
 
-# rep-level statistics:
-# -- average closing time for a lead
-# -- average contract value
-# -- average days ready to booked
-# -- average days booked to demo
-# -- average actions to close the deal
-# -- average days from demo to closed
-# -- average 'days in entire sales cycle` (READY to CLOSED or backup CLAIMED to CLOSED)
-# -- average calls/texts/emails/actions per deal
-
 # org-level statistics:
 # -- average calls/texts/emails/actions per deal
 
@@ -56,7 +47,7 @@ class LeadDataGenerator:
     Generates lead-level metrics for StoryReport.
     Final output is the self.as_dict method.
 
-    Lead/account/organization DB data is to be added into Response
+    Lead/representative/organization DB data is to be added into Response
     as part of the serialization step, not here.
     """
     def __init__(
@@ -227,3 +218,31 @@ class LeadDataGenerator:
             'custom_action_counts': self.custom_action_counts,
             'actions_count': self.actions_count,
         }
+
+
+# rep-level statistics:
+# -- average closing time for a lead
+# -- average contract value
+# -- average days ready to booked
+# -- average days booked to demo
+# -- average actions to close the deal
+# -- average days from demo to closed
+# -- average 'days in entire sales cycle` (READY to CLOSED or backup CLAIMED to CLOSED)
+# -- average calls/texts/emails/actions per deal
+
+class RepresentativeDataGenerator:
+    """
+    Generates representative-level metrics for StoryReport.
+    Final output is the self.as_dict method.
+
+    Lead/representative/organization DB data is to be added into Response
+    as part of the serialization step, not here.
+    """
+    def __init__(
+        self,
+        story_report,
+    ):
+        self._story_report = story_report
+        self._lead = story_report.lead
+        self._representative = self._lead.claimed_by
+        self._organization = self._representative.organization
