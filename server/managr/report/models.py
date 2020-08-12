@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
+from managr.utils.sites import get_site_url
 from managr.core.models import TimeStampModel
 
 
@@ -41,6 +42,11 @@ class StoryReport(TimeStampModel):
     )
 
     objects = StoryReportQuerySet.as_manager()
+
+    @property
+    def client_side_url(self):
+        base_app_url = get_site_url()
+        return f"{base_app_url}/story-reports/{self.id}"
 
     class Meta:
         ordering = ["-datetime_created"]

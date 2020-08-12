@@ -21,6 +21,7 @@ from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
 from managr.lead.models import Lead
+from managr.core.background import emit_report_event
 from .models import (
    StoryReport,
 )
@@ -53,13 +54,11 @@ class StoryReportViewSet(
         except Lead.DoesNotExist:
             raise ValidationError({'lead': 'does not exist'})
         report = StoryReport.objects.create(lead=lead, generated_by=generated_by)
-        # # The following should be async:
-        # send_email_for_report()
+        emit_report_event(str(report.id), str(generated_by.id))
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)
 
 
-# build generate_report_data(report) => data & datetime_generated
-# explore async & triggering email
+# TODO:
 # build skeleton of /story-report/:id
 # tests (e.g. structure/contents of JSON Field)
 # explore graph libraries / LOE analysis on report design

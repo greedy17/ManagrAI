@@ -3,34 +3,71 @@ import logging
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from managr.core.models import EmailAuthAccount
+from managr.core.nylas.emails import send_new_email_legacy
 from managr.lead import constants as lead_constants
 from managr.lead.models import ActionChoice, Action, Lead
 from managr.organization.models import Contact
 from managr.organization.serializers import ContactSerializer
+from managr.utils.sites import get_site_url
+
+from .models import StoryReport
 
 logger = logging.getLogger("managr")
 
 
-def generate_story_report_data(story_report):
+def generate_story_report_data(story_report_id, generated_by_id):
     """
-    Given an instance of StoryReport, generate the report's
+    Given a StoryReport UUID, generate the report's
     data and update the instance with the generated data.
-    Finally, trigger email regarding report generation to
+    Finally, trigger email regarding report availability to
     user that triggered this story_report to be generated.
     """
-    # NOTE: lead/account/organization DB data is to be added into Response
-    # as part of the serialization step, not here.
+    story_report = StoryReport.objects.get(
+        generated_by=generated_by_id,
+        pk=story_report_id
+    )
+
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
         logger.exception(f"Attempted to generate story report for open lead {lead.id}")
         raise ValidationError(f"Attempted to generate story report for open lead {lead.id}")
+
+    # generate report's data
     story_report.data['lead'] = LeadDataGenerator(lead).as_dict
     story_report.data['representative'] = RepresentativeDataGenerator(lead).as_dict
     story_report.data['organization'] = OrganizationDataGenerator(lead).as_dict
     story_report.datetime_generated = timezone.now()
     story_report.save()
-    return story_report
-    # trigger email
+
+    # send email to user that generated report
+    send_email(story_report)
+
+
+def send_email(report):
+    recipient = report.generated_by
+
+    try:
+        ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
+    except EmailAuthAccount.DoesNotExist:
+        # currently passing if there is an error, when we are ready we will require this
+        pass
+    if ea:
+        token = ea.access_token
+        sender = {"email": ea.email_address, "name": "Managr"}
+        recipient = [
+            {"email": recipient.email, "name": recipient.full_name}
+        ]
+        message = {
+            "subject": f"Story Report Generated for {report.lead.title}",
+            "body": f"The report is available at {report.client_side_url}."
+        }
+        try:
+            send_new_email_legacy(token, sender, recipient, message)
+        except Exception as e:
+            """ this error is most likely going to be an error on our set
+            up rather than the user_token """
+            pass
 
 
 class BaseGenerator:
