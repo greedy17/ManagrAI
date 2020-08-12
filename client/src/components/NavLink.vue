@@ -37,13 +37,15 @@ export default {
   @include disable-text-select();
   @include pointer-on-hover();
   height: 4.5rem;
-  width: 5rem;
-  display: flex;
+
+  display: inline-flex;
   flex-flow: column;
   justify-content: center;
   align-items: center;
   margin: 0 3%;
   border-bottom: 2px solid rgba($color: $dark-green, $alpha: 0);
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .active {

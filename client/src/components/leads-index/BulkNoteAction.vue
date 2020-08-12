@@ -66,13 +66,12 @@ export default {
         return
       }
 
-      let leads = this.leads.map(l => l.id)
       let data = {
         note: {
           title: this.title,
           content: this.description,
         },
-        created_for: leads,
+        created_for: this.leads,
       }
       Note.api.bulkCreate(data).then(() => {
         this.$Alert.alert({

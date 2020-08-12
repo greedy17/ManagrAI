@@ -71,8 +71,44 @@
             </div>
           </div>
         </div>
-        <div class="footer" v-if="!user.textConnected && this.selected">
-          <button class="primary-button" @click="onSaveAccount">Save</button>
+        <div class="footer">
+          <button
+            v-if="!user.textConnected && this.selected"
+            class="primary-button"
+            @click="onSaveAccount"
+          >
+            Save
+          </button>
+          <button v-if="user.textConnected" class="primary-button" @click="onShowDeleteModal">
+            x Disconnect
+          </button>
+          <Modal v-if="showDeleteModal" dimmed :width="40" @close-modal="onHideDeleteModal">
+            <template v-if="!loading">
+              <div class="body">
+                <p>
+                  Are you sure you want to disconnect this number?
+                  <br />
+                  Disconnecting your number will result in a loss of data related to this number.
+                  This change is permanent and cannot be undone.
+                  <br />
+                </p>
+                <h5>
+                  Click "Agree" to disconnect the number, or "Cancel" to return to the menu!
+                </h5>
+              </div>
+              <div class="footer">
+                <button v-if="user.textConnected" class="primary-button" @click="onDisconnectAgree">
+                  Agree
+                </button>
+                <button v-if="user.textConnected" class="primary-button" @click="onHideDeleteModal">
+                  Cancel
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <ComponentLoadingSVG />
+            </template>
+          </Modal>
         </div>
       </div>
     </div>
@@ -100,6 +136,7 @@ export default {
       statesList: STATES,
       selectedState: null,
       showNumbersList: false,
+      showDeleteModal: false,
     }
   },
 
@@ -122,6 +159,23 @@ export default {
         await this.refreshCurrentUser()
         this.loading = false
       }
+    },
+    async onDisconnectAgree() {
+      // delete api
+      this.loading = true
+      try {
+        await User.api.deleteMessagingAccount()
+      } finally {
+        await this.refreshCurrentUser()
+        this.showDeleteModal = false
+        this.loading = false
+      }
+    },
+    onShowDeleteModal() {
+      this.showDeleteModal = true
+    },
+    onHideDeleteModal() {
+      this.showDeleteModal = false
     },
   },
   computed: {
@@ -165,5 +219,12 @@ export default {
   > * {
     margin: 1rem;
   }
+}
+.footer {
+  display: flex;
+  padding: 0.5rem;
+}
+.primary-button {
+  @include button-danger;
 }
 </style>

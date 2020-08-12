@@ -5,14 +5,14 @@
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
     </div> -->
-    <div class="lead-title" v-if="!editTitle" @click="onEditTitle">
+    <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
       <h2>{{ lead.title }}</h2>
     </div>
     <div v-else class="title-editable">
       <form class="title-form" @submit.prevent="updateTitle">
         <input v-model="tempTitle" type="text" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click="updateTitle" />
-        <img class="reset" src="@/assets/images/remove.svg" @click="resetTitle" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
+        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
       </form>
     </div>
     <div class="rating">
@@ -79,11 +79,11 @@
         <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
       </a>
     </div>
-    <div v-if="lead.status === Lead.CLOSED" class="amount">
+    <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
       Amount:
       <span>{{ lead.closingAmount | currency }}</span>
     </div>
-    <div v-else-if="!editAmount" class="amount" @click="onEditAmount">
+    <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
       Amount:
       <span>{{ lead.amount | currency }}</span>
     </div>
@@ -91,12 +91,15 @@
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
         <input v-model="tempAmount" type="number" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click="updateAmount" />
-        <img class="reset" src="@/assets/images/remove.svg" @click="resetAmount" />
+        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
+        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
       </form>
     </div>
 
-    <div v-if="lead.status === Lead.CLOSED" class="expected-close-date section-shadow">
+    <div
+      v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
+      class="expected-close-date section-shadow"
+    >
       <div>
         Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
@@ -104,7 +107,7 @@
     <div
       v-else-if="!editExpectedCloseDate"
       class="expected-close-date section-shadow"
-      @click="editExpectedCloseDate = true"
+      @click.stop.prevent="editExpectedCloseDate = true"
     >
       <div v-if="!lead.expectedCloseDate">
         Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
@@ -360,7 +363,7 @@ export default {
       selectedLists: {},
     }
   },
-
+  created() {},
   computed: {
     usersLists() {
       return this.myLists.list
@@ -693,6 +696,8 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: column;
+  .lead-title {
+  }
 }
 
 .toolbar,
@@ -727,8 +732,9 @@ export default {
 .lead-title {
   @include pointer-on-hover;
   margin-top: 1rem;
-  padding: 0 15%;
   text-align: center;
+  padding: 1rem;
+  word-wrap: break-word;
 }
 
 .title-editable {

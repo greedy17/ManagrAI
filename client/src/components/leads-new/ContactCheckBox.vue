@@ -1,11 +1,15 @@
 <template>
   <div class="contact-checkbox">
-    <CheckBox :checked="checked" @checkbox-clicked="bubbleCheckboxClick" />
-    <ContactInformation
-      :contact="contact"
-      :editable="editable"
-      @updated-contact="(contact, editForm) => $emit('updated-contact', contact, editForm)"
-    />
+    <div class="check-box">
+      <CheckBox :checked="checked" @checkbox-clicked="bubbleCheckboxClick" />
+    </div>
+    <div class="contact">
+      <ContactInformation
+        :contact="contact"
+        :editable="editable"
+        @updated-contact="(contact, editForm) => $emit('updated-contact', contact, editForm)"
+      />
+    </div>
   </div>
 </template>
 
@@ -53,5 +57,8 @@ export default {
 .contact-checkbox {
   display: flex;
   flex-flow: row;
+  .contact {
+    flex: 1 0 auto;
+  }
 }
 </style>

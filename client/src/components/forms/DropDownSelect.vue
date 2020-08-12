@@ -4,16 +4,20 @@
       <input
         class="search"
         type="text"
-        @input="execUpdateValue($event.target.value)"
+        @input="
+          visible = true
+          execUpdateValue($event.target.value)
+        "
         :disabled="!isSearchable"
         @blur="$event.target.value = ''"
+        @focus="visible = true"
       />
       <div v-if="!isMulti" class="selected-items">
-        <span v-show="!isMulti && !visible">{{
-          objectSelectedItems ? objectSelectedItems[displayKey] : ''
-        }}</span>
+        <span v-show="!isMulti && !visible">
+          {{ objectSelectedItems ? objectSelectedItems[displayKey] : '' }}</span
+        >
       </div>
-      <div v-if="isMulti" class="selected-items multi">
+      <div v-if="isMulti && !isHidden" class="selected-items multi">
         <span
           @click.prevent="execUpdateSelected(item[valueKey])"
           :key="`${item[valueKey]}-${i}`"
@@ -26,7 +30,7 @@
     </div>
 
     <div v-if="visible" class="dropdown-content">
-      <template v-for="(item, i) in items">
+      <template v-for="(item, i) in itemList">
         <slot
           :classes="'dd-item'"
           :name="`dd-item-${item[displayKey]}`"
@@ -67,7 +71,7 @@
  *        c. displays selected values differently and allows them to be removed on the fly
  *
  *@local enables local sorting for objects required to use sync when passing items :items.sync
- *
+ *@hide hides the list of selected items when multi is set
  *
  *
  *
@@ -135,6 +139,14 @@ export default {
       isLoading: this.loading,
     }
   },
+  watch: {
+    items: {
+      deep: true,
+      handler(val) {
+        this.itemList = val
+      },
+    },
+  },
 
   computed: {
     element() {
@@ -159,6 +171,9 @@ export default {
     },
     isLocalFilter() {
       return this.$attrs.hasOwnProperty('local')
+    },
+    isHidden() {
+      return this.$attrs.hasOwnProperty('hidden')
     },
   },
   created() {
@@ -196,11 +211,11 @@ export default {
       }
       if (this.isLocalFilter) {
         this.isLoading = true
-        let results = this.itemList.filter(i => {
+        let results = this.items.filter(i => {
           return i[this.displayKey].toLowerCase().includes(val.toLowerCase())
         })
 
-        this.emitUpdateItems(results)
+        this.itemList = results
       }
       this.emitSearch(val)
       this.isLoading = false
@@ -291,7 +306,7 @@ Display dropdown relative to the component it is triggered by
 }
 
 .selected {
-  background-color: lightgreen;
+  background-color: #e5f2ea;
   color: darkgreen;
 }
 
@@ -332,7 +347,7 @@ Display dropdown relative to the component it is triggered by
 .selected-items.multi {
   display: flex;
   overflow-y: scroll;
-  max-height: 20px;
+  height: 2rem;
   padding: 0px;
   > .selected-items__item {
     margin: 0.2rem;

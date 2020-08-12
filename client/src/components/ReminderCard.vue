@@ -10,7 +10,8 @@
         </span>
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
-        {{ reminder.content }}
+        <span class="muted">{{ reminder.datetimeFor | dateShortWithTime }}</span>
+        <span>{{ reminder.content }}</span>
         <div
           @click.prevent="goToLead(reminder.createdFor)"
           class="notification-card__content__leads"
@@ -79,9 +80,14 @@ export default {
   &__title {
     display: flex;
     overflow: hidden;
+    text-transform: capitalize;
 
     &__text {
       flex: 1 0 auto;
+      max-width: 12vw;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     &__type {
     }
