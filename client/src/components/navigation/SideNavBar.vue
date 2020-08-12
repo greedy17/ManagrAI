@@ -1,6 +1,5 @@
 <template>
   <div class="sidenav-container">
-    <div class="background"></div>
     <div class="sidenav" ref="sidenav">
       <div class="content">
         <div class="view-toggle-container">
@@ -135,9 +134,9 @@ export default {
   background-color: transparent;
   position: absolute;
   right: 0px;
-  top: 4rem;
+  top: 5rem;
   width: 0rem;
-  max-width: 15vw;
+  max-width: 15rem;
   min-height: 90%;
   > .content {
     display: none;
@@ -145,7 +144,6 @@ export default {
 }
 
 .sidenav.close {
-  background-color: lighten($soft-gray, 5%);
   animation: closemenu forwards;
   animation-duration: 1s;
   animation-iteration-count: 1;
@@ -171,16 +169,21 @@ export default {
     width: 0rem;
   }
   100% {
-    width: 15vw;
+    width: 15rem;
   }
 }
 @keyframes closemenu {
   0% {
-    width: 15vw;
+    width: 15rem;
+    background-color: transparent;
+  }
+  50% {
+    background-color: lighten($soft-gray, 2%);
   }
 
   100% {
     width: 0vw;
+    background-color: lighten($soft-gray, 5%);
   }
 }
 .view-toggle-container {

@@ -5,21 +5,11 @@
 //  main-content-area-with-panel.
 
 .page {
-  padding: 2rem;
   display: flex;
-  &__left-nav-bar {
-    flex: 3;
-  }
+  justify-content: center;
   &__main-content-area {
-    flex: 12;
-    padding: 0 2rem;
-  }
-  &__main-content-area-with-panel {
-    flex: 9;
-    padding: 0 2rem;
-  }
-  &__right-panel {
-    flex: 3;
+    width: 60vw;
+    min-width: 65rem;
   }
 }
 

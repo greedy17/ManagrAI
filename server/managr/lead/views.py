@@ -51,7 +51,7 @@ from .models import (
     Reminder,
     Action,
     ActionChoice,
-    Notification
+    Notification,
 )
 from .insights import LeadInsights
 from .forecast_kpis import ForecastKPIs
@@ -62,13 +62,17 @@ class LeadActivityLogViewSet(
 ):
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
-    filter_fields = ('lead',)
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend,)
-    search_fields = ('meta',)
+    filter_fields = ("lead",)
+    filter_backends = (
+        filters.SearchFilter,
+        DjangoFilterBackend,
+    )
+    search_fields = ("meta",)
 
     def get_queryset(self):
-        return LeadActivityLog.objects.for_user(self.request.user) \
-            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+        return LeadActivityLog.objects.for_user(self.request.user).exclude(
+            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
+        )
 
     @action(
         methods=["GET"],
@@ -102,42 +106,47 @@ class LeadActivityLogViewSet(
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
             lead_qs = lead_qs.filter(id__in=leads.split(","))
-            filter_params['leads'] = leads.split(",")
+            filter_params["leads"] = leads.split(",")
         else:
-            filter_params['leads'] = None
+            filter_params["leads"] = None
 
         if claimed_by:
             lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
-            filter_params['claimed_by'] = claimed_by.split(",")
+            filter_params["claimed_by"] = claimed_by.split(",")
         else:
-            filter_params['claimed_by'] = None
+            filter_params["claimed_by"] = None
 
         # date_range_from and date_range_to can be missing, because:
         # - TODAY_ONWARD means there is no date_range_to
         # - ALL_TIME means both are missing
         if date_range_from:
             log_qs = log_qs.filter(action_timestamp__gte=date_range_from)
-            filter_params['date_range_from'] = date_range_from
+            filter_params["date_range_from"] = date_range_from
         else:
-            filter_params['date_range_from'] = None
+            filter_params["date_range_from"] = None
 
         if date_range_to:
             log_qs = log_qs.filter(action_timestamp__lte=date_range_to)
-            filter_params['date_range_to'] = date_range_to
+            filter_params["date_range_to"] = date_range_to
         else:
-            filter_params['date_range_to'] = None
+            filter_params["date_range_to"] = None
 
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
-        filter_params['empty'] = empty
+        filter_params["empty"] = empty
 
-        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params)
+        insights = LeadInsights(
+            lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params
+        )
         return Response(insights.as_dict)
 
 
 class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    permission_classes = (
+        IsSalesPerson,
+        CanEditResourceOrReadOnly,
+    )
     serializer_class = lead_serializers.LeadMessageSerializer
     filter_class = lead_filters.LeadMessageFilterSet
 
@@ -152,7 +161,7 @@ class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def list_messages_from_contact(self, request, *args, **kwargs):
         user = self.request.user
-        contact = request.query_params.get('contact_phone')
+        contact = request.query_params.get("contact_phone")
         if user.message_auth_account:
             sender = user.message_auth_account.phone_number
 
@@ -165,7 +174,10 @@ class LeadMessageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsSalesPerson, CanEditResourceOrReadOnly,)
+    permission_classes = (
+        IsSalesPerson,
+        CanEditResourceOrReadOnly,
+    )
     serializer_class = lead_serializers.NotificationSerializer
 
     def get_queryset(self):
@@ -174,8 +186,7 @@ class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         """ override to set the notified_at field when an object is gotten"""
         queryset = self.filter_queryset(self.get_queryset())
-        queryset.filter(notified_at__isnull=True).update(
-            notified_at=timezone.now())
+        queryset.filter(notified_at__isnull=True).update(notified_at=timezone.now())
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -196,11 +207,16 @@ class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user = self.request.user
         return Response(data={"count": user.unviewed_notifications_count})
 
-    @action(methods=["POST"], authentication_classes=(authentication.TokenAuthentication,), detail=False, url_path="mark-as-viewed")
+    @action(
+        methods=["POST"],
+        authentication_classes=(authentication.TokenAuthentication,),
+        detail=False,
+        url_path="mark-as-viewed",
+    )
     def mark_as_viewed(self, request, *args, **kwargs):
         user = self.request.user
         query = Q()
-        notifications = request.data.get('notifications', None)
+        notifications = request.data.get("notifications", None)
         if not notifications:
             return ValidationError()
 
@@ -240,8 +256,11 @@ class LeadViewSet(
     search_fields = ("title",)
 
     def get_queryset(self):
-        return Lead.objects.for_user(self.request.user) \
-            .order_by(Lower("title")).prefetch_related('activity_logs')
+        return (
+            Lead.objects.for_user(self.request.user)
+            .order_by(Lower("title"))
+            .prefetch_related("activity_logs")
+        )
 
     def get_serializer_class(self):
         is_verbose = self.request.GET.get("verbose", None)
@@ -262,12 +281,10 @@ class LeadViewSet(
         # check account to be sure it is in org
         account_for = request.data.get("account", None)
         if not account_for:
-            raise ValidationError(
-                detail={"detail": "Account is a required field"})
+            raise ValidationError(detail={"detail": "Account is a required field"})
         # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
         try:
-            account = Account.objects.for_user(
-                request.user).get(pk=account_for)
+            account = Account.objects.for_user(request.user).get(pk=account_for)
         except Account.DoesNotExist:
             raise PermissionDenied()
         # if there are contacts to be added first check that contacts exist or create them
@@ -279,10 +296,8 @@ class LeadViewSet(
                 email=contact["email"].lower(), defaults={"account": account}
             )
             if created:
-                phone_1 = contact.get(
-                    "phone_number_1", None)
-                phone_2 = contact.get(
-                    "phone_number_2", None)
+                phone_1 = contact.get("phone_number_1", None)
+                phone_2 = contact.get("phone_number_2", None)
                 if phone_1:
                     try:
                         validate_phone_number(phone_1)
@@ -300,14 +315,11 @@ class LeadViewSet(
                 c.first_name = contact.get("first_name", c.first_name)
                 c.last_name = contact.get("last_name", c.last_name)
 
-                c.phone_number_1 = contact.get(
-                    "phone_number_1", c.phone_number_1)
-                c.phone_number_2 = contact.get(
-                    "phone_number_2", c.phone_number_2)
+                c.phone_number_1 = contact.get("phone_number_1", c.phone_number_1)
+                c.phone_number_2 = contact.get("phone_number_2", c.phone_number_2)
                 c.save()
             contact_list.append(c.id)
-        serializer = self.serializer_class(
-            data=data, context={"request": request})
+        serializer = self.serializer_class(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
@@ -416,8 +428,7 @@ class LeadViewSet(
             closing_amount = request.data.get("closing_amount")
             contract = request.data.get("contract")
         except KeyError:
-            raise ValidationError(
-                {"detail": "Closing Amount and Contract Required"})
+            raise ValidationError({"detail": "Closing Amount and Contract Required"})
         lead = self.get_object()
         try:
             contract = File.objects.get(pk=contract)
@@ -425,8 +436,7 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = Stage.objects.get(
-            title=lead_constants.LEAD_STATUS_CLOSED)
+        lead.status = Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED)
         lead.closing_amount = closing_amount
         lead.expected_close_date = timezone.now()
         lead.forecast.forecast = lead_constants.FORECAST_CLOSED
@@ -466,8 +476,7 @@ class ListViewSet(
         # make sure the user that created the lead is in the created_by field
 
         data["created_by"] = user.id
-        serializer = self.serializer_class(
-            data=data, context={"request": request})
+        serializer = self.serializer_class(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
@@ -542,8 +551,7 @@ class ListViewSet(
             try:
                 Lead.objects.get(pk=lead_id).lists.set(request.data["lists"])
             except Lead.DoesNotExist:
-                raise ValidationError(
-                    {"detail": f"Invalid Lead ID: {lead_id}"})
+                raise ValidationError({"detail": f"Invalid Lead ID: {lead_id}"})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -569,8 +577,7 @@ class NoteViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(
-            data=d, context={"request": request})
+        serializer = self.serializer_class(data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.NOTE_CREATED, u, serializer.instance)
@@ -600,8 +607,7 @@ class NoteViewSet(
                 "created_for": lead,
                 "created_by": user.id,
             }
-            serializer = self.serializer_class(
-                data=d, context={"request": request})
+            serializer = self.serializer_class(data=d, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             emit_event(lead_constants.NOTE_CREATED, user, serializer.instance)
@@ -660,14 +666,10 @@ class ForecastViewSet(
             - Upside
         """
 
-        date_range_from = request.data['date_range_from']
-        date_range_to = request.data['date_range_to']
-        repIDs = request.data['representatives']
-        kpis = ForecastKPIs(
-            date_range_from,
-            date_range_to,
-            representatives=repIDs,
-        )
+        date_range_from = request.data["date_range_from"]
+        date_range_to = request.data["date_range_to"]
+        repIDs = request.data["representatives"]
+        kpis = ForecastKPIs(date_range_from, date_range_to, representatives=repIDs,)
 
         return Response(kpis.as_dict, status=status.HTTP_200_OK)
 
@@ -692,8 +694,7 @@ class CallNoteViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(
-            data=d, context={"request": request})
+        serializer = self.serializer_class(data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.CALL_NOTE_CREATED, u, serializer.instance)
@@ -739,8 +740,7 @@ class ReminderViewSet(
         leads = request.data.get("created_for", [])
         created = list()
         if len(leads) < 1:
-            raise ValidationError(
-                {"detail": "lead or leads required in created_for"})
+            raise ValidationError({"detail": "lead or leads required in created_for"})
         # TODO: change this to create a list of items not created if a user does not exist instead
         for lead in leads:
             try:
@@ -751,12 +751,10 @@ class ReminderViewSet(
             data["created_for"] = lead
             data["created_by"] = user.id
 
-            serializer = self.serializer_class(
-                data=data, context={"request": request})
+            serializer = self.serializer_class(data=data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
-            emit_event(lead_constants.REMINDER_CREATED,
-                       user, serializer.instance)
+            emit_event(lead_constants.REMINDER_CREATED, user, serializer.instance)
             created.append(serializer.data)
             return Response(data=created, status=status.HTTP_201_CREATED)
 
@@ -782,7 +780,12 @@ class ReminderViewSet(
         reminder = self.get_object()
         if reminder.has_notification:
 
-            return Response(data={'non_field_errors': 'Cannot Delete Reminder that has already been executed'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={
+                    "non_field_errors": "Cannot Delete Reminder that has already been executed"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         reminder.delete()
         return Response(data=None, status=status.HTTP_204_NO_CONTENT)
 
@@ -823,8 +826,7 @@ class ActionChoiceViewSet(
         user = request.user
         data = dict(request.data)
         data["organization"] = user.organization.id
-        serializer = self.serializer_class(
-            data=data, context={"request": request})
+        serializer = self.serializer_class(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)
@@ -862,8 +864,7 @@ class ActionViewSet(
         u = request.user
         d = request.data
         d["created_by"] = u.id
-        serializer = self.serializer_class(
-            data=d, context={"request": request})
+        serializer = self.serializer_class(data=d, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         emit_event(lead_constants.ACTION_CREATED, u, serializer.instance)
@@ -895,13 +896,11 @@ class ActionViewSet(
                 "action_detail": action_data["action_detail"],
                 "lead": l,
             }
-            serializer = self.serializer_class(
-                data=d, context={"request": request})
+            serializer = self.serializer_class(data=d, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             created.append(serializer.data)
-            emit_event(lead_constants.ACTION_CREATED,
-                       request.user, serializer.instance)
+            emit_event(lead_constants.ACTION_CREATED, request.user, serializer.instance)
         return Response({"created": created})
 
     def update(self, request, *args, **kwargs):
@@ -935,8 +934,7 @@ class FileViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        serializer = self.serializer_class(
-            data=data, context={"request": request})
+        serializer = self.serializer_class(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data)

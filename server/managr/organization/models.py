@@ -76,6 +76,11 @@ class Organization(TimeStampModel):
     def avg_amount_closed_contracts(self):
         return Organization.objects.aggregate(Avg('accounts__leads__amount'))
 
+    @property
+    def message_auth_count(self):
+        """ returns a count of how many message auth phone numbers an org has """
+        return self.users.filter(message_auth_account__isnull=False).count()
+
 
 class AccountQuerySet(models.QuerySet):
 

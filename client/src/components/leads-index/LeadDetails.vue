@@ -4,9 +4,6 @@
       <div class="actions-pane">
         <LeadActions class="lead-actions" :lead="lead" />
       </div>
-      <!-- <div class="insights-pane">
-        <LeadInsights :lead="lead" />
-      </div> -->
     </div>
     <div class="route-to-detail" @click="routeToLeadDetail">See Opportunity Detail</div>
   </div>

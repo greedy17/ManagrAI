@@ -30,7 +30,12 @@
           </DropDownMenu>
         </div>
 
-        <span ref="notification-trigger" class="right__items" @click.prevent="toggleNotifications">
+        <span
+          v-if="userIsLoggedIn"
+          ref="notification-trigger"
+          class="right__items"
+          @click.prevent="toggleNotifications"
+        >
           {{ unViewedCount > 0 ? unViewedCount : '' }}
           <svg
             v-if="userIsLoggedIn"
@@ -53,6 +58,7 @@
 import NavLink from '@/components/NavLink'
 import Notification from '@/services/notifications/'
 import DropDownMenu from '@/components/forms/DropDownMenu'
+import polling from '@/services/polling'
 const POLLING_INTERVAL = 10000
 export default {
   name: 'NavBar',
@@ -72,6 +78,9 @@ export default {
     if (this.userIsLoggedIn) {
       const count = await Notification.api.getUnviewedCount({})
       this.unViewedCount = count.count
+      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
+      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
+
       await this.refresh(POLLING_INTERVAL)
     }
   },
@@ -93,8 +102,7 @@ export default {
     async refresh(repeat) {
       clearTimeout(this.pollingTimeout)
       try {
-        const count = await Notification.api.getUnviewedCount({})
-        this.unViewedCount = count.count
+        await this.$store.dispatch('updatePollingData')
 
         if (repeat) {
           this.polllingTimeout = setTimeout(async () => {
@@ -110,6 +118,7 @@ export default {
         }
       }
     },
+
     toggleUserMenu() {
       this.showMenus.user = !this.showMenus.user
       if (this.showMenus.user) {
@@ -126,11 +135,26 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      this.$store.commit('CLEAR_POLLING_DATA')
       this.toggleUserMenu()
     },
   },
-
+  watch: {
+    shouldRefreshPolling(val) {
+      if (val) {
+        if (this.$store.getters.pollingDataToUpdate.includes('notificationCount')) {
+          this.unViewedCount = this.$store.state.pollingData.items.notificationCount.count
+        }
+      }
+    },
+  },
   computed: {
+    shouldRefreshPolling() {
+      return this.$store.getters.updatePollingData
+    },
+    itemsToRefresh() {
+      return this.$store.getters.pollingDataToUpdate
+    },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },

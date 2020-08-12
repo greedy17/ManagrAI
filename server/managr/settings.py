@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "managr.api",
     "managr.lead",
     "managr.organization",
+    "managr.polling",
     "managr.report",
     # Django
     "django.contrib.admin",
@@ -92,7 +93,7 @@ ROOT_URLCONF = "managr.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"), ],
+        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"),],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -137,9 +138,9 @@ AUTH_USER_MODEL = "core.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 10, },
+        "OPTIONS": {"min_length": 10,},
     },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
 #
@@ -182,9 +183,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "../client/dist/static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # fixtures
-FIXTURE_DIRS = [
-    'organization/fixtures/'
-]
+FIXTURE_DIRS = ["organization/fixtures/"]
 
 
 # Django Storages configuration
@@ -242,7 +241,7 @@ LOGGING = {
     "disable_existing_loggers": True,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue", },
+        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue",},
     },
     "formatters": {
         "verbose": {
@@ -267,10 +266,10 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {"handlers": ["console", "mail_admins"], "level": "INFO", },
+        "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
         # The logger name matters -- it MUST match the name of the app
         "managr": {
-            "handlers": ["console", "mail_admins", ],
+            "handlers": ["console", "mail_admins",],
             "level": "DEBUG",
             "propagate": True,
         },

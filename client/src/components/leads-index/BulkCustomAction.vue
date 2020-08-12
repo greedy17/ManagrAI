@@ -83,8 +83,7 @@ export default {
         return
       }
 
-      let leads = this.leads.map(l => l.id)
-      Action.api.bulkCreate(this.type, this.description, leads).then(() => {
+      Action.api.bulkCreate(this.type, this.description, this.leads).then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,

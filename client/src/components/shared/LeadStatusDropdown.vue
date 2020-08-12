@@ -1,5 +1,5 @@
 <template>
-  <div class="status-dropdown">
+  <div class="status-dropdown" @click.stop.prevent>
     <select
       :value="leadItem.status"
       :style="{ 'background-color': getStatusColor }"
@@ -8,7 +8,7 @@
     >
       <option :value="null">---</option>
       <option v-for="option in getStatuses" :key="option.id" :value="option.id">
-        {{ option.title }}
+        {{ option.title.toLowerCase() }}
       </option>
     </select>
     <Modal
@@ -85,7 +85,7 @@ export default {
   computed: {
     getStatusColor() {
       return this.leadItem.statusRef
-        ? getLightenedColor(this.leadItem.statusRef.color)
+        ? getLightenedColor(this.leadItem.statusRef.color, 0.9)
         : getLightenedColor('#9B9B9B')
     },
     getStatuses() {
@@ -121,6 +121,7 @@ export default {
     font-size: 10px;
     font-weight: bold;
     border: unset;
+    text-transform: capitalize;
 
     &:focus {
       outline: none;
