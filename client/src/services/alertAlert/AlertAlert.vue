@@ -40,6 +40,10 @@ export default {
     setTop() {
       // NOTE (Bruno 4-23-20): querySelector is used to gather DOM data, not manipulate it
       let nav = document.querySelector('#nav')
+      if (!nav) {
+        this.top = this.oneRem * 0.5
+        return
+      }
       let navRect = nav.getBoundingClientRect()
       let calculation = navRect.height + navRect.top
       let calculationIsValid = navRect.height >= calculation && calculation >= 0
