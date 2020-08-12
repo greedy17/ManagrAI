@@ -2,11 +2,12 @@ from rest_framework import serializers
 
 from .models import StoryReport
 from managr.lead.serializers import LeadRefSerializer
+from managr.organization.serializers import AccountRefSerializer
 
 
 class StoryReportSerializer(serializers.ModelSerializer):
-    lead_ref = LeadRefSerializer(source="lead", read_only=True)
-    account_ref = serializers.SerializerMethodField()
+    lead_ref = LeadRefSerializer(source='lead', read_only=True)
+    account_ref = AccountRefSerializer(source='lead.account', read_only=True)
 
     class Meta:
         model = StoryReport
@@ -18,10 +19,3 @@ class StoryReportSerializer(serializers.ModelSerializer):
             'lead_ref',
             'account_ref',
         )
-
-    def get_account_ref(self, instance):
-        account = instance.lead.account
-        return {
-            'id': account.id,
-            'logo': account.logo
-        }
