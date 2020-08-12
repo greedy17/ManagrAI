@@ -81,6 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
             "upside",
             "commit",
             "unviewed_notifications_count",
+            "profile_photo",
         )
 
     read_only_fields = (
