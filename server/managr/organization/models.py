@@ -6,6 +6,7 @@ from django.db.models import Sum, Avg, Q
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models import Sum, Avg
 from managr.utils.numbers import format_phone_number
+from managr.utils.misc import datetime_appended_filepath
 
 from managr.core.models import UserManager, TimeStampModel
 from . import constants as org_consts
@@ -100,6 +101,9 @@ class Account(TimeStampModel):
         'Organization', related_name="accounts", blank=False, null=True, on_delete=models.CASCADE)
     state = models.CharField(max_length=255, choices=STATE_CHOCIES,
                              default=STATE_ACTIVE, null=False, blank=False)
+    logo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
+    )
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):

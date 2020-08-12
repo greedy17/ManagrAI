@@ -1,9 +1,14 @@
-from django.utils import timezone
+import logging
 
-from managr.lead import constants
-from managr.lead.models import ActionChoice, Action
+from django.utils import timezone
+from rest_framework.exceptions import ValidationError
+
+from managr.lead import constants as lead_constants
+from managr.lead.models import ActionChoice, Action, Lead
 from managr.organization.models import Contact
 from managr.organization.serializers import ContactSerializer
+
+logger = logging.getLogger("managr")
 
 
 def generate_story_report_data(story_report):
@@ -15,49 +20,31 @@ def generate_story_report_data(story_report):
     """
     # NOTE: lead/account/organization DB data is to be added into Response
     # as part of the serialization step, not here.
-    story_report.data['lead'] = LeadDataGenerator(story_report).as_dict
-    story_report.data['representative'] = RepresentativeDataGenerator(story_report).as_dict
-    story_report.data['organization'] = OrganizationDataGenerator(story_report).as_dict
+    lead = story_report.lead
+    if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
+        logger.exception(f"Attempted to generate story report for open lead {lead.id}")
+        raise ValidationError(f"Attempted to generate story report for open lead {lead.id}")
+    story_report.data['lead'] = LeadDataGenerator(lead).as_dict
+    story_report.data['representative'] = RepresentativeDataGenerator(lead).as_dict
+    story_report.data['organization'] = OrganizationDataGenerator(lead).as_dict
     story_report.datetime_generated = timezone.now()
     story_report.save()
+    return story_report
     # trigger email
 
 
-# lead ref
-# account ref
+class BaseGenerator:
+    def __init__(self, lead):
+        self._lead = lead
+        self._representative = lead.claimed_by
+        self._organization = self._representative.organization
 
-# lead-level statistics:
-# -x- comms. calls/texts/emails/actions for deal
-# -x- primary contact
-# -x- number of actions to close the deal
-# -x- custom actions for deal:
-#       -- all custom actions, sorted by count (tie-breaker by alphabetical)
-# -x- READY to CLOSED (backup is CLAIMED to CLOSED)
-# -x- days to first demo
-# -x- days post demo
-# -x- days ready to booked
-# -x- days booked to demo
-# -x- days from demo to closed
 
-# org-level statistics:
-# -- average calls/texts/emails/actions per deal
-
-class LeadDataGenerator:
+class LeadDataGenerator(BaseGenerator):
     """
     Generates lead-level metrics for StoryReport.
     Final output is the self.as_dict method.
-
-    Lead/representative/organization DB data is to be added into Response
-    as part of the serialization step, not here.
     """
-    def __init__(
-        self,
-        story_report,
-    ):
-        self._story_report = story_report
-        self._lead = story_report.lead
-        self._representative = self._lead.claimed_by
-        self._organization = self._representative.organization
 
     @property
     def lead_activity_logs(self):
@@ -66,7 +53,7 @@ class LeadDataGenerator:
         though to the closing of the lead.
         """
         return self._lead.activity_logs.filter(
-            action_timestamp__gte=self.claimed_timestamp
+            action_timestamp__gte=self.claimed_timestamp,
             action_timestamp__lte=self._lead.expected_close_date,
             action_taken_by=self._representative,
         )
@@ -76,10 +63,14 @@ class LeadDataGenerator:
         """
         Given lead, return timestamp for latest claim-event.
         """
-        # can assume that there has been at least one claim-event for lead.
-        return self._lead.activity_logs.filter(
+        # NOTE (Bruno 8-11-20): currently, a claim-event does not
+        # take place on lead creation. Hence conditional herein.
+        claimed_event = self._lead.activity_logs.filter(
             activity=lead_constants.LEAD_CLAIMED
-        ).first().action_timestamp
+        ).first()
+        if claimed_event:
+            return claimed_event.action_timestamp
+        return self._lead.datetime_created
 
     @property
     def ready_timestamp(self):
@@ -87,9 +78,9 @@ class LeadDataGenerator:
         Find newest READY, because this salesperson may have picked it more than once.
         """
         logged_ready = self.lead_activity_logs.filter(
-            activity=constants.LEAD_UPDATED,
+            activity=lead_constants.LEAD_UPDATED,
             meta__extra__status_update=True,
-            meta__extra__new_status=constants.LEAD_STATUS_READY,
+            meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
         ).first()
         if logged_ready:
             return logged_ready.action_timestamp
@@ -100,9 +91,9 @@ class LeadDataGenerator:
         Find first BOOKED, because this salesperson may have picked it more than once.
         """
         logged_booked = self.lead_activity_logs.filter(
-            activity=constants.LEAD_UPDATED,
+            activity=lead_constants.LEAD_UPDATED,
             meta__extra__status_update=True,
-            meta__extra__new_status=constants.LEAD_STATUS_BOOKED,
+            meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
         ).last()
         if logged_booked:
             return logged_booked.action_timestamp
@@ -113,9 +104,9 @@ class LeadDataGenerator:
         Find first DEMO, because this salesperson may have picked it more than once.
         """
         logged_demo = self.lead_activity_logs.filter(
-            activity=constants.LEAD_UPDATED,
+            activity=lead_constants.LEAD_UPDATED,
             meta__extra__status_update=True,
-            meta__extra__new_status=constants.LEAD_STATUS_DEMO,
+            meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
         ).last()
         if logged_demo:
             return logged_demo.action_timestamp
@@ -131,9 +122,9 @@ class LeadDataGenerator:
         with lead was most contacted.
         Returns Contact instance.
         """
-        calls = self.lead_activity_logs.filter(activity=constants.CALL_NOTE_CREATED)
-        texts = self.lead_activity_logs.filter(activity=constants.MESSAGE_SENT)
-        emails = self.lead_activity_logs.filter(activity=constants.EMAIL_SENT)
+        calls = self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED)
+        texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
+        emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
         contact_map = {}
         for call in calls:
             if call.meta.get('linked_contacts'):
@@ -159,24 +150,25 @@ class LeadDataGenerator:
                     else:
                         contact_map[contact] = 1
 
+        if not bool(contact_map):
+            return None
         # NOTE (Bruno): if more than one contact have same count of comms.
         # actions, the first one is returned.
         primary_contact_id = max(contact_map, key=lambda key: contact_map[key])
-        return Contact.objects.get(pk=primary_contact_id)
+        primary_contact = Contact.objects.get(pk=primary_contact_id)
+        return ContactSerializer(primary_contact).data
 
     @property
-    def communication_counts(self):
-        """
-        Generate count of communications (calls/texts/email) for lead.
-        """
-        call_count = self.lead_activity_logs.filter(activity=constants.CALL_NOTE_CREATED).count()
-        text_count = self.lead_activity_logs.filter(activity=constants.MESSAGE_SENT).count()
-        email_count = self.lead_activity_logs.filter(activity=constants.EMAIL_SENT).count()
-        return {
-            'call_count': call_count,
-            'text_count': text_count,
-            'email_count': email_count,
-        }
+    def call_count(self):
+        return self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED).count()
+
+    @property
+    def text_count(self):
+        return self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT).count()
+
+    @property
+    def email_count(self):
+        return self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT).count()
 
     @property
     def custom_action_counts(self):
@@ -201,52 +193,157 @@ class LeadDataGenerator:
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
-        return self.lead_activity_logs.filter(activity=constants.ACTION_CREATED).count()
+        return self.lead_activity_logs.filter(activity=lead_constants.ACTION_CREATED).count()
+
+    @property
+    def days_to_closed(self):
+        if self.ready_timestamp:
+            return (self.closed_timestamp - self.ready_timestamp).days
+        return (self.closed_timestamp - self.claimed_timestamp).days
+
+    @property
+    def days_ready_to_booked(self):
+        if not self.ready_timestamp or not self.booked_timestamp:
+            return None
+        return (self.booked_timestamp - self.ready_timestamp).days
+
+    @property
+    def days_booked_to_demo(self):
+        if not self.booked_timestamp or not self.demo_timestamp:
+            return None
+        return (self.demo_timestamp - self.booked_timestamp).days
+
+    @property
+    def days_to_demo(self):
+        if not self.demo_timestamp:
+            return None
+        if self.ready_timestamp:
+            return (self.demo_timestamp - self.ready_timestamp).days
+        return (self.demo_timestamp - self.claimed_timestamp).days
+
+    @property
+    def days_demo_to_closed(self):
+        if not self.demo_timestamp:
+            return None
+        return (self.closed_timestamp - self.demo_timestamp).days
+
+    @property
+    def contract_value(self):
+        return self._lead.closing_amount
 
     @property
     def as_dict(self):
         return {
-            'timestamps': {
-                'claimed': self.claimed_timestamp,
-                'ready': self.ready_timestamp,
-                'booked': self.booked_timestamp,
-                'demo': self.demo_timestamp,
-                'closed': self.closed_timestamp,
-            }
-            'primary_contact': ContactSerializer(self.primary_contact).data
-            'communication_counts': self.communication_counts,
+            'contract_value': self.contract_value,
+            'days_to_closed': self.days_to_closed,
+            'days_ready_to_booked': self.days_ready_to_booked,
+            'days_booked_to_demo': self.days_booked_to_demo,
+            'days_to_demo': self.days_to_demo,
+            'days_demo_to_closed': self.days_demo_to_closed,
+            'primary_contact': self.primary_contact,
+            'call_count': self.call_count,
+            'text_count': self.text_count,
+            'email_count': self.email_count,
             'custom_action_counts': self.custom_action_counts,
             'actions_count': self.actions_count,
         }
 
 
-# rep-level statistics:
-# -- average closing time for a lead
-# -- average contract value
-# -- average days ready to booked
-# -- average days booked to demo
-# -- average actions to close the deal
-# -- average days from demo to closed
-# -- average 'days in entire sales cycle` (READY to CLOSED or backup CLAIMED to CLOSED)
-# -- average calls/texts/emails/actions per deal
-
-class RepresentativeDataGenerator:
+class RepresentativeDataGenerator(BaseGenerator):
     """
     Generates representative-level metrics for StoryReport.
     Final output is the self.as_dict method.
-
-    Lead/representative/organization DB data is to be added into Response
-    as part of the serialization step, not here.
     """
-    def __init__(
-        self,
-        story_report,
-    ):
-        self._story_report = story_report
-        self._lead = story_report.lead
-        self._representative = self._lead.claimed_by
-        self._organization = self._representative.organization
+    @property
+    def leads(self):
+        closed_leads = Lead.objects.filter(
+            claimed_by=self._representative,
+            status__title=lead_constants.LEAD_STATUS_CLOSED,
+        )
+        return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
 
-# since need to produce averages for 'days to' ... 
-# just return an array of each timestamp (each array for all closed leads)
-# can compute in client-side... or once have array then compute it here ?
+    def average_for(self, property, rounding_places=0, as_integer=True):
+        total = 0
+        count = 0
+        for lead in self.leads:
+            if lead.get(property):
+                total += lead[property]
+                count += 1
+        if count == 0:
+            return None
+        if as_integer:
+            return int(round(total / count, rounding_places))
+        return round(total / count, rounding_places)
+
+    @property
+    def average_custom_action_counts(self):
+        totals = {}
+        counts = {}
+        for lead in self.leads:
+            for action_choice_title, count in lead['custom_action_counts'].items():
+                if totals.get(action_choice_title):
+                    totals[action_choice_title] += count
+                    counts[action_choice_title] += 1
+                else:
+                    totals[action_choice_title] = count
+                    counts[action_choice_title] = 1
+
+        averages = {}
+        for action_choice_title, aggregate in totals.items():
+            averages[action_choice_title] = int(round(aggregate / counts[action_choice_title]))
+        return averages
+
+    @property
+    def as_dict(self):
+        return {
+            'average_contract_value': self.average_for('contract_value', rounding_places=2, as_integer=False),
+            'average_days_to_closed': self.average_for('days_to_closed'),
+            'average_days_ready_to_booked': self.average_for('days_ready_to_booked'),
+            'average_days_booked_to_demo': self.average_for('days_booked_to_demo'),
+            'average_days_to_demo': self.average_for('days_to_demo'),
+            'average_days_demo_to_closed': self.average_for('days_demo_to_closed'),
+            'average_call_count': self.average_for('call_count'),
+            'average_text_count': self.average_for('text_count'),
+            'average_email_count': self.average_for('email_count'),
+            'average_custom_action_counts': self.average_custom_action_counts,
+            'average_actions_count': self.average_for('actions_count'),
+        }
+
+
+class OrganizationDataGenerator(BaseGenerator):
+    """
+    Generates organization-level metrics for StoryReport.
+    Final output is the self.as_dict method.
+    """
+
+    @property
+    def representatives(self):
+        return self._organization.users.all()
+
+    def generate_representative_leads(self, representative):
+        closed_leads = Lead.objects.filter(
+            claimed_by=representative,
+            status__title=lead_constants.LEAD_STATUS_CLOSED,
+        )
+        return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
+
+    def average_for(self, property, rounding_places=0):
+        total = 0
+        count = 0
+        for representative in self.representatives:
+            leads = self.generate_representative_leads(representative)
+            for lead in leads:
+                if lead.get(property):
+                    total += lead[property]
+                    count += 1
+        if count == 0:
+            return None
+        return int(round(total / count, rounding_places))
+
+    @property
+    def as_dict(self):
+        return {
+            'average_call_count': self.average_for('call_count'),
+            'average_text_count': self.average_for('text_count'),
+            'average_email_count': self.average_for('email_count'),
+        }
