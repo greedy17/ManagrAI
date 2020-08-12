@@ -56,9 +56,3 @@ class StoryReportViewSet(
         report = StoryReport.objects.create(lead=lead, generated_by=generated_by)
         emit_report_event(str(report.id), str(generated_by.id))
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)
-
-
-# TODO:
-# build skeleton of /story-report/:id
-# tests (e.g. structure/contents of JSON Field)
-# explore graph libraries / LOE analysis on report design
