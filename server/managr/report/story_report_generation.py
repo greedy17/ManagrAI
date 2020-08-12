@@ -205,11 +205,15 @@ class LeadDataGenerator(BaseGenerator):
     def days_ready_to_booked(self):
         if not self.ready_timestamp or not self.booked_timestamp:
             return None
+        if self.ready_timestamp > self.booked_timestamp:
+            return None
         return (self.booked_timestamp - self.ready_timestamp).days
 
     @property
     def days_booked_to_demo(self):
         if not self.booked_timestamp or not self.demo_timestamp:
+            return None
+        if self.booked_timestamp > self.demo_timestamp:
             return None
         return (self.demo_timestamp - self.booked_timestamp).days
 
@@ -217,7 +221,7 @@ class LeadDataGenerator(BaseGenerator):
     def days_to_demo(self):
         if not self.demo_timestamp:
             return None
-        if self.ready_timestamp:
+        if self.ready_timestamp and not (self.ready_timestamp > self.demo_timestamp):
             return (self.demo_timestamp - self.ready_timestamp).days
         return (self.demo_timestamp - self.claimed_timestamp).days
 
