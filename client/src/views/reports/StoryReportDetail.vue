@@ -45,6 +45,9 @@
           :title="'Days in Entire Sales Cycle'"
           :average="repMetrics.averageDaysToClosed"
         />
+        <CircularProgressBar
+          :percent="(leadMetrics.daysToClosed / repMetrics.averageDaysToClosed) * 100"
+        />
       </div>
       <div class="managr-logo">
         managr
@@ -112,6 +115,7 @@
 <script>
 import StoryReport from '@/services/storyReports'
 import StageDaysGraphic from '@/components/reports/StageDaysGraphic'
+import CircularProgressBar from '@/components/reports/CircularProgressBar'
 
 function customActionSorter(firstAction, secondAction) {
   if (firstAction.count > secondAction.count) {
@@ -131,7 +135,7 @@ function customActionSorter(firstAction, secondAction) {
 
 export default {
   name: 'StoryReportDetail',
-  components: { StageDaysGraphic },
+  components: { StageDaysGraphic, CircularProgressBar },
   props: ['id'],
   data() {
     return {
