@@ -74,6 +74,7 @@ class LeadMessageTestCase(TestCase):
         # it should 'send' a message to the webhook for receiving messages from twilio
         # it should create a LeadMessage
         # the lead message should only have one contact
+        # TODO replace with the view PB 08/13/2020
         # request = self.factory.post("/api/twilio/callback/messages", self.message)
 
         # request.user = self.user
