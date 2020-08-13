@@ -57,11 +57,11 @@
       </div>
       <div class="contract-hero">
         <div>
-          <div class="amount">{{ leadMetrics.contractValue | currency }}</div>
+          <div class="amount">{{ leadMetrics.contractValue | currencyNoCents }}</div>
           <div class="description">Deal Size</div>
         </div>
         <div>
-          <div class="amount">{{ repMetrics.averageContractValue | currency }}</div>
+          <div class="amount">{{ repMetrics.averageContractValue | currencyNoCents }}</div>
           <div class="description">Average contract value</div>
         </div>
       </div>
