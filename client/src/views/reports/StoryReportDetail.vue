@@ -54,9 +54,7 @@
       </div>
       <div class="divider" />
       <div class="actions">
-        <div v-for="action in sortedActionMetrics" :key="action.title">
-          {{ `${action.title}: ${action.count}` }}
-        </div>
+        <ActionsGraphic :actions="sortedActionMetrics" />
       </div>
       <div class="contract-hero">
         <div>
@@ -116,13 +114,14 @@
 import StoryReport from '@/services/storyReports'
 import StageDaysGraphic from '@/components/reports/StageDaysGraphic'
 import CircularProgressBar from '@/components/reports/CircularProgressBar'
+import ActionsGraphic from '@/components/reports/ActionsGraphic'
 
 function customActionSorter(firstAction, secondAction) {
   if (firstAction.count > secondAction.count) {
-    return 1
+    return -1
   }
   if (secondAction.count > firstAction.count) {
-    return -1
+    return 1
   }
   if (firstAction.title.toLowerCase() > secondAction.title.toLowerCase()) {
     return 1
@@ -135,7 +134,7 @@ function customActionSorter(firstAction, secondAction) {
 
 export default {
   name: 'StoryReportDetail',
-  components: { StageDaysGraphic, CircularProgressBar },
+  components: { StageDaysGraphic, CircularProgressBar, ActionsGraphic },
   props: ['id'],
   data() {
     return {
@@ -195,7 +194,7 @@ export default {
 // @import '@/styles/mixins/utils';
 
 .page {
-  padding: 0 10rem;
+  padding: 0 10vw;
 }
 
 .shadow {
