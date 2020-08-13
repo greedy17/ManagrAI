@@ -10,6 +10,7 @@
         >
           <span class="title">{{ action.title }}</span>
         </li>
+        <li v-for="n in 4 - set.length" :key="n" class="hidden"></li>
       </ul>
     </div>
   </div>
@@ -53,7 +54,7 @@ export default {
 @import '@/styles/variables';
 
 .container {
-  width: 80vw;
+  width: 76vw;
   position: absolute;
   z-index: 1;
 }
@@ -61,10 +62,9 @@ export default {
   list-style: none;
   display: flex;
   flex-flow: row;
-  align-items: left;
   justify-content: left;
-  padding: 0 2rem;
   margin-top: 2rem;
+  padding: 0;
 }
 .progress-bar li {
   width: 20rem;
@@ -97,6 +97,9 @@ export default {
   top: 1.25rem;
   left: -50%;
   z-index: -1;
+}
+.progress-bar li.hidden:after {
+  background: rgba($color: $dark-green, $alpha: 0);
 }
 .progress-bar li.active:before {
   border-color: $yellow;

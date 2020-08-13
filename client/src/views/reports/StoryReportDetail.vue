@@ -45,25 +45,24 @@
           :title="'Days in Entire Sales Cycle'"
           :average="repMetrics.averageDaysToClosed"
         />
-        <CircularProgressBar
-          :percentComplete="(leadMetrics.daysToClosed / repMetrics.averageDaysToClosed) * 100"
-        />
+        <CircularProgressBar :percentComplete="daysToClosedGraphicValue" />
       </div>
       <div class="managr-logo">
         managr
       </div>
       <div class="divider" />
       <div class="actions">
+        <h2>Actions</h2>
         <ActionsGraphic :actions="sortedActionMetrics" />
       </div>
       <div class="contract-hero">
         <div>
-          <div>{{ leadMetrics.contractValue | currency }}</div>
-          <div>Deal Size</div>
+          <div class="amount">{{ leadMetrics.contractValue | currency }}</div>
+          <div class="description">Deal Size</div>
         </div>
         <div>
-          <div>{{ repMetrics.averageContractValue | currency }}</div>
-          <div>Average contract value</div>
+          <div class="amount">{{ repMetrics.averageContractValue | currency }}</div>
+          <div class="description">Average contract value</div>
         </div>
       </div>
       <div class="table">
@@ -160,20 +159,23 @@ export default {
   },
   methods: {},
   computed: {
+    missingReport() {
+      return this.report === null
+    },
     leadMetrics() {
-      return this.report === null ? null : this.report.data.lead
+      return this.missingReport ? null : this.report.data.lead
     },
     repMetrics() {
-      return this.report === null ? null : this.report.data.representative
+      return this.missingReport ? null : this.report.data.representative
     },
     orgMetrics() {
-      return this.report === null ? null : this.report.data.organization
+      return this.missingReport ? null : this.report.data.organization
     },
     rep() {
-      return this.report === null ? null : this.report.leadRef.claimedByRef
+      return this.missingReport ? null : this.report.leadRef.claimedByRef
     },
     sortedActionMetrics() {
-      if (this.report === null) {
+      if (this.missingReport) {
         return null
       }
       let unsortedArray = Object.keys(this.leadMetrics.customActionCounts).map(key => ({
@@ -181,6 +183,12 @@ export default {
         count: this.leadMetrics.customActionCounts[key],
       }))
       return unsortedArray.sort(customActionSorter)
+    },
+    daysToClosedGraphicValue() {
+      if (this.missingReport) {
+        return 0
+      }
+      return (this.leadMetrics.daysToClosed / this.repMetrics.averageDaysToClosed) * 100
     },
   },
 }
@@ -239,8 +247,8 @@ export default {
 }
 
 .contract-hero {
-  background-color: rgba($color: $dark-green, $alpha: 0.2);
-  height: 15rem;
+  background-color: rgba($color: $dark-green, $alpha: 0.15);
+  padding: 6rem 0;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -250,10 +258,29 @@ export default {
     display: flex;
     flex-flow: column;
     align-items: center;
+
+    .amount {
+      color: $dark-green;
+      font-size: 5rem;
+    }
+
+    .description {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
   }
 }
 
 tr {
   height: 3rem;
+}
+
+.actions {
+  margin: 3rem 0;
+
+  h2 {
+    color: $dark-green;
+    padding-left: 4rem;
+  }
 }
 </style>
