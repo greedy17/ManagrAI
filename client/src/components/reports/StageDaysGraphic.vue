@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div>{{ count || 0 }}</div>
+    <div>{{ count === null ? 'Skipped' : count }}</div>
     <div>{{ title }}</div>
     <div>Avg: {{ average || 0 }}</div>
   </div>

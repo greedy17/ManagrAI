@@ -31,9 +31,9 @@
           :average="repMetrics.averageDaysBookedToDemo"
         />
         <StageDaysGraphic
-          :count="leadMetrics.actionsCount"
+          :count="leadMetrics.actionCount"
           :title="'Actions to Close this deal'"
-          :average="repMetrics.averageActionsCount"
+          :average="repMetrics.averageActionCount"
         />
         <StageDaysGraphic
           :count="leadMetrics.daysDemoToClosed"
@@ -82,7 +82,7 @@
             <td>{{ leadMetrics.callCount || 0 }}</td>
             <td>{{ leadMetrics.textCount || 0 }}</td>
             <td>{{ leadMetrics.emailCount || 0 }}</td>
-            <td>{{ leadMetrics.actionsCount || 0 }}</td>
+            <td>{{ leadMetrics.actionCount || 0 }}</td>
           </tr>
 
           <tr>
@@ -90,7 +90,7 @@
             <td>{{ repMetrics.averageCallCount || 0 }}</td>
             <td>{{ repMetrics.averageTextCount || 0 }}</td>
             <td>{{ repMetrics.averageEmailCount || 0 }}</td>
-            <td>{{ repMetrics.averageActionsCount || 0 }}</td>
+            <td>{{ repMetrics.averageActionCount || 0 }}</td>
           </tr>
 
           <tr>
