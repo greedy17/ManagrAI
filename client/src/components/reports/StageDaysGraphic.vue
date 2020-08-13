@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-    <div>{{ count === null ? 'N/A' : count }}</div>
+    <div>{{ count || 0 }}</div>
     <div>{{ title }}</div>
-    <div>Avg: {{ average === null ? 'N/A' : average }}</div>
+    <div>Avg: {{ average || 0 }}</div>
   </div>
 </template>
 
