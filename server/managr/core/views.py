@@ -2,6 +2,7 @@ import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 import logging
+from django.core import serializers
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
@@ -572,7 +573,7 @@ class TwilioMessageWebhook(APIView):
         u = User.objects.filter(message_auth_account__phone_number=recipient).first()
         # check if it is associated with a contact
 
-        contacts_object = Contact.objects.filter(
+        contacts_object = Contact.objects.for_user(u).filter(
             Q(phone_number_1=sender) | Q(phone_number_2=sender)
         )
 
@@ -582,6 +583,7 @@ class TwilioMessageWebhook(APIView):
         # REAL PHONE NUMBER
 
         # create a LeadMessage object
+
         if leads.count() > 0:
             for lead in leads:
                 lead_message = LeadMessage.objects.create(
@@ -621,6 +623,7 @@ class TwilioMessageWebhook(APIView):
                     "leads": [{"id": str(l.id), "title": l.title} for l in leads],
                 },
             )
+
         return Response()
 
 
