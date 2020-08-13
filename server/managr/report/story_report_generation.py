@@ -226,7 +226,7 @@ class LeadDataGenerator(BaseGenerator):
     # NOTE (Bruno): not sure how relevant this property is, since self.custom_action_counts
     # may cover it. Keeping it here for further testing once we have real data.
     @property
-    def actions_count(self):
+    def action_count(self):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
@@ -286,7 +286,7 @@ class LeadDataGenerator(BaseGenerator):
             'text_count': self.text_count,
             'email_count': self.email_count,
             'custom_action_counts': self.custom_action_counts,
-            'actions_count': self.actions_count,
+            'action_count': self.action_count,
         }
 
 
@@ -347,7 +347,7 @@ class RepresentativeDataGenerator(BaseGenerator):
             'average_text_count': self.average_for('text_count'),
             'average_email_count': self.average_for('email_count'),
             'average_custom_action_counts': self.average_custom_action_counts,
-            'average_actions_count': self.average_for('actions_count'),
+            'average_action_count': self.average_for('action_count'),
         }
 
 
@@ -387,4 +387,5 @@ class OrganizationDataGenerator(BaseGenerator):
             'average_call_count': self.average_for('call_count'),
             'average_text_count': self.average_for('text_count'),
             'average_email_count': self.average_for('email_count'),
+            'average_action_count': self.average_for('action_count'),
         }

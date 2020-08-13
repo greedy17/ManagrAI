@@ -79,10 +79,10 @@
               <div>{{ rep.fullName }}</div>
               <div>On this Deal</div>
             </td>
-            <td>{{ leadMetrics.callCount }}</td>
-            <td>{{ leadMetrics.textCount }}</td>
-            <td>{{ leadMetrics.emailCount }}</td>
-            <td>{{ leadMetrics.actionsCount }}</td>
+            <td>{{ leadMetrics.callCount || 0 }}</td>
+            <td>{{ leadMetrics.textCount || 0 }}</td>
+            <td>{{ leadMetrics.emailCount || 0 }}</td>
+            <td>{{ leadMetrics.actionsCount || 0 }}</td>
           </tr>
 
           <tr>
@@ -98,6 +98,7 @@
             <td>{{ orgMetrics.averageCallCount || 0 }}</td>
             <td>{{ orgMetrics.averageTextCount || 0 }}</td>
             <td>{{ orgMetrics.averageEmailCount || 0 }}</td>
+            <td>{{ orgMetrics.averageActionCount || 0 }}</td>
           </tr>
         </table>
       </div>
