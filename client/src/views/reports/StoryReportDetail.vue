@@ -5,7 +5,7 @@
       <h1>404</h1>
       <p>Report Not Found</p>
     </div>
-    <div class="not-available" v-else-if="!storyReport.datetimeGenerated">
+    <div class="not-available" v-else-if="!report.datetimeGenerated">
       <p>This report is still being generated.</p>
     </div>
     <div class="report shadow" v-else>
@@ -20,23 +20,89 @@
         </div>
       </div>
       <div class="status-metrics">
-        status metrics container
+        <StageDaysGraphic
+          :count="leadMetrics.daysReadyToBooked"
+          :title="'Days from Ready to Booked'"
+          :average="repMetrics.averageDaysReadyToBooked"
+        />
+        <StageDaysGraphic
+          :count="leadMetrics.daysBookedToDemo"
+          :title="'Days from Booked to Demo'"
+          :average="repMetrics.averageDaysBookedToDemo"
+        />
+        <StageDaysGraphic
+          :count="leadMetrics.actionsCount"
+          :title="'Actions to Close this deal'"
+          :average="repMetrics.averageActionsCount"
+        />
+        <StageDaysGraphic
+          :count="leadMetrics.daysDemoToClosed"
+          :title="'Days from Demo to Closed'"
+          :average="repMetrics.averageDaysDemoToClosed"
+        />
+        <StageDaysGraphic
+          :count="leadMetrics.daysToClosed"
+          :title="'Days in Entire Sales Cycle'"
+          :average="repMetrics.averageDaysToClosed"
+        />
       </div>
       <div class="managr-logo">
-        managr logo
+        managr
       </div>
       <div class="divider" />
       <div class="actions">
-        actions here
+        <div v-for="action in sortedActionMetrics" :key="action.title">
+          {{ `${action.title}: ${action.count}` }}
+        </div>
       </div>
       <div class="contract-hero">
-        contract hero here
+        <div>
+          <div>{{ leadMetrics.contractValue | currency }}</div>
+          <div>Deal Size</div>
+        </div>
+        <div>
+          <div>{{ repMetrics.averageContractValue | currency }}</div>
+          <div>Average contract value</div>
+        </div>
       </div>
       <div class="table">
-        table here
+        <table style="width:100%">
+          <tr>
+            <th></th>
+            <th>Calls</th>
+            <th>Texts</th>
+            <th>Emails</th>
+            <th>Actions</th>
+          </tr>
+          <tr>
+            <td>
+              <div>{{ rep.fullName }}</div>
+              <div>On this Deal</div>
+            </td>
+            <td>{{ leadMetrics.callCount }}</td>
+            <td>{{ leadMetrics.textCount }}</td>
+            <td>{{ leadMetrics.emailCount }}</td>
+            <td>{{ leadMetrics.actionsCount }}</td>
+          </tr>
+
+          <tr>
+            <td>{{ rep.firstName }}'s average on all closed deals</td>
+            <td>{{ repMetrics.averageCallCount || 0 }}</td>
+            <td>{{ repMetrics.averageTextCount || 0 }}</td>
+            <td>{{ repMetrics.averageEmailCount || 0 }}</td>
+            <td>{{ repMetrics.averageActionsCount || 0 }}</td>
+          </tr>
+
+          <tr>
+            <td>Company average on all closed deals</td>
+            <td>{{ orgMetrics.averageCallCount || 0 }}</td>
+            <td>{{ orgMetrics.averageTextCount || 0 }}</td>
+            <td>{{ orgMetrics.averageEmailCount || 0 }}</td>
+          </tr>
+        </table>
       </div>
       <div class="managr-logo">
-        managr logo
+        managr
       </div>
     </div>
   </div>
@@ -44,23 +110,40 @@
 
 <script>
 import StoryReport from '@/services/storyReports'
+import StageDaysGraphic from '@/components/reports/StageDaysGraphic'
+
+function customActionSorter(firstAction, secondAction) {
+  if (firstAction.count > secondAction.count) {
+    return 1
+  }
+  if (secondAction.count > firstAction.count) {
+    return -1
+  }
+  if (firstAction.title.toLowerCase() > secondAction.title.toLowerCase()) {
+    return 1
+  }
+  if (secondAction.title.toLowerCase() > firstAction.title.toLowerCase()) {
+    return -1
+  }
+  return 0
+}
 
 export default {
   name: 'StoryReportDetail',
-  components: {},
+  components: { StageDaysGraphic },
   props: ['id'],
   data() {
     return {
       loading: true,
       show404: false,
-      storyReport: null,
+      report: null,
     }
   },
   created() {
     StoryReport.api
       .retrieve(this.id)
       .then(report => {
-        this.storyReport = report
+        this.report = report
       })
       .catch(({ response }) => {
         if (response.status === 404) {
@@ -72,6 +155,30 @@ export default {
       })
   },
   methods: {},
+  computed: {
+    leadMetrics() {
+      return this.report === null ? null : this.report.data.lead
+    },
+    repMetrics() {
+      return this.report === null ? null : this.report.data.representative
+    },
+    orgMetrics() {
+      return this.report === null ? null : this.report.data.organization
+    },
+    rep() {
+      return this.report === null ? null : this.report.leadRef.claimedByRef
+    },
+    sortedActionMetrics() {
+      if (this.report === null) {
+        return null
+      }
+      let unsortedArray = Object.keys(this.leadMetrics.customActionCounts).map(key => ({
+        title: key,
+        count: this.leadMetrics.customActionCounts[key],
+      }))
+      return unsortedArray.sort(customActionSorter)
+    },
+  },
 }
 </script>
 
@@ -113,5 +220,36 @@ export default {
     font-size: 1.5rem;
     margin-top: 0;
   }
+}
+
+.managr-logo {
+  text-align: center;
+  font-family: $logo-font-family;
+  font-size: 2.25rem;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  color: $dark-green;
+  padding: 2rem 0;
+}
+
+.contract-hero {
+  background-color: rgba($color: $dark-green, $alpha: 0.2);
+  height: 15rem;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  div {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+  }
+}
+
+tr {
+  height: 3rem;
 }
 </style>

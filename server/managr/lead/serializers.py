@@ -35,7 +35,7 @@ class UserRefSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "profile_photo")
+        fields = ("id", "email", "full_name", "first_name", "profile_photo")
 
     def get_full_name(self, instance):
         return f"{instance.first_name} {instance.last_name}"
