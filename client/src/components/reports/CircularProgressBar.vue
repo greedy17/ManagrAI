@@ -1,10 +1,12 @@
 <template>
-  <div ref="progressPieChart" class="progress-pie-chart" data-percent="43">
+  <div ref="progressPieChart" class="progress-pie-chart">
     <div class="ppc-progress">
       <div ref="ppcProgressFill" class="ppc-progress-fill"></div>
     </div>
     <div class="ppc-percents">
-      <div class="pcc-percents-wrapper"></div>
+      <div class="pcc-percents-wrapper">
+        <!-- here can add text inside of progress bar, such as percentage -->
+      </div>
     </div>
   </div>
 </template>
@@ -13,15 +15,15 @@
 export default {
   name: 'CircularProgressBar',
   props: {
-    percent: {
+    percentComplete: {
       type: Number,
       required: true,
     },
   },
   created() {
     let ppc = this.$refs.progressPieChart
-    let deg = (360 * this.percent) / 100
-    if (this.percent > 50) {
+    let deg = (360 * this.percentComplete) / 100
+    if (this.percentComplete > 50) {
       ppc.addClass('gt-50')
     }
     this.$refs.ppcProgressFill.css('transform', 'rotate(' + deg + 'deg)')
@@ -87,10 +89,6 @@ $size: 200px;
   vertical-align: middle;
 }
 
-// body {
-//   font-family: Arial;
-//   background: #f7f7f7;
-// }
 .progress-pie-chart {
   margin: 50px auto 0;
 }

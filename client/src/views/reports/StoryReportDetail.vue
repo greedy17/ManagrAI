@@ -46,7 +46,7 @@
           :average="repMetrics.averageDaysToClosed"
         />
         <CircularProgressBar
-          :percent="(leadMetrics.daysToClosed / repMetrics.averageDaysToClosed) * 100"
+          :percentComplete="(leadMetrics.daysToClosed / repMetrics.averageDaysToClosed) * 100"
         />
       </div>
       <div class="managr-logo">
