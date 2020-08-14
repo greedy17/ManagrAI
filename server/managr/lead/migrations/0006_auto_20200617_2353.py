@@ -6,28 +6,42 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0005_auto_20200616_1629'),
+        ("lead", "0005_auto_20200616_1629"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='callnote',
-            name='content',
+            model_name="callnote",
+            name="content",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='lead',
-            name='status',
-            field=models.CharField(choices=[('READY', 'Ready'), ('TRIAL', 'Trial'), ('DEMO', 'Demo'), ('WAITING', 'Waiting'), ('CLOSED', 'Closed'), ('LOST', 'Lost'), ('BOOKED', 'Booked'), ('LEAD', 'Lead')], help_text='Status in the sale process', max_length=255, null=True),
+            model_name="lead",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("READY", "Ready"),
+                    ("TRIAL", "Trial"),
+                    ("DEMO", "Demo"),
+                    ("WAITING", "Waiting"),
+                    ("CLOSED", "Closed"),
+                    ("LOST", "Lost"),
+                    ("BOOKED", "Booked"),
+                    ("LEAD", "Lead"),
+                ],
+                help_text="Status in the sale process",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='note',
-            name='content',
+            model_name="note",
+            name="content",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='reminder',
-            name='content',
+            model_name="reminder",
+            name="content",
             field=models.CharField(blank=True, max_length=255),
         ),
     ]

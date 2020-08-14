@@ -10,46 +10,67 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('lead', '0014_lead_expected_close_date'),
+        ("lead", "0014_lead_expected_close_date"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='notification',
-            options={'ordering': ['-datetime_created']},
+            name="notification", options={"ordering": ["-datetime_created"]},
         ),
-        migrations.RemoveField(
-            model_name='notification',
-            name='action_taken',
+        migrations.RemoveField(model_name="notification", name="action_taken",),
+        migrations.AddField(
+            model_name="notification",
+            name="meta",
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                default=dict, help_text="Details about the notification"
+            ),
         ),
         migrations.AddField(
-            model_name='notification',
-            name='meta',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, help_text='Details about the notification'),
+            model_name="notification",
+            name="notification_type",
+            field=models.CharField(
+                choices=[
+                    ("REMINDER", "Reminder"),
+                    ("EMAIL", "Email"),
+                    ("SYSTEM", "System"),
+                ],
+                help_text="type of Notification being created",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='notification',
-            name='notification_type',
-            field=models.CharField(choices=[('REMINDER', 'Reminder'), ('EMAIL', 'Email'), ('SYSTEM', 'System')], help_text='type of Notification being created', max_length=255, null=True),
+            model_name="notification",
+            name="resource_id",
+            field=models.CharField(
+                help_text="Id of the resource if it is an email it will be the thread id",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='notification',
-            name='resource_id',
-            field=models.CharField(help_text='Id of the resource if it is an email it will be the thread id', max_length=255, null=True),
+            model_name="notification",
+            name="user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="notifications",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='notification',
-            name='user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='notifications', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='notification',
-            name='viewed',
+            model_name="notification",
+            name="viewed",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='leadactivitylog',
-            name='lead',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity_logs', to='lead.Lead'),
+            model_name="leadactivitylog",
+            name="lead",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="activity_logs",
+                to="lead.Lead",
+            ),
         ),
     ]

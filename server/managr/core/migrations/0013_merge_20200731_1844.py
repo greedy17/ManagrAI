@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0009_merge_20200731_1833'),
-        ('core', '0012_messageauthaccount_phone_number'),
+        ("core", "0009_merge_20200731_1833"),
+        ("core", "0012_messageauthaccount_phone_number"),
     ]
 
-    operations = [
-    ]
+    operations = []
