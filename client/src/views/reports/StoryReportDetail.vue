@@ -9,7 +9,6 @@
       <p>This report is still being generated.</p>
     </div>
     <div class="report shadow" v-else>
-      Page 1!!
       <div class="divider" />
       <div class="profile-photo-and-list">
         <div class="profile-photo">
@@ -179,10 +178,18 @@
             <th>Emails</th>
             <th>Actions</th>
           </tr>
-          <tr>
-            <td>
-              <div>{{ rep.fullName }}</div>
-              <div>On this Deal</div>
+          <tr class="rep-row">
+            <td class="left-column">
+              <div class="rep-cell">
+                <img
+                  :class="{ photo: !!rep.profilePhoto, icon: !rep.profilePhoto }"
+                  :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')"
+                />
+                <div style="display: inline-block;">
+                  <div>{{ rep.fullName }}</div>
+                  <div><span>On this Deal</span></div>
+                </div>
+              </div>
             </td>
             <td>{{ leadMetrics.callCount || 0 }}</td>
             <td>{{ leadMetrics.textCount || 0 }}</td>
@@ -191,7 +198,7 @@
           </tr>
 
           <tr>
-            <td>{{ rep.firstName }}'s average on all closed deals</td>
+            <td class="left-column">{{ rep.firstName }}'s average on all closed deals</td>
             <td>{{ repMetrics.averageCallCount || 0 }}</td>
             <td>{{ repMetrics.averageTextCount || 0 }}</td>
             <td>{{ repMetrics.averageEmailCount || 0 }}</td>
@@ -199,7 +206,7 @@
           </tr>
 
           <tr>
-            <td>Company average on all closed deals</td>
+            <td class="left-column">Company average on all closed deals</td>
             <td>{{ orgMetrics.averageCallCount || 0 }}</td>
             <td>{{ orgMetrics.averageTextCount || 0 }}</td>
             <td>{{ orgMetrics.averageEmailCount || 0 }}</td>
@@ -355,7 +362,7 @@ export default {
   font-style: normal;
   line-height: normal;
   color: $dark-green;
-  padding: 2rem 0;
+  padding: 3rem 0;
 }
 
 .contract-hero {
@@ -381,10 +388,6 @@ export default {
       font-weight: 600;
     }
   }
-}
-
-tr {
-  height: 3rem;
 }
 
 .actions {
@@ -480,6 +483,60 @@ tr {
         }
       }
     }
+  }
+}
+
+.table {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding: 0 3rem;
+  font-size: 1.2rem;
+
+  .icon {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 50%;
+  }
+  .photo {
+    border-radius: 50%;
+    height: 3rem;
+    width: 3rem;
+    border: 2px solid $yellow;
+    object-fit: cover;
+  }
+}
+table {
+  border: 1px solid $soft-gray;
+}
+tr {
+  height: 4rem;
+}
+.rep-row {
+  background-color: rgba($color: $yellow, $alpha: 0.1);
+}
+.rep-cell {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+
+  img {
+    margin-right: 1rem;
+  }
+}
+th {
+  font-weight: 600;
+}
+td {
+  text-align: center;
+}
+.left-column {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 2rem;
+
+  span {
+    font-weight: 300;
+    font-style: italic;
   }
 }
 </style>
