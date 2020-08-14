@@ -67,9 +67,6 @@ class LeadMessageTestCase(TestCase):
         # send mock lead message to lead message end point from user 1
         self.message = message_data
 
-        # send mock lead message to lead message end point from user 2
-        # get Lead Messages each one should only have one linked_contact
-
     def test_create_lead_message(self):
         # it should 'send' a message to the webhook for receiving messages from twilio
         # it should create a LeadMessage
@@ -106,10 +103,5 @@ class LeadMessageTestCase(TestCase):
 
                 lead_message.linked_contacts.set(contacts_object)
                 lead_message.save()
-
-                #
-                # emit and event with LeadMessage.RECEIVED to create activity log
-            # create the notification with resource id being the leadmessage
-            # no need to emit an event for this as the notification has no async actions
 
         self.assertEqual(self.lead.messages.first().linked_contacts.all().count(), 1)
