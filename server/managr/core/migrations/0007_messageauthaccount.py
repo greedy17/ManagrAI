@@ -10,36 +10,65 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_auto_20200602_2004'),
+        ("core", "0006_auto_20200602_2004"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MessageAuthAccount',
+            name="MessageAuthAccount",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('account_sid', models.CharField(max_length=128)),
-                ('capabilities', django.contrib.postgres.fields.jsonb.JSONField(default=dict, max_length=128)),
-                ('date_created', models.CharField(max_length=128)),
-                ('date_updated', models.CharField(max_length=128)),
-                ('friendly_name', models.CharField(max_length=128)),
-                ('identity_sid', models.CharField(max_length=128)),
-                ('origin', models.CharField(max_length=128)),
-                ('sid', models.CharField(max_length=128)),
-                ('sms_method', models.CharField(max_length=128)),
-                ('sms_url', models.CharField(help_text='the webhook url for incoming messages', max_length=128)),
-                ('status_callback', models.CharField(help_text='the webhook url for message status', max_length=128)),
-                ('status_callback_method', models.CharField(max_length=128)),
-                ('uri', models.CharField(max_length=128)),
-                ('voice_method', models.CharField(max_length=128)),
-                ('voice_url', models.CharField(max_length=128, null=True)),
-                ('status', models.CharField(max_length=128)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='message_auth_account', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("account_sid", models.CharField(max_length=128)),
+                (
+                    "capabilities",
+                    django.contrib.postgres.fields.jsonb.JSONField(
+                        default=dict, max_length=128
+                    ),
+                ),
+                ("date_created", models.CharField(max_length=128)),
+                ("date_updated", models.CharField(max_length=128)),
+                ("friendly_name", models.CharField(max_length=128)),
+                ("identity_sid", models.CharField(max_length=128)),
+                ("origin", models.CharField(max_length=128)),
+                ("sid", models.CharField(max_length=128)),
+                ("sms_method", models.CharField(max_length=128)),
+                (
+                    "sms_url",
+                    models.CharField(
+                        help_text="the webhook url for incoming messages",
+                        max_length=128,
+                    ),
+                ),
+                (
+                    "status_callback",
+                    models.CharField(
+                        help_text="the webhook url for message status", max_length=128
+                    ),
+                ),
+                ("status_callback_method", models.CharField(max_length=128)),
+                ("uri", models.CharField(max_length=128)),
+                ("voice_method", models.CharField(max_length=128)),
+                ("voice_url", models.CharField(max_length=128, null=True)),
+                ("status", models.CharField(max_length=128)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="message_auth_account",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['datetime_created'],
-            },
+            options={"ordering": ["datetime_created"],},
         ),
     ]

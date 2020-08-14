@@ -6,24 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0001_initial'),
-        ('lead', '0001_initial'),
+        ("organization", "0001_initial"),
+        ("lead", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='callnote',
-            name='linked_contacts',
-            field=models.ManyToManyField(blank=True, related_name='lead_callnote', to='organization.Contact'),
+            model_name="callnote",
+            name="linked_contacts",
+            field=models.ManyToManyField(
+                blank=True, related_name="lead_callnote", to="organization.Contact"
+            ),
         ),
         migrations.AddField(
-            model_name='note',
-            name='linked_contacts',
-            field=models.ManyToManyField(blank=True, related_name='lead_note', to='organization.Contact'),
+            model_name="note",
+            name="linked_contacts",
+            field=models.ManyToManyField(
+                blank=True, related_name="lead_note", to="organization.Contact"
+            ),
         ),
         migrations.AddField(
-            model_name='reminder',
-            name='linked_contacts',
-            field=models.ManyToManyField(blank=True, related_name='lead_reminder', to='organization.Contact'),
+            model_name="reminder",
+            name="linked_contacts",
+            field=models.ManyToManyField(
+                blank=True, related_name="lead_reminder", to="organization.Contact"
+            ),
         ),
     ]

@@ -7,23 +7,52 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0004_auto_20200616_1547'),
+        ("lead", "0004_auto_20200616_1547"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='leadactivitylog',
-            options={'ordering': ['-action_timestamp', '-datetime_created']},
+            name="leadactivitylog",
+            options={"ordering": ["-action_timestamp", "-datetime_created"]},
         ),
         migrations.AddField(
-            model_name='leadactivitylog',
-            name='action_timestamp',
-            field=models.DateTimeField(default=django.utils.timezone.now, help_text="Keep track of when the action happened so we can construct a timeline for the lead, since this might be different from the 'datetime_created' timestamp."),
+            model_name="leadactivitylog",
+            name="action_timestamp",
+            field=models.DateTimeField(
+                default=django.utils.timezone.now,
+                help_text="Keep track of when the action happened so we can construct a timeline for the lead, since this might be different from the 'datetime_created' timestamp.",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='leadactivitylog',
-            name='activity',
-            field=models.CharField(choices=[('Lead.CREATED', 'Lead Created'), ('Lead.UPDATED', 'Lead Updated'), ('Lead.DELETED', 'Lead Deleted'), ('Lead.CLAIMED', 'Lead Claimed'), ('Lead.RELEASED', 'Lead Released'), ('Lead.CLOSED', 'Lead Closed'), ('Note.CREATED', 'Note Created'), ('Note.UPDATED', 'Note Updated'), ('Note.DELETED', 'Note Deleted'), ('CallNote.CREATED', 'Call Note Created'), ('CallNote.UPDATED', 'Call Note Updated'), ('CallNote.DELETED', 'Call Note Deleted'), ('File.CREATED', 'File Created'), ('File.UPDATED', 'File Updated'), ('File.DELETED', 'File Deleted'), ('Reminder.CREATED', 'Reminder Created'), ('Reminder.UPDATED', 'Reminder Updated'), ('Reminder.DELETED', 'Reminder Deleted'), ('Action.CREATED', 'Action.CREATED'), ('Action.UPDATED', 'Action.UPDATED'), ('Action.DELETED', 'Action.DELETED')], help_text='records any actions taken on a lead', max_length=255),
+            model_name="leadactivitylog",
+            name="activity",
+            field=models.CharField(
+                choices=[
+                    ("Lead.CREATED", "Lead Created"),
+                    ("Lead.UPDATED", "Lead Updated"),
+                    ("Lead.DELETED", "Lead Deleted"),
+                    ("Lead.CLAIMED", "Lead Claimed"),
+                    ("Lead.RELEASED", "Lead Released"),
+                    ("Lead.CLOSED", "Lead Closed"),
+                    ("Note.CREATED", "Note Created"),
+                    ("Note.UPDATED", "Note Updated"),
+                    ("Note.DELETED", "Note Deleted"),
+                    ("CallNote.CREATED", "Call Note Created"),
+                    ("CallNote.UPDATED", "Call Note Updated"),
+                    ("CallNote.DELETED", "Call Note Deleted"),
+                    ("File.CREATED", "File Created"),
+                    ("File.UPDATED", "File Updated"),
+                    ("File.DELETED", "File Deleted"),
+                    ("Reminder.CREATED", "Reminder Created"),
+                    ("Reminder.UPDATED", "Reminder Updated"),
+                    ("Reminder.DELETED", "Reminder Deleted"),
+                    ("Action.CREATED", "Action.CREATED"),
+                    ("Action.UPDATED", "Action.UPDATED"),
+                    ("Action.DELETED", "Action.DELETED"),
+                ],
+                help_text="records any actions taken on a lead",
+                max_length=255,
+            ),
         ),
     ]

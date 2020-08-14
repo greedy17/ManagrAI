@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0010_auto_20200727_1638'),
+        ("core", "0010_auto_20200727_1638"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='messageauthaccount',
-            name='identity_sid',
+            model_name="messageauthaccount",
+            name="identity_sid",
             field=models.CharField(max_length=128, null=True),
         ),
     ]

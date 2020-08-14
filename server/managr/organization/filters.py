@@ -14,15 +14,15 @@ from .models import Contact, Account
 
 
 class ContactFilterSet(FilterSet):
-    by_lead = django_filters.CharFilter(field_name='leads')
+    by_lead = django_filters.CharFilter(field_name="leads")
 
     class Meta:
         model = Contact
-        fields = ('account',)
+        fields = ("account",)
 
 
 class AccountFilterSet(FilterSet):
-    by_params = django_filters.CharFilter(method='filter_by_params')
+    by_params = django_filters.CharFilter(method="filter_by_params")
 
     class Meta:
         model = Account
@@ -39,19 +39,23 @@ class AccountFilterSet(FilterSet):
               interface from the client-side.
         """
         params = json.loads(value)
-        only_unclaimed = params.get('only_unclaimed', False)
-        representatives = params.get('representatives', [])
-        search_term = params.get('search_term', '')
+        only_unclaimed = params.get("only_unclaimed", False)
+        representatives = params.get("representatives", [])
+        search_term = params.get("search_term", "")
 
         # if search term and unclaimed
         if search_term and only_unclaimed:
-            leads = Lead.objects.filter(title__icontains=search_term, claimed_by__isnull=True)
+            leads = Lead.objects.filter(
+                title__icontains=search_term, claimed_by__isnull=True
+            )
             accounts = {l.account.id for l in leads}
             return queryset.filter(pk__in=accounts)
 
         # if search term and representatives
         if search_term and len(representatives):
-            leads = Lead.objects.filter(title__icontains=search_term, claimed_by__in=representatives)
+            leads = Lead.objects.filter(
+                title__icontains=search_term, claimed_by__in=representatives
+            )
             accounts = {l.account.id for l in leads}
             return queryset.filter(pk__in=accounts)
 

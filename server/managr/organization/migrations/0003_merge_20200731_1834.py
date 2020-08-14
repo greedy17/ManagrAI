@@ -6,9 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0002_normalize_contact_emails'),
-
+        ("organization", "0002_normalize_contact_emails"),
     ]
 
-    operations = [
-    ]
+    operations = []

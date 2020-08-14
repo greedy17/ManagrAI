@@ -6,13 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0020_merge_20200724_1409'),
+        ("lead", "0020_merge_20200724_1409"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='forecast',
-            name='forecast',
-            field=models.CharField(choices=[('50/50', '50/50'), ('NA', 'NA'), ('STRONG', 'Strong'), ('FUTURE', 'Future'), ('VERBAL', 'Verbal'), ('CLOSED', 'Closed')], default='NA', max_length=255, null=True),
+            model_name="forecast",
+            name="forecast",
+            field=models.CharField(
+                choices=[
+                    ("50/50", "50/50"),
+                    ("NA", "NA"),
+                    ("STRONG", "Strong"),
+                    ("FUTURE", "Future"),
+                    ("VERBAL", "Verbal"),
+                    ("CLOSED", "Closed"),
+                ],
+                default="NA",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

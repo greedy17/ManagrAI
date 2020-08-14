@@ -6,23 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_auto_20200602_2004'),
+        ("core", "0006_auto_20200602_2004"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='commit',
-            field=models.PositiveIntegerField(default=0, help_text='Worst-case quota.'),
+            model_name="user",
+            name="commit",
+            field=models.PositiveIntegerField(default=0, help_text="Worst-case quota."),
         ),
         migrations.AddField(
-            model_name='user',
-            name='quota',
-            field=models.PositiveIntegerField(default=0, help_text='Target sell amount for some defined timespan set by their Organization.'),
+            model_name="user",
+            name="quota",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Target sell amount for some defined timespan set by their Organization.",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='upside',
-            field=models.PositiveIntegerField(default=0, help_text='Optimistic quota.'),
+            model_name="user",
+            name="upside",
+            field=models.PositiveIntegerField(default=0, help_text="Optimistic quota."),
         ),
     ]

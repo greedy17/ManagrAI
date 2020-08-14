@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0021_merge_20200727_1448'),
+        ("lead", "0021_merge_20200727_1448"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='leadmessage',
-            name='body',
+            model_name="leadmessage",
+            name="body",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='leadmessage',
-            name='status',
-            field=models.CharField(choices=[('DELIVERED', 'Delivered'), ('NOT_DELIVERED', 'Not Delivered'), ('MESSAGE_PENDING', 'Pending')], max_length=255, null=True),
+            model_name="leadmessage",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("DELIVERED", "Delivered"),
+                    ("NOT_DELIVERED", "Not Delivered"),
+                    ("MESSAGE_PENDING", "Pending"),
+                ],
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

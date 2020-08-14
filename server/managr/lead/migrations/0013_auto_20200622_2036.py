@@ -6,23 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0012_auto_20200622_2006'),
+        ("lead", "0012_auto_20200622_2006"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='callnote',
-            name='content',
-            field=models.TextField(blank=True),
+            model_name="callnote", name="content", field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='note',
-            name='content',
-            field=models.TextField(blank=True),
+            model_name="note", name="content", field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='reminder',
-            name='content',
-            field=models.TextField(blank=True),
+            model_name="reminder", name="content", field=models.TextField(blank=True),
         ),
     ]

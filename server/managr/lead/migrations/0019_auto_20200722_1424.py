@@ -6,18 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0018_remove_reminder_notification'),
+        ("lead", "0018_remove_reminder_notification"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='leademail',
-            name='opened_count',
+            model_name="leademail",
+            name="opened_count",
             field=models.IntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='notification',
-            name='notification_type',
-            field=models.CharField(choices=[('REMINDER', 'Reminder'), ('EMAIL', 'Email'), ('SYSTEM', 'System'), ('EMAIL_OPENED', 'Email Opened')], help_text='type of Notification being created', max_length=255, null=True),
+            model_name="notification",
+            name="notification_type",
+            field=models.CharField(
+                choices=[
+                    ("REMINDER", "Reminder"),
+                    ("EMAIL", "Email"),
+                    ("SYSTEM", "System"),
+                    ("EMAIL_OPENED", "Email Opened"),
+                ],
+                help_text="type of Notification being created",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]
