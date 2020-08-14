@@ -5,7 +5,7 @@
         <li
           class="active"
           v-for="(action, i) in set"
-          :key="i"
+          :key="action.title"
           :style="{ '--count': `'${action.count}'` }"
         >
           <span class="title">{{ action.title }}</span>

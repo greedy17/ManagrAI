@@ -20,32 +20,52 @@
         </div>
       </div>
       <div class="status-metrics">
-        <StageDaysGraphic
-          :count="leadMetrics.daysReadyToBooked"
-          :title="'Days from Ready to Booked'"
-          :average="repMetrics.averageDaysReadyToBooked"
-        />
-        <StageDaysGraphic
-          :count="leadMetrics.daysBookedToDemo"
-          :title="'Days from Booked to Demo'"
-          :average="repMetrics.averageDaysBookedToDemo"
-        />
-        <StageDaysGraphic
-          :count="leadMetrics.actionCount"
-          :title="'Actions to Close this deal'"
-          :average="repMetrics.averageActionCount"
-        />
-        <StageDaysGraphic
-          :count="leadMetrics.daysDemoToClosed"
-          :title="'Days from Demo to Closed'"
-          :average="repMetrics.averageDaysDemoToClosed"
-        />
-        <StageDaysGraphic
-          :count="leadMetrics.daysToClosed"
-          :title="'Days in Entire Sales Cycle'"
-          :average="repMetrics.averageDaysToClosed"
-        />
-        <CircularProgressBar :percentComplete="daysToClosedGraphicValue" />
+        <div class="group">
+          <StageDaysGraphic
+            :icon="'calendar'"
+            :count="leadMetrics.daysReadyToBooked"
+            :titleTop="'Days from'"
+            :titleBottom="'Ready to Booked'"
+            :average="repMetrics.averageDaysReadyToBooked"
+          />
+          <StageDaysGraphic
+            :icon="'event-available'"
+            :count="leadMetrics.daysBookedToDemo"
+            :titleTop="'Days from'"
+            :titleBottom="'Booked to Demo'"
+            :average="repMetrics.averageDaysBookedToDemo"
+          />
+          <StageDaysGraphic
+            :icon="'claimed'"
+            :count="leadMetrics.actionCount"
+            :titleTop="'Actions'"
+            :titleBottom="'to Close this deal'"
+            :average="repMetrics.averageActionCount"
+          />
+        </div>
+        <div class="group">
+          <StageDaysGraphic
+            :icon="'forecast'"
+            :count="leadMetrics.daysDemoToClosed"
+            :titleTop="'Days from'"
+            :titleBottom="'Demo to Closed'"
+            :average="repMetrics.averageDaysDemoToClosed"
+          />
+          <div class="days-to-closed">
+            <CircularProgressBar :percentComplete="daysToClosedGraphicValue" />
+            <div>
+              <StageDaysGraphic
+                :icon="'loop'"
+                :count="leadMetrics.daysToClosed"
+                :titleTop="'Days in'"
+                :titleBottom="'Entire Sales Cycle'"
+                :average="repMetrics.averageDaysToClosed"
+                :asCard="false"
+                :progressBar="false"
+              />
+            </div>
+          </div>
+        </div>
       </div>
       <div class="managr-logo">
         managr
@@ -133,7 +153,11 @@ function customActionSorter(firstAction, secondAction) {
 
 export default {
   name: 'StoryReportDetail',
-  components: { StageDaysGraphic, CircularProgressBar, ActionsGraphic },
+  components: {
+    StageDaysGraphic,
+    CircularProgressBar,
+    ActionsGraphic,
+  },
   props: ['id'],
   data() {
     return {
@@ -282,5 +306,33 @@ tr {
     color: $dark-green;
     padding-left: 4rem;
   }
+}
+
+.status-metrics {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 2rem;
+
+  .group {
+    margin-top: 2rem;
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+.days-to-closed {
+  background-color: $white;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 5px 1px $soft-gray;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2rem;
 }
 </style>
