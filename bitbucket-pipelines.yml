@@ -13,10 +13,6 @@ djangoTests: &djangoTests
     - pip install pipenv
     - pipenv install --system --deploy --ignore-pipfile
     - cp server/.env.example .env
-    - TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
-    - TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
-    - TWILIO_BASE_CALLBACK_URL=$TWILIO_BASE_CALLBACK_URL
-    - echo $TWILIO_BASE_CALLBACK_URL
     - cd server
     - IN_CI=True python manage.py test
   services:
