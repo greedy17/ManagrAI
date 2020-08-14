@@ -63,6 +63,7 @@ class LeadActivityLogViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
     filter_class = lead_filters.LeadActivityLogFilterSet
+    filter_fields = ("lead",)
     filter_backends = (
         filters.SearchFilter,
         DjangoFilterBackend,
@@ -106,36 +107,38 @@ class LeadActivityLogViewSet(
         lead_qs = Lead.objects.for_user(request.user)
         if leads:
             lead_qs = lead_qs.filter(id__in=leads.split(","))
-            filter_params['leads'] = leads.split(",")
+            filter_params["leads"] = leads.split(",")
         else:
-            filter_params['leads'] = None
+            filter_params["leads"] = None
 
         if claimed_by:
             lead_qs = lead_qs.filter(claimed_by__in=claimed_by.split(","))
-            filter_params['claimed_by'] = claimed_by.split(",")
+            filter_params["claimed_by"] = claimed_by.split(",")
         else:
-            filter_params['claimed_by'] = None
+            filter_params["claimed_by"] = None
 
         # date_range_from and date_range_to can be missing, because:
         # - TODAY_ONWARD means there is no date_range_to
         # - ALL_TIME means both are missing
         if date_range_from:
             log_qs = log_qs.filter(action_timestamp__gte=date_range_from)
-            filter_params['date_range_from'] = date_range_from
+            filter_params["date_range_from"] = date_range_from
         else:
-            filter_params['date_range_from'] = None
+            filter_params["date_range_from"] = None
 
         if date_range_to:
             log_qs = log_qs.filter(action_timestamp__lte=date_range_to)
-            filter_params['date_range_to'] = date_range_to
+            filter_params["date_range_to"] = date_range_to
         else:
-            filter_params['date_range_to'] = None
+            filter_params["date_range_to"] = None
 
         # The Empty param overrides the others
         empty = empty is not None and empty.lower() == "true"
-        filter_params['empty'] = empty
+        filter_params["empty"] = empty
 
-        insights = LeadInsights(lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params)
+        insights = LeadInsights(
+            lead_queryset=lead_qs, log_queryset=log_qs, filter_params=filter_params
+        )
         return Response(insights.as_dict)
 
 
@@ -533,8 +536,7 @@ class LeadViewSet(
             raise ValidationError({"detail": "File Not Found"})
         contract.doc_type = lead_constants.FILE_TYPE_CONTRACT
         contract.save()
-        lead.status = Stage.objects.get(
-            title=lead_constants.LEAD_STATUS_CLOSED)
+        lead.status = Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED)
         lead.closing_amount = closing_amount
         lead.expected_close_date = timezone.now()
         lead.forecast.forecast = lead_constants.FORECAST_CLOSED

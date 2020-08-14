@@ -34,7 +34,7 @@
           <div class="dropdown-search">
             <DropDownSelect
               v-if="leadLinkedContactsRef"
-              :items.sync="leadLinkedContacts"
+              :items="leadLinkedContacts"
               displayKey="full_name"
               valueKey="id"
               v-model="recipients"
@@ -123,6 +123,8 @@ export default {
       }
       try {
         await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
+
+        this.resetText()
       } catch (e) {
         let { response } = { ...e }
         if (response.status == 400) {
@@ -133,8 +135,6 @@ export default {
           })
         }
       }
-
-      this.resetText()
 
       this.sendingMessage = false
     },

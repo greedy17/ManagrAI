@@ -18,7 +18,8 @@ const state = {
   stages: null,
   showToolbarNav: false,
   pollingData: {
-    notification: { count: 0, lastChecked: null },
+    items: {},
+    lastCheck: null,
   },
   pollingItems: [],
   shouldUpdatePollingData: false,
@@ -26,13 +27,30 @@ const state = {
 }
 
 const mutations = {
+  CLEAR_POLLING_DATA: state => {
+    state.pollingItems = []
+    state.pollingData = {
+      items: {},
+      lastCheck: null,
+    }
+    state.itemsFromPollToUpdate = []
+    state.shouldUpdatePollingData = false
+  },
   UPDATE_ITEMS_TO_POLL: (state, ...payload) => {
     payload.forEach(i => {
       let index = state.pollingItems.findIndex(item => item == i)
-      if (index != -1) {
-        state.pollingItems.slice(index, 1)
-      } else {
+
+      if (index == -1) {
         state.pollingItems.push(i)
+      }
+    })
+  },
+  REMOVE_ITEMS_FROM_POLL: (state, ...payload) => {
+    payload.forEach(i => {
+      let index = state.pollingItems.findIndex(item => item == i)
+
+      if (index != -1) {
+        state.pollingItems.splice(index, 1)
       }
     })
   },
@@ -41,18 +59,19 @@ const mutations = {
   },
   UPDATE_POLLING_DATA: (state, payload) => {
     let currentPollingData = { ...state.pollingData }
+    let hasItemsToUpdate = false
+    state.itemsFromPollToUpdate = []
     for (const [key, value] of Object.entries(currentPollingData.items)) {
-      state.itemsFromPollToUpdate = []
       if (payload.items[key]) {
-        if (payload.items[key].count > value.count) {
+        if (payload.items[key].count != value.count) {
           state.itemsFromPollToUpdate.push(key)
-          state.shouldUpdatePollingData = true
-        } else {
-          state.shouldUpdatePollingData = false
+
+          hasItemsToUpdate = true
         }
+        state.shouldUpdatePollingData = hasItemsToUpdate
       }
     }
-    state.pollingData = { ...payload }
+    state.pollingData = payload
   },
   UPDATE_USER: (state, payload) => {
     state.user = payload
@@ -64,6 +83,7 @@ const mutations = {
   LOGOUT_USER(state) {
     state.token = null
     state.user = null
+    state.stages = []
   },
   TOGGLE_SIDE_NAV(state, show) {
     state.showSideNav = show
