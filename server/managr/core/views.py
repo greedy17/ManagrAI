@@ -177,6 +177,25 @@ class UserViewSet(
 
         return Response(response_data)
 
+    @action(
+        methods=["patch"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=True,
+        url_path="profile-photo",
+    )
+    def update_profile_photo(self, request, *args, **kwargs):
+        photo = request.data.get('file')
+        pk = kwargs.get("pk", None)
+        u = User.objects.filter(pk=pk).first()
+        if not u:
+            raise ValidationError(
+                {"user": "invalid user id"}
+            )
+        u.profile_photo = photo
+        u.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
     def _is_kpi_update(self, request):
         if (
             request.data.get("quota")
