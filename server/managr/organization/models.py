@@ -1,7 +1,7 @@
 from django.db import models
 
 from django.db.models import Sum, Avg, Q
-
+from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models import Sum, Avg
@@ -225,3 +225,16 @@ class Stage(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def save(self, *args, **kwargs):
+        # save all as upper case
+        self.title = self.title.upper()
+        if (
+            Stage.objects.filter(title=self.title, organization=self.organization)
+            .exclude(id=self.id)
+            .exists()
+        ):
+            raise ValidationError(
+                detail={"key_error": "A stage with this title already exists"}
+            )
+
+        return super(Stage, self).save(*args, **kwargs)

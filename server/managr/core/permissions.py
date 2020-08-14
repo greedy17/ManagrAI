@@ -2,20 +2,23 @@ from rest_framework import permissions, exceptions
 from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import (ACCOUNT_TYPE_MANAGER, STATE_ACTIVE)
+from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 from managr.lead.models import Lead, List
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Stage
 
 
 class IsOrganizationManager(permissions.BasePermission):
     """ Organization has salespeople who are managers or limited """
+
     """ Managers can invite new users and update account info """
 
     def has_permission(self, request, view):
         user = request.user
         if not user or request.user.is_anonymous:
-            raise exceptions.ValidationError('Authentication Required.')
-        return user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.is_active
+            raise exceptions.ValidationError("Authentication Required.")
+        return (
+            user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.is_active
+        )
 
 
 class IsSalesPerson(permissions.BasePermission):
@@ -23,7 +26,7 @@ class IsSalesPerson(permissions.BasePermission):
 
         user = request.user
         if not user or request.user.is_anonymous:
-            raise exceptions.ValidationError('Authentication Required.')
+            raise exceptions.ValidationError("Authentication Required.")
 
         return user.organization and user.is_active
 
@@ -33,20 +36,22 @@ def lead_permissions(self, request, view, obj):
     if not request.user.organization.accounts.filter(pk=obj.account_id).exists():
         # check to make sure user is part of org and account is in org
         raise PermissionDenied()
-    if view.action == 'un_claim':
+    if view.action == "un_claim":
         if obj.is_claimed and obj.claimed_by == request.user:
             return True
         elif obj.is_claimed and obj.claimed_by != request.user:
             raise PermissionDenied(
-                {'detail': 'Cannot un claim a Lead that is not claimed By You'})
+                {"detail": "Cannot un claim a Lead that is not claimed By You"}
+            )
         else:
-            raise PermissionDenied({'detail': 'lead is not claimed'})
+            raise PermissionDenied({"detail": "lead is not claimed"})
 
-    elif view.action == 'claim':
+    elif view.action == "claim":
         if not obj.is_claimed:
             return True
         raise PermissionDenied(
-            {'detail': 'Leads can only be claimed if they were previously unclaimed'})
+            {"detail": "Leads can only be claimed if they were previously unclaimed"}
+        )
     else:
         return request.user == obj.claimed_by
 
@@ -86,6 +91,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
             return list_permissions(self, request, view, obj)
         elif isinstance(obj, Organization):
             return org_permissions(self, request, view, obj)
+        elif isinstance(obj, Stage):
+            return org_permissions(self, request, view, obj)
         else:
             return False
 
@@ -103,7 +110,7 @@ class SuperUserCreateOnly(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action == 'create':
+        if view.action == "create":
             return request.user.is_superuser
         else:
             return True
