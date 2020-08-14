@@ -213,11 +213,7 @@ class Stage(TimeStampModel):
     type = models.CharField(max_length=255, choices=(org_consts.STAGE_TYPES))
 
     organization = models.ForeignKey(
-        "Organization",
-        related_name="stages",
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
+        "Organization", related_name="stages", null=True, on_delete=models.CASCADE,
     )
 
     objects = StageQuerySet.as_manager()
