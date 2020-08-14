@@ -215,7 +215,7 @@ class Stage(TimeStampModel):
     organization = models.ForeignKey(
         "Organization",
         related_name="stages",
-        blank=False,
+        blank=True,
         null=True,
         on_delete=models.CASCADE,
     )
