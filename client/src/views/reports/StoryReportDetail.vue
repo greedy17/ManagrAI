@@ -13,7 +13,10 @@
       <div class="divider" />
       <div class="profile-photo-and-list">
         <div class="profile-photo">
-          <img :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')" />
+          <img
+            :class="{ photo: !!rep.profilePhoto, icon: !rep.profilePhoto }"
+            :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')"
+          />
           <div v-if="!rep.profilePhoto">
             No profile photo
           </div>
@@ -434,11 +437,19 @@ tr {
     flex-flow: column;
     align-items: center;
 
-    img {
+    .icon {
       height: 5rem;
       width: 5rem;
       border-radius: 50%;
       margin-top: 5rem;
+    }
+    .photo {
+      border-radius: 50%;
+      margin-top: 5rem;
+      height: 10rem;
+      width: 10rem;
+      border: 2px solid $yellow;
+      object-fit: cover;
     }
     div {
       font-style: italic;
