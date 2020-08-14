@@ -13,10 +13,92 @@
       <div class="divider" />
       <div class="profile-photo-and-list">
         <div class="profile-photo">
-          photo here
+          <img :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')" />
+          <div v-if="!rep.profilePhoto">
+            No profile photo
+          </div>
         </div>
         <div class="list">
-          list here
+          <div class="list-item">
+            <div class="icon">
+              <img src="@/assets/images/checkmark.svg" />
+            </div>
+            <div class="content">
+              <div class="desc">
+                {{ rep.firstName }} closed {{ lead.title }} for
+                {{ leadMetrics.contractValue | currency }}
+              </div>
+              <div class="sub-desc">
+                S/he primarily worked with (based on calls, texts, and emails) <br />
+                <template v-if="leadMetrics.primaryContact">
+                  {{ leadMetrics.primaryContact.fullName }},
+                  {{
+                    leadMetrics.primaryContact.title
+                      ? leadMetrics.primaryContact.title
+                      : 'title not known'
+                  }}.
+                </template>
+                <template v-else>
+                  no primary contact.
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="icon">
+              <img src="@/assets/images/checkmark.svg" />
+            </div>
+            <div class="content">
+              <div class="desc">
+                It took a total of {{ leadMetrics.daysToClosed }} days to close the deal
+              </div>
+              <div class="sub-desc">
+                <template v-if="leadMetrics.daysToDemo">
+                  {{ leadMetrics.daysToDemo }} to first demo
+                </template>
+                <template v-if="leadMetrics.daysDemoToClosed">
+                  {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed 20 days post demo
+                </template>
+                <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
+                  S/he did not have to leverge a demo.
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="list-item" v-if="leadMetrics.daysToClosed && repMetrics.averageDaysToClosed">
+            <div class="icon">
+              <img src="@/assets/images/checkmark.svg" />
+            </div>
+            <div class="content">
+              <div class="desc">
+                S/he closed this deal
+                <template v-if="leadMetrics.daysToClosed < repMetrics.averageDaysToClosed">
+                  faster than usual ({{ repMetrics.averageDaysToClosed }}
+                  {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
+                </template>
+                <template v-else-if="leadMetrics.daysToClosed > repMetrics.averageDaysToClosed">
+                  slower than usual ({{ repMetrics.averageDaysToClosed }}
+                  {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
+                </template>
+                <template v-else>
+                  on par with her/his average({{ repMetrics.averageDaysToClosed }}
+                  {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
+                </template>
+                <div>
+                  and for
+                  <template v-if="leadMetrics.contractValue > repMetrics.averageContractValue">
+                    a higher ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
+                  </template>
+                  <template v-else-if="leadMetrics.contractValue < repMetrics.averageContractValue">
+                    a lower ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
+                  </template>
+                  <template v-else>
+                    her/his ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="status-metrics">
@@ -198,6 +280,9 @@ export default {
     rep() {
       return this.missingReport ? null : this.report.leadRef.claimedByRef
     },
+    lead() {
+      return this.missingReport ? null : this.report.leadRef
+    },
     sortedActionMetrics() {
       if (this.missingReport) {
         return null
@@ -315,6 +400,7 @@ tr {
   justify-content: center;
   width: 100%;
   padding-bottom: 2rem;
+  margin-top: -11rem;
 
   .group {
     margin-top: 2rem;
@@ -334,5 +420,55 @@ tr {
   align-items: center;
   justify-content: center;
   margin: 0 2rem;
+}
+
+.profile-photo-and-list {
+  padding-top: 1rem;
+  display: flex;
+  flex-flow: row;
+  height: 31rem;
+  background-color: $off-white;
+  .profile-photo {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+
+    img {
+      height: 5rem;
+      width: 5rem;
+      border-radius: 50%;
+      margin-top: 5rem;
+    }
+    div {
+      font-style: italic;
+    }
+  }
+  .list {
+    flex-grow: 1;
+
+    .list-item {
+      display: flex;
+      flex-flow: row;
+      padding: 0 2rem;
+      margin-top: 2rem;
+
+      .icon img {
+        height: 2.5rem;
+      }
+
+      .content {
+        margin-left: 2rem;
+        padding-top: 0.5rem;
+        .desc {
+          line-height: 1.3rem;
+          font-weight: 600;
+        }
+        .sub-desc {
+          font-style: italic;
+        }
+      }
+    }
+  }
 }
 </style>

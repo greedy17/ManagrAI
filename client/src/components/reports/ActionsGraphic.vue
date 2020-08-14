@@ -4,7 +4,7 @@
       <ul class="progress-bar" v-for="(set, i) in setsOfFour" :key="i">
         <li
           class="active"
-          v-for="(action, i) in set"
+          v-for="action in set"
           :key="action.title"
           :style="{ '--count': `'${action.count}'` }"
         >

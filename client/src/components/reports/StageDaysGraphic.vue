@@ -68,7 +68,7 @@ export default {
   padding: 2rem 1rem 3rem 1rem;
   background-color: $white;
   border-radius: 0.5rem;
-  margin: 0 2rem;
+  margin: 0 1rem;
 }
 
 .as-card {
