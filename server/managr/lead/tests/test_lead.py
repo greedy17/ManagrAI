@@ -15,6 +15,28 @@ from managr.lead.serializers import LeadMessageSerializer
 from managr.core import views as core_views
 from managr.lead import constants as lead_consts
 
+MESSAGE_DATA = {
+    "ToCountry": "US",
+    "ToState": "DC",
+    "SmsMessageSid": "SM10c767cc90d781531d4dd7e1ee785447",
+    "NumMedia": "0",
+    "ToCity": "",
+    "FromZip": "02110",
+    "SmsSid": "SM10c767cc90d781531d4dd7e1ee785447",
+    "FromState": "MA",
+    "SmsStatus": "received",
+    "FromCity": "BOSTON",
+    "Body": "Hi",
+    "FromCountry": "US",
+    "To": "+8888888888",
+    "ToZip": "",
+    "NumSegments": "1",
+    "MessageSid": "SM10c767cc90d781531d4dd7e1ee785447",
+    "AccountSid": "AC784182e7011308684b48ae153d9832df",
+    "From": "+18888888888",
+    "ApiVersion": "2010-04-01",
+}
+
 
 class MockRequest:
     def __init__(self, user):
@@ -26,9 +48,7 @@ class LeadMessageTestCase(TestCase):
     fixtures = ["dev.json"]
 
     def setUp(self):
-        with open("mock-message.json", "r+") as message_json:
-            data = message_json.read()
-            message_data = json.loads(data)
+        message_data = MESSAGE_DATA
         self.factory = RequestFactory()
 
         self.org = Organization.objects.first()
