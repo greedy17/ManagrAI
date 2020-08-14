@@ -315,10 +315,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-// @import '@/styles/layout';
-// @import '@/styles/containers';
-// @import '@/styles/sidebars';
-// @import '@/styles/mixins/utils';
 
 .page {
   padding: 0 10vw;

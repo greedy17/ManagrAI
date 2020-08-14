@@ -33,7 +33,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-$bar-width: 15rem;
+$bar-width: 20vw;
 $bar-height: 0.7rem;
 
 .progress-bar {
