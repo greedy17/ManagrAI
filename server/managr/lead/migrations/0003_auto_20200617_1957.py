@@ -6,23 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0002_auto_20200609_1929'),
+        ("lead", "0002_auto_20200609_1929"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='lead',
-            name='primary_description',
+            model_name="lead",
+            name="primary_description",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='lead',
-            name='secondary_description',
+            model_name="lead",
+            name="secondary_description",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='lead',
-            name='status',
-            field=models.CharField(choices=[('READY', 'Ready'), ('TRIAL', 'Trial'), ('DEMO', 'Demo'), ('WAITING', 'Waiting'), ('CLOSED', 'Closed'), ('LOST', 'Lost'), ('BOOKED', 'Booked'), ('LEAD', 'Lead')], help_text='Status in the sale process', max_length=255, null=True),
+            model_name="lead",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("READY", "Ready"),
+                    ("TRIAL", "Trial"),
+                    ("DEMO", "Demo"),
+                    ("WAITING", "Waiting"),
+                    ("CLOSED", "Closed"),
+                    ("LOST", "Lost"),
+                    ("BOOKED", "Booked"),
+                    ("LEAD", "Lead"),
+                ],
+                help_text="Status in the sale process",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0005_merge_20200804_0227'),
+        ("organization", "0005_merge_20200804_0227"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='stage',
-            name='color',
-            field=models.CharField(default='#9B9B9B', help_text='hex code for color', max_length=255),
+            model_name="stage",
+            name="color",
+            field=models.CharField(
+                default="#9B9B9B", help_text="hex code for color", max_length=255
+            ),
         ),
     ]

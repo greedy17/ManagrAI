@@ -58,4 +58,3 @@ class EmailSerializerTestCase(TestCase):
             str(error.exception),
             "{'to': {0: [ErrorDetail(string='Expected a dictionary of items but got type \"str\".', code='not_a_dict')]}}",
         )
-

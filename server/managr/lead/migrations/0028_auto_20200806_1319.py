@@ -7,23 +7,41 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0027_merge_20200805_1513'),
+        ("lead", "0027_merge_20200805_1513"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='callnote',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_callnotes', to='lead.Lead'),
+            model_name="callnote",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_callnotes",
+                to="lead.Lead",
+            ),
         ),
         migrations.AlterField(
-            model_name='note',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_notes', to='lead.Lead'),
+            model_name="note",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_notes",
+                to="lead.Lead",
+            ),
         ),
         migrations.AlterField(
-            model_name='reminder',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_reminders', to='lead.Lead'),
+            model_name="reminder",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_reminders",
+                to="lead.Lead",
+            ),
         ),
     ]

@@ -6,12 +6,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0001_initial'),
+        ("organization", "0001_initial"),
     ]
 
     operations = [
         migrations.RunSQL(
-            sql=[("UPDATE organization_contact SET email = REPLACE(LOWER(email),' ','');"),
-                 ]
+            sql=[
+                (
+                    "UPDATE organization_contact SET email = REPLACE(LOWER(email),' ','');"
+                ),
+            ]
         )
     ]

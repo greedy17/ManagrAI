@@ -24,13 +24,11 @@ def _generate_nylas_basic_auth_token(user):
     """
     password = ""
     if user.email_auth_account is None or user.email_auth_account.access_token is None:
-        raise PermissionDenied(
-            detail="User does not have a Nylas access token")
+        raise PermissionDenied(detail="User does not have a Nylas access token")
 
     access_token = user.email_auth_account.access_token
     auth_string = f"{access_token}:{password}"
-    base64_secret = base64.b64encode(
-        auth_string.encode("ascii")).decode("utf-8")
+    base64_secret = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
     return base64_secret
 
 
@@ -51,15 +49,13 @@ def _handle_nylas_response(response):
             code=response.status_code,
         )
     else:
-        raise APIException(detail="Error from Nylas server",
-                           code=response.status_code)
+        raise APIException(detail="Error from Nylas server", code=response.status_code)
 
 
 def _return_nylas_headers(user):
     """ Function to generate the basic headers required by Nylas
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
-    headers = dict(Authorization=(
-        f"Basic {_generate_nylas_basic_auth_token(user)}"))
+    headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
 
 
@@ -220,9 +216,7 @@ def render_email(
         email_info["file_ids"] = file_ids
 
     # add open email tracking to emails sent
-    email_info['tracking'] = {
-        'opens': True
-    }
+    email_info["tracking"] = {"opens": True}
     return email_info
 
 
@@ -282,12 +276,10 @@ def send_new_email(
     if response.status_code == 200:
         # Create a Lead/Thread connection
         obj = LeadEmail.objects.create(
-            created_by=sender, lead=lead, thread_id=response.json()[
-                "thread_id"],
+            created_by=sender, lead=lead, thread_id=response.json()["thread_id"],
         )
-        cleaned_contacts = [c['email'] for c in to if c['email']]
-        linked_contacts = lead.linked_contacts.filter(
-            email__in=cleaned_contacts)
+        cleaned_contacts = [c["email"] for c in to if c["email"]]
+        linked_contacts = lead.linked_contacts.filter(email__in=cleaned_contacts)
         obj.linked_contacts.set(linked_contacts)
 
         # Emit an EMAIL_SENT event and pass in Lead/Thread record.
@@ -338,8 +330,13 @@ def send_new_email_legacy(auth, sender, receipient, message):
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {"from": sender, "to": to, "subject": subject,
-            "body": body, "tracking": {"opens": True}}
+        {
+            "from": sender,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "tracking": {"opens": True},
+        }
     )
 
     response = requests.post(
