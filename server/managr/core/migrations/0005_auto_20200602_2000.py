@@ -6,12 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0004_emailtemplate'),
+        ("core", "0004_emailtemplate"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='emailtemplate',
-            unique_together={('user', 'name')},
+            name="emailtemplate", unique_together={("user", "name")},
         ),
     ]

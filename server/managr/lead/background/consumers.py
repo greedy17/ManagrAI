@@ -67,7 +67,7 @@ class BaseActionConsumer:
                 logger.exception(
                     f"Consumer '{self.__class__.__name__}' attempted to "
                     f"to retrieve a '{self.model_class_name}' instance with id "
-                    f"{obj_id}, but it does not exist."
+                    f"{self.obj_id}, but it does not exist."
                 )
         return self._obj
 
@@ -156,8 +156,9 @@ class ReminderActionConsumer(BaseActionConsumer):
 
         try:
             rem_meta = obj.activity_log_meta
-            rem_meta['datetime_for'] = obj.datetime_for.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ')
+            rem_meta["datetime_for"] = obj.datetime_for.strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            )
             return rem_meta
         except AttributeError:
             logger.warning(

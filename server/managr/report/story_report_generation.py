@@ -26,7 +26,7 @@ def generate_story_report_data(story_report_id, generated_by_id):
     story_report = StoryReport.objects.get(
         generated_by=generated_by_id,
         pk=story_report_id
-    )
+    ).prefetch_related('lead')
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
@@ -47,11 +47,7 @@ def generate_story_report_data(story_report_id, generated_by_id):
 def send_email(report):
     recipient = report.generated_by
 
-    try:
-        ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
-    except EmailAuthAccount.DoesNotExist:
-        # currently passing if there is an error, when we are ready we will require this
-        pass
+    ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
     if ea:
         token = ea.access_token
         sender = {"email": ea.email_address, "name": "Managr"}

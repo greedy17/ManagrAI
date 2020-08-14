@@ -6,5 +6,6 @@ class PageNumberPagination(PageNumberPagination):
 
     This class wraps Django Rest Framework's built-in ``PageNumberPagination`` class.
     """
-    page_size_query_param = 'page_size'
+
+    page_size_query_param = "page_size"
     page_size = 25
