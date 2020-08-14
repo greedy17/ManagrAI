@@ -351,7 +351,6 @@ class LeadViewSet(
 
         # if updating status, also update status_last_update
         if "status" in data:
-
             data["status_last_update"] = timezone.now()
 
         # make sure the user that created the lead is not updated as well
@@ -362,8 +361,18 @@ class LeadViewSet(
             current_lead, data=data, context={"request": request}, partial=True
         )
         serializer.is_valid(raise_exception=True)
+
+        # if updating status, add status-related meta to
+        # LeadActivityLog by way of emit_event, for report purposes
+        extra_meta = None
+        if "status" in data:
+            extra_meta = {
+                'status_update': True,
+                'new_status': data['status'],
+            }
+
         self.perform_update(serializer)
-        emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance)
+        emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance, extra_meta=extra_meta)
         return Response(serializer.data)
 
     @action(

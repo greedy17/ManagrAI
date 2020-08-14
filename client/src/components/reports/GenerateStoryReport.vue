@@ -45,6 +45,7 @@
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
 import Lead from '@/services/leads'
+import StoryReport from '@/services/storyReports'
 
 export default {
   name: 'GenerateStoryReport',
@@ -83,7 +84,18 @@ export default {
       }
     },
     generateReport() {
-      //
+      StoryReport.api.create(this.selectedLead).then(() => {
+        this.clearForm()
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: `Report being generated! You will receive an email once the report is accessible.`,
+        })
+      })
+    },
+    clearForm() {
+      this.selectedLead = null
+      this.selectedRepresentative = null
     },
   },
   watch: {

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="page__left-nav-bar">
+    <div class="page__left-nav-bar test" style="padding: 1rem;">
       <div class="toolbar">
         <div class="toolbar__header">
           <span class="toolbar__title">Reports</span>
@@ -21,7 +21,7 @@
         </div>
       </div>
     </div>
-    <div class="page__main-content-area">
+    <div class="page__main-content-area" style="padding: 1rem;">
       <GenerateStoryReport v-if="storyReportsActive" />
     </div>
   </div>

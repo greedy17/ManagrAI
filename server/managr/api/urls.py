@@ -5,6 +5,7 @@ from managr.core import views as core_views
 from managr.lead import views as lead_views
 from managr.polling import views as poll_views
 from managr.organization import views as organization_views
+from managr.report import views as report_views
 
 
 app_name = "api"
@@ -88,14 +89,12 @@ router.register("notes", lead_views.NoteViewSet, "notes")
 router.register("call-notes", lead_views.CallNoteViewSet, "call-notes")
 router.register("forecasts", lead_views.ForecastViewSet, "forecast")
 router.register("reminders", lead_views.ReminderViewSet, "reminders")
-router.register("actionchoices", lead_views.ActionChoiceViewSet, "actionchoices")
-router.register("actions", lead_views.ActionViewSet, "actions")
-router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
-
 router.register("action-choices", lead_views.ActionChoiceViewSet, "action-choices")
 router.register("actions", lead_views.ActionViewSet, "actions")
+router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
+router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
 router.register("files", lead_views.FileViewSet, "files")
-router.register("notifications", lead_views.NotificationViewSet, "notificiations")
+router.register("notifications", lead_views.NotificationViewSet, "notifications")
 router.register("stages", organization_views.StageViewSet, "stages")
 router.register("lead-messages", lead_views.LeadMessageViewSet, "lead-messages")
 
