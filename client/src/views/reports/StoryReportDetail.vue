@@ -31,7 +31,7 @@
                 {{ leadMetrics.contractValue | currency }}
               </div>
               <div class="sub-desc">
-                S/he primarily worked with (based on calls, texts, and emails) <br />
+                They primarily worked with (based on calls, texts, and emails) <br />
                 <template v-if="leadMetrics.primaryContact">
                   {{ leadMetrics.primaryContact.fullName }},
                   {{
@@ -62,7 +62,7 @@
                   {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed 20 days post demo
                 </template>
                 <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
-                  S/he did not have to leverge a demo.
+                  They did not have to leverge a demo.
                 </template>
               </div>
             </div>
@@ -73,7 +73,7 @@
             </div>
             <div class="content">
               <div class="desc">
-                S/he closed this deal
+                They closed this deal
                 <template v-if="leadMetrics.daysToClosed < repMetrics.averageDaysToClosed">
                   faster than usual ({{ repMetrics.averageDaysToClosed }}
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
