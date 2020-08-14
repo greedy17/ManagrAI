@@ -64,12 +64,6 @@ class Organization(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
-    def save(self, *args, **kwargs):
-        if not self.users.filter(lists__title="no_list").exists():
-            org_leads =
-            List.objects.create(title="no_list", leads=)
-        return super(Organization, self).save(*args, **kwargs)
-
     @property
     def total_amount_closed_contracts(self):
         total = Organization.objects.aggregate(Sum("accounts__leads__closing_amount"))
@@ -86,7 +80,6 @@ class Organization(TimeStampModel):
     def message_auth_count(self):
         """ returns a count of how many message auth phone numbers an org has """
         return self.users.filter(message_auth_account__isnull=False).count()
-
 
 
 class AccountQuerySet(models.QuerySet):

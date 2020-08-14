@@ -129,7 +129,9 @@ class ListQuerySet(models.QuerySet):
 
 class List(TimeStampModel):
     title = models.CharField(max_length=255, blank=False, null=False)
-    created_by = models.ForeignKey("core.User", null=True, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(
+        "core.User", null=True, on_delete=models.SET_NULL, related_name="lists"
+    )
     leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
