@@ -13,185 +13,544 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('organization', '0001_initial'),
+        ("organization", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Lead',
+            name="Lead",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(blank=True, max_length=255)),
-                ('amount', models.PositiveIntegerField(default=0, help_text='This field is editable')),
-                ('closing_amount', models.PositiveIntegerField(default=0, help_text='This field is set at close and non-editable')),
-                ('primary_description', models.CharField(blank=True, max_length=150)),
-                ('secondary_description', models.CharField(blank=True, max_length=150)),
-                ('rating', models.IntegerField(choices=[(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)], default=1)),
-                ('status', models.CharField(choices=[('READY', 'Ready'), ('TRIAL', 'Trial'), ('DEMO', 'Demo'), ('WAITING', 'Waiting'), ('CLOSED', 'Closed'), ('LOST', 'Lost'), ('BOOKED', 'Booked')], help_text='Status in the sale process', max_length=255, null=True)),
-                ('account', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='leads', to='organization.Account')),
-                ('claimed_by', models.ForeignKey(help_text='Leads can only be closed by their claimed_by rep', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='claimed_leads', to=settings.AUTH_USER_MODEL)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_leads', to=settings.AUTH_USER_MODEL)),
-                ('last_updated_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated_leads', to=settings.AUTH_USER_MODEL)),
-                ('linked_contacts', models.ManyToManyField(blank=True, related_name='leads', to='organization.Contact')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(blank=True, max_length=255)),
+                (
+                    "amount",
+                    models.PositiveIntegerField(
+                        default=0, help_text="This field is editable"
+                    ),
+                ),
+                (
+                    "closing_amount",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="This field is set at close and non-editable",
+                    ),
+                ),
+                ("primary_description", models.CharField(blank=True, max_length=150)),
+                ("secondary_description", models.CharField(blank=True, max_length=150)),
+                (
+                    "rating",
+                    models.IntegerField(
+                        choices=[(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)], default=1
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("READY", "Ready"),
+                            ("TRIAL", "Trial"),
+                            ("DEMO", "Demo"),
+                            ("WAITING", "Waiting"),
+                            ("CLOSED", "Closed"),
+                            ("LOST", "Lost"),
+                            ("BOOKED", "Booked"),
+                        ],
+                        help_text="Status in the sale process",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                (
+                    "account",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="leads",
+                        to="organization.Account",
+                    ),
+                ),
+                (
+                    "claimed_by",
+                    models.ForeignKey(
+                        help_text="Leads can only be closed by their claimed_by rep",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="claimed_leads",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_leads",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "last_updated_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated_leads",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "linked_contacts",
+                    models.ManyToManyField(
+                        blank=True, related_name="leads", to="organization.Contact"
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('notify_at', models.DateTimeField(help_text='Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time                                        if it is an email it can be the time the email is received ', null=True)),
-                ('notified_at', models.DateTimeField(help_text='date time when the notification was executed', null=True)),
-                ('title', models.CharField(help_text='a title for the notification', max_length=255, null=True)),
-                ('action_taken', models.CharField(choices=[('SNOOZE', 'Snooze'), ('VIEWED', 'Viewed')], help_text='a notification can either be viewed or snoozed', max_length=255, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                (
+                    "notify_at",
+                    models.DateTimeField(
+                        help_text="Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time                                        if it is an email it can be the time the email is received ",
+                        null=True,
+                    ),
+                ),
+                (
+                    "notified_at",
+                    models.DateTimeField(
+                        help_text="date time when the notification was executed",
+                        null=True,
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(
+                        help_text="a title for the notification",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                (
+                    "action_taken",
+                    models.CharField(
+                        choices=[("SNOOZE", "Snooze"), ("VIEWED", "Viewed")],
+                        help_text="a notification can either be viewed or snoozed",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='Reminder',
+            name="Reminder",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('content', models.CharField(max_length=255)),
-                ('datetime_for', models.DateTimeField(null=True)),
-                ('completed', models.BooleanField(default=False)),
-                ('viewed', models.BooleanField(default=False)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_lead_reminder', to=settings.AUTH_USER_MODEL)),
-                ('created_for', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_reminders', to='lead.Lead')),
-                ('notification', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='lead.Notification')),
-                ('updated_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated_lead_reminder', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("content", models.CharField(max_length=255)),
+                ("datetime_for", models.DateTimeField(null=True)),
+                ("completed", models.BooleanField(default=False)),
+                ("viewed", models.BooleanField(default=False)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_lead_reminder",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_for",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lead_reminders",
+                        to="lead.Lead",
+                    ),
+                ),
+                (
+                    "notification",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reminders",
+                        to="lead.Notification",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated_lead_reminder",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_for'],
-            },
+            options={"ordering": ["-datetime_for"],},
         ),
         migrations.CreateModel(
-            name='Note',
+            name="Note",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('content', models.CharField(max_length=255)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_lead_note', to=settings.AUTH_USER_MODEL)),
-                ('created_for', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_notes', to='lead.Lead')),
-                ('updated_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated_lead_note', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("content", models.CharField(max_length=255)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_lead_note",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_for",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lead_notes",
+                        to="lead.Lead",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated_lead_note",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='List',
+            name="List",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('leads', models.ManyToManyField(blank=True, related_name='lists', to='lead.Lead')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "leads",
+                    models.ManyToManyField(
+                        blank=True, related_name="lists", to="lead.Lead"
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='Forecast',
+            name="Forecast",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('forecast', models.CharField(choices=[('50/50', '50/50'), ('NA', 'NA'), ('STRONG', 'Strong'), ('FUTURE', 'Future'), ('VERBAL', 'Verbal')], default='NA', max_length=255, null=True)),
-                ('lead', models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, to='lead.Lead')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                (
+                    "forecast",
+                    models.CharField(
+                        choices=[
+                            ("50/50", "50/50"),
+                            ("NA", "NA"),
+                            ("STRONG", "Strong"),
+                            ("FUTURE", "Future"),
+                            ("VERBAL", "Verbal"),
+                        ],
+                        default="NA",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                (
+                    "lead",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="lead.Lead",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='File',
+            name="File",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('doc_type', models.CharField(choices=[('OTHER', 'Other'), ('CONTRACT', 'Contract')], default='OTHER', max_length=255)),
-                ('file', models.FileField(max_length=255, null=True, upload_to=managr.utils.misc.datetime_appended_filepath)),
-                ('lead', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='files', to='lead.Lead')),
-                ('uploaded_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='files_uploaded', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                (
+                    "doc_type",
+                    models.CharField(
+                        choices=[("OTHER", "Other"), ("CONTRACT", "Contract")],
+                        default="OTHER",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        max_length=255,
+                        null=True,
+                        upload_to=managr.utils.misc.datetime_appended_filepath,
+                    ),
+                ),
+                (
+                    "lead",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="files",
+                        to="lead.Lead",
+                    ),
+                ),
+                (
+                    "uploaded_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="files_uploaded",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='CallNote',
+            name="CallNote",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('content', models.CharField(max_length=255)),
-                ('call_date', models.DateField(help_text='The date the call occured')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_lead_callnote', to=settings.AUTH_USER_MODEL)),
-                ('created_for', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_callnotes', to='lead.Lead')),
-                ('updated_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated_lead_callnote', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("content", models.CharField(max_length=255)),
+                ("call_date", models.DateField(help_text="The date the call occured")),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_lead_callnote",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_for",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lead_callnotes",
+                        to="lead.Lead",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated_lead_callnote",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-                'abstract': False,
-            },
+            options={"ordering": ["-datetime_created"], "abstract": False,},
         ),
         migrations.CreateModel(
-            name='ActivityLog',
+            name="ActivityLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('activity', models.CharField(choices=[('NOTE_ADDED', 'Note Added'), ('NOTE_DELETED', 'Note Deleted'), ('NOTE_UPDATED', 'Note Updated')], help_text='records any actions taken on a lead', max_length=255)),
-                ('meta', models.CharField(blank=True, help_text='Extra details about activity', max_length=255)),
-                ('action_taken_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('lead', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='lead.Lead')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                (
+                    "activity",
+                    models.CharField(
+                        choices=[
+                            ("NOTE_ADDED", "Note Added"),
+                            ("NOTE_DELETED", "Note Deleted"),
+                            ("NOTE_UPDATED", "Note Updated"),
+                        ],
+                        help_text="records any actions taken on a lead",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "meta",
+                    models.CharField(
+                        blank=True,
+                        help_text="Extra details about activity",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "action_taken_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "lead",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="lead.Lead",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='ActionChoice',
+            name="ActionChoice",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(blank=True, max_length=255)),
-                ('description', models.CharField(blank=True, max_length=255)),
-                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='action_choices', to='organization.Organization')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(blank=True, max_length=255)),
+                ("description", models.CharField(blank=True, max_length=255)),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="action_choices",
+                        to="organization.Organization",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['title'],
-            },
+            options={"ordering": ["title"],},
         ),
         migrations.CreateModel(
-            name='Action',
+            name="Action",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('action_detail', models.CharField(blank=True, max_length=255)),
-                ('action_type', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='lead.ActionChoice')),
-                ('lead', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='actions', to='lead.Lead')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("action_detail", models.CharField(blank=True, max_length=255)),
+                (
+                    "action_type",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="lead.ActionChoice",
+                    ),
+                ),
+                (
+                    "lead",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="actions",
+                        to="lead.Lead",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
     ]

@@ -1,16 +1,19 @@
-from decimal import (Decimal, ROUND_DOWN, )
+from decimal import (
+    Decimal,
+    ROUND_DOWN,
+)
 import random
 import re
 
 
 def generate_random_numbers(length=10):
-    value = ''
+    value = ""
     for i in range(10):
         value += str(random.randint(1, 9))
     return value
 
 
-def round_decimal(value, quantize='.01'):
+def round_decimal(value, quantize=".01"):
     """"""
     if value is not None:
         return Decimal(value).quantize(Decimal(quantize), rounding=ROUND_DOWN)
@@ -26,14 +29,14 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
     """
 
     # final string should have this length - the special % sign
-    regex_format_chars = r'(\%[d|w])'
+    regex_format_chars = r"(\%[d|w])"
     matches = re.findall(regex_format_chars, format)
     matches_length = len(matches)
     # final string should have this length - the special % sign
-    format_length = len(format)-matches_length
+    format_length = len(format) - matches_length
 
     # get the integers and push them into an array
-    value_array = [None]*11
+    value_array = [None] * 11
     cnt = 0
     for char in value:
         try:
@@ -47,7 +50,7 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
         value_array.pop(0)
 
     # take each char in the format and put it into an array
-    empty_str = ''
+    empty_str = ""
     cnt = 0
     value_cnt = 0
     _format = format
@@ -59,12 +62,12 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
         test = re.search(regex_format_chars, _format)
         if test:
             if cnt == cnt + test.start():
-                if format[cnt+test.start():cnt+test.end()] == '%w':
-                    empty_str += ' '
-                elif format[cnt+test.start():cnt+test.end()] == '%d':
+                if format[cnt + test.start() : cnt + test.end()] == "%w":
+                    empty_str += " "
+                elif format[cnt + test.start() : cnt + test.end()] == "%d":
                     empty_str += value_array[value_cnt]
                     value_cnt += 1
-                cnt = cnt+test.end()
+                cnt = cnt + test.end()
             else:
                 empty_str += format[cnt]
                 cnt += 1
@@ -78,7 +81,7 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
 #                          format="+1(%d%d%d)%w%d%d%d-%d%d%d%d"))
 
 
-def validate_phone_number(value, country='US'):
+def validate_phone_number(value, country="US"):
     """ 
         validates phone number depending on country (default is us) 
         Currently only supports US, will accept formats 
@@ -90,15 +93,16 @@ def validate_phone_number(value, country='US'):
     value_length = len(value)
     if value_length < 10:
         # currently only supporting US which requires a minimum of 10 numbers including area code
-        raise ValueError(f'{value} must be at least 10 characters')
+        raise ValueError(f"{value} must be at least 10 characters")
     # phone numbers can contain (), -, + collect them
-    regex_format_chars = r'([\+\(\)\-\s])'
+    regex_format_chars = r"([\+\(\)\-\s])"
     matches = re.findall(regex_format_chars, value)
     matches_length = len(matches)
-    if (value_length - matches_length) < 10 or value_length-matches_length > 11:
+    if (value_length - matches_length) < 10 or value_length - matches_length > 11:
         # make sure at least 10 chars are included and no more than 11 (including the 1)
         raise ValueError(
-            f'{value} must be at least 10 numeric characters and no more than 11')
+            f"{value} must be at least 10 numeric characters and no more than 11"
+        )
     return True
 
 

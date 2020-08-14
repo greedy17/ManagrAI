@@ -6,12 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0015_auto_20200713_1815'),
+        ("lead", "0015_auto_20200713_1815"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='notification',
-            options={'ordering': ['-notify_at']},
+            name="notification", options={"ordering": ["-notify_at"]},
         ),
     ]

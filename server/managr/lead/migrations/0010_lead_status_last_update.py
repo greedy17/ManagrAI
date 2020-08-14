@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0009_merge_20200618_1844'),
+        ("lead", "0009_merge_20200618_1844"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='lead',
-            name='status_last_update',
+            model_name="lead",
+            name="status_last_update",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]
