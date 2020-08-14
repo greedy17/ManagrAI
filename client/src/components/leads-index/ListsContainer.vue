@@ -14,11 +14,7 @@
           :title="list.title"
           @get-leads="onGetLeads($event, list.id)"
           @refresh-collections="$emit('refresh-collections')"
-          :leadCount="
-            leadsFromList.pagination.totalCount
-              ? leadsFromList.pagination.totalCount
-              : list.leadCount
-          "
+          :leadCount="list.leadCount"
           :isOwner="true"
         />
         <!-- 
