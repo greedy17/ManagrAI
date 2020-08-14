@@ -90,7 +90,6 @@
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
   },
-
   {
     "model": "organization.stage",
     "pk": "36be069d-7d39-4b7f-a339-aa7c0a27085d",
@@ -115,6 +114,47 @@
       "color": "#484A6E",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "5c205dc4-e43f-4748-9134-d942c6c01abc",
+    "fields": {
+      "password": "pbkdf2_sha256$150000$FXtF6UR1Hg8Q$MYUa42GCygpIFFiSUY5k7dk1VuIg397mU4HlWUjeqfQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "date_joined": "2020-06-09T17:38:38.084Z",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "email": "testing@thinknimble.com",
+      "is_serviceaccount": true,
+      "is_active": true,
+      "type": "MANAGER",
+      "first_name": "Testing Email",
+      "last_name": "User",
+      "phone_number": "",
+      "is_invited": true,
+      "magic_token": "630222a1-48bd-4314-b548-952ddd51376a",
+      "magic_token_expiration": null,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.emailauthaccount",
+    "pk": "d0afdd6f-d378-48fd-b17a-07e19386b59a",
+    "fields": {
+      "datetime_created": "2020-06-09T18:30:17.568Z",
+      "last_edited": "2020-06-09T18:30:17.568Z",
+      "access_token": "5RoflrcYLEn2hV54R19Ud1y9XU4x8H",
+      "account_id": "2yyyiu5lq221zmm4dvhmng5gc",
+      "email_address": "testing@thinknimble.com",
+      "provider": "gmail",
+      "sync_state": "",
+      "name": "test",
+      "linked_at": "2020-06-09T18:30:17.568Z",
+      "user": "39d37230-0e1f-476f-88e6-abe46fa3d3e2"
     }
   }
 ]
