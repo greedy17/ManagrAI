@@ -36,6 +36,7 @@ def generate_story_report_data(story_report_id, generated_by_id):
 
     # generate report's data
     story_report.data["lead"] = LeadDataGenerator(lead).as_dict
+
     story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
     story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
     story_report.datetime_generated = timezone.now()
@@ -84,11 +85,20 @@ class LeadDataGenerator(BaseGenerator):
         Only include the actions logged from last time this rep claimed the lead,
         though to the closing of the lead.
         """
-        return self._lead.activity_logs.filter(
-            action_timestamp__gte=self.claimed_timestamp,
-            action_timestamp__lte=self._lead.expected_close_date,
-            action_taken_by=self._representative,
-        )
+        try:
+
+            return self._lead.activity_logs.filter(
+                action_timestamp__gte=self.claimed_timestamp,
+                action_timestamp__lte=self._lead.expected_close_date,
+                action_taken_by=self._representative,
+            )
+        except Exception as e:
+            print("failed on lead_activity_logs")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def claimed_timestamp(self):
@@ -97,51 +107,87 @@ class LeadDataGenerator(BaseGenerator):
         """
         # NOTE (Bruno 8-11-20): currently, a claim-event does not
         # take place on lead creation. Hence conditional herein.
-        claimed_event = self._lead.activity_logs.filter(
-            activity=lead_constants.LEAD_CLAIMED
-        ).first()
-        if claimed_event:
-            return claimed_event.action_timestamp
-        return self._lead.datetime_created
+        try:
+            claimed_event = self._lead.activity_logs.filter(
+                activity=lead_constants.LEAD_CLAIMED
+            ).first()
+            if claimed_event:
+                return claimed_event.action_timestamp
+            return self._lead.datetime_created
+        except Exception as e:
+            print("failed on claimed_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def ready_timestamp(self):
         """
         Find newest READY, because this salesperson may have picked it more than once.
         """
-        logged_ready = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
-        ).first()
-        if logged_ready:
-            return logged_ready.action_timestamp
+
+        try:
+            logged_ready = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
+            ).first()
+
+            if logged_ready:
+                return logged_ready.action_timestamp
+
+        except Exception as e:
+            print("failed on ready_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def booked_timestamp(self):
         """
         Find first BOOKED, because this salesperson may have picked it more than once.
         """
-        logged_booked = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
-        ).last()
-        if logged_booked:
-            return logged_booked.action_timestamp
+        try:
+            logged_booked = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
+            ).last()
+
+            if logged_booked:
+                return logged_booked.action_timestamp
+        except Exception as e:
+            print("failed on booked_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def demo_timestamp(self):
         """
         Find first DEMO, because this salesperson may have picked it more than once.
         """
-        logged_demo = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
-        ).last()
-        if logged_demo:
-            return logged_demo.action_timestamp
+        try:
+            logged_demo = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
+            ).last()
+            if logged_demo:
+                return logged_demo.action_timestamp
+        except Exception as e:
+            print("filed on demo_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def closed_timestamp(self):
@@ -154,43 +200,68 @@ class LeadDataGenerator(BaseGenerator):
         with lead was most contacted.
         Returns Contact instance.
         """
-        calls = self.lead_activity_logs.filter(
-            activity=lead_constants.CALL_NOTE_CREATED
-        )
-        texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
-        emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
-        contact_map = {}
-        for call in calls:
-            if call.meta.get("linked_contacts"):
-                for contact in call.meta["linked_contacts"]:
-                    if contact_map.get(contact):
+        try:
+            calls = self.lead_activity_logs.filter(
+                activity=lead_constants.CALL_NOTE_CREATED
+            )
+            texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
+            emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
+            contact_map = None
+            # some contacts may have already be removed so we should only include existing
+
+            for call in calls:
+                linked_contacts = call.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        for text in texts:
-            if text.meta.get("linked_contacts"):
-                for contact in text.meta["linked_contacts"]:
-                    if contact_map.get(contact):
+            for text in texts:
+                linked_contacts = text.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        for email in emails:
-            if email.meta.get("linked_contacts"):
-                for contact in email.meta["linked_contacts"]:
-                    if contact_map.get(contact):
+            for email in emails:
+                linked_contacts = email.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        if not bool(contact_map):
-            return None
-        # NOTE (Bruno): if more than one contact have same count of comms.
-        # actions, the first one is returned.
-        primary_contact_id = max(contact_map, key=lambda key: contact_map[key])
-        primary_contact = Contact.objects.get(pk=primary_contact_id)
-        return ContactSerializer(primary_contact).data
+            if not contact_map:
+                return None
+            # NOTE (Bruno): if more than one contact have same count of comms.
+            # actions, the first one is returned.
+            try:
+                primary_contact_id = max(contact_map)
+
+                primary_contact = Contact.objects.get(pk=primary_contact_id)
+
+                return ContactSerializer(primary_contact).data
+            except Exception as e:
+                print("failed on geting contact")
+                raise (e)
+        except Exception as e:
+            print("failed on primary_contact")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def call_count(self):
