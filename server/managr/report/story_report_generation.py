@@ -35,12 +35,19 @@ def generate_story_report_data(story_report_id, generated_by_id):
         )
 
     # generate report's data
-    story_report.data["lead"] = LeadDataGenerator(lead).as_dict
+    try:
+        story_report.data["lead"] = LeadDataGenerator(lead).as_dict
 
-    story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
-    story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
-    story_report.datetime_generated = timezone.now()
-    story_report.save()
+        story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
+        story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
+        story_report.datetime_generated = timezone.now()
+
+        story_report.save()
+    except Exception as e:
+        print(e)
+        logger.exception(
+            f"{story_report.data['lead']}, {story_report.data['representative']},{story_report.data['organization']}"
+        )
 
     # send email to user that generated report
     send_email(story_report)
