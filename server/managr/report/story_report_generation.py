@@ -249,9 +249,12 @@ class LeadDataGenerator(BaseGenerator):
             try:
                 primary_contact_id = max(contact_map)
 
-                primary_contact = Contact.objects.get(pk=primary_contact_id)
+                primary_contact = Contact.objects.filter(pk=primary_contact_id).first()
+                if primary_contact:
+                    return ContactSerializer(primary_contact).data
+                else:
+                    return None
 
-                return ContactSerializer(primary_contact).data
             except Exception as e:
                 print("failed on geting contact")
                 raise (e)
