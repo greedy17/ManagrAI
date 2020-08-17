@@ -422,7 +422,7 @@ class LeadViewSet(
         return Response(data={"created": created_leads})
 
     @action(
-        methods=["PATCH"],
+        methods=["POST"],
         permission_classes=(IsSalesPerson,),
         detail=False,
         url_path="bulk-update",
