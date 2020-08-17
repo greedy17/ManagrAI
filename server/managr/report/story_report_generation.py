@@ -1,7 +1,8 @@
 import logging
-
+import json
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from django.core import serializers
 
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
@@ -44,9 +45,9 @@ def generate_story_report_data(story_report_id, generated_by_id):
 
         story_report.save()
     except Exception as e:
-        print(e)
+
         logger.exception(
-            f"{story_report.data['lead']}, {story_report.data['representative']},{story_report.data['organization']}"
+            f"failed to generate a report for {story_report_id}, error: {e}"
         )
 
     # send email to user that generated report
@@ -208,6 +209,7 @@ class LeadDataGenerator(BaseGenerator):
         Returns Contact instance.
         """
         try:
+
             calls = self.lead_activity_logs.filter(
                 activity=lead_constants.CALL_NOTE_CREATED
             )
@@ -228,10 +230,12 @@ class LeadDataGenerator(BaseGenerator):
                         contact_map = {contact: 1}
 
             for text in texts:
+
                 linked_contacts = text.meta.get("linked_contacts", [])
                 linked_contacts_ids = Contact.objects.filter(
                     id__in=[contact["id"] for contact in linked_contacts]
                 ).values_list("id", flat=True)
+
                 for contact in linked_contacts_ids:
                     if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
@@ -253,12 +257,16 @@ class LeadDataGenerator(BaseGenerator):
                 return None
             # NOTE (Bruno): if more than one contact have same count of comms.
             # actions, the first one is returned.
+
             try:
                 primary_contact_id = max(contact_map)
 
                 primary_contact = Contact.objects.filter(pk=primary_contact_id).first()
                 if primary_contact:
-                    return ContactSerializer(primary_contact).data
+
+                    data = json.loads(serializers.serialize("json", [primary_contact]))
+                    contact = data[0]["fields"]
+                    return contact
                 else:
                     return None
 
