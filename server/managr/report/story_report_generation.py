@@ -24,19 +24,20 @@ def generate_story_report_data(story_report_id, generated_by_id):
     user that triggered this story_report to be generated.
     """
     story_report = StoryReport.objects.get(
-        generated_by=generated_by_id,
-        pk=story_report_id
-    ).prefetch_related('lead')
+        generated_by=generated_by_id, pk=story_report_id
+    )
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
         logger.exception(f"Attempted to generate story report for open lead {lead.id}")
-        raise ValidationError(f"Attempted to generate story report for open lead {lead.id}")
+        raise ValidationError(
+            f"Attempted to generate story report for open lead {lead.id}"
+        )
 
     # generate report's data
-    story_report.data['lead'] = LeadDataGenerator(lead).as_dict
-    story_report.data['representative'] = RepresentativeDataGenerator(lead).as_dict
-    story_report.data['organization'] = OrganizationDataGenerator(lead).as_dict
+    story_report.data["lead"] = LeadDataGenerator(lead).as_dict
+    story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
+    story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
     story_report.datetime_generated = timezone.now()
     story_report.save()
 
@@ -51,12 +52,10 @@ def send_email(report):
     if ea:
         token = ea.access_token
         sender = {"email": ea.email_address, "name": "Managr"}
-        recipient = [
-            {"email": recipient.email, "name": recipient.full_name}
-        ]
+        recipient = [{"email": recipient.email, "name": recipient.full_name}]
         message = {
             "subject": f"Story Report Generated for {report.lead.title}",
-            "body": f"The report is available at {report.client_side_url}."
+            "body": f"The report is available at {report.client_side_url}.",
         }
         try:
             send_new_email_legacy(token, sender, recipient, message)
@@ -155,29 +154,31 @@ class LeadDataGenerator(BaseGenerator):
         with lead was most contacted.
         Returns Contact instance.
         """
-        calls = self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED)
+        calls = self.lead_activity_logs.filter(
+            activity=lead_constants.CALL_NOTE_CREATED
+        )
         texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
         emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
         contact_map = {}
         for call in calls:
-            if call.meta.get('linked_contacts'):
-                for contact in call.meta['linked_contacts']:
+            if call.meta.get("linked_contacts"):
+                for contact in call.meta["linked_contacts"]:
                     if contact_map.get(contact):
                         contact_map[contact] += 1
                     else:
                         contact_map[contact] = 1
 
         for text in texts:
-            if text.meta.get('linked_contacts'):
-                for contact in text.meta['linked_contacts']:
+            if text.meta.get("linked_contacts"):
+                for contact in text.meta["linked_contacts"]:
                     if contact_map.get(contact):
                         contact_map[contact] += 1
                     else:
                         contact_map[contact] = 1
 
         for email in emails:
-            if email.meta.get('linked_contacts'):
-                for contact in email.meta['linked_contacts']:
+            if email.meta.get("linked_contacts"):
+                for contact in email.meta["linked_contacts"]:
                     if contact_map.get(contact):
                         contact_map[contact] += 1
                     else:
@@ -193,15 +194,21 @@ class LeadDataGenerator(BaseGenerator):
 
     @property
     def call_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.CALL_NOTE_CREATED
+        ).count()
 
     @property
     def text_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.MESSAGE_SENT
+        ).count()
 
     @property
     def email_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.EMAIL_SENT
+        ).count()
 
     @property
     def custom_action_counts(self):
@@ -226,7 +233,9 @@ class LeadDataGenerator(BaseGenerator):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
-        return self.lead_activity_logs.filter(activity=lead_constants.ACTION_CREATED).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.ACTION_CREATED
+        ).count()
 
     @property
     def days_to_closed(self):
@@ -271,18 +280,18 @@ class LeadDataGenerator(BaseGenerator):
     @property
     def as_dict(self):
         return {
-            'contract_value': self.contract_value,
-            'days_to_closed': self.days_to_closed,
-            'days_ready_to_booked': self.days_ready_to_booked,
-            'days_booked_to_demo': self.days_booked_to_demo,
-            'days_to_demo': self.days_to_demo,
-            'days_demo_to_closed': self.days_demo_to_closed,
-            'primary_contact': self.primary_contact,
-            'call_count': self.call_count,
-            'text_count': self.text_count,
-            'email_count': self.email_count,
-            'custom_action_counts': self.custom_action_counts,
-            'action_count': self.action_count,
+            "contract_value": self.contract_value,
+            "days_to_closed": self.days_to_closed,
+            "days_ready_to_booked": self.days_ready_to_booked,
+            "days_booked_to_demo": self.days_booked_to_demo,
+            "days_to_demo": self.days_to_demo,
+            "days_demo_to_closed": self.days_demo_to_closed,
+            "primary_contact": self.primary_contact,
+            "call_count": self.call_count,
+            "text_count": self.text_count,
+            "email_count": self.email_count,
+            "custom_action_counts": self.custom_action_counts,
+            "action_count": self.action_count,
         }
 
 
@@ -291,6 +300,7 @@ class RepresentativeDataGenerator(BaseGenerator):
     Generates representative-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+
     @property
     def leads(self):
         closed_leads = Lead.objects.filter(
@@ -317,7 +327,7 @@ class RepresentativeDataGenerator(BaseGenerator):
         totals = {}
         counts = {}
         for lead in self.leads:
-            for action_choice_title, count in lead['custom_action_counts'].items():
+            for action_choice_title, count in lead["custom_action_counts"].items():
                 if totals.get(action_choice_title):
                     totals[action_choice_title] += count
                     counts[action_choice_title] += 1
@@ -327,23 +337,27 @@ class RepresentativeDataGenerator(BaseGenerator):
 
         averages = {}
         for action_choice_title, aggregate in totals.items():
-            averages[action_choice_title] = int(round(aggregate / counts[action_choice_title]))
+            averages[action_choice_title] = int(
+                round(aggregate / counts[action_choice_title])
+            )
         return averages
 
     @property
     def as_dict(self):
         return {
-            'average_contract_value': self.average_for('contract_value', rounding_places=2, as_integer=False),
-            'average_days_to_closed': self.average_for('days_to_closed'),
-            'average_days_ready_to_booked': self.average_for('days_ready_to_booked'),
-            'average_days_booked_to_demo': self.average_for('days_booked_to_demo'),
-            'average_days_to_demo': self.average_for('days_to_demo'),
-            'average_days_demo_to_closed': self.average_for('days_demo_to_closed'),
-            'average_call_count': self.average_for('call_count'),
-            'average_text_count': self.average_for('text_count'),
-            'average_email_count': self.average_for('email_count'),
-            'average_custom_action_counts': self.average_custom_action_counts,
-            'average_action_count': self.average_for('action_count'),
+            "average_contract_value": self.average_for(
+                "contract_value", rounding_places=2, as_integer=False
+            ),
+            "average_days_to_closed": self.average_for("days_to_closed"),
+            "average_days_ready_to_booked": self.average_for("days_ready_to_booked"),
+            "average_days_booked_to_demo": self.average_for("days_booked_to_demo"),
+            "average_days_to_demo": self.average_for("days_to_demo"),
+            "average_days_demo_to_closed": self.average_for("days_demo_to_closed"),
+            "average_call_count": self.average_for("call_count"),
+            "average_text_count": self.average_for("text_count"),
+            "average_email_count": self.average_for("email_count"),
+            "average_custom_action_counts": self.average_custom_action_counts,
+            "average_action_count": self.average_for("action_count"),
         }
 
 
@@ -359,8 +373,7 @@ class OrganizationDataGenerator(BaseGenerator):
 
     def generate_representative_leads(self, representative):
         closed_leads = Lead.objects.filter(
-            claimed_by=representative,
-            status__title=lead_constants.LEAD_STATUS_CLOSED,
+            claimed_by=representative, status__title=lead_constants.LEAD_STATUS_CLOSED,
         )
         return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
 
@@ -380,8 +393,8 @@ class OrganizationDataGenerator(BaseGenerator):
     @property
     def as_dict(self):
         return {
-            'average_call_count': self.average_for('call_count'),
-            'average_text_count': self.average_for('text_count'),
-            'average_email_count': self.average_for('email_count'),
-            'average_action_count': self.average_for('action_count'),
+            "average_call_count": self.average_for("call_count"),
+            "average_text_count": self.average_for("text_count"),
+            "average_email_count": self.average_for("email_count"),
+            "average_action_count": self.average_for("action_count"),
         }
