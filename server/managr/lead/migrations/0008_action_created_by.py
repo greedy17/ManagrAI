@@ -9,13 +9,18 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('lead', '0007_action_linked_contacts'),
+        ("lead", "0007_action_linked_contacts"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='action',
-            name='created_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_actions', to=settings.AUTH_USER_MODEL),
+            model_name="action",
+            name="created_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="created_actions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

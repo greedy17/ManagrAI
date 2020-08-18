@@ -11,46 +11,104 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('lead', '0002_auto_20200609_1929'),
+        ("lead", "0002_auto_20200609_1929"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LeadActivityLog',
+            name="LeadActivityLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('activity', models.CharField(choices=[('Lead.CREATED', 'Lead Created'), ('Lead.UPDATED', 'Lead Updated'), ('Lead.DELETED', 'Lead Deleted'), ('Lead.CLAIMED', 'Lead Claimed'), ('Lead.RELEASED', 'Lead Released'), ('Lead.CLOSED', 'Lead Closed'), ('CallNote.CREATED', 'Call Note Created'), ('CallNote.UPDATED', 'Call Note Updated'), ('CallNote.DELETED', 'Call Note Deleted')], help_text='records any actions taken on a lead', max_length=255)),
-                ('meta', django.contrib.postgres.fields.jsonb.JSONField(default=dict, help_text='Details about the activity')),
-                ('action_taken_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('lead', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='lead.Lead')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                (
+                    "activity",
+                    models.CharField(
+                        choices=[
+                            ("Lead.CREATED", "Lead Created"),
+                            ("Lead.UPDATED", "Lead Updated"),
+                            ("Lead.DELETED", "Lead Deleted"),
+                            ("Lead.CLAIMED", "Lead Claimed"),
+                            ("Lead.RELEASED", "Lead Released"),
+                            ("Lead.CLOSED", "Lead Closed"),
+                            ("CallNote.CREATED", "Call Note Created"),
+                            ("CallNote.UPDATED", "Call Note Updated"),
+                            ("CallNote.DELETED", "Call Note Deleted"),
+                        ],
+                        help_text="records any actions taken on a lead",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "meta",
+                    django.contrib.postgres.fields.jsonb.JSONField(
+                        default=dict, help_text="Details about the activity"
+                    ),
+                ),
+                (
+                    "action_taken_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "lead",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="lead.Lead",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.AlterField(
-            model_name='callnote',
-            name='call_date',
-            field=models.DateField(help_text='The date the call occurred'),
+            model_name="callnote",
+            name="call_date",
+            field=models.DateField(help_text="The date the call occurred"),
         ),
         migrations.AlterField(
-            model_name='callnote',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_callnotes', to='lead.Lead'),
+            model_name="callnote",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_callnotes",
+                to="lead.Lead",
+            ),
         ),
         migrations.AlterField(
-            model_name='note',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_notes', to='lead.Lead'),
+            model_name="note",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_notes",
+                to="lead.Lead",
+            ),
         ),
         migrations.AlterField(
-            model_name='reminder',
-            name='created_for',
-            field=models.ForeignKey(help_text='The Lead that this note was created for.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lead_reminders', to='lead.Lead'),
+            model_name="reminder",
+            name="created_for",
+            field=models.ForeignKey(
+                help_text="The Lead that this note was created for.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="lead_reminders",
+                to="lead.Lead",
+            ),
         ),
-        migrations.DeleteModel(
-            name='ActivityLog',
-        ),
+        migrations.DeleteModel(name="ActivityLog",),
     ]

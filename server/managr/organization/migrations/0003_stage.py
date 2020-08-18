@@ -8,24 +8,51 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0002_normalize_contact_emails'),
+        ("organization", "0002_normalize_contact_emails"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Stage',
+            name="Stage",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.CharField(blank=True, max_length=255)),
-                ('color', models.CharField(default='rgb(155,155,155)', help_text='hex code for color or rgba', max_length=255)),
-                ('type', models.CharField(choices=[('PRIVATE', 'Private'), ('PUBLIC', 'Public')], max_length=255)),
-                ('organization', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='stages', to='organization.Organization')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.CharField(blank=True, max_length=255)),
+                (
+                    "color",
+                    models.CharField(
+                        default="rgb(155,155,155)",
+                        help_text="hex code for color or rgba",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("PRIVATE", "Private"), ("PUBLIC", "Public")],
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="stages",
+                        to="organization.Organization",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
     ]

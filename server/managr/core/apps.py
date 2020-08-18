@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 
 class ManagrCoreConfig(AppConfig):
-    name = 'managr.core'
+    name = "managr.core"
 
     def ready(self):
         import managr.core.signals
