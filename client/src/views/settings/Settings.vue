@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="page__left-nav-bar">
+    <div class="page__left-nav-bar" style="padding: 1rem;">
       <div class="toolbar">
         <div class="toolbar__header">
           <span class="toolbar__title">Settings</span>
@@ -47,7 +47,7 @@
         </div> -->
       </div>
     </div>
-    <div class="page__main-content-area">
+    <div class="page__main-content-area" style="padding: 1rem;">
       <EmailIntegration v-if="emailIntegrationActive" />
       <EmailTemplates v-if="emailTemplatesActive" />
       <TextIntegration v-if="textIntegrationActive" />

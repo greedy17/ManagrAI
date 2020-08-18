@@ -2,27 +2,41 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Organization, Account,  Contact, Stage
+from .models import Organization, Account, Contact, Stage
 
 
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
-    list_display = ('name', 'message_auth_count',)
+    list_display = (
+        "name",
+        "message_auth_count",
+    )
 
 
 class CustomAccount(admin.ModelAdmin):
     model = Account
-    list_display = ('name', 'url',)
+    list_display = (
+        "name",
+        "url",
+    )
 
 
 class CustomContact(admin.ModelAdmin):
     model = Contact
     fieldsets = (
-        (None, {
-            "fields": (
-                'first_name', 'last_name', 'email', 'phone_number_1', 'phone_number_2', 'account'
-            ),
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "phone_number_1",
+                    "phone_number_2",
+                    "account",
+                ),
+            },
+        ),
     )
 
 

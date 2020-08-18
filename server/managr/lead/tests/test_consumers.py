@@ -121,4 +121,3 @@ class CallNoteActionConsumerTestCase(TestCase):
         # "now" (the time of the update), so NOT the time of the call,
         # which is in the past.
         self.assertNotEqual(log.action_timestamp, self.call_note.call_date)
-

@@ -6,12 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0024_merge_20200804_0227'),
+        ("lead", "0024_merge_20200804_0227"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='leadmessage',
-            options={'ordering': ['-datetime_created']},
+            name="leadmessage", options={"ordering": ["-datetime_created"]},
         ),
     ]

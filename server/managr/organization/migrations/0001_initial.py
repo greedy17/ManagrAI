@@ -9,56 +9,112 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Organization',
+            name="Organization",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255, null=True)),
-                ('state', models.CharField(choices=[('ACTIVE', 'Active'), ('INACTIVE', 'Inactive')], default='ACTIVE', max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255, null=True)),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[("ACTIVE", "Active"), ("INACTIVE", "Inactive")],
+                        default="ACTIVE",
+                        max_length=255,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255, null=True)),
-                ('url', models.CharField(max_length=255, null=True)),
-                ('type', models.CharField(choices=[('RENEWAL', 'Renewal'), ('NEW', 'New')], default='NEW', max_length=255)),
-                ('state', models.CharField(choices=[('ACTIVE', 'Active'), ('INACTIVE', 'Inactive')], default='ACTIVE', max_length=255)),
-                ('organization', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='accounts', to='organization.Organization')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255, null=True)),
+                ("url", models.CharField(max_length=255, null=True)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("RENEWAL", "Renewal"), ("NEW", "New")],
+                        default="NEW",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[("ACTIVE", "Active"), ("INACTIVE", "Inactive")],
+                        default="ACTIVE",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="accounts",
+                        to="organization.Organization",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-datetime_created'],
-            },
+            options={"ordering": ["-datetime_created"],},
         ),
         migrations.CreateModel(
-            name='Contact',
+            name="Contact",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('datetime_created', models.DateTimeField(auto_now_add=True)),
-                ('last_edited', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(blank=True, max_length=255)),
-                ('first_name', models.CharField(max_length=255)),
-                ('last_name', models.CharField(blank=True, max_length=255)),
-                ('email', models.CharField(max_length=255)),
-                ('phone_number_1', models.CharField(max_length=255)),
-                ('phone_number_2', models.CharField(blank=True, max_length=255)),
-                ('account', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='contacts', to='organization.Account')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("datetime_created", models.DateTimeField(auto_now_add=True)),
+                ("last_edited", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(blank=True, max_length=255)),
+                ("first_name", models.CharField(max_length=255)),
+                ("last_name", models.CharField(blank=True, max_length=255)),
+                ("email", models.CharField(max_length=255)),
+                ("phone_number_1", models.CharField(max_length=255)),
+                ("phone_number_2", models.CharField(blank=True, max_length=255)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contacts",
+                        to="organization.Account",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['first_name'],
-                'unique_together': {('email', 'account')},
+                "ordering": ["first_name"],
+                "unique_together": {("email", "account")},
             },
         ),
     ]

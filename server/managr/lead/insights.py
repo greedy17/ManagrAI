@@ -35,14 +35,14 @@ class LeadInsights:
 
     @property
     def lead_queryset(self):
-        if self._filter_params.get('empty'):
+        if self._filter_params.get("empty"):
             return self._lead_queryset.none()
         return self._lead_queryset
 
     @property
     def log_queryset(self):
         """Filter the log queryset by leads, if applicable."""
-        if self._filter_params.get('empty'):
+        if self._filter_params.get("empty"):
             return self._log_queryset.none()
 
         lead_ids = self._lead_queryset.values_list("id", flat=True)
@@ -96,7 +96,9 @@ class LeadInsights:
 
     @property
     def reminder_count(self):
-        return self.log_queryset.filter(activity=lead_constants.REMINDER_CREATED).count()
+        return self.log_queryset.filter(
+            activity=lead_constants.REMINDER_CREATED
+        ).count()
 
     @property
     def reminder_latest(self):
@@ -137,9 +139,9 @@ class LeadInsights:
     @property
     def closed_leads(self):
         return self.lead_queryset.closed_leads(
-                                    date_range_from=self._filter_params.get('date_range_from'),
-                                    date_range_to=self._filter_params.get('date_range_to')
-                                )
+            date_range_from=self._filter_params.get("date_range_from"),
+            date_range_to=self._filter_params.get("date_range_to"),
+        )
 
     @property
     def open_leads_count(self):
@@ -160,12 +162,15 @@ class LeadInsights:
     @property
     def as_dict(self):
         return {
-            "calls": {"count": self.call_count, "latest": self.call_latest, },
-            "notes": {"count": self.note_count, "latest": self.note_latest, },
-            "reminders": {"count": self.reminder_count, "latest": self.reminder_latest, },
-            "actions": {"count": self.action_count, "latest": self.action_latest, },
-            "emails": {"count": self.email_count, "latest": self.email_latest, },
-            "messages": {"count": self.message_count, "latest": self.message_latest, },
+            "calls": {"count": self.call_count, "latest": self.call_latest,},
+            "notes": {"count": self.note_count, "latest": self.note_latest,},
+            "reminders": {
+                "count": self.reminder_count,
+                "latest": self.reminder_latest,
+            },
+            "actions": {"count": self.action_count, "latest": self.action_latest,},
+            "emails": {"count": self.email_count, "latest": self.email_latest,},
+            "messages": {"count": self.message_count, "latest": self.message_latest,},
             "closed_leads": {
                 "count": self.closed_leads_count,
                 "total_value": self.closed_leads_value,

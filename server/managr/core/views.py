@@ -22,7 +22,6 @@ from rest_framework import (
     views,
     viewsets,
 )
-from rest_framework import viewsets, mixins, generics, status, filters, permissions
 from rest_framework.decorators import (
     api_view,
     permission_classes,

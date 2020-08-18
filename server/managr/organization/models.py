@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models import Sum, Avg
 from managr.utils.numbers import format_phone_number
+from managr.utils.misc import datetime_appended_filepath
 
 from managr.core.models import UserManager, TimeStampModel
 from . import constants as org_consts
@@ -94,8 +95,9 @@ class AccountQuerySet(models.QuerySet):
 
 class Account(TimeStampModel):
     """
-        Accounts are potential and exisiting clients that can be made into leads and added to lists
-        Accounts are associated with organizations (question can an account exist in a different organization, or can an organization have a different version of an account)
+        Accounts are potential and exisiting clients that 
+        can be made into leads and added to lists
+
     """
 
     name = models.CharField(max_length=255, null=True)
@@ -117,6 +119,10 @@ class Account(TimeStampModel):
         null=False,
         blank=False,
     )
+    logo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
+    )
+
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):
@@ -138,8 +144,11 @@ class ContactQuerySet(models.QuerySet):
 
 class Contact(TimeStampModel):
     """
-        Contacts are the point of contacts that belong to an account, they must be unique (by email) and can only belong to one account
-        If we have multiple organizations per account then that will also be unique and added here
+        Contacts are the point of contacts that belong to 
+        an account, they must be unique (by email) and can 
+        only belong to one account
+        If we have multiple organizations per account 
+        then that will also be unique and added here
     """
 
     title = models.CharField(max_length=255, blank=True)
