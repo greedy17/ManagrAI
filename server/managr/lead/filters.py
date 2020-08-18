@@ -94,7 +94,7 @@ class LeadFilterSet(FilterSet):
             v = value.upper()
             v = v.split(",")
 
-            return qs.filter(status__in=v)
+            return qs.filter(status__title__in=v)
         return qs
 
     def leads_by_rating(self, qs, name, value):

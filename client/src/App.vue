@@ -72,6 +72,7 @@ body {
 }
 
 .page-content {
+  padding: 1rem;
 }
 
 .section-shadow {

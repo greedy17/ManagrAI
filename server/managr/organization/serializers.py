@@ -49,12 +49,7 @@ class AccountRefSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = (
-            "id",
-            "name",
-            "organization",
-            "url",
-        )
+        fields = ('id', 'name', 'organization', 'url', 'logo')
 
 
 class OrganizationVerboseSerializer(serializers.ModelSerializer):

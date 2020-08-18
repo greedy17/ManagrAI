@@ -22,12 +22,13 @@ class BaseActionConsumer:
 
     model_class = None
 
-    def __init__(self, action, user_id, obj_id):
+    def __init__(self, action, user_id, obj_id, extra_meta=None):
         self.action = action
         self.user_id = user_id
         self.obj_id = obj_id
         self._user = None
         self._obj = None
+        self._extra_meta = extra_meta
 
     def assert_model_class(self):
         if self.model_class is None:
@@ -66,7 +67,7 @@ class BaseActionConsumer:
                 logger.exception(
                     f"Consumer '{self.__class__.__name__}' attempted to "
                     f"to retrieve a '{self.model_class_name}' instance with id "
-                    f"{obj_id}, but it does not exist."
+                    f"{self.obj_id}, but it does not exist."
                 )
         return self._obj
 
@@ -96,12 +97,16 @@ class BaseActionConsumer:
     def create_log(self):
         self.assert_model_class()
 
+        meta = self.get_meta()
+        if self._extra_meta is not None:
+            meta['extra'] = self._extra_meta
+
         return lead_models.LeadActivityLog.objects.create(
             lead=self.get_lead(),
             activity=self.activity_name,
             action_taken_by=self.get_user(),
             action_timestamp=self.get_timestamp(),
-            meta=self.get_meta(),
+            meta=meta,
         )
 
 

@@ -87,7 +87,7 @@ export default {
     }
   },
   async created() {
-    this.users.refresh()
+    this.loadEntireCollection(this.users)
   },
   methods: {
     toggleActiveRep(repID) {
@@ -101,6 +101,15 @@ export default {
     deselectAll() {
       this.$emit('deselect-all-reps')
       this.menuOpen = false
+    },
+    async loadEntireCollection(collection) {
+      // Since the list of collection is for populating a list, there is no pagination UI.
+      // Yet, our backend delivers paginated results.
+      // Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
+      await collection.refresh()
+      while (collection.pagination.hasNextPage) {
+        await collection.addNextPage()
+      }
     },
   },
   computed: {

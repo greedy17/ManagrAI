@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
+from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
@@ -123,8 +124,13 @@ class User(AbstractUser, TimeStampModel):
         "set by their Organization.",
         default=0,
     )
-    commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
-    upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
+    commit = models.PositiveIntegerField(
+        help_text='Worst-case quota.', default=0)
+    upside = models.PositiveIntegerField(
+        help_text='Optimistic quota.', default=0)
+    profile_photo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
+    )
 
     objects = UserManager()
 
