@@ -39,17 +39,18 @@
         <slot name="center"></slot>
       </div>
       <div class="lead__container__right">
-        <span>
-          Claimed By
-          {{
-            belongsToCurrentUser
-              ? 'You'
-              : dataLead.claimedByRef.fullName.trim()
-              ? dataLead.claimedByRef.fullName
-              : dataLead.claimedByRef.email
-          }}
-        </span>
-        <slot name="right"></slot>
+        <slot name="right">
+          <span v-if="dataLead.claimedBy">
+            Claimed By
+            {{
+              belongsToCurrentUser
+                ? 'You'
+                : dataLead.claimedByRef.fullName.trim()
+                ? dataLead.claimedByRef.fullName
+                : dataLead.claimedByRef.email
+            }}
+          </span>
+        </slot>
         <span class="go-to" @click="routeToLeadDetail()">
           <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
             <use xlink:href="@/assets/images/svg-repo.svg#caret" />
@@ -110,7 +111,10 @@ export default {
       return this.getStatuses.find(s => s.title == Lead.CLOSED)
     },
     belongsToCurrentUser() {
-      return this.dataLead.claimedBy == this.$store.state.user.id
+      if (this.dataLead.claimedBy) {
+        return this.dataLead.claimedBy == this.$store.state.user.id
+      }
+      return false
     },
     headerBackgroundColor() {
       return this.dataLead.statusRef

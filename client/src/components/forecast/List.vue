@@ -35,7 +35,6 @@
                 </span>
               </div>
             </template>
-            <template v-slot:right> </template>
           </LeadRow>
         </div>
         <Pagination

@@ -80,7 +80,6 @@
                   </span>
                 </div>
               </template>
-              <template v-slot:right> </template>
             </LeadRow>
           </span>
         </div>
