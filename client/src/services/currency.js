@@ -4,9 +4,12 @@ const formatter = new Intl.NumberFormat('en-US', {
 })
 
 // NOTE: Bruno(4-22-20): currently only formats to USD
-function currencyFilter(value) {
+export function currencyFilter(value) {
   if (!value) return formatter.format(0)
   return formatter.format(value)
 }
 
-export default currencyFilter
+export function currencyFilterNoCents(value) {
+  if (!value) return formatter.format(0)
+  return formatter.format(value).split('.')[0]
+}

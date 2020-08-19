@@ -7,18 +7,18 @@ export default class StoryReport {
   constructor({
     id = '',
     data = null,
-    datetimeCreated = null,
     datetimeGenerated = null,
-    lastEdited = null,
-    lead = null,
+    generatedBy = '',
+    leadRef = null,
+    accountRef = null,
   } = {}) {
     Object.assign(this, {
       id,
       data,
-      datetimeCreated,
       datetimeGenerated,
-      lastEdited,
-      lead,
+      generatedBy,
+      leadRef,
+      accountRef,
     })
   }
 

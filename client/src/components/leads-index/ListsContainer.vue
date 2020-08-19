@@ -10,7 +10,7 @@
           @delete-list="emitDeleteList(list.id, index)"
           v-for="(list, index) in listsCollection.list"
           :collection="leadsFromList"
-          :key="list.leadCount"
+          :key="index"
           :title="list.title"
           @get-leads="onGetLeads($event, list.id)"
           @refresh-collections="$emit('refresh-collections')"

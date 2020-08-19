@@ -17,7 +17,7 @@ import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import Modal from '@/components/Modal'
 
 // filters
-import currencyFilter from '@/services/currency'
+import { currencyFilter, currencyFilterNoCents } from '@/services/currency'
 import { formatDateShort } from '@/services/utils'
 import {
   formatDateShortWithTime,
@@ -41,6 +41,7 @@ Vue.use(VueMask)
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)
 Vue.filter('currency', currencyFilter)
+Vue.filter('currencyNoCents', currencyFilterNoCents)
 Vue.filter('dateShort', formatDateShort)
 Vue.filter('timeAgo', timeAgo)
 Vue.filter('timeToNow', timeToNow)

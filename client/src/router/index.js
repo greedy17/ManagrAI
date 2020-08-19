@@ -18,6 +18,7 @@ import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
 import GenerateReport from '@/views/reports/GenerateReport'
+import StoryReportDetail from '@/views/reports/StoryReportDetail'
 // import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
@@ -98,6 +99,13 @@ export default new Router({
       path: '/reports',
       name: 'GenerateReport',
       component: GenerateReport,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/story-reports/:id',
+      name: 'StoryReportDetail',
+      props: true,
+      component: StoryReportDetail,
       beforeEnter: Auth.requireAuth,
     },
     // {

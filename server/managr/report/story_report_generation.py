@@ -1,7 +1,8 @@
 import logging
-
+import json
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from django.core import serializers
 
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
@@ -24,21 +25,30 @@ def generate_story_report_data(story_report_id, generated_by_id):
     user that triggered this story_report to be generated.
     """
     story_report = StoryReport.objects.get(
-        generated_by=generated_by_id,
-        pk=story_report_id
-    ).prefetch_related('lead')
+        generated_by=generated_by_id, pk=story_report_id
+    )
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
         logger.exception(f"Attempted to generate story report for open lead {lead.id}")
-        raise ValidationError(f"Attempted to generate story report for open lead {lead.id}")
+        raise ValidationError(
+            f"Attempted to generate story report for open lead {lead.id}"
+        )
 
     # generate report's data
-    story_report.data['lead'] = LeadDataGenerator(lead).as_dict
-    story_report.data['representative'] = RepresentativeDataGenerator(lead).as_dict
-    story_report.data['organization'] = OrganizationDataGenerator(lead).as_dict
-    story_report.datetime_generated = timezone.now()
-    story_report.save()
+    try:
+        story_report.data["lead"] = LeadDataGenerator(lead).as_dict
+
+        story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
+        story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
+        story_report.datetime_generated = timezone.now()
+
+        story_report.save()
+    except Exception as e:
+
+        logger.exception(
+            f"failed to generate a report for {story_report_id}, error: {e}"
+        )
 
     # send email to user that generated report
     send_email(story_report)
@@ -51,12 +61,10 @@ def send_email(report):
     if ea:
         token = ea.access_token
         sender = {"email": ea.email_address, "name": "Managr"}
-        recipient = [
-            {"email": recipient.email, "name": recipient.full_name}
-        ]
+        recipient = [{"email": recipient.email, "name": recipient.full_name}]
         message = {
             "subject": f"Story Report Generated for {report.lead.title}",
-            "body": f"The report is available at {report.client_side_url}."
+            "body": f"The report is available at {report.client_side_url}.",
         }
         try:
             send_new_email_legacy(token, sender, recipient, message)
@@ -85,11 +93,20 @@ class LeadDataGenerator(BaseGenerator):
         Only include the actions logged from last time this rep claimed the lead,
         though to the closing of the lead.
         """
-        return self._lead.activity_logs.filter(
-            action_timestamp__gte=self.claimed_timestamp,
-            action_timestamp__lte=self._lead.expected_close_date,
-            action_taken_by=self._representative,
-        )
+        try:
+
+            return self._lead.activity_logs.filter(
+                action_timestamp__gte=self.claimed_timestamp,
+                action_timestamp__lte=self._lead.expected_close_date,
+                action_taken_by=self._representative,
+            )
+        except Exception as e:
+            print("failed on lead_activity_logs")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def claimed_timestamp(self):
@@ -98,51 +115,87 @@ class LeadDataGenerator(BaseGenerator):
         """
         # NOTE (Bruno 8-11-20): currently, a claim-event does not
         # take place on lead creation. Hence conditional herein.
-        claimed_event = self._lead.activity_logs.filter(
-            activity=lead_constants.LEAD_CLAIMED
-        ).first()
-        if claimed_event:
-            return claimed_event.action_timestamp
-        return self._lead.datetime_created
+        try:
+            claimed_event = self._lead.activity_logs.filter(
+                activity=lead_constants.LEAD_CLAIMED
+            ).first()
+            if claimed_event:
+                return claimed_event.action_timestamp
+            return self._lead.datetime_created
+        except Exception as e:
+            print("failed on claimed_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def ready_timestamp(self):
         """
         Find newest READY, because this salesperson may have picked it more than once.
         """
-        logged_ready = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
-        ).first()
-        if logged_ready:
-            return logged_ready.action_timestamp
+
+        try:
+            logged_ready = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
+            ).first()
+
+            if logged_ready:
+                return logged_ready.action_timestamp
+
+        except Exception as e:
+            print("failed on ready_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def booked_timestamp(self):
         """
         Find first BOOKED, because this salesperson may have picked it more than once.
         """
-        logged_booked = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
-        ).last()
-        if logged_booked:
-            return logged_booked.action_timestamp
+        try:
+            logged_booked = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
+            ).last()
+
+            if logged_booked:
+                return logged_booked.action_timestamp
+        except Exception as e:
+            print("failed on booked_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def demo_timestamp(self):
         """
         Find first DEMO, because this salesperson may have picked it more than once.
         """
-        logged_demo = self.lead_activity_logs.filter(
-            activity=lead_constants.LEAD_UPDATED,
-            meta__extra__status_update=True,
-            meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
-        ).last()
-        if logged_demo:
-            return logged_demo.action_timestamp
+        try:
+            logged_demo = self.lead_activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+                meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
+            ).last()
+            if logged_demo:
+                return logged_demo.action_timestamp
+        except Exception as e:
+            print("filed on demo_timestamp")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def closed_timestamp(self):
@@ -155,53 +208,96 @@ class LeadDataGenerator(BaseGenerator):
         with lead was most contacted.
         Returns Contact instance.
         """
-        calls = self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED)
-        texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
-        emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
-        contact_map = {}
-        for call in calls:
-            if call.meta.get('linked_contacts'):
-                for contact in call.meta['linked_contacts']:
-                    if contact_map.get(contact):
+        try:
+
+            calls = self.lead_activity_logs.filter(
+                activity=lead_constants.CALL_NOTE_CREATED
+            )
+            texts = self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT)
+            emails = self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT)
+            contact_map = None
+            # some contacts may have already be removed so we should only include existing
+
+            for call in calls:
+                linked_contacts = call.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        for text in texts:
-            if text.meta.get('linked_contacts'):
-                for contact in text.meta['linked_contacts']:
-                    if contact_map.get(contact):
+            for text in texts:
+
+                linked_contacts = text.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        for email in emails:
-            if email.meta.get('linked_contacts'):
-                for contact in email.meta['linked_contacts']:
-                    if contact_map.get(contact):
+            for email in emails:
+                linked_contacts = email.meta.get("linked_contacts", [])
+                linked_contacts_ids = Contact.objects.filter(
+                    id__in=[contact["id"] for contact in linked_contacts]
+                ).values_list("id", flat=True)
+                for contact in linked_contacts_ids:
+                    if contact_map and contact_map.get(contact, None):
                         contact_map[contact] += 1
                     else:
-                        contact_map[contact] = 1
+                        contact_map = {contact: 1}
 
-        if not bool(contact_map):
-            return None
-        # NOTE (Bruno): if more than one contact have same count of comms.
-        # actions, the first one is returned.
-        primary_contact_id = max(contact_map, key=lambda key: contact_map[key])
-        primary_contact = Contact.objects.get(pk=primary_contact_id)
-        return ContactSerializer(primary_contact).data
+            if not contact_map:
+                return None
+            # NOTE (Bruno): if more than one contact have same count of comms.
+            # actions, the first one is returned.
+
+            try:
+                primary_contact_id = max(contact_map)
+
+                primary_contact = Contact.objects.filter(pk=primary_contact_id).first()
+                if primary_contact:
+
+                    data = json.loads(serializers.serialize("json", [primary_contact]))
+                    contact = data[0]["fields"]
+                    return contact
+                else:
+                    return None
+
+            except Exception as e:
+                print("failed on geting contact")
+                raise (e)
+        except Exception as e:
+            print("failed on primary_contact")
+            class_name = LeadDataGenerator.__name__
+            logger.exception(
+                f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
+            )
+            raise (e)
 
     @property
     def call_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.CALL_NOTE_CREATED).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.CALL_NOTE_CREATED
+        ).count()
 
     @property
     def text_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.MESSAGE_SENT).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.MESSAGE_SENT
+        ).count()
 
     @property
     def email_count(self):
-        return self.lead_activity_logs.filter(activity=lead_constants.EMAIL_SENT).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.EMAIL_SENT
+        ).count()
 
     @property
     def custom_action_counts(self):
@@ -222,11 +318,13 @@ class LeadDataGenerator(BaseGenerator):
     # NOTE (Bruno): not sure how relevant this property is, since self.custom_action_counts
     # may cover it. Keeping it here for further testing once we have real data.
     @property
-    def actions_count(self):
+    def action_count(self):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
-        return self.lead_activity_logs.filter(activity=lead_constants.ACTION_CREATED).count()
+        return self.lead_activity_logs.filter(
+            activity=lead_constants.ACTION_CREATED
+        ).count()
 
     @property
     def days_to_closed(self):
@@ -271,18 +369,18 @@ class LeadDataGenerator(BaseGenerator):
     @property
     def as_dict(self):
         return {
-            'contract_value': self.contract_value,
-            'days_to_closed': self.days_to_closed,
-            'days_ready_to_booked': self.days_ready_to_booked,
-            'days_booked_to_demo': self.days_booked_to_demo,
-            'days_to_demo': self.days_to_demo,
-            'days_demo_to_closed': self.days_demo_to_closed,
-            'primary_contact': self.primary_contact,
-            'call_count': self.call_count,
-            'text_count': self.text_count,
-            'email_count': self.email_count,
-            'custom_action_counts': self.custom_action_counts,
-            'actions_count': self.actions_count,
+            "contract_value": self.contract_value,
+            "days_to_closed": self.days_to_closed,
+            "days_ready_to_booked": self.days_ready_to_booked,
+            "days_booked_to_demo": self.days_booked_to_demo,
+            "days_to_demo": self.days_to_demo,
+            "days_demo_to_closed": self.days_demo_to_closed,
+            "primary_contact": self.primary_contact,
+            "call_count": self.call_count,
+            "text_count": self.text_count,
+            "email_count": self.email_count,
+            "custom_action_counts": self.custom_action_counts,
+            "action_count": self.action_count,
         }
 
 
@@ -291,6 +389,7 @@ class RepresentativeDataGenerator(BaseGenerator):
     Generates representative-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+
     @property
     def leads(self):
         closed_leads = Lead.objects.filter(
@@ -317,7 +416,7 @@ class RepresentativeDataGenerator(BaseGenerator):
         totals = {}
         counts = {}
         for lead in self.leads:
-            for action_choice_title, count in lead['custom_action_counts'].items():
+            for action_choice_title, count in lead["custom_action_counts"].items():
                 if totals.get(action_choice_title):
                     totals[action_choice_title] += count
                     counts[action_choice_title] += 1
@@ -327,23 +426,27 @@ class RepresentativeDataGenerator(BaseGenerator):
 
         averages = {}
         for action_choice_title, aggregate in totals.items():
-            averages[action_choice_title] = int(round(aggregate / counts[action_choice_title]))
+            averages[action_choice_title] = int(
+                round(aggregate / counts[action_choice_title])
+            )
         return averages
 
     @property
     def as_dict(self):
         return {
-            'average_contract_value': self.average_for('contract_value', rounding_places=2, as_integer=False),
-            'average_days_to_closed': self.average_for('days_to_closed'),
-            'average_days_ready_to_booked': self.average_for('days_ready_to_booked'),
-            'average_days_booked_to_demo': self.average_for('days_booked_to_demo'),
-            'average_days_to_demo': self.average_for('days_to_demo'),
-            'average_days_demo_to_closed': self.average_for('days_demo_to_closed'),
-            'average_call_count': self.average_for('call_count'),
-            'average_text_count': self.average_for('text_count'),
-            'average_email_count': self.average_for('email_count'),
-            'average_custom_action_counts': self.average_custom_action_counts,
-            'average_actions_count': self.average_for('actions_count'),
+            "average_contract_value": self.average_for(
+                "contract_value", rounding_places=2, as_integer=False
+            ),
+            "average_days_to_closed": self.average_for("days_to_closed"),
+            "average_days_ready_to_booked": self.average_for("days_ready_to_booked"),
+            "average_days_booked_to_demo": self.average_for("days_booked_to_demo"),
+            "average_days_to_demo": self.average_for("days_to_demo"),
+            "average_days_demo_to_closed": self.average_for("days_demo_to_closed"),
+            "average_call_count": self.average_for("call_count"),
+            "average_text_count": self.average_for("text_count"),
+            "average_email_count": self.average_for("email_count"),
+            "average_custom_action_counts": self.average_custom_action_counts,
+            "average_action_count": self.average_for("action_count"),
         }
 
 
@@ -359,8 +462,7 @@ class OrganizationDataGenerator(BaseGenerator):
 
     def generate_representative_leads(self, representative):
         closed_leads = Lead.objects.filter(
-            claimed_by=representative,
-            status__title=lead_constants.LEAD_STATUS_CLOSED,
+            claimed_by=representative, status__title=lead_constants.LEAD_STATUS_CLOSED,
         )
         return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
 
@@ -380,7 +482,8 @@ class OrganizationDataGenerator(BaseGenerator):
     @property
     def as_dict(self):
         return {
-            'average_call_count': self.average_for('call_count'),
-            'average_text_count': self.average_for('text_count'),
-            'average_email_count': self.average_for('email_count'),
+            "average_call_count": self.average_for("call_count"),
+            "average_text_count": self.average_for("text_count"),
+            "average_email_count": self.average_for("email_count"),
+            "average_action_count": self.average_for("action_count"),
         }
