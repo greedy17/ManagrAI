@@ -20,6 +20,7 @@ from managr.organization.serializers import (
     ContactSerializer,
     StageSerializer,
 )
+from managr.organization import constants as org_consts
 from managr.core.models import User
 from managr.lead import constants as lead_constants
 from django.core.paginator import Paginator
@@ -406,7 +407,9 @@ class LeadSerializer(serializers.ModelSerializer):
     def validate_status(self, value):
         if not value:
             return value
-        closed = Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED)
+        closed = Stage.objects.get(
+            title=lead_constants.LEAD_STATUS_CLOSED, type=org_consts.STAGE_TYPE_PUBLIC,
+        )
         if value.id == closed.id:
             raise serializers.ValidationError({"detail": "Cannot Close Lead by Update"})
         return value

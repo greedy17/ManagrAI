@@ -76,5 +76,31 @@
       "linked_at": "2020-06-09T18:30:17.568Z",
       "user": "39d37230-0e1f-476f-88e6-abe46fa3d3e2"
     }
+  },
+  {
+    "model": "core.messageauthaccount",
+    "pk": "b54f9f60-9ba0-41bf-b2ea-b92fa65ffb0f",
+    "fields": {
+      "datetime_created": "2020-08-06T14:38:21.773Z",
+      "last_edited": "2020-08-07T18:54:10.537Z",
+      "account_sid": "AC784182e7011308684b48ae153d9832dfasdasd",
+      "capabilities": { "fax": true, "mms": true, "sms": true, "voice": true },
+      "date_created": "2020-08-06T14:38:21Z",
+      "date_updated": "2020-08-06T14:38:21Z",
+      "friendly_name": "(888) 888-8888",
+      "identity_sid": null,
+      "origin": "twilio",
+      "sid": "PN163373eaedda7e9e62b24sdfsdfsdfa1c3a008697",
+      "phone_number": "+12029521765",
+      "sms_method": "POST",
+      "sms_url": "https://thinknimble.ngrok.io/api/twilio/callback/messages",
+      "status_callback": "https://thinknimble.ngrok.io/api/twilio/callback/messages/status",
+      "status_callback_method": "POST",
+      "uri": "/2010-04-01/Accounts/AC784182e7011308684b48ae153d9832dfasdasd/IncomingPhoneNumbers/PN163373eaedda7e9e62b24a1c3a008697.json",
+      "voice_method": "POST",
+      "voice_url": null,
+      "status": "in-use",
+      "user": "3dddd261-93b1-46fe-a83e-bc064551362a"
+    }
   }
 ]
