@@ -8,7 +8,10 @@
         <div class="form">
           <div class="form__element">
             <div class="form__element-header">Select Representative</div>
-            <select v-model="selectedRepresentative">
+            <select class="select" v-if="representatives.refreshing" disabled>
+              <option>Loading...</option>
+            </select>
+            <select class="select" v-else v-model="selectedRepresentative">
               <option disabled :value="null">Select Representative</option>
               <option v-for="rep in representatives.list" :key="rep.id" :value="rep.id">
                 {{ rep.fullName.trim() ? rep.fullName : rep.email }}
@@ -17,7 +20,10 @@
           </div>
           <div class="form__element" style="margin-top: 1.5rem;">
             <div class="form__element-header">Lead Closed</div>
-            <select v-model="selectedLead" :disabled="!leads.list.length">
+            <select class="select" v-if="leads.refreshing" disabled>
+              <option disabled>Loading...</option>
+            </select>
+            <select class="select" v-else v-model="selectedLead" :disabled="!leads.list.length">
               <option disabled :value="null">Select Lead</option>
               <option v-for="lead in leads.list" :key="lead.id" :value="lead.id">
                 {{ lead.title }}
@@ -95,11 +101,15 @@ export default {
     },
     clearForm() {
       this.selectedLead = null
+      this.leads.list = []
       this.selectedRepresentative = null
     },
   },
   watch: {
     selectedRepresentative(repID) {
+      if (repID === null) {
+        return
+      }
       this.leads.pagination.page = 1
       this.leads.list = []
       this.selectedLead = null
@@ -132,7 +142,7 @@ export default {
   padding-right: 3em;
 }
 
-select {
+.select {
   background-color: rgba($color: $dark-gray-blue, $alpha: 0);
   width: 100%;
   border: 2px solid $soft-gray;
@@ -142,7 +152,10 @@ select {
   font-size: 1rem;
   font-weight: 600;
   margin-left: auto;
+  height: 2.5rem;
+}
 
+select {
   &:disabled {
     background-color: $mid-gray;
   }

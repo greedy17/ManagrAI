@@ -7,6 +7,7 @@ from .models import (
     Notification,
     LeadMessage,
     Forecast,
+    LeadActivityLog,
 )
 
 # Register your models here.
@@ -36,3 +37,4 @@ admin.site.register(List, CustomList)
 admin.site.register(Reminder)
 admin.site.register(Notification)
 admin.site.register(LeadMessage)
+admin.site.register(LeadActivityLog)
