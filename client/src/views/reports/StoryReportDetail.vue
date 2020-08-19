@@ -62,7 +62,7 @@
                   {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed 20 days post demo
                 </template>
                 <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
-                  Did not have to leverge a demo.
+                  Did not have to leverage a demo.
                 </template>
               </div>
             </div>
