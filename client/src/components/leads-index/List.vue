@@ -128,6 +128,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    showLeads: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {
     Lead,
@@ -138,8 +142,6 @@ export default {
   },
   data() {
     return {
-      showLeads: false,
-
       checkedLeads: [],
       modal: {
         isOpen: false,
@@ -149,8 +151,7 @@ export default {
   created() {},
   methods: {
     toggleLeads() {
-      this.showLeads = !this.showLeads
-      this.$emit('get-leads', this.showLeads)
+      this.$emit('show-leads')
     },
     onCloseModal() {
       this.checkedLeads = []

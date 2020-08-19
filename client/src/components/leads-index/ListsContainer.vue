@@ -12,10 +12,11 @@
           :collection="leadsFromList"
           :key="index"
           :title="list.title"
-          @get-leads="onGetLeads($event, list.id)"
+          @show-leads="onToggleShowList(`${list.title}`)"
           @refresh-collections="$emit('refresh-collections')"
           :leadCount="list.leadCount"
           :isOwner="true"
+          :showLeads="showList == list.title"
         />
         <!-- 
           This set of lists contains all opportunities and ones not on lists by a user and will populate the count based on that list
@@ -27,6 +28,8 @@
           title="No List"
           @refresh-collections="$emit('refresh-collections')"
           :leadCount="noListLeadsCollection.pagination.totalCount"
+          @show-leads="onToggleShowList(`noList`)"
+          :showLeads="showList == 'noList'"
         />
         <List
           :collection="allLeadsCollection"
@@ -34,6 +37,8 @@
           title="All Opportunities"
           @refresh-collections="$emit('refresh-collections')"
           :leadCount="allLeadsCollection.pagination.totalCount"
+          @show-leads="onToggleShowList(`allOpportunities`)"
+          :showLeads="showList == 'allOpportunities'"
         />
         <CreateList @list-created="emitListCreated" />
       </div>
@@ -112,9 +117,17 @@ export default {
         ModelClass: LeadModel,
         filters: {},
       }),
+      showList: null,
     }
   },
   methods: {
+    onToggleShowList(listName) {
+      if (listName.toLowerCase() !== 'allopportunities' && listName.toLowerCase() !== 'nolist') {
+        let listToGetDataFor = this.listsCollection.list.find(list => list.title == listName)
+        this.onGetLeads(true, listToGetDataFor.id)
+      }
+      this.showList = listName
+    },
     async onGetLeads(show, listId) {
       if (show) {
         this.leadsFromList.filters = {

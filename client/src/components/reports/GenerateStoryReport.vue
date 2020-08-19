@@ -70,7 +70,7 @@ export default {
         ModelClass: Lead,
         filters: {
           byUser: this.$store.state.user.id,
-          byStatus: Lead.CLOSED,
+          byStatus: this.getIsClosedStatus,
           orderBy: '-expected_close_date',
         },
       }),
@@ -120,6 +120,12 @@ export default {
   computed: {
     bothFieldsHaveSelections() {
       return !!this.selectedRepresentative && !!this.selectedLead
+    },
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED).id
     },
   },
 }
