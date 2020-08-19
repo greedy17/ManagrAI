@@ -70,7 +70,9 @@
               <template v-slot:center>
                 <div class="lead-items">
                   <span class="muted">
-                    Expected Close By: <br />{{ lead.expectedCloseDate | dateShort }}</span
+                    {{ getIsClosedStatus ? 'Closed On:' : 'Expected Close By:' }}: <br />{{
+                      lead.expectedCloseDate | dateShort
+                    }}</span
                   >
                   <span class="muted">
                     Last Action On:
@@ -177,6 +179,12 @@ export default {
   computed: {
     collectionList() {
       return this.collection.list
+    },
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED)
     },
   },
 }
