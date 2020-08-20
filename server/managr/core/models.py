@@ -131,18 +131,11 @@ class User(AbstractUser, TimeStampModel):
         "set by their Organization.",
         default=0,
     )
-<<<<<<< HEAD
     commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
     upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
-=======
-    commit = models.PositiveIntegerField(
-        help_text='Worst-case quota.', default=0)
-    upside = models.PositiveIntegerField(
-        help_text='Optimistic quota.', default=0)
     profile_photo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, null=True
     )
->>>>>>> develop
 
     objects = UserManager()
 
