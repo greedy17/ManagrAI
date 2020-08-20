@@ -37,7 +37,7 @@ class CustomList(admin.ModelAdmin):
 admin.site.register(Lead, CustomLead)
 admin.site.register(ActionChoice, CustomActionChoice)
 admin.site.register(List, CustomList)
-admin.site.register(LeadActivityLog)
+
 admin.site.register(Reminder)
 admin.site.register(Notification)
 admin.site.register(LeadMessage)
