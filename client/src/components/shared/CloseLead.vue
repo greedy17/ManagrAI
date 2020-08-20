@@ -21,8 +21,8 @@
         <div class="form-field">
           <label>Final Contract</label>
           <div class="flex-container">
-            <input ref="upload" type="file" :style="{ display: 'none' }" @change="onFileChosen" />
-            <button type="button" class="upload-button" @click.prevent="chooseFile">
+            <input ref="upload" type="file" accept="*" hidden @change="onFileChosen" />
+            <button type="button" class="upload-button" @click="$refs.upload.click()">
               <img class="icon" alt="icon" src="@/assets/images/add.svg" />
               Choose File
             </button>
@@ -69,9 +69,6 @@ export default {
     }
   },
   methods: {
-    chooseFile() {
-      this.$refs.upload.click()
-    },
     onFileChosen(e) {
       this.file = e.target.files[0]
     },

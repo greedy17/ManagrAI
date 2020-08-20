@@ -43,10 +43,6 @@ class StageSerializer(serializers.ModelSerializer):
         model = Stage
         fields = "__all__"
 
-    class Meta:
-        model = Stage
-        fields = "__all__"
-
 
 class AccountRefSerializer(serializers.ModelSerializer):
     """
@@ -56,12 +52,7 @@ class AccountRefSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = (
-            "id",
-            "name",
-            "organization",
-            "url",
-        )
+        fields = ("id", "name", "organization", "url", "logo")
 
 
 class OrganizationVerboseSerializer(serializers.ModelSerializer):
@@ -111,8 +102,6 @@ class AccountSerializer(serializers.ModelSerializer):
         Only Organization Managers can add, update, delete accounts
         Other users can list  
     """
-
-    lead_count = serializers.SerializerMethodField()
 
     lead_count = serializers.SerializerMethodField()
 

@@ -4,6 +4,7 @@ import store from '@/store'
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
+const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
@@ -40,6 +41,7 @@ export default class UserAPI {
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
       active: ApiFilter.create({ key: 'active' }),
+      ordering: ApiFilter.create({ key: 'ordering' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -126,6 +128,17 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'UserAPI.update' }))
     return promise
   }
+
+  updateProfilePhoto(id, file) {
+    let data = new FormData()
+    data.append('file', file)
+
+    const promise = apiClient()
+      .patch(GET_USER_PHOTO_ENDPOINT(id), data)
+      .catch(apiErrorHandler({ apiName: 'UserAPI.updateProfilePhoto' }))
+    return promise
+  }
+
   async createMessagingAccount(phoneNumber) {
     const url = CREATE_MESSAGING_ACCOUNT_ENDPOINT
     const data = {

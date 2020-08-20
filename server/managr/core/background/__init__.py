@@ -10,6 +10,7 @@ from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
 from managr.core import constants as core_consts
 from managr.lead.models import Notification, LeadEmail, LeadActivityLog
+from managr.report.story_report_generation import generate_story_report_data
 
 from ..nylas.emails import retrieve_message, retrieve_thread
 
@@ -29,6 +30,18 @@ def emit_event(account_id, object_id, date, action, **kwargs):
         _get_email_metadata_info(
             account_id, object_id, date, **{"count": kwargs["count"]}
         )
+<<<<<<< HEAD
+=======
+
+
+def emit_report_event(report_id, generated_by_id):
+    _generate_story_report_data(report_id, generated_by_id)
+
+
+@background(schedule=0)
+def _generate_story_report_data(report_id, generated_by_id):
+    return generate_story_report_data(report_id, generated_by_id)
+>>>>>>> develop
 
 
 @background(schedule=0)

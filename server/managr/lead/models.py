@@ -8,6 +8,7 @@ from django.core import serializers
 import json
 from managr.core.models import TimeStampModel
 from managr.utils.misc import datetime_appended_filepath
+from managr.organization import constants as org_consts
 from . import constants as lead_constants
 from managr.core import constants as core_consts
 
@@ -26,7 +27,8 @@ class LeadQuerySet(models.QuerySet):
             status__title__in=[
                 lead_constants.LEAD_STATUS_CLOSED,
                 lead_constants.LEAD_STATUS_LOST,
-            ]
+            ],
+            status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
 
     def closed_leads(self, date_range_from=None, date_range_to=None):

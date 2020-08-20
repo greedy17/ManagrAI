@@ -45,7 +45,7 @@ from managr.core.permissions import (
 
 
 from .models import Organization, Account, Contact, Stage
-
+from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,
     OrganizationVerboseSerializer,
@@ -322,14 +322,14 @@ class ContactViewSet(
         return Response(data={"removed_contacts": contacts_removed})
 
 
-class StageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class StageViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+):
     """ endpoint to retrieve all stages for an org """
 
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (
-        SuperUserCreateOnly,
-        CanEditResourceOrReadOnly,
-    )
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (
         SuperUserCreateOnly,
@@ -339,3 +339,39 @@ class StageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         return Stage.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        d = request.data
+        user = request.user
+        if not user.is_superuser:
+            # only super users can create public items
+            d["type"] = org_consts.STAGE_TYPE_PRIVATE
+            # only super users can create items for other orgs
+            d["organization"] = user.organization.id
+
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response_data = serializer.data
+        return Response(response_data)
+
+    def update(self, request, *args, **kwargs):
+
+        d = request.data
+        user = request.user
+        instance = self.get_object()
+        if not user.is_superuser:
+            # only super users can create public items
+            d["type"] = org_consts.STAGE_TYPE_PRIVATE
+            # only super users can update items for other orgs
+            d["organization"] = user.organization.id
+
+        serializer = self.serializer_class(
+            instance, data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response_data = serializer.data
+        return Response(response_data)

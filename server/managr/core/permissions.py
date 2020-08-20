@@ -3,8 +3,9 @@ from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.lead.models import Lead, List
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts
+from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -102,6 +103,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
         elif isinstance(obj, List):
             return list_permissions(self, request, view, obj)
         elif isinstance(obj, Organization):
+            return org_permissions(self, request, view, obj)
+        elif isinstance(obj, Stage):
             return org_permissions(self, request, view, obj)
         else:
             return False

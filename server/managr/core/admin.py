@@ -36,6 +36,7 @@ class CustomUserAdmin(UserAdmin):
                     "first_name",
                     "last_name",
                     "email",
+                    "profile_photo",
                     "is_active",
                     "is_invited",
                     "quota",

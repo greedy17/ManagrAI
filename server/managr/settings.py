@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "managr.lead",
     "managr.organization",
     "managr.polling",
+    "managr.report",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -324,6 +325,19 @@ if USE_NYLAS:
 #
 USE_TWILIO = os.environ.get("USE_TWILIO") == "True"
 if USE_TWILIO:
-    TWILIO_ACCOUNT_SID = _env_get_required("TWILIO_ACCOUNT_SID")
-    TWILIO_AUTH_TOKEN = _env_get_required("TWILIO_AUTH_TOKEN")
-    TWILIO_BASE_CALLBACK_URL = _env_get_required("TWILIO_BASE_CALLBACK_URL")
+    TWILIO_ACCOUNT_SID = (
+        _env_get_required("TWILIO_ACCOUNT_SID")
+        if not IN_CI
+        else os.environ.get("TWILIO_ACCOUNT_SID", "")
+    )
+    TWILIO_AUTH_TOKEN = (
+        _env_get_required("TWILIO_AUTH_TOKEN")
+        if not IN_CI
+        else os.environ.get("TWILIO_AUTH_TOKEN", "")
+    )
+    TWILIO_BASE_CALLBACK_URL = (
+        _env_get_required("TWILIO_BASE_CALLBACK_URL")
+        if not IN_CI
+        else os.environ.get("TWILIO_BASE_CALLBACK_URL", "")
+    )
+

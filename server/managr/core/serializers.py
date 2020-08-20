@@ -14,9 +14,9 @@ from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
 
+
 from .models import (
     User,
-    EmailAuthAccount,
     STATE_ACTIVE,
     STATE_INACTIVE,
     STATE_INVITED,
@@ -91,6 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             "upside",
             "commit",
             "unviewed_notifications_count",
+            "profile_photo",
         )
 
     read_only_fields = (
