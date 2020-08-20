@@ -30,8 +30,6 @@ def emit_event(account_id, object_id, date, action, **kwargs):
         _get_email_metadata_info(
             account_id, object_id, date, **{"count": kwargs["count"]}
         )
-<<<<<<< HEAD
-=======
 
 
 def emit_report_event(report_id, generated_by_id):
@@ -41,7 +39,6 @@ def emit_report_event(report_id, generated_by_id):
 @background(schedule=0)
 def _generate_story_report_data(report_id, generated_by_id):
     return generate_story_report_data(report_id, generated_by_id)
->>>>>>> develop
 
 
 @background(schedule=0)

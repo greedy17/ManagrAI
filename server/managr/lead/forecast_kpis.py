@@ -43,14 +43,10 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-<<<<<<< HEAD
-        qs_1 = Lead.objects.filter(status__title=lead_constants.LEAD_STATUS_CLOSED)
-=======
         qs_1 = Lead.objects.filter(
             status__title=lead_constants.LEAD_STATUS_CLOSED,
             status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
->>>>>>> develop
         # filter for leads that are claimed by given representatives
         qs_2 = self._add_representatives_filter_to_lead_queryset(qs_1)
         # filter for leads closed within the given date range
@@ -63,14 +59,10 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-<<<<<<< HEAD
-        qs_1 = Lead.objects.filter(status__title=lead_constants.LEAD_STATUS_CLOSED)
-=======
         qs_1 = Lead.objects.filter(
             status__title=lead_constants.LEAD_STATUS_CLOSED,
             status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
->>>>>>> develop
         # filter for leads that are claimed by given representatives
         qs_2 = self._add_representatives_filter_to_lead_queryset(qs_1)
         # filter for leads closed within the given date range
