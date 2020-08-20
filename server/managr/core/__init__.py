@@ -1,1 +1,1 @@
-default_app_config = 'managr.core.apps.ManagrCoreConfig'
+default_app_config = "managr.core.apps.ManagrCoreConfig"

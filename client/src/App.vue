@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-    <NavBar />
+    <NavBar v-if="!hideNavBar" />
     <alert-alert />
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
-    <div class="page-content">
+    <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
 
@@ -18,6 +18,8 @@ import NavBar from '@/components/NavBar'
 import SideNavBar from '@/components/navigation/SideNavBar'
 
 import { mapGetters, mapState, mapActions } from 'vuex'
+
+const routesWithoutNavBar = ['StoryReportDetail']
 
 export default {
   name: 'app',
@@ -46,6 +48,9 @@ export default {
   computed: {
     ...mapGetters(['userIsLoggedIn']),
     ...mapGetters(['showSideNav']),
+    hideNavBar() {
+      return routesWithoutNavBar.includes(this.$route.name)
+    },
   },
 }
 </script>
@@ -72,6 +77,7 @@ body {
 }
 
 .page-content {
+  padding: 1rem;
 }
 
 .section-shadow {

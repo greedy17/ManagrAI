@@ -14,15 +14,25 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 from managr.lead import constants as lead_constants
-from .models import Lead, Forecast, List, Note, File, CallNote, Reminder, Notification, LeadMessage
+from .models import (
+    Lead,
+    Forecast,
+    List,
+    Note,
+    File,
+    CallNote,
+    Reminder,
+    Notification,
+    LeadMessage,
+)
 
 
 class LeadRatingOrderFiltering(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
-        ordering = request.query_params.get('order_by', None)
+        ordering = request.query_params.get("order_by", None)
         if ordering is not None:
-            if ordering.startswith('-'):
-                ordering.strip('-')
+            if ordering.startswith("-"):
+                ordering.strip("-")
                 queryset = queryset.order_by(ordering)
             else:
                 queryset = queryset.order_by(ordering)
@@ -32,10 +42,10 @@ class LeadRatingOrderFiltering(OrderingFilter):
 
 class ReminderOrderingFilter(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
-        ordering = request.query_params.get('order_by', None)
+        ordering = request.query_params.get("order_by", None)
         if ordering is not None:
-            if ordering.startswith('-'):
-                ordering.strip('-')
+            if ordering.startswith("-"):
+                ordering.strip("-")
                 queryset = queryset.order_by(ordering)
             else:
                 queryset = queryset.order_by(ordering)
@@ -63,16 +73,15 @@ class LeadFilterSet(FilterSet):
 
     class Meta:
         model = Lead
-        fields = ['rating', 'on_list', 'is_claimed',
-                  'by_list', 'by_user', 'by_account']
+        fields = ["rating", "on_list", "is_claimed", "by_list", "by_user", "by_account"]
 
     def leads_by_user(self, queryset, name, value):
         u = self.request.user
         if value:
             value = value.strip()
-            user_list = value.split(',')
+            user_list = value.split(",")
             users_in_org = u.organization.users.filter(id__in=user_list).values_list(
-                'id', flat=True
+                "id", flat=True
             )
             return queryset.filter(claimed_by__in=users_in_org)
         return queryset
@@ -81,17 +90,16 @@ class LeadFilterSet(FilterSet):
         """ allows list of statuses"""
         if value:
 
-            v = value.strip('')
-            v = value.upper()
-            v = v.split(',')
+            v = value.strip("")
+            v = v.split(",")
 
             return qs.filter(status__in=v)
         return qs
 
     def leads_by_rating(self, qs, name, value):
         if value:
-            v = value.strip('')
-            v = v.split(',')
+            v = value.strip("")
+            v = v.split(",")
             return qs.filter(rating__in=v)
         return qs
 
@@ -99,8 +107,8 @@ class LeadFilterSet(FilterSet):
         """ allows list of forecasts """
 
         if value:
-            v = value.strip('')
-            v = v.split(',')
+            v = value.strip("")
+            v = v.split(",")
 
             return qs.filter(forecast__forecast__in=v)
         return qs
@@ -109,10 +117,18 @@ class LeadFilterSet(FilterSet):
         """ filter leads by list count """
         if value:
             # if true on_list=True return leads with a list count of greater than 0 (non inclusive)
-            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__gt=0).order_by('title')
+            return (
+                queryset.annotate(len_lists=Count("lists"))
+                .filter(len_lists__gt=0)
+                .order_by("title")
+            )
         else:
             # if false on_list=False return leads with a list count of less than 1 (non inclusive)
-            return queryset.annotate(len_lists=Count('lists')).filter(len_lists__lt=1).order_by('title')
+            return (
+                queryset.annotate(len_lists=Count("lists"))
+                .filter(len_lists__lt=1)
+                .order_by("title")
+            )
 
     def claim_status(self, queryset, name, value):
         """ checks if the claimed_by field is null """
@@ -134,7 +150,7 @@ class LeadFilterSet(FilterSet):
         u = self.request.user
         if value:
             value = value.strip()
-            account_list = value.split(',')
+            account_list = value.split(",")
             for acc in account_list:
                 # check if account is in org
                 if u.organization.accounts.filter(id=acc).exists():
@@ -142,37 +158,42 @@ class LeadFilterSet(FilterSet):
                 else:
                     account_list.remove(acc)
 
-            return queryset.filter(account__in=account_list).order_by('account', 'title')
+            return queryset.filter(account__in=account_list).order_by(
+                "account", "title"
+            )
         return queryset
 
 
 class ForecastFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="forecasts_by_user")
-    date_range_from = django_filters.CharFilter(
-        method="filter_by_date_range_from")
+    date_range_from = django_filters.CharFilter(method="filter_by_date_range_from")
     date_range_to = django_filters.IsoDateTimeFilter(
-        field_name="lead__expected_close_date", lookup_expr="lte")
+        field_name="lead__expected_close_date", lookup_expr="lte"
+    )
 
     class Meta:
         model = Forecast
-        fields = ['by_user', 'forecast']
+        fields = ["by_user", "forecast"]
 
     def forecasts_by_user(self, queryset, name, value):
         """ provide a user or a list of users """
         if value:
             value = value.strip()
-            user_list = value.split(',')
+            user_list = value.split(",")
             try:
                 # exclude unclaimed leads
                 # order by expected_close_date, nulls last
                 # then order by lead title
-                if self.request.user.organization.users.filter(id__in=user_list).exists():
-                    return queryset.exclude(lead__claimed_by__isnull=True) \
-                                   .filter(lead__claimed_by__in=user_list) \
-                                   .order_by(
-                                       F('lead__expected_close_date').asc(
-                                           nulls_last=True),
-                                       'lead__title'
+                if self.request.user.organization.users.filter(
+                    id__in=user_list
+                ).exists():
+                    return (
+                        queryset.exclude(lead__claimed_by__isnull=True)
+                        .filter(lead__claimed_by__in=user_list)
+                        .order_by(
+                            F("lead__expected_close_date").asc(nulls_last=True),
+                            "lead__title",
+                        )
                     )
                 else:
                     # if there is a user that does not exist or a problem with the query silently fail
@@ -185,8 +206,11 @@ class ForecastFilterSet(FilterSet):
     def filter_by_date_range_from(self, queryset, name, value):
         # if the request does not include date_range_to param,
         # then also include leads without an expected_close_date
-        if not self.request.query_params.get('date_range_to'):
-            return queryset.filter(Q(lead__expected_close_date__gte=value) | Q(lead__expected_close_date__isnull=True))
+        if not self.request.query_params.get("date_range_to"):
+            return queryset.filter(
+                Q(lead__expected_close_date__gte=value)
+                | Q(lead__expected_close_date__isnull=True)
+            )
         else:
             return queryset.filter(lead__expected_close_date__gte=value)
 
@@ -197,15 +221,15 @@ class ListFilterSet(FilterSet):
 
     class Meta:
         model = List
-        fields = ['by_user']
+        fields = ["by_user"]
 
     def lists_by_user(self, queryset, name, value):
         u = self.request.user
         if value:
             value = value.strip()
-            user_list = value.split(',')
+            user_list = value.split(",")
             users_in_org = u.organization.users.filter(id__in=user_list).values_list(
-                'id', flat=True
+                "id", flat=True
             )
             return queryset.filter(created_by_id__in=users_in_org)
         return queryset
@@ -216,7 +240,7 @@ class LeadMessageFilterSet(FilterSet):
 
     class Meta:
         model = LeadMessage
-        fields = ['by_lead']
+        fields = ["by_lead"]
 
 
 class NoteFilterSet(FilterSet):
@@ -224,7 +248,7 @@ class NoteFilterSet(FilterSet):
 
     class Meta:
         model = Note
-        fields = ['by_lead']
+        fields = ["by_lead"]
 
 
 class CallNoteFilterSet(FilterSet):
@@ -232,7 +256,7 @@ class CallNoteFilterSet(FilterSet):
 
     class Meta:
         model = CallNote
-        fields = ['by_lead']
+        fields = ["by_lead"]
 
 
 class FileFilterSet(FilterSet):
@@ -240,7 +264,7 @@ class FileFilterSet(FilterSet):
 
     class Meta:
         model = File
-        fields = ['by_lead', 'lead']
+        fields = ["by_lead", "lead"]
 
     def files_by_lead(self, queryset, name, value):
         if value:
@@ -249,20 +273,22 @@ class FileFilterSet(FilterSet):
 
 class ReminderFilterSet(FilterSet):
     """ filter for reminders that are in the future (+5 minutes) to display to user"""
+
     # also filtering out has_notifications technically this should not occur
     by_remind_on = django_filters.CharFilter(method="from_date")
 
     class Meta:
         model = Reminder
-        fields = ['by_remind_on']
+        fields = ["by_remind_on"]
 
     def from_date(self, qs, name, value):
         if value:
             min = parse(value)
             min = min + timezone.timedelta(minutes=5)
-            ns = Notification.objects.filter(
-                notification_type="REMINDER").values_list('resource_id', flat=True)
+            ns = Notification.objects.filter(notification_type="REMINDER").values_list(
+                "resource_id", flat=True
+            )
         query = Q()
         for n in ns:
             query |= Q(id=n)
-        return qs.filter(datetime_for__gte=min).exclude(query).order_by('datetime_for')
+        return qs.filter(datetime_for__gte=min).exclude(query).order_by("datetime_for")

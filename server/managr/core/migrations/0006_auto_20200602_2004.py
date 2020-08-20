@@ -6,20 +6,14 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_auto_20200602_2000'),
+        ("core", "0005_auto_20200602_2000"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='emailtemplate',
-            options={'ordering': ['name'], 'verbose_name_plural': 'Email Templates'},
+            name="emailtemplate",
+            options={"ordering": ["name"], "verbose_name_plural": "Email Templates"},
         ),
-        migrations.RemoveField(
-            model_name='emailtemplate',
-            name='header',
-        ),
-        migrations.RemoveField(
-            model_name='emailtemplate',
-            name='organization',
-        ),
+        migrations.RemoveField(model_name="emailtemplate", name="header",),
+        migrations.RemoveField(model_name="emailtemplate", name="organization",),
     ]

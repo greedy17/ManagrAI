@@ -24,8 +24,8 @@
             <template v-slot:center>
               <div class="lead-items">
                 <span class="muted">
-                  Expected Close By: <br />
-                  {{ lead.expectedCloseDate | dateShort }}
+                  {{ getIsClosedStatus ? 'Closed On:' : 'Expected Close By:' }}: <br />
+                  {{ lead.leadRef.expectedCloseDate | dateShort }}
                 </span>
                 <span class="muted">
                   Last Action On:
@@ -35,7 +35,6 @@
                 </span>
               </div>
             </template>
-            <template v-slot:right> </template>
           </LeadRow>
         </div>
         <Pagination
@@ -91,6 +90,12 @@ export default {
     },
   },
   computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED)
+    },
     numOfLeads() {
       return this.collection.pagination.totalCount
     },
