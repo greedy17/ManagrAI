@@ -120,6 +120,14 @@ export default {
       showList: null,
     }
   },
+  watch: {
+    filters: {
+      deep: true,
+      handler() {
+        this.showList = null
+      },
+    },
+  },
   methods: {
     onToggleShowList(listName) {
       if (listName.toLowerCase() !== 'allopportunities' && listName.toLowerCase() !== 'nolist') {
