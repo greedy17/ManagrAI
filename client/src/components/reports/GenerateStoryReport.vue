@@ -110,12 +110,14 @@ export default {
       if (repID === null) {
         return
       }
-      this.leads.pagination.page = 1
-      this.leads.list = []
-      this.selectedLead = null
-      this.leads.filters.byUser = repID
-      this.leads.filter.byStatus = this.getIsClosedStatus
-      this.loadEntireCollection(this.leads)
+      if (this.leads.length) {
+        this.leads.pagination.page = 1
+        this.leads.list = []
+        this.selectedLead = null
+        this.leads.filters.byUser = repID
+        this.leads.filter.byStatus = this.getIsClosedStatus
+        this.loadEntireCollection(this.leads)
+      }
     },
   },
   computed: {

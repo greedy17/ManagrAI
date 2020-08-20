@@ -40,15 +40,18 @@
       </div>
       <div class="lead__container__right">
         <slot name="right">
-          <span v-if="dataLead.claimedBy">
-            Claimed By
-            {{
-              belongsToCurrentUser
-                ? 'You'
-                : dataLead.claimedByRef.fullName.trim()
-                ? dataLead.claimedByRef.fullName
-                : dataLead.claimedByRef.email
-            }}
+          <span class="claim-label" v-if="dataLead.claimedBy">
+            Claimed By:
+            <br />
+            <span class="claim-info">
+              {{
+                belongsToCurrentUser
+                  ? 'You'
+                  : dataLead.claimedByRef.fullName.trim()
+                  ? dataLead.claimedByRef.fullName
+                  : dataLead.claimedByRef.email
+              }}
+            </span>
           </span>
         </slot>
         <span class="go-to" @click="routeToLeadDetail()">
