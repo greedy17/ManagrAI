@@ -132,6 +132,7 @@ export default {
 
 .lead {
   width: 100%;
+  margin: 0.5rem 0rem;
 }
 .lead__container {
   &:hover {

@@ -36,11 +36,13 @@
             <div class="lead-select">
               <Checkbox
                 @checkbox-clicked="toggleAllLeads"
-                :checked="leadCount == checkedLeads.length"
+                :checked="leadCountInView == checkedLeads.length"
               />
             </div>
 
-            <span>Select All</span>
+            <span>{{
+              leadCountInView == checkedLeads.length ? 'UnSelect All' : 'Select All'
+            }}</span>
             <button class="bulk-action-button" v-if="checkedLeads.length > 0" @click="onBulkAction">
               Take Action
             </button>
@@ -164,14 +166,18 @@ export default {
     onBulkAction() {
       this.modal.isOpen = true
     },
-    toggleAllLeads() {
-      this.checkedLeads = []
-      this.checkedLeads = this.collectionList.map(l => l.id)
+    toggleAllLeads(val) {
+      if (val) {
+        this.checkedLeads = []
+        this.checkedLeads = this.collectionList.map(l => l.id)
+      } else {
+        this.checkedLeads = []
+      }
     },
     toggleCheckedLead(leadId) {
       let index = this.checkedLeads.findIndex(l => l == leadId)
       if (index != -1) {
-        this.checkedLeads = this.checkedLeads.splice(index, 1)
+        this.checkedLeads.splice(index, 1)
       } else {
         this.checkedLeads.push(leadId)
       }
@@ -180,6 +186,9 @@ export default {
   computed: {
     collectionList() {
       return this.collection.list
+    },
+    leadCountInView() {
+      return this.collection.list.length
     },
     getStatuses() {
       return this.$store.state.stages

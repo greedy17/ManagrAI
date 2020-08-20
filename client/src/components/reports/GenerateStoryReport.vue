@@ -114,6 +114,7 @@ export default {
       this.leads.list = []
       this.selectedLead = null
       this.leads.filters.byUser = repID
+      this.leads.filter.byStatus = this.getIsClosedStatus
       this.loadEntireCollection(this.leads)
     },
   },
