@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0019_auto_20200723_1617'),
+        ("lead", "0019_auto_20200723_1617"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='leadmessage',
-            name='direction',
-            field=models.CharField(choices=[('SENT', 'Sent'), ('RECEIVED', 'Received')], max_length=255, null=True),
+            model_name="leadmessage",
+            name="direction",
+            field=models.CharField(
+                choices=[("SENT", "Sent"), ("RECEIVED", "Received")],
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

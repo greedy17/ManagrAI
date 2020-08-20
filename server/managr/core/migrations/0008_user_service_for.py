@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0007_auto_20200709_1708'),
+        ("core", "0007_auto_20200709_1708"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='service_for',
-            field=models.CharField(choices=[('EMAIL', 'Email'), ('EXTERNAL', 'External'), (None, None)], max_length=255, null=True),
+            model_name="user",
+            name="service_for",
+            field=models.CharField(
+                choices=[("EMAIL", "Email"), ("EXTERNAL", "External"), (None, None)],
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

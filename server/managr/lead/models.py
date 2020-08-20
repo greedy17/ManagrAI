@@ -116,19 +116,17 @@ class Lead(TimeStampModel):
 
     @property
     def activity_log_meta(self):
-        linked_contacts = serializers.serialize(
-            'json', self.linked_contacts.all())
-        linked_contacts = json.loads(
-            linked_contacts)
-        linked_contacts = [c['fields'] for c in linked_contacts]
-        activity = serializers.serialize('json', [self, ])
+        linked_contacts = serializers.serialize("json", self.linked_contacts.all())
+        linked_contacts = json.loads(linked_contacts)
+        linked_contacts = [c["fields"] for c in linked_contacts]
+        activity = serializers.serialize("json", [self,])
         activity = json.loads(activity)
 
         activity = activity[0]
 
-        activity['fields']['linked_contacts_ref'] = linked_contacts
+        activity["fields"]["linked_contacts_ref"] = linked_contacts
 
-        return activity['fields']
+        return activity["fields"]
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"

@@ -13,19 +13,19 @@ from .models import Account, Contact, Organization
 
 
 class AccountFactory(DjangoModelFactory):
-    name = factory.Faker('company')
-    url = factory.Faker('url')
-    type = 'NEW'
+    name = factory.Faker("company")
+    url = factory.Faker("url")
+    type = "NEW"
 
     class Meta:
         model = Account
 
 
 class ContactFactory(DjangoModelFactory):
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
     title = "Employee"
-    email = factory.Faker('email')
+    email = factory.Faker("email")
     phone_number_1 = generate_random_numbers()
     phone_number_2 = generate_random_numbers()
 
@@ -34,7 +34,7 @@ class ContactFactory(DjangoModelFactory):
 
 
 class OrganizationFactory(DjangoModelFactory):
-    name = factory.Faker('company')
+    name = factory.Faker("company")
     state = "ACTIVE"
 
     class Meta:
@@ -43,7 +43,7 @@ class OrganizationFactory(DjangoModelFactory):
 
 def gen_random_test_data():
     """Quick script to generate random accounts, contacts, and leads."""
-    u = User.objects.get(email='testing@thinknimble.com')
+    u = User.objects.get(email="testing@thinknimble.com")
     o = u.organization
 
     # Create 30 accounts

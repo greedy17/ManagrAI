@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0008_merge_20200727_1448'),
+        ("core", "0008_merge_20200727_1448"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='messageauthaccount',
-            name='date_created',
+            model_name="messageauthaccount",
+            name="date_created",
             field=models.DateTimeField(max_length=128),
         ),
         migrations.AlterField(
-            model_name='messageauthaccount',
-            name='date_updated',
+            model_name="messageauthaccount",
+            name="date_updated",
             field=models.DateTimeField(max_length=128),
         ),
     ]

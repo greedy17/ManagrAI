@@ -103,4 +103,3 @@ def list_polling_counts(request):
             items[item] = data
 
     return Response({"items": items, "last_check": now})
-

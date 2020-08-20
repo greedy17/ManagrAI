@@ -152,8 +152,9 @@ class ReminderActionConsumer(BaseActionConsumer):
 
         try:
             rem_meta = obj.activity_log_meta
-            rem_meta['datetime_for'] = obj.datetime_for.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ')
+            rem_meta["datetime_for"] = obj.datetime_for.strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            )
             return rem_meta
         except AttributeError:
             logger.warning(

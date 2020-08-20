@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0018_remove_reminder_notification'),
-        ('lead', '0015_auto_20200720_2028'),
+        ("lead", "0018_remove_reminder_notification"),
+        ("lead", "0015_auto_20200720_2028"),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0001_initial'),
+        ("organization", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organization',
-            name='is_externalsyncenabled',
+            model_name="organization",
+            name="is_externalsyncenabled",
             field=models.BooleanField(default=False),
         ),
     ]

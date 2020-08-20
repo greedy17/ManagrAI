@@ -7,13 +7,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0014_lead_expected_close_date'),
+        ("lead", "0014_lead_expected_close_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='leadactivitylog',
-            name='lead',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity_logs', to='lead.Lead'),
+            model_name="leadactivitylog",
+            name="lead",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="activity_logs",
+                to="lead.Lead",
+            ),
         ),
     ]

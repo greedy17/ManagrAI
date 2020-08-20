@@ -6,12 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lead', '0017_auto_20200716_0757'),
+        ("lead", "0017_auto_20200716_0757"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='reminder',
-            name='notification',
-        ),
+        migrations.RemoveField(model_name="reminder", name="notification",),
     ]

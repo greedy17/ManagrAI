@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organization', '0002_organization_is_externalsyncenabled'),
-        ('organization', '0006_auto_20200804_0229'),
+        ("organization", "0002_organization_is_externalsyncenabled"),
+        ("organization", "0006_auto_20200804_0229"),
     ]
 
-    operations = [
-    ]
+    operations = []

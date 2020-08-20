@@ -6,13 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_auto_20200602_2004'),
+        ("core", "0006_auto_20200602_2004"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='type',
-            field=models.CharField(choices=[('LIMITED', 'LIMITED'), ('MANAGER', 'MANAGER'), ('INTEGRATION', 'INTEGRATION')], default='MANAGER', max_length=255),
+            model_name="user",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("LIMITED", "LIMITED"),
+                    ("MANAGER", "MANAGER"),
+                    ("INTEGRATION", "INTEGRATION"),
+                ],
+                default="MANAGER",
+                max_length=255,
+            ),
         ),
     ]

@@ -2,7 +2,17 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import ActionChoice, Lead, List, Reminder, Notification, LeadMessage, Forecast, LeadActivityLog
+from .models import (
+    ActionChoice,
+    Lead,
+    List,
+    Reminder,
+    Notification,
+    LeadMessage,
+    Forecast,
+    LeadActivityLog,
+)
+
 # Register your models here.
 
 

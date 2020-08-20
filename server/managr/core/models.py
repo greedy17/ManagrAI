@@ -19,8 +19,7 @@ from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 ACCOUNT_TYPE_LIMITED = "LIMITED"
 ACCOUNT_TYPE_MANAGER = "MANAGER"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"),
-                 (ACCOUNT_TYPE_MANAGER, "MANAGER"))
+ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"), (ACCOUNT_TYPE_MANAGER, "MANAGER"))
 
 STATE_ACTIVE = "ACTIVE"
 STATE_INACTIVE = "INACTIVE"
@@ -105,12 +104,13 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     type = models.CharField(
-        choices=core_consts.ACCOUNT_TYPES, max_length=255, default=core_consts.ACCOUNT_TYPE_MANAGER
+        choices=core_consts.ACCOUNT_TYPES,
+        max_length=255,
+        default=core_consts.ACCOUNT_TYPE_MANAGER,
     )
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
-    phone_number = models.CharField(
-        max_length=255, blank=True, null=False, default="")
+    phone_number = models.CharField(max_length=255, blank=True, null=False, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
@@ -126,14 +126,12 @@ class User(AbstractUser, TimeStampModel):
         help_text="The datetime when the magic token is expired.", null=True
     )
     quota = models.PositiveIntegerField(
-        help_text='Target sell amount for some defined timespan '
-        'set by their Organization.',
-        default=0
+        help_text="Target sell amount for some defined timespan "
+        "set by their Organization.",
+        default=0,
     )
-    commit = models.PositiveIntegerField(
-        help_text='Worst-case quota.', default=0)
-    upside = models.PositiveIntegerField(
-        help_text='Optimistic quota.', default=0)
+    commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
+    upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
 
     objects = UserManager()
 
@@ -258,12 +256,13 @@ class MessageAuthAccount(TimeStampModel):
     origin = models.CharField(max_length=128)
     sid = models.CharField(max_length=128, null=True)
     phone_number = models.CharField(max_length=128, blank=True)
-    sms_method = models.CharField(
-        max_length=128)
+    sms_method = models.CharField(max_length=128)
     sms_url = models.CharField(
-        max_length=128, help_text="the webhook url for incoming messages")
+        max_length=128, help_text="the webhook url for incoming messages"
+    )
     status_callback = models.CharField(
-        max_length=128, help_text="the webhook url for message status")
+        max_length=128, help_text="the webhook url for message status"
+    )
     status_callback_method = models.CharField(max_length=128)
     uri = models.CharField(max_length=128)
     voice_method = models.CharField(max_length=128)

@@ -252,4 +252,3 @@ class Stage(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
-
