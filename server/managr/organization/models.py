@@ -1,7 +1,7 @@
 from django.db import models
 
 from django.db.models import Sum, Avg, Q
-
+from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models import Sum, Avg
@@ -222,14 +222,24 @@ class Stage(TimeStampModel):
     type = models.CharField(max_length=255, choices=(org_consts.STAGE_TYPES))
 
     organization = models.ForeignKey(
-        "Organization",
-        related_name="stages",
-        blank=False,
-        null=True,
-        on_delete=models.CASCADE,
+        "Organization", related_name="stages", null=True, on_delete=models.CASCADE,
     )
 
     objects = StageQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    def save(self, *args, **kwargs):
+        # save all as upper case
+        self.title = self.title.upper()
+        if (
+            Stage.objects.filter(title=self.title, organization=self.organization)
+            .exclude(id=self.id)
+            .exists()
+        ):
+            raise ValidationError(
+                detail={"key_error": "A stage with this title already exists"}
+            )
+
+        return super(Stage, self).save(*args, **kwargs)
