@@ -15,8 +15,15 @@
     </div>
     <div class="leads-container" v-if="showLeads">
       <ComponentLoadingSVG v-if="leads.refreshing" style="margin: 1rem auto;" />
-      <div v-else-if="leads.pagination.totalCount > 0" class="accLeads">
-        <LeadRow v-for="lead in leads.list" :key="lead.id" :lead="lead"> </LeadRow>
+      <div v-else-if="leads.pagination.totalCount > 0" class="leads">
+        <div class="leads__lead">
+          <LeadRow v-for="lead in leads.list" :key="lead.id" :lead="lead">
+            <template v-slot:right>
+              <button v-if="!lead.claimedBy" @click.stop="claimLead(lead)">Claim Lead</button>
+            </template>
+          </LeadRow>
+        </div>
+
         <Pagination
           v-if="!leads.refreshing"
           style="margin-bottom: 1rem;"
@@ -30,10 +37,9 @@
 </template>
 
 <script>
-import Lead from '@/components/prospect/Lead'
 import Pagination from '@/components/shared/Pagination'
 import LeadRow from '@/components/shared/LeadRow'
-
+import Lead from '@/services/leads'
 import CollectionManager from '@/services/collectionManager'
 import LeadModel from '@/services/leads'
 import { paginationMixin } from '@/services/pagination'
@@ -76,6 +82,18 @@ export default {
     },
   },
   methods: {
+    claimLead(lead) {
+      Lead.api.claim(lead.id).then(() => {
+        lead.claimedBy = this.$store.state.user.id
+        lead.claimedByRef = this.$store.state.user
+
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: `Claimed Opportunity titled '${lead.title}' of Account '${lead.accountRef.name}'.`,
+        })
+      })
+    },
     toggleLeads() {
       if (!this.madeInitialRetrieval) {
         this.leads.refresh().finally(() => {

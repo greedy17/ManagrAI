@@ -1,5 +1,5 @@
 <template>
-  <div class="lead-messages" v-if="!!isTextConnected">
+  <div class="lead-messages" v-if="!!isTextConnected && activeTabContact">
     <div class="messages" v-if="!loading">
       <div class="tab">
         <div class="tab__header">
@@ -14,7 +14,7 @@
           </ActionTabHeader>
         </div>
         <div class="tab__content">
-          <template v-if="inbound.length > 0 || outbound.length > 0">
+          <template v-if="activeTabContact && (inbound.length > 0 || outbound.length > 0)">
             <div class="incoming">
               <MessageContainer :direction="'Received'" :messages="inbound" />
             </div>
@@ -22,11 +22,17 @@
               <MessageContainer :direction="'Sent'" :messages="outbound" />
             </div>
           </template>
-          <template v-if="!this.activeTabContact.phone_number_1">
+
+          <template v-if="!activeTabContact.phone_number_1">
             <span class="muted">This Contact Has No Associated Number</span>
           </template>
           <template
-            v-if="inbound.length < 1 && outbound.length < 1 && this.activeTabContact.phone_number_1"
+            v-if="
+              inbound.length < 1 &&
+                outbound.length < 1 &&
+                activeTabContact &&
+                activeTabContact.phone_number_1
+            "
           >
             <span class="muted">No Messages With this contact</span>
           </template>
@@ -37,10 +43,14 @@
       <ComponentLoadingSVG />
     </div>
   </div>
+
   <div v-else class="lead-messages">
-    <span class="muted">
+    <span v-if="!isTextConnected" class="muted">
       Please Enable Text Integration in your account settings
     </span>
+    <template v-if="!activeTabContact">
+      <span class="muted">This Lead Has No Associated Contacts</span>
+    </template>
   </div>
 </template>
 
@@ -67,26 +77,17 @@ export default {
   },
   data() {
     return {
-      loading: true,
+      loading: false,
       leadItem: this.lead,
       activeTab: 0,
       inbound: [],
       outbound: [],
-      leadMessages: CollectionManager.create({
-        ModelClass: LeadMessage,
-        filters: {
-          byLead: this.lead.id,
-        },
-      }),
     }
   },
   async created() {
     this.leadItem = this.getFreshLead
-    this.loading = true
-    await this.refresh()
-    this.loading = false
 
-    if (this.isTextConnected) {
+    if (this.isTextConnected && this.activeTabContact) {
       await this.getInboundMessages()
       await this.getOutbountMessages()
     }
@@ -106,13 +107,12 @@ export default {
     async getInboundMessages() {
       this.loading = true
       try {
-        if (!this.activeTabContact.phone_number_1) {
-          return
+        if (this.activeTabContact && this.activeTabContact.phone_number_1) {
+          this.inbound = await Messaging.listMessages(
+            this.activeTabContact.phone_number_1,
+            this.isTextConnected,
+          )
         }
-        this.inbound = await Messaging.listMessages(
-          this.activeTabContact.phone_number_1,
-          this.isTextConnected,
-        )
       } catch {
         this.$Alert.alert({
           type: 'error',
@@ -127,13 +127,12 @@ export default {
       this.loading = true
 
       try {
-        if (!this.activeTabContact.phone_number_1) {
-          return
+        if (this.activeTabContact && this.activeTabContact.phone_number_1) {
+          this.outbound = await Messaging.listMessages(
+            this.isTextConnected,
+            this.activeTabContact.phone_number_1,
+          )
         }
-        this.outbound = await Messaging.listMessages(
-          this.isTextConnected,
-          this.activeTabContact.phone_number_1,
-        )
       } catch {
         this.$Alert.alert({
           type: 'error',
@@ -149,16 +148,12 @@ export default {
         this.activeTab = index
         this.inbound = []
         this.outbound = []
-        if (this.activeTabContact.phone_number_1) {
+
+        if (this.activeTabContact && this.activeTabContact.phone_number_1) {
           await this.getInboundMessages()
           await this.getOutbountMessages()
         }
       }
-    },
-    async refresh() {
-      this.loading = true
-      await this.leadMessages.refresh()
-      this.loading = false
     },
   },
 }
