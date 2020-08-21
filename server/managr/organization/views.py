@@ -331,10 +331,7 @@ class StageViewSet(
     """ endpoint to retrieve all stages for an org """
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (
-        SuperUserCreateOnly,
-        CanEditResourceOrReadOnly,
-    )
+    permission_classes = (IsSalesPerson,)
     serializer_class = StageSerializer
 
     def get_queryset(self):
