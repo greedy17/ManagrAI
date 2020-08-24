@@ -35,8 +35,14 @@
                 <template v-if="leadMetrics.primaryContact">
                   {{ leadMetrics.primaryContact.fullName }},
                   {{
-                    leadMetrics.primaryContact.fullName.trim()
-                      ? leadMetrics.primaryContact.fullName
+                    (
+                      leadMetrics.primaryContact.firstName +
+                      '' +
+                      leadMetrics.primaryContact.lastName
+                    ).trim()
+                      ? leadMetrics.primaryContact.firstName +
+                        '' +
+                        leadMetrics.primaryContact.lastName
                       : leadMetrics.primaryContact.email
                   }}
                   {{
