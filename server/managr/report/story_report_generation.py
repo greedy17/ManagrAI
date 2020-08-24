@@ -8,7 +8,8 @@ from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.lead import constants as lead_constants
 from managr.lead.models import ActionChoice, Action, Lead
-from managr.organization.models import Contact
+from managr.organization import constants as org_constants
+from managr.organization.models import Contact, Stage
 from managr.organization.serializers import ContactSerializer
 from managr.utils.sites import get_site_url
 
@@ -137,10 +138,18 @@ class LeadDataGenerator(BaseGenerator):
         """
 
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_READY,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_ready = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
+                meta__extra__new_status=str(status.id),
             ).first()
 
             if logged_ready:
@@ -160,10 +169,18 @@ class LeadDataGenerator(BaseGenerator):
         Find first BOOKED, because this salesperson may have picked it more than once.
         """
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_BOOKED,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_booked = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
+                meta__extra__new_status=str(status.id),
             ).last()
 
             if logged_booked:
@@ -182,10 +199,18 @@ class LeadDataGenerator(BaseGenerator):
         Find first DEMO, because this salesperson may have picked it more than once.
         """
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_DEMO,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_demo = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
+                meta__extra__new_status=str(status.id),
             ).last()
             if logged_demo:
                 return logged_demo.action_timestamp
@@ -315,15 +340,18 @@ class LeadDataGenerator(BaseGenerator):
             ).count()
         return action_count_map
 
-    # NOTE (Bruno): not sure how relevant this property is, since self.custom_action_counts
-    # may cover it. Keeping it here for further testing once we have real data.
+    # NOTE (Bruno): includes regular (reminder, note), communication (call/text/email), and custom actions
     @property
     def action_count(self):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
         return self.lead_activity_logs.filter(
-            activity=lead_constants.ACTION_CREATED
+            lead=self._lead,
+            action_taken_by=self._representative,
+            datetime_created__gte=self.claimed_timestamp
+        ).exclude(
+            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
         ).count()
 
     @property
