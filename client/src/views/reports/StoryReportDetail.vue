@@ -33,7 +33,6 @@
               <div class="sub-desc">
                 Primarily worked with (based on calls, texts, and emails) <br />
                 <template v-if="leadMetrics.primaryContact">
-                  {{ leadMetrics.primaryContact.fullName }},
                   {{
                     (
                       leadMetrics.primaryContact.firstName +
@@ -44,7 +43,7 @@
                         '' +
                         leadMetrics.primaryContact.lastName
                       : leadMetrics.primaryContact.email
-                  }}
+                  }},
                   {{
                     leadMetrics.primaryContact.title
                       ? leadMetrics.primaryContact.title
@@ -67,10 +66,10 @@
               </div>
               <div class="sub-desc">
                 <template v-if="leadMetrics.daysToDemo">
-                  {{ leadMetrics.daysToDemo }} to first demo
+                  {{ leadMetrics.daysToDemo }} days to first demo
                 </template>
                 <template v-if="leadMetrics.daysDemoToClosed">
-                  {{ leadMetrics.daysDemo ? ', c' : 'C' }}losed
+                  {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed
                   {{ leadMetrics.daysDemoToClosed }} days post demo
                 </template>
                 <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
