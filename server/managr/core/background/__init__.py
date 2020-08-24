@@ -62,12 +62,6 @@ def _get_email_notification(account_id, object_id, date):
         )
         return
 
-    # get the message form nylas and make it into a json object
-    # from managr.core.background import _get_email_info
-    # t = _get_email_info.now
-    # t('2yyyiu5lq221zmm4dvhmng5gc','5s0f2hsvh4htrm4fskqn8xnty','')
-
-    # if user.claimed_leads.count() > 0:
     try:
         if user:
 
@@ -116,7 +110,6 @@ def _get_email_notification(account_id, object_id, date):
                     },
                 )
 
-                # PLACEHOLDER = IN FUTURE EMAILS SENT/RECIEVED WILL ALL LOG ON THE WEBHOOK
                 # if user.email in message_to:
                 for lead in leads:
                     obj = LeadEmail.objects.create(
@@ -141,8 +134,8 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
     try:
         user = User.objects.get(email_auth_account__account_id=account_id)
     except User.DoesNotExist as e:
-        logger.exception(
-            f"The user account_id is not in saved on the system they might need to re-auth a token,{account_id}"
+        logger.info(
+            f"The user with account id {account_id} is not in saved on the system they might need to re-auth a token"
         )
         return
     try:
