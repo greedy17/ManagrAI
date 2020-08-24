@@ -22,7 +22,7 @@ class StoryReportTestCase(TestCase):
 
     def test_story_report_lead_data_generator(self):
         # should be loaded from the fixture, else should error
-        lead = Lead.objects.get(title="LEAD ONE")
+        lead = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
         # no need to create story-report since LeadDataGenerator
         # is decoupled from that model
         instance = LeadDataGenerator(lead)
