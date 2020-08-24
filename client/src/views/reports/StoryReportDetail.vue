@@ -36,11 +36,11 @@
                   {{
                     (
                       leadMetrics.primaryContact.firstName +
-                      '' +
+                      ' ' +
                       leadMetrics.primaryContact.lastName
                     ).trim()
                       ? leadMetrics.primaryContact.firstName +
-                        '' +
+                        ' ' +
                         leadMetrics.primaryContact.lastName
                       : leadMetrics.primaryContact.email
                   }},

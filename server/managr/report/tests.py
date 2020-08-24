@@ -39,7 +39,6 @@ class StoryReportTestCase(TestCase):
         # This test happens to test the case where the lead is never released and claimed,
         # but rather is closed by the same person that created it.
         claim_date = "2020-06-20"
-        breakpoint()
 
         # assert timestamps:
         self.assertEqual(str(instance.ready_timestamp.date()), ready_date)
