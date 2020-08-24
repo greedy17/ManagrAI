@@ -35,6 +35,11 @@
                 <template v-if="leadMetrics.primaryContact">
                   {{ leadMetrics.primaryContact.fullName }},
                   {{
+                    leadMetrics.primaryContact.fullName.trim()
+                      ? leadMetrics.primaryContact.fullName
+                      : leadMetrics.primaryContact.email
+                  }}
+                  {{
                     leadMetrics.primaryContact.title
                       ? leadMetrics.primaryContact.title
                       : 'title not known'
@@ -59,7 +64,8 @@
                   {{ leadMetrics.daysToDemo }} to first demo
                 </template>
                 <template v-if="leadMetrics.daysDemoToClosed">
-                  {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed 20 days post demo
+                  {{ leadMetrics.daysDemo ? ', c' : 'C' }}losed
+                  {{ leadMetrics.daysDemoToClosed }} days post demo
                 </template>
                 <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
                   Did not have to leverage a demo.
@@ -83,7 +89,7 @@
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <template v-else>
-                  on par with her/his average({{ repMetrics.averageDaysToClosed }}
+                  on par with her/his average ({{ repMetrics.averageDaysToClosed }}
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <div>
