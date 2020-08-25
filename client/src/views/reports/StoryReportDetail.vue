@@ -94,7 +94,7 @@
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <template v-else>
-                  on par with her/his average ({{ repMetrics.averageDaysToClosed }}
+                  on par with personal average ({{ repMetrics.averageDaysToClosed }}
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <div>
@@ -106,7 +106,7 @@
                     a lower ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
                   </template>
                   <template v-else>
-                    her/his ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
+                    personal ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
                   </template>
                 </div>
               </div>
