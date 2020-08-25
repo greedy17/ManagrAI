@@ -88,7 +88,7 @@ class StoryReportRepresentativeDataGeneratorTestCase(TestCase):
         self.instance = RepresentativeDataGenerator(self.lead_one)
         self.rep_data_dict = self.instance.as_dict
 
-    def test_date_ranges(self):
+    def test_averages(self):
         # all averages, except custom-action-counts, use same method within RepresentativeDataGenerator
         # Therefore, below we just test one metric
         total = self.lead_one_data.days_ready_to_booked + self.lead_two_data.days_ready_to_booked
