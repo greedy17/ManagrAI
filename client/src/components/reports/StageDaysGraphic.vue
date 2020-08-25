@@ -5,7 +5,7 @@
     <div class="title">{{ titleTop }}</div>
     <div class="title">{{ titleBottom }}</div>
     <ProgressBar
-      :percentComplete="(count / average) * 100"
+      :percentComplete="percentComplete"
       style="margin: 2rem 0 0.5rem 0 ;"
       v-if="progressBar"
     />
@@ -49,10 +49,15 @@ export default {
   components: {
     ProgressBar,
   },
-  created() {},
-  methods: {},
-  watch: {},
-  computed: {},
+  computed: {
+    percentComplete() {
+      let percent = (this.count / this.average) * 100
+      if (percent > 100) {
+        return 100
+      }
+      return percent
+    },
+  },
 }
 </script>
 
