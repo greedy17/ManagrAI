@@ -3,12 +3,14 @@ import json
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from django.core import serializers
+from django.db.models import Q
 
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.lead import constants as lead_constants
 from managr.lead.models import ActionChoice, Action, Lead
-from managr.organization.models import Contact
+from managr.organization import constants as org_constants
+from managr.organization.models import Contact, Stage
 from managr.organization.serializers import ContactSerializer
 from managr.utils.sites import get_site_url
 
@@ -96,7 +98,7 @@ class LeadDataGenerator(BaseGenerator):
         try:
 
             return self._lead.activity_logs.filter(
-                action_timestamp__gte=self.claimed_timestamp,
+                action_timestamp__gte=self.start_timestamp,
                 action_timestamp__lte=self._lead.expected_close_date,
                 action_taken_by=self._representative,
             )
@@ -109,21 +111,22 @@ class LeadDataGenerator(BaseGenerator):
             raise (e)
 
     @property
-    def claimed_timestamp(self):
+    def start_timestamp(self):
         """
-        Given lead, return timestamp for latest claim-event.
+        Given lead, return timestamp for latest claim-event, 
+        OR latest reset event.
         """
         # NOTE (Bruno 8-11-20): currently, a claim-event does not
         # take place on lead creation. Hence conditional herein.
         try:
-            claimed_event = self._lead.activity_logs.filter(
-                activity=lead_constants.LEAD_CLAIMED
+            start_event = self._lead.activity_logs.filter(
+                Q(activity=lead_constants.LEAD_CLAIMED) | Q(activity=lead_constants.LEAD_RESET)
             ).first()
-            if claimed_event:
-                return claimed_event.action_timestamp
+            if start_event:
+                return start_event.action_timestamp
             return self._lead.datetime_created
         except Exception as e:
-            print("failed on claimed_timestamp")
+            print("failed on start_timestamp")
             class_name = LeadDataGenerator.__name__
             logger.exception(
                 f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
@@ -137,10 +140,18 @@ class LeadDataGenerator(BaseGenerator):
         """
 
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_READY,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_ready = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_READY,
+                meta__extra__new_status=str(status.id),
             ).first()
 
             if logged_ready:
@@ -160,10 +171,18 @@ class LeadDataGenerator(BaseGenerator):
         Find first BOOKED, because this salesperson may have picked it more than once.
         """
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_BOOKED,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_booked = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_BOOKED,
+                meta__extra__new_status=str(status.id),
             ).last()
 
             if logged_booked:
@@ -182,10 +201,18 @@ class LeadDataGenerator(BaseGenerator):
         Find first DEMO, because this salesperson may have picked it more than once.
         """
         try:
+            # get status, use .get() to throw error if more than one in DB
+            # as this would not make sense
+            status = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_DEMO,
+                type=org_constants.STAGE_TYPE_PUBLIC
+            )
+
+            # get activity log
             logged_demo = self.lead_activity_logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
-                meta__extra__new_status=lead_constants.LEAD_STATUS_DEMO,
+                meta__extra__new_status=str(status.id),
             ).last()
             if logged_demo:
                 return logged_demo.action_timestamp
@@ -310,27 +337,30 @@ class LeadDataGenerator(BaseGenerator):
             action_count_map[action_choice.title] = action_choice.action_set.filter(
                 lead=self._lead,
                 created_by=self._representative,
-                datetime_created__gte=self.claimed_timestamp,
+                datetime_created__gte=self.start_timestamp,
                 datetime_created__lte=self._lead.expected_close_date,
             ).count()
         return action_count_map
 
-    # NOTE (Bruno): not sure how relevant this property is, since self.custom_action_counts
-    # may cover it. Keeping it here for further testing once we have real data.
+    # NOTE (Bruno): includes regular (reminder, note), communication (call/text/email), and custom actions
     @property
     def action_count(self):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
         return self.lead_activity_logs.filter(
-            activity=lead_constants.ACTION_CREATED
+            lead=self._lead,
+            action_taken_by=self._representative,
+            datetime_created__gte=self.start_timestamp
+        ).exclude(
+            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
         ).count()
 
     @property
     def days_to_closed(self):
         if self.ready_timestamp:
             return (self.closed_timestamp - self.ready_timestamp).days
-        return (self.closed_timestamp - self.claimed_timestamp).days
+        return (self.closed_timestamp - self.start_timestamp).days
 
     @property
     def days_ready_to_booked(self):
@@ -354,7 +384,7 @@ class LeadDataGenerator(BaseGenerator):
             return None
         if self.ready_timestamp and not (self.ready_timestamp > self.demo_timestamp):
             return (self.demo_timestamp - self.ready_timestamp).days
-        return (self.demo_timestamp - self.claimed_timestamp).days
+        return (self.demo_timestamp - self.start_timestamp).days
 
     @property
     def days_demo_to_closed(self):
@@ -402,8 +432,9 @@ class RepresentativeDataGenerator(BaseGenerator):
         total = 0
         count = 0
         for lead in self.leads:
-            if lead.get(property):
-                total += lead[property]
+            value = lead.get(property, None)
+            if value is not None:
+                total += value
                 count += 1
         if count == 0:
             return None
@@ -417,7 +448,8 @@ class RepresentativeDataGenerator(BaseGenerator):
         counts = {}
         for lead in self.leads:
             for action_choice_title, count in lead["custom_action_counts"].items():
-                if totals.get(action_choice_title):
+                is_present = totals.get(action_choice_title, None)
+                if is_present is not None:
                     totals[action_choice_title] += count
                     counts[action_choice_title] += 1
                 else:
@@ -472,8 +504,9 @@ class OrganizationDataGenerator(BaseGenerator):
         for representative in self.representatives:
             leads = self.generate_representative_leads(representative)
             for lead in leads:
-                if lead.get(property):
-                    total += lead[property]
+                value = lead.get(property, None)
+                if value is not None:
+                    total += value
                     count += 1
         if count == 0:
             return None
