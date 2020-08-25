@@ -72,3 +72,26 @@ class StoryReportLeadDataGeneratorTestCase(TestCase):
         self.assertEqual(self.instance.text_count, text_count)
         self.assertEqual(self.instance.email_count, email_count)
         self.assertEqual(self.instance.action_count, action_count)
+
+
+class StoryReportRepresentativeDataGeneratorTestCase(TestCase):
+    fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
+
+    def setUp(self):
+        # should be loaded from the fixture, else should error
+        self.lead_one = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
+        self.lead_two = Lead.objects.get(pk="77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d")
+        # no need to create story-report since LeadDataGenerator
+        # is decoupled from that model
+        self.lead_one_data = LeadDataGenerator(self.lead_one)
+        self.lead_two_data = LeadDataGenerator(self.lead_two)
+        self.rep_data_dict = RepresentativeDataGenerator(self.lead_one).as_dict
+
+    def test_date_ranges(self):
+        # all averages, except custom-action-counts, use same method within RepresentativeDataGenerator
+        # Therefore, below we just test one metric
+        total = self.lead_one_data.days_ready_to_booked + self.lead_two_data.days_ready_to_booked
+        # rounded to zero decimal places, as does RepresentativeDataGenerator
+        average_days_ready_to_booked = round(total / 2, 0)
+
+        self.assertEqual(self.rep_data_dict["average_days_ready_to_booked"], average_days_ready_to_booked)
