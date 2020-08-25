@@ -430,8 +430,9 @@ class RepresentativeDataGenerator(BaseGenerator):
         total = 0
         count = 0
         for lead in self.leads:
-            if lead.get(property):
-                total += lead[property]
+            value = lead.get(property, None)
+            if value is not None:
+                total += value
                 count += 1
         if count == 0:
             return None
@@ -445,7 +446,8 @@ class RepresentativeDataGenerator(BaseGenerator):
         counts = {}
         for lead in self.leads:
             for action_choice_title, count in lead["custom_action_counts"].items():
-                if totals.get(action_choice_title):
+                is_present = totals.get(action_choice_title, None)
+                if is_present is not None:
                     totals[action_choice_title] += count
                     counts[action_choice_title] += 1
                 else:
@@ -500,8 +502,9 @@ class OrganizationDataGenerator(BaseGenerator):
         for representative in self.representatives:
             leads = self.generate_representative_leads(representative)
             for lead in leads:
-                if lead.get(property):
-                    total += lead[property]
+                value = lead.get(property, None)
+                if value is not None:
+                    total += value
                     count += 1
         if count == 0:
             return None
