@@ -39,7 +39,7 @@ class StoryReportLeadDataGeneratorTestCase(TestCase):
         self.assertEqual(str(self.instance.booked_timestamp.date()), booked_date)
         self.assertEqual(str(self.instance.demo_timestamp.date()), demo_date)
         self.assertEqual(str(self.instance.closed_timestamp.date()), close_date)
-        self.assertEqual(str(self.instance.claimed_timestamp.date()), claim_date)
+        self.assertEqual(str(self.instance.start_timestamp.date()), claim_date)
 
     def test_date_ranges(self):
         # derived from fixture-sourced dates

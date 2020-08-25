@@ -3,6 +3,7 @@ import json
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from django.core import serializers
+from django.db.models import Q
 
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
@@ -97,7 +98,7 @@ class LeadDataGenerator(BaseGenerator):
         try:
 
             return self._lead.activity_logs.filter(
-                action_timestamp__gte=self.claimed_timestamp,
+                action_timestamp__gte=self.start_timestamp,
                 action_timestamp__lte=self._lead.expected_close_date,
                 action_taken_by=self._representative,
             )
@@ -110,21 +111,22 @@ class LeadDataGenerator(BaseGenerator):
             raise (e)
 
     @property
-    def claimed_timestamp(self):
+    def start_timestamp(self):
         """
-        Given lead, return timestamp for latest claim-event.
+        Given lead, return timestamp for latest claim-event, 
+        OR latest reset event.
         """
         # NOTE (Bruno 8-11-20): currently, a claim-event does not
         # take place on lead creation. Hence conditional herein.
         try:
-            claimed_event = self._lead.activity_logs.filter(
-                activity=lead_constants.LEAD_CLAIMED
+            start_event = self._lead.activity_logs.filter(
+                Q(activity=lead_constants.LEAD_CLAIMED) | Q(activity=lead_constants.LEAD_RESET)
             ).first()
-            if claimed_event:
-                return claimed_event.action_timestamp
+            if start_event:
+                return start_event.action_timestamp
             return self._lead.datetime_created
         except Exception as e:
-            print("failed on claimed_timestamp")
+            print("failed on start_timestamp")
             class_name = LeadDataGenerator.__name__
             logger.exception(
                 f"Unable to create report for {self._lead.id} failed at {class_name}, with error {e} "
@@ -335,7 +337,7 @@ class LeadDataGenerator(BaseGenerator):
             action_count_map[action_choice.title] = action_choice.action_set.filter(
                 lead=self._lead,
                 created_by=self._representative,
-                datetime_created__gte=self.claimed_timestamp,
+                datetime_created__gte=self.start_timestamp,
                 datetime_created__lte=self._lead.expected_close_date,
             ).count()
         return action_count_map
@@ -349,7 +351,7 @@ class LeadDataGenerator(BaseGenerator):
         return self.lead_activity_logs.filter(
             lead=self._lead,
             action_taken_by=self._representative,
-            datetime_created__gte=self.claimed_timestamp
+            datetime_created__gte=self.start_timestamp
         ).exclude(
             activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
         ).count()
@@ -358,7 +360,7 @@ class LeadDataGenerator(BaseGenerator):
     def days_to_closed(self):
         if self.ready_timestamp:
             return (self.closed_timestamp - self.ready_timestamp).days
-        return (self.closed_timestamp - self.claimed_timestamp).days
+        return (self.closed_timestamp - self.start_timestamp).days
 
     @property
     def days_ready_to_booked(self):
@@ -382,7 +384,7 @@ class LeadDataGenerator(BaseGenerator):
             return None
         if self.ready_timestamp and not (self.ready_timestamp > self.demo_timestamp):
             return (self.demo_timestamp - self.ready_timestamp).days
-        return (self.demo_timestamp - self.claimed_timestamp).days
+        return (self.demo_timestamp - self.start_timestamp).days
 
     @property
     def days_demo_to_closed(self):
