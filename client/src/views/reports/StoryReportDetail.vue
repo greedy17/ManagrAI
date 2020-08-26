@@ -133,7 +133,7 @@
           <StageDaysGraphic
             :icon="'claimed'"
             :count="leadMetrics.actionCount"
-            :titleTop="'Actions'"
+            :titleTop="'Activities'"
             :titleBottom="'to Close this deal'"
             :average="repMetrics.averageActionCount"
           />
@@ -187,7 +187,7 @@
             <th>Calls</th>
             <th>Texts</th>
             <th>Emails</th>
-            <th>Actions</th>
+            <th>Activities</th>
           </tr>
           <tr class="rep-row">
             <td class="left-column">
