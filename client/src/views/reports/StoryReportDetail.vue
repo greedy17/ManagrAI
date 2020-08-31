@@ -33,7 +33,17 @@
               <div class="sub-desc">
                 Primarily worked with (based on calls, texts, and emails) <br />
                 <template v-if="leadMetrics.primaryContact">
-                  {{ leadMetrics.primaryContact.fullName }},
+                  {{
+                    (
+                      leadMetrics.primaryContact.firstName +
+                      ' ' +
+                      leadMetrics.primaryContact.lastName
+                    ).trim()
+                      ? leadMetrics.primaryContact.firstName +
+                        ' ' +
+                        leadMetrics.primaryContact.lastName
+                      : leadMetrics.primaryContact.email
+                  }},
                   {{
                     leadMetrics.primaryContact.title
                       ? leadMetrics.primaryContact.title
@@ -56,10 +66,11 @@
               </div>
               <div class="sub-desc">
                 <template v-if="leadMetrics.daysToDemo">
-                  {{ leadMetrics.daysToDemo }} to first demo
+                  {{ leadMetrics.daysToDemo }} days to first demo
                 </template>
                 <template v-if="leadMetrics.daysDemoToClosed">
-                  {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed 20 days post demo
+                  {{ leadMetrics.daysToDemo ? ', c' : 'C' }}losed
+                  {{ leadMetrics.daysDemoToClosed }} days post demo
                 </template>
                 <template v-if="!leadMetrics.daysToDemo && !leadMetrics.daysDemoToClosed">
                   Did not have to leverage a demo.
@@ -83,7 +94,7 @@
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <template v-else>
-                  on par with her/his average({{ repMetrics.averageDaysToClosed }}
+                  on par with personal average ({{ repMetrics.averageDaysToClosed }}
                   {{ 'day' | pluralize(repMetrics.averageDaysToClosed) }})
                 </template>
                 <div>
@@ -95,7 +106,7 @@
                     a lower ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
                   </template>
                   <template v-else>
-                    her/his ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
+                    personal ACV ({{ repMetrics.averageContractValue | currencyNoCents }})
                   </template>
                 </div>
               </div>
@@ -122,7 +133,7 @@
           <StageDaysGraphic
             :icon="'claimed'"
             :count="leadMetrics.actionCount"
-            :titleTop="'Actions'"
+            :titleTop="'Activities'"
             :titleBottom="'to Close this deal'"
             :average="repMetrics.averageActionCount"
           />
@@ -176,7 +187,7 @@
             <th>Calls</th>
             <th>Texts</th>
             <th>Emails</th>
-            <th>Actions</th>
+            <th>Activities</th>
           </tr>
           <tr class="rep-row">
             <td class="left-column">

@@ -1,0 +1,78 @@
+[
+    {
+        "model": "organization.organization",
+        "pk": "700287d3-4ce6-4803-a236-b18e260729a7",
+        "fields": {
+          "datetime_created": "2020-06-09T18:30:17.568Z",
+          "last_edited": "2020-06-09T18:30:17.568Z",
+          "name": "Report Testing Corp",
+          "state": "ACTIVE"
+        }
+    },
+    {
+      "model": "organization.account",
+      "pk": "922287d3-4ce6-4803-a236-b18e260729a7",
+      "fields": {
+        "name": "ACCOUNT ONE",
+        "url": null,
+        "type": "NEW",
+        "organization": "700287d3-4ce6-4803-a236-b18e260729a7",
+        "state": "ACTIVE",
+        "logo": null,
+        "datetime_created": "2020-06-10T18:30:17.568Z",
+        "last_edited": "2020-06-10T18:30:17.568Z"
+      }
+    },
+    {
+      "model": "organization.contact",
+      "pk": "2dfe323f-6740-49d4-bdce-3560de3292b0",
+      "fields": {
+        "first_name": "Report",
+        "last_name": "Contact",
+        "title": "RC",
+        "email": "test@account-one.com",
+        "phone_number_1": "+13013013011",
+        "phone_number_2": "",
+        "account": "922287d3-4ce6-4803-a236-b18e260729a7",
+        "datetime_created": "2020-06-10T18:30:17.568Z",
+        "last_edited": "2020-06-10T18:30:17.568Z"
+      }
+    },
+    {
+      "model": "lead.actionchoice",
+      "pk": "711287d3-4ce6-4823-a236-b18e260729b7",
+      "fields": {
+        "title": "TEST ACTION ONE",
+        "description": "",
+        "organization": "700287d3-4ce6-4803-a236-b18e260729a7",
+        "datetime_created": "2020-06-10T18:30:17.568Z",
+        "last_edited": "2020-06-10T18:30:17.568Z"
+      }
+    },
+    {
+        "model": "core.user",
+        "pk": "3dddd261-93b1-46fe-a83e-bc164551362a",
+        "fields": {
+            "first_name": "Report",
+            "last_name": "Tester",
+            "email": "report@test.com",
+            "password": "pbkdf2_sha256$150000$FXtF6UR1Hg8Q$MYUa42GCygpIFFiSUY5k7dk1VuIg397mU4HlWUjeqfQ=",
+            "last_login": null,
+            "is_superuser": false,
+            "is_staff": false,
+            "date_joined": "2020-06-09T17:38:38.084Z",
+            "datetime_created": "2020-06-09T17:38:38.085Z",
+            "last_edited": "2020-06-09T17:38:38.085Z",
+            "is_serviceaccount": false,
+            "is_active": true,
+            "organization": "700287d3-4ce6-4803-a236-b18e260729a7",
+            "type": "MANAGER",
+            "phone_number": "",
+            "is_invited": true,
+            "magic_token": "630222a1-48bd-4314-b548-952ddd51376a",
+            "magic_token_expiration": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    }
+]

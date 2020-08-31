@@ -42,6 +42,7 @@
 <script>
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import Lead from '@/services/leads'
 import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 export default {
   name: 'LeadBanner',
@@ -57,7 +58,15 @@ export default {
   },
   methods: {
     emitReset() {
-      this.$emit('lead-reset')
+      if (this.lead.statusRef && this.lead.statusRef.title === Lead.CLOSED) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 3000,
+          message: 'Cannot reset a lead that is closed.',
+        })
+      } else {
+        this.$emit('lead-reset')
+      }
     },
     emitRelease() {
       this.$emit('lead-released')
