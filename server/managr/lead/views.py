@@ -72,6 +72,9 @@ class LeadActivityLogViewSet(
     search_fields = ("meta",)
 
     def get_queryset(self):
+        # as per Mike's request certain activities are not shown in the log on the FE
+        # however our salesforce integration reacts to all changes therefore
+        # the frontend passes an excludes key to exclude certain activites
         exclude_activities = self.request.query_params.get("exclude", None)
         if exclude_activities:
             exclude_activities = exclude_activities.split(",")
