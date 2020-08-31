@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.db.models import F, Q, Count
+from rest_framework.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 
@@ -116,6 +117,27 @@ class Lead(TimeStampModel):
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
+
+    def save(self, *args, **kwargs):
+        ## do not allow duplicates of lead titles in a single org
+        leads = (
+            Lead.objects.filter(
+                title=self.title, account__organization__id=self.account.organization.id
+            )
+            .exclude(id=self.id)
+            .exists()
+        )
+        if leads:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_title": "A lead with this title already exists\
+            in your organization"
+                    }
+                }
+            )
+        else:
+            return super(Lead, self).save(*args, **kwargs)
 
 
 class ListQuerySet(models.QuerySet):
