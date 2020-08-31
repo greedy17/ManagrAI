@@ -88,6 +88,7 @@ export default {
 
 .container {
   position: absolute;
+  top: 0;
   left: 0;
   //   top: 0; This is calculated from componentState.original.documentY
   width: 100vw;
