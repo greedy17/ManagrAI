@@ -72,9 +72,13 @@ class LeadActivityLogViewSet(
     search_fields = ("meta",)
 
     def get_queryset(self):
-        return LeadActivityLog.objects.for_user(self.request.user).exclude(
-            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
-        )
+        exclude_activities = self.request.query_params.get("exclude", None)
+        if exclude_activities:
+            exclude_activities = exclude_activities.split(",")
+            return LeadActivityLog.objects.for_user(self.request.user).exclude(
+                activity__in=exclude_activities
+            )
+        return LeadActivityLog.objects.for_user(self.request.user)
 
     @action(
         methods=["GET"],

@@ -246,6 +246,7 @@ export default {
         ModelClass: LeadActivityLog,
         filters: {
           lead: this.id,
+          exclude: LeadActivityLog.types.LEAD_ACTIVITY_LOG_EXCLUDE.join(','),
         },
       }),
     }

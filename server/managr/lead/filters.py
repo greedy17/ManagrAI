@@ -64,15 +64,11 @@ class LeadActivityLogFilterSet(FilterSet):
 
     def by_min_date(self, queryset, name, value):
         if value:
-
-            # min = timezone.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f%Z')
             min = parse(value)
             return queryset.filter(action_timestamp__gte=min)
 
     def by_max_date(self, queryset, name, value):
         if value:
-
-            # min = timezone.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f%Z')
             min = parse(value)
             return queryset.filter(action_timestamp__lte=min)
 
