@@ -204,7 +204,7 @@ class BaseNote(TimeStampModel):
         Note all models inherit the parent queryset manager
     """
 
-    title = models.CharField(max_length=255, blank=False, null=False)
+    title = models.CharField(max_length=500, blank=False, null=False)
     content = models.TextField(blank=True)
     created_by = models.ForeignKey(
         "core.User",
@@ -485,7 +485,7 @@ class Action(TimeStampModel):
         on_delete=models.SET_NULL,
         related_name="created_actions",
     )
-    action_detail = models.CharField(max_length=255, blank=True)
+    action_detail = models.TextField(blank=True)
     lead = models.ForeignKey(
         "Lead", on_delete=models.CASCADE, null=True, blank=False, related_name="actions"
     )
