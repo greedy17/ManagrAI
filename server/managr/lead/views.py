@@ -64,7 +64,7 @@ class LeadActivityLogViewSet(
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
     filter_class = lead_filters.LeadActivityLogFilterSet
-    filter_fields = ("lead",)
+
     filter_backends = (
         filters.SearchFilter,
         DjangoFilterBackend,
@@ -369,12 +369,17 @@ class LeadViewSet(
         extra_meta = None
         if "status" in data:
             extra_meta = {
-                'status_update': True,
-                'new_status': data['status'],
+                "status_update": True,
+                "new_status": data["status"],
             }
 
         self.perform_update(serializer)
-        emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance, extra_meta=extra_meta)
+        emit_event(
+            lead_constants.LEAD_UPDATED,
+            user,
+            serializer.instance,
+            extra_meta=extra_meta,
+        )
         return Response(serializer.data)
 
     @action(
