@@ -258,6 +258,16 @@ class Note(BaseNote):
         ordering = ["-datetime_created"]
 
 
+class ReminderQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(created_by=user.id)
+        else:
+            return None
+
+
 class Reminder(BaseNote):
     """Reminders are like notes they are created with a date time, a title and content.
 
@@ -270,6 +280,7 @@ class Reminder(BaseNote):
     # TODO: - will build this out on a separate branch pb
     # this is a temporary field for a reminder the view status will be handled by notifications in V2
     viewed = models.BooleanField(default=False)
+    objects = ReminderQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_for"]
