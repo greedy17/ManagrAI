@@ -3,19 +3,6 @@
     "model": "organization.stage",
     "pk": "6407b7a1-a877-44e2-979d-1effafec5035",
     "fields": {
-      "title": "LEAD",
-      "description": "Defines an Opportunity as a Lead",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#FFFFFF",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "organization.stage",
-    "pk": "6407b7a1-a877-44e2-979d-1effafec5035",
-    "fields": {
       "title": "READY",
       "description": "Defines an Opportunity as a Lead",
       "type": "PUBLIC",
@@ -51,32 +38,7 @@
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
   },
-  {
-    "model": "organization.stage",
-    "pk": "d57310d2-cf68-4c54-af40-8eac8e5a0825",
-    "fields": {
-      "title": "TRIAL",
-      "description": "Defines an opportunity as ready",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#A537FD",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "organization.stage",
-    "pk": "a61b108d-4259-4407-9a25-a62e8b2df460",
-    "fields": {
-      "title": "WAITING",
-      "description": "Defines an opportunity as ready",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#9596B4",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
+
   {
     "model": "organization.stage",
     "pk": "fe89a6fd-f049-4b23-a059-86d45c12b14b",
@@ -99,19 +61,6 @@
       "type": "PUBLIC",
       "organization": null,
       "color": "#4C4949",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "organization.stage",
-    "pk": "34066d79-824b-4541-9f4e-6be1a9f602bb",
-    "fields": {
-      "title": "LEAD",
-      "description": "Defines an opportunity as closed",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#484A6E",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
