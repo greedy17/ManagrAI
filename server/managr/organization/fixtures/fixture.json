@@ -9,7 +9,8 @@
       "organization": null,
       "color": "#F9CD53",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "order": 1
     }
   },
   {
@@ -22,7 +23,8 @@
       "organization": null,
       "color": "#FA646A",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "order": 2
     }
   },
   {
@@ -35,7 +37,8 @@
       "organization": null,
       "color": "#5FA9E5",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "order": 3
     }
   },
 
@@ -49,7 +52,8 @@
       "organization": null,
       "color": "#2F9E54",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "order": 4
     }
   },
   {
@@ -62,7 +66,8 @@
       "organization": null,
       "color": "#4C4949",
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "order": 5
     }
   }
 ]
