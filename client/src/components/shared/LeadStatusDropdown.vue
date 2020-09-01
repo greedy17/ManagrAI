@@ -67,7 +67,13 @@ export default {
     async onChange({ target: { value } }) {
       let val = this.getStatuses.find(s => s.id == value)
       if (!value || val.title != 'CLOSED') {
-        await this.updateStatus(value)
+        try {
+          this.loading = true
+          await this.updateStatus(value)
+          this.$emit('status-changed', val)
+        } finally {
+          this.loading = false
+        }
       } else {
         this.modal.isOpen = true
       }
@@ -75,7 +81,7 @@ export default {
     updateStatus(newStatus) {
       let patchData = { status: newStatus }
       Lead.api.update(this.lead.id, patchData).then(lead => {
-        this.leadItem = { ...lead }
+        this.leadItem = lead
       })
     },
     closeModal() {
