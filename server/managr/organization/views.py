@@ -182,8 +182,7 @@ class AccountViewSet(
         accs = Account.objects.for_user(request.user).filter(query)
         updated_accounts = []
         for account in accs:
-            # updated_acc = copy.deepcopy(account)
-            # updated_acc = updated_acc.values
+
             for updated_data in accounts:
                 if updated_data["id"] == str(account.id):
                     serializer = AccountSerializer(
@@ -248,18 +247,18 @@ class ContactViewSet(
         contacts = request.data
         updated_contacts = []
         for contact in contacts:
-            c = None
+            contact_obj = None
             try:
-                c = Contact.objects.for_user(request.user).get(
+                contact_obj = Contact.objects.for_user(request.user).get(
                     email=contact["email"], account=contact["account"]
                 )
             except Contact.DoesNotExist:
                 # pass if the contact doesn't exist
                 # TODO: Could have it create the contact if it does not exist PB 07/06
                 pass
-            if c:
+            if contact_obj:
                 serializer = ContactSerializer(
-                    c, data=contact, context={"request": request}
+                    contact_obj, data=contact, context={"request": request}
                 )
 
                 serializer.is_valid(raise_exception=True)
@@ -277,23 +276,23 @@ class ContactViewSet(
     )
     def add_to_lead(self, request, *args, **kwargs):
         """ special endpoint to add a contact to a lead or leads, takes a list of contact ids and lead ids"""
-        u = request.user
+
         d = request.data
         contacts = d.get("contacts", [])
         leads = d.get("leads", [])
         for_payload = None
         for (index, lead) in enumerate(leads):
             try:
-                l = Lead.objects.get(pk=lead)
-                l.linked_contacts.set(contacts)
-                for_payload = l.linked_contacts
+                lead = Lead.objects.get(pk=lead)
+                lead.linked_contacts.set(contacts)
+                for_payload = lead.linked_contacts
             except (
                 V,
                 Lead.DoesNotExist,
                 ValueError,
             ):
                 pass
-        payload = [ContactSerializer(c).data for c in for_payload.all()]
+        payload = [ContactSerializer(contact).data for contact in for_payload.all()]
         return Response(data=payload)
 
     @action(
@@ -304,15 +303,15 @@ class ContactViewSet(
     )
     def remove_from_lead(self, request, *args, **kwargs):
         """ special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
-        d = request.data
-        contacts = d.get("contacts", [])
+        request_data = request.data
+        contacts = request_data.get("contacts", [])
         contacts_removed = list()
-        l = d.get("lead", None)
-        if not l:
+        lead_id = request_data.get("lead", None)
+        if not lead_id:
             raise ValidationError({"detail": "a lead is required for this operation"})
 
         for contact in contacts:
-            lead = Lead.objects.get(pk=l)
+            lead = Lead.objects.get(pk=lead_id)
             if lead.linked_contacts.filter(pk=contact).exists():
                 lead.linked_contacts.remove(contact)
                 # if a contact does not exist no error is thrown it will continue as though it removed a contact
@@ -356,14 +355,14 @@ class StageViewSet(
 
     def update(self, request, *args, **kwargs):
 
-        d = request.data
+        request_data = request.data
         user = request.user
         instance = self.get_object()
         if not user.is_superuser:
             # only super users can create public items
-            d["type"] = org_consts.STAGE_TYPE_PRIVATE
+            request_data["type"] = org_consts.STAGE_TYPE_PRIVATE
             # only super users can update items for other orgs
-            d["organization"] = user.organization.id
+            request_data["organization"] = user.organization.id
 
         serializer = self.serializer_class(
             instance, data=request.data, context={"request": request}
