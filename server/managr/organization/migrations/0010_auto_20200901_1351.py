@@ -23,21 +23,4 @@ class Migration(migrations.Migration):
                 to="organization.Organization",
             ),
         ),
-        migrations.RunSQL(
-            sql=[
-                'UPDATE organization_stage set organization_id = "" WHERE organization_id IS NULL;'
-            ]
-        ),
-        migrations.AlterField(
-            model_name="stage",
-            name="organization",
-            field=models.ForeignKey(
-                blank=True,
-                default="",
-                null=False,
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="stages",
-                to="organization.Organization",
-            ),
-        ),
     ]
