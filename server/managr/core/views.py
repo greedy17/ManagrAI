@@ -145,6 +145,7 @@ class UserViewSet(
             return User.objects.all()
         elif (
             self.request.user.type == core_consts.ACCOUNT_TYPE_MANAGER
+            or self.request.user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
             and self.request.user.is_active
         ):
             return User.objects.filter(organization=self.request.user.organization)
@@ -182,13 +183,11 @@ class UserViewSet(
         url_path="profile-photo",
     )
     def update_profile_photo(self, request, *args, **kwargs):
-        photo = request.data.get('file')
+        photo = request.data.get("file")
         pk = kwargs.get("pk", None)
         u = User.objects.filter(pk=pk).first()
         if not u:
-            raise ValidationError(
-                {"user": "invalid user id"}
-            )
+            raise ValidationError({"user": "invalid user id"})
         u.profile_photo = photo
         u.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
