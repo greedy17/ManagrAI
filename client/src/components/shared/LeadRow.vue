@@ -54,7 +54,7 @@
             </span>
           </span>
         </slot>
-        <span class="go-to" @click="routeToLeadDetail()">
+        <span class="go-to" @click="openLeadDetail">
           <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
             <use xlink:href="@/assets/images/svg-repo.svg#caret" />
           </svg>
@@ -102,8 +102,9 @@ export default {
     toggleDetails() {
       this.showDetails = !this.showDetails
     },
-    routeToLeadDetail() {
-      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    openLeadDetail() {
+      let routeData = this.$router.resolve({ name: 'LeadsDetail', params: { id: this.lead.id } })
+      window.open(routeData.href, '_blank')
     },
   },
   computed: {
