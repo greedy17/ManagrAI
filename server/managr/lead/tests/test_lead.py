@@ -125,3 +125,12 @@ class LeadMessageTestCase(TestCase):
                 lead_message.save()
 
         self.assertEqual(self.lead.messages.first().linked_contacts.all().count(), 1)
+
+    def test_duplicate_lead_names(self):
+
+        lead_2 = LeadFactory(account=self.account, claimed_by=self.user)
+        lead_2.title = self.lead.title
+
+        with self.assertRaises(ValidationError):
+            lead = lead_2.save()
+

@@ -24,38 +24,32 @@ class LeadInsightsTestCase(TestCase):
         self.user_2 = User.objects.create_user(
             organization=self.org, email="test2@thinknimble.com"
         )
-
-        # Random lead for basic insight testing
+        self.account = AccountFactory(organization=self.org)
         self.lead = LeadFactory(
+            account=self.account,
             amount=25000,
-            status=Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_LEAD, type=org_consts.STAGE_TYPE_PUBLIC
-            ),
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LOST),
             claimed_by=self.user_1,
         )
 
         # Open and closed leads for KPI testing
         self.open_lead_1 = LeadFactory(
+            account=self.account,
             amount=25000,
-            status=Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_LEAD, type=org_consts.STAGE_TYPE_PUBLIC
-            ),
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LOST),
             claimed_by=self.user_1,
         )
         self.open_lead_2 = LeadFactory(
+            account=self.account,
             amount=25000,
-            status=Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_LEAD, type=org_consts.STAGE_TYPE_PUBLIC
-            ),
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_LOST),
             claimed_by=self.user_1,
         )
         self.closed_lead_1 = LeadFactory(
+            account=self.account,
             amount=25000,
             closing_amount=30000,
-            status=Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_CLOSED,
-                type=org_consts.STAGE_TYPE_PUBLIC,
-            ),
+            status=Stage.objects.get(title=lead_constants.LEAD_STATUS_CLOSED),
             claimed_by=self.user_1,
         )
 

@@ -1,32 +1,69 @@
 <template>
   <div class="dropdown">
-    <div @click="toggle" class="dropdown-input-container" :class="{ searchable: isSearchable }">
+    <div
+      @click="toggle"
+      class="dropdown-input-container"
+      :class="{ searchable: isSearchable, disabled: isDisabled }"
+    >
       <input
         class="search"
         type="text"
-        @input="
-          visible = true
-          execUpdateValue($event.target.value)
-        "
-        :disabled="!isSearchable"
-        @blur="$event.target.value = ''"
-        @focus="visible = true"
+        ref="search-input"
+        @input="execUpdateValue($event.target.value)"
+        :disabled="!isSearchable || !visible || isDisabled"
+        :class="{ disabled: isDisabled }"
+        :placeholder="isSearchable && visible ? nullDisplay : ''"
       />
-      <div v-if="!isMulti" class="selected-items">
-        <span v-show="!isMulti && !visible">
-          {{ objectSelectedItems ? objectSelectedItems[displayKey] : '' }}</span
-        >
+
+      <div v-if="!isMulti" class="selected-items" :class="{ disabled: isDisabled }">
+        <span v-show="!isMulti && !visible" class="selected-items__item">
+          <span v-if="selectedItemsObject">{{ selectedItemsObject[displayKey] }}</span>
+          <span v-else class="muted">{{ nullDisplay }}</span>
+          <span
+            @click.stop="execUpdateSelected(selectedItemsObject[valueKey])"
+            class="selected-items__item__remove"
+            v-if="selectedItemsObject"
+            >x</span
+          >
+        </span>
       </div>
-      <div v-if="isMulti && !isHidden" class="selected-items multi">
+      <div
+        v-if="isMulti && !isHidden && !visible"
+        class="selected-items multi"
+        :class="{ disabled: isDisabled }"
+        @click.stop.prevent="toggle"
+      >
         <span
-          @click.prevent="execUpdateSelected(item[valueKey])"
+          @click.stop.prevent="execUpdateSelected(item[valueKey])"
           :key="`${item[valueKey]}-${i}`"
-          v-for="(item, i) in objectSelectedItems"
+          v-for="(item, i) in selectedItemsObject"
           class="selected-items__item"
         >
           {{ item[displayKey] }}
         </span>
       </div>
+      <div
+        v-if="isMulti && isHidden && !visible"
+        class="selected-items"
+        :class="{ disabled: isDisabled }"
+        @click.stop.prevent="toggle"
+      >
+        <span v-show="isMulti && !visible" class="selected-items__item">
+          <span class="muted">{{ nullDisplay }}</span>
+        </span>
+      </div>
+
+      <slot name="dropdown-icon" v-if="showIcon" :classes="'dropdown-icon'">
+        <span
+          v-show="showIcon"
+          class="dropdown-icon"
+          :class="{ 'dropdown-icon__expanded': visible }"
+        >
+          <svg fill="black" stroke="black" width="15px" height="10px" viewBox="0 0 290 290">
+            <use xlink:href="#arrow-down" />
+          </svg>
+        </span>
+      </slot>
     </div>
 
     <div v-if="visible" class="dropdown-content">
@@ -53,7 +90,7 @@
       </template>
 
       <slot name="dd-pagination" :classes="'dd-item'" :loadMore="onLoadMore">
-        <div v-if="hasNext" @click.prevent="onLoadMore" class="dd-item">
+        <div v-if="hasNext" @click.stop class="dd-item">
           +
         </div>
       </slot>
@@ -70,9 +107,19 @@
  *        b. does not close dropdown on select if multi select is enabled
  *        c. displays selected values differently and allows them to be removed on the fly
  *
- *@local enables local sorting for objects required to use sync when passing items :items.sync
+ *@local enables local sorting for objects
  *@hide hides the list of selected items when multi is set
- *
+ * Props:
+ *@has_next enables pagination
+ *@inputDelay && @selectDelay optional debounce
+ *@itemsRef .sync provide the object of the selected
+ *          useful when this is populated with data saved in the server
+ *          or if you would like the whole object returned rather than just the value
+ *          must use .sync as the child will sync value back to parent when item is changed
+ *@items the array or items as key value pair.
+ *@valueKey && @displayKey by default value and key are used respectively but can be customized
+ *@disabled to disable the dropdown menu
+ *@closeOnSelect determines where the dropdwon will close after each select on a multi-select
  *
  *
  *
@@ -80,9 +127,14 @@
  **/
 
 import debounce from 'lodash.debounce'
+
 export default {
   name: 'DropDownSelect',
   props: {
+    showIcon: {
+      type: Boolean,
+      default: true,
+    },
     loading: {
       type: Boolean,
       default: false,
@@ -93,11 +145,11 @@ export default {
     },
     inputDelay: {
       type: Number,
-      default: 0,
+      default: 100,
     },
     selectDelay: {
       type: Number,
-      default: 0,
+      default: 100,
     },
     items: {
       /** list of items */
@@ -127,23 +179,56 @@ export default {
       default: 0,
     },
     value: {},
+    itemsRef: {
+      type: [Object, Array],
+    },
+    nullDisplay: {
+      type: String,
+      default: 'Click to Select',
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       visible: false,
       eventClicked: null,
       selectedItems: this.value,
+      selectedItemsObject: null,
       execUpdateValue: debounce(this.updateValue, this.inputDelay),
       execUpdateSelected: debounce(this.updateSelectedValue, this.selectDelay),
       itemList: [],
       isLoading: this.loading,
     }
   },
+  components: {},
   watch: {
+    value: {
+      immediate: true,
+      handler(val) {
+        this.selectedItems = val
+        this.selectedItemsObject = this.itemsRef
+      },
+    },
     items: {
       deep: true,
       handler(val) {
         this.itemList = val
+      },
+    },
+    visible: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          window.addEventListener('click', this.closeEvent)
+        } else {
+          this.removeEvent()
+          if (this.$refs['search-input']) {
+            this.$refs['search-input'].value = ''
+          }
+        }
       },
     },
   },
@@ -152,17 +237,7 @@ export default {
     element() {
       return this.$el
     },
-    objectSelectedItems() {
-      if (!this.selectedItems) {
-        return null
-      }
-      if (this.isMulti) {
-        return this.selectedItems.map(v => {
-          return this.itemList.filter(i => i[this.valueKey] == v)[0]
-        })
-      }
-      return this.itemList.filter(i => i[this.valueKey] == this.selectedItems)[0]
-    },
+
     isMulti() {
       return this.$attrs.hasOwnProperty('multi')
     },
@@ -175,12 +250,34 @@ export default {
     isHidden() {
       return this.$attrs.hasOwnProperty('hidden')
     },
+    isNullable() {
+      return this.$attrs.hasOwnProperty('nullable')
+    },
+    isDisabled() {
+      // will also check loading state in future
+      return this.disabled
+    },
+    isCloseOnSelect() {
+      return this.$attrs.hasOwnProperty('closeOnSelect')
+    },
   },
   created() {
+    this.selectedItemsObject = this.objectSelectedItems()
+    /* immediately update itemsRef if an item is already set */
+
+    this.emitUpdateItemsRef(this.selectedItemsObject)
     /* wait until created so that all the elements of the dom are ready */
-    window.addEventListener('click', this.closeEvent)
+
     if (this.isMulti) {
       if (!Array.isArray(this.value)) {
+        throw new Error(
+          JSON.stringify({
+            code: 'expected_array',
+            message: 'Multi is selected expected value to be array',
+          }),
+        )
+      }
+      if (this.itemsRef && !Array.isArray(this.itemsRef)) {
         throw new Error(
           JSON.stringify({
             code: 'expected_array',
@@ -193,6 +290,35 @@ export default {
     this.itemList = [...this.items]
   },
   methods: {
+    objectSelectedItems() {
+      if (!this.isMulti && !this.selectedItems) {
+        return null
+      } else if (this.isMulti && !this.selectedItems.length) {
+        return null
+      }
+      if (this.isMulti) {
+        let objectItems = []
+        for (let i = 0; i <= this.selectedItems.length; i++) {
+          // using for loop and findIndex to maintain order
+          let index = this.itemList.findIndex(it => it[this.valueKey] == this.selectedItems[i])
+          if (~index) {
+            objectItems.push(this.itemList[index])
+          } else if (this.itemsRef) {
+            // check to see if it is part of the passed refs (as it may be serversie)
+            let index = this.itemsRef.findIndex(it => it[this.valueKey] == this.selectedItems[i])
+            if (~index) {
+              objectItems.push(this.itemsRef[index])
+            }
+          }
+        }
+        return objectItems
+      }
+      return this.itemList.find(i => i[this.valueKey] == this.selectedItems)
+        ? this.itemList.find(i => i[this.valueKey] == this.selectedItems)
+        : this.itemsRef[this.valueKey] == this.selectedItems
+        ? this.itemsRef
+        : null
+    },
     onLoadMore() {
       this.isLoading = true
       this.$emit('load-more')
@@ -221,16 +347,39 @@ export default {
       this.isLoading = false
     },
     toggle() {
-      this.visible = !this.visible
+      if (this.isDisabled) {
+        this.visible = false
+        return
+      }
+      if (this.visible) {
+        this.closeDropDownEvent()
+      }
+      if (!this.visible) {
+        this.visible = true
+      }
+
+      if (this.isSearchable) {
+        this.$refs['search-input'].disabled = false
+        this.$refs['search-input'].focus()
+      }
+      if (!this.visible) {
+        this.removeEvent()
+      }
     },
     closeDropDownEvent() {
+      if (this.$refs['search-input']) {
+        this.$refs['search-input'].value = ''
+      }
+
+      this.visible = false
+
       this.$emit('close')
     },
     emitSearch(val) {
       this.$emit('search-term', val)
     },
-    emitUpdateItems(items) {
-      this.$emit('update:items', items)
+    emitUpdateItemsRef(itemsRef) {
+      this.$emit('update:itemsRef', itemsRef)
     },
 
     emitSelected() {
@@ -241,16 +390,29 @@ export default {
       this.isLoading = true
       if (this.isMulti) {
         const index = this.checkIsSelected(itemValue)
+
         if (~index) {
           this.selectedItems.splice(index, 1)
+          this.selectedItemsObject.splice(index, 1)
         } else {
           this.selectedItems.push(itemValue)
+          this.selectedItemsObject = this.objectSelectedItems()
         }
+
+        if (this.isCloseOnSelect) {
+          this.closeDropDownEvent()
+        }
+      } else if (this.selectedItems == itemValue) {
+        this.selectedItems = null
+        this.selectedItemsObject = null
+        this.closeDropDownEvent()
       } else {
         this.selectedItems = itemValue
-        this.visible = false
+        this.selectedItemsObject = this.objectSelectedItems()
+        this.closeDropDownEvent()
       }
-      this.emitSelected(itemValue)
+      this.emitSelected()
+      this.emitUpdateItemsRef(this.selectedItemsObject)
       this.isLoading = false
     },
     removeEvent() {
@@ -264,10 +426,11 @@ export default {
       return window.addEventListener('click', this.closeEvent)
     },
     closeEvent(e) {
-      if (this.element.contains(e.target) !== true) {
-        this.closeDropDownEvent()
-        this.visible = false
+      if (this.element.contains(e.target) || this.element.contains(e.target.parentNode)) {
+        return
       }
+      this.closeDropDownEvent()
+      this.visible = false
     },
   },
 }
@@ -306,93 +469,182 @@ Display dropdown relative to the component it is triggered by
 }
 
 .selected {
-  background-color: #e5f2ea;
-  color: darkgreen;
+  background-color: lighten(#068bff, 10%);
+  color: #068bff;
 }
 
 .dropdown-input-container {
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  border: 1px solid black;
   cursor: pointer;
   &.searchable {
     cursor: default;
   }
-  border-radius: 5px;
-  padding: 0.5rem 0.5rem;
+  &.disabled {
+    cursor: not-allowed;
+  }
 
   .search,
   .selected-items {
     position: absolute;
-    top: 0;
-    left: 0;
+    font-size: 12px;
+    padding: 0.3rem 2rem;
+    border-radius: 0;
+    height: 99%;
+    background-color: transparent;
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* mozilla */
+    width: 95%;
+    &.disabled {
+      cursor: not-allowed;
+    }
   }
+  .dropdown-icon {
+    position: absolute;
+    right: 0.4rem;
+
+    &__expanded {
+      /* animation: rotatetoggleicon forwards;
+      animation-duration: 1s;
+      animation-iteration-count: 1; */
+    }
+  }
+
   .selected-items::-webkit-scrollbar {
     display: none; /* chrome safari */
   }
 
   .search {
-    width: 100%;
-    height: 100%;
+    height: 60%;
     border: none;
-    padding-top: 2%;
+    min-height: 0;
+    min-width: 0;
+    &::placeholder {
+      color: #808080;
+    }
     &:disabled {
       cursor: pointer;
+    }
+    &.disabled {
+      cursor: not-allowed;
     }
   }
 }
 
 .selected-items.multi {
   display: flex;
-  overflow-y: scroll;
+  overflow-x: scroll;
   height: 2rem;
-  padding: 0px;
+  padding-top: 0px;
+  max-width: 85%;
+
   > .selected-items__item {
-    margin: 0.2rem;
+    height: 100%;
+
     background-color: purple;
-    border-radius: 2px;
+    text-align: center;
+    border-radius: 5px;
     color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 10%;
-    padding: 0rem 0.2rem;
+    width: 15%;
+    min-width: 5rem;
+    padding: 0 0.5rem;
     font-size: 10px;
+    margin: 0rem 0.2rem;
     font-weight: bold;
+
     &:hover {
       cursor: pointer;
     }
   }
 }
 .selected-items {
-  width: 100%;
+  &:hover {
+    cursor: pointer;
+  }
   display: flex;
-  overflow-y: scroll;
-  //max-height: 20px;
-  padding-left: 10px;
-  padding-top: 10px;
+  padding-left: 5%;
+  padding-right: 5%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  &__item {
+    max-width: 95%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &__remove {
+      position: absolute;
+      right: 1.5rem;
+      border-radius: 50%;
+    }
+  }
+}
+
+.dd-item {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: black;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+  padding: 1rem 1rem;
+
+  min-height: 40px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+
+  &:hover {
+    cursor: pointer;
+    background-color: #f4f7f9;
+  }
+}
+.muted {
+  // muted color is the same as placeholder color
+  color: #808080;
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.dd-item {
-  display: inline-flex;
-  overflow: hidden;
-  white-space: nowrap;
-  color: black;
-  text-decoration: none;
-  color: inherit;
-  height: 100%;
-  border-bottom: 1px solid lightgray;
-  min-height: 40px;
-  justify-content: center;
-  align-items: center;
-  &:hover {
-    cursor: pointer;
-    background-color: lighten(gray, 20%);
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #484a6e;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  top: 1rem;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 100;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+@keyframes rotatetoggleicon {
+  from {
+  }
+  to {
+    transform: rotate(180deg);
   }
 }
 </style>
