@@ -29,6 +29,7 @@
           <LeadForecastDropdown
             :lead="dataLead"
             :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
           />
           <LeadStatusDropdown
             :lead="dataLead"
