@@ -76,6 +76,7 @@ export default {
           .subtract(1, 'weeks')
           .startOf('week')
         let formatted = moment(curr.datetimeFor)
+        console.log(formatted)
         if (!acc['today']) {
           acc['today'] = []
         }
@@ -93,20 +94,26 @@ export default {
         }
         if (today.isSame(formatted, 'day')) {
           acc['today'].push(curr)
+          console.log('hit today')
           return acc
         } else if (yesterday.isSame(formatted, 'day')) {
           acc['yesterday'].push(curr)
+          console.log('hit yesterday')
           return acc
         } else if (formatted.isSame(thisWeek, 'week')) {
           acc['this week'].push(curr)
+          console.log('hit this week')
           return acc
         } else if (formatted.isSame(lastWeek, 'week')) {
           acc['last week'].push(curr)
+          console.log('hit last week')
           return acc
         } else if (formatted.isBefore(lastWeek, 'week')) {
           acc['previous weeks'].push(curr)
+          console.log('hit previous weeks')
           return acc
         }
+        console.log('reached end')
       }, {})
     },
   },
