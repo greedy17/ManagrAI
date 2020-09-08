@@ -75,7 +75,7 @@ export default {
         let lastWeek = moment()
           .subtract(1, 'weeks')
           .startOf('week')
-        let formatted = moment(curr.datetimeCreated)
+        let formatted = moment(curr.datetimeFor)
         if (!acc['today']) {
           acc['today'] = []
         }
