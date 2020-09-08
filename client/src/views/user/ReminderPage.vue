@@ -7,8 +7,6 @@
     <br />
 
     <template v-if="reminders.list.length > 0">
-      <!-- start -->
-
       <template v-for="(value, key) in formattedReminders(reminders.list)">
         <span class="muted" :key="key">
           {{ key }}
@@ -18,8 +16,6 @@
           <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
         </template>
       </template>
-
-      <!-- end -->
     </template>
     <template v-else>
       <br />

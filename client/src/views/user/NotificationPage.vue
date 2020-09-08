@@ -1,10 +1,7 @@
 <template>
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0">
-      <!-- start -->
-
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
-        <!-- ----- -->
         <span class="muted" :key="key">
           {{ key }}
           <br />
@@ -24,7 +21,6 @@
         @start-loading="hasNextPageData = true"
         model="Notification"
       />
-      <!-- end -->
     </template>
     <template v-else>
       No Notifications
