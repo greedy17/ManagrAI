@@ -68,53 +68,30 @@ export default {
       if (list.length <= 0) {
         return null
       }
+      let accumulator = {
+        today: [],
+        tomorrow: [],
+        future: [],
+      }
       return list.reduce((acc, curr) => {
         let today = moment()
-        let yesterday = moment().subtract(1, 'day')
-        let thisWeek = moment().startOf('week')
-        let lastWeek = moment()
-          .subtract(1, 'weeks')
-          .startOf('week')
+        let tomorrow = moment().add(1, 'day')
         let formatted = moment(curr.datetimeFor)
-        console.log(formatted)
-        if (!acc['today']) {
-          acc['today'] = []
-        }
-        if (!acc['yesterday']) {
-          acc['yesterday'] = []
-        }
-        if (!acc['this week']) {
-          acc['this week'] = []
-        }
-        if (!acc['last week']) {
-          acc['last week'] = []
-        }
-        if (!acc['previous weeks']) {
-          acc['previous weeks'] = []
-        }
         if (today.isSame(formatted, 'day')) {
           acc['today'].push(curr)
           console.log('hit today')
           return acc
-        } else if (yesterday.isSame(formatted, 'day')) {
-          acc['yesterday'].push(curr)
-          console.log('hit yesterday')
+        } else if (tomorrow.isSame(formatted, 'day')) {
+          acc['tomorrow'].push(curr)
+          console.log('hit tomorrow')
           return acc
-        } else if (formatted.isSame(thisWeek, 'week')) {
-          acc['this week'].push(curr)
-          console.log('hit this week')
-          return acc
-        } else if (formatted.isSame(lastWeek, 'week')) {
-          acc['last week'].push(curr)
-          console.log('hit last week')
-          return acc
-        } else if (formatted.isBefore(lastWeek, 'week')) {
-          acc['previous weeks'].push(curr)
-          console.log('hit previous weeks')
+        } else if (formatted.isAfter(tomorrow, 'day')) {
+          acc['future'].push(curr)
+          console.log('hit future')
           return acc
         }
         console.log('reached end')
-      }, {})
+      }, accumulator)
     },
   },
 
