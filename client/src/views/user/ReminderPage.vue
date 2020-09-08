@@ -5,9 +5,19 @@
     <small class="muted"> to refresh toggle back </small>
 
     <template v-if="reminders.list.length > 0">
-      <template v-for="(reminder, i) in reminders.list">
-        <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
+      <!-- start -->
+
+      <template v-for="(value, key) in formattedReminders(reminders.list)">
+        <span class="muted" :key="key">
+          {{ key }}
+          <br />
+        </span>
+        <template v-for="(reminder, i) in value">
+          <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
+        </template>
       </template>
+
+      <!-- end -->
     </template>
     <template v-else>
       <br />
@@ -52,10 +62,61 @@ export default {
         return
       }
     },
+    formattedReminders(list) {
+      if (list.length <= 0) {
+        return null
+      }
+      return list.reduce((acc, curr) => {
+        let today = moment()
+        let yesterday = moment().subtract(1, 'day')
+        let thisWeek = moment().startOf('week')
+        let lastWeek = moment()
+          .subtract(1, 'weeks')
+          .startOf('week')
+        let formatted = moment(curr.datetimeCreated)
+        if (!acc['today']) {
+          acc['today'] = []
+        }
+        if (!acc['yesterday']) {
+          acc['yesterday'] = []
+        }
+        if (!acc['this week']) {
+          acc['this week'] = []
+        }
+        if (!acc['last week']) {
+          acc['last week'] = []
+        }
+        if (!acc['previous weeks']) {
+          acc['previous weeks'] = []
+        }
+        if (today.isSame(formatted, 'day')) {
+          acc['today'].push(curr)
+          return acc
+        } else if (yesterday.isSame(formatted, 'day')) {
+          acc['yesterday'].push(curr)
+          return acc
+        } else if (formatted.isSame(thisWeek, 'week')) {
+          acc['this week'].push(curr)
+          return acc
+        } else if (formatted.isSame(lastWeek, 'week')) {
+          acc['last week'].push(curr)
+          return acc
+        } else if (formatted.isBefore(lastWeek, 'week')) {
+          acc['previous weeks'].push(curr)
+          return acc
+        }
+      }, {})
+    },
   },
 
   destroyed() {},
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
+.muted {
+  text-transform: capitalize;
+}
+</style>
