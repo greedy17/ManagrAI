@@ -3,6 +3,8 @@
     <small class="muted">last checked at {{ lastChecked | dateShortWithTime }} </small>
     <br />
     <small class="muted"> to refresh toggle back </small>
+    <br />
+    <br />
 
     <template v-if="reminders.list.length > 0">
       <!-- start -->
