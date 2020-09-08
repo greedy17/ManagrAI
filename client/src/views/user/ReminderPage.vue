@@ -79,18 +79,14 @@ export default {
         let formatted = moment(curr.datetimeFor)
         if (today.isSame(formatted, 'day')) {
           acc['today'].push(curr)
-          console.log('hit today')
           return acc
         } else if (tomorrow.isSame(formatted, 'day')) {
           acc['tomorrow'].push(curr)
-          console.log('hit tomorrow')
           return acc
         } else if (formatted.isAfter(tomorrow, 'day')) {
           acc['future'].push(curr)
-          console.log('hit future')
           return acc
         }
-        console.log('reached end')
       }, accumulator)
     },
   },
