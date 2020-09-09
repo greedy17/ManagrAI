@@ -83,8 +83,10 @@ def _get_email_notification(account_id, object_id, date):
             message_contacts = message["from"]
             message_to = message["to"]
 
-            message_contacts = [c["email"] for c in message_contacts if c["email"]]
-            message_to = [c["email"] for c in message_to if c["email"]]
+            message_contacts = [
+                c["email"].lower() for c in message_contacts if c["email"]
+            ]
+            message_to = [c["email"].lower() for c in message_to if c["email"]]
             # retrieve user leads and contacts
             # create a new leademailaction
             # create a new notification
@@ -160,7 +162,9 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
                 return
 
             message_contacts = message["to"]
-            message_contacts = [c["email"] for c in message_contacts if c["email"]]
+            message_contacts = [
+                c["email"].lower() for c in message_contacts if c["email"]
+            ]
 
             # retrieve user leads and contacts
             # create a new leademailaction

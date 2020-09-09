@@ -66,6 +66,7 @@ LEAD_UPDATED = "Lead.UPDATED"
 LEAD_DELETED = "Lead.DELETED"
 LEAD_CLAIMED = "Lead.CLAIMED"
 LEAD_RELEASED = "Lead.RELEASED"
+LEAD_RESET = "Lead.RESET"
 LEAD_CLOSED = "Lead.CLOSED"
 
 # Possible Note actions
@@ -139,6 +140,7 @@ ACTIVITY_CHOICES = (
     (LEAD_DELETED, "Lead Deleted",),
     (LEAD_CLAIMED, "Lead Claimed",),
     (LEAD_RELEASED, "Lead Released",),
+    (LEAD_RESET, "Lead Reset",),
     (LEAD_CLOSED, "Lead Closed",),
     (NOTE_CREATED, "Note Created",),
     (NOTE_UPDATED, "Note Updated",),
@@ -176,6 +178,7 @@ ACTIVITIES_TO_EXCLUDE_FROM_HISTORY = [
     LEAD_UPDATED,
     LEAD_CLAIMED,
     LEAD_RELEASED,
+    LEAD_RESET,
 ]
 
 NOTIFICATION_ACTION_SNOOZE = "SNOOZE"

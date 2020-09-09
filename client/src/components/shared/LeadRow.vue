@@ -33,6 +33,7 @@
           <LeadStatusDropdown
             :lead="dataLead"
             :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            @status-changed="onUpdateLocalStatus"
           />
         </div>
 
@@ -99,6 +100,11 @@ export default {
     this.dataLead = this.lead
   },
   methods: {
+    onUpdateLocalStatus(val) {
+      // if status update was successful or was not closed then update it manually
+      // No need to call the whole endpoint again
+      this.dataLead = { ...this.dataLead, statusRef: val, status: val.id }
+    },
     toggleDetails() {
       this.showDetails = !this.showDetails
     },

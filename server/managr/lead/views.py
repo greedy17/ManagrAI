@@ -336,16 +336,23 @@ class LeadViewSet(
         """ cant update account, cant update created_by  """
         user = request.user
         current_lead = self.get_object()
+        # create new dict to not affect request data
+        data = dict(request.data)
+
+        # NOTE (Bruno):
+        # reset_flag is used to discern if this was a lead-reset event or not,
+        # since a reset-event is actually a PATCH to /leads with default values decided client-side.
+        reset_flag = 'reset_flag' in data.keys()
+
         # restricted fields array to delete them if they are in
         restricted_fields = (
             "created_by",
             "account",
             "claimed_by",
             "contacts",
+            "reset_flag",
         )
 
-        # create new dict to not affect request data
-        data = dict(request.data)
         for field in restricted_fields:
             if field in data.keys():
                 del data[field]
@@ -373,7 +380,10 @@ class LeadViewSet(
             }
 
         self.perform_update(serializer)
-        emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance, extra_meta=extra_meta)
+        if reset_flag:
+            emit_event(lead_constants.LEAD_RESET, user, serializer.instance, extra_meta=extra_meta)
+        else:
+            emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance, extra_meta=extra_meta)
         return Response(serializer.data)
 
     @action(
