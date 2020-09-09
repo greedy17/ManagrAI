@@ -19,7 +19,11 @@
       <ComponentLoadingSVG v-if="collection.refreshing" style="margin: 1rem auto;" />
       <template v-else>
         <div :key="lead.id" class="list-leads__row" v-for="lead in collection.list">
-          <LeadRow :key="lead.id" :lead="lead.leadRef">
+          <LeadRow
+            :key="lead.id"
+            :lead="lead.leadRef"
+            @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
+          >
             <template v-slot:left> </template>
             <template v-slot:center>
               <div class="lead-items">
@@ -50,8 +54,7 @@
 
 <script>
 import Forecast from '@/services/forecasts'
-import Lead from '@/components/forecast/Lead'
-import LoadMoreButton from '@/components/shared/LoadMoreButton'
+import Lead from '@/services/leads'
 import LeadRow from '@/components/shared/LeadRow'
 import Pagination from '@/components/shared/Pagination'
 import { paginationMixin } from '@/services/pagination'
@@ -70,8 +73,6 @@ export default {
     },
   },
   components: {
-    Lead,
-    LoadMoreButton,
     LeadRow,
     Pagination,
   },

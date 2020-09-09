@@ -113,9 +113,9 @@ export default {
       // clean up 'Unforecasted'/'NA' client/server inconsistency
       to = to == Forecast.NA ? Forecast.UNFORECASTED : to
       from = from == Forecast.NA ? Forecast.UNFORECASTED : from
-      let { leadRef } = forecast
+      let leadID = forecast.leadRef.id
       // remove from proper collection
-      this.lists[from].list = this.lists[from].list.filter(f => f.leadRef.id != leadRef.id)
+      this.lists[from].list = this.lists[from].list.filter(f => f.leadRef.id != leadID)
       this.lists[from].pagination.totalCount -= 1
       // add to proper collection, sort
       let newCollectionList = [...this.lists[to].list, forecast]

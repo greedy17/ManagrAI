@@ -78,8 +78,15 @@ export default {
           forecast: value,
         }
         Forecast.api.update(this.lead.forecast, patchData).then(forecast => {
+          let prevForecast = this.lead.forecastRef.forecast
           this.lead.forecast = forecast.id
           this.lead.forecastRef = forecast
+          let eventPayload = {
+            forecast, // includes the leadRef
+            from: prevForecast,
+            to: value,
+          }
+          this.$emit('move-lead-in-forecast-list', eventPayload)
         })
       } else {
         // since currently null, create forecast

@@ -103,11 +103,11 @@
 </template>
 
 <script>
-import Lead from '@/components/leads-index/Lead'
 import Pagination from '@/components/shared/Pagination'
 import Checkbox from '@/components/leads-new/CheckBox'
 import BulkLeadActions from '@/components/leads-index/BulkLeadActions'
 import LeadRow from '@/components/shared/LeadRow'
+import Lead from '@/services/leads'
 import { paginationMixin } from '@/services/pagination'
 
 export default {
@@ -136,7 +136,6 @@ export default {
     },
   },
   components: {
-    Lead,
     Checkbox,
     Pagination,
     BulkLeadActions,
