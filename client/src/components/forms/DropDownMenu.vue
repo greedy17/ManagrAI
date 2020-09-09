@@ -101,15 +101,17 @@ export default {
       selectedItem: null,
     }
   },
+  watch: {
+    visible() {
+      this.removeEvent()
+    },
+  },
   computed: {
     element() {
       return this.$el
     },
   },
-  created() {
-    /* wait until created so that all the elements of the dom are ready */
-    window.addEventListener('click', this.closeEvent)
-  },
+  created() {},
   methods: {
     toggle() {
       this.visible = !this.visible
