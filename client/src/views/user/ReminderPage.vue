@@ -3,10 +3,18 @@
     <small class="muted">last checked at {{ lastChecked | dateShortWithTime }} </small>
     <br />
     <small class="muted"> to refresh toggle back </small>
+    <br />
+    <br />
 
     <template v-if="reminders.list.length > 0">
-      <template v-for="(reminder, i) in reminders.list">
-        <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
+      <template v-for="(value, key) in formattedReminders(reminders.list)">
+        <span class="muted" :key="key">
+          {{ key }}
+          <br />
+        </span>
+        <template v-for="(reminder, i) in value">
+          <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
+        </template>
       </template>
     </template>
     <template v-else>
@@ -52,10 +60,41 @@ export default {
         return
       }
     },
+    formattedReminders(list) {
+      if (list.length <= 0) {
+        return null
+      }
+      let accumulator = {
+        today: [],
+        tomorrow: [],
+        future: [],
+      }
+      return list.reduce((acc, curr) => {
+        let today = moment()
+        let tomorrow = moment().add(1, 'day')
+        let formatted = moment(curr.datetimeFor)
+        if (today.isSame(formatted, 'day')) {
+          acc['today'].push(curr)
+          return acc
+        } else if (tomorrow.isSame(formatted, 'day')) {
+          acc['tomorrow'].push(curr)
+          return acc
+        } else if (formatted.isAfter(tomorrow, 'day')) {
+          acc['future'].push(curr)
+          return acc
+        }
+      }, accumulator)
+    },
   },
 
   destroyed() {},
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
+.muted {
+  text-transform: capitalize;
+}
+</style>

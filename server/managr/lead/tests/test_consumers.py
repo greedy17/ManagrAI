@@ -44,7 +44,7 @@ class CallNoteActionConsumerTestCase(TestCase):
         self.user = self.org.users.first()
 
         # Create some lead-related data
-        self.account = AccountFactory()
+        self.account = AccountFactory(organization=self.org)
         self.contact_1 = ContactFactory(account=self.account)
         self.contact_2 = ContactFactory(account=self.account)
         self.contact_3 = ContactFactory(account=self.account)

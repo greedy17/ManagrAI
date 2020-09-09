@@ -458,6 +458,24 @@ class LeadViewSet(
         emit_event(lead_constants.LEAD_CLOSED, request.user, lead)
         return Response()
 
+    @action(
+        methods=["GET"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="count",
+    )
+    def count(self, request, *args, **kwargs):
+        # NOTE (Bruno): this endpoint could be expanded to leverage
+        # more query_params. Currently, it assumes filtering by_user.
+        user = request.user
+        stage = request.query_params.get("stage")
+        queryset = lead_models.Lead.objects.filter(claimed_by=user)
+        if stage:
+            queryset = queryset.filter(status__title=stage)
+        count = queryset.count()
+        data = {'count': count}
+        return Response(data)
+
 
 class ListViewSet(
     viewsets.GenericViewSet,

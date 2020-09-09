@@ -29,10 +29,12 @@
           <LeadForecastDropdown
             :lead="dataLead"
             :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
           />
           <LeadStatusDropdown
             :lead="dataLead"
             :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            @status-changed="onUpdateLocalStatus"
           />
         </div>
 
@@ -54,7 +56,7 @@
             </span>
           </span>
         </slot>
-        <span class="go-to" @click="routeToLeadDetail()">
+        <span class="go-to" @click="openLeadDetail">
           <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
             <use xlink:href="@/assets/images/svg-repo.svg#caret" />
           </svg>
@@ -99,11 +101,17 @@ export default {
     this.dataLead = this.lead
   },
   methods: {
+    onUpdateLocalStatus(val) {
+      // if status update was successful or was not closed then update it manually
+      // No need to call the whole endpoint again
+      this.dataLead = { ...this.dataLead, statusRef: val, status: val.id }
+    },
     toggleDetails() {
       this.showDetails = !this.showDetails
     },
-    routeToLeadDetail() {
-      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    openLeadDetail() {
+      let routeData = this.$router.resolve({ name: 'LeadsDetail', params: { id: this.lead.id } })
+      window.open(routeData.href, '_blank')
     },
   },
   computed: {

@@ -5,7 +5,7 @@
         <LeadActions class="lead-actions" :lead="lead" />
       </div>
     </div>
-    <div class="route-to-detail" @click="routeToLeadDetail">See Opportunity Detail</div>
+    <div class="route-to-detail" @click="openLeadDetail">See Opportunity Detail</div>
   </div>
 </template>
 
@@ -19,8 +19,9 @@ export default {
     LeadActions,
   },
   methods: {
-    routeToLeadDetail() {
-      this.$router.push({ name: 'LeadsDetail', params: { id: this.lead.id } })
+    openLeadDetail() {
+      let routeData = this.$router.resolve({ name: 'LeadsDetail', params: { id: this.lead.id } })
+      window.open(routeData.href, '_blank')
     },
   },
 }

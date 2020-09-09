@@ -21,14 +21,14 @@
       <div class="filter-options">
         <div
           class="option"
-          @click="emitUpdateFilter({ key: 'byStatus', value: status.id })"
-          v-for="status in getStatuses"
-          :key="status.id"
+          @click="emitUpdateFilter({ key: 'byStatus', value: status.obj.id })"
+          v-for="status in statuses"
+          :key="status.obj.id"
           :class="{
-            active: currentFilters.byStatus ? currentFilters.byStatus == status.id : false,
+            active: currentFilters.byStatus ? currentFilters.byStatus == status.obj.id : false,
           }"
         >
-          {{ status.title.toLowerCase() }}
+          {{ status.obj.title.toLowerCase() }} ({{ status.count }})
         </div>
       </div>
     </div>
@@ -38,6 +38,7 @@
 <script>
 import { forecastEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
+import Lead from '@/services/leads'
 
 export default {
   name: 'ListsToolBar',
@@ -52,16 +53,23 @@ export default {
   data() {
     return {
       forecastEnums,
+      statuses: this.$store.state.stages.map(s => ({ obj: s, count: null })),
     }
   },
-  computed: {
-    getStatuses() {
-      return this.$store.state.stages
-    },
+  created() {
+    this.statuses.forEach(this.fetchStatusCount)
   },
   methods: {
     emitUpdateFilter(item) {
       this.$emit('update-filter', item)
+    },
+    fetchStatusCount(status) {
+      let params = {
+        stage: status.obj.title,
+      }
+      Lead.api.count(params).then(data => {
+        status.count = data.count
+      })
     },
   },
 }

@@ -63,7 +63,7 @@ def list_polling_counts(request):
     items_to_return = request.data.get("items", None)
     last_checked_at = request.data.get("last_checked_at", None)
     last_checked_at = (
-        parse(last_checked_at) - timezone.timedelta(minutes=1)
+        parse(last_checked_at) - timezone.timedelta(seconds=20)
         if last_checked_at
         else None
     )
@@ -100,6 +100,7 @@ def list_polling_counts(request):
                 "count": request.user.unviewed_notifications_count,
                 "last_check": now,
             }
+
             items[item] = data
 
     return Response({"items": items, "last_check": now})
