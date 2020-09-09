@@ -222,13 +222,20 @@ class Stage(TimeStampModel):
     type = models.CharField(max_length=255, choices=(org_consts.STAGE_TYPES))
 
     organization = models.ForeignKey(
-        "Organization", related_name="stages", null=True, on_delete=models.CASCADE,
+        "Organization",
+        related_name="stages",
+        null=True,
+        blank=True,
+        default="",
+        on_delete=models.CASCADE,
     )
+    # currently setting default to 6 we have 5 public tags that are taking 1-5
+    order = models.IntegerField(blank=False, null=False, default=6)
 
     objects = StageQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["order"]
 
     def save(self, *args, **kwargs):
         # save all as upper case

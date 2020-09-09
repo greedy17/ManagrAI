@@ -23,9 +23,11 @@ class SendEmailTestCase(TestCase):
     def setUp(self):
         self.org = Organization.objects.first()
         self.user = self.org.users.get(email="testing@thinknimble.com")
-
+        self.account = AccountFactory(organization=self.org)
         # Random lead for basic insight testing
-        self.lead = LeadFactory(amount=25000, claimed_by=self.user,)
+        self.lead = LeadFactory(
+            amount=25000, claimed_by=self.user, account=self.account
+        )
         contact = ContactFactory()
         self.lead.linked_contacts.set([contact])
 
