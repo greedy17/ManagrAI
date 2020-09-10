@@ -23,7 +23,7 @@ class ContactFilterSet(FilterSet):
 
 class AccountFilterSet(FilterSet):
     by_params = django_filters.CharFilter(method="filter_by_params")
-    leads = django_filters.CharFilter(methods="filter_by_leads")
+    leads = django_filters.CharFilter(method="filter_by_leads")
 
     class Meta:
         model = Account
