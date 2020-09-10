@@ -23,10 +23,11 @@ class ContactFilterSet(FilterSet):
 
 class AccountFilterSet(FilterSet):
     by_params = django_filters.CharFilter(method="filter_by_params")
+    leads = django_filters.CharFilter(methods="filter_by_leads")
 
     class Meta:
         model = Account
-        fields = []
+        fields = ["leads"]
 
     def filter_by_params(self, queryset, name, value):
         """
@@ -74,3 +75,15 @@ class AccountFilterSet(FilterSet):
             return queryset.filter(leads__claimed_by__in=representatives).distinct()
 
         return queryset
+
+    def filter_by_leads(self, queryset, name, value):
+        q = Q()
+        if value:
+            l = value.split(",")
+            for lead in l:
+                q |= Q(id=lead)
+            leads = Lead.objects.for_user(self.request.user).filter(q)
+
+            return queryset.filter(leads__in=leads)
+        return queryset
+
