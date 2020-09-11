@@ -61,7 +61,16 @@
       "plugin:prettier/recommended",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": {
+      "no-unused-vars": [
+        "error",
+        {
+          "vars": "all",
+          "args": "after-used",
+          "ignoreRestSiblings": false
+        }
+      ]
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     }
