@@ -1,10 +1,15 @@
 import copy
 import json
 from django.test import TestCase
+from django.urls import reverse
 from faker import Faker
 from django.test import RequestFactory
+from django.test import Client
+from rest_framework.authtoken.models import Token
+from rest_framework import status
 
 from managr.core.models import User
+from managr.organization import views as org_views
 
 from .models import Organization, Account
 from .serializers import AccountSerializer
@@ -37,6 +42,8 @@ class AccountTestCase(TestCase):
         self.org = Organization.objects.first()
         self.user = self.org.users.first()
         self.request = MockRequest(self.user)
+        self.factory = RequestFactory()
+        self.token = Token.objects.filter(user=self.user).first().key
 
     def test_account_created_to_org(self):
         # test to see if an account was created and set to an org
@@ -65,9 +72,14 @@ class AccountTestCase(TestCase):
         faker = Faker()
         acc = AccountFactory(organization=self.org)
         updated_acc = {"id": acc.id, "name": faker.name(), "url": acc.url}
+        url = "/api/accounts/bulk-update/"
+        request = self.factory.get(url)
+        request.user = self.user
+        headers = dict(Authorization=f"token {self.token}")
+        request.headers = headers
 
         serializer = AccountSerializer(
-            acc, data=updated_acc, context={"request": self.request}
+            acc, data=updated_acc, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
