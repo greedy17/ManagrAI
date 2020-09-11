@@ -1,18 +1,20 @@
 <template>
-  <div class="invite">
+  <div class="invite-container">
     <form class="invite-form" v-if="!success" @submit.prevent="handleInvite">
       <h2>Invite</h2>
 
       <div class="errors">
         <!-- client side validations -->
-        <div v-if="isStaff && organizations.length > 0" class="organization">
+        <div v-if="isStaff" class="invite-form__organization">
           <DropDownSelect
-            :items="organizations"
+            :items="organizations.list"
+            :itemsRef.sync="organizationRef"
             v-model="organization"
             displayKey="name"
             valueKey="id"
+            nullDisplay="Select an Org"
             searchable
-            local
+            :haseNext="!!organizations.pagination.next"
           />
         </div>
         <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
@@ -33,8 +35,13 @@
         </div>
       </div>
       <!-- type="text" instead of type="email" so we can control UI when invalid -->
-      <input v-model="email" type="text" placeholder="email" />
-      <input v-model="emailConfirmation" type="text" placeholder="confirm email" />
+      <input class="invite-form__form-input" v-model="email" type="text" placeholder="email" />
+      <input
+        class="invite-form__form-input"
+        v-model="emailConfirmation"
+        type="text"
+        placeholder="confirm email"
+      />
       <div class="group" v-if="isStaff && isIntegrationEnabled">
         <label for="is-integration-account">Integration Account</label>
         <input
@@ -62,7 +69,7 @@
 
 <script>
 import User from '@/services/users'
-import DropDownSelect from '@/components/forms/inputs/DropDownSelect'
+import DropDownSelect from '@/components/forms/DropDownSelect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 
@@ -82,7 +89,8 @@ export default {
       link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
       isIntegrationAccount: false,
       organization: null,
-      organizations: [],
+      organizations: CollectionManager.create({ ModelClass: Organization }),
+      organizationRef: null,
     }
   },
   watch: {
@@ -96,8 +104,7 @@ export default {
   },
   async created() {
     if (this.isStaff) {
-      let i = await Organization.api.list({})
-      this.organizations = i.results
+      await this.organizations.refresh()
     } else {
       this.organization = this.$store.state.user.organization
     }
@@ -172,7 +179,7 @@ export default {
     isIntegrationEnabled() {
       // if the user isStaff and the org is integration enabled
       if (this.isStaff && this.organization) {
-        let org = this.organizations.find(i => i.id == this.organization)
+        let org = this.organizationRef
         return org.isExternalsyncenabled
       }
       return false
@@ -202,10 +209,11 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.invite {
+.invite-container {
   display: flex;
   flex-flow: row;
   justify-content: center;
+  height: 80vh;
 }
 
 h2 {
@@ -220,19 +228,17 @@ form,
   @include standard-border();
   margin-top: 3.125rem;
   width: 31.25rem;
-  height: 18.75rem;
+
   background-color: $white;
   display: flex;
   flex-flow: column;
   align-items: center;
 }
 
-input {
-  @include input-field();
+.invite-form__form-input {
+  width: 20rem;
   height: 2.5rem;
-  width: 15.65rem;
-  display: block;
-  margin: 0.375rem 0;
+  @include input-field();
 }
 .checkbox {
   width: auto;
@@ -262,7 +268,25 @@ button {
     margin-top: 1rem;
   }
 }
-::v-deep.dropdown {
-  margin-bottom: 1rem;
+.invite-form__organization {
+  height: 2.5rem;
+  width: 20rem;
+  display: flex;
+  align-items: center;
+  @include input-field();
+}
+::v-deep .dropdown {
+  // manually setting the style for the dropdown here
+  // width is set on the parent class
+
+  .dropdown-input-container {
+    width: 100%;
+    align-items: center;
+    border: none;
+
+    &.disabled {
+      border: 1px solid gray;
+    }
+  }
 }
 </style>

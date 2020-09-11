@@ -15,10 +15,22 @@ from .models import Contact, Account
 
 class ContactFilterSet(FilterSet):
     by_lead = django_filters.CharFilter(field_name="leads")
+    by_leads = django_filters.CharFilter(method="filter_by_leads")
 
     class Meta:
         model = Contact
         fields = ("account",)
+
+    def filter_by_leads(self, queryset, name, value):
+        q = Q()
+        if value:
+            l = value.split(",")
+            for lead in l:
+                q |= Q(id=lead)
+            leads = Lead.objects.for_user(self.request.user).filter(q)
+
+            return queryset.filter(leads__in=leads)
+        return queryset
 
 
 class AccountFilterSet(FilterSet):
