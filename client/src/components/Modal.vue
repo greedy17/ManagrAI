@@ -40,6 +40,7 @@
  * Events:
  *  @event close-modal - Emitted when the area of page around the actual modal is clicked.
  */
+import VueScrollTo from 'vue-scrollto'
 export default {
   name: 'Modal',
   props: {
@@ -65,6 +66,10 @@ export default {
       },
     }
   },
+  created() {
+    // page elements are created
+    this.original.documentY = 0
+  },
   mounted() {
     document.body.style.overflowX = 'hidden'
     document.body.style.overflowY = 'hidden'
@@ -88,6 +93,7 @@ export default {
 
 .container {
   position: absolute;
+  top: 0;
   left: 0;
   //   top: 0; This is calculated from componentState.original.documentY
   width: 100vw;

@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.db.models import F, Q, Count
+from rest_framework.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.core import serializers
@@ -133,6 +134,27 @@ class Lead(TimeStampModel):
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
 
+    def save(self, *args, **kwargs):
+        ## do not allow duplicates of lead titles in a single org
+        leads = (
+            Lead.objects.filter(
+                title=self.title, account__organization__id=self.account.organization.id
+            )
+            .exclude(id=self.id)
+            .exists()
+        )
+        if leads:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_title": "A lead with this title already exists\
+            in your organization"
+                    }
+                }
+            )
+        else:
+            return super(Lead, self).save(*args, **kwargs)
+
 
 class ListQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -220,7 +242,7 @@ class BaseNote(TimeStampModel):
         Note all models inherit the parent queryset manager
     """
 
-    title = models.CharField(max_length=255, blank=False, null=False)
+    title = models.CharField(max_length=500, blank=False, null=False)
     content = models.TextField(blank=True)
     created_by = models.ForeignKey(
         "core.User",
@@ -274,6 +296,16 @@ class Note(BaseNote):
         ordering = ["-datetime_created"]
 
 
+class ReminderQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(created_by=user.id)
+        else:
+            return None
+
+
 class Reminder(BaseNote):
     """Reminders are like notes they are created with a date time, a title and content.
 
@@ -286,6 +318,7 @@ class Reminder(BaseNote):
     # TODO: - will build this out on a separate branch pb
     # this is a temporary field for a reminder the view status will be handled by notifications in V2
     viewed = models.BooleanField(default=False)
+    objects = ReminderQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_for"]
@@ -490,7 +523,7 @@ class Action(TimeStampModel):
         on_delete=models.SET_NULL,
         related_name="created_actions",
     )
-    action_detail = models.CharField(max_length=255, blank=True)
+    action_detail = models.TextField(blank=True)
     lead = models.ForeignKey(
         "Lead", on_delete=models.CASCADE, null=True, blank=False, related_name="actions"
     )
@@ -564,7 +597,7 @@ class LeadMessage(TimeStampModel):
         choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True
     )
 
-    body = models.CharField(max_length=255, blank=True)
+    body = models.TextField(blank=True)
     status = models.CharField(
         choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True
     )

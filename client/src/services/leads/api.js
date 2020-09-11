@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const LEADS_ENDPOINT = '/leads/'
+const LEADS_COUNT_ENDPOINT = '/leads/count/'
 const GENERATE_LEAD_ENDPOINT = uid => `/leads/${uid}/`
 const GENERATE_CLAIM_ENDPOINT = uid => `/leads/${uid}/claim/`
 const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
@@ -114,6 +115,17 @@ export default class LeadAPI {
       .post(GENERATE_CLOSE_ENDPOINT(id), data)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'LeadAPI.close' }))
+    return promise
+  }
+
+  count(params) {
+    let options = {
+      params,
+    }
+    const promise = apiClient()
+      .get(LEADS_COUNT_ENDPOINT, options)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.count' }))
     return promise
   }
 }

@@ -8,7 +8,7 @@
       </div>
     </template>
     <template v-else>
-      <div class="message-recipient">
+      <div class="message-recipients">
         <div class="selected-recipients">
           <span>To:</span>
           <div class="contacts">
@@ -31,15 +31,17 @@
               </div>
             </div>
           </div>
-          <div class="dropdown-search">
+          <div class="dd__contacts">
             <DropDownSelect
               v-if="leadLinkedContactsRef"
               :items="leadLinkedContacts"
+              :itemsRef.sync="recipientsRef"
               displayKey="full_name"
               valueKey="id"
               v-model="recipients"
               multi
               searchable
+              closeOnSelect
               local
               hidden
             />
@@ -73,6 +75,7 @@ export default {
       contactsToInclude: {},
       recipients: [],
       leadLinkedContacts: [],
+      recipientsRef: [],
       sendingMessage: false,
     }
   },
@@ -176,17 +179,24 @@ export default {
 ::v-deep .dropdown {
   // manually setting input style here
 
-  input[type='text'] {
+  .dropdown-input-container {
     width: 100%;
-    background-color: $soft-gray;
-    border-radius: 5px;
-    height: 20px;
-  }
-  .selected-items.multi {
-    .selected-items__item {
-      background-color: $dark-green;
+    border-radius: 30px;
+    border: 1px solid $soft-gray;
+    > input[type='text'] {
+      min-width: 0;
+      padding: 0;
+    }
+    &.disabled {
+      border: 1px solid gray;
     }
   }
+}
+.dd__contacts {
+  width: 15rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
 }
 
 .save-button-container {
@@ -202,12 +212,7 @@ export default {
   display: flex;
   width: 90%;
 }
-.message-recipient {
-  margin-bottom: 3rem;
-  > .dropdown {
-    width: 80%;
-  }
-}
+
 .selected-recipients {
   display: flex;
 

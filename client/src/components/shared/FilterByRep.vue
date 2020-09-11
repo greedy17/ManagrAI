@@ -7,14 +7,22 @@
           src="@/assets/images/more_horizontal.svg"
           class="trigger-icon"
           :class="{ 'full-opacity': menuOpen }"
-          @click="menuOpen = !menuOpen"
+          @click="openMenu"
         />
-        <div class="menu" v-if="menuOpen">
-          <div class="option" @click="selectAll">
-            Select All
-          </div>
-          <div class="option" @click="deselectAll">
-            Deselect All
+        <div style="position: relative; height: 0px; width: 0px;" v-if="menuOpen">
+          <div
+            class="menu"
+            :class="{
+              'menu-for-forecast-page': $route.name === 'Forecast',
+              'menu-for-accounts-page': $route.name !== 'Forecast',
+            }"
+          >
+            <div class="option" @click="selectAll">
+              Select All
+            </div>
+            <div class="option" @click="deselectAll">
+              Deselect All
+            </div>
           </div>
         </div>
       </div>
@@ -90,6 +98,18 @@ export default {
     this.loadEntireCollection(this.users)
   },
   methods: {
+    openMenu() {
+      // if showing, close and remove event listener
+      // if not showing, open and add event listener
+      if (!this.showHelp) {
+        this.menuOpen = true
+        setTimeout(() => document.body.addEventListener('click', this.menuCallback), 0)
+      }
+    },
+    menuCallback() {
+      this.menuOpen = false
+      document.body.removeEventListener('click', this.menuCallback)
+    },
     toggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
     },
@@ -200,7 +220,6 @@ export default {
       width: 9rem;
       background-color: white;
       position: absolute;
-      margin-left: 2rem;
 
       .option {
         @include pointer-on-hover;
@@ -221,5 +240,12 @@ export default {
       }
     }
   }
+}
+.menu-for-forecast-page {
+  margin-top: -6.5rem;
+  margin-left: -9rem;
+}
+.menu-for-accounts-page {
+  margin-left: 1rem;
 }
 </style>

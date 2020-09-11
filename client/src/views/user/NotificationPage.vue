@@ -2,8 +2,8 @@
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0">
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
-        <span class="muted" :key="key"
-          >{{ key }}
+        <span class="muted" :key="key">
+          {{ key }}
           <br />
         </span>
 
@@ -73,6 +73,13 @@ export default {
       if (list.length <= 0) {
         return null
       }
+      let accumulator = {
+        today: [],
+        yesterday: [],
+        'this week': [],
+        'last week': [],
+        'previous weeks': [],
+      }
       return list.reduce((acc, curr) => {
         let today = moment()
         let yesterday = moment().subtract(1, 'day')
@@ -81,21 +88,6 @@ export default {
           .subtract(1, 'weeks')
           .startOf('week')
         let formatted = moment(curr.notifiedAt)
-        if (!acc['today']) {
-          acc['today'] = []
-        }
-        if (!acc['yesterday']) {
-          acc['yesterday'] = []
-        }
-        if (!acc['this week']) {
-          acc['this week'] = []
-        }
-        if (!acc['last week']) {
-          acc['last week'] = []
-        }
-        if (!acc['previous weeks']) {
-          acc['previous weeks'] = []
-        }
         if (today.isSame(formatted, 'day')) {
           acc['today'].push(curr)
           return acc
@@ -112,7 +104,7 @@ export default {
           acc['previous weeks'].push(curr)
           return acc
         }
-      }, {})
+      }, accumulator)
     },
   },
 
