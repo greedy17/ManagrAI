@@ -1,8 +1,26 @@
 from django.contrib import admin
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
-
+from django import forms
+from django.forms import ModelForm, Textarea
 from .models import User, EmailAuthAccount, EmailTemplate, MessageAuthAccount
+
+
+class EmailAuthAccForm(forms.ModelForm):
+    linked_at = forms.IntegerField()
+
+    class Meta:
+        model = EmailAuthAccount
+        fields = (
+            "access_token",
+            "account_id",
+            "email_address",
+            "provider",
+            "sync_state",
+            "name",
+            "user",
+            "linked_at",
+        )
 
 
 class CustomUserAdmin(UserAdmin):
@@ -55,7 +73,11 @@ class CustomUserAdmin(UserAdmin):
     ordering = []
 
 
+class CustomEmailAuthAccount(admin.ModelAdmin):
+    form = EmailAuthAccForm
+
+
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(EmailAuthAccount)
+admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
 admin.site.register(EmailTemplate)
 admin.site.register(MessageAuthAccount)

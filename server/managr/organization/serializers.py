@@ -33,6 +33,8 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "state",
+            "org_token",
+            "is_externalsyncenabled",
         )
 
 
@@ -44,12 +46,13 @@ class StageSerializer(serializers.ModelSerializer):
 
 class AccountRefSerializer(serializers.ModelSerializer):
     """
-        Read only serializer for ref of the Account used for the AccountSerializer
+        Read only serializer for ref of the Account 
+        used for the AccountSerializer
     """
 
     class Meta:
         model = Account
-        fields = ('id', 'name', 'organization', 'url', 'logo')
+        fields = ("id", "name", "organization", "url", "logo")
 
 
 class OrganizationVerboseSerializer(serializers.ModelSerializer):
@@ -130,6 +133,7 @@ class AccountSerializer(serializers.ModelSerializer):
     def get_lead_count(self, instance):
         request = self.context.get("request")
         by_params = request.GET.get("by_params", None)
+
         if by_params:
             params = json.loads(by_params)
             only_unclaimed = params.get("only_unclaimed", False)

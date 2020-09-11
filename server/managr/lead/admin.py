@@ -1,4 +1,7 @@
 from django.contrib import admin
+
+# Register your models here.
+
 from .models import (
     ActionChoice,
     Lead,
@@ -34,6 +37,7 @@ class CustomList(admin.ModelAdmin):
 admin.site.register(Lead, CustomLead)
 admin.site.register(ActionChoice, CustomActionChoice)
 admin.site.register(List, CustomList)
+
 admin.site.register(Reminder)
 admin.site.register(Notification)
 admin.site.register(LeadMessage)

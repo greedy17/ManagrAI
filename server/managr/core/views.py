@@ -10,6 +10,7 @@ from django.views import View
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
+
 from django.db.models import F, Q, Count
 
 from rest_framework import (
@@ -47,12 +48,10 @@ from managr.core.twilio.messages import (
 )
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
+from managr.core.background import emit_event
 
 from .models import (
     User,
-    ACCOUNT_TYPE_MANAGER,
-    STATE_ACTIVE,
-    STATE_INVITED,
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
@@ -76,8 +75,6 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
-
-from managr.core.background import emit_event
 
 
 logger = logging.getLogger("managr")
@@ -147,7 +144,8 @@ class UserViewSet(
         if self.request.user.is_superuser:
             return User.objects.all()
         elif (
-            self.request.user.type == ACCOUNT_TYPE_MANAGER
+            self.request.user.type == core_consts.ACCOUNT_TYPE_MANAGER
+            or self.request.user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
             and self.request.user.is_active
         ):
             return User.objects.filter(organization=self.request.user.organization)
@@ -185,13 +183,11 @@ class UserViewSet(
         url_path="profile-photo",
     )
     def update_profile_photo(self, request, *args, **kwargs):
-        photo = request.data.get('file')
+        photo = request.data.get("file")
         pk = kwargs.get("pk", None)
         u = User.objects.filter(pk=pk).first()
         if not u:
-            raise ValidationError(
-                {"user": "invalid user id"}
-            )
+            raise ValidationError({"user": "invalid user id"})
         u.profile_photo = photo
         u.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -13,7 +13,9 @@ export const LEAD_DELETED = 'Lead.DELETED'
 export const LEAD_CLAIMED = 'Lead.CLAIMED'
 export const LEAD_RELEASED = 'Lead.RELEASED'
 export const LEAD_CLOSED = 'Lead.CLOSED'
+export const LEAD_RESET = 'Lead.RESET'
 
+export const LEAD_ACTIVITY_LOG_EXCLUDE = [LEAD_UPDATED, LEAD_CLAIMED, LEAD_RELEASED, LEAD_RESET]
 // Possible Note actions
 export const NOTE_CREATED = 'Note.CREATED'
 export const NOTE_UPDATED = 'Note.UPDATED'
@@ -68,4 +70,5 @@ export default {
   ACTION_DELETED,
   EMAIL_SENT,
   EMAIL_RECEIVED,
+  LEAD_ACTIVITY_LOG_EXCLUDE,
 }
