@@ -2,8 +2,7 @@
   <div>
     <nav id="nav">
       <div class="logo">
-        <!-- <span class="name">managr</span> -->
-        <img src="@/assets/images/logo.png" />
+        <img src="@/assets/images/logo-with-name.png" />
       </div>
       <div v-if="userIsLoggedIn" class="links">
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>

@@ -10,9 +10,10 @@
           <Tooltip>
             <template v-slot:tooltip-target>
               <span class="toggle-icon" @click="toggleSideToolbar('details')">
-                <svg width="20px" height="20px" viewBox="0 0 15 15">
-                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
-                </svg>
+                <img
+                  src="@/assets/images/logo.png"
+                  style="width: 1.5rem; height: 1.5rem; margin-right: 1rem;"
+                />
               </span>
             </template>
             <template v-slot:tooltip-content>
@@ -22,7 +23,7 @@
           <Tooltip>
             <template v-slot:tooltip-target>
               <span class="toggle-icon" @click="toggleSideToolbar('insights')">
-                <svg width="20px" height="20px" viewBox="0 0 15 15">
+                <svg width="1.5rem" height="1.5rem" viewBox="0 0 15 15">
                   <use xlink:href="@/assets/images/cloud.svg#cloud" />
                 </svg>
               </span>

@@ -163,7 +163,7 @@
         </div>
       </div>
       <div class="managr-logo">
-        <img src="@/assets/images/logo.png" />
+        <img src="@/assets/images/logo-with-name.png" />
       </div>
       <div class="divider" />
       <div class="actions">
@@ -226,7 +226,7 @@
         </table>
       </div>
       <div class="managr-logo">
-        <img src="@/assets/images/logo.png" />
+        <img src="@/assets/images/logo-with-name.png" />
       </div>
     </div>
   </div>
