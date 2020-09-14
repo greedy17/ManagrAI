@@ -66,8 +66,9 @@ export default {
     await this.notifications.refresh()
   },
   methods: {
-    async markAsViewed(notificationId) {
-      await Notification.api.markAsViewed([notificationId])
+    async markAsViewed(notification) {
+      await Notification.api.markAsViewed([notification.id])
+      notification.viewed = true
       this.$emit('refresh-unviewed-notif-count')
     },
     formattedNotifications(list) {

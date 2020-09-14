@@ -60,7 +60,7 @@ export default {
       this.updateUnviewedNotifCount(count)
     },
     updateUnviewedNotifCount(count) {
-      console.log('updateUnviewedNotifCount')
+      console.log('updateUnviewedNotifCount: ', count)
       this.unviewedNotifCount = count
     },
   },
