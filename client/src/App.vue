@@ -3,7 +3,7 @@
     <NavBar
       v-if="!hideNavBar"
       @update-unviewed-notif-count="updateUnviewedNotifCount"
-      :unviewedCount="unviewedNotifCount"
+      :unViewedCount="unviewedNotifCount"
     />
     <alert-alert />
     <!-- Binding a key to the full path will remount a view if
