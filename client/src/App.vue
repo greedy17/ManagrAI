@@ -12,14 +12,16 @@
       <router-view :key="$route.fullPath"></router-view>
     </div>
 
-    <SideNavBar v-if="userIsLoggedIn" @refresh-unviewed-notif-count="refreshUnviewedNotifCount" />
+    <SideNavBar
+      v-if="userIsLoggedIn"
+      @viewed-notif="updateUnviewedNotifCount(unviewedNotifCount - 1)"
+    />
   </div>
 </template>
 
 <script>
 import { mapGetters, mapState, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
-import Notification from '@/services/notifications/'
 
 import NavBar from '@/components/NavBar'
 import SideNavBar from '@/components/navigation/SideNavBar'
@@ -54,13 +56,7 @@ export default {
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
     },
-    async refreshUnviewedNotifCount() {
-      console.log('refreshUnviewedNotifCount')
-      const { count } = await Notification.api.getUnviewedCount({})
-      this.updateUnviewedNotifCount(count)
-    },
     updateUnviewedNotifCount(count) {
-      console.log('updateUnviewedNotifCount: ', count)
       this.unviewedNotifCount = count
     },
   },

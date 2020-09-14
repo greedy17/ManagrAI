@@ -16,7 +16,7 @@
         </div>
         <NotificationPage
           v-if="selectedView == notificationsView"
-          @refresh-unviewed-notif-count="$emit('refresh-unviewed-notif-count')"
+          @viewed-notif="$emit('viewed-notif')"
         />
         <ReminderPage v-if="selectedView == remindersView" />
       </div>
