@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="15px" id="cloud" height="15px" viewBox="0 0 24 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="15px" id="cloud" height="15px" viewBox="0 0 24 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
-    <title>Shape</title>
+    <title>Path</title>
     <desc>Created with Sketch.</desc>
     <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Icon-/-icon-backup-Copy" transform="translate(0.000000, -4.000000)" fill="#484A6E">
-            <path d="M19.35,10.04 C18.67,6.59 15.64,4 12,4 C9.11,4 6.6,5.64 5.35,8.04 C2.34,8.36 0,10.91 0,14 C0,17.31 2.69,20 6,20 L19,20 C21.76,20 24,17.76 24,15 C24,12.36 21.95,10.22 19.35,10.04 Z M19.54375,9.78833333 C18.8920833,6.48208333 15.9883333,4 12.5,4 C9.73041667,4 7.325,5.57166667 6.12708333,7.87166667 C3.2425,8.17833333 1,10.6220833 1,13.5833333 C1,16.7554167 3.57791667,19.3333333 6.75,19.3333333 L19.2083333,19.3333333 C21.8533333,19.3333333 24,17.1866667 24,14.5416667 C24,12.0116667 22.0354167,9.96083333 19.54375,9.78833333 Z" id="Shape"></path>
+        <g id="Icon-/-icon-backup" transform="translate(0.000000, -4.000000)" fill="#484A6E">
+            <path
+                d="M19.35,10.04 C18.67,6.59 15.64,4 12,4 C9.11,4 6.6,5.64 5.35,8.04 C2.34,8.36 0,10.91 0,14 C0,17.31 2.69,20 6,20 L19,20 C21.76,20 24,17.76 24,15 C24,12.36 21.95,10.22 19.35,10.04 Z"
+                id="Shape"></path>
         </g>
     </g>
 </svg>

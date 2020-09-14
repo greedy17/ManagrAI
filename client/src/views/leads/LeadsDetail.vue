@@ -23,9 +23,7 @@
           <Tooltip>
             <template v-slot:tooltip-target>
               <span class="toggle-icon" @click="toggleSideToolbar('insights')">
-                <svg width="1.5rem" height="1.5rem" viewBox="0 0 15 15">
-                  <use xlink:href="@/assets/images/cloud.svg#cloud" />
-                </svg>
+                <img class="cloud-svg" src="@/assets/images/cloud-outline.png" />
               </span>
             </template>
             <template v-slot:tooltip-content>
@@ -483,5 +481,9 @@ export default {
 .lead-header {
   text-align: center;
   margin-bottom: 2rem;
+}
+.cloud-svg {
+  height: 1.2rem;
+  padding: 0.1rem;
 }
 </style>
