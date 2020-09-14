@@ -163,7 +163,7 @@
         </div>
       </div>
       <div class="managr-logo">
-        managr
+        <img src="@/assets/images/logo.png" />
       </div>
       <div class="divider" />
       <div class="actions">
@@ -226,7 +226,7 @@
         </table>
       </div>
       <div class="managr-logo">
-        managr
+        <img src="@/assets/images/logo.png" />
       </div>
     </div>
   </div>
@@ -362,14 +362,10 @@ export default {
 
 .managr-logo {
   text-align: center;
-  font-family: $logo-font-family;
-  font-size: 2.25rem;
-  font-weight: 500;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: normal;
-  color: $dark-green;
-  padding: 3rem 0;
+
+  img {
+    height: 10rem;
+  }
 }
 
 .contract-hero {

@@ -2,7 +2,8 @@
   <div>
     <nav id="nav">
       <div class="logo">
-        <span class="name">managr</span>
+        <!-- <span class="name">managr</span> -->
+        <img src="@/assets/images/logo.png" />
       </div>
       <div v-if="userIsLoggedIn" class="links">
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
@@ -184,21 +185,8 @@ nav {
   display: flex;
   align-items: center;
 
-  .image {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .name {
-    display: flex;
-    align-items: center;
-    font-family: $logo-font-family;
-    font-size: 2.25rem;
-    font-weight: 500;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: normal;
-    color: $dark-green;
+  img {
+    height: 10rem;
   }
 }
 
