@@ -58,26 +58,31 @@
 import NavLink from '@/components/NavLink'
 import Notification from '@/services/notifications/'
 import DropDownMenu from '@/components/forms/DropDownMenu'
-import polling from '@/services/polling'
+
 const POLLING_INTERVAL = 10000
+
 export default {
   name: 'NavBar',
   components: {
     NavLink,
     DropDownMenu,
   },
+  props: {
+    unViewedCount: {
+      required: true,
+    },
+  },
   data() {
     return {
       showMenus: {
         user: false,
       },
-      unViewedCount: null,
     }
   },
   async created() {
     if (this.userIsLoggedIn) {
-      const count = await Notification.api.getUnviewedCount({})
-      this.unViewedCount = count.count
+      const { count } = await Notification.api.getUnviewedCount({})
+      this.$emit('update-unviewed-notif-count', count)
       this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
       this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
 
@@ -143,7 +148,8 @@ export default {
     shouldRefreshPolling(val) {
       if (val) {
         if (this.$store.getters.pollingDataToUpdate.includes('notificationCount')) {
-          this.unViewedCount = this.$store.state.pollingData.items.notificationCount.count
+          let count = this.$store.state.pollingData.items.notificationCount.count
+          this.$emit('update-unviewed-notif-count', count)
         }
       }
     },

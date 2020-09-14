@@ -63,13 +63,12 @@ export default {
     },
   },
   async created() {
-    await this.notifications.refresh().then(() => {
-      console.log(this.notifications)
-    })
+    await this.notifications.refresh()
   },
   methods: {
     async markAsViewed(notificationId) {
       await Notification.api.markAsViewed([notificationId])
+      this.$emit('refresh-unviewed-notif-count')
     },
     formattedNotifications(list) {
       if (list.length <= 0) {
