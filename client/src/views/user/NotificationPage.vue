@@ -63,7 +63,9 @@ export default {
     },
   },
   async created() {
-    await this.notifications.refresh()
+    await this.notifications.refresh().then(() => {
+      console.log(this.notifications)
+    })
   },
   methods: {
     async markAsViewed(notificationId) {

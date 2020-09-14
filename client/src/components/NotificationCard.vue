@@ -98,6 +98,7 @@ export default {
     },
     toggleCard() {
       this.expand = !this.expand
+      // when is notification.viewed updated??
       if (!this.notification.viewed) {
         this.$emit('mark-as-viewed', this.notification.id)
       }
