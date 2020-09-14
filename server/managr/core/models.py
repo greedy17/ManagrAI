@@ -74,12 +74,14 @@ class UserManager(BaseUserManager):
         extra_fields["is_serviceaccount"] = False
         return self._create_user(email, password, **extra_fields)
 
-    def create_serviceaccount(self, email, password, **extra_fields):
+    def create_serviceaccount(self, email, password, service_for, **extra_fields):
         """ Create service accounts that will be used to send emails/notifications etc """
-        extra_fields["is_staff"] = True
+        extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_serviceaccount"] = True
+        extra_fields["service_for"] = service_for
+        password = self.make_random_password()
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -92,6 +94,9 @@ class User(AbstractUser, TimeStampModel):
     username = None
     email = models.EmailField(unique=True)
     is_serviceaccount = models.BooleanField(default=False)
+    service_for = models.CharField(
+        choices=core_consts.SERVICE_TYPES, max_length=255, null=True
+    )
     is_active = models.BooleanField(default=False)
     organization = models.ForeignKey(
         "organization.Organization",
@@ -100,7 +105,9 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     type = models.CharField(
-        choices=ACCOUNT_TYPES, max_length=255, default=ACCOUNT_TYPE_MANAGER
+        choices=core_consts.ACCOUNT_TYPES,
+        max_length=255,
+        default=core_consts.ACCOUNT_TYPE_MANAGER,
     )
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
@@ -124,10 +131,8 @@ class User(AbstractUser, TimeStampModel):
         "set by their Organization.",
         default=0,
     )
-    commit = models.PositiveIntegerField(
-        help_text='Worst-case quota.', default=0)
-    upside = models.PositiveIntegerField(
-        help_text='Optimistic quota.', default=0)
+    commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
+    upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
     profile_photo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, null=True
     )

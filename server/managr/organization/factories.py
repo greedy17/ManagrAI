@@ -6,10 +6,12 @@ from managr.core.models import User
 from managr.lead.factories import LeadFactory
 from managr.utils.numbers import generate_random_numbers
 
-from .models import Account, Contact
+from .models import Account, Contact, Organization
 
 
 # Factories go here
+
+
 class AccountFactory(DjangoModelFactory):
     name = factory.Faker("company")
     url = factory.Faker("url")
@@ -31,9 +33,17 @@ class ContactFactory(DjangoModelFactory):
         model = Contact
 
 
+class OrganizationFactory(DjangoModelFactory):
+    name = factory.Faker("company")
+    state = "ACTIVE"
+
+    class Meta:
+        model = Organization
+
+
 def gen_random_test_data():
     """Quick script to generate random accounts, contacts, and leads."""
-    u = User.objects.get(email="test@thinknimble.com")
+    u = User.objects.get(email="testing@thinknimble.com")
     o = u.organization
 
     # Create 30 accounts

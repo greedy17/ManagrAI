@@ -2,9 +2,10 @@ from rest_framework import permissions, exceptions
 from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 from managr.lead.models import Lead, List
 from managr.organization.models import Organization, Stage
+from managr.core import constants as core_consts
+from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -17,8 +18,20 @@ class IsOrganizationManager(permissions.BasePermission):
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
         return (
-            user.type == ACCOUNT_TYPE_MANAGER and user.organization and user.is_active
+            user.type == core_consts.ACCOUNT_TYPE_MANAGER
+            and user.organization
+            and user.is_active
         )
+
+
+class IsExternalIntegrationAccount(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or request.user.is_anonymous:
+            raise exceptions.ValidationError("Authentication Required.")
+        if request.method in permissions.SAFE_METHODS and user.is_serviceaccount:
+            return True
+        return False
 
 
 class IsSalesPerson(permissions.BasePermission):

@@ -469,8 +469,8 @@ Display dropdown relative to the component it is triggered by
 }
 
 .selected {
-  background-color: lighten(#068bff, 10%);
-  color: #068bff;
+  background-color: lightgreen;
+  color: darkgreen;
 }
 
 .dropdown-input-container {
@@ -499,6 +499,7 @@ Display dropdown relative to the component it is triggered by
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* mozilla */
     width: 95%;
+    outline: none;
     &.disabled {
       cursor: not-allowed;
     }
@@ -611,33 +612,6 @@ Display dropdown relative to the component it is triggered by
 .muted {
   // muted color is the same as placeholder color
   color: #808080;
-}
-.tooltip {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Tooltip text */
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: #484a6e;
-  color: #fff;
-  text-align: center;
-  padding: 5px 0;
-  border-radius: 6px;
-  top: 1rem;
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 100;
-}
-
-/* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
-  visibility: visible;
 }
 
 @keyframes rotatetoggleicon {

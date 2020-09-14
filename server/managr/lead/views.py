@@ -63,7 +63,8 @@ class LeadActivityLogViewSet(
 ):
     permission_classes = (IsSalesPerson,)
     serializer_class = lead_serializers.LeadActivityLogSerializer
-    filter_fields = ("lead",)
+    filter_class = lead_filters.LeadActivityLogFilterSet
+
     filter_backends = (
         filters.SearchFilter,
         DjangoFilterBackend,
@@ -71,9 +72,16 @@ class LeadActivityLogViewSet(
     search_fields = ("meta",)
 
     def get_queryset(self):
-        return LeadActivityLog.objects.for_user(self.request.user).exclude(
-            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
-        )
+        # as per Mike's request certain activities are not shown in the log on the FE
+        # however our salesforce integration reacts to all changes therefore
+        # the frontend passes an excludes key to exclude certain activites
+        exclude_activities = self.request.query_params.get("exclude", None)
+        if exclude_activities:
+            exclude_activities = exclude_activities.split(",")
+            return LeadActivityLog.objects.for_user(self.request.user).exclude(
+                activity__in=exclude_activities
+            )
+        return LeadActivityLog.objects.for_user(self.request.user)
 
     @action(
         methods=["GET"],
@@ -342,7 +350,7 @@ class LeadViewSet(
         # NOTE (Bruno):
         # reset_flag is used to discern if this was a lead-reset event or not,
         # since a reset-event is actually a PATCH to /leads with default values decided client-side.
-        reset_flag = 'reset_flag' in data.keys()
+        reset_flag = "reset_flag" in data.keys()
 
         # restricted fields array to delete them if they are in
         restricted_fields = (
@@ -375,16 +383,135 @@ class LeadViewSet(
         extra_meta = None
         if "status" in data:
             extra_meta = {
-                'status_update': True,
-                'new_status': data['status'],
+                "status_update": True,
+                "new_status": data["status"],
             }
 
         self.perform_update(serializer)
         if reset_flag:
-            emit_event(lead_constants.LEAD_RESET, user, serializer.instance, extra_meta=extra_meta)
+            emit_event(
+                lead_constants.LEAD_RESET,
+                user,
+                serializer.instance,
+                extra_meta=extra_meta,
+            )
         else:
-            emit_event(lead_constants.LEAD_UPDATED, user, serializer.instance, extra_meta=extra_meta)
+            emit_event(
+                lead_constants.LEAD_UPDATED,
+                user,
+                serializer.instance,
+                extra_meta=extra_meta,
+            )
         return Response(serializer.data)
+
+    @action(
+        methods=["POST"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk-create",
+    )
+    def bulk_create(self, request, *args, **kwargs):
+        """Endpoint to create bulk Leads used for the integrations"""
+        # will also use endpoint for bulk imports currently not setting the users as claimed but will for that
+        # will check if the user is integration type or not, if it is then set the emitter to api
+        user = request.user
+
+        d = request.data
+        # make sure the user that created the lead is in the created_by field
+        created_leads = []
+        for data in d:
+
+            data["created_by"] = user.id
+            # check account to be sure it is in org
+            account_for = data.get("account", None)
+            if not account_for:
+                raise ValidationError(detail={"detail": "Account is a required field"})
+            # create method does returns true as object is not an instance of lead therefore we must check if account is part of user account
+            try:
+                account = Account.objects.for_user(request.user).get(pk=account_for)
+            except Account.DoesNotExist:
+                raise PermissionDenied()
+            # if there are contacts to be added first check that contacts exist or create them
+            # TODO: PB 05/15/20 fix issue where This get_or_create allows creating a user with a blank first_name and number
+            contacts = data.pop("linked_contacts", [])
+            contact_list = list()
+            for contact in contacts:
+                c, created = Contact.objects.for_user(request.user).get_or_create(
+                    email=contact["email"], defaults={"account": account}
+                )
+                if created:
+                    c.title = contact.get("title", c.title)
+                    c.first_name = contact.get("first_name", c.first_name)
+                    c.last_name = contact.get("last_name", c.last_name)
+                    c.phone_number_1 = contact.get("phone_number_1", c.phone_number_1)
+                    c.phone_number_2 = contact.get("phone_number_2", c.phone_number_2)
+                    c.save()
+                contact_list.append(c.id)
+            serializer = self.serializer_class(data=data, context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+
+            # Attach contacts and create a Forecast
+            serializer.instance.linked_contacts.add(*contact_list)
+            Forecast.objects.create(lead=serializer.instance)
+
+            emit_event(lead_constants.LEAD_CREATED_API, user, serializer.instance)
+            created_leads.append(serializer.data)
+        return Response(data={"created": created_leads})
+
+    @action(
+        methods=["POST"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk-update",
+    )
+    def bulk_update(self, request, *args, **kwargs):
+        user = request.user
+
+        # restricted fields array to delete them if they are in
+        restricted_fields = (
+            "created_by",
+            "account",
+            "claimed_by",
+            "contacts",
+            "linked_contacts",
+        )
+        leads = request.data
+        updated_lead = []
+        query = Q()
+        for lead in leads:
+            query |= Q(id=lead["id"])
+
+        existing_leads = Lead.objects.for_user(user).filter(query)
+        for existing_lead in existing_leads:
+            for lead in leads:
+                if lead["id"] == str(existing_lead.id):
+                    for field in restricted_fields:
+                        if field in lead.keys():
+                            del lead[field]
+
+                    # if updating status, also update status_last_update
+                    if "status" in lead:
+                        lead["status_last_update"] = timezone.now()
+
+                    # make sure the user that created the lead is not updated as well
+
+                    lead["last_updated_by"] = user.id
+                    # set its status to claimed by assigning it to the user that created the lead
+                    serializer = self.serializer_class(
+                        existing_lead,
+                        data=lead,
+                        context={"request": request},
+                        partial=True,
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    self.perform_update(serializer)
+                    emit_event(
+                        lead_constants.LEAD_UPDATED_API, user, serializer.instance
+                    )
+                    updated_lead.append(serializer.data)
+
+        return Response({"updated_leads": updated_lead})
 
     @action(
         methods=["POST"],

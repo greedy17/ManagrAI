@@ -13,6 +13,8 @@ from managr.organization.serializers import (
 from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
+
+
 from .models import (
     User,
     STATE_ACTIVE,
@@ -101,7 +103,7 @@ class UserSerializer(serializers.ModelSerializer):
         "full_name",
         "email_auth_account",
         "is_serviceaccount",
-        "message_auth_account",
+        "is_staff" "message_auth_account",
     )
 
 

@@ -11,6 +11,7 @@ from django_filters.rest_framework import FilterSet
 from django_filters import OrderingFilter
 from django.db.models import F, Q, Count, Max, Min, DateTimeField, Value, Case, When
 from django.db.models.functions import Lower
+from dateutil.parser import parse
 from django.utils import timezone
 
 from managr.lead import constants as lead_constants
@@ -24,6 +25,7 @@ from .models import (
     Reminder,
     Notification,
     LeadMessage,
+    LeadActivityLog,
 )
 
 
@@ -38,6 +40,37 @@ class LeadRatingOrderFiltering(OrderingFilter):
                 queryset = queryset.order_by(ordering)
 
         return queryset
+
+
+class LeadActivityLogFilterSet(FilterSet):
+    leads = django_filters.CharFilter(method="by_leads")
+    min_date = django_filters.CharFilter(method="by_min_date")
+    max_date = django_filters.CharFilter(method="by_max_date")
+
+    class Meta:
+        model = LeadActivityLog
+        fields = ["lead", "leads"]
+
+    def by_leads(self, queryset, name, value):
+        q = Q()
+        if value:
+            l = value.split(",")
+            for lead in l:
+                q |= Q(id=lead)
+            leads = Lead.objects.for_user(self.request.user).filter(q)
+
+            return queryset.filter(lead__in=leads)
+        return queryset
+
+    def by_min_date(self, queryset, name, value):
+        if value:
+            min = parse(value)
+            return queryset.filter(action_timestamp__gte=min)
+
+    def by_max_date(self, queryset, name, value):
+        if value:
+            min = parse(value)
+            return queryset.filter(action_timestamp__lte=min)
 
 
 class ReminderOrderingFilter(OrderingFilter):

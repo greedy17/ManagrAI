@@ -95,6 +95,7 @@ class BaseActionConsumer:
         return timezone.now()
 
     def create_log(self):
+
         self.assert_model_class()
 
         meta = self.get_meta()

@@ -1,4 +1,13 @@
+import json
+
 from django.db import models
+from django.core import serializers
+from django.db.models import Sum, Avg, Q
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
+from rest_framework.authtoken.models import Token
+
+from managr.utils.numbers import format_phone_number
 
 from django.db.models import Sum, Avg, Q
 from rest_framework.exceptions import ValidationError
@@ -9,6 +18,12 @@ from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
 
 from managr.core.models import UserManager, TimeStampModel
+from . import constants as org_consts
+
+
+from managr.core.models import UserManager, TimeStampModel
+from managr.core import constants as core_consts
+
 from . import constants as org_consts
 
 
@@ -25,7 +40,7 @@ STATE_CHOCIES = ((STATE_ACTIVE, "Active"), (STATE_INACTIVE, "Inactive"))
 
 class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
+        if user.is_superuser or user.is_serviceaccount:
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(pk=user.organization_id)
@@ -47,7 +62,7 @@ class Organization(TimeStampModel):
         null=False,
         blank=False,
     )
-
+    is_externalsyncenabled = models.BooleanField(default=False, null=False, blank=False)
     objects = OrganizationQuerySet.as_manager()
 
     @property
@@ -81,6 +96,20 @@ class Organization(TimeStampModel):
     def message_auth_count(self):
         """ returns a count of how many message auth phone numbers an org has """
         return self.users.filter(message_auth_account__isnull=False).count()
+
+    @property
+    def org_token(self):
+        if self.is_externalsyncenabled:
+            integration = self.users.filter(
+                type=core_consts.ACCOUNT_TYPE_INTEGRATION
+            ).first()
+            if integration:
+                if integration.is_active and integration.is_invited:
+                    auth_token, token_created = Token.objects.get_or_create(
+                        user=integration
+                    )
+                    token = json.loads(serializers.serialize("json", [auth_token,]))
+                    return token[0]["pk"]
 
 
 class AccountQuerySet(models.QuerySet):
@@ -194,7 +223,6 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
-
         return super(Contact, self).save(*args, **kwargs)
 
 

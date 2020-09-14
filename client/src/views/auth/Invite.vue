@@ -1,9 +1,22 @@
 <template>
-  <div class="invite">
-    <form v-if="!success" @submit.prevent="handleInvite">
+  <div class="invite-container">
+    <form class="invite-form" v-if="!success" @submit.prevent="handleInvite">
       <h2>Invite</h2>
+
       <div class="errors">
         <!-- client side validations -->
+        <div v-if="isStaff" class="invite-form__organization">
+          <DropDownSelect
+            :items="organizations.list"
+            :itemsRef.sync="organizationRef"
+            v-model="organization"
+            displayKey="name"
+            valueKey="id"
+            nullDisplay="Select an Org"
+            searchable
+            :haseNext="!!organizations.pagination.next"
+          />
+        </div>
         <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
           Fields may not be blank.
         </div>
@@ -22,8 +35,24 @@
         </div>
       </div>
       <!-- type="text" instead of type="email" so we can control UI when invalid -->
-      <input v-model="email" type="text" placeholder="email" />
-      <input v-model="emailConfirmation" type="text" placeholder="confirm email" />
+      <input class="invite-form__form-input" v-model="email" type="text" placeholder="email" />
+      <input
+        class="invite-form__form-input"
+        v-model="emailConfirmation"
+        type="text"
+        placeholder="confirm email"
+      />
+      <div class="group" v-if="isStaff && isIntegrationEnabled">
+        <label for="is-integration-account">Integration Account</label>
+        <input
+          type="checkbox"
+          class="checkbox"
+          v-model="isIntegrationAccount"
+          :checked="type == 'INTEGRATION'"
+          id="is-integration-account"
+        />
+      </div>
+
       <button type="submit">Invite</button>
     </form>
     <div v-else class="success-prompt">
@@ -40,22 +69,45 @@
 
 <script>
 import User from '@/services/users'
-
-const initialData = {
-  email: '',
-  emailConfirmation: '',
-  type: 'MANAGER', // TODO(Bruno 4-9-20): Make this dynamic
-  isFormValid: null,
-  errors: {},
-  success: null,
-  link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
-}
+import DropDownSelect from '@/components/forms/DropDownSelect'
+import Organization from '@/services/organizations'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'Invite',
-  components: {},
+  components: {
+    DropDownSelect,
+  },
   data() {
-    return Object.assign({}, initialData)
+    return {
+      email: '',
+      emailConfirmation: '',
+      type: 'MANAGER', // TODO(Bruno 4-9-20): Make this dynamic
+      isFormValid: null,
+      errors: {},
+      success: null,
+      link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
+      isIntegrationAccount: false,
+      organization: null,
+      organizations: CollectionManager.create({ ModelClass: Organization }),
+      organizationRef: null,
+    }
+  },
+  watch: {
+    isIntegrationAccount(val) {
+      if (val) {
+        this.type = 'INTEGRATION'
+      } else {
+        this.type = 'MANAGER'
+      }
+    },
+  },
+  async created() {
+    if (this.isStaff) {
+      await this.organizations.refresh()
+    } else {
+      this.organization = this.$store.state.user.organization
+    }
   },
 
   methods: {
@@ -64,7 +116,6 @@ export default {
       this.isFormValid = null
       this.success = null
       this.errors = {}
-
       // check form data for this request
       let validationResults = this.clientSideValidations()
       this.isFormValid = validationResults[0]
@@ -73,8 +124,7 @@ export default {
         return
       }
 
-      let organization = this.$store.state.user.organization
-      let invitePromise = User.api.invite(this.email, this.type, organization)
+      let invitePromise = User.api.invite(this.email, this.type, this.organization)
 
       invitePromise
         .then(response => {
@@ -98,16 +148,42 @@ export default {
         emailIsBlank: this.emailIsBlank,
         emailsDontMatch: this.emailsDontMatch,
         invalidEmail: this.invalidEmail,
+        invalidOrganization: this.invalidOrganization,
       }
-      let isFormValid = !this.emailIsBlank && !this.emailsDontMatch && !this.invalidEmail
+      let isFormValid =
+        !this.emailIsBlank &&
+        !this.emailsDontMatch &&
+        !this.invalidEmail &&
+        !this.invalidOrganization
 
       return [isFormValid, formErrors]
     },
     resetData() {
-      Object.assign(this, initialData)
+      this.email = ''
+      this.emailConfirmation = ''
+      this.type = 'MANAGER' // TODO(Bruno 4-9-20): Make this dynamic
+      this.isFormValid = null
+      this.errors = {}
+      this.success = null
+      this.link = '' // NOTE(Bruno 4-20-20): temporary, for staging purposes
+      this.isIntegrationAccount = false
+      this.organization = null
     },
   },
   computed: {
+    isStaff() {
+      // checking isStaff to see if they can create organizations or invite special users
+      // on the backend only superusers can do this
+      return this.$store.state.user.isStaff
+    },
+    isIntegrationEnabled() {
+      // if the user isStaff and the org is integration enabled
+      if (this.isStaff && this.organization) {
+        let org = this.organizationRef
+        return org.isExternalsyncenabled
+      }
+      return false
+    },
     emailIsBlank() {
       return !this.email.length
     },
@@ -120,6 +196,9 @@ export default {
       let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       return !regex.test(this.email)
     },
+    invalidOrganization() {
+      return !this.organization
+    },
   },
 }
 </script>
@@ -130,10 +209,11 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.invite {
+.invite-container {
   display: flex;
   flex-flow: row;
   justify-content: center;
+  height: 80vh;
 }
 
 h2 {
@@ -148,19 +228,21 @@ form,
   @include standard-border();
   margin-top: 3.125rem;
   width: 31.25rem;
-  height: 18.75rem;
+
   background-color: $white;
   display: flex;
   flex-flow: column;
   align-items: center;
 }
 
-input {
-  @include input-field();
+.invite-form__form-input {
+  width: 20rem;
   height: 2.5rem;
-  width: 15.65rem;
-  display: block;
-  margin: 0.375rem 0;
+  @include input-field();
+}
+.checkbox {
+  width: auto;
+  height: auto;
 }
 
 button {
@@ -168,5 +250,43 @@ button {
   margin-top: 1.25rem;
   height: 1.875rem;
   width: 9.375rem;
+}
+.group {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  align-items: center;
+  > * {
+    margin: 0.5rem;
+  }
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  > * {
+    margin-top: 1rem;
+  }
+}
+.invite-form__organization {
+  height: 2.5rem;
+  width: 20rem;
+  display: flex;
+  align-items: center;
+  @include input-field();
+}
+::v-deep .dropdown {
+  // manually setting the style for the dropdown here
+  // width is set on the parent class
+
+  .dropdown-input-container {
+    width: 100%;
+    align-items: center;
+    border: none;
+
+    &.disabled {
+      border: 1px solid gray;
+    }
+  }
 }
 </style>
