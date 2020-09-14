@@ -81,6 +81,7 @@ export default {
     updateStatus(newStatus) {
       let patchData = { status: newStatus }
       Lead.api.update(this.lead.id, patchData).then(lead => {
+        this.lead.statusRef = lead.statusRef
         this.leadItem = lead
       })
     },
