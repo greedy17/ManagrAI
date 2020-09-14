@@ -12,6 +12,10 @@ __pycache__/
 # Ignore editor directories
 .vscode/
 
+# Ignore the top directory package-lock.json
+package-lock.json
+
+
 # Ignore local static files and media
 server/static-files/
 server/media-files/
