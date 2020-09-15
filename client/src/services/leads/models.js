@@ -48,6 +48,12 @@ export default class Lead {
     actionsRef = null,
     lists = null,
     notes = null,
+    companySize = null,
+    industry = null,
+    type = null,
+    custom = null,
+    competitor = null,
+    competitorDescription = null,
   } = {}) {
     Object.assign(this, {
       id,
@@ -83,6 +89,12 @@ export default class Lead {
       actionsRef,
       lists,
       notes,
+      companySize,
+      industry,
+      type,
+      custom,
+      competitor,
+      competitorDescription,
     })
   }
 
