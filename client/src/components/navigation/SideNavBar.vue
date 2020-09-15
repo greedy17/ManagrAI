@@ -14,7 +14,10 @@
             >Notifications</span
           >
         </div>
-        <NotificationPage v-if="selectedView == notificationsView" />
+        <NotificationPage
+          v-if="selectedView == notificationsView"
+          @viewed-notif="$emit('viewed-notif')"
+        />
         <ReminderPage v-if="selectedView == remindersView" />
       </div>
     </div>
