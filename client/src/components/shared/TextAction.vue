@@ -126,7 +126,11 @@ export default {
       }
       try {
         await Messages.sendMessage(this.body, contactRefs, this.$attrs.lead.id)
-
+        this.$Alert.alert({
+          type: 'success',
+          message: `Text Message Sent`,
+          timeout: 3000,
+        })
         this.resetText()
       } catch (e) {
         let { response } = { ...e }
