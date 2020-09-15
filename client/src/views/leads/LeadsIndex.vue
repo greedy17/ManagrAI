@@ -9,9 +9,7 @@
                 class="toggle-icon"
                 @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
               >
-                <svg width="20px" height="20px" viewBox="0 0 15 15">
-                  <use xlink:href="@/assets/images/bookmark.svg#bookmark" />
-                </svg>
+                <img src="@/assets/images/logo.png" style="width: 1.5rem; height: 1.5rem;" />
               </span>
             </template>
             <template v-slot:tooltip-content>

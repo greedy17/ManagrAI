@@ -361,11 +361,6 @@ export default {
         this.accounts.list = [...this.accounts.list, account]
         this.selectedAccount = account.id
         this.loading = false
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: `Created account: ${account.name}.`,
-        })
         this.$emit('to-add-contacts')
       })
     },

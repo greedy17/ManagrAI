@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <NavBar v-if="!hideNavBar" />
+    <NavBar
+      v-if="!hideNavBar"
+      @update-unviewed-notif-count="updateUnviewedNotifCount"
+      :unViewedCount="unviewedNotifCount"
+    />
     <alert-alert />
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -8,16 +12,19 @@
       <router-view :key="$route.fullPath"></router-view>
     </div>
 
-    <SideNavBar v-if="userIsLoggedIn" />
+    <SideNavBar
+      v-if="userIsLoggedIn"
+      @viewed-notif="updateUnviewedNotifCount(unviewedNotifCount - 1)"
+    />
   </div>
 </template>
 
 <script>
+import { mapGetters, mapState, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
+
 import NavBar from '@/components/NavBar'
 import SideNavBar from '@/components/navigation/SideNavBar'
-
-import { mapGetters, mapState, mapActions } from 'vuex'
 
 const routesWithoutNavBar = ['StoryReportDetail']
 
@@ -26,6 +33,11 @@ export default {
   components: {
     NavBar,
     SideNavBar,
+  },
+  data() {
+    return {
+      unviewedNotifCount: null,
+    }
   },
   watch: {
     // When route changes, scroll to the top
@@ -43,6 +55,9 @@ export default {
     ...mapActions(['refreshCurrentUser']),
     toggleNotifications() {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
+    },
+    updateUnviewedNotifCount(count) {
+      this.unviewedNotifCount = count
     },
   },
   computed: {
