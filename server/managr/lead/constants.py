@@ -296,8 +296,8 @@ TYPE_CHOICES = (
 )
 
 # Choices for Lead competitor field
-YES = "YES"
-NO = "NO"
+YES = "Yes"
+NO = "No"
 
 COMPETITOR_CHOICES = (
       (YES, YES),
