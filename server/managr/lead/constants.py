@@ -216,73 +216,73 @@ COMPANY_SIZE_CHOICES = (
 )
 
 # Choices for Lead industry field
-AGRICULTURE = "Agriculture"
-APPAREL = "Apparel"
-BANKING = "Banking"
-BIOTECHNOLOGY = "Biotechnology"
-CHEMICALS = "Chemicals"
-COMMUNICATIONS = "Communications"
-CONSTRUCTION = "Construction"
-CONSULTING = "Consulting"
-EDUCATION = "Education"
-ELECTRONICS = "Electronics"
-ENERGY = "Energy"
-ENGINEERING = "Engineering"
-ENTERTAINMENT = "Entertainment"
-ENVIRONMENTAL = "Environmental"
-FINANCE = "Finance"
-FOOD_AND_BEVERAGE = "Food & Beverage"
-GOVERNMENT = "Government"
-HEALTHCARE = "Healthcare"
-HOSPITALITY = "Hospitality"
-INSURANCE = "Insurance"
-MACHINERY = "Machinery"
-MANUFACTURING = "Manufacturing"
-MEDIA = "Media"
-NOT_FOR_PROFIT = "Not for Profit"
-RECREATION = "Recreation"
-RETAIL = "Retail"
-SHIPPING = "Shipping"
-TECHNOLOGY = "Technology"
-TELECOMMUNICATIONS = "Telecommunications"
-TRANSPORTATION = "Transportation"
-UTILITIES = "Utilities"
+AGRICULTURE = "AGRICULTURE"
+APPAREL = "APPAREL"
+BANKING = "BANKING"
+BIOTECHNOLOGY = "BIOTECHNOLOGY"
+CHEMICALS = "CHEMICALS"
+COMMUNICATIONS = "COMMUNICATIONS"
+CONSTRUCTION = "CONSTRUCTION"
+CONSULTING = "CONSULTING"
+EDUCATION = "EDUCATION"
+ELECTRONICS = "ELECTRONICS"
+ENERGY = "ENERGY"
+ENGINEERING = "ENGINEERING"
+ENTERTAINMENT = "ENTERTAINMENT"
+ENVIRONMENTAL = "ENVIRONMENTAL"
+FINANCE = "FINANCE"
+FOOD_AND_BEVERAGE = "FOOD_AND_BEVERAGE"
+GOVERNMENT = "GOVERNMENT"
+HEALTHCARE = "HEALTHCARE"
+HOSPITALITY = "HOSPITALITY"
+INSURANCE = "INSURANCE"
+MACHINERY = "MACHINERY"
+MANUFACTURING = "MANUFACTURING"
+MEDIA = "MEDIA"
+NOT_FOR_PROFIT = "NOT_FOR_PROFIT"
+RECREATION = "RECREATION"
+RETAIL = "RETAIL"
+SHIPPING = "SHIPPING"
+TECHNOLOGY = "TECHNOLOGY"
+TELECOMMUNICATIONS = "TELECOMMUNICATIONS"
+TRANSPORTATION = "TRANSPORTATION"
+UTILITIES = "UTILITIES"
 # NOTE (Bruno 9-15-2020): the following choice is reused for other choice-sets, such as Lead type field
-OTHER = "Other"
+OTHER = "OTHER"
 
 INDUSTRY_CHOICES = (
-    (AGRICULTURE, AGRICULTURE),
-    (APPAREL, APPAREL),
-    (BANKING, BANKING),
-    (BIOTECHNOLOGY, BIOTECHNOLOGY),
-    (CHEMICALS, CHEMICALS),
-    (COMMUNICATIONS, COMMUNICATIONS),
-    (CONSTRUCTION, CONSTRUCTION),
-    (CONSULTING, CONSULTING),
-    (EDUCATION, EDUCATION),
-    (ELECTRONICS, ELECTRONICS),
-    (ENERGY, ENERGY),
-    (ENGINEERING, ENGINEERING),
-    (ENTERTAINMENT, ENTERTAINMENT),
-    (ENVIRONMENTAL, ENVIRONMENTAL),
-    (FINANCE, FINANCE),
-    (FOOD_AND_BEVERAGE, FOOD_AND_BEVERAGE),
-    (GOVERNMENT, GOVERNMENT),
-    (HEALTHCARE, HEALTHCARE),
-    (HOSPITALITY, HOSPITALITY),
-    (INSURANCE, INSURANCE),
-    (MACHINERY, MACHINERY),
-    (MANUFACTURING, MANUFACTURING),
-    (MEDIA, MEDIA),
-    (NOT_FOR_PROFIT, NOT_FOR_PROFIT),
-    (RECREATION, RECREATION),
-    (RETAIL, RETAIL),
-    (SHIPPING, SHIPPING),
-    (TECHNOLOGY, TECHNOLOGY),
-    (TELECOMMUNICATIONS, TELECOMMUNICATIONS),
-    (TRANSPORTATION, TRANSPORTATION),
-    (UTILITIES, UTILITIES),
-    (OTHER, OTHER),
+    (AGRICULTURE, "Agriculture"),
+    (APPAREL, "Apparel"),
+    (BANKING, "Banking"),
+    (BIOTECHNOLOGY, "Biotechnology"),
+    (CHEMICALS, "Chemicals"),
+    (COMMUNICATIONS, "Communications"),
+    (CONSTRUCTION, "Construction"),
+    (CONSULTING, "Consulting"),
+    (EDUCATION, "Education"),
+    (ELECTRONICS, "Electronics"),
+    (ENERGY, "Energy"),
+    (ENGINEERING, "Engineering"),
+    (ENTERTAINMENT, "Entertainment"),
+    (ENVIRONMENTAL, "Environmental"),
+    (FINANCE, "Finance"),
+    (FOOD_AND_BEVERAGE, "Food & Beverage"),
+    (GOVERNMENT, "Government"),
+    (HEALTHCARE, "Healthcare"),
+    (HOSPITALITY, "Hospitality"),
+    (INSURANCE, "Insurance"),
+    (MACHINERY, "Machinery"),
+    (MANUFACTURING, "Manufacturing"),
+    (MEDIA, "Media"),
+    (NOT_FOR_PROFIT, "Not for Profit"),
+    (RECREATION, "Recreation"),
+    (RETAIL, "Retail"),
+    (SHIPPING, "Shipping"),
+    (TECHNOLOGY, "Technology"),
+    (TELECOMMUNICATIONS, "Telecommunications"),
+    (TRANSPORTATION, "Transportation"),
+    (UTILITIES, "Utilities"),
+    (OTHER, "Other"),
 )
 
 # Choices for Lead type field
@@ -292,15 +292,15 @@ SQL = "SQL"
 TYPE_CHOICES = (
       (MQL, MQL),
       (SQL, SQL),
-      (OTHER, OTHER),
+      (OTHER, "Other"),
 )
 
 # Choices for Lead competitor field
-YES = "Yes"
-NO = "No"
+YES = "YES"
+NO = "NO"
 
 COMPETITOR_CHOICES = (
-      (YES, YES),
-      (NO, NO),
-      (OTHER, OTHER),
+      (YES, "Yes"),
+      (NO, "No"),
+      (OTHER, "Other"),
 )
