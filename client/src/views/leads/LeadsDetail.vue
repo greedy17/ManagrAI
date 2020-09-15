@@ -11,6 +11,7 @@
             <template v-slot:tooltip-target>
               <span class="toggle-icon" @click="toggleSideToolbar('details')">
                 <img
+                  class="tooltip-icon"
                   src="@/assets/images/logo.png"
                   style="width: 1.5rem; height: 1.5rem; margin-right: 1rem;"
                 />
@@ -23,11 +24,21 @@
           <Tooltip>
             <template v-slot:tooltip-target>
               <span class="toggle-icon" @click="toggleSideToolbar('insights')">
-                <img class="cloud-svg" src="@/assets/images/cloud-outline.png" />
+                <img class="tooltip-icon cloud-svg" src="@/assets/images/cloud-outline.png" />
               </span>
             </template>
             <template v-slot:tooltip-content>
               Insights
+            </template>
+          </Tooltip>
+          <Tooltip>
+            <template v-slot:tooltip-target>
+              <span class="toggle-icon" @click="toggleSideToolbar('custom-fields')">
+                <img class="tooltip-icon building-svg" src="@/assets/images/building.svg" />
+              </span>
+            </template>
+            <template v-slot:tooltip-content>
+              Custom Fields
             </template>
           </Tooltip>
         </template>
@@ -42,6 +53,10 @@
             @updated-amount="updateAmount"
             @updated-expected-close-date="updateExpectedCloseDate"
             @updated-title="updateTitle"
+          />
+          <LeadCustomFields
+            v-if="showToolbarNav && selectedToolbarView == 'custom-fields'"
+            :lead="lead"
           />
         </template>
       </SideNavToolbar>
@@ -171,6 +186,7 @@
 
 <script>
 import ToolBar from '@/components/leads-detail/ToolBar'
+import LeadCustomFields from '@/components/leads-detail/LeadCustomFields'
 import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
@@ -200,6 +216,7 @@ export default {
   props: ['id'],
   components: {
     ToolBar,
+    LeadCustomFields,
     LeadBanner,
     LeadActions,
     PinnedNotes,
@@ -482,8 +499,16 @@ export default {
   text-align: center;
   margin-bottom: 2rem;
 }
+.tooltip-icon {
+  margin-bottom: 0.5rem;
+}
 .cloud-svg {
   height: 1.2rem;
   padding: 0.1rem;
+  margin-right: 1rem;
+}
+.building-svg {
+  height: 1.4rem;
+  padding: 0 0.3rem;
 }
 </style>
