@@ -75,7 +75,19 @@ export default {
           this.loading = false
         }
       } else {
-        this.modal.isOpen = true
+        // All custom-fields must be completed in order to close a lead
+        if (this.leadCanBeClosed) {
+          this.modal.isOpen = true
+        } else {
+          let prevVal = this.leadItem.status
+          this.leadItem.status = null
+          this.leadItem.status = prevVal
+          this.$Alert.alert({
+            type: 'error',
+            timeout: 3000,
+            message: 'All custom-fields must be completed to close a lead.',
+          })
+        }
       }
     },
     updateStatus(status) {
@@ -102,6 +114,16 @@ export default {
     },
     getIsClosed() {
       return this.leadItem.statusRef ? this.leadItem.statusRef.title == 'CLOSED' : false
+    },
+    leadCanBeClosed() {
+      // All custom-fields must be completed in order to close a lead
+      let fields = ['companySize', 'industry', 'competitor', 'geography', 'type', 'custom']
+      for (let f of fields) {
+        if (!this.lead[f]) {
+          return false
+        }
+      }
+      return true
     },
   },
 }
