@@ -78,9 +78,8 @@ export default {
         this.modal.isOpen = true
       }
     },
-    updateStatus(newStatus) {
-      let patchData = { status: newStatus }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+    updateStatus(status) {
+      Lead.api.update(this.lead.id, { status }).then(lead => {
         this.lead.statusRef = lead.statusRef
         this.leadItem = lead
       })

@@ -326,41 +326,35 @@ export default {
       this.loading = true
       return Lead.api.retrieve(this.id)
     },
-    updatePrimaryDescription(description) {
-      let patchData = { primary_description: description }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+    updatePrimaryDescription(primaryDescription) {
+      Lead.api.update(this.lead.id, { primaryDescription }).then(lead => {
         this.lead = lead
       })
     },
-    updateSecondaryDescription(description) {
-      let patchData = { secondary_description: description }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+    updateSecondaryDescription(secondaryDescription) {
+      Lead.api.update(this.lead.id, { secondaryDescription }).then(lead => {
         this.lead = lead
       })
     },
     updateRating(rating) {
-      let patchData = { rating }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+      Lead.api.update(this.lead.id, { rating }).then(lead => {
         this.lead = lead
       })
     },
     updateAmount(amount) {
-      let patchData = { amount }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+      Lead.api.update(this.lead.id, { amount }).then(lead => {
         this.lead = lead
       })
     },
     updateExpectedCloseDate(expectedCloseDate) {
       const tzOffset = new Date().getTimezoneOffset()
       expectedCloseDate = `${expectedCloseDate}T${tzOffset / 60}:00`
-      let patchData = { expectedCloseDate }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+      Lead.api.update(this.lead.id, { expectedCloseDate }).then(lead => {
         this.lead = lead
       })
     },
     updateTitle(title) {
-      let patchData = { title }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+      Lead.api.update(this.lead.id, { title }).then(lead => {
         this.lead = lead
       })
     },
