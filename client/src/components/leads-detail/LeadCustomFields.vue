@@ -7,7 +7,12 @@
 export default {
   name: 'LeadCustomFields',
   components: {},
-  props: {},
+  props: {
+    lead: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {}
   },
