@@ -47,7 +47,34 @@
           </option>
         </select>
       </div>
-      Text Field Here
+      <!-- Competitor Description -->
+      <div class="text-field" style="padding: 1rem 0 0 0;">
+        <div class="display-mode-container" v-if="!competitorDescription.editing">
+          <div class="value">{{ lead.competitorDescription || '-Empty-' }}</div>
+          <div class="edit-icon-container">
+            <img
+              src="@/assets/images/pencil.svg"
+              class="edit-icon"
+              @click.stop.prevent="editTextField('competitorDescription')"
+            />
+          </div>
+        </div>
+        <div class="edit-mode-container" v-else-if="competitorDescription.editing">
+          <form @submit.prevent="updateTextField('competitorDescription')">
+            <input type="text" v-model="competitorDescription.temp" />
+            <img
+              class="save"
+              src="@/assets/images/checkmark.svg"
+              @click.stop.prevent="updateTextField('competitorDescription')"
+            />
+            <img
+              class="reset"
+              src="@/assets/images/remove.svg"
+              @click.stop.prevent="resetTextField('competitorDescription')"
+            />
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Geography -->
@@ -73,10 +100,7 @@
     <div class="text-field section-shadow">
       <div class="label">Custom</div>
       <div class="display-mode-container" v-if="!custom.editing">
-        <!-- <div class="fifth-wide" /> -->
-        <!-- <span class="three-fifth-wide value">{{ lead.custom || '-Empty-' }}</span> -->
         <div class="value">{{ lead.custom || '-Empty-' }}</div>
-        <!-- <div class="fifth-wide"> -->
         <div class="edit-icon-container">
           <img
             src="@/assets/images/pencil.svg"
@@ -123,6 +147,10 @@ export default {
       custom: {
         editing: false,
         temp: this.lead.custom,
+      },
+      competitorDescription: {
+        editing: false,
+        temp: this.lead.competitorDescription,
       },
     }
   },
