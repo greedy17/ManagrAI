@@ -75,6 +75,7 @@ class OrganizationVerboseSerializer(serializers.ModelSerializer):
             "action_choices_ref",
             "total_amount_closed_contracts",
             "avg_amount_closed_contracts",
+            "is_externalsyncenabled",
         )
         read_only_fields = (
             "accounts",
@@ -93,6 +94,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "state",
             "total_amount_closed_contracts",
             "avg_amount_closed_contracts",
+            "is_externalsyncenabled",
         )
 
 
