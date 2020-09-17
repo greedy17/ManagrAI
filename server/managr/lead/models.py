@@ -554,6 +554,9 @@ class ActionChoice(TimeStampModel):
     class Meta:
         ordering = ["title"]
 
+    def __str__(self):
+        return f" ActionChoice ({self.id}) {self.title} -- for {self.organization.name}"
+
 
 class ActionQuerySet(models.QuerySet):
     def for_user(self, user):
