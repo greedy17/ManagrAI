@@ -7,7 +7,7 @@
       <div class="label">Company Size</div>
       <div class="dropdown-container">
         <select v-model="lead.companySize">
-          <option :value="null" :key="'null'" disabled>Select</option>
+          <option :value="null" :key="'null'" disabled>-Select Company Size-</option>
           <option
             v-for="(option, i) in LeadModel.COMPANY_SIZE_CHOICES"
             :value="option.value"
@@ -24,7 +24,7 @@
       <div class="label">Industry</div>
       <div class="dropdown-container">
         <select v-model="lead.industry">
-          <option :value="null" :key="'null'" disabled>Select</option>
+          <option :value="null" :key="'null'" disabled>-Select Industry-</option>
           <option v-for="(option, i) in LeadModel.INDUSTRY_CHOICES" :value="option.value" :key="i">
             {{ option.label }}
           </option>
@@ -37,7 +37,7 @@
       <div class="label">Competitor</div>
       <div class="dropdown-container">
         <select v-model="lead.competitor">
-          <option :value="null" :key="'null'" disabled>Select</option>
+          <option :value="null" :key="'null'" disabled>-Select Competitor-</option>
           <option
             v-for="(option, i) in LeadModel.COMPETITOR_CHOICES"
             :value="option.value"
@@ -61,7 +61,7 @@
         </div>
         <div class="edit-mode-container" v-else-if="competitorDescription.editing">
           <form @submit.prevent="updateTextField('competitorDescription')">
-            <input type="text" v-model="competitorDescription.temp" />
+            <input type="text" v-model="competitorDescription.temp" placeholder="Description" />
             <img
               class="save"
               src="@/assets/images/checkmark.svg"
@@ -78,9 +78,33 @@
     </div>
 
     <!-- Geography -->
-    <div class="field section-shadow">
+    <div class="text-field section-shadow">
       <div class="label">Geography</div>
-      Text Field Here
+      <div class="display-mode-container" v-if="!geography.editing">
+        <div class="value">{{ lead.geographyAddress || '-Empty-' }}</div>
+        <div class="edit-icon-container">
+          <img
+            src="@/assets/images/pencil.svg"
+            class="edit-icon"
+            @click.stop.prevent="editTextField('geography')"
+          />
+        </div>
+      </div>
+      <div class="edit-mode-container" v-else-if="geography.editing">
+        <form @submit.prevent="updateGeography">
+          <GmapAutocomplete :placeholder="'Geography'" @place_changed="setGeographyTemp" />
+          <img
+            class="save"
+            src="@/assets/images/checkmark.svg"
+            @click.stop.prevent="updateGeography"
+          />
+          <img
+            class="reset"
+            src="@/assets/images/remove.svg"
+            @click.stop.prevent="resetGeography"
+          />
+        </form>
+      </div>
     </div>
 
     <!-- Type -->
@@ -88,7 +112,7 @@
       <div class="label">Type</div>
       <div class="dropdown-container">
         <select v-model="lead.type">
-          <option :value="null" :key="'null'" disabled>Select</option>
+          <option :value="null" :key="'null'" disabled>-Select Type-</option>
           <option v-for="(option, i) in LeadModel.TYPE_CHOICES" :value="option.value" :key="i">
             {{ option.label }}
           </option>
@@ -111,7 +135,7 @@
       </div>
       <div class="edit-mode-container" v-else-if="custom.editing">
         <form @submit.prevent="updateTextField('custom')">
-          <input type="text" v-model="custom.temp" />
+          <input type="text" v-model="custom.temp" placeholder="Custom" />
           <img
             class="save"
             src="@/assets/images/checkmark.svg"
@@ -143,20 +167,93 @@ export default {
   data() {
     return {
       LeadModel,
-      // text fields:
-      custom: {
-        editing: false,
-        temp: this.lead.custom,
-      },
+      // Text fields:
       competitorDescription: {
         editing: false,
         temp: this.lead.competitorDescription,
+      },
+      geography: {
+        editing: false,
+        tempAddress: null,
+        tempAddressComponents: {},
+      },
+      custom: {
+        editing: false,
+        temp: this.lead.custom,
       },
     }
   },
   created() {},
   computed: {},
   methods: {
+    setGeographyTemp({ formatted_address, address_components, geometry: { location } }) {
+      let streetNumber = this.getAddressComponent('street_number', address_components)
+      let route = this.getAddressComponent('route', address_components)
+      let locality = this.getAddressComponent('locality', address_components)
+      let administrativeAreaLevel3 = this.getAddressComponent(
+        'administrative_area_level_3',
+        address_components,
+      )
+      let administrativeAreaLevel2 = this.getAddressComponent(
+        'administrative_area_level_2',
+        address_components,
+      )
+      let administrativeAreaLevel1 = this.getAddressComponent(
+        'administrative_area_level_1',
+        address_components,
+      )
+      let country = this.getAddressComponent('country', address_components)
+      let postalCode = this.getAddressComponent('postal_code', address_components)
+      let latitude = location.lat()
+      let longitude = location.lng()
+
+      this.geography.tempAddress = formatted_address
+      this.geography.tempAddressComponents = {
+        streetNumber,
+        route,
+        locality,
+        administrativeAreaLevel3,
+        administrativeAreaLevel2,
+        administrativeAreaLevel1,
+        country,
+        postalCode,
+        latitude,
+        longitude,
+      }
+    },
+    getAddressComponent(target, allComponents) {
+      // Look through geodata address_components for component whose 'type' matches
+      // return both long and short names for the component
+      // null if not found
+      for (let c of allComponents) {
+        if (c.types.includes(target)) {
+          return {
+            longName: c.long_name,
+            shortName: c.short_name,
+          }
+        }
+      }
+      return null
+    },
+    updateGeography() {
+      let data = {
+        geographyAddress: this.geography.tempAddress,
+        geographyAddressComponents: this.geography.tempAddressComponents,
+      }
+      this.updateLead(data)
+        .then(({ geographyAddress, geographyAddressComponents }) => {
+          this.lead.geographyAddress = geographyAddress
+          this.lead.geographyAddressComponents = geographyAddressComponents
+        })
+        .finally(() => {
+          this.resetGeography()
+        })
+    },
+    resetGeography() {
+      this.geography.editing = false
+      this.geography.tempAddress = null
+      this.geography.tempAddressComponents = {}
+    },
     updateLead(data) {
       return LeadModel.api.update(this.lead.id, data)
     },
@@ -181,7 +278,7 @@ export default {
     },
   },
   watch: {
-    // change in dropdown-field --> patch Lead
+    // Change in dropdown-field --> patch Lead
     'lead.companySize': function(companySize) {
       this.updateLead({ companySize })
     },

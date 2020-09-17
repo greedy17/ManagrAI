@@ -118,6 +118,26 @@ class Lead(TimeStampModel):
         blank=True,
         help_text="Describes the value chosen in the Lead's competitor field"
     )
+    geography_address = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    geography_address_components = JSONField(
+        default=dict,
+        blank=True,
+        help_text="Includes up to all of the following: "
+        "street number, "
+        "route, "
+        "locality, "
+        "administrative_area_level_3, "
+        "administrative_area_level_2, "
+        "administrative_area_level_1, "
+        "postal_code, "
+        "country, "
+        "latitude, "
+        "longitude"
+    )
 
     objects = LeadQuerySet.as_manager()
 

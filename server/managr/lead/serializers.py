@@ -467,6 +467,8 @@ class LeadSerializer(serializers.ModelSerializer):
             "custom",
             "competitor",
             "competitor_description",
+            "geography_address",
+            "geography_address_components",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the
         # create/update/delete end points for forecasts

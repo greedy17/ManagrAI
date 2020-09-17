@@ -6,6 +6,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import AlertAlert from '@/services/alertAlert'
 import VueMask from 'v-mask'
+import * as VueGoogleMaps from 'vue2-google-maps'
 
 import App from './App'
 import router from './router'
@@ -37,6 +38,14 @@ Vue.config.productionTip = false
 Vue.use(Vuex)
 Vue.use(AlertAlert)
 Vue.use(VueMask)
+Vue.use(VueGoogleMaps, {
+  load: {
+    // NOTE (Bruno): Documentation for error-messages for this Google API:
+    // https://developers.google.com/maps/documentation/javascript/error-messages
+    key: process.env.VUE_APP_MAPS_API_KEY,
+    libraries: 'places',
+  },
+})
 
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)

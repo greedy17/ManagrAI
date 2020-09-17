@@ -117,7 +117,7 @@ export default {
     },
     leadCanBeClosed() {
       // All custom-fields must be completed in order to close a lead
-      let fields = ['companySize', 'industry', 'competitor', 'geography', 'type', 'custom']
+      let fields = ['companySize', 'industry', 'competitor', 'geographyAddress', 'type', 'custom']
       for (let f of fields) {
         if (!this.lead[f]) {
           return false
