@@ -66,7 +66,7 @@ export default {
     },
     async onChange({ target: { value } }) {
       let val = this.getStatuses.find(s => s.id == value)
-      if (!value || val.title != 'CLOSED') {
+      if (!value || val.title != Lead.CLOSED) {
         try {
           this.loading = true
           await this.updateStatus(value)
@@ -113,7 +113,7 @@ export default {
       return this.leadItem.statusRef ? this.leadItem.statusRef.title : null
     },
     getIsClosed() {
-      return this.leadItem.statusRef ? this.leadItem.statusRef.title == 'CLOSED' : false
+      return this.leadItem.statusRef ? this.leadItem.statusRef.title == Lead.CLOSED : false
     },
     leadCanBeClosed() {
       // All custom-fields must be completed in order to close a lead

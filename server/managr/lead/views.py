@@ -380,12 +380,10 @@ class LeadViewSet(
 
         # if updating status, add status-related meta to
         # LeadActivityLog by way of emit_event, for report purposes
-        extra_meta = None
+        extra_meta = {}
         if "status" in data:
-            extra_meta = {
-                "status_update": True,
-                "new_status": data["status"],
-            }
+            extra_meta["status_update"] = True
+            extra_meta["new_status"] = data["status"]
 
         self.perform_update(serializer)
         if reset_flag:
@@ -806,6 +804,28 @@ class ForecastViewSet(
 
     def get_queryset(self):
         return Forecast.objects.for_user(self.request.user)
+
+    def _emit_lead_activity_log(self, request):
+        lead = Lead.objects.get(pk=request.data["lead"])
+        forecast_value = request.data["forecast"]
+        extra_meta = {
+            "forecast_update": True,
+            "new_forecast": forecast_value,
+        }
+        emit_event(
+                lead_constants.LEAD_UPDATED,
+                request.user,
+                lead,
+                extra_meta=extra_meta,
+            )
+
+    def create(self, request, *args, **kwargs):
+        self._emit_lead_activity_log(request)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._emit_lead_activity_log(request)
+        return super().update(request, *args, **kwargs)
 
     @action(
         methods=["post"],
