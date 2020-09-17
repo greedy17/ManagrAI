@@ -183,9 +183,44 @@ export default {
       },
     }
   },
-  created() {},
-  computed: {},
+  watch: {
+    // Change in dropdown-field --> patch Lead
+    'lead.companySize': function(companySize) {
+      this.updateLead({ companySize })
+    },
+    'lead.industry': function(industry) {
+      this.updateLead({ industry })
+    },
+    'lead.competitor': function(competitor) {
+      this.updateLead({ competitor })
+    },
+    'lead.type': function(type) {
+      this.updateLead({ type })
+    },
+  },
   methods: {
+    updateLead(data) {
+      return LeadModel.api.update(this.lead.id, data)
+    },
+    editTextField(field) {
+      this[field].editing = true
+    },
+    updateTextField(field) {
+      let data = {
+        [field]: this[field].temp,
+      }
+      this.updateLead(data)
+        .then(() => {
+          this.lead[field] = this[field].temp
+        })
+        .finally(() => {
+          this.resetTextField(field)
+        })
+    },
+    resetTextField(field) {
+      this[field].editing = false
+      this[field].temp = this.lead[field]
+    },
     setGeographyTemp({ formatted_address, address_components, geometry: { location } }) {
       let streetNumber = this.getAddressComponent('street_number', address_components)
       let route = this.getAddressComponent('route', address_components)
@@ -253,43 +288,6 @@ export default {
       this.geography.editing = false
       this.geography.tempAddress = null
       this.geography.tempAddressComponents = {}
-    },
-    updateLead(data) {
-      return LeadModel.api.update(this.lead.id, data)
-    },
-    editTextField(field) {
-      this[field].editing = true
-    },
-    updateTextField(field) {
-      let data = {
-        [field]: this[field].temp,
-      }
-      this.updateLead(data)
-        .then(() => {
-          this.lead[field] = this[field].temp
-        })
-        .finally(() => {
-          this.resetTextField(field)
-        })
-    },
-    resetTextField(field) {
-      this[field].editing = false
-      this[field].temp = this.lead[field]
-    },
-  },
-  watch: {
-    // Change in dropdown-field --> patch Lead
-    'lead.companySize': function(companySize) {
-      this.updateLead({ companySize })
-    },
-    'lead.industry': function(industry) {
-      this.updateLead({ industry })
-    },
-    'lead.competitor': function(competitor) {
-      this.updateLead({ competitor })
-    },
-    'lead.type': function(type) {
-      this.updateLead({ type })
     },
   },
 }
