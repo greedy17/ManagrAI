@@ -369,6 +369,15 @@ export default {
         amount: 0,
         rating: 1,
         expectedCloseDate: null,
+        // Custom fields:
+        companySize: null,
+        industry: null,
+        competitor: null,
+        competitorDescription: null,
+        geographyAddress: null,
+        geographyAddressComponents: {},
+        type: null,
+        custom: null,
         /* NOTE (Bruno):
          reset_flag is used to discern if this was a lead-reset event or not,
          since a reset-event is actually a PATCH to /leads with default values decided client-side. */
