@@ -266,7 +266,10 @@ class Stage(TimeStampModel):
         ordering = ["order"]
 
     def __str__(self):
-        return f"Stage ({self.id}) {self.title} -- for {self.organization.name}"
+        if self.organization:    
+            return f"Stage ({self.id}) {self.title} -- for {self.organization.name}"
+        else:
+            return f"Stage ({self.id}) {self.title} -- PUBLIC"
 
     def save(self, *args, **kwargs):
         # save all as upper case
