@@ -335,8 +335,6 @@ export default {
   }
 
   .dropdown-container {
-    border: 1px dashed red;
-
     box-sizing: border-box;
     display: flex;
     flex-flow: row;
@@ -368,7 +366,6 @@ export default {
   }
 
   .display-mode-container {
-    border: 1px dashed green;
     color: rgba($color: $main-font-gray, $alpha: 0.5);
     padding: 0.5rem 0;
     width: 100%;
@@ -405,7 +402,6 @@ export default {
   }
 
   form {
-    border: 1px dashed blue;
     display: flex;
     flex-flow: row;
     align-items: center;
