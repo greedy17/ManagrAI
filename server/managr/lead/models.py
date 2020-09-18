@@ -555,7 +555,7 @@ class ActionChoice(TimeStampModel):
         ordering = ["title"]
 
     def __str__(self):
-        return f" ActionChoice ({self.id}) {self.title} -- for {self.organization.name}"
+        return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
 
 
 class ActionQuerySet(models.QuerySet):
