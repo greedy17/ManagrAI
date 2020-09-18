@@ -1,11 +1,5 @@
 <template>
-  <div
-    class="container"
-    ref="container"
-    :class="{ dimmed: dimmed }"
-    :style="{ top: `${original.documentY}px` }"
-    @click="emitCloseModal"
-  >
+  <div class="container" ref="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
     <div class="modal" :class="{ 'box-shadow': !dimmed }" :style="{ width: `${width}vw` }">
       <div :class="{ content: includeMargin }">
         <slot />
@@ -35,12 +29,13 @@
  *
  * Props:
  *  @prop {Boolean} dimmed - Optional. Whether the background of the modal is dimmed or not. Defaults to false.
+ *  @prop {Boolean} includeMargin - Optional. Should the content have a margin against its container (like if
+ *                                  a container had padding for its content). Defaults to true.
  *  @prop {Integer} width - Optional. How tall, in vw units, the modal should be. Defaults to 60.
  *
  * Events:
  *  @event close-modal - Emitted when the area of page around the actual modal is clicked.
  */
-import VueScrollTo from 'vue-scrollto'
 export default {
   name: 'Modal',
   props: {
@@ -60,15 +55,10 @@ export default {
   data() {
     return {
       original: {
-        documentY: document.documentElement.scrollTop,
         overflowX: document.body.style.overflowX,
         overflowY: document.body.style.overflowY,
       },
     }
-  },
-  created() {
-    // page elements are created
-    this.original.documentY = 0
   },
   mounted() {
     document.body.style.overflowX = 'hidden'
@@ -92,10 +82,9 @@ export default {
 @import '@/styles/variables';
 
 .container {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  //   top: 0; This is calculated from componentState.original.documentY
   width: 100vw;
   height: 100vh;
   min-height: 100vh !important; // in case of inheritance issues
