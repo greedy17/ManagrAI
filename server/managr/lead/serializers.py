@@ -461,6 +461,14 @@ class LeadSerializer(serializers.ModelSerializer):
             "files",
             "files_ref",
             "last_action_taken",
+            "company_size",
+            "industry",
+            "type",
+            "custom",
+            "competitor",
+            "competitor_description",
+            "geography_address",
+            "geography_address_components",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the
         # create/update/delete end points for forecasts

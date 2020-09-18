@@ -75,12 +75,23 @@ export default {
           this.loading = false
         }
       } else {
-        this.modal.isOpen = true
+        // All custom-fields must be completed in order to close a lead
+        if (this.leadCanBeClosed) {
+          this.modal.isOpen = true
+        } else {
+          let prevVal = this.leadItem.status
+          this.leadItem.status = null
+          this.leadItem.status = prevVal
+          this.$Alert.alert({
+            type: 'error',
+            timeout: 3000,
+            message: 'All custom-fields must be completed to close a lead.',
+          })
+        }
       }
     },
-    updateStatus(newStatus) {
-      let patchData = { status: newStatus }
-      Lead.api.update(this.lead.id, patchData).then(lead => {
+    updateStatus(status) {
+      Lead.api.update(this.lead.id, { status }).then(lead => {
         this.lead.statusRef = lead.statusRef
         this.leadItem = lead
       })
@@ -103,6 +114,16 @@ export default {
     },
     getIsClosed() {
       return this.leadItem.statusRef ? this.leadItem.statusRef.title == 'CLOSED' : false
+    },
+    leadCanBeClosed() {
+      // All custom-fields must be completed in order to close a lead
+      let fields = ['companySize', 'industry', 'competitor', 'geographyAddress', 'type', 'custom']
+      for (let f of fields) {
+        if (!this.lead[f]) {
+          return false
+        }
+      }
+      return true
     },
   },
 }

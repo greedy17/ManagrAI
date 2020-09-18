@@ -86,6 +86,59 @@ class Lead(TimeStampModel):
     last_updated_by = models.ForeignKey(
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL
     )
+    company_size = models.CharField(
+        choices=lead_constants.COMPANY_SIZE_CHOICES,
+        max_length=255,
+        null=True,
+    )
+    industry = models.CharField(
+        choices=lead_constants.INDUSTRY_CHOICES,
+        max_length=255,
+        null=True,
+    )
+    type = models.CharField(
+        choices=lead_constants.TYPE_CHOICES,
+        max_length=255,
+        null=True,
+    )
+    custom = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Custom field"
+    )
+    competitor = models.CharField(
+        choices=lead_constants.COMPETITOR_CHOICES,
+        max_length=255,
+        null=True,
+    )
+    competitor_description = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Describes the value chosen in the Lead's competitor field"
+    )
+    geography_address = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    geography_address_components = JSONField(
+        default=dict,
+        blank=True,
+        help_text="Includes up to all of the following: "
+        "street number, "
+        "route, "
+        "locality, "
+        "administrative_area_level_3, "
+        "administrative_area_level_2, "
+        "administrative_area_level_1, "
+        "postal_code, "
+        "country, "
+        "latitude, "
+        "longitude"
+    )
+
     objects = LeadQuerySet.as_manager()
 
     class Meta:

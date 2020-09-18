@@ -693,11 +693,8 @@ export default {
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   min-height: 50rem;
-  width: 100%;
   display: flex;
   flex-flow: column;
-  .lead-title {
-  }
 }
 
 .toolbar,
