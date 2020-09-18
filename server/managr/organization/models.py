@@ -265,6 +265,12 @@ class Stage(TimeStampModel):
     class Meta:
         ordering = ["order"]
 
+    def __str__(self):
+        if self.organization:    
+            return f"Stage ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
+        else:
+            return f"Stage ({self.id}) -- Title: {self.title}, Organization: None (is Public)"
+
     def save(self, *args, **kwargs):
         # save all as upper case
         self.title = self.title.upper()
