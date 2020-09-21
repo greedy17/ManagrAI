@@ -32,28 +32,28 @@ def generate_story_report_data(story_report_id, generated_by_id):
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
+        # TODO (Bruno 09-22-2020):
+        # Send an email to user that generated report notifying of failure?
         logger.exception(f"Attempted to generate story report for open lead {lead.id}")
         raise ValidationError(
             f"Attempted to generate story report for open lead {lead.id}"
         )
 
-    # generate report's data
     try:
+        # generate report's data
         story_report.data["lead"] = LeadDataGenerator(lead).as_dict
-
         story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
         story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
         story_report.datetime_generated = timezone.now()
-
         story_report.save()
+        # send email to user that generated report
+        send_email(story_report)
     except Exception as e:
-
+        # TODO (Bruno 09-22-2020):
+        # Send an email to user that generated report notifying of failure?
         logger.exception(
             f"failed to generate a report for {story_report_id}, error: {e}"
         )
-
-    # send email to user that generated report
-    send_email(story_report)
 
 
 def send_email(report):
@@ -409,8 +409,8 @@ class LeadDataGenerator(BaseGenerator):
             "call_count": self.call_count,
             "text_count": self.text_count,
             "email_count": self.email_count,
-            "custom_action_counts": self.custom_action_counts,
-            "action_count": self.action_count,
+            "custom_action_counts": self.custom_action_counts, # now 'actions'
+            "action_count": self.action_count, # now 'activities'
         }
 
 
@@ -477,8 +477,8 @@ class RepresentativeDataGenerator(BaseGenerator):
             "average_call_count": self.average_for("call_count"),
             "average_text_count": self.average_for("text_count"),
             "average_email_count": self.average_for("email_count"),
-            "average_custom_action_counts": self.average_custom_action_counts,
-            "average_action_count": self.average_for("action_count"),
+            "average_custom_action_counts": self.average_custom_action_counts, # now 'actions'
+            "average_action_count": self.average_for("action_count"), # now 'activities'
         }
 
 
