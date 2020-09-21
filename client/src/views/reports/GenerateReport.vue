@@ -34,6 +34,7 @@
 <script>
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
+import { loadEntireCollection } from '@/services/utils'
 
 import GenerateStoryReport from '@/components/reports/GenerateStoryReport'
 import GeneratePerformanceReport from '@/components/reports/GeneratePerformanceReport'
@@ -57,18 +58,9 @@ export default {
     }
   },
   created() {
-    this.loadEntireCollection(this.representatives)
+    loadEntireCollection(this.representatives)
   },
   methods: {
-    async loadEntireCollection(collection) {
-      // Since the list of collection is for populating a dropdown, there is no pagination UI.
-      // Yet, our backend delivers paginated results.
-      // Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
-      await collection.refresh()
-      while (collection.pagination.hasNextPage) {
-        await collection.addNextPage()
-      }
-    },
     toggleActivePage(pageToActivate) {
       this.storyReportsActive = false
       this.performanceReportsActive = false

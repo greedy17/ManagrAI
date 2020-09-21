@@ -54,6 +54,7 @@
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
 import StoryReport from '@/services/storyReports'
+import { loadEntireCollection } from '@/services/utils'
 
 export default {
   name: 'GenerateStoryReport',
@@ -78,15 +79,6 @@ export default {
     }
   },
   methods: {
-    async loadEntireCollection(collection) {
-      // Since the list of collection is for populating a dropdown, there is no pagination UI.
-      // Yet, our backend delivers paginated results.
-      // Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
-      await collection.refresh()
-      while (collection.pagination.hasNextPage) {
-        await collection.addNextPage()
-      }
-    },
     generateReport() {
       StoryReport.api.create(this.selectedLead).then(() => {
         this.clearForm()
@@ -114,7 +106,7 @@ export default {
       this.selectedLead = null
       this.leads.filters.byUser = repID
       this.leads.filters.byStatus = this.getIsClosedStatus
-      this.loadEntireCollection(this.leads)
+      loadEntireCollection(this.leads)
     },
   },
   computed: {
