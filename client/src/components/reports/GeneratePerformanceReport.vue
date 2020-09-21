@@ -26,8 +26,11 @@
           <!-- Select Time Frame -->
           <div class="form__element" style="margin-top: 1.5rem;">
             <div class="form__element-header">Select Time Frame</div>
-            <select class="select" v-model="selectedTimeFrame">
-              <option disabled :value="null">Select Time Frame</option>
+            <select class="select" v-model="selectedDateRange">
+              <option disabled :value="null" key="null">Select Time Frame</option>
+              <option v-for="preset in dateRangePresets" :value="preset.value" :key="preset.value">
+                {{ preset.label }}
+              </option>
             </select>
           </div>
 
@@ -48,6 +51,18 @@
 </template>
 
 <script>
+import PerformanceReport from '@/services/performanceReports'
+import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
+
+const dateRangePresets = [
+  { value: PerformanceReport.THIS_MONTH, label: 'This Month' },
+  { value: PerformanceReport.LAST_MONTH, label: 'Last Month' },
+  { value: PerformanceReport.THIS_QUARTER, label: 'This Quarter' },
+  { value: PerformanceReport.LAST_QUARTER, label: 'Last Quarter' },
+  { value: PerformanceReport.THIS_YEAR, label: 'This Year' },
+  { value: PerformanceReport.LAST_YEAR, label: 'Last Year' },
+]
+
 export default {
   name: 'GeneratePerformanceReport',
   props: {
@@ -58,29 +73,32 @@ export default {
   },
   data() {
     return {
+      dateRangePresets,
       selectedRepresentative: null,
-      selectedTimeFrame: null,
+      selectedDateRange: null,
     }
   },
   methods: {
     generateReport() {
-      //   StoryReport.api.create(this.selectedLead).then(() => {
-      //     this.clearForm()
-      //     this.$Alert.alert({
-      //       type: 'success',
-      //       timeout: 3000,
-      //       message: `Report being generated! You will receive an email once the report is accessible.`,
-      //     })
-      //   })
+      PerformanceReport.api
+        .create(this.selectedRepresentative, dateRangeParamsFromPreset(this.selectedDateRange))
+        .then(() => {
+          this.clearForm()
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 3000,
+            message: `Report being generated! You will receive an email once the report is accessible.`,
+          })
+        })
     },
     clearForm() {
       this.selectedRepresentative = null
-      this.selectedTimeFrame = null
+      this.selectedDateRange = null
     },
   },
   computed: {
     bothFieldsHaveSelections() {
-      return !!this.selectedRepresentative && !!this.selectedTimeFrame
+      return !!this.selectedRepresentative && !!this.selectedDateRange
     },
   },
 }
