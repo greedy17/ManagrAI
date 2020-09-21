@@ -13,8 +13,8 @@
           Story Reports
         </div>
         <div
-          class="toolbar__row WIP"
-          @click="() => {}"
+          class="toolbar__row"
+          @click="toggleActivePage('performanceReports')"
           :class="{ toolbar__active: performanceReportsActive }"
         >
           Performance Reports
@@ -22,26 +22,53 @@
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
-      <GenerateStoryReport v-if="storyReportsActive" />
+      <GenerateStoryReport v-if="storyReportsActive" :representatives="representatives" />
+      <GeneratePerformanceReport
+        v-if="performanceReportsActive"
+        :representatives="representatives"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import CollectionManager from '@/services/collectionManager'
+import User from '@/services/users'
+
 import GenerateStoryReport from '@/components/reports/GenerateStoryReport'
+import GeneratePerformanceReport from '@/components/reports/GeneratePerformanceReport'
 
 export default {
   name: 'GenerateReport',
   components: {
     GenerateStoryReport,
+    GeneratePerformanceReport,
   },
   data() {
     return {
       storyReportsActive: true,
       performanceReportsActive: false,
+      representatives: CollectionManager.create({
+        ModelClass: User,
+        filters: {
+          byUser: this.$store.state.user.id,
+        },
+      }),
     }
   },
+  created() {
+    this.loadEntireCollection(this.representatives)
+  },
   methods: {
+    async loadEntireCollection(collection) {
+      // Since the list of collection is for populating a dropdown, there is no pagination UI.
+      // Yet, our backend delivers paginated results.
+      // Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
+      await collection.refresh()
+      while (collection.pagination.hasNextPage) {
+        await collection.addNextPage()
+      }
+    },
     toggleActivePage(pageToActivate) {
       this.storyReportsActive = false
       this.performanceReportsActive = false
@@ -61,12 +88,5 @@ export default {
 
 .toolbar__row {
   @include pointer-on-hover;
-}
-
-.WIP {
-  color: $gray;
-  &:hover {
-    cursor: not-allowed;
-  }
 }
 </style>

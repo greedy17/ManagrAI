@@ -2,7 +2,7 @@
   <div class="container">
     <div class="box">
       <div class="box__header">
-        <div class="box__title">Generate Story Report</div>
+        <div class="box__title">Generate Performance Report</div>
       </div>
       <div class="box__content">
         <div class="form">
@@ -14,23 +14,20 @@
             </select>
             <select class="select" v-else v-model="selectedRepresentative">
               <option disabled :value="null">Select Representative</option>
+              <option key="ALL" :value="'ALL'" style="border-bottom: 1px solid grey;">
+                *Select All*
+              </option>
               <option v-for="rep in representatives.list" :key="rep.id" :value="rep.id">
                 {{ rep.fullName.trim() ? rep.fullName : rep.email }}
               </option>
             </select>
           </div>
 
-          <!-- Select Lead -->
+          <!-- Select Time Frame -->
           <div class="form__element" style="margin-top: 1.5rem;">
-            <div class="form__element-header">Lead Closed</div>
-            <select class="select" v-if="leads.refreshing" disabled>
-              <option disabled>Loading...</option>
-            </select>
-            <select class="select" v-else v-model="selectedLead" :disabled="!leads.list.length">
-              <option disabled :value="null">Select Lead</option>
-              <option v-for="lead in leads.list" :key="lead.id" :value="lead.id">
-                {{ lead.title }}
-              </option>
+            <div class="form__element-header">Select Time Frame</div>
+            <select class="select" v-model="selectedTimeFrame">
+              <option disabled :value="null">Select Time Frame</option>
             </select>
           </div>
 
@@ -51,30 +48,18 @@
 </template>
 
 <script>
-import CollectionManager from '@/services/collectionManager'
-import Lead from '@/services/leads'
-import StoryReport from '@/services/storyReports'
-
 export default {
-  name: 'GenerateStoryReport',
+  name: 'GeneratePerformanceReport',
   props: {
     representatives: {
-      type: CollectionManager,
+      type: Object,
       required: true,
     },
   },
   data() {
     return {
       selectedRepresentative: null,
-      selectedLead: null,
-      leads: CollectionManager.create({
-        ModelClass: Lead,
-        filters: {
-          byUser: this.$store.state.user.id,
-          byStatus: this.getIsClosedStatus,
-          orderBy: '-expected_close_date',
-        },
-      }),
+      selectedTimeFrame: null,
     }
   },
   methods: {
@@ -88,44 +73,23 @@ export default {
       }
     },
     generateReport() {
-      StoryReport.api.create(this.selectedLead).then(() => {
-        this.clearForm()
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: `Report being generated! You will receive an email once the report is accessible.`,
-        })
-      })
+      //   StoryReport.api.create(this.selectedLead).then(() => {
+      //     this.clearForm()
+      //     this.$Alert.alert({
+      //       type: 'success',
+      //       timeout: 3000,
+      //       message: `Report being generated! You will receive an email once the report is accessible.`,
+      //     })
+      //   })
     },
     clearForm() {
-      this.selectedLead = null
-      this.leads.list = []
       this.selectedRepresentative = null
-    },
-  },
-  watch: {
-    selectedRepresentative(repID) {
-      if (repID === null) {
-        return
-      }
-
-      this.leads.pagination.page = 1
-
-      this.selectedLead = null
-      this.leads.filters.byUser = repID
-      this.leads.filters.byStatus = this.getIsClosedStatus
-      this.loadEntireCollection(this.leads)
+      this.selectedTimeFrame = null
     },
   },
   computed: {
     bothFieldsHaveSelections() {
-      return !!this.selectedRepresentative && !!this.selectedLead
-    },
-    getStatuses() {
-      return this.$store.state.stages
-    },
-    getIsClosedStatus() {
-      return this.getStatuses.find(s => s.title == Lead.CLOSED).id
+      return !!this.selectedRepresentative && !!this.selectedTimeFrame
     },
   },
 }
