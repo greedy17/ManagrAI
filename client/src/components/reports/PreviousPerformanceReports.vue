@@ -54,7 +54,11 @@ export default {
       return !!Object.keys(report.data).length
     },
     openReport(report) {
-      console.log('opening report...')
+      let routeData = this.$router.resolve({
+        name: 'PerformanceReportDetail',
+        params: { id: report.id },
+      })
+      window.open(routeData.href, '_blank')
     },
   },
 }
