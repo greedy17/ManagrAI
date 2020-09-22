@@ -15,7 +15,10 @@ export default class PerformanceReport {
   constructor({
     id = '',
     representative = null,
-    dateRange = null,
+    representativeRef = null,
+    dateRangePreset = null,
+    dateRangeFrom = null,
+    dateRangeTo = null,
     data = null,
     datetimeGenerated = null,
     datetimeCreated = null,
@@ -24,7 +27,10 @@ export default class PerformanceReport {
     Object.assign(this, {
       id,
       representative,
-      dateRange,
+      representativeRef,
+      dateRangePreset,
+      dateRangeFrom,
+      dateRangeTo,
       data,
       datetimeGenerated,
       datetimeCreated,

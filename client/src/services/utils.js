@@ -308,3 +308,10 @@ export async function loadEntireCollection(collection) {
     await collection.addNextPage()
   }
 }
+
+export function consantToCapitalized(value) {
+  return value
+    .split('_')
+    .map(capitalizeWord)
+    .join(' ')
+}

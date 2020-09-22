@@ -82,11 +82,12 @@ class PerformanceReport(TimeStampModel):
         help_text="If populated, refers to the representative that is the focus of the report. "
                   "If it is NULL, it means that this is na organization-wide (all representatives) report.",
     )
-    date_range = models.CharField(
+    date_range_preset = models.CharField(
         choices=report_const.DATE_RANGES,
         max_length=255,
-        help_text="Email notifying of report generation is to be sent to this user",
     )
+    date_range_from = models.DateTimeField()
+    date_range_to = models.DateTimeField()
     data = JSONField(help_text="Content of the PerformanceReport", default=dict)
     datetime_generated = models.DateTimeField(
         null=True, help_text="date time when the report was populated with computed data"

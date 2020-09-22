@@ -23,6 +23,7 @@ from rest_framework.response import Response
 from managr.core.models import User
 from managr.lead.models import Lead
 from managr.core.background import emit_report_event
+from managr.report import constants as report_const
 from .models import (
    StoryReport,
    PerformanceReport,
@@ -31,6 +32,7 @@ from .serializers import (
     StoryReportSerializer,
     PerformanceReportSerializer,
 )
+
 
 logger = logging.getLogger("managr")
 
@@ -65,6 +67,7 @@ class PerformanceReportViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
 ):
     serializer_class = PerformanceReportSerializer
 
@@ -74,9 +77,15 @@ class PerformanceReportViewSet(
     def create(self, request, *args, **kwargs):
         generated_by = request.user
         representative = request.data.get('representative')
-        date_range = request.data.get('date_range')
+        date_range_preset = request.data.get('date_range_preset')
+        date_range_from = request.data.get('date_range_from')
+        date_range_to = request.data.get('date_range_to')
 
-        if representative:
+        if representative == report_const.ALL:
+            # This means that the report regards all 'managers',
+            # organization-wide.
+            representative = None
+        else:
             try:
                 representative = User.objects.get(pk=representative)
             except User.DoesNotExist:
@@ -84,7 +93,9 @@ class PerformanceReportViewSet(
 
         report = PerformanceReport.objects.create(
             representative=representative,
-            date_range=date_range,
+            date_range_preset=date_range_preset,
+            date_range_from=date_range_from,
+            date_range_to=date_range_to,
             generated_by=generated_by,
         )
 

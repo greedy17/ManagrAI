@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler } from '@/services/api'
+import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 // API Endpoints
 const PERFORMANCE_REPORTS_ENDPOINT = '/performance-reports/'
@@ -23,11 +23,16 @@ export default class PerformanceReportAPI {
     return new PerformanceReportAPI(cls)
   }
 
-  create(representative, dateRange) {
+  get client() {
+    return apiClient()
+  }
+
+  create(representative, dateRangePreset, dateRanges) {
     // representative can be a repID or the constant 'ALL'
     let data = {
       representative,
-      dateRange,
+      dateRangePreset,
+      ...dateRanges,
     }
     const promise = apiClient()
       .post(PERFORMANCE_REPORTS_ENDPOINT, this.cls.toAPI(data))
@@ -42,5 +47,25 @@ export default class PerformanceReportAPI {
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'PerformanceReportAPI.retrieve' }))
     return promise
+  }
+
+  async list({ pagination, filters }) {
+    const url = PERFORMANCE_REPORTS_ENDPOINT
+    const filtersMap = {
+      page: ApiFilter.create({ key: 'page' }),
+      pageSize: ApiFilter.create({ key: 'page_size' }),
+    }
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+    }
+    try {
+      const res = await this.client.get(url, options)
+      return {
+        ...res.data,
+        results: res.data.results.map(this.cls.fromAPI),
+      }
+    } catch (e) {
+      apiErrorHandler({ apiName: 'PerformanceReportAPI.list' })
+    }
   }
 }

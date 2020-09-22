@@ -81,8 +81,13 @@ export default {
   methods: {
     generateReport() {
       PerformanceReport.api
-        .create(this.selectedRepresentative, dateRangeParamsFromPreset(this.selectedDateRange))
-        .then(() => {
+        .create(
+          this.selectedRepresentative,
+          this.selectedDateRange,
+          dateRangeParamsFromPreset(this.selectedDateRange),
+        )
+        .then(report => {
+          this.$emit('performance-report-created', report)
           this.clearForm()
           this.$Alert.alert({
             type: 'success',

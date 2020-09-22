@@ -1,3 +1,6 @@
+ALL = 'ALL'
+
+# date-range options
 THIS_MONTH = 'THIS_MONTH'
 LAST_MONTH = 'LAST_MONTH'
 THIS_QUARTER = 'THIS_QUARTER'

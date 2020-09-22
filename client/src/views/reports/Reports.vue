@@ -26,6 +26,11 @@
       <GeneratePerformanceReport
         v-if="performanceReportsActive"
         :representatives="representatives"
+        @performance-report-created="prependNewPerformanceReport"
+      />
+      <PreviousPerformanceReports
+        v-if="performanceReportsActive"
+        :performanceReports="performanceReports"
       />
     </div>
   </div>
@@ -34,16 +39,19 @@
 <script>
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
+import PerformanceReport from '@/services/performanceReports'
 import { loadEntireCollection } from '@/services/utils'
 
 import GenerateStoryReport from '@/components/reports/GenerateStoryReport'
 import GeneratePerformanceReport from '@/components/reports/GeneratePerformanceReport'
+import PreviousPerformanceReports from '@/components/reports/PreviousPerformanceReports'
 
 export default {
-  name: 'GenerateReport',
+  name: 'Reports',
   components: {
     GenerateStoryReport,
     GeneratePerformanceReport,
+    PreviousPerformanceReports,
   },
   data() {
     return {
@@ -55,10 +63,14 @@ export default {
           byUser: this.$store.state.user.id,
         },
       }),
+      performanceReports: CollectionManager.create({
+        ModelClass: PerformanceReport,
+      }),
     }
   },
   created() {
     loadEntireCollection(this.representatives)
+    this.performanceReports.refresh()
   },
   methods: {
     toggleActivePage(pageToActivate) {
@@ -66,6 +78,11 @@ export default {
       this.performanceReportsActive = false
       if (pageToActivate === 'storyReports') this.storyReportsActive = true
       if (pageToActivate === 'performanceReports') this.performanceReportsActive = true
+    },
+    prependNewPerformanceReport(report) {
+      this.performanceReports.list.shift(report)
+      // prepend to list,
+      // may not need to do anything regarding pagination?
     },
   },
 }
