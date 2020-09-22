@@ -12,11 +12,22 @@ export default class PerformanceReport {
   static THIS_YEAR = 'THIS_YEAR'
   static LAST_YEAR = 'LAST_YEAR'
 
-  constructor({ id = '', data = null, datetimeGenerated = null, generatedBy = '' } = {}) {
+  constructor({
+    id = '',
+    representative = null,
+    dateRange = null,
+    data = null,
+    datetimeGenerated = null,
+    datetimeCreated = null,
+    generatedBy = '',
+  } = {}) {
     Object.assign(this, {
       id,
+      representative,
+      dateRange,
       data,
       datetimeGenerated,
+      datetimeCreated,
       generatedBy,
     })
   }
