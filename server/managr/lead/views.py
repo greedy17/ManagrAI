@@ -577,8 +577,14 @@ class LeadViewSet(
         )
         lead.closing_amount = closing_amount
         lead.expected_close_date = timezone.now()
-        lead.forecast.forecast = lead_constants.FORECAST_CLOSED
-        lead.forecast.save()
+        if lead.forecast:
+            lead.forecast.forecast = lead_constants.FORECAST_CLOSED
+            lead.forecast.save()
+        else:
+            Forecast.objects.create(
+                lead=lead,
+                forecast=lead_constants.FORECAST_CLOSED,
+            )
         lead.save()
         emit_event(lead_constants.LEAD_CLOSED, request.user, lead)
         return Response()
