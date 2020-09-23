@@ -5,22 +5,29 @@
         <div class="box__title">Previous Reports</div>
       </div>
       <div class="box__content">
-        <div class="report" v-for="report in performanceReports.list" :key="report.id">
-          <div class="report__focus">
-            {{ report.representative ? report.representativeRef.fullName : 'Organization-wide' }},
-            {{ report.dateRangePreset | consantToCapitalized }}
+        <template v-if="performanceReports.list.length">
+          <div class="report" v-for="report in performanceReports.list" :key="report.id">
+            <div class="report__focus">
+              {{ report.representative ? report.representativeRef.fullName : 'Organization-wide' }},
+              {{ report.dateRangePreset | consantToCapitalized }}
+            </div>
+            <div class="report__datetime">
+              {{ report.datetimeCreated | dateShort }}
+            </div>
+            <button
+              class="report__button"
+              :disabled="!isReady(report)"
+              @click.prevent="openReport(report)"
+            >
+              {{ isReady(report) ? 'See Report' : 'Pending...' }}
+            </button>
           </div>
-          <div class="report__datetime">
-            {{ report.datetimeCreated | dateShort }}
+        </template>
+        <template v-else>
+          <div class="report">
+            No Reports
           </div>
-          <button
-            class="report__button"
-            :disabled="!isReady(report)"
-            @click.prevent="openReport(report)"
-          >
-            {{ isReady(report) ? 'See Report' : 'Pending...' }}
-          </button>
-        </div>
+        </template>
       </div>
     </div>
     <Pagination
