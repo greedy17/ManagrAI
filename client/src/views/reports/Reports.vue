@@ -80,9 +80,8 @@ export default {
       if (pageToActivate === 'performanceReports') this.performanceReportsActive = true
     },
     prependNewPerformanceReport(report) {
-      this.performanceReports.list.shift(report)
-      // prepend to list,
-      // may not need to do anything regarding pagination?
+      this.performanceReports.list.unshift(report)
+      this.performanceReports.pagination.totalCount += 1
     },
   },
 }
