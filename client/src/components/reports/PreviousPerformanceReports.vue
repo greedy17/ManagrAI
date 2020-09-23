@@ -8,7 +8,7 @@
         <template v-if="performanceReports.list.length">
           <div class="report" v-for="report in performanceReports.list" :key="report.id">
             <div class="report__focus">
-              {{ report.representative ? report.representativeRef.fullName : 'Organization-wide' }},
+              {{ getReportFocus(report) }},
               {{ report.dateRangePreset | consantToCapitalized }}
             </div>
             <div class="report__datetime">
@@ -59,6 +59,14 @@ export default {
   methods: {
     isReady(report) {
       return !!Object.keys(report.data).length
+    },
+    getReportFocus(report) {
+      if (report.representative) {
+        let { fullName, email } = report.representativeRef
+        return fullName.trim() ? fullName : email
+      } else {
+        return 'Organization-wide'
+      }
     },
     openReport(report) {
       let routeData = this.$router.resolve({
