@@ -80,7 +80,7 @@ class PerformanceReport(TimeStampModel):
         on_delete=models.PROTECT,
         null=True,
         help_text="If populated, refers to the representative that is the focus of the report. "
-                  "If it is NULL, it means that this is na organization-wide (all representatives) report.",
+                  "If it is NULL, it means that this is an organization-wide (all representatives) report.",
     )
     date_range_preset = models.CharField(
         choices=report_const.DATE_RANGES,
