@@ -58,7 +58,7 @@ export default {
   },
   methods: {
     isReady(report) {
-      return !!Object.keys(report.data).length
+      return !!report.datetimeGenerated
     },
     getReportFocus(report) {
       if (report.representative) {
