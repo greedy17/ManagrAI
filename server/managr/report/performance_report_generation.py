@@ -9,13 +9,18 @@ from django.db.models import Q, Sum
 from managr.core.models import EmailAuthAccount
 from managr.lead.models import LeadActivityLog
 
-from managr.lead.constants as lead_constants
+from managr.lead import constants as lead_constants
+from managr.lead.serializers import LeadRefSerializer
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.utils.sites import get_site_url
 
 from .models import PerformanceReport
+from .story_report_generation import LeadDataGenerator
 
 logger = logging.getLogger("managr")
+
+# NOTE: remove import:
+from pdb import set_trace
 
 
 def generate_performance_report_data(performance_report_id, generated_by_id):
@@ -27,17 +32,17 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
     """
     performance_report = PerformanceReport.objects.get(pk=performance_report_id)
 
-    # here need to figure out if org-wide or rep-specific
+    # NOTE: here need to figure out if org-wide or rep-specific, use classes accordingly
 
     try:
         # generate report's data
-        story_report.data["lead"] = LeadDataGenerator(lead).as_dict
-        story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
-        story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
-        story_report.datetime_generated = timezone.now()
-        story_report.save()
+        performance_report.data["focus"] = RepDataForSelectedDateRange(performance_report).as_dict
+        # performance_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
+        # performance_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
+        performance_report.datetime_generated = timezone.now()
+        performance_report.save()
         # send email to user that generated report
-        send_email(story_report)
+        # send_email(performance_report)
     except Exception as e:
         # TODO (Bruno 09-22-2020):
         # Send an email to user that generated report notifying of failure?
@@ -90,6 +95,25 @@ class RepDataForSelectedDateRange(BaseGenerator):
     These metrics regard the specific date-range of the report.
     Final output is the self.as_dict method.
     """
+
+    # private properties:
+
+    @property
+    def _logs_for_closing_events(self):
+        return self.activity_logs.filter(
+            activity=lead_constants.LEAD_CLOSED,
+        )
+
+    @property
+    def _closed_leads(self):
+        return {log.lead for log in self._logs_for_closing_events.prefetch_related("lead")}
+
+    @property
+    def _closed_leads_data(self):
+        return [LeadDataGenerator(lead).as_dict for lead in self._closed_leads]
+
+    # public properties:
+
     @property
     def activity_logs(self):
         """
@@ -144,7 +168,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
         lead_amounts = {}
         for log in self.activity_logs.filter(
             activity=lead_constants.LEAD_UPDATED,
-            extra_meta__forecast_table_addition=True,
+            meta__extra__forecast_table_addition=True,
         ).exclude(
             lead__status__title=lead_constants.LEAD_CLOSED,
             lead__expected_close_date__gte=self._report.date_range_from,
@@ -154,7 +178,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
             # If in dict then keep max of the two:
             # this log's forecast_amount and whatever current value
             lead.id = log.lead.id
-            forecast_amount = log.extra_meta["forecast_amount"]
+            forecast_amount = log.meta["extra"]["forecast_amount"]
             if lead_amounts.get(lead.id, None) is None:
                 lead_amounts[lead.id] = forecast_amount
             else:
@@ -162,35 +186,23 @@ class RepDataForSelectedDateRange(BaseGenerator):
         return sum(lead_amounts.values())
 
     @property
-    def _logs_for_deals_closed(self):
-        return self.activity_logs.filter(
-            activty=lead_constants.LEAD_CLOSED,
-        )
-
-    @property
     def deals_closed_count(self):
-        return self._logs_for_deals_closed.count()
+        return self._logs_for_closing_events.count()
 
     @property
     def amount_closed(self):
-        return self._logs_for_deals_closed.prefetch_related(
+        return self._logs_for_closing_events.prefetch_related(
             "lead"
         ).aggregate(
             sum=Sum("lead__closing_amount")
         )["sum"] or 0
 
-    # -------------------------------------
-
     @property
     def forecast_table_additions(self):
         return self.activity_logs.filter(
             activity=lead_constants.LEAD_UPDATED,
-            extra_meta__forecast_table_addition=True,
-        ).exclude(
-            lead__status__title=lead_constants.LEAD_CLOSED,
-            lead__expected_close_date__gte=self._report.date_range_from,
-            lead__expected_close_date__lte=self._report.date_range_to,
-        ).count():
+            meta__extra__forecast_table_addition=True,
+        ).distinct('lead__id').order_by('lead_id').count()
 
     @property
     def top_opportunities(self):
@@ -201,11 +213,16 @@ class RepDataForSelectedDateRange(BaseGenerator):
             "STRONG": None,
             "50/50": None,
         }
-
         closed_leads = [
-            log.lead for log in self._logs_for_deals_closed.prefetch_related("lead").order_by('lead__closing_amount')[:total_needed_count]
+            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('lead__closing_amount')[:total_needed_count]
         ]
-        output[lead_constants.LEAD_STATUS_CLOSED] = closed_leads
+        output[lead_constants.LEAD_STATUS_CLOSED] = [data["fields"] for data in json.loads(
+                                                        serializers.serialize(
+                                                            "json",
+                                                            closed_leads,
+                                                            fields=("pk", "title", "closing_amount", "amount")
+                                                        ))
+                                                    ]
 
         if len(closed_leads) == total_needed_count:
             # There is no need to look through logs regarding entrance into FORECAST_TABLE
@@ -222,9 +239,9 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
             # Therefore:
             # (1) Look through each forecast within FORECAST_TABLE (this list is already ordered).
-            # (2) Look through all logs with extra_meta__forecast_update=True, in newest-first order.
+            # (2) Look through all logs with meta__extra__forecast_update=True, in newest-first order.
             # (3) Keep track of leads as iterating:
-            #       If this log's extra_meta__new_forecast == current forecast,
+            #       If this log's meta__extra__new_forecast == current forecast,
             #       and is first time seeing this log's lead,
             #       => this is the forecast with which this lead ended the report's date_range, so keep it!
             # (4) Stop once total_count_needed is fulfilled
@@ -232,7 +249,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
             still_needed_count = total_needed_count - len(closed_leads)
             logs = self.activity_logs.filter(
                     activity=lead_constants.LEAD_UPDATED,
-                    extra_meta__forecast_update=True,
+                    meta__extra__forecast_update=True,
                 ).exclude(
                     lead__status__title=lead_constants.LEAD_CLOSED,
                     lead__expected_close_date__gte=self._report.date_range_from,
@@ -244,32 +261,133 @@ class RepDataForSelectedDateRange(BaseGenerator):
                 leads_logged = {}
                 target_leads = []
                 for log in logs:
-                    if log.extra_meta.get("new_forecast") == forecast and not leads_logged.get(log.lead_id):
+                    if log.meta["extra"].get("new_forecast") == forecast and not leads_logged.get(log.lead_id):
                         target_leads.append(log.lead)
                     if len(target_leads) == still_needed_count:
                         break
                     leads_logged[log.lead_id] = True
-                output[forecast] = target_leads
+                output[forecast] = [data["fields"] for data in json.loads(
+                                                        serializers.serialize(
+                                                            "json",
+                                                            target_leads,
+                                                            fields=("pk", "title", "closing_amount", "amount")
+                                                        ))
+                                                    ]
                 still_needed_count -= len(target_leads)
-
         return output
+
+
+    @property
+    def sales_cycle(self):
+        # average: for leads closed, what is total time to close, as per story-report protocol
+        count = len(self._closed_leads_data)
+        aggregate = 0
+        for cld in self._closed_leads_data:
+            aggregate += cld["days_to_closed"]
+        if count is 0:
+            return None
+        return round(aggregate / count)
+
+    @property
+    def actions_to_close_opportunity(self):
+        actions_map = {}
+        # need to populate actions_map to produce 'most performed action'
+        for cld in self._closed_leads_data:
+            actions_dict = cld["custom_action_counts"]
+            for key in actions_dict:
+                if actions_map.get(key, None) is None:
+                    actions_map[key] = actions_dict[key]
+                else:
+                    actions_map[key] += actions_dict[key]
+
+        aggregate = sum(actions_map.values())
+        count = len(self._closed_leads_data)
+        return {
+            "average": round(aggregate / count),
+            "most_performed": max(actions_map),
+        }
+
+    @property
+    def ACV(self):
+        aggregate = self.amount_closed
+        count = self.deals_closed_count
+        if count is 0:
+            return None
+        return round(aggregate / count, 2)
+
+
+    @property
+    def deal_analysis(self):
+        # (value => count) for each lead-custom-field:
+        # -- company_size (char-field-choices)
+        # -- industry (char-field-choices)
+        # -- type (char-field-choices)
+        # -- competitor (Bool)
+        # -- geography_address_components (???)
+
+        company_size_map = {}
+        industry_map = {}
+        type_map = {}
+        competitor_map = {}
+        geography_map = {}
+
+        # run through CLOSED LEADS DATA
+        for cld in self._closed_leads:
+            # company_size:
+            if company_size_map.get(cld.company_size, None) is None:
+                company_size_map[cld.company_size] = 1
+            else:
+                company_size_map[cld.company_size] += 1
+            # industry:
+            if industry_map.get(cld.industry, None) is None:
+                industry_map[cld.industry] = 1
+            else:
+                industry_map[cld.industry] += 1
+            # type:
+            if type_map.get(cld.type, None) is None:
+                type_map[cld.type] = 1
+            else:
+                type_map[cld.type] += 1
+            # competitor:
+            if competitor_map.get(cld.competitor, None) is None:
+                competitor_map[cld.competitor] = 1
+            else:
+                competitor_map[cld.competitor] += 1
+            # geography:
+            # if company_size_map.get(cld.company_size, None) is None:
+            #     company_size_map[cld.company_size] = 1
+            # else:
+            #     company_size_map[cld.company_size] += 1
+
+        # TODO: figure top per field, figure out geography
+        return {
+            "company_size": company_size_map,
+            "industry": industry_map,
+            "type": type_map,
+            "competitor": competitor_map,
+            "geograpy": None,
+        }
 
     # -------------------------------------
 
     @property
     def as_dict(self):
         return {
-            # For Summary-Box:
+            # For Summary Box:
             "activities_count": self.activities_count,
             "actions_count": self.actions_count,
             "incoming_messages_count": self.incoming_messages_count,
             "forecast_amount": self.forecast_amount,
             "deals_closed_count": self.deals_closed_count,
             "amount_closed": self.amount_closed,
-            # For Forecast-Box:
+            # For next few boxes:
             "forecast_table_additions": self.forecast_table_additions,
-            # For Top-Opportunities-Box:
             "top_opportunities": self.top_opportunities,
+            "sales_cycle": self.sales_cycle,
+            "actions_to_close_opportunity": self.actions_to_close_opportunity,
+            "ACV": self.ACV,
+            # For Deal-Analysis Box:
+            "deal_analysis": self.deal_analysis,
         }
 
 
