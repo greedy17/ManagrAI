@@ -57,7 +57,7 @@ export default {
         case NOTIFICATION_TYPES.reminder:
           return 'alarm'
         case NOTIFICATION_TYPES.system:
-          return 'alarm'
+          return 'dark-settings'
         case NOTIFICATION_TYPES.message:
           return 'sms'
         case NOTIFICATION_TYPES.emailOpened:
