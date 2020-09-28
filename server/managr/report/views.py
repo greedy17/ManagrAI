@@ -110,5 +110,6 @@ class PerformanceReportViewSet(
 
         # NOTE: development purposes only:
         generate_performance_report_data(str(report.id),  str(generated_by.id))
+        report = PerformanceReport.objects.get(pk=str(report.id))
 
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)

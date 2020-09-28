@@ -208,20 +208,21 @@ class RepDataForSelectedDateRange(BaseGenerator):
     def top_opportunities(self):
         total_needed_count = 3
         output = {
-            "CLOSED": None,
-            "VERBAL": None,
-            "STRONG": None,
-            "50/50": None,
+            "CLOSED": [],
+            "VERBAL": [],
+            "STRONG": [],
+            "50/50": [],
         }
         closed_leads = [
             log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('lead__closing_amount')[:total_needed_count]
         ]
-        output[lead_constants.LEAD_STATUS_CLOSED] = [data["fields"] for data in json.loads(
-                                                        serializers.serialize(
-                                                            "json",
-                                                            closed_leads,
-                                                            fields=("pk", "title", "closing_amount", "amount")
-                                                        ))
+        output[lead_constants.LEAD_STATUS_CLOSED] = [
+                                                        data["fields"] for data in json.loads(
+                                                            serializers.serialize(
+                                                                "json",
+                                                                closed_leads,
+                                                                fields=("title", "closing_amount", "amount")
+                                                            ))
                                                     ]
 
         if len(closed_leads) == total_needed_count:
@@ -270,7 +271,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
                                                         serializers.serialize(
                                                             "json",
                                                             target_leads,
-                                                            fields=("pk", "title", "closing_amount", "amount")
+                                                            fields=("title", "closing_amount", "amount")
                                                         ))
                                                     ]
                 still_needed_count -= len(target_leads)
@@ -302,9 +303,10 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
         aggregate = sum(actions_map.values())
         count = len(self._closed_leads_data)
+
         return {
-            "average": round(aggregate / count),
-            "most_performed": max(actions_map),
+            "average": round(aggregate / count) if count else None,
+            "most_performed": max(actions_map) if bool(actions_map) else None,
         }
 
     @property
@@ -323,7 +325,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
         # -- industry (char-field-choices)
         # -- type (char-field-choices)
         # -- competitor (Bool)
-        # -- geography_address_components (???)
+        # -- geography (String, based on administrative_area_level_1)
 
         company_size_map = {}
         industry_map = {}
@@ -331,42 +333,55 @@ class RepDataForSelectedDateRange(BaseGenerator):
         competitor_map = {}
         geography_map = {}
 
-        # run through CLOSED LEADS DATA
-        for cld in self._closed_leads:
+        # run through CLOSED LEADS, populating the count-maps accordingly
+        for lead in self._closed_leads:
             # company_size:
-            if company_size_map.get(cld.company_size, None) is None:
-                company_size_map[cld.company_size] = 1
+            if company_size_map.get(lead.company_size, None) is None:
+                company_size_map[lead.company_size] = 1
             else:
-                company_size_map[cld.company_size] += 1
+                company_size_map[lead.company_size] += 1
             # industry:
-            if industry_map.get(cld.industry, None) is None:
-                industry_map[cld.industry] = 1
+            if industry_map.get(lead.industry, None) is None:
+                industry_map[lead.industry] = 1
             else:
-                industry_map[cld.industry] += 1
+                industry_map[lead.industry] += 1
             # type:
-            if type_map.get(cld.type, None) is None:
-                type_map[cld.type] = 1
+            if type_map.get(lead.type, None) is None:
+                type_map[lead.type] = 1
             else:
-                type_map[cld.type] += 1
+                type_map[lead.type] += 1
             # competitor:
-            if competitor_map.get(cld.competitor, None) is None:
-                competitor_map[cld.competitor] = 1
+            if competitor_map.get(lead.competitor, None) is None:
+                competitor_map[lead.competitor] = 1
             else:
-                competitor_map[cld.competitor] += 1
+                competitor_map[lead.competitor] += 1
             # geography:
-            # if company_size_map.get(cld.company_size, None) is None:
-            #     company_size_map[cld.company_size] = 1
-            # else:
-            #     company_size_map[cld.company_size] += 1
+            geography_component = lead.geography_address_components.get("administrative_area_level_1")
+            if geography_map.get(geography_component, None) is None:
+                geography_map[geography_component] = 1
+            else:
+                geography_map[geography_component] += 1
 
-        # TODO: figure top per field, figure out geography
+        def get_field_values(field_map):
+            if bool(field_map):
+                return {
+                    "value": max(fields_map),
+                    "percentage": round(max(fields_map) / sum(company_size_map.values())),
+                }
+            else:
+                return {
+                    "value": None,
+                    "percentage": None,
+                }
+
         return {
-            "company_size": company_size_map,
-            "industry": industry_map,
-            "type": type_map,
-            "competitor": competitor_map,
-            "geograpy": None,
+            "company_size": get_field_values(company_size_map),
+            "industry": get_field_values(industry_map),
+            "type": get_field_values(type_map),
+            "competitor": get_field_values(competitor_map),
+            "geography": get_field_values(geography_map),
         }
+
 
     # -------------------------------------
 
