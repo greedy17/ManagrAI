@@ -1,15 +1,24 @@
 from django.test import TestCase
 
+from managr.core.models import User
 from managr.organization.models import Organization
 from managr.lead.models import Lead, LeadActivityLog, Action
 from managr.lead import constants as lead_constants
 
-from .models import StoryReport
+from .models import (
+    StoryReport,
+    PerformanceReport,
+)
 from .story_report_generation import (
     LeadDataGenerator,
     RepresentativeDataGenerator,
     OrganizationDataGenerator
 )
+from .performance_report_generation import (
+    RepDataForSelectedDateRange
+)
+from managr.report import constants as report_const
+from pdb import set_trace
 
 
 class StoryReportLeadDataGeneratorTestCase(TestCase):
@@ -95,3 +104,66 @@ class StoryReportRepresentativeDataGeneratorTestCase(TestCase):
         # rounded to zero decimal places, as does RepresentativeDataGenerator
         average_days_ready_to_booked = round(total / 2, 0)
         self.assertEqual(self.rep_data_dict["average_days_ready_to_booked"], average_days_ready_to_booked)
+
+
+class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
+    fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
+
+    def setUp(self):
+        # should be loaded from the fixture, else should error
+        self.representative = User.objects.get(pk="3dddd261-93b1-46fe-a83e-bc164551362a")
+        self.organization = self.representative.organization
+        # Both leads closed in 2020
+        self.closed_lead_one = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
+        self.closed_lead_two = Lead.objects.get(pk="77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d")
+        self.performance_report = PerformanceReport.objects.create(
+            representative=self.representative,
+            generated_by=self.representative,
+            date_range_preset=report_const.THIS_YEAR,
+            date_range_from="2020-01-01T05:00:00Z",
+            date_range_to="2021-01-01T04:59:59.999000Z",
+        )
+
+    def generate_report_data(self):
+        return RepDataForSelectedDateRange(self.performance_report).as_dict
+
+    def test_actions_count(self):
+        data = self.generate_report_data()
+        # there should already be an action due to fixtures:
+        # pk 7aa287d3-4ce6-4823-a236-b18e260729b7
+        self.assertEqual(data["actions_count"], 1)
+
+        # an org-level action for Test Org
+        action_choice = self.organization.action_choices.first()
+        Action.objects.create(
+            action_type=action_choice,
+            created_by=self.representative,
+            datetime_created="2020-03-01T05:00:00Z",
+        )
+        data = self.generate_report_data()
+        self.assertEqual(data["actions_count"], 2)
+
+    def test_incoming_messages_count(self):
+        data = self.generate_report_data()
+        self.assertEqual(data["incoming_messages_count"], 0)
+        for n in range(3):
+            LeadActivityLog.objects.create(
+                activity=lead_constants.EMAIL_RECEIVED,
+                lead=self.closed_lead_one,
+                action_timestamp="2020-04-01T05:00:00Z",
+                action_taken_by=self.representative,
+            )
+        data = self.generate_report_data()
+        self.assertEqual(data["incoming_messages_count"], 3)
+
+    # TODO:
+    # activities count
+    # forecast amount
+    # deals_closed_count
+    # amount closed
+    # forecast table additions
+    # top opportunities
+    # sales cycle
+    # actions_to_close_opportunity
+    # ACV
+    # deal_analysis
