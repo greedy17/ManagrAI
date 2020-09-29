@@ -177,7 +177,9 @@ class RepDataForSelectedDateRange(BaseGenerator):
             # If lead not in dict, add this log's forecast_amount
             # If in dict then keep max of the two:
             # this log's forecast_amount and whatever current value
-            lead.id = log.lead.id
+            lead = log.lead
+            # All logs that include meta__extra__forecast_table_addition=True
+            # should include meta__extra__forecast_amount.
             forecast_amount = log.meta["extra"]["forecast_amount"]
             if lead_amounts.get(lead.id, None) is None:
                 lead_amounts[lead.id] = forecast_amount
@@ -267,16 +269,16 @@ class RepDataForSelectedDateRange(BaseGenerator):
                     if len(target_leads) == still_needed_count:
                         break
                     leads_logged[log.lead_id] = True
-                output[forecast] = [data["fields"] for data in json.loads(
+                output[forecast] = [
+                                        data["fields"] for data in json.loads(
                                                         serializers.serialize(
                                                             "json",
                                                             target_leads,
                                                             fields=("title", "closing_amount", "amount")
                                                         ))
-                                                    ]
+                                    ]
                 still_needed_count -= len(target_leads)
         return output
-
 
     @property
     def sales_cycle(self):
@@ -317,7 +319,6 @@ class RepDataForSelectedDateRange(BaseGenerator):
             return None
         return round(aggregate / count, 2)
 
-
     @property
     def deal_analysis(self):
         # (value => count) for each lead-custom-field:
@@ -356,16 +357,27 @@ class RepDataForSelectedDateRange(BaseGenerator):
             else:
                 competitor_map[lead.competitor] += 1
             # geography:
-            geography_component = lead.geography_address_components.get("administrative_area_level_1")
-            if geography_map.get(geography_component, None) is None:
-                geography_map[geography_component] = 1
+            geography_component = lead.geography_address_components.get("administrative_area_level_1", None)
+            if geography_component is not None:
+                key = geography_component["long_name"]
+                if geography_map.get(key, None) is None:
+                    geography_map[key] = 1
+                else:
+                    geography_map[key] += 1
             else:
-                geography_map[geography_component] += 1
+                if geography_map.get(None, None) is None:
+                    geography_map[None] = 1
+                else:
+                    geography_map[None] = 1
 
         def get_field_values(field_map):
+            # need to filter out None
+            num_null = field_map.get(None, 0)
+            if num_null:
+                del field_map[None]
             if bool(field_map):
                 max_key = max(field_map)
-                proportion = field_map[max_key] / sum(field_map.values())
+                proportion = field_map[max_key] / (sum(field_map.values()) + num_null)
                 percentage = round(proportion * 100)
                 return {
                     "value": max_key,
@@ -384,9 +396,6 @@ class RepDataForSelectedDateRange(BaseGenerator):
             "competitor": get_field_values(competitor_map),
             "geography": get_field_values(geography_map),
         }
-
-
-    # -------------------------------------
 
     @property
     def as_dict(self):
