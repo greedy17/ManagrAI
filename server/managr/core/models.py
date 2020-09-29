@@ -9,7 +9,7 @@ from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth import login
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
@@ -314,3 +314,107 @@ class EmailTemplate(TimeStampModel):
         ordering = ["name"]
         verbose_name_plural = "Email Templates"
         unique_together = ["user", "name"]
+
+
+class NotificationOptionQuerySet(models.QuerySet):
+
+    ### NOTE We are using __contains here as the field type is text[] in sql __in will search equality
+    ### this will throw a mismatch type error
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
+                return self.filter(
+                    user_groups__contains=[core_consts.ACCOUNT_TYPE_MANAGER]
+                )
+            elif user.type == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(user_groups__contains=[core_consts.ACCOUNT_TYPE_REP])
+            elif user.type == core_consts.ACCOUNT_TYPE_ADMIN:
+                return self.filter(
+                    user_groups__contains=[core_consts.ACCOUNT_TYPE_ADMIN]
+                )
+        else:
+            return None
+
+
+class NotificationSelectionQuerySet(TimeStampModel):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            return self.filter(user=user)
+        else:
+            return None
+
+
+class NotificationSelection(TimeStampModel):
+    option = models.ForeignKey(
+        "core.NotificationOption", on_delete=models.CASCADE, related_name="selections"
+    )
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="notification_settings"
+    )
+    value = models.BooleanField(
+        help_text="If no option is selected it will take the default value",
+    )
+
+    def __str__(self):
+        return f"user:{self.user}, option: {self.option}, value: {self.value}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+        # only allow one selection per option for each user
+        unique_together = (
+            "user",
+            "option",
+        )
+
+
+class NotificationOption(TimeStampModel):
+    """ Manage Email and Alert Notifications (Alerts are notfications
+     they receive on the Notifications side nav) options """
+
+    # user groups will be used to populate the options for each user type
+    title = models.CharField(max_length=128)
+    description = models.TextField(
+        blank=True, help_text="this will show up as a tooltip for the option"
+    )
+    default_value = models.BooleanField(
+        default=True,
+        help_text="All options are Boolean, the value here populates the default for the user",
+    )
+    user_groups = ArrayField(
+        models.CharField(max_length=255, choices=core_consts.ACCOUNT_TYPES, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of user types that have access to this setting",
+    )
+    notification_type = models.CharField(
+        choices=core_consts.NOTIFICATION_TYPES,
+        max_length=255,
+        help_text="Email or Alert",
+    )
+    objects = NotificationOptionQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.title} - {self.notification_type}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+        unique_together = (
+            "title",
+            "notification_type",
+        )
+
+    def get_value(self, user):
+        selection = self.selections.filter(user=user)
+        if selection.exists():
+            return selection.first()
+        else:
+            # create an option for the user with the default value
+            selection = NotificationSelection.objects.create(
+                option=self, user=user, value=self.default_value
+            )
+            return selection
+

@@ -55,6 +55,7 @@ from .models import (
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
+    NotificationOption,
 )
 from .serializers import (
     UserSerializer,
@@ -63,6 +64,7 @@ from .serializers import (
     EmailTemplateSerializer,
     EmailSerializer,
     MessageAuthAccountSerializer,
+    NotificationOptionSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -495,6 +497,18 @@ class GetFileView(View):
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
+
+
+class NotificationOptionsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        options = NotificationOption.objects.for_user(request.user)
+        serializer = NotificationOptionSerializer(
+            options, many=True, context={"request": request}
+        )
+
+        return Response(serializer.data)
 
 
 class NylasMessageWebhook(APIView):

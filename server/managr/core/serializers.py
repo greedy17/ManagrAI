@@ -22,6 +22,8 @@ from .models import (
     STATE_INVITED,
     EmailAuthAccount,
     MessageAuthAccount,
+    NotificationOption,
+    NotificationSelection,
 )
 from .models import EmailTemplate
 
@@ -232,3 +234,31 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
         validated_data["user"] = user
         request = super().create(validated_data)
         return request
+
+
+class NotificationSelectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationSelection
+        fields = ("id", "option", "user", "value")
+
+
+class NotificationOptionSerializer(serializers.ModelSerializer):
+    value = serializers.SerializerMethodField("get_value")
+
+    class Meta:
+        model = NotificationOption
+        fields = (
+            "id",
+            "title",
+            "description",
+            "default_value",
+            "notification_type",
+            "value",
+        )
+
+    def get_value(self, instance):
+        selection = instance.get_value(self.context["request"].user)
+        serializer = NotificationSelectionSerializer(selection)
+
+        return serializer.data
+

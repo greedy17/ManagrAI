@@ -3,7 +3,17 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
-from .models import User, EmailAuthAccount, EmailTemplate, MessageAuthAccount
+from .models import (
+    User,
+    EmailAuthAccount,
+    EmailTemplate,
+    MessageAuthAccount,
+    NotificationOption,
+    NotificationSelection,
+)
+from . import constants as core_consts
+
+TRUE_FALSE_CHOICES = (("True", "ON",), ("False", "OFF"))
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -77,7 +87,49 @@ class CustomEmailAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
+class CustomNotificationOptionForm(forms.ModelForm):
+    default_value = forms.ChoiceField(
+        widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES
+    )
+    user_groups = forms.MultipleChoiceField(
+        choices=core_consts.ACCOUNT_TYPES, widget=forms.SelectMultiple
+    )
+
+    class Meta:
+        model = NotificationOption
+        fields = (
+            "title",
+            "description",
+            "default_value",
+            "user_groups",
+            "notification_type",
+        )
+
+
+class CustomNotificationSelectionForm(forms.ModelForm):
+    value = forms.ChoiceField(widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES)
+
+    class Meta:
+        model = NotificationSelection
+        fields = (
+            "option",
+            "user",
+            "value",
+        )
+
+
+class CustomNotificationSelection(admin.ModelAdmin):
+    form = CustomNotificationSelectionForm
+
+
+class CustomNotificationOption(admin.ModelAdmin):
+    form = CustomNotificationOptionForm
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
 admin.site.register(EmailTemplate)
 admin.site.register(MessageAuthAccount)
+admin.site.register(NotificationOption, CustomNotificationOption)
+admin.site.register(NotificationSelection, CustomNotificationSelection)
+

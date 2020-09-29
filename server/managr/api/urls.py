@@ -43,6 +43,11 @@ urlpatterns = [
         name="get_file_from_nylas",
     ),
     path(
+        "notifications/options",
+        core_views.NotificationOptionsView.as_view(),
+        name="notification_options",
+    ),
+    path(
         "nylas/callback/messages",
         core_views.NylasMessageWebhook.as_view(),
         name="nylas_message_webhook",
@@ -99,3 +104,4 @@ router.register("stages", organization_views.StageViewSet, "stages")
 router.register("lead-messages", lead_views.LeadMessageViewSet, "lead-messages")
 
 urlpatterns += router.urls
+
