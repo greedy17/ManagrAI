@@ -364,9 +364,12 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
         def get_field_values(field_map):
             if bool(field_map):
+                max_key = max(field_map)
+                proportion = field_map[max_key] / sum(field_map.values())
+                percentage = round(proportion * 100)
                 return {
-                    "value": max(fields_map),
-                    "percentage": round(max(fields_map) / sum(company_size_map.values())),
+                    "value": max_key,
+                    "percentage": percentage,
                 }
             else:
                 return {
