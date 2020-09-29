@@ -150,20 +150,66 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
             LeadActivityLog.objects.create(
                 activity=lead_constants.EMAIL_RECEIVED,
                 lead=self.closed_lead_one,
-                action_timestamp="2020-04-01T05:00:00Z",
                 action_taken_by=self.representative,
+                action_timestamp="2020-04-01T05:00:00Z",
+                datetime_created="2020-04-01T05:00:00Z",
             )
         data = self.generate_report_data()
         self.assertEqual(data["incoming_messages_count"], 3)
+
+    def test_amount_closed(self):
+        # while the leads are already closed,
+        # the performance-report looks to the activity log for the closing-event
+        LeadActivityLog.objects.create(
+            activity=lead_constants.LEAD_CLOSED,
+            lead=self.closed_lead_one,
+            action_taken_by=self.representative,
+            action_timestamp="2020-04-01T05:00:00Z",
+            datetime_created="2020-04-01T05:00:00Z",
+        )
+        data = self.generate_report_data()
+        self.assertEqual(data["amount_closed"], self.closed_lead_one.closing_amount)
+        LeadActivityLog.objects.create(
+            activity=lead_constants.LEAD_CLOSED,
+            lead=self.closed_lead_two,
+            action_taken_by=self.representative,
+            action_timestamp="2020-04-01T05:00:00Z",
+            datetime_created="2020-04-01T05:00:00Z",
+        )
+        data = self.generate_report_data()
+        aggregate = self.closed_lead_one.closing_amount + self.closed_lead_two.closing_amount
+        self.assertEqual(data["amount_closed"], aggregate)
+
+    def test_ACV(self):
+        # while the leads are already closed,
+        # the performance-report looks to the activity log for the closing-event
+        LeadActivityLog.objects.create(
+            activity=lead_constants.LEAD_CLOSED,
+            lead=self.closed_lead_one,
+            action_taken_by=self.representative,
+            action_timestamp="2020-04-01T05:00:00Z",
+            datetime_created="2020-04-01T05:00:00Z",
+        )
+        data = self.generate_report_data()
+        self.assertEqual(data["ACV"], self.closed_lead_one.closing_amount)
+        LeadActivityLog.objects.create(
+            activity=lead_constants.LEAD_CLOSED,
+            lead=self.closed_lead_two,
+            action_taken_by=self.representative,
+            action_timestamp="2020-04-01T05:00:00Z",
+            datetime_created="2020-04-01T05:00:00Z",
+        )
+        data = self.generate_report_data()
+        aggregate = self.closed_lead_one.closing_amount + self.closed_lead_two.closing_amount
+        average = round(aggregate / 2)
+        self.assertEqual(data["ACV"], average)
 
     # TODO:
     # activities count
     # forecast amount
     # deals_closed_count
-    # amount closed
     # forecast table additions
     # top opportunities
     # sales cycle
     # actions_to_close_opportunity
-    # ACV
     # deal_analysis
