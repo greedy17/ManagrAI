@@ -2,6 +2,8 @@ import logging
 import json
 import inspect
 from django.utils import timezone
+from dateutil.parser import parse
+
 from rest_framework.exceptions import ValidationError
 from django.core import serializers
 from django.db.models import Q, Sum
@@ -420,8 +422,80 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
 class RepDataAverageForSelectedDateRange(BaseGenerator):
     """
-    Generates rep-level metrics for PerformanceReport.
+    Generates average rep-level metrics for PerformanceReport.
     These metrics regard the rep's averages across time for a given date-range.
     Final output is the self.as_dict method.
     """
-    pass
+
+    @property
+    def _slice_length_in_days(self):
+        datetime_to = parse(self._report.date_range_to) if isinstance(self._report.date_range_to, str) else self._report.date_range_to
+        datetime_from = parse(self._report.date_range_from) if isinstance(self._report.date_range_from, str) else self._report.date_range_from
+        return (datetime_to - datetime_from).days
+
+    @property
+    def _start_datetime(self):
+        return parse(self._representative.datetime_created) if isinstance(self._representative.datetime_created, str) else self._representative.datetime_created
+
+    @property
+    def _report_upper_bound(self):
+        return parse(self._report.date_range_to) if isinstance(self._report.date_range_to, str) else self._report.date_range_to
+
+    @property
+    def _time_slices(self):
+        initial_slice = {
+            "from": self._start_datetime,
+            "to": self._start_datetime + timezone.timedelta(days=self._slice_length_in_days),
+        }
+        slices = [initial_slice]
+        latest_slice = initial_slice
+        while not self._next_slice_exceeds_report_limit(latest_slice):
+            # Build next slice
+            new_from = latest_slice["to"] + timezone.timedelta(microseconds=1)
+            new_slice = {
+                "from": new_from,
+                "to": new_from + timezone.timedelta(days=self._slice_length_in_days)
+            }
+            # Append it to slices
+            slices.append(new_slice)
+            # Set as latest_slice
+            latest_slice = new_slice
+        return slices
+
+    def _next_slice_exceeds_report_limit(self, current_slice):
+        next_slice_upper_bound = current_slice["to"] + timezone.timedelta(days=self._slice_length_in_days)
+        return next_slice_upper_bound > self._report_upper_bound
+
+    @property
+    def _data_for_time_slices(self):
+        data_list = []
+        for ts in self._time_slices:
+            non_db_report = PerformanceReport(
+                date_range_from=ts["from"],
+                date_range_to=ts["to"],
+                date_range_preset=self._report.date_range_preset,
+                representative=self._representative,
+                generated_by=self._report.generated_by,
+            )
+            data_item = RepDataForSelectedDateRange(non_db_report).as_dict
+            data_list.append(data_item)
+        return data_list
+
+    # ------------------------
+
+    @property
+    def as_dict(self):
+        return {
+            # For Summary Box:
+            "activities_count": None,
+            "actions_count": None,
+            "incoming_messages_count": None,
+            "forecast_amount": None,
+            "deals_closed_count": None,
+            "amount_closed": None,
+            # For next few boxes:
+            "forecast_table_additions": None,
+            "sales_cycle": None,
+            "actions_to_close_opportunity": None,
+            "ACV": None,
+        }

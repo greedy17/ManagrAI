@@ -15,7 +15,8 @@ from .story_report_generation import (
     OrganizationDataGenerator
 )
 from .performance_report_generation import (
-    RepDataForSelectedDateRange
+    RepDataForSelectedDateRange,
+    RepDataAverageForSelectedDateRange,
 )
 from managr.report import constants as report_const
 from pdb import set_trace
@@ -630,3 +631,28 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
         self.assertEqual(len(top_verbal), 1)
         self.assertEqual(len(top_strong), 0)
         self.assertEqual(len(top_50_50), 0)
+
+
+class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
+    fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
+
+    def setUp(self):
+        # should be loaded from the fixture, else should error
+        self.representative = User.objects.get(pk="3dddd261-93b1-46fe-a83e-bc164551362a")
+        self.organization = self.representative.organization
+        # Both leads closed in 2020
+        self.closed_lead_one = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
+        self.closed_lead_two = Lead.objects.get(pk="77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d")
+        self.performance_report = PerformanceReport.objects.create(
+            representative=self.representative,
+            generated_by=self.representative,
+            date_range_preset=report_const.THIS_MONTH,
+            date_range_from="2020-09-01T04:00:00Z",
+            date_range_to="2020-10-01T03:59:59.999000Z",
+        )
+
+    def test_x(self):
+        # data = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
+        data = RepDataAverageForSelectedDateRange(self.performance_report)
+        set_trace()
+        print('-----end-----')
