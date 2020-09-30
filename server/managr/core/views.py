@@ -48,7 +48,7 @@ from managr.core.twilio.messages import (
 )
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
-from managr.core.background import emit_event
+from managr.core.background import emit_event, emit_email_sync_event
 
 from .models import (
     User,
@@ -75,6 +75,7 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
+from .nylas.models import NylasAccountStatus, NylasAccountStatusList
 
 
 logger = logging.getLogger("managr")
@@ -558,7 +559,34 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
+        """ this endpoint will have to eventually be handled by a different instance
+        unlike the messages endpoint we cannot grab an id and pass it to the async 
+        we can however track the delta and check the api for that delta or we can save it in the cache
+
+        """
         data = request.data
+        deltas = data.get("deltas", [])
+        # a list class wrapper around custom NylasAccountStatus class
+        nylas_data = NylasAccountStatusList(deltas)
+        # calling .values on the NylasAccStatList returns a list of lists using the object keys passed
+        values = [
+            # details is position 0 in the first entry and 1 is resource_status
+            (item[0]["account_id"], item[1])
+            for item in nylas_data.values("details", "resource_status")
+        ]
+        email_accounts = []
+        for v in values:
+            email_account = EmailAuthAccount.objects.filter(account_id=v[0]).first()
+            if email_account:
+                if email_account.sync_state != v[1]:
+                    email_account.sync_state = v[1]
+                    email_accounts.append(email_account)
+                    emit_email_sync_event(str(email_account.user.id), v[1])
+                # if the account is having problems send an email and a notification
+                # we will be removing accounts from our db and from nylas if it has been inactive for 5 days
+
+        EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
+
         return Response()
 
 

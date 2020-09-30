@@ -1,24 +1,23 @@
 # custom classes for nylas
 
-
+# connected: An Account has been connected to your app
+# running: An Account is syncing and properly running
+# stopped: An account was stopped or canceled
+# invalid: an account has invalid credentials and needs to be reauthed
+# sync_error: An account has a sync error and is no longer syncing
 class NylasAccountStatus:
     def __init__(self, object):
         self.date_received = object[
             "date"
         ]  # date received the webhook it comes as epoch
-        self.resource = object[
-            "object"
-        ]  # the resource being targeted (account, message)
-        self.resource_status = object[
-            "type"
-        ]  # the webhook trigger object.status account.running
+        self.resource, self.resource_status = object["type"].split(".")
         self.details = object[
             "object_data"
         ]  # the meta data namespace_id, account_id, object attributes, id additional meta
 
     def __str__(self):
-        resource, status = self.resource_status.split(".")
-        return f"{resource} with {self.details['account_id']} is currently {status}"
+
+        return f"{self.resource} with {self.details['account_id']} is currently {self.resource_status}"
 
     def __dict__(self):
         return {
@@ -52,9 +51,9 @@ class NylasAccountStatusList:
         """ returns values as list of lists for each key passed if it exists"""
         collected = []
         for v in self.items:
+            current = []
             for key in args:
                 val = v.data.get(key, None)
-                current = []
                 if val:
                     current.append(val)
                 collected.append(current)
