@@ -60,12 +60,12 @@ def _notify_user_of_email_status(user_id, sync_state):
                     we will remove your account from our platform and from nylas"
                 )
             if sync_state == "invalid" or sync_state == "sync_error":
-                now = timezone.now() + datetime.timedelta(days=5)
+                expire = timezone.now() + datetime.timedelta(days=5)
 
                 message = (
                     message
                     + f" you must login to managr and re authenticate your account \
-                        Note, we will remove your integration from our system by {now}"
+                        Note, we will remove your integration from our system by {expire}"
                 )
 
             message_obj = {"subject": "Email Integration Alert", "body": message}
