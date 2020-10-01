@@ -1,6 +1,6 @@
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 import { NotificationSettingsAPI } from './api'
-class NotificationSelection {
+export class NotificationSelection {
   constructor({ id = null, option = null, user = null, value = false } = {}) {
     Object.assign(this, {
       id,

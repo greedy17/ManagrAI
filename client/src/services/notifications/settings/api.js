@@ -3,6 +3,7 @@ import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 const OPTIONS_URL = '/notifications/options'
 const SELECTIONS_URL = '/notifications/selections'
 const SETTINGS_ENDPOINT = '/notifications/settings'
+const UPDATE_SETTINGS_ENDPOINT = '/notifications/settings/update-settings/'
 
 export class NotificationSettingsAPI {
   constructor(cls) {
@@ -37,5 +38,12 @@ export class NotificationSettingsAPI {
       apiErrorHandler({ apiName: 'Notification.Settings' })
     }
   }
-  async update(options) {}
+  async updateSettings(options) {
+    const url = UPDATE_SETTINGS_ENDPOINT
+    try {
+      await this.client.patch(url, options)
+    } catch {
+      apiErrorHandler({ apiName: 'Notification.Settings Update' })
+    }
+  }
 }

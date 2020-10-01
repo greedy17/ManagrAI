@@ -48,6 +48,7 @@
           </div>
         </div>
       </div>
+      <button @click="updateSettings">Save</button>
     </div>
   </div>
 </template>
@@ -55,7 +56,7 @@
 <script>
 import { FormField } from '@thinknimble/tn-forms'
 import Tooltip from '@/components/shared/Tooltip'
-import NotificationSettings from '@/services/notifications/settings'
+import NotificationSettings, { NotificationSelection } from '@/services/notifications/settings'
 import CollectionManager from '@/services/collectionManager'
 
 // since this is a dynamic form we will only use form fields to generate without a form class
@@ -89,15 +90,39 @@ export default {
       let fields = this.settingsOptions.list.map(opt => {
         return {
           field: new FormField({ name: opt.title, value: opt.value.value }),
-          meta: { type: opt.notificationType, helpText: opt.description, id: opt.id },
+          meta: {
+            type: opt.notificationType,
+            helpText: opt.description,
+            id: opt.id,
+            selection: opt.value.id,
+          },
         }
       })
       this.fields = fields
     },
-  },
-  updateSettings() {
-    if (!this.loading) {
-    }
+    generateSubmission() {
+      return {
+        selections: this.fields.map(field => {
+          return new NotificationSelection({
+            option: field.meta.id,
+            value: field.field.value,
+            id: field.meta.selection,
+          })
+        }),
+      }
+    },
+    async updateSettings() {
+      if (!this.loading) {
+        this.loading
+        let selections = this.generateSubmission()
+
+        try {
+          await NotificationSettings.api.updateSettings(selections)
+        } finally {
+          this.loading = false
+        }
+      }
+    },
   },
 }
 </script>
