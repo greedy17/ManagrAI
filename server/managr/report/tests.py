@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from managr.core.models import User
-from managr.organization.models import Organization, Account
+from managr.organization.models import Organization, Account, Stage
 from managr.lead.models import Lead, LeadActivityLog, Action, ActionChoice
 from managr.lead import constants as lead_constants
 
@@ -17,6 +17,7 @@ from .story_report_generation import (
 from .performance_report_generation import (
     RepDataForSelectedDateRange,
     RepDataAverageForSelectedDateRange,
+    OrganizationDataAverageForSelectedDateRange,
 )
 from managr.report import constants as report_const
 from pdb import set_trace
@@ -669,3 +670,143 @@ class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
         denominator = 2
         sales_cycle_average = round(numerator / denominator)
         self.assertEqual(rep_data["sales_cycle"], sales_cycle_average)
+
+
+class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
+    fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
+
+    def setUp(self):
+        # should be loaded from the fixture, else should error
+        self.representative = User.objects.get(pk="3dddd261-93b1-46fe-a83e-bc164551362a")
+        self.organization = self.representative.organization
+        self.closed_lead_one = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
+        self.closed_lead_two = Lead.objects.get(pk="77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d")
+        self.performance_report = PerformanceReport.objects.create(
+            representative=self.representative,
+            generated_by=self.representative,
+            date_range_preset=report_const.THIS_MONTH,
+            date_range_from="2020-09-01T04:00:00Z",
+            date_range_to="2020-10-01T03:59:59.999000Z",
+        )
+
+    def generate_org_data(self):
+        org_data_generator = OrganizationDataAverageForSelectedDateRange(self.performance_report)
+        return org_data_generator.as_dict_for_representative_report
+
+    def generate_rep_two_data(self):
+        # generate rep
+        representative = User.objects.create(
+            email="second_report_tester@reports.com",
+            is_invited=True,
+            is_active=True,
+            organization=self.organization,
+        )
+        # generate closed lead
+        lead_one = Lead.objects.create(
+            title="first lead",
+            created_by=representative,
+            claimed_by=representative,
+            status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
+            amount=1000,
+            closing_amount=1000,
+            expected_close_date="2020-08-05T05:00:00Z",
+            account=Account.objects.first(),
+        )
+        log_one = LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_CLOSED,
+                lead=lead_one,
+                action_taken_by=representative,
+                action_timestamp="2020-08-05T05:00:00Z",
+                datetime_created="2020-08-05T05:00:00Z",
+            )
+
+        # make sure that leads dates are static regardless of
+        # whenever these tests are run
+        # All of the dates have to take place before the report's
+        # date_range_from, because that is part of the protocol for
+        # leads/data to be included in the data generation.
+        representative.datetime_created = "2020-06-25T05:00:00Z"
+        lead_one.datetime_created = "2020-07-05T05:00:00Z"
+        lead_one.save()
+        log_one.datetime_created = "2020-08-05T05:00:00Z"
+        log_one.action_timestamp = "2020-08-05T05:00:00Z"
+        log_one.save()
+
+        # generate performance report
+        performance_report = PerformanceReport.objects.create(
+            representative=representative,
+            generated_by=representative,
+            date_range_preset=self.performance_report.date_range_preset,
+            date_range_from=self.performance_report.date_range_from,
+            date_range_to=self.performance_report.date_range_to,
+        )
+        return RepDataAverageForSelectedDateRange(performance_report).as_dict
+
+    def test_averages(self):
+        # Originally, given fixture:
+        # Only one rep with two leads.
+        # Therefore, averages of OrganizationDataAverageForSelectedDateRange
+        # should be same as the one rep's RepDataAverageForSelectedDateRange.
+        rep_one_averages = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
+        # org_averages = self.generate_org_data()
+
+        self.assertEqual(
+                org_averages["activities_count"],
+                rep_one_averages["activities_count"],
+            )
+        self.assertEqual(
+                org_averages["actions_count"],
+                rep_one_averages["actions_count"],
+            )
+        self.assertEqual(
+                org_averages["incoming_messages_count"],
+                rep_one_averages["incoming_messages_count"],
+            )
+        self.assertEqual(
+                org_averages["forecast_amount"],
+                rep_one_averages["forecast_amount"],
+            )
+        self.assertEqual(
+                org_averages["deals_closed_count"],
+                rep_one_averages["deals_closed_count"],
+            )
+        self.assertEqual(
+                org_averages["amount_closed"],
+                rep_one_averages["amount_closed"],
+            )
+
+        # Add new rep and confirm org_averages
+        rep_two_averages = self.generate_rep_two_data()
+        org_averages = self.generate_org_data()
+
+        a1 = (rep_one_averages["activities_count"] + rep_two_averages["activities_count"]) / 2
+        a2 = (rep_one_averages["actions_count"] + rep_two_averages["actions_count"]) / 2
+        a3 = (rep_one_averages["deals_closed_count"] + rep_two_averages["deals_closed_count"]) / 2
+        a4 = (rep_one_averages["amount_closed"] + rep_two_averages["amount_closed"]) / 2
+        b1 = org_averages["activities_count"]        
+        b2 = org_averages["actions_count"]        
+        b3 = org_averages["deals_closed_count"]  
+        b4 = org_averages["amount_closed"]
+        
+        set_trace()
+
+        # self.assertEqual(
+        #         org_averages["activities_count"],
+        #         manual_average,
+        #     )   
+        # manual_average = (rep_one_averages["actions_count"] + rep_two_averages["actions_count"]) / 2
+        # self.assertEqual(
+        #         org_averages["actions_count"],
+        #         manual_average,
+        #     )  
+        # manual_average = (rep_one_averages["deals_closed_count"] + rep_two_averages["deals_closed_count"]) / 2
+        # self.assertEqual(
+        #         org_averages["deals_closed_count"],
+        #         manual_average,
+        #     )  
+        # manual_average = (rep_one_averages["amount_closed"] + rep_two_averages["amount_closed"]) / 2
+        # self.assertEqual(
+        #         org_averages["amount_closed"],
+        #         manual_average,
+        #     )  
+       
