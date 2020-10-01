@@ -20,14 +20,7 @@
         >
           Email Templates
         </div>
-        <!-- NOTE (Bruno 6-19-2020) hiding email-test page -->
-        <!-- <div
-          class="toolbar__row"
-          @click="toggleActivePage('emailTest')"
-          :class="{ toolbar__active: emailTestActive }"
-        >
-          Email Test
-        </div> -->
+
         <div
           class="toolbar__row"
           @click="toggleActivePage('textIntegration')"
@@ -53,6 +46,7 @@
       <TextIntegration v-if="textIntegrationActive" />
       <Profile v-if="profileActive" />
       <Password v-if="passwordActive" />
+      <NotificationSettings />
     </div>
   </div>
 </template>
@@ -63,6 +57,7 @@ import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
 import Profile from '@/components/settings/Profile'
 import Password from '@/components/settings/Password'
+import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
 
 export default {
   name: 'Settings',
@@ -72,6 +67,7 @@ export default {
     TextIntegration,
     Profile,
     Password,
+    NotificationSettings,
   },
   data() {
     return {
