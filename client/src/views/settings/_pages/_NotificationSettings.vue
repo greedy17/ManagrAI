@@ -48,7 +48,15 @@
           </div>
         </div>
       </div>
-      <button @click="updateSettings">Save</button>
+      <div class="notification-settings--box__footer">
+        <button
+          :disabled="loading"
+          class="notification-settings__button--primary"
+          @click="updateSettings"
+        >
+          Save
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -118,6 +126,11 @@ export default {
 
         try {
           await NotificationSettings.api.updateSettings(selections)
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 3000,
+            message: 'Settings Saved',
+          })
         } finally {
           this.loading = false
         }
@@ -129,9 +142,13 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/containers.scss';
+@import '@/styles/mixins/buttons.scss';
 .notification-settings {
   &--box {
     @include box--bordered();
+  }
+  &__button--primary {
+    @include primary-button;
   }
   &__option {
     display: flex;
@@ -140,6 +157,7 @@ export default {
     &__options {
       padding: 1rem;
     }
+
     &__title {
       width: 25rem;
       display: flex;

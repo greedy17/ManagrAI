@@ -14,6 +14,14 @@
     justify-content: space-between;
     box-shadow: 0 1px 0 0 #eeeeee;
   }
+  &__footer {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 0 0 #eeeeee;
+    padding: 1rem;
+  }
   &__title {
     @include base-font-styles();
     padding: 1rem 1rem;
