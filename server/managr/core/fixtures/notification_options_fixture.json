@@ -1,6 +1,20 @@
 [
   {
     "model": "core.NotificationOption",
+    "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa3",
+    "fields": {
+      "title": "Email",
+      "description": "Turn On/Off Alert Notifications for received emails",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "EMAIL"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
     "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa1",
     "fields": {
       "title": "Organization",
@@ -9,7 +23,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ORGANIZATION"
     }
   },
   {
@@ -22,7 +37,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ORGANIZATION"
     }
   },
   {
@@ -35,7 +51,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REPORTS"
     }
   },
   {
@@ -48,7 +65,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REPORTS"
     }
   },
   {
@@ -61,7 +79,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ACCOUNT"
     }
   },
   {
@@ -74,7 +93,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ACCOUNT"
     }
   },
   {
@@ -87,7 +107,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "TEXT"
     }
   },
   {
@@ -100,7 +121,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "TEXT"
     }
   },
   {
@@ -113,7 +135,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REMINDER"
     }
   },
   {
@@ -126,7 +149,8 @@
       "user_groups": ["MANAGER", "REP", "ADMIN"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
-      "last_edited": "2020-06-09T17:38:38.085Z"
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REMINDER"
     }
   }
 ]

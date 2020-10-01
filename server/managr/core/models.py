@@ -376,7 +376,7 @@ class NotificationOption(TimeStampModel):
      they receive on the Notifications side nav) options """
 
     # user groups will be used to populate the options for each user type
-    title = models.CharField(max_length=128)
+    title = models.CharField(max_length=128, help_text="Friendly Name")
     description = models.TextField(
         blank=True, help_text="this will show up as a tooltip for the option"
     )
@@ -395,6 +395,13 @@ class NotificationOption(TimeStampModel):
         max_length=255,
         help_text="Email or Alert",
     )
+    ## this may get removed and replaced with notification options set on the leads
+    key = models.CharField(
+        max_length=255,
+        choices=core_consts.NOTIFICATION_KEYS,
+        null=True,
+        help_text="select a static key to use when applying filter",
+    )
     objects = NotificationOptionQuerySet.as_manager()
 
     def __str__(self):
@@ -403,8 +410,10 @@ class NotificationOption(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
         unique_together = (
-            "title",
+            # only allow a single key with two types per user group
+            "key",
             "notification_type",
+            "user_groups",
         )
 
     def get_value(self, user):
