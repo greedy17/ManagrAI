@@ -16,6 +16,7 @@ from managr.lead.serializers import LeadRefSerializer
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.utils.sites import get_site_url
 
+from managr.report import constants as report_constants
 from .models import PerformanceReport
 from .story_report_generation import LeadDataGenerator
 
@@ -38,9 +39,16 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
 
     try:
         # generate report's data
-        performance_report.data["focus"] = RepDataForSelectedDateRange(performance_report).as_dict
-        # performance_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
-        # performance_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
+        data = {
+            "representative": {
+                "focus": RepDataForSelectedDateRange(performance_report).as_dict,
+                "typical": RepDataAverageForSelectedDateRange(performance_report).as_dict,
+            }
+            "organization": {
+                "typical": None,
+            }
+        }
+        performance_report.data = data
         performance_report.datetime_generated = timezone.now()
         performance_report.save()
         # send email to user that generated report
@@ -187,6 +195,8 @@ class RepDataForSelectedDateRange(BaseGenerator):
                 lead_amounts[lead.id] = forecast_amount
             else:
                 lead_amounts[lead.id] = max(lead_amounts[lead.id], forecast_amount)
+        if not bool(lead_amounts):
+            return 0
         return sum(lead_amounts.values())
 
     @property
@@ -428,13 +438,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
     """
 
     @property
-    def _slice_length_in_days(self):
-        datetime_to = parse(self._report.date_range_to) if isinstance(self._report.date_range_to, str) else self._report.date_range_to
-        datetime_from = parse(self._report.date_range_from) if isinstance(self._report.date_range_from, str) else self._report.date_range_from
-        return (datetime_to - datetime_from).days
-
-    @property
-    def _start_datetime(self):
+    def _representative_join_date(self):
         return parse(self._representative.datetime_created) if isinstance(self._representative.datetime_created, str) else self._representative.datetime_created
 
     @property
@@ -442,29 +446,47 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
         return parse(self._report.date_range_to) if isinstance(self._report.date_range_to, str) else self._report.date_range_to
 
     @property
-    def _time_slices(self):
-        initial_slice = {
-            "from": self._start_datetime,
-            "to": self._start_datetime + timezone.timedelta(days=self._slice_length_in_days),
+    def _report_lower_bound(self):
+        return parse(self._report.date_range_from) if isinstance(self._report.date_range_from, str) else self._report.date_range_from
+
+    @property
+    def _slice_length_in_days(self):
+        return (self._report_upper_bound - self._report_lower_bound).days
+
+    @property
+    def _time_delta(self):
+        return timezone.timedelta(days=self._slice_length_in_days)
+
+    def _get_next_time_slice(self, current_slice):
+        # Given current_slice, returns time-slice to its chronological-left
+        return {
+            "to": current_slice["to"] - self._time_delta,
+            "from": current_slice["from"] - self._time_delta,
         }
-        slices = [initial_slice]
+
+    def _next_slice_would_be_invalid(self, current_slice):
+        next_slice_lower_bound = self._get_next_time_slice(current_slice)["from"]
+        return next_slice_lower_bound < self._representative_join_date
+
+    @property
+    def _time_slices(self):
+        # reverse-chronological
+        # "this [date-range]" is excluded
+        # ignore remainder
+        initial_slice = {
+            "to": self._report_lower_bound,
+            "from": self._report_lower_bound - self._time_delta,
+        }
+        slices_list = [initial_slice]
         latest_slice = initial_slice
-        while not self._next_slice_exceeds_report_limit(latest_slice):
+        while not self._next_slice_would_be_invalid(latest_slice):
             # Build next slice
-            new_from = latest_slice["to"] + timezone.timedelta(microseconds=1)
-            new_slice = {
-                "from": new_from,
-                "to": new_from + timezone.timedelta(days=self._slice_length_in_days)
-            }
-            # Append it to slices
-            slices.append(new_slice)
+            new_slice = self._get_next_time_slice(latest_slice)
+            # Insert at beginning of slices_list
+            slices_list.insert(0, new_slice)
             # Set as latest_slice
             latest_slice = new_slice
-        return slices
-
-    def _next_slice_exceeds_report_limit(self, current_slice):
-        next_slice_upper_bound = current_slice["to"] + timezone.timedelta(days=self._slice_length_in_days)
-        return next_slice_upper_bound > self._report_upper_bound
+        return slices_list
 
     @property
     def _data_for_time_slices(self):
@@ -481,21 +503,39 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
             data_list.append(data_item)
         return data_list
 
-    # ------------------------
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
+        if sub_field:
+            target_data = [data_item[field][sub_field] for data_item in self._data_for_time_slices]
+        else:
+            target_data = [data_item[field] for data_item in self._data_for_time_slices]
+        if could_be_null:
+            no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
+            numerator = sum(no_nulls_target_data)
+            denominator = len(no_nulls_target_data)
+        else:
+            numerator = sum(target_data)
+            denominator = len(target_data)
+        if denominator is 0:
+            return None
+        return round(numerator / denominator)
 
     @property
     def as_dict(self):
         return {
             # For Summary Box:
-            "activities_count": None,
-            "actions_count": None,
-            "incoming_messages_count": None,
-            "forecast_amount": None,
-            "deals_closed_count": None,
-            "amount_closed": None,
+            "activities_count": self.average_for_field("activities_count"),
+            "actions_count": self.average_for_field("actions_count"),
+            "incoming_messages_count": self.average_for_field("incoming_messages_count"),
+            "forecast_amount": self.average_for_field("forecast_amount"),
+            "deals_closed_count": self.average_for_field("deals_closed_count"),
+            "amount_closed": self.average_for_field("amount_closed"),
             # For next few boxes:
-            "forecast_table_additions": None,
-            "sales_cycle": None,
-            "actions_to_close_opportunity": None,
-            "ACV": None,
+            "forecast_table_additions": self.average_for_field("forecast_table_additions"),
+            "sales_cycle": self.average_for_field("sales_cycle", could_be_null=True),
+            "actions_to_close_opportunity": self.average_for_field(
+                                                    "actions_to_close_opportunity",
+                                                    sub_field="average",
+                                                    could_be_null=True,
+                                                ),
+            "ACV": self.average_for_field("ACV", could_be_null=True),
         }
