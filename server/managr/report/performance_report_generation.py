@@ -43,7 +43,7 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
             "representative": {
                 "focus": RepDataForSelectedDateRange(performance_report).as_dict,
                 "typical": RepDataAverageForSelectedDateRange(performance_report).as_dict,
-            }
+            },
             "organization": {
                 "typical": None,
             }

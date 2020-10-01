@@ -651,8 +651,21 @@ class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
             date_range_to="2020-10-01T03:59:59.999000Z",
         )
 
-    def test_x(self):
-        # data = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
-        data = RepDataAverageForSelectedDateRange(self.performance_report)
-        set_trace()
-        print('-----test_x-----')
+    def test_average_for_field(self):
+        # all statistics for this aspect of PerformanceReports are generated
+        # via average_for_field().
+        lead_one_data = LeadDataGenerator(self.closed_lead_one).as_dict
+        lead_two_data = LeadDataGenerator(self.closed_lead_two).as_dict
+        rep_data = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
+
+        # test activities_count
+        numerator = lead_one_data["action_count"] + lead_two_data["action_count"]
+        denominator = 2
+        activities_average = round(numerator / denominator)
+        self.assertEqual(rep_data["activities_count"], activities_average)
+
+        # test sales_cycle
+        numerator = lead_one_data["days_to_closed"] + lead_two_data["days_to_closed"]
+        denominator = 2
+        sales_cycle_average = round(numerator / denominator)
+        self.assertEqual(rep_data["sales_cycle"], sales_cycle_average)
