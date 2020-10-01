@@ -28,6 +28,9 @@
         >
           Text Integration
         </div>
+        <div class="toolbar__row" @click="toggleActivePage('notificationSettingsPage')">
+          Notification Settings
+        </div>
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
@@ -46,7 +49,7 @@
       <TextIntegration v-if="textIntegrationActive" />
       <Profile v-if="profileActive" />
       <Password v-if="passwordActive" />
-      <NotificationSettings />
+      <NotificationSettings v-if="notificationSettingsPage" />
     </div>
   </div>
 </template>
@@ -76,6 +79,7 @@ export default {
       textIntegrationActive: false,
       profileActive: false,
       passwordActive: false,
+      notificationSettingsPage: false,
     }
   },
   methods: {
@@ -85,11 +89,13 @@ export default {
       this.textIntegrationActive = false
       this.profileActive = false
       this.passwordActive = false
+      this.notificationSettingsPage = false
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
       if (pageToActivate === 'textIntegration') this.textIntegrationActive = true
       if (pageToActivate === 'profile') this.profileActive = true
       if (pageToActivate === 'password') this.passwordActive = true
+      if (pageToActivate === 'notificationSettingsPage') this.notificationSettingsPage = true
     },
     routeToInviteUser() {
       this.$router.push({ name: 'Invite' })
