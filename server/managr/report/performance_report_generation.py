@@ -45,7 +45,7 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
                 "typical": RepDataAverageForSelectedDateRange(performance_report).as_dict,
             },
             "organization": {
-                "typical": None,
+                "typical": OrganizationDataAverageForSelectedDateRange(performance_report).as_dict_for_representative_report,
             }
         }
         performance_report.data = data
@@ -105,6 +105,10 @@ class RepDataForSelectedDateRange(BaseGenerator):
     These metrics regard the specific date-range of the report.
     Final output is the self.as_dict method.
     """
+    def __init__(self, report):
+        self.__cached__closed_leads = None
+        self.__cached__closed_leads_data = None
+        super().__init__(report)
 
     # private properties:
 
@@ -116,11 +120,19 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
     @property
     def _closed_leads(self):
-        return {log.lead for log in self._logs_for_closing_events.prefetch_related("lead")}
+        if self.__cached__closed_leads is None:
+            self.__cached__closed_leads = {log.lead for log in self._logs_for_closing_events.prefetch_related("lead")}
+            return self.__cached__closed_leads
+        else:
+            return self.__cached__closed_leads
 
     @property
     def _closed_leads_data(self):
-        return [LeadDataGenerator(lead).as_dict for lead in self._closed_leads]
+        if self.__cached__closed_leads_data is None:
+            self.__cached__closed_leads_data = [LeadDataGenerator(lead).as_dict for lead in self._closed_leads]
+            return self.__cached__closed_leads_data
+        else:
+            return self.__cached__closed_leads_data
 
     # public properties:
 
@@ -301,7 +313,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
             aggregate += cld["days_to_closed"]
         if count is 0:
             return None
-        return round(aggregate / count)
+        return aggregate / count
 
     @property
     def actions_to_close_opportunity(self):
@@ -319,7 +331,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
         count = len(self._closed_leads_data)
 
         return {
-            "average": round(aggregate / count) if count else None,
+            "average": aggregate / count if count else None,
             "most_performed": max(actions_map) if bool(actions_map) else None,
         }
 
@@ -329,7 +341,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
         count = self.deals_closed_count
         if count is 0:
             return None
-        return round(aggregate / count, 2)
+        return aggregate / count
 
     @property
     def deal_analysis(self):
@@ -436,6 +448,10 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
     These metrics regard the rep's averages across time for a given date-range.
     Final output is the self.as_dict method.
     """
+    def __init__(self, report):
+        self.__cached__time_slices = None
+        self.__cached__data_for_time_slices = None
+        super().__init__(report)
 
     @property
     def _representative_join_date(self):
@@ -470,38 +486,46 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
 
     @property
     def _time_slices(self):
-        # reverse-chronological
-        # "this [date-range]" is excluded
-        # ignore remainder
-        initial_slice = {
-            "to": self._report_lower_bound,
-            "from": self._report_lower_bound - self._time_delta,
-        }
-        slices_list = [initial_slice]
-        latest_slice = initial_slice
-        while not self._next_slice_would_be_invalid(latest_slice):
-            # Build next slice
-            new_slice = self._get_next_time_slice(latest_slice)
-            # Insert at beginning of slices_list
-            slices_list.insert(0, new_slice)
-            # Set as latest_slice
-            latest_slice = new_slice
-        return slices_list
+        if self.__cached__time_slices is None:
+            # reverse-chronological
+            # "this [date-range]" is excluded
+            # ignore remainder
+            initial_slice = {
+                "to": self._report_lower_bound,
+                "from": self._report_lower_bound - self._time_delta,
+            }
+            slices_list = [initial_slice]
+            latest_slice = initial_slice
+            while not self._next_slice_would_be_invalid(latest_slice):
+                # Build next slice
+                new_slice = self._get_next_time_slice(latest_slice)
+                # Insert at beginning of slices_list
+                slices_list.insert(0, new_slice)
+                # Set as latest_slice
+                latest_slice = new_slice
+            self.__cached__time_slices = slices_list
+            return self.__cached__time_slices
+        else:
+            return self.__cached__time_slices
 
     @property
     def _data_for_time_slices(self):
-        data_list = []
-        for ts in self._time_slices:
-            non_db_report = PerformanceReport(
-                date_range_from=ts["from"],
-                date_range_to=ts["to"],
-                date_range_preset=self._report.date_range_preset,
-                representative=self._representative,
-                generated_by=self._report.generated_by,
-            )
-            data_item = RepDataForSelectedDateRange(non_db_report).as_dict
-            data_list.append(data_item)
-        return data_list
+        if self.__cached__data_for_time_slices is None:
+            data_list = []
+            for ts in self._time_slices:
+                non_db_report = PerformanceReport(
+                    date_range_from=ts["from"],
+                    date_range_to=ts["to"],
+                    date_range_preset=self._report.date_range_preset,
+                    representative=self._representative,
+                    generated_by=self._report.generated_by,
+                )
+                data_item = RepDataForSelectedDateRange(non_db_report).as_dict
+                data_list.append(data_item)
+            self.__cached__data_for_time_slices = data_list
+            return self.__cached__data_for_time_slices
+        else:
+            return self.__cached__data_for_time_slices
 
     def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
@@ -517,7 +541,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
             denominator = len(target_data)
         if denominator is 0:
             return None
-        return round(numerator / denominator)
+        return numerator / denominator
 
     @property
     def as_dict(self):
@@ -538,4 +562,71 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
                                                     could_be_null=True,
                                                 ),
             "ACV": self.average_for_field("ACV", could_be_null=True),
+        }
+
+
+class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
+    def __init__(self, report):
+        self.__cached__non_db_representative_reports = None
+        self.__cached__averages_per_rep = None
+        super().__init__(report)
+
+    @property
+    def _non_db_representative_reports(self):
+        if self.__cached__non_db_representative_reports is None:
+            self.__cached__non_db_representative_reports = [
+                                                        PerformanceReport(
+                                                            date_range_from=self._report.date_range_from,
+                                                            date_range_to=self._report.date_range_to,
+                                                            date_range_preset=self._report.date_range_preset,
+                                                            generated_by=self._report.generated_by,
+                                                            representative=representative,
+                                                        ) for representative in self._organization.users.filter(is_active=True)
+                                                ]
+            return self.__cached__non_db_representative_reports
+        else:
+            return self.__cached__non_db_representative_reports
+
+    @property
+    def _averages_per_rep(self):
+        if self.__cached__averages_per_rep is None:
+            self.__cached__averages_per_rep = [
+                        RepDataAverageForSelectedDateRange(report).as_dict
+                        for report in self._non_db_representative_reports
+                ]
+            return self.__cached__averages_per_rep
+        else:
+            return self.__cached__averages_per_rep
+
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
+        # NOTE: need to only run through averages_per_rep once
+        if sub_field:
+            target_data = [rep_data[field][sub_field] for rep_data in self._averages_per_rep]
+        else:
+            target_data = [rep_data[field] for rep_data in self._averages_per_rep]
+        if could_be_null:
+            no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
+            numerator = sum(no_nulls_target_data)
+            denominator = len(no_nulls_target_data)
+        else:
+            numerator = sum(target_data)
+            denominator = len(target_data)
+        if denominator is 0:
+            return None
+        return numerator / denominator
+
+    @property
+    def as_dict_for_organization_report(self):
+        pass
+
+    @property
+    def as_dict_for_representative_report(self):
+        return {
+            # For Summary Box:
+            "activities_count": self.average_for_field("activities_count"),
+            "actions_count": self.average_for_field("actions_count"),
+            "incoming_messages_count": self.average_for_field("incoming_messages_count"),
+            "forecast_amount": self.average_for_field("forecast_amount"),
+            "deals_closed_count": self.average_for_field("deals_closed_count"),
+            "amount_closed": self.average_for_field("amount_closed"),
         }
