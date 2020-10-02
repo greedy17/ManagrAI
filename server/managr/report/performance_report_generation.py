@@ -34,6 +34,9 @@ def generate_performance_report_data(performance_report_id):
     user that triggered this performance_report to be generated.
     """
     report = PerformanceReport.objects.get(pk=performance_report_id)
+    # there are two types of performance reports:
+    # (1) representative-specific, and
+    # (2) organization-wide
     is_representative_report = bool(report.representative)
 
     try:
@@ -50,6 +53,7 @@ def generate_performance_report_data(performance_report_id):
                 }
             }
         else:
+            # TODO: generate organization-wide data
             data = {}
         report.data = data
         report.datetime_generated = timezone.now()
@@ -445,13 +449,12 @@ class RepDataForSelectedDateRange(BaseGenerator):
             "forecast_amount": self.forecast_amount,
             "deals_closed_count": self.deals_closed_count,
             "amount_closed": self.amount_closed,
-            # For next few boxes:
+            # Other:
             "forecast_table_additions": self.forecast_table_additions,
             "top_opportunities": self.top_opportunities,
             "sales_cycle": self.sales_cycle,
             "actions_to_close_opportunity": self.actions_to_close_opportunity,
             "ACV": self.ACV,
-            # For Deal-Analysis Box:
             "deal_analysis": self.deal_analysis,
         }
 
@@ -571,7 +574,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
             "forecast_amount": self.average_for_field("forecast_amount"),
             "deals_closed_count": self.average_for_field("deals_closed_count"),
             "amount_closed": self.average_for_field("amount_closed"),
-            # For next few boxes:
+            # Other:
             "forecast_table_additions": self.average_for_field("forecast_table_additions"),
             "sales_cycle": self.average_for_field("sales_cycle", could_be_null=True),
             "actions_to_close_opportunity": self.average_for_field(
