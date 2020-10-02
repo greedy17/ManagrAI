@@ -431,9 +431,7 @@ class RepresentativeDataGenerator(BaseGenerator):
                 status__title=lead_constants.LEAD_STATUS_CLOSED,
             )
             self.__cached__leads = [LeadDataGenerator(lead).as_dict for lead in closed_leads]
-            return self.__cached__leads
-        else:
-            return self.__cached__leads
+        return self.__cached__leads
 
     def average_for(self, property, rounding_places=0, as_integer=True):
         total = 0
@@ -502,9 +500,7 @@ class OrganizationDataGenerator(BaseGenerator):
     def representatives(self):
         if self.__cached__representatives is None:
             self.__cached__representatives = self._organization.users.all()
-            return self.__cached__representatives
-        else:
-            return self.__cached__representatives
+        return self.__cached__representatives
 
     def generate_representative_leads(self, representative):
         closed_leads = Lead.objects.filter(

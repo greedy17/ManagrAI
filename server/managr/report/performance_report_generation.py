@@ -122,17 +122,13 @@ class RepDataForSelectedDateRange(BaseGenerator):
     def _closed_leads(self):
         if self.__cached__closed_leads is None:
             self.__cached__closed_leads = {log.lead for log in self._logs_for_closing_events.prefetch_related("lead")}
-            return self.__cached__closed_leads
-        else:
-            return self.__cached__closed_leads
+        return self.__cached__closed_leads
 
     @property
     def _closed_leads_data(self):
         if self.__cached__closed_leads_data is None:
             self.__cached__closed_leads_data = [LeadDataGenerator(lead).as_dict for lead in self._closed_leads]
-            return self.__cached__closed_leads_data
-        else:
-            return self.__cached__closed_leads_data
+        return self.__cached__closed_leads_data
 
     # public properties:
 
@@ -504,9 +500,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
                 # Set as latest_slice
                 latest_slice = new_slice
             self.__cached__time_slices = slices_list
-            return self.__cached__time_slices
-        else:
-            return self.__cached__time_slices
+        return self.__cached__time_slices
 
     @property
     def _data_for_time_slices(self):
@@ -523,9 +517,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
                 data_item = RepDataForSelectedDateRange(non_db_report).as_dict
                 data_list.append(data_item)
             self.__cached__data_for_time_slices = data_list
-            return self.__cached__data_for_time_slices
-        else:
-            return self.__cached__data_for_time_slices
+        return self.__cached__data_for_time_slices
 
     def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
@@ -583,9 +575,7 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
                                                             representative=representative,
                                                         ) for representative in self._organization.users.filter(is_active=True)
                                                 ]
-            return self.__cached__non_db_representative_reports
-        else:
-            return self.__cached__non_db_representative_reports
+        return self.__cached__non_db_representative_reports
 
     @property
     def _averages_per_rep(self):
@@ -594,9 +584,7 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
                         RepDataAverageForSelectedDateRange(report).as_dict
                         for report in self._non_db_representative_reports
                 ]
-            return self.__cached__averages_per_rep
-        else:
-            return self.__cached__averages_per_rep
+        return self.__cached__averages_per_rep
 
     def average_for_field(self, field, sub_field=None, could_be_null=False):
         # NOTE: need to only run through averages_per_rep once
