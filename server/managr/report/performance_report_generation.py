@@ -26,7 +26,7 @@ logger = logging.getLogger("managr")
 from pdb import set_trace
 
 
-def generate_performance_report_data(performance_report_id, generated_by_id):
+def generate_performance_report_data(performance_report_id):
     """
     Given a PerformanceReport UUID, generate the report's
     data and update the instance with the generated data.
@@ -45,6 +45,7 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
                 "typical": RepDataAverageForSelectedDateRange(performance_report).as_dict,
             },
             "organization": {
+                "focus": OrganizationDataForSelectedDateRange(performance_report).as_dict_for_representative_report,
                 "typical": OrganizationDataAverageForSelectedDateRange(performance_report).as_dict_for_representative_report,
             }
         }
@@ -52,7 +53,7 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
         performance_report.datetime_generated = timezone.now()
         performance_report.save()
         # send email to user that generated report
-        # send_email(performance_report)
+        send_email(performance_report)
     except Exception as e:
         # TODO (Bruno 09-22-2020):
         # Send an email to user that generated report notifying of failure?
@@ -61,8 +62,22 @@ def generate_performance_report_data(performance_report_id, generated_by_id):
         )
 
 
+def get_report_focus_from_preset(preset):
+    for preset_set in report_constants.DATE_RANGES:
+        if preset_set[0] == preset:
+            return preset_set[1]
+    raise ValidationError({"performance_report": "invalid date_range_preset"})
+
+
 def send_email(report):
     recipient = report.generated_by
+    is_rep_report = bool(report.representative)
+    report_type = "Representative" if is_rep_report else "Organization"
+    report_date_range = get_report_focus_from_preset(report.date_range_preset)
+    rep_name = report.representative.full_name or report.representative.email if is_rep_report else None
+    report_focus = rep_name if is_rep_report else report.generated_by.organization
+
+    subject = f"{report_type} Performance Report ({report_date_range}) generated for {report_focus}"
 
     ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
     if ea:
@@ -70,7 +85,7 @@ def send_email(report):
         sender = {"email": ea.email_address, "name": "Managr"}
         recipient = [{"email": recipient.email, "name": recipient.full_name}]
         message = {
-            "subject": f"Story Report Generated for {report.lead.title}",
+            "subject": subject,
             "body": f"The report is available at {report.client_side_url}.",
         }
         try:
@@ -554,6 +569,18 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
                                                     could_be_null=True,
                                                 ),
             "ACV": self.average_for_field("ACV", could_be_null=True),
+        }
+
+
+class OrganizationDataForSelectedDateRange(BaseGenerator):
+    pass
+
+    def as_dict_for_organization_report(self):
+        pass
+
+    def as_dict_for_representative_report(self):
+        return {
+            "top_performers": None
         }
 
 
