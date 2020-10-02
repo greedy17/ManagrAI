@@ -575,9 +575,11 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
 class OrganizationDataForSelectedDateRange(BaseGenerator):
     pass
 
+    @property
     def as_dict_for_organization_report(self):
         pass
 
+    @property
     def as_dict_for_representative_report(self):
         return {
             "top_performers": None
