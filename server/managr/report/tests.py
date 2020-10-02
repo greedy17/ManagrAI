@@ -209,8 +209,7 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
         # lead two has 0 actions
         # there are 2 leads
         # so 1/2 => 0.5
-        # the rounding via Python's round() is down, hence zero
-        self.assertEqual(average, 0)
+        self.assertEqual(average, 0.5)
         self.assertEqual(most_performed, 'TEST ACTION ONE')
 
         action_type = ActionChoice.objects.create(
@@ -236,14 +235,13 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
         # lead two has 0 actions
         # there are two leads
         # so 11/2 => 5.5
-        # the rounding via Python's round() is up, hence 6
-        self.assertEqual(average, 6)
+        self.assertEqual(average, 5.5)
         self.assertEqual(most_performed, action_type.title)
 
     def test_sales_cycle(self):
         num_1 = LeadDataGenerator(self.closed_lead_one).as_dict["days_to_closed"]
         num_2 = LeadDataGenerator(self.closed_lead_two).as_dict["days_to_closed"]
-        average = round((num_1 + num_2) / 2)
+        average = (num_1 + num_2) / 2
         data = self.generate_report_data()
         self.assertEqual(data["sales_cycle"], average)
 
@@ -662,13 +660,13 @@ class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
         # test activities_count
         numerator = lead_one_data["action_count"] + lead_two_data["action_count"]
         denominator = 2
-        activities_average = round(numerator / denominator)
+        activities_average = numerator / denominator
         self.assertEqual(rep_data["activities_count"], activities_average)
 
         # test sales_cycle
         numerator = lead_one_data["days_to_closed"] + lead_two_data["days_to_closed"]
         denominator = 2
-        sales_cycle_average = round(numerator / denominator)
+        sales_cycle_average = numerator / denominator
         self.assertEqual(rep_data["sales_cycle"], sales_cycle_average)
 
 
@@ -689,9 +687,8 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
             date_range_to="2020-10-01T03:59:59.999000Z",
         )
 
-    def generate_org_data(self):
-        org_data_generator = OrganizationDataAverageForSelectedDateRange(self.performance_report)
-        return org_data_generator.as_dict_for_representative_report
+    def generate_rep_one_data(self):
+        return RepDataAverageForSelectedDateRange(self.performance_report).as_dict
 
     def generate_rep_two_data(self):
         # generate rep
@@ -726,6 +723,7 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
         # date_range_from, because that is part of the protocol for
         # leads/data to be included in the data generation.
         representative.datetime_created = "2020-06-25T05:00:00Z"
+        representative.save()
         lead_one.datetime_created = "2020-07-05T05:00:00Z"
         lead_one.save()
         log_one.datetime_created = "2020-08-05T05:00:00Z"
@@ -742,13 +740,17 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
         )
         return RepDataAverageForSelectedDateRange(performance_report).as_dict
 
+    def generate_org_data(self):
+        org_data_generator = OrganizationDataAverageForSelectedDateRange(self.performance_report)
+        return org_data_generator.as_dict_for_representative_report
+
     def test_averages(self):
         # Originally, given fixture:
         # Only one rep with two leads.
         # Therefore, averages of OrganizationDataAverageForSelectedDateRange
         # should be same as the one rep's RepDataAverageForSelectedDateRange.
-        rep_one_averages = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
-        # org_averages = self.generate_org_data()
+        rep_one_averages = self.generate_rep_one_data()
+        org_averages = self.generate_org_data()
 
         self.assertEqual(
                 org_averages["activities_count"],
@@ -778,35 +780,24 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
         # Add new rep and confirm org_averages
         rep_two_averages = self.generate_rep_two_data()
         org_averages = self.generate_org_data()
+        activities_count = (rep_one_averages["activities_count"] + rep_two_averages["activities_count"]) / 2
+        actions_count = (rep_one_averages["actions_count"] + rep_two_averages["actions_count"]) / 2
+        deals_closed_count = (rep_one_averages["deals_closed_count"] + rep_two_averages["deals_closed_count"]) / 2
+        amount_closed = (rep_one_averages["amount_closed"] + rep_two_averages["amount_closed"]) / 2
 
-        a1 = (rep_one_averages["activities_count"] + rep_two_averages["activities_count"]) / 2
-        a2 = (rep_one_averages["actions_count"] + rep_two_averages["actions_count"]) / 2
-        a3 = (rep_one_averages["deals_closed_count"] + rep_two_averages["deals_closed_count"]) / 2
-        a4 = (rep_one_averages["amount_closed"] + rep_two_averages["amount_closed"]) / 2
-        b1 = org_averages["activities_count"]        
-        b2 = org_averages["actions_count"]        
-        b3 = org_averages["deals_closed_count"]  
-        b4 = org_averages["amount_closed"]
-        
-        set_trace()
-
-        # self.assertEqual(
-        #         org_averages["activities_count"],
-        #         manual_average,
-        #     )   
-        # manual_average = (rep_one_averages["actions_count"] + rep_two_averages["actions_count"]) / 2
-        # self.assertEqual(
-        #         org_averages["actions_count"],
-        #         manual_average,
-        #     )  
-        # manual_average = (rep_one_averages["deals_closed_count"] + rep_two_averages["deals_closed_count"]) / 2
-        # self.assertEqual(
-        #         org_averages["deals_closed_count"],
-        #         manual_average,
-        #     )  
-        # manual_average = (rep_one_averages["amount_closed"] + rep_two_averages["amount_closed"]) / 2
-        # self.assertEqual(
-        #         org_averages["amount_closed"],
-        #         manual_average,
-        #     )  
-       
+        self.assertEqual(
+                org_averages["activities_count"],
+                activities_count,
+            )
+        self.assertEqual(
+                org_averages["actions_count"],
+                actions_count,
+            )
+        self.assertEqual(
+                org_averages["deals_closed_count"],
+                deals_closed_count,
+            )
+        self.assertEqual(
+                org_averages["amount_closed"],
+                amount_closed,
+            )
