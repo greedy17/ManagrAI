@@ -33,27 +33,29 @@ def generate_performance_report_data(performance_report_id):
     Finally, trigger email regarding report availability to
     user that triggered this performance_report to be generated.
     """
-    performance_report = PerformanceReport.objects.get(pk=performance_report_id)
-
-    # NOTE: here need to figure out if org-wide or rep-specific, use classes accordingly
+    report = PerformanceReport.objects.get(pk=performance_report_id)
+    is_representative_report = bool(report.representative)
 
     try:
         # generate report's data
-        data = {
-            "representative": {
-                "focus": RepDataForSelectedDateRange(performance_report).as_dict,
-                "typical": RepDataAverageForSelectedDateRange(performance_report).as_dict,
-            },
-            "organization": {
-                "focus": OrganizationDataForSelectedDateRange(performance_report).as_dict_for_representative_report,
-                "typical": OrganizationDataAverageForSelectedDateRange(performance_report).as_dict_for_representative_report,
+        if is_representative_report:
+            data = {
+                "representative": {
+                    "focus": RepDataForSelectedDateRange(report).as_dict,
+                    "typical": RepDataAverageForSelectedDateRange(report).as_dict,
+                },
+                "organization": {
+                    "focus": OrganizationDataForSelectedDateRange(report).as_dict_for_representative_report,
+                    "typical": OrganizationDataAverageForSelectedDateRange(report).as_dict_for_representative_report,
+                }
             }
-        }
-        performance_report.data = data
-        performance_report.datetime_generated = timezone.now()
-        performance_report.save()
+        else:
+            data = {}
+        report.data = data
+        report.datetime_generated = timezone.now()
+        report.save()
         # send email to user that generated report
-        send_email(performance_report)
+        send_email(report)
     except Exception as e:
         # TODO (Bruno 09-22-2020):
         # Send an email to user that generated report notifying of failure?
@@ -96,9 +98,6 @@ def send_email(report):
             pass
 
 
-# NOTE: the following classes regard representative-specific
-# (as opposed to organization-wide) performance report data generation
-
 class BaseGenerator:
     def __init__(self, report):
         self._report = report
@@ -107,7 +106,7 @@ class BaseGenerator:
 
     def failure_logger(self, e):
         method_name = inspect.stack()[1][3]
-        class_name = RepThisDateRange.__name__
+        class_name = self.__name__
         logger.exception(
             f"Unable to create report UUID {self._report.id} failed at method {method_name} of class {class_name}, with error {e}"
         )
@@ -124,6 +123,10 @@ class RepDataForSelectedDateRange(BaseGenerator):
         self.__cached__closed_leads = None
         self.__cached__closed_leads_data = None
         super().__init__(report)
+
+    @property
+    def __name__(self):
+        return "RepDataForSelectedDateRange"
 
     # private properties:
 
@@ -465,6 +468,12 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
         super().__init__(report)
 
     @property
+    def __name__(self):
+        return "RepDataAverageForSelectedDateRange"
+
+    # private properties:
+
+    @property
     def _representative_join_date(self):
         return parse(self._representative.datetime_created) if isinstance(self._representative.datetime_created, str) else self._representative.datetime_created
 
@@ -534,6 +543,8 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
             self.__cached__data_for_time_slices = data_list
         return self.__cached__data_for_time_slices
 
+    # public properties:
+
     def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
             target_data = [data_item[field][sub_field] for data_item in self._data_for_time_slices]
@@ -573,7 +584,94 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
 
 
 class OrganizationDataForSelectedDateRange(BaseGenerator):
-    pass
+    """
+    Generates org-level metrics for PerformanceReport.
+    These metrics regard the specific date-range of the report.
+    Final outputs are two methods:
+    (1) self.as_dict_for_organization_report
+    (2) self.as_dict_for_representative_report
+    """
+    def __init__(self, report, representative=None):
+        self.__cached__non_db_representative_reports = None
+        self.__cached__representatives_data = None
+        super().__init__(report)
+
+    @property
+    def __name__(self):
+        return "OrganizationDataForSelectedDateRange"
+
+    # private properties:
+
+    @property
+    def _non_db_representative_reports(self):
+        if self.__cached__non_db_representative_reports is None:
+            self.__cached__non_db_representative_reports = [
+                                                        PerformanceReport(
+                                                            date_range_from=self._report.date_range_from,
+                                                            date_range_to=self._report.date_range_to,
+                                                            date_range_preset=self._report.date_range_preset,
+                                                            generated_by=self._report.generated_by,
+                                                            representative=representative,
+                                                        ) for representative in self._organization.users.filter(is_active=True)
+                                                ]
+        return self.__cached__non_db_representative_reports
+
+    @property
+    def _representatives_data(self):
+        if self.__cached__representatives_data is None:
+            data = [
+                    {
+                        "data": RepDataForSelectedDateRange(report).as_dict,
+                        "representative": report.representative,
+                    } for report in self._non_db_representative_reports
+                ]
+            self.__cached__representatives_data = data
+        return self.__cached__representatives_data
+
+    def _top_performers_sorter(self, rep_data):
+        if rep_data["data"]["ACV"] is None:
+            return -1
+        return rep_data["data"]["ACV"]
+
+    # public properties:
+
+    @property
+    def top_performers(self):
+        sorted_data = sorted(
+                        self._representatives_data,
+                        key=self._top_performers_sorter,
+                        reverse=True
+                    )
+        sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
+        top_performers = sorted_reps[0:3]
+        serialized_top_performers = [
+            data["fields"] for data in json.loads(
+                serializers.serialize(
+                    "json",
+                    top_performers,
+                    fields=("full_name", "email", "profile_photo")
+                ))
+        ]
+
+        for i in range(len(serialized_top_performers)):
+            serialized_top_performers[i]["rank"] = i + 1
+            serialized_top_performers[i]["ACV"] = sorted_data[i]["data"]["ACV"]
+
+        if self._representative not in top_performers:
+            serialized_rep = json.loads(
+                                serializers.serialize(
+                                    "json",
+                                    [self._representative],
+                                    fields=("full_name", "email", "profile_photo")
+                                )
+                            )[0]["fields"]
+
+            sorted_index = sorted_reps.index(self._representative)
+            serialized_rep["rank"] = sorted_index + 1
+            serialized_rep["ACV"] = sorted_data[sorted_index]["data"]["ACV"]
+            serialized_top_performers.append(serialized_rep)
+        set_trace()
+        return serialized_top_performers
 
     @property
     def as_dict_for_organization_report(self):
@@ -582,15 +680,29 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
     @property
     def as_dict_for_representative_report(self):
         return {
-            "top_performers": None
+            "top_performers": self.top_performers,
         }
 
 
 class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
+    """
+    Generates average org-level metrics for PerformanceReport.
+    These metrics regard the org's averages across time for a given date-range.
+    Final outputs are two methods:
+    (1) self.as_dict_for_organization_report
+    (2) self.as_dict_for_representative_report
+    """
+
     def __init__(self, report):
         self.__cached__non_db_representative_reports = None
         self.__cached__averages_per_rep = None
         super().__init__(report)
+
+    @property
+    def __name__(self):
+        return "OrganizationDataAverageForSelectedDateRange"
+
+    # private properties:
 
     @property
     def _non_db_representative_reports(self):
@@ -614,6 +726,8 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
                         for report in self._non_db_representative_reports
                 ]
         return self.__cached__averages_per_rep
+
+    # public properties:
 
     def average_for_field(self, field, sub_field=None, could_be_null=False):
         # NOTE: need to only run through averages_per_rep once
