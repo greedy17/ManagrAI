@@ -115,7 +115,7 @@
             Messages
           </div>
 
-          <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isTextConnected">
+          <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isEmailConnected">
             <button
               class="primary-button"
               @click="() => $refs.Emails.refresh()"
