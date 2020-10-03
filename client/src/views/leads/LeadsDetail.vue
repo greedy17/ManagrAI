@@ -161,7 +161,7 @@
         </div>
 
         <div v-show="activityTabSelected === EMAILS" class="box__content">
-          <template v-if="!isTextConnected">
+          <template v-if="!isEmailConnected">
             <div>
               <span class="muted">
                 <span class="muted">
@@ -269,6 +269,9 @@ export default {
   },
   computed: {
     ...mapGetters(['showToolbarNav']),
+    isEmailConnected() {
+      return !!this.$store.state.user.emailConnected
+    },
     isTextConnected() {
       return !!this.$store.state.user.textConnected
     },
