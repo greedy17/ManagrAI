@@ -87,42 +87,27 @@ class Lead(TimeStampModel):
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL
     )
     company_size = models.CharField(
-        choices=lead_constants.COMPANY_SIZE_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.COMPANY_SIZE_CHOICES, max_length=255, null=True,
     )
     industry = models.CharField(
-        choices=lead_constants.INDUSTRY_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.INDUSTRY_CHOICES, max_length=255, null=True,
     )
     type = models.CharField(
-        choices=lead_constants.TYPE_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.TYPE_CHOICES, max_length=255, null=True,
     )
     custom = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text="Custom field"
+        max_length=255, null=True, blank=True, help_text="Custom field"
     )
     competitor = models.CharField(
-        choices=lead_constants.COMPETITOR_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.COMPETITOR_CHOICES, max_length=255, null=True,
     )
     competitor_description = models.CharField(
         max_length=255,
         null=True,
         blank=True,
-        help_text="Describes the value chosen in the Lead's competitor field"
+        help_text="Describes the value chosen in the Lead's competitor field",
     )
-    geography_address = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-    )
+    geography_address = models.CharField(max_length=255, null=True, blank=True,)
     geography_address_components = JSONField(
         default=dict,
         blank=True,
@@ -136,7 +121,7 @@ class Lead(TimeStampModel):
         "postal_code, "
         "country, "
         "latitude, "
-        "longitude"
+        "longitude",
     )
 
     objects = LeadQuerySet.as_manager()
@@ -313,7 +298,7 @@ class BaseNote(TimeStampModel):
         "Lead",
         related_name="%(app_label)s_%(class)ss",
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         help_text="The Lead that this note was created for.",
     )
     linked_contacts = models.ManyToManyField(
