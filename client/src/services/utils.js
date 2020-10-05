@@ -311,6 +311,7 @@ export async function loadEntireCollection(collection) {
 }
 
 export function constantToCapitalized(value) {
+  if (!value) return ''
   return value
     .split('_')
     .map(capitalizeWord)

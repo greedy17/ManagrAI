@@ -675,7 +675,6 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             serialized_rep["rank"] = sorted_index + 1
             serialized_rep["ACV"] = sorted_data[sorted_index]["data"]["ACV"]
             serialized_top_performers.append(serialized_rep)
-        set_trace()
         return serialized_top_performers
 
     @property

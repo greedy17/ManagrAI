@@ -114,13 +114,58 @@
     </div>
 
     <div class="report__deal-analysis">
-      deals analysis here
+      <div class="report__deal-analysis__title">
+        Deal Analysis
+      </div>
+      <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
+        {{ dealAnalysisDisplayName }} closed mostly
+        {{ focusData.dealAnalysis.industry.value | constantToCapitalized }} opportunities in
+        {{ focusData.dealAnalysis.geography.value | constantToCapitalized }}, with
+        {{ focusData.dealAnalysis.companySize.value }} employees. They were of type
+        {{
+          focusData.dealAnalysis.type.value === 'OTHER'
+            ? constantToCapitalized(focusData.dealAnalysis.type.value)
+            : focusData.dealAnalysis.type.value
+        }}
+        {{
+          focusData.dealAnalysis.competitor.value === 'OTHER'
+            ? null
+            : focusData.dealAnalysis.competitor.value === 'YES'
+            ? ', using a competitor'
+            : ', not using a competitor'
+        }}.
+      </div>
+      <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.industry.value | constantToCapitalized }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.industry.percentage"
+              :centerPiece="false"
+              :widthValue="25"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.industry.percentage }}%
+          </div>
+        </div>
+      </div>
+      <div class="report__deal-analysis__none-closed" v-else>
+        No deals closed.
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
+import { constantToCapitalized } from '@/services/utils'
+
+import ProgressBar from '@/components/reports/ProgressBar'
 
 export default {
   name: 'RepresentativePerformanceReport',
@@ -130,7 +175,15 @@ export default {
       type: PerformanceReport,
     },
   },
-  created() {},
+  components: {
+    ProgressBar,
+  },
+  data() {
+    return {
+      Lead,
+      constantToCapitalized,
+    }
+  },
   methods: {},
   computed: {
     dateRangePresetFocus() {
@@ -139,6 +192,16 @@ export default {
     },
     representative() {
       return this.report.representativeRef
+    },
+    dealAnalysisDisplayName() {
+      // Name to display in the 'Deal Analysis' portion of report
+      if (this.representative.firstName.trim()) {
+        return this.representative.firstName
+      }
+      if (this.representative.lastName.trim()) {
+        return this.representative.lastName
+      }
+      return this.representative.email
     },
     focusData() {
       return this.report.data.representative.focus
@@ -219,6 +282,31 @@ export default {
     &__statistic-cell {
       text-align: center;
       padding: 0.6rem 0;
+    }
+  }
+}
+
+.report__deal-analysis {
+  &__title {
+    font-weight: 600;
+    padding-bottom: 0.4rem;
+  }
+
+  &__summary {
+    color: $mid-gray;
+  }
+
+  &__none-closed {
+    color: $mid-gray;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  &__breakdown {
+    &__category {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
     }
   }
 }

@@ -1,7 +1,17 @@
 <template>
-  <div class="progress-bar">
-    <div ref="progress" class="progress" />
-    <div class="center-piece" />
+  <div
+    class="progress-bar"
+    :style="{ width: `${widthValue}${widthUnit}`, height: `${heightValue}${heightUnit}` }"
+  >
+    <div ref="progress" class="progress" :style="{ height: `${heightValue}${heightUnit}` }" />
+    <div
+      class="center-piece"
+      v-if="centerPiece"
+      :style="{
+        height: `${heightValue * 2}${heightUnit}`,
+        marginLeft: `${widthValue / 2}${widthUnit}`,
+      }"
+    />
   </div>
 </template>
 
@@ -12,6 +22,26 @@ export default {
     percentComplete: {
       type: Number,
       required: true,
+    },
+    centerPiece: {
+      type: Boolean,
+      default: true,
+    },
+    heightValue: {
+      type: Number,
+      default: 0.7,
+    },
+    heightUnit: {
+      type: String,
+      default: 'rem',
+    },
+    widthValue: {
+      type: Number,
+      default: 20,
+    },
+    widthUnit: {
+      type: String,
+      default: 'vw',
     },
   },
   created() {
@@ -33,14 +63,9 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-$bar-width: 20vw;
-$bar-height: 0.7rem;
-
 .progress-bar {
   background-color: $soft-gray;
   border-radius: 13px; /* (height of inner div) / 2 + padding */
-  width: $bar-width;
-  height: $bar-height;
 
   position: relative;
   display: flex;
@@ -51,7 +76,6 @@ $bar-height: 0.7rem;
 .progress-bar > .progress {
   background-color: $dark-green;
   width: 0%; /* Adjust with JavaScript */
-  height: $bar-height;
   border-radius: 10px;
   position: absolute;
 }
@@ -59,9 +83,7 @@ $bar-height: 0.7rem;
 .center-piece {
   background-color: $black;
   width: 0.3rem;
-  height: $bar-height * 2;
   position: absolute;
-  margin-left: $bar-width / 2;
   z-index: 1;
   border-radius: 1rem;
 }
