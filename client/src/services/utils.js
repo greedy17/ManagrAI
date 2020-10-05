@@ -31,6 +31,7 @@ const Utils = {
   getTimeZone,
   convertToRgba,
   loadEntireCollection,
+  constantToCapitalized,
 }
 
 export default Utils
@@ -309,7 +310,7 @@ export async function loadEntireCollection(collection) {
   }
 }
 
-export function consantToCapitalized(value) {
+export function constantToCapitalized(value) {
   return value
     .split('_')
     .map(capitalizeWord)
