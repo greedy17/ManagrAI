@@ -23,6 +23,8 @@ export default class PerformanceReport {
     datetimeGenerated = null,
     datetimeCreated = null,
     generatedBy = '',
+    isRepresentativeReport = null,
+    isOrganizationReport = null,
   } = {}) {
     Object.assign(this, {
       id,
@@ -35,6 +37,8 @@ export default class PerformanceReport {
       datetimeGenerated,
       datetimeCreated,
       generatedBy,
+      isRepresentativeReport,
+      isOrganizationReport,
     })
   }
 

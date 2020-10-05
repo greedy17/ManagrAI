@@ -8,9 +8,10 @@
     <div class="not-available" v-else-if="!report.datetimeGenerated">
       <p>This report is still being generated.</p>
     </div>
-    <div class="report shadow">
+    <div class="report shadow" v-else>
       <div class="divider" />
-      One of two report types here
+      <RepresentativePerformanceReport :report="report" v-if="report.isRepresentativeReport" />
+      <OrganizationPerformanceReport :report="report" v-else />
       <div class="managr-logo">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
@@ -19,11 +20,17 @@
 </template>
 
 <script>
-import StoryReport from '@/services/storyReports'
+import PerformanceReport from '@/services/performanceReports'
+
+import RepresentativePerformanceReport from '@/components/reports/RepresentativePerformanceReport'
+import OrganizationPerformanceReport from '@/components/reports/OrganizationPerformanceReport'
 
 export default {
   name: 'PerformanceReportDetail',
-  components: {},
+  components: {
+    RepresentativePerformanceReport,
+    OrganizationPerformanceReport,
+  },
   props: ['id'],
   data() {
     return {
@@ -33,7 +40,7 @@ export default {
     }
   },
   created() {
-    StoryReport.api
+    PerformanceReport.api
       .retrieve(this.id)
       .then(report => {
         this.report = report
