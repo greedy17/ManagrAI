@@ -34,14 +34,13 @@ def generate_performance_report_data(performance_report_id):
     user that triggered this performance_report to be generated.
     """
     report = PerformanceReport.objects.get(pk=performance_report_id)
-    # there are two types of performance reports:
-    # (1) representative-specific, and
-    # (2) organization-wide
-    is_representative_report = bool(report.representative)
 
     try:
         # generate report's data
-        if is_representative_report:
+        # there are two types of performance reports:
+        # (1) representative-specific, and
+        # (2) organization-wide
+        if report.is_representative_report:
             data = {
                 "representative": {
                     "focus": RepDataForSelectedDateRange(report).as_dict,
@@ -76,13 +75,15 @@ def get_report_focus_from_preset(preset):
 
 
 def send_email(report):
-    recipient = report.generated_by
-    is_rep_report = bool(report.representative)
-    report_type = "Representative" if is_rep_report else "Organization"
+    if report.is_representative_report:
+        report_type = "Representative"
+        report_focus = report.representative.full_name or report.representative.email
+    else:
+        report_type = "Organization"
+        report_focus = report.generated_by.organization
     report_date_range = get_report_focus_from_preset(report.date_range_preset)
-    rep_name = report.representative.full_name or report.representative.email if is_rep_report else None
-    report_focus = rep_name if is_rep_report else report.generated_by.organization
 
+    recipient = report.generated_by
     subject = f"{report_type} Performance Report ({report_date_range}) generated for {report_focus}"
 
     ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
