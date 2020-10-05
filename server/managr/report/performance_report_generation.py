@@ -67,13 +67,6 @@ def generate_performance_report_data(performance_report_id):
         )
 
 
-def get_report_focus_from_preset(preset):
-    for preset_set in report_constants.DATE_RANGES:
-        if preset_set[0] == preset:
-            return preset_set[1]
-    raise ValidationError({"performance_report": "invalid date_range_preset"})
-
-
 def send_email(report):
     if report.is_representative_report:
         report_type = "Representative"
@@ -101,6 +94,14 @@ def send_email(report):
             """ this error is most likely going to be an error on our set
             up rather than the user_token """
             pass
+
+
+def get_report_focus_from_preset(preset):
+    # Get user-friendly text for constant
+    for preset_set in report_constants.DATE_RANGES:
+        if preset_set[0] == preset:
+            return preset_set[1]
+    raise ValidationError({"performance_report": "invalid date_range_preset"})
 
 
 class BaseGenerator:
