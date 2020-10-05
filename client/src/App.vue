@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { mapGetters, mapState, mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
