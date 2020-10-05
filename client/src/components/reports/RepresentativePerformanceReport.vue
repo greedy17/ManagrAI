@@ -1,7 +1,7 @@
 <template>
   <div class="report">
     <div class="report__summary-container">
-      <div class="report-focus">
+      <div class="report-focus soft-gray-background">
         <img
           :src="
             representative.profilePhoto
@@ -18,7 +18,7 @@
       </div>
       <table class="summary-table">
         <!-- header row -->
-        <tr class="summary-table__header-row">
+        <tr class="summary-table__header-row soft-gray-background">
           <th></th>
           <th class="summary-table__title-cell">Activities</th>
           <th class="summary-table__title-cell">Actions</th>
@@ -54,7 +54,7 @@
         </tr>
 
         <!-- content row #2 -->
-        <tr class="summary-table__content-row">
+        <tr class="summary-table__content-row soft-gray-background">
           <td class="summary-table__label-cell">
             Typical {{ dateRangePresetFocus | constantToCapitalized }}
           </td>
@@ -143,6 +143,14 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+.report {
+  padding: 2rem 3rem;
+
+  &__summary-container {
+    border: 1px solid $soft-gray;
+    border-radius: 5px;
+  }
+}
 
 .report-focus {
   flex-grow: 1;
@@ -174,6 +182,7 @@ export default {
 
 .summary-table {
   width: 100%;
+  border-spacing: 0;
 
   &__focus-row {
     color: $dark-green;
@@ -191,6 +200,18 @@ export default {
   &__statistic-cell {
     text-align: center;
     padding: 0.6rem 0;
+  }
+}
+
+.soft-gray-background {
+  background-color: $soft-gray;
+
+  & > .summary-table__statistic-cell:last-of-type {
+    box-shadow: 2px 0 0 -1px $soft-gray;
+  }
+
+  & > .summary-table__title-cell:last-of-type {
+    box-shadow: 2px 0 0 -1px $soft-gray;
   }
 }
 </style>

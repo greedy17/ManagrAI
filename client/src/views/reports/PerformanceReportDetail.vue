@@ -66,7 +66,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 .page {
-  padding: 0 10vw;
+  padding: 0 5vw;
 }
 .not-available {
   padding-top: 10rem;
@@ -84,9 +84,6 @@ export default {
 }
 .shadow {
   box-shadow: 0 0 5px 1px $soft-gray;
-}
-.report {
-  background-color: $white;
 }
 .divider {
   background-color: $dark-green;
