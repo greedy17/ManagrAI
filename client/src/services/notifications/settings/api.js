@@ -1,8 +1,8 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
-const OPTIONS_URL = '/notifications/options'
-const SELECTIONS_URL = '/notifications/selections'
-const SETTINGS_ENDPOINT = '/notifications/settings'
+const OPTIONS_URL = '/notifications/options/'
+const SELECTIONS_URL = '/notifications/selections/'
+const SETTINGS_ENDPOINT = '/notifications/settings/'
 const UPDATE_SETTINGS_ENDPOINT = '/notifications/settings/update-settings/'
 
 export class NotificationSettingsAPI {
