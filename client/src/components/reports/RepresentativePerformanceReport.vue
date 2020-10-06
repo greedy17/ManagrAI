@@ -237,25 +237,55 @@
 
     <div class="report__middle-row">
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          Forecast
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          Top Opportunities
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          Sales Cycle
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
     </div>
 
     <div class="report__middle-row">
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          Actions to Close an Opportunity
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          ACV
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
       <div class="report__middle-row__card">
-        row__card
+        <div class="report__middle-row__card__title">
+          Top Performers
+        </div>
+        <div class="report__middle-row__card__summary">
+          summary
+        </div>
       </div>
     </div>
 
@@ -562,11 +592,18 @@ export default {
     border-radius: 7px;
     height: 15rem;
     width: 22rem;
+    display: flex;
+    flex-flow: column;
+    padding: 1rem;
 
     &__title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
     }
 
     &__summary {
+      font-weight: 600;
+      color: $mid-gray;
     }
   }
 
