@@ -13,7 +13,7 @@
           {{ report.dateRangePreset | constantToCapitalized }}
         </div>
         <div class="report__summary-container__report-focus__representative-info">
-          {{ representative.fullName.trim() ? representative.fullName : representative.email }}
+          {{ repDisplayNameLong }}
         </div>
       </div>
       <table class="report__summary-container__summary-table">
@@ -251,6 +251,30 @@
         <div class="report__middle-row__card__summary">
           summary
         </div>
+        <div class="report__middle-row__card__content">
+          <div
+            v-for="(lead, idx) in focusTopOpportunities"
+            :key="idx"
+            class="report__middle-row__card__content__row"
+            :class="{ 'soft-gray-background': idx % 2 !== 0 }"
+          >
+            <div style="font-weight: 600; width: 49%;">
+              {{ lead.title }}
+            </div>
+            <div style="font-weight: 600; margin: 0 1rem 0 auto;" class="mid-gray-font">
+              {{ lead.status | constantToCapitalized }},
+              {{
+                lead.status === Lead.CLOSED ? lead.closing_amount : lead.amount | currencyNoCents
+              }}
+            </div>
+          </div>
+          <div
+            v-for="n in 3 - focusTopOpportunities.length"
+            :key="focusTopOpportunities.length - 1 + n"
+            class="report__middle-row__card__content__row"
+            :class="{ 'soft-gray-background': (focusTopOpportunities.length + n) % 2 == 0 }"
+          ></div>
+        </div>
       </div>
       <div class="report__middle-row__card">
         <div class="report__middle-row__card__title">
@@ -270,6 +294,32 @@
         <div class="report__middle-row__card__summary">
           summary
         </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row soft-gray-background">
+            <div style="font-weight: 600; width: 65%;">
+              Average Actions on Closed<br />
+              Opportunities {{ report.dateRangePreset | constantToCapitalized }}
+            </div>
+            <div
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.actionsToCloseOpportunity.average }}
+            </div>
+          </div>
+          <div class="report__middle-row__card__content__row">
+            <div style="font-weight: 600; width: 65%;">
+              Typical Average Actions on<br />
+              Closed Opportunities
+            </div>
+            <div
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.actionsToCloseOpportunity || 'N/A' }}
+            </div>
+          </div>
+        </div>
       </div>
       <div class="report__middle-row__card">
         <div class="report__middle-row__card__title">
@@ -277,6 +327,30 @@
         </div>
         <div class="report__middle-row__card__summary">
           summary
+        </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row soft-gray-background">
+            <div style="font-weight: 600; width: 40%;">
+              ACV {{ report.dateRangePreset | constantToCapitalized }}
+            </div>
+            <div
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.ACV | currencyNoCents }}
+            </div>
+          </div>
+          <div class="report__middle-row__card__content__row">
+            <div style="font-weight: 600; width: 40%;">
+              Typical ACV
+            </div>
+            <div
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.ACV || 'N/A' }}
+            </div>
+          </div>
         </div>
       </div>
       <div class="report__middle-row__card">
@@ -294,7 +368,7 @@
         Deal Analysis
       </div>
       <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
-        {{ dealAnalysisDisplayName }} closed mostly
+        {{ repDisplayNameShort }} closed mostly
         {{ focusData.dealAnalysis.industry.value | constantToCapitalized }} opportunities in
         {{ focusData.dealAnalysis.geography.value | constantToCapitalized }}, with
         {{ focusData.dealAnalysis.companySize.value }} employees. They were of type
@@ -460,6 +534,11 @@ export default {
         return 'trending-down.svg'
       }
     },
+    topOpportunityMapper(status) {
+      return lead => {
+        return { ...lead, status }
+      }
+    },
   },
   computed: {
     dateRangePresetFocus() {
@@ -469,8 +548,12 @@ export default {
     representative() {
       return this.report.representativeRef
     },
-    dealAnalysisDisplayName() {
-      // Name to display in the 'Deal Analysis' portion of report
+    repDisplayNameLong() {
+      return this.representative.fullName.trim()
+        ? this.representative.fullName
+        : this.representative.email
+    },
+    repDisplayNameShort() {
       if (this.representative.firstName.trim()) {
         return this.representative.firstName
       }
@@ -481,6 +564,15 @@ export default {
     },
     focusData() {
       return this.report.data.representative.focus
+    },
+    focusTopOpportunities() {
+      const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
+      return [
+        ...CLOSED.map(this.topOpportunityMapper('CLOSED')),
+        ...VERBAL.map(this.topOpportunityMapper('VERBAL')),
+        ...STRONG.map(this.topOpportunityMapper('STRONG')),
+        ...FIFTY_FIFTY.map(this.topOpportunityMapper('50/50')),
+      ]
     },
     typicalData() {
       return this.report.data.representative.typical
@@ -591,19 +683,36 @@ export default {
     border: 1px solid $soft-gray;
     border-radius: 7px;
     height: 15rem;
-    width: 22rem;
+    min-width: 22rem;
+    width: 30%;
+    max-width: 35rem;
     display: flex;
     flex-flow: column;
-    padding: 1rem;
 
     &__title {
       font-weight: 600;
       margin-bottom: 0.5rem;
+      padding: 1rem 1rem 0 1rem;
     }
 
     &__summary {
       font-weight: 600;
       color: $mid-gray;
+      padding: 0 1rem 0.5rem 1rem;
+    }
+
+    &__content {
+      flex-grow: 1;
+      display: flex;
+      flex-flow: column;
+
+      &__row {
+        flex-grow: 1;
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+        padding: 0 1rem;
+      }
     }
   }
 
@@ -623,6 +732,7 @@ export default {
   }
 
   &__summary {
+    font-weight: 600;
     color: $mid-gray;
     margin-bottom: 0.5rem;
   }
@@ -664,5 +774,13 @@ export default {
   & > .report__summary-container__summary-table__title-cell:last-of-type {
     box-shadow: 2px 0 0 -1px $soft-gray;
   }
+}
+
+.dark-green-font {
+  color: $dark-green;
+}
+
+.mid-gray-font {
+  color: $mid-gray;
 }
 </style>
