@@ -136,6 +136,7 @@
         }}.
       </div>
       <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
+        <!-- Industry -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
             {{ focusData.dealAnalysis.industry.value | constantToCapitalized }}
@@ -144,12 +145,84 @@
             <ProgressBar
               :percentComplete="focusData.dealAnalysis.industry.percentage"
               :centerPiece="false"
-              :widthValue="25"
+              :widthValue="50"
               :widthUnit="'rem'"
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
             {{ focusData.dealAnalysis.industry.percentage }}%
+          </div>
+        </div>
+
+        <!-- Geography -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.geography.value }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.geography.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.geography.percentage }}%
+          </div>
+        </div>
+
+        <!-- companySize -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.companySize.value }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.companySize.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.companySize.percentage }}%
+          </div>
+        </div>
+
+        <!-- type -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.type.value }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.type.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.type.percentage }}%
+          </div>
+        </div>
+
+        <!-- competitor -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.competitor.value | constantToCapitalized }} competitor
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.competitor.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.competitor.percentage }}%
           </div>
         </div>
       </div>
@@ -229,7 +302,7 @@ export default {
   &__deal-analysis {
     border: 1px solid $soft-gray;
     border-radius: 5px;
-    padding: 0.5rem;
+    padding: 1rem;
   }
 }
 
@@ -294,6 +367,7 @@ export default {
 
   &__summary {
     color: $mid-gray;
+    margin-bottom: 0.5rem;
   }
 
   &__none-closed {
@@ -307,6 +381,18 @@ export default {
       display: flex;
       flex-flow: row;
       align-items: center;
+      padding: 0.5rem 0;
+
+      &__title {
+        font-weight: 600;
+        width: 15%;
+      }
+
+      &__percentage {
+        font-weight: 600;
+        color: $mid-gray;
+        padding-left: 1rem;
+      }
     }
   }
 }
