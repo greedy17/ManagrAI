@@ -235,8 +235,28 @@
       </table>
     </div>
 
-    <div style="padding: 10rem 0; text-align: center;">
-      Other statistics go here...
+    <div class="report__middle-row">
+      <div class="report__middle-row__card">
+        row__card
+      </div>
+      <div class="report__middle-row__card">
+        row__card
+      </div>
+      <div class="report__middle-row__card">
+        row__card
+      </div>
+    </div>
+
+    <div class="report__middle-row">
+      <div class="report__middle-row__card">
+        row__card
+      </div>
+      <div class="report__middle-row__card">
+        row__card
+      </div>
+      <div class="report__middle-row__card">
+        row__card
+      </div>
     </div>
 
     <div class="report__deal-analysis">
@@ -449,12 +469,19 @@ export default {
 
   &__summary-container {
     border: 1px solid $soft-gray;
-    border-radius: 5px;
+    border-radius: 7px;
+    margin-bottom: 2rem;
+  }
+
+  &__middle-row {
+    display: flex;
+    flex-flow: row;
+    margin-bottom: 2rem;
   }
 
   &__deal-analysis {
     border: 1px solid $soft-gray;
-    border-radius: 5px;
+    border-radius: 7px;
     padding: 1rem;
   }
 }
@@ -526,6 +553,29 @@ export default {
         }
       }
     }
+  }
+}
+
+.report__middle-row {
+  &__card {
+    border: 1px solid $soft-gray;
+    border-radius: 7px;
+    height: 15rem;
+    width: 22rem;
+
+    &__title {
+    }
+
+    &__summary {
+    }
+  }
+
+  & > &__card:first-of-type {
+    margin-right: auto;
+  }
+
+  & > &__card:last-of-type {
+    margin-left: auto;
   }
 }
 
