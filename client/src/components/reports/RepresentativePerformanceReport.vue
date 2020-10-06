@@ -249,11 +249,11 @@
               style="font-weight: 600; font-size: 3rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ Math.round(getTrendStat('forecastTableAdditions') * 10) / 10 }}
+              {{ forecastAdditionsProportion }}
             </div>
             <img
               style="margin: 0 auto 0 1rem; height: 3rem; width: 3rem;"
-              :src="require(`@/assets/images/${getTrendIcon('forecastTableAdditions')}`)"
+              :src="require(`@/assets/images/${forecastAdditionsIcon}`)"
             />
           </div>
         </div>
@@ -296,6 +296,44 @@
         </div>
         <div class="report__middle-row__card__summary">
           summary
+        </div>
+        <div class="report__middle-row__card__content">
+          <div>
+            <div style="margin: 1rem 0 0.5rem 0;" class="report__middle-row__card__content__row">
+              <div style="font-weight: 600;">
+                {{ report.dateRangePreset | constantToCapitalized }}
+              </div>
+              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
+                {{ focusData.salesCycle }} days
+              </div>
+            </div>
+            <div style="padding: 0 1rem;">
+              <ProgressBar
+                :percentComplete="100"
+                :centerPiece="false"
+                :widthValue="100"
+                :widthUnit="'%'"
+              />
+            </div>
+          </div>
+          <div>
+            <div style="margin: 2rem 0 0.5rem 0;" class="report__middle-row__card__content__row">
+              <div style="font-weight: 600;">
+                Typical {{ dateRangePresetFocus | constantToCapitalized }}
+              </div>
+              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
+                {{ typicalData.salesCycle ? `${typicalData.salesCycle} days` : 'N/A' }}
+              </div>
+            </div>
+            <div style="padding: 0 1rem;">
+              <ProgressBar
+                :percentComplete="typicalData.salesCycle ? typicalData.salesCycle : 0"
+                :centerPiece="false"
+                :widthValue="100"
+                :widthUnit="'%'"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -587,6 +625,23 @@ export default {
         ...STRONG.map(this.topOpportunityMapper('STRONG')),
         ...FIFTY_FIFTY.map(this.topOpportunityMapper('50/50')),
       ]
+    },
+    forecastAdditionsProportion() {
+      const focus = this.focusData.forecastTableAdditions
+      const typical = this.typicalData.forecastTableAdditions
+      if (!typical) {
+        return focus || 'N/A'
+      }
+      return Math.round((focus / typical) * 10) / 10
+    },
+    forecastAdditionsIcon() {
+      if (this.forecastAdditionsProportion > 1) {
+        return 'trending-up.svg'
+      }
+      if (this.forecastAdditionsProportion < 1) {
+        return 'trending-down.svg'
+      }
+      return 'no-trend.svg'
     },
     typicalData() {
       return this.report.data.representative.typical
