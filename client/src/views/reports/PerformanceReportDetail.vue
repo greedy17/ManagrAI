@@ -10,9 +10,18 @@
     </div>
     <div class="report shadow" v-else>
       <div class="divider" />
+      <div class="report__header">
+        <div class="report__header__logo">
+          <img src="@/assets/images/logo-with-name.png" />
+        </div>
+        <div class="report__header__text">
+          Performance Report
+        </div>
+      </div>
+
       <RepresentativePerformanceReport :report="report" v-if="report.isRepresentativeReport" />
       <OrganizationPerformanceReport :report="report" v-else />
-      <div class="managr-logo">
+      <div class="report__footer">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
     </div>
@@ -90,11 +99,37 @@ export default {
   height: 0.5em;
   width: 100%;
 }
-.managr-logo {
-  text-align: center;
 
-  img {
-    height: 10rem;
+.report {
+  &__header {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    padding-left: 3rem;
+    margin-bottom: -3rem;
+
+    &__logo {
+      text-align: center;
+      margin-right: 2rem;
+
+      img {
+        height: 12rem;
+      }
+    }
+
+    &__text {
+      color: $mid-gray;
+      font-size: 3rem;
+      padding-bottom: 0.8rem;
+    }
+  }
+
+  &__footer {
+    text-align: center;
+
+    img {
+      height: 10rem;
+    }
   }
 }
 </style>
