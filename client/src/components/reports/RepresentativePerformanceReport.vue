@@ -243,6 +243,20 @@
         <div class="report__middle-row__card__summary">
           summary
         </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row">
+            <div
+              style="font-weight: 600; font-size: 3rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ Math.round(getTrendStat('forecastTableAdditions') * 10) / 10 }}
+            </div>
+            <img
+              style="margin: 0 auto 0 1rem; height: 3rem; width: 3rem;"
+              :src="require(`@/assets/images/${getTrendIcon('forecastTableAdditions')}`)"
+            />
+          </div>
+        </div>
       </div>
       <div class="report__middle-row__card">
         <div class="report__middle-row__card__title">
