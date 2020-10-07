@@ -13,7 +13,7 @@
           {{ report.dateRangePreset | constantToCapitalized }}
         </div>
         <div class="report__summary-container__report-focus__representative-info">
-          {{ repDisplayNameLong }}
+          {{ focusRepDisplayNameLong }}
         </div>
       </div>
       <table class="report__summary-container__summary-table">
@@ -241,7 +241,13 @@
           Forecast
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ focusRepDisplayNameShort }} added {{ focusData.forecastTableAdditions }} opportunities
+          to the forecast.
+          {{
+            forecastAdditionsProportion !== 'N/A'
+              ? `That is ${forecastAdditionsProportion} the typical number.`
+              : 'Since the typical number of additions is N/A, no trend can be determined.'
+          }}
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row">
@@ -263,7 +269,7 @@
           Top Opportunities
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ topOpportunitiesSummary }}
         </div>
         <div class="report__middle-row__card__content">
           <div
@@ -277,9 +283,7 @@
             </div>
             <div style="font-weight: 600; margin: 0 1rem 0 auto;" class="mid-gray-font">
               {{ lead.status | constantToCapitalized }},
-              {{
-                lead.status === Lead.CLOSED ? lead.closing_amount : lead.amount | currencyNoCents
-              }}
+              {{ lead.status === Lead.CLOSED ? lead.closingAmount : lead.amount | currencyNoCents }}
             </div>
           </div>
           <div
@@ -287,7 +291,10 @@
             :key="focusTopOpportunities.length - 1 + n"
             class="report__middle-row__card__content__row"
             :class="{ 'soft-gray-background': (focusTopOpportunities.length + n) % 2 == 0 }"
-          ></div>
+            style="justify-content: center;"
+          >
+            --
+          </div>
         </div>
       </div>
       <div class="report__middle-row__card">
@@ -295,11 +302,13 @@
           Sales Cycle
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ focusRepDisplayNameShort }}'s sales cycle
+          {{ focusData.salesCycle > Number(typicalData.salesCycle) ? 'extended' : 'contracted' }}
+          this month to {{ focusData.salesCycle }} days.
         </div>
         <div class="report__middle-row__card__content">
           <div>
-            <div style="margin: 1rem 0 0.5rem 0;" class="report__middle-row__card__content__row">
+            <div style="margin: 0 0 0.5rem 0;" class="report__middle-row__card__content__row">
               <div style="font-weight: 600;">
                 {{ report.dateRangePreset | constantToCapitalized }}
               </div>
@@ -344,7 +353,14 @@
           Actions to Close an Opportunity
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ focusRepDisplayNameShort }} took
+          {{ focusData.actionsToCloseOpportunity.average }} actions to close a deal.
+          {{
+            focusData.actionsToCloseOpportunity.average
+              ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
+          action.`
+              : null
+          }}
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
@@ -378,7 +394,16 @@
           ACV
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ focusRepDisplayNameShort }}'s ACV
+          {{
+            focusData.ACV > Number(typicalData.ACV)
+              ? 'increased'
+              : focusData.ACV < Number(typicalData.ACV)
+              ? 'decreased'
+              : 'steadied'
+          }}
+          {{ report.dateRangePreset | constantToCapitalized }} to
+          {{ focusData.ACV | currencyNoCents }} from {{ typicalData.ACV || 'N/A' }}.
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
@@ -410,7 +435,31 @@
           Top Performers
         </div>
         <div class="report__middle-row__card__summary">
-          summary
+          {{ focusRepDisplayNameShort }} is #{{ focusRepPerformanceRank }} in overall performance.
+        </div>
+        <div class="report__middle-row__card__content">
+          <div
+            class="report__middle-row__card__content__row"
+            style="align-items: unset; padding-top: 1rem;"
+          >
+            <div
+              v-for="(rep, idx) in organizationFocusData.topPerformers"
+              :key="idx"
+              class="report__middle-row__card__content__column"
+              style="justify-content: unset;"
+            >
+              <img
+                class="report__middle-row__card__content__column__img"
+                :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')"
+              />
+              <div class="report__middle-row__card__content__column__text">
+                {{ rep.rank }}. {{ generateRepDisplayName(rep) }}
+              </div>
+              <div class="report__middle-row__card__content__column__text">
+                {{ rep.ACV | currencyNoCents }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -420,7 +469,7 @@
         Deal Analysis
       </div>
       <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
-        {{ repDisplayNameShort }} closed mostly
+        {{ focusRepDisplayNameShort }} closed mostly
         {{ focusData.dealAnalysis.industry.value | constantToCapitalized }} opportunities in
         {{ focusData.dealAnalysis.geography.value | constantToCapitalized }}, with
         {{ focusData.dealAnalysis.companySize.value }} employees. They were of type
@@ -536,6 +585,7 @@
 </template>
 
 <script>
+import pluralize from 'pluralize'
 import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
 import { constantToCapitalized } from '@/services/utils'
@@ -591,6 +641,9 @@ export default {
         return { ...lead, status }
       }
     },
+    generateRepDisplayName(rep) {
+      return rep.fullName.trim() ? rep.fullName : rep.email.slice(0, 10) + '...'
+    },
   },
   computed: {
     dateRangePresetFocus() {
@@ -600,12 +653,12 @@ export default {
     representative() {
       return this.report.representativeRef
     },
-    repDisplayNameLong() {
+    focusRepDisplayNameLong() {
       return this.representative.fullName.trim()
         ? this.representative.fullName
         : this.representative.email
     },
-    repDisplayNameShort() {
+    focusRepDisplayNameShort() {
       if (this.representative.firstName.trim()) {
         return this.representative.firstName
       }
@@ -626,6 +679,41 @@ export default {
         ...FIFTY_FIFTY.map(this.topOpportunityMapper('50/50')),
       ]
     },
+    topOpportunitiesSummary() {
+      // this.focusRepDisplayNameShort
+      const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
+      let str = `${this.focusRepDisplayNameShort} closed ${CLOSED.length} ${pluralize(
+        'deal',
+        CLOSED.length,
+      )}`
+      if (VERBAL.length) {
+        str += `${STRONG.length || FIFTY_FIFTY.length ? ', ' : 'and'} moved ${
+          VERBAL.length
+        } ${pluralize('opportunity', VERBAL.length)} to verbal`
+      }
+      if (STRONG.length) {
+        str += `${FIFTY_FIFTY.length ? ', ' : 'and'} moved ${STRONG.length} ${pluralize(
+          'opportunity',
+          STRONG.length,
+        )} to strong`
+      }
+      if (FIFTY_FIFTY.length) {
+        str += `${VERBAL.length || STRONG.length ? ',' : ''} and moved ${STRONG.length} ${pluralize(
+          'opportunity',
+          STRONG.length,
+        )} to strong`
+      }
+      return str + '.'
+    },
+    focusRepPerformanceRank() {
+      for (let idx in this.organizationFocusData.topPerformers) {
+        const rep = this.organizationFocusData.topPerformers[idx]
+        if (rep.id === this.representative.id) {
+          return rep.rank
+        }
+      }
+      return 0
+    },
     forecastAdditionsProportion() {
       const focus = this.focusData.forecastTableAdditions
       const typical = this.typicalData.forecastTableAdditions
@@ -645,6 +733,9 @@ export default {
     },
     typicalData() {
       return this.report.data.representative.typical
+    },
+    organizationFocusData() {
+      return this.report.data.organization.focus
     },
     organizationTypicalData() {
       return this.report.data.organization.typical
@@ -768,6 +859,8 @@ export default {
       font-weight: 600;
       color: $mid-gray;
       padding: 0 1rem 0.5rem 1rem;
+      height: 3.5rem;
+      overflow-y: auto;
     }
 
     &__content {
@@ -781,6 +874,28 @@ export default {
         flex-flow: row;
         align-items: center;
         padding: 0 1rem;
+      }
+
+      &__column {
+        flex-grow: 1;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        // padding: 0 1rem;
+
+        &__img {
+          height: 3.5rem;
+          width: 3.5rem;
+          border-radius: 50%;
+          border: 2px solid $yellow;
+          object-fit: cover;
+        }
+
+        &__text {
+          font-size: 0.8rem;
+          color: $mid-gray;
+          padding-top: 0.5rem;
+        }
       }
     }
   }

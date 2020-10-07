@@ -12,7 +12,7 @@ from managr.core.models import EmailAuthAccount
 from managr.lead.models import LeadActivityLog
 
 from managr.lead import constants as lead_constants
-from managr.lead.serializers import LeadRefSerializer
+from managr.lead.serializers import LeadRefSerializer, UserRefSerializer
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.utils.sites import get_site_url
 
@@ -649,13 +649,16 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
                     )
         sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
         top_performers = sorted_reps[0:3]
+        # serialized_top_performers = [
+        #     data["fields"] for data in json.loads(
+        #         serializers.serialize(
+        #             "json",
+        #             top_performers,
+        #             fields=("first_name", "last_name", "email", "profile_photo",)
+        #         ))
+        # ]
         serialized_top_performers = [
-            data["fields"] for data in json.loads(
-                serializers.serialize(
-                    "json",
-                    top_performers,
-                    fields=("full_name", "email", "profile_photo")
-                ))
+            UserRefSerializer(rep).data for rep in top_performers
         ]
 
         for i in range(len(serialized_top_performers)):
@@ -663,18 +666,25 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             serialized_top_performers[i]["ACV"] = sorted_data[i]["data"]["ACV"]
 
         if self._representative not in top_performers:
-            serialized_rep = json.loads(
-                                serializers.serialize(
-                                    "json",
-                                    [self._representative],
-                                    fields=("full_name", "email", "profile_photo")
-                                )
-                            )[0]["fields"]
+            # serialized_rep = json.loads(
+            #                     serializers.serialize(
+            #                         "json",
+            #                         [self._representative],
+            #                         fields=("full_name", "email", "profile_photo")
+            #                     )
+            #                 )[0]["fields"]
+            serialized_rep = UserRefSerializer(self._representative).data
 
             sorted_index = sorted_reps.index(self._representative)
             serialized_rep["rank"] = sorted_index + 1
             serialized_rep["ACV"] = sorted_data[sorted_index]["data"]["ACV"]
-            serialized_top_performers.append(serialized_rep)
+            if len(serialized_top_performers) is 3:
+                # if there are three users in the list,
+                # swap the last user for self._representative
+                serialized_top_performers[2](serialized_rep)
+            else:
+                # else append self._representative to the list
+                serialized_top_performers.append(serialized_rep)
         return serialized_top_performers
 
     @property
