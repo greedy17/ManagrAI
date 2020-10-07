@@ -30,7 +30,6 @@ from collections import OrderedDict
 from rest_framework import status, filters, permissions
 
 from rest_framework.response import Response
-from pdb import set_trace
 
 
 class UserRefSerializer(serializers.ModelSerializer):

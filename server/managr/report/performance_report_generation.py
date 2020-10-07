@@ -649,14 +649,6 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
                     )
         sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
         top_performers = sorted_reps[0:3]
-        # serialized_top_performers = [
-        #     data["fields"] for data in json.loads(
-        #         serializers.serialize(
-        #             "json",
-        #             top_performers,
-        #             fields=("first_name", "last_name", "email", "profile_photo",)
-        #         ))
-        # ]
         serialized_top_performers = [
             UserRefSerializer(rep).data for rep in top_performers
         ]
@@ -666,13 +658,6 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             serialized_top_performers[i]["ACV"] = sorted_data[i]["data"]["ACV"]
 
         if self._representative not in top_performers:
-            # serialized_rep = json.loads(
-            #                     serializers.serialize(
-            #                         "json",
-            #                         [self._representative],
-            #                         fields=("full_name", "email", "profile_photo")
-            #                     )
-            #                 )[0]["fields"]
             serialized_rep = UserRefSerializer(self._representative).data
 
             sorted_index = sorted_reps.index(self._representative)
