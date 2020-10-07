@@ -38,6 +38,10 @@ export default class PerformanceReport {
     })
   }
 
+  get isReady() {
+    return !!this.datetimeGenerated
+  }
+
   static create(opts) {
     return new PerformanceReport(opts)
   }

@@ -16,10 +16,10 @@
             </div>
             <button
               class="report__button"
-              :disabled="!isReady(report)"
+              :disabled="!report.isReady"
               @click.prevent="openReport(report)"
             >
-              {{ isReady(report) ? 'See Report' : 'Pending...' }}
+              {{ report.isReady ? 'See Report' : 'Pending...' }}
             </button>
           </div>
         </template>
@@ -57,9 +57,6 @@ export default {
     },
   },
   methods: {
-    isReady(report) {
-      return !!report.datetimeGenerated
-    },
     getReportFocus(report) {
       if (report.representative) {
         let { fullName, email } = report.representativeRef
