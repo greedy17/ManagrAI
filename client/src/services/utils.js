@@ -30,6 +30,8 @@ const Utils = {
   debounce,
   getTimeZone,
   convertToRgba,
+  loadEntireCollection,
+  constantToCapitalized,
 }
 
 export default Utils
@@ -101,16 +103,24 @@ export function capitalizeWord(word) {
  * Transform the string-based keys of a JavaScript object to `camelCase` style notation.
  * This is useful for translating the style of object keys after making an API call to
  * the Python-based API, which uses `snake_case` style notation by default.
+ *
+ * Works on both objects, arrays, and any combination of nested objects and arrays.
  */
-export function objectToCamelCase(value) {
-  if (isObject(value)) {
-    return Object.keys(value).reduce((acc, snakeKey) => {
+export function objectToCamelCase(obj) {
+  if (isObject(obj)) {
+    return Object.keys(obj).reduce((acc, snakeKey) => {
       const camelKey = toCamelCase(snakeKey)
-      acc[camelKey] = isObject(value[snakeKey])
-        ? objectToCamelCase(value[snakeKey])
-        : value[snakeKey]
+      acc[camelKey] = isObjectOrArray(obj[snakeKey])
+        ? objectToCamelCase(obj[snakeKey])
+        : obj[snakeKey]
       return acc
     }, {})
+  }
+  if (Array.isArray(obj)) {
+    return obj.reduce((acc, val, index) => {
+      acc[index] = isObjectOrArray(val) ? objectToCamelCase(val) : val
+      return acc
+    }, [])
   }
 }
 
@@ -137,6 +147,13 @@ export function objectToSnakeCase(value) {
 
 export function isObject(value) {
   return value !== null && value instanceof Object && !Array.isArray(value)
+}
+
+/**
+ * Check whether a value is an Object or Array
+ */
+export function isObjectOrArray(value) {
+  return value !== null && value instanceof Object
 }
 
 /**
@@ -291,4 +308,27 @@ function convertToRgba(color, opacity = 1) {
     blue = 0
   }
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`
+}
+
+/**
+ * @function    loadEntireCollection
+ * Since the list of collection is for populating a dropdown, there is no pagination UI.
+ * Yet, our backend delivers paginated results.
+ * Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
+ * @param   {CollectionManager}  collection  - the collection for which all pages should be loaded.
+ **/
+
+export async function loadEntireCollection(collection) {
+  await collection.refresh()
+  while (collection.pagination.hasNextPage) {
+    await collection.addNextPage()
+  }
+}
+
+export function constantToCapitalized(value) {
+  if (!value) return ''
+  return value
+    .split('_')
+    .map(capitalizeWord)
+    .join(' ')
 }

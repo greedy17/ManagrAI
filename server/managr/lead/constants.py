@@ -52,6 +52,16 @@ FORECAST_CHOICES = (
     (FORECAST_CLOSED, "Closed"),
 )
 
+# Forecasts that make up the 'Forecast Table',
+# NOTE: Ordered from most weighted to least weighted,
+# because their order matters when generating PerformanceReport,
+# and this set is used therein!
+FORECAST_TABLE = (
+    FORECAST_VERBAL,
+    FORECAST_STRONG,
+    FORECAST_FIFTY_FIFTY,
+)
+
 # Define constants for the types of model events that can happen.
 CREATED = "CREATED"
 UPDATED = "UPDATED"

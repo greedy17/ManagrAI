@@ -77,5 +77,18 @@
             "action_taken_by":  "3dddd261-93b1-46fe-a83e-bc164551362a",
             "datetime_created": "2020-08-11 11:39:23.632256Z"
         }
+    },
+    {
+        "model": "lead.leadactivitylog",
+        "pk": "123911d3-4ce6-4803-a236-b58e272729c7",
+        "fields": {
+            "meta": {},
+            "action_timestamp": "2020-08-21 11:39:23.632256Z",
+            "last_edited": "2020-08-21 11:39:23.632256Z",
+            "lead": "77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d",
+            "activity": "Lead.CLOSED",
+            "action_taken_by":  "3dddd261-93b1-46fe-a83e-bc164551362a",
+            "datetime_created": "2020-08-21 11:39:23.632256Z"
+        }
     }
 ]

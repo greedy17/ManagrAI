@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="10px" height="6px" viewBox="0 0 10 6" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Icon / icon-trending-down</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Performance-Reports-(3)" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Report-v3-All" transform="translate(-710.000000, -158.000000)">
+            <g id="Group-3" transform="translate(151.000000, 63.000000)">
+                <g id="Icon-/-icon-trending-up" transform="translate(558.000000, 92.000000)">
+                    <polygon id="Shape" points="0 0 12 0 12 12 0 12"></polygon>
+                    <polygon id="Shape" fill="#D7D7DD" fill-rule="evenodd" points="8 3 9.145 4.145 6.705 6.585 4.705 4.585 1 8.295 1.705 9 4.705 6 6.705 8 9.855 4.855 11 6 11 3"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

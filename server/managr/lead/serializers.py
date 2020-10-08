@@ -14,6 +14,7 @@ from .models import (
     Notification,
     LeadMessage,
 )
+from managr.utils import sites as site_utils
 from managr.organization.models import Stage
 from managr.organization.serializers import (
     AccountRefSerializer,
@@ -33,13 +34,29 @@ from rest_framework.response import Response
 
 class UserRefSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    profile_photo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "first_name", "profile_photo")
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "first_name",
+            "last_name",
+            "profile_photo"
+        )
 
     def get_full_name(self, instance):
         return f"{instance.first_name} {instance.last_name}"
+
+    def get_profile_photo(self, instance):
+        # looks like the below may work in staging/prod, just
+        # not local given settings.CURRENT_X
+        base_url = site_utils.get_site_url()
+        profile_photo = instance.profile_photo
+        if (bool(profile_photo)):
+            return base_url + profile_photo.url
 
 
 class NotificationSerializer(serializers.ModelSerializer):
