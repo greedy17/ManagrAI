@@ -601,7 +601,11 @@
         <!-- type -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.type.value }}
+            {{
+              focusData.dealAnalysis.type.value === 'OTHER'
+                ? 'Other (Type)'
+                : focusData.dealAnalysis.type.value
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -619,7 +623,13 @@
         <!-- competitor -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.competitor.value | constantToCapitalized }} competitor
+            {{
+              focusData.dealAnalysis.competitor.value === 'YES'
+                ? 'Competitor Switch'
+                : focusData.dealAnalysis.competitor.value === 'NO'
+                ? 'Not using a competitor'
+                : 'Other (Competitor)'
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
