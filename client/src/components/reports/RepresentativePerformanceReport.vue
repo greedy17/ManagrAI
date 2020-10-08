@@ -546,7 +546,13 @@
       <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
         <!-- Industry -->
         <div class="report__deal-analysis__breakdown__category">
-          <div class="report__deal-analysis__breakdown__category__title">
+          <div
+            v-if="isNull(focusData.dealAnalysis.industry.value)"
+            class="report__deal-analysis__breakdown__category__title"
+          >
+            Industry: N/A
+          </div>
+          <div v-else class="report__deal-analysis__breakdown__category__title">
             {{ focusData.dealAnalysis.industry.value | constantToCapitalized }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
@@ -565,7 +571,11 @@
         <!-- Geography -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.geography.value }}
+            {{
+              isNull(focusData.dealAnalysis.geography.value)
+                ? 'Geography: N/A'
+                : focusData.dealAnalysis.geography.value
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -583,7 +593,11 @@
         <!-- companySize -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.companySize.value }}
+            {{
+              isNull(focusData.dealAnalysis.companySize.value)
+                ? 'Company Size: N/A'
+                : focusData.dealAnalysis.companySize.value
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -602,8 +616,10 @@
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
             {{
-              focusData.dealAnalysis.type.value === 'OTHER'
-                ? 'Other (Type)'
+              isNull(focusData.dealAnalysis.type.value)
+                ? 'Type: N/A'
+                : focusData.dealAnalysis.type.value === 'OTHER'
+                ? 'Type: Other'
                 : focusData.dealAnalysis.type.value
             }}
           </div>
@@ -624,7 +640,9 @@
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
             {{
-              focusData.dealAnalysis.competitor.value === 'YES'
+              isNull(focusData.dealAnalysis.competitor.value)
+                ? 'Competitor: N/A'
+                : focusData.dealAnalysis.competitor.value === 'YES'
                 ? 'Competitor Switch'
                 : focusData.dealAnalysis.competitor.value === 'NO'
                 ? 'Not using a competitor'
