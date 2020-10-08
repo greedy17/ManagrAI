@@ -666,7 +666,7 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             if len(serialized_top_performers) is 3:
                 # if there are three users in the list,
                 # swap the last user for self._representative
-                serialized_top_performers[2](serialized_rep)
+                serialized_top_performers[2] = serialized_rep
             else:
                 # else append self._representative to the list
                 serialized_top_performers.append(serialized_rep)
