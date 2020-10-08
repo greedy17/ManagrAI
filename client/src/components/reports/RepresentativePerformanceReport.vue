@@ -244,7 +244,7 @@
           {{ focusRepDisplayNameShort }} added {{ focusData.forecastTableAdditions }} opportunities
           to the forecast.
           {{
-            forecastAdditionsProportion !== 'N/A'
+            forecastAdditionsProportion !== localConstants.NA
               ? `That is ${forecastAdditionsProportion} the typical number.`
               : 'Since the typical number of additions is N/A, no trend can be determined.'
           }}
@@ -343,7 +343,7 @@
                 Typical {{ dateRangePresetFocus | constantToCapitalized }}
               </div>
               <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
-                {{ typicalData.salesCycle ? `${typicalData.salesCycle} days` : 'N/A' }}
+                {{ typicalData.salesCycle ? `${typicalData.salesCycle} days` : localConstants.NA }}
               </div>
             </div>
             <div style="padding: 0 1rem;">
@@ -444,7 +444,7 @@
               : 'steadied'
           }}
           {{ report.dateRangePreset | constantToCapitalized }} to
-          {{ focusData.ACV | currencyNoCents }} from {{ typicalData.ACV || 'N/A' }}.
+          {{ focusData.ACV | currencyNoCents }} from {{ typicalData.ACV || localConstants.NA }}.
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
@@ -603,7 +603,7 @@
             {{
               isNull(focusData.dealAnalysis.type.value)
                 ? 'Type: N/A'
-                : focusData.dealAnalysis.type.value === 'OTHER'
+                : focusData.dealAnalysis.type.value === localConstants.OTHER
                 ? 'Type: Other'
                 : focusData.dealAnalysis.type.value
             }}
@@ -627,9 +627,9 @@
             {{
               isNull(focusData.dealAnalysis.competitor.value)
                 ? 'Competitor: N/A'
-                : focusData.dealAnalysis.competitor.value === 'YES'
+                : focusData.dealAnalysis.competitor.value === localConstants.YES
                 ? 'Competitor Switch'
-                : focusData.dealAnalysis.competitor.value === 'NO'
+                : focusData.dealAnalysis.competitor.value === localConstants.NO
                 ? 'Not using a competitor'
                 : 'Other (Competitor)'
             }}
@@ -660,8 +660,19 @@ import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
 import { constantToCapitalized, isNull } from '@/services/utils'
 import { roundToOneDecimalPlace } from '@/services/filters'
-
 import ProgressBar from '@/components/reports/ProgressBar'
+
+const NA = 'N/A'
+const OTHER = 'OTHER'
+const YES = 'YES'
+const NO = 'NO'
+
+const localConstants = {
+  NA,
+  OTHER,
+  YES,
+  NO,
+}
 
 export default {
   name: 'RepresentativePerformanceReport',
@@ -677,6 +688,7 @@ export default {
   data() {
     return {
       Lead,
+      localConstants,
       constantToCapitalized,
       isNull,
     }
@@ -777,7 +789,14 @@ export default {
       }
       return str + '.'
     },
+    canGenerateDealAnalysisSummary() {
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
+      return !!(industry || geography || companySize || type || competitor)
+    },
     dealAnalysisSummary() {
+      if (!this.canGenerateDealAnalysisSummary) {
+        return `Insights regarding ${this.focusRepDisplayNameShort}'s closed deals could not be generated because the needed data is N/A.`
+      }
       let str = `${this.focusRepDisplayNameShort} closed mostly`
       if (this.focusData.dealAnalysis.industry.value) {
         str += ` ${constantToCapitalized(this.focusData.dealAnalysis.industry.value)}`
@@ -792,14 +811,15 @@ export default {
       str += '.'
       if (this.focusData.dealAnalysis.type.value) {
         let value =
-          this.focusData.dealAnalysis.type.value === 'OTHER'
+          this.focusData.dealAnalysis.type.value === this.localConstants.OTHER
             ? constantToCapitalized(this.focusData.dealAnalysis.type.value)
             : this.focusData.dealAnalysis.type.value
         str += ` They were of type ${value}`
       }
       if (this.focusData.dealAnalysis.competitor.value) {
-        if (this.focusData.dealAnalysis.competitor.value !== 'OTHER') {
-          let usingCompetitor = this.focusData.dealAnalysis.competitor.value === 'YES'
+        if (this.focusData.dealAnalysis.competitor.value !== this.localConstants.OTHER) {
+          let usingCompetitor =
+            this.focusData.dealAnalysis.competitor.value === this.localConstants.YES
           str += usingCompetitor ? ', using a competitor' : ', not using a competitor'
         }
       }
@@ -819,7 +839,7 @@ export default {
       const focus = this.focusData.forecastTableAdditions
       const typical = this.typicalData.forecastTableAdditions
       if (!typical) {
-        return focus || 'N/A'
+        return focus || this.localConstants.NA
       }
       return roundToOneDecimalPlace(focus / typical)
     },
