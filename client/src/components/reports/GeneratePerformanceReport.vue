@@ -38,10 +38,10 @@
           <div class="form__element" style="margin-top: 1.5rem;">
             <button
               class="button"
-              :disabled="!bothFieldsHaveSelections"
+              :disabled="!bothFieldsHaveSelections || submittingForm"
               @click.prevent="generateReport"
             >
-              Generate Report
+              {{ submittingForm ? 'Sending...' : 'Generate Report' }}
             </button>
           </div>
         </div>
@@ -76,10 +76,12 @@ export default {
       dateRangePresets,
       selectedRepresentative: null,
       selectedDateRange: null,
+      submittingForm: false,
     }
   },
   methods: {
     generateReport() {
+      this.submittingForm = true
       PerformanceReport.api
         .create(
           this.selectedRepresentative,
@@ -94,6 +96,9 @@ export default {
             timeout: 3000,
             message: `Report being generated! You will receive an email once the report is accessible.`,
           })
+        })
+        .finally(() => {
+          this.submittingForm = false
         })
     },
     clearForm() {
