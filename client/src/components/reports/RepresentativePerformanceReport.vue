@@ -189,19 +189,19 @@
             Typical {{ dateRangePresetFocus | constantToCapitalized }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.activitiesCount }}
+            {{ typicalData.activitiesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.actionsCount }}
+            {{ typicalData.actionsCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.incomingMessagesCount }}
+            {{ typicalData.incomingMessagesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ typicalData.forecastAmount | currencyNoCents }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.dealsClosedCount }}
+            {{ typicalData.dealsClosedCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ typicalData.amountClosed | currencyNoCents }}
@@ -214,19 +214,19 @@
             Typical Team {{ dateRangePresetFocus | constantToCapitalized }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.activitiesCount }}
+            {{ organizationTypicalData.activitiesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.actionsCount }}
+            {{ organizationTypicalData.actionsCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.incomingMessagesCount }}
+            {{ organizationTypicalData.incomingMessagesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ organizationTypicalData.forecastAmount | currencyNoCents }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.dealsClosedCount }}
+            {{ organizationTypicalData.dealsClosedCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ organizationTypicalData.amountClosed | currencyNoCents }}
@@ -255,6 +255,7 @@
               style="font-weight: 600; font-size: 3rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
+              <!-- could leverage rundToOneDecimalPlace herein: -->
               {{ forecastAdditionsProportion }}
             </div>
             <img
@@ -301,10 +302,14 @@
         <div class="report__middle-row__card__title">
           Sales Cycle
         </div>
-        <div class="report__middle-row__card__summary">
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.salesCycle)">
+          {{ focusRepDisplayNameShort }}'s sales cycle trend could not be determined for
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }}'s sales cycle
           {{ focusData.salesCycle > Number(typicalData.salesCycle) ? 'extended' : 'contracted' }}
-          this month to {{ focusData.salesCycle }} days.
+          this month to {{ focusData.salesCycle | roundToOneDecimalPlace }} days.
         </div>
         <div class="report__middle-row__card__content">
           <div>
@@ -312,13 +317,20 @@
               <div style="font-weight: 600;">
                 {{ report.dateRangePreset | constantToCapitalized }}
               </div>
-              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
-                {{ focusData.salesCycle }} days
+              <div
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+                v-if="isNull(focusData.salesCycle)"
+              >
+                N/A
+              </div>
+              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;" v-else>
+                {{ focusData.salesCycle | roundToOneDecimalPlace }} days
               </div>
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
-                :percentComplete="100"
+                :percentComplete="isNull(focusData.salesCycle) ? 0 : 100"
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
@@ -352,9 +364,17 @@
         <div class="report__middle-row__card__title">
           Actions to Close an Opportunity
         </div>
-        <div class="report__middle-row__card__summary">
+        <div
+          class="report__middle-row__card__summary"
+          v-if="isNull(focusData.actionsToCloseOpportunity.average)"
+        >
+          An insight could not be generated because no opportunities were closed
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }} took
-          {{ focusData.actionsToCloseOpportunity.average }} actions to close a deal.
+          {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }} actions to
+          close a deal.
           {{
             focusData.actionsToCloseOpportunity.average
               ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
@@ -362,6 +382,7 @@
               : null
           }}
         </div>
+
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
             <div style="font-weight: 600; width: 65%;">
@@ -369,10 +390,18 @@
               Opportunities {{ report.dateRangePreset | constantToCapitalized }}
             </div>
             <div
+              v-if="isNull(focusData.actionsToCloseOpportunity.average)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ focusData.actionsToCloseOpportunity.average }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }}
             </div>
           </div>
           <div class="report__middle-row__card__content__row">
@@ -381,10 +410,18 @@
               Closed Opportunities
             </div>
             <div
+              v-if="isNull(typicalData.actionsToCloseOpportunity)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ typicalData.actionsToCloseOpportunity || 'N/A' }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.actionsToCloseOpportunity | roundToOneDecimalPlace }}
             </div>
           </div>
         </div>
@@ -393,7 +430,11 @@
         <div class="report__middle-row__card__title">
           ACV
         </div>
-        <div class="report__middle-row__card__summary">
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.ACV)">
+          An insight could not be generated because {{ focusRepDisplayNameShort }}'s ACV for
+          {{ report.dateRangePreset | constantToCapitalized }} is N/A.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }}'s ACV
           {{
             focusData.ACV > Number(typicalData.ACV)
@@ -411,6 +452,14 @@
               ACV {{ report.dateRangePreset | constantToCapitalized }}
             </div>
             <div
+              v-if="isNull(focusData.ACV)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
@@ -588,7 +637,8 @@
 import pluralize from 'pluralize'
 import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
-import { constantToCapitalized } from '@/services/utils'
+import { constantToCapitalized, isNull } from '@/services/utils'
+import { roundToOneDecimalPlace } from '@/services/filters'
 
 import ProgressBar from '@/components/reports/ProgressBar'
 
@@ -607,6 +657,7 @@ export default {
     return {
       Lead,
       constantToCapitalized,
+      isNull,
     }
   },
   methods: {
@@ -720,7 +771,7 @@ export default {
       if (!typical) {
         return focus || 'N/A'
       }
-      return Math.round((focus / typical) * 10) / 10
+      return roundToOneDecimalPlace(focus / typical)
     },
     forecastAdditionsIcon() {
       if (this.forecastAdditionsProportion > 1) {

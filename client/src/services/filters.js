@@ -8,6 +8,7 @@ export {
   timeToNow,
   prependUrlProtocol,
   formatDateShortWithTime,
+  roundToOneDecimalPlace,
 }
 
 function uppercase(value) {
@@ -58,4 +59,12 @@ function formatDateShortWithTime(value) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function roundToOneDecimalPlace(value) {
+  // must be int, float, or their stringified versions
+  if (isNaN(parseFloat(value))) {
+    return NaN
+  }
+  return Math.round(parseFloat(value) * 10) / 10
 }
