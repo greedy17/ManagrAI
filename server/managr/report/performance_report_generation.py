@@ -260,7 +260,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
             "50/50": [],
         }
         closed_leads = [
-            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('lead__closing_amount')[:total_needed_count]
+            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
         ]
         output[lead_constants.LEAD_STATUS_CLOSED] = [
                                                         data["fields"] for data in json.loads(
