@@ -122,6 +122,6 @@ class PerformanceReport(TimeStampModel):
 
     def __str__(self):
         if self.representative:
-            return f"PerformanceReport ({self.id}): REPRESENTATIVE => '{self.representative.full_name}'. ({self.representative_id}). GENERATED => {self.datetime_generated or 'Pending...'}"
+            return f"PerformanceReport ({self.id}): REPRESENTATIVE => {self.representative.full_name if self.representative.first_name else self.representative.email}. ORGANIZATION => {self.generated_by.organization.name}. GENERATED => {self.datetime_generated or 'Pending...'}"
         else:
-            return f"PerformanceReport ({self.id}): REPRESENTATIVE => 'ALL'. GENERATED => {self.datetime_generated or 'Pending...'}"
+            return f"PerformanceReport ({self.id}): REPRESENTATIVE => ALL. ORGANIZATION => {self.generated_by.organization.name}. GENERATED => {self.datetime_generated or 'Pending...'}"
