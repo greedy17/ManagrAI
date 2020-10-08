@@ -255,7 +255,6 @@
               style="font-weight: 600; font-size: 3rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              <!-- could leverage rundToOneDecimalPlace herein: -->
               {{ forecastAdditionsProportion }}
             </div>
             <img
@@ -330,7 +329,9 @@
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
-                :percentComplete="isNull(focusData.salesCycle) ? 0 : 100"
+                :percentComplete="
+                  generateProgressBarValue(focusData.salesCycle, typicalData.salesCycle)
+                "
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
@@ -348,7 +349,9 @@
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
-                :percentComplete="typicalData.salesCycle ? typicalData.salesCycle : 0"
+                :percentComplete="
+                  generateProgressBarValue(typicalData.salesCycle, focusData.salesCycle)
+                "
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
@@ -728,6 +731,16 @@ export default {
     generateRepDisplayName(rep) {
       return rep.fullName.trim() ? rep.fullName : rep.email.slice(0, 10) + '...'
     },
+    generateProgressBarValue(currentValue, comparativeValue) {
+      // To be used with sales cycle statistics
+      if (isNull(currentValue)) {
+        return 0
+      }
+      if (isNull(comparativeValue) || currentValue > comparativeValue) {
+        return 100
+      }
+      return (currentValue / comparativeValue) * 100
+    },
   },
   computed: {
     dateRangePresetFocus() {
@@ -750,9 +763,6 @@ export default {
         return this.representative.lastName
       }
       return this.representative.email
-    },
-    focusData() {
-      return this.report.data.representative.focus
     },
     focusTopOpportunities() {
       const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
@@ -851,6 +861,9 @@ export default {
         return 'trending-down.svg'
       }
       return 'no-trend.svg'
+    },
+    focusData() {
+      return this.report.data.representative.focus
     },
     typicalData() {
       return this.report.data.representative.typical
