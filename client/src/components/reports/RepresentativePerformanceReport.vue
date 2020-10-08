@@ -526,22 +526,7 @@
         Deal Analysis
       </div>
       <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
-        {{ focusRepDisplayNameShort }} closed mostly
-        {{ focusData.dealAnalysis.industry.value | constantToCapitalized }} opportunities in
-        {{ focusData.dealAnalysis.geography.value | constantToCapitalized }}, with
-        {{ focusData.dealAnalysis.companySize.value }} employees. They were of type
-        {{
-          focusData.dealAnalysis.type.value === 'OTHER'
-            ? constantToCapitalized(focusData.dealAnalysis.type.value)
-            : focusData.dealAnalysis.type.value
-        }}
-        {{
-          focusData.dealAnalysis.competitor.value === 'OTHER'
-            ? null
-            : focusData.dealAnalysis.competitor.value === 'YES'
-            ? ', using a competitor'
-            : ', not using a competitor'
-        }}.
+        {{ dealAnalysisSummary }}
       </div>
       <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
         <!-- Industry -->
@@ -791,6 +776,35 @@ export default {
         )} to strong`
       }
       return str + '.'
+    },
+    dealAnalysisSummary() {
+      let str = `${this.focusRepDisplayNameShort} closed mostly`
+      if (this.focusData.dealAnalysis.industry.value) {
+        str += ` ${constantToCapitalized(this.focusData.dealAnalysis.industry.value)}`
+      }
+      str += ' opportunities'
+      if (this.focusData.dealAnalysis.geography.value) {
+        str += ` in ${this.focusData.dealAnalysis.geography.value},`
+      }
+      if (this.focusData.dealAnalysis.companySize.value) {
+        str += ` with ${this.focusData.dealAnalysis.companySize.value} employees`
+      }
+      str += '.'
+      if (this.focusData.dealAnalysis.type.value) {
+        let value =
+          this.focusData.dealAnalysis.type.value === 'OTHER'
+            ? constantToCapitalized(this.focusData.dealAnalysis.type.value)
+            : this.focusData.dealAnalysis.type.value
+        str += ` They were of type ${value}`
+      }
+      if (this.focusData.dealAnalysis.competitor.value) {
+        if (this.focusData.dealAnalysis.competitor.value !== 'OTHER') {
+          let usingCompetitor = this.focusData.dealAnalysis.competitor.value === 'YES'
+          str += usingCompetitor ? ', using a competitor' : ', not using a competitor'
+        }
+      }
+      str += '.'
+      return str
     },
     focusRepPerformanceRank() {
       for (let idx in this.organizationFocusData.topPerformers) {
