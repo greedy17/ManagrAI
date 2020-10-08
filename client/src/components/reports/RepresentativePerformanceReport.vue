@@ -552,7 +552,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.industry.percentage }}%
+            {{ focusData.dealAnalysis.industry.percentage || 0 }}%
           </div>
         </div>
 
@@ -574,7 +574,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.geography.percentage }}%
+            {{ focusData.dealAnalysis.geography.percentage || 0 }}%
           </div>
         </div>
 
@@ -584,7 +584,7 @@
             {{
               isNull(focusData.dealAnalysis.companySize.value)
                 ? 'Company Size: N/A'
-                : focusData.dealAnalysis.companySize.value
+                : focusData.dealAnalysis.companySize.value + ' Employees'
             }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
@@ -596,7 +596,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.companySize.percentage }}%
+            {{ focusData.dealAnalysis.companySize.percentage || 0 }}%
           </div>
         </div>
 
@@ -620,7 +620,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.type.percentage }}%
+            {{ focusData.dealAnalysis.type.percentage || 0 }}%
           </div>
         </div>
 
@@ -646,7 +646,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.competitor.percentage }}%
+            {{ focusData.dealAnalysis.competitor.percentage || 0 }}%
           </div>
         </div>
       </div>
@@ -801,36 +801,51 @@ export default {
     },
     canGenerateDealAnalysisSummary() {
       let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
-      return !!(industry || geography || companySize || type || competitor)
+      return !!(
+        industry.value ||
+        geography.value ||
+        companySize.value ||
+        type.value ||
+        competitor.value
+      )
     },
     dealAnalysisSummary() {
       if (!this.canGenerateDealAnalysisSummary) {
         return `Insights regarding ${this.focusRepDisplayNameShort}'s closed deals could not be generated because the needed data is N/A.`
       }
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
       let str = `${this.focusRepDisplayNameShort} closed mostly`
-      if (this.focusData.dealAnalysis.industry.value) {
-        str += ` ${constantToCapitalized(this.focusData.dealAnalysis.industry.value)}`
+      if (industry.value) {
+        str += ` ${constantToCapitalized(industry.value)}`
       }
       str += ' opportunities'
-      if (this.focusData.dealAnalysis.geography.value) {
-        str += ` in ${this.focusData.dealAnalysis.geography.value},`
+      if (geography.value) {
+        str += ` in ${geography.value}`
       }
-      if (this.focusData.dealAnalysis.companySize.value) {
-        str += ` with ${this.focusData.dealAnalysis.companySize.value} employees`
+      if (geography.value && companySize.value) {
+        str += ','
       }
-      str += '.'
-      if (this.focusData.dealAnalysis.type.value) {
+      if (companySize.value) {
+        str += ` with ${companySize.value} employees`
+      }
+      // if (!industry.value && !geography.value && !companySize.value){
+      //   str += ' '
+      // } else {
+      //   str += '. They were '
+      // }
+      if (industry.value || geography.value || companySize.value) {
+        str += '. They were'
+      }
+      if (type.value) {
         let value =
-          this.focusData.dealAnalysis.type.value === this.localConstants.OTHER
-            ? constantToCapitalized(this.focusData.dealAnalysis.type.value)
-            : this.focusData.dealAnalysis.type.value
-        str += ` They were of type ${value}`
+          type.value === this.localConstants.OTHER ? constantToCapitalized(type.value) : type.value
+        str += ` of type ${value}`
       }
-      if (this.focusData.dealAnalysis.competitor.value) {
-        if (this.focusData.dealAnalysis.competitor.value !== this.localConstants.OTHER) {
-          let usingCompetitor =
-            this.focusData.dealAnalysis.competitor.value === this.localConstants.YES
-          str += usingCompetitor ? ', using a competitor' : ', not using a competitor'
+      if (competitor.value) {
+        str += type.value ? ',' : ''
+        if (competitor.value !== this.localConstants.OTHER) {
+          let usingCompetitor = competitor.value === this.localConstants.YES
+          str += usingCompetitor ? ' using a competitor' : ' not using a competitor'
         }
       }
       str += '.'
