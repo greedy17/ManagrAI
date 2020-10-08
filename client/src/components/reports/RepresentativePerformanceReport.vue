@@ -471,10 +471,18 @@
               Typical ACV
             </div>
             <div
+              v-if="isNull(typicalData.ACV)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ typicalData.ACV || 'N/A' }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.ACV | currencyNoCents }}
             </div>
           </div>
         </div>
