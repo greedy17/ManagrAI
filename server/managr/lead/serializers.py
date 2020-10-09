@@ -14,7 +14,6 @@ from .models import (
     Notification,
     LeadMessage,
 )
-from managr.utils import sites as site_utils
 from managr.organization.models import Stage
 from managr.organization.serializers import (
     AccountRefSerializer,
