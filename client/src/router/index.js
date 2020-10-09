@@ -19,6 +19,7 @@ import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
 import Reports from '@/views/reports/Reports'
 import StoryReportDetail from '@/views/reports/StoryReportDetail'
+import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 // import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
@@ -106,6 +107,13 @@ export default new Router({
       name: 'StoryReportDetail',
       props: true,
       component: StoryReportDetail,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/performance-reports/:id',
+      name: 'PerformanceReportDetail',
+      props: true,
+      component: PerformanceReportDetail,
       beforeEnter: Auth.requireAuth,
     },
     // {

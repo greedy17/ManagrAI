@@ -31,6 +31,7 @@ const Utils = {
   getTimeZone,
   convertToRgba,
   loadEntireCollection,
+  constantToCapitalized,
 }
 
 export default Utils
@@ -102,16 +103,24 @@ export function capitalizeWord(word) {
  * Transform the string-based keys of a JavaScript object to `camelCase` style notation.
  * This is useful for translating the style of object keys after making an API call to
  * the Python-based API, which uses `snake_case` style notation by default.
+ *
+ * Works on both objects, arrays, and any combination of nested objects and arrays.
  */
-export function objectToCamelCase(value) {
-  if (isObject(value)) {
-    return Object.keys(value).reduce((acc, snakeKey) => {
+export function objectToCamelCase(obj) {
+  if (isObject(obj)) {
+    return Object.keys(obj).reduce((acc, snakeKey) => {
       const camelKey = toCamelCase(snakeKey)
-      acc[camelKey] = isObject(value[snakeKey])
-        ? objectToCamelCase(value[snakeKey])
-        : value[snakeKey]
+      acc[camelKey] = isObjectOrArray(obj[snakeKey])
+        ? objectToCamelCase(obj[snakeKey])
+        : obj[snakeKey]
       return acc
     }, {})
+  }
+  if (Array.isArray(obj)) {
+    return obj.reduce((acc, val, index) => {
+      acc[index] = isObjectOrArray(val) ? objectToCamelCase(val) : val
+      return acc
+    }, [])
   }
 }
 
@@ -138,6 +147,13 @@ export function objectToSnakeCase(value) {
 
 export function isObject(value) {
   return value !== null && value instanceof Object && !Array.isArray(value)
+}
+
+/**
+ * Check whether a value is an Object or Array
+ */
+export function isObjectOrArray(value) {
+  return value !== null && value instanceof Object
 }
 
 /**
@@ -309,7 +325,8 @@ export async function loadEntireCollection(collection) {
   }
 }
 
-export function consantToCapitalized(value) {
+export function constantToCapitalized(value) {
+  if (!value) return ''
   return value
     .split('_')
     .map(capitalizeWord)

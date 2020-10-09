@@ -37,4 +37,6 @@ class PerformanceReportSerializer(serializers.ModelSerializer):
             'datetime_created',
             'data',
             'generated_by',
+            'is_representative_report',
+            'is_organization_report',
         )

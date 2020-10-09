@@ -9,7 +9,7 @@
           <div class="report" v-for="report in performanceReports.list" :key="report.id">
             <div class="report__focus">
               {{ getReportFocus(report) }},
-              {{ report.dateRangePreset | consantToCapitalized }}
+              {{ report.dateRangePreset | constantToCapitalized }}
             </div>
             <div class="report__datetime">
               {{ report.datetimeCreated | dateShort }}
