@@ -283,7 +283,9 @@
             </div>
             <div style="font-weight: 600; margin: 0 1rem 0 auto;" class="mid-gray-font">
               {{ lead.status | constantToCapitalized }},
-              {{ lead.status === Lead.CLOSED ? lead.closingAmount : lead.amount | currencyNoCents }}
+              {{
+                lead.status === Lead.CLOSED ? lead.closing_amount : lead.amount | currencyNoCents
+              }}
             </div>
           </div>
           <div
@@ -530,7 +532,7 @@
             >
               <img
                 class="report__middle-row__card__content__column__img"
-                :src="rep.profilePhoto ? rep.profilePhoto : require('@/assets/images/camera.svg')"
+                :src="rep.profile_photo ? rep.profile_photo : require('@/assets/images/camera.svg')"
               />
               <div class="report__middle-row__card__content__column__text">
                 {{ rep.rank }}. {{ generateRepDisplayName(rep) }}
@@ -749,7 +751,7 @@ export default {
       }
     },
     generateRepDisplayName(rep) {
-      return rep.fullName.trim() ? rep.fullName : rep.email.slice(0, 10) + '...'
+      return rep.full_name.trim() ? rep.full_name : rep.email.slice(0, 10) + '...'
     },
     generateProgressBarValue(currentValue, comparativeValue) {
       // To be used with sales cycle statistics
