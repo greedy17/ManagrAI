@@ -245,8 +245,8 @@
           to the forecast.
           {{
             forecastAdditionsProportion !== localConstants.NA
-              ? `That is ${forecastAdditionsProportion} the typical number.`
-              : 'Since the typical number of additions is N/A, no trend can be determined.'
+              ? `That is ${forecastAdditionsProportion} times the typical number.`
+              : 'Since the typical number of additions is N/A, no trend could be determined.'
           }}
         </div>
         <div class="report__middle-row__card__content">
@@ -307,7 +307,13 @@
         </div>
         <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }}'s sales cycle
-          {{ focusData.salesCycle > Number(typicalData.salesCycle) ? 'extended' : 'contracted' }}
+          {{
+            focusData.salesCycle > Number(typicalData.salesCycle)
+              ? 'extended'
+              : focusData.salesCycle < Number(typicalData.salesCycle)
+              ? 'contracted'
+              : 'steadied'
+          }}
           this month to {{ focusData.salesCycle | roundToOneDecimalPlace }} days.
         </div>
         <div class="report__middle-row__card__content">
@@ -343,8 +349,15 @@
               <div style="font-weight: 600;">
                 Typical {{ dateRangePresetFocus | constantToCapitalized }}
               </div>
-              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
-                {{ typicalData.salesCycle ? `${typicalData.salesCycle} days` : localConstants.NA }}
+              <div
+                v-if="isNull(typicalData.salesCycle)"
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+              >
+                N/A
+              </div>
+              <div v-else class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
+                {{ typicalData.salesCycle | roundToOneDecimalPlace }} days
               </div>
             </div>
             <div style="padding: 0 1rem;">
