@@ -15,7 +15,7 @@ class StoryReportQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(generated_by__organization=user.organization_id)
         else:
-            return None
+            return self.none()
 
 
 class StoryReport(TimeStampModel):
@@ -63,7 +63,7 @@ class PerformanceReportQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(generated_by__organization=user.organization_id)
         else:
-            return None
+            return self.none()
 
 
 class PerformanceReport(TimeStampModel):

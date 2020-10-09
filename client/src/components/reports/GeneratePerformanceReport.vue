@@ -36,11 +36,7 @@
 
           <!-- Submit -->
           <div class="form__element" style="margin-top: 1.5rem;">
-            <button
-              class="button"
-              :disabled="!bothFieldsHaveSelections"
-              @click.prevent="generateReport"
-            >
+            <button class="button" :disabled="!formIsValid" @click.prevent="generateReport">
               Generate Report
             </button>
           </div>
@@ -102,7 +98,7 @@ export default {
     },
   },
   computed: {
-    bothFieldsHaveSelections() {
+    formIsValid() {
       return !!this.selectedRepresentative && !!this.selectedDateRange
     },
   },
