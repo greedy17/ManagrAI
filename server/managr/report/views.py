@@ -33,11 +33,6 @@ from .serializers import (
     PerformanceReportSerializer,
 )
 
-
-# NOTE: development purposes only:
-from .performance_report_generation import generate_performance_report_data
-
-
 logger = logging.getLogger("managr")
 
 
@@ -63,7 +58,7 @@ class StoryReportViewSet(
         except Lead.DoesNotExist:
             raise ValidationError({'lead': 'does not exist'})
         report = StoryReport.objects.create(lead=lead, generated_by=generated_by)
-        emit_report_event(str(report.id), str(generated_by.id))
+        emit_report_event(str(report.id), report_const.STORY_REPORT)
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)
 
 
@@ -84,7 +79,6 @@ class PerformanceReportViewSet(
         date_range_preset = request.data.get('date_range_preset')
         date_range_from = request.data.get('date_range_from')
         date_range_to = request.data.get('date_range_to')
-
         if representative == report_const.ALL:
             # This means that the report regards all 'managers',
             # organization-wide.
@@ -94,7 +88,6 @@ class PerformanceReportViewSet(
                 representative = User.objects.get(pk=representative)
             except User.DoesNotExist:
                 raise ValidationError({'representative': 'does not exist'})
-
         report = PerformanceReport.objects.create(
             representative=representative,
             date_range_preset=date_range_preset,
@@ -102,14 +95,5 @@ class PerformanceReportViewSet(
             date_range_to=date_range_to,
             generated_by=generated_by,
         )
-
-        # TODO: async report data generation.
-        # below is for story report, therefore give it a more specific name or use for
-        # both report types
-        # emit_report_event(str(report.id), str(generated_by.id))
-
-        # NOTE: development purposes only:
-        generate_performance_report_data(str(report.id))
-        report = PerformanceReport.objects.get(pk=str(report.id))
-
+        emit_report_event(str(report.id), report_const.PERFORMANCE_REPORT)
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)

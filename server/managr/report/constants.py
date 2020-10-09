@@ -1,3 +1,7 @@
+# report types:
+PERFORMANCE_REPORT = 'PERFORMANCE_REPORT'
+STORY_REPORT = 'STORY_REPORT'
+
 ALL = 'ALL'
 
 # date-range options
