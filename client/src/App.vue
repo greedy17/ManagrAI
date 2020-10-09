@@ -20,13 +20,13 @@
 </template>
 
 <script>
-import { mapGetters, mapState, mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
 import SideNavBar from '@/components/navigation/SideNavBar'
 
-const routesWithoutNavBar = ['StoryReportDetail']
+const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
 export default {
   name: 'app',

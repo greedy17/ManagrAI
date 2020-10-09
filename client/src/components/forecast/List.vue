@@ -91,7 +91,7 @@ export default {
     },
     isLeadClosed(forecastObj) {
       // NOTE: 'lead objects' in this view are actually Forecast objects with a leadRef
-      return forecastObj.leadRef.statusRef.title === Lead.CLOSED
+      return forecastObj.leadRef.statusRef && forecastObj.leadRef.statusRef.title === Lead.CLOSED
     },
   },
   computed: {

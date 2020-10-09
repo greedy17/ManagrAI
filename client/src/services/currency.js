@@ -10,6 +10,6 @@ export function currencyFilter(value) {
 }
 
 export function currencyFilterNoCents(value) {
-  if (!value) return formatter.format(0)
+  if (!value) return formatter.format(0).split('.')[0]
   return formatter.format(value).split('.')[0]
 }
