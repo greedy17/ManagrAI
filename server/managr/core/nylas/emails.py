@@ -1,6 +1,7 @@
 import base64
 import json
 import requests
+import logging
 from requests.exceptions import HTTPError
 
 from rest_framework.exceptions import APIException, PermissionDenied
@@ -16,6 +17,9 @@ from managr.lead.background import emit_event
 
 from .exceptions import NylasAPIError
 from .. import constants as core_consts
+from ..models import EmailAuthAccount
+
+logger = logging.getLogger("managr")
 
 
 def _generate_nylas_basic_auth_token(user):
@@ -346,3 +350,20 @@ def send_new_email_legacy(auth, sender, receipient, message):
     )
 
     return _handle_nylas_response(response)
+
+
+def send_system_email(
+    recipients, message,
+):
+    """ sends an email from a service account """
+    ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
+    if ea:
+        token = ea.access_token
+        sender = {"email": ea.email_address, "name": "Managr"}
+        try:
+            send_new_email_legacy(token, sender, recipients, message)
+        except Exception as e:
+            """ this error is most likely going to be an error on our set
+            up rather than the user_token """
+            logger.warning(f"Unable to send system email {e}")
+            pass
