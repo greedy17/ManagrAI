@@ -109,13 +109,13 @@ export default new Router({
       component: StoryReportDetail,
       beforeEnter: Auth.requireAuth,
     },
-    {
-      path: '/performance-reports/:id',
-      name: 'PerformanceReportDetail',
-      props: true,
-      component: PerformanceReportDetail,
-      beforeEnter: Auth.requireAuth,
-    },
+    // {
+    //   path: '/performance-reports/:id',
+    //   name: 'PerformanceReportDetail',
+    //   props: true,
+    //   component: PerformanceReportDetail,
+    //   beforeEnter: Auth.requireAuth,
+    // },
     // {
     //   path: '/styles',
     //   name: 'Styles',
