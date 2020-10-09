@@ -189,19 +189,19 @@
             Typical {{ dateRangePresetFocus | constantToCapitalized }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.activitiesCount }}
+            {{ typicalData.activitiesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.actionsCount }}
+            {{ typicalData.actionsCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.incomingMessagesCount }}
+            {{ typicalData.incomingMessagesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ typicalData.forecastAmount | currencyNoCents }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ typicalData.dealsClosedCount }}
+            {{ typicalData.dealsClosedCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ typicalData.amountClosed | currencyNoCents }}
@@ -214,19 +214,19 @@
             Typical Team {{ dateRangePresetFocus | constantToCapitalized }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.activitiesCount }}
+            {{ organizationTypicalData.activitiesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.actionsCount }}
+            {{ organizationTypicalData.actionsCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.incomingMessagesCount }}
+            {{ organizationTypicalData.incomingMessagesCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ organizationTypicalData.forecastAmount | currencyNoCents }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
-            {{ organizationTypicalData.dealsClosedCount }}
+            {{ organizationTypicalData.dealsClosedCount | roundToOneDecimalPlace }}
           </td>
           <td class="report__summary-container__summary-table__statistic-cell">
             {{ organizationTypicalData.amountClosed | currencyNoCents }}
@@ -244,9 +244,9 @@
           {{ focusRepDisplayNameShort }} added {{ focusData.forecastTableAdditions }} opportunities
           to the forecast.
           {{
-            forecastAdditionsProportion !== 'N/A'
-              ? `That is ${forecastAdditionsProportion} the typical number.`
-              : 'Since the typical number of additions is N/A, no trend can be determined.'
+            forecastAdditionsProportion !== localConstants.NA
+              ? `That is ${forecastAdditionsProportion} times the typical number.`
+              : 'Since the typical number of additions is N/A, no trend could be determined.'
           }}
         </div>
         <div class="report__middle-row__card__content">
@@ -301,10 +301,20 @@
         <div class="report__middle-row__card__title">
           Sales Cycle
         </div>
-        <div class="report__middle-row__card__summary">
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.salesCycle)">
+          {{ focusRepDisplayNameShort }}'s sales cycle trend could not be determined for
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }}'s sales cycle
-          {{ focusData.salesCycle > Number(typicalData.salesCycle) ? 'extended' : 'contracted' }}
-          this month to {{ focusData.salesCycle }} days.
+          {{
+            focusData.salesCycle > Number(typicalData.salesCycle)
+              ? 'extended'
+              : focusData.salesCycle < Number(typicalData.salesCycle)
+              ? 'contracted'
+              : 'steadied'
+          }}
+          this month to {{ focusData.salesCycle | roundToOneDecimalPlace }} days.
         </div>
         <div class="report__middle-row__card__content">
           <div>
@@ -312,13 +322,22 @@
               <div style="font-weight: 600;">
                 {{ report.dateRangePreset | constantToCapitalized }}
               </div>
-              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
-                {{ focusData.salesCycle }} days
+              <div
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+                v-if="isNull(focusData.salesCycle)"
+              >
+                N/A
+              </div>
+              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;" v-else>
+                {{ focusData.salesCycle | roundToOneDecimalPlace }} days
               </div>
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
-                :percentComplete="100"
+                :percentComplete="
+                  generateProgressBarValue(focusData.salesCycle, typicalData.salesCycle)
+                "
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
@@ -330,13 +349,22 @@
               <div style="font-weight: 600;">
                 Typical {{ dateRangePresetFocus | constantToCapitalized }}
               </div>
-              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
-                {{ typicalData.salesCycle ? `${typicalData.salesCycle} days` : 'N/A' }}
+              <div
+                v-if="isNull(typicalData.salesCycle)"
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+              >
+                N/A
+              </div>
+              <div v-else class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
+                {{ typicalData.salesCycle | roundToOneDecimalPlace }} days
               </div>
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
-                :percentComplete="typicalData.salesCycle ? typicalData.salesCycle : 0"
+                :percentComplete="
+                  generateProgressBarValue(typicalData.salesCycle, focusData.salesCycle)
+                "
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
@@ -352,9 +380,17 @@
         <div class="report__middle-row__card__title">
           Actions to Close an Opportunity
         </div>
-        <div class="report__middle-row__card__summary">
+        <div
+          class="report__middle-row__card__summary"
+          v-if="isNull(focusData.actionsToCloseOpportunity.average)"
+        >
+          An insight could not be generated because no opportunities were closed
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }} took
-          {{ focusData.actionsToCloseOpportunity.average }} actions to close a deal.
+          {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }} actions to
+          close a deal.
           {{
             focusData.actionsToCloseOpportunity.average
               ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
@@ -362,6 +398,7 @@
               : null
           }}
         </div>
+
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
             <div style="font-weight: 600; width: 65%;">
@@ -369,10 +406,18 @@
               Opportunities {{ report.dateRangePreset | constantToCapitalized }}
             </div>
             <div
+              v-if="isNull(focusData.actionsToCloseOpportunity.average)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ focusData.actionsToCloseOpportunity.average }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }}
             </div>
           </div>
           <div class="report__middle-row__card__content__row">
@@ -381,10 +426,18 @@
               Closed Opportunities
             </div>
             <div
+              v-if="isNull(typicalData.actionsToCloseOpportunity)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ typicalData.actionsToCloseOpportunity || 'N/A' }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.actionsToCloseOpportunity | roundToOneDecimalPlace }}
             </div>
           </div>
         </div>
@@ -393,7 +446,11 @@
         <div class="report__middle-row__card__title">
           ACV
         </div>
-        <div class="report__middle-row__card__summary">
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.ACV)">
+          An insight could not be generated because {{ focusRepDisplayNameShort }}'s ACV for
+          {{ report.dateRangePreset | constantToCapitalized }} is N/A.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
           {{ focusRepDisplayNameShort }}'s ACV
           {{
             focusData.ACV > Number(typicalData.ACV)
@@ -403,7 +460,14 @@
               : 'steadied'
           }}
           {{ report.dateRangePreset | constantToCapitalized }} to
-          {{ focusData.ACV | currencyNoCents }} from {{ typicalData.ACV || 'N/A' }}.
+          <template v-if="isNull(focusData.ACV)"> {{ localConstants.NA }}</template>
+          <template v-else> {{ focusData.ACV | currencyNoCents }}</template>
+          from
+          <template v-if="isNull(typicalData.ACV)"> {{ localConstants.NA }}</template>
+          <template v-else>
+            {{ typicalData.ACV | currencyNoCents }}
+          </template>
+          .
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
@@ -411,6 +475,14 @@
               ACV {{ report.dateRangePreset | constantToCapitalized }}
             </div>
             <div
+              v-if="isNull(focusData.ACV)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
@@ -422,10 +494,18 @@
               Typical ACV
             </div>
             <div
+              v-if="isNull(typicalData.ACV)"
               style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
               class="dark-green-font"
             >
-              {{ typicalData.ACV || 'N/A' }}
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.ACV | currencyNoCents }}
             </div>
           </div>
         </div>
@@ -469,27 +549,18 @@
         Deal Analysis
       </div>
       <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
-        {{ focusRepDisplayNameShort }} closed mostly
-        {{ focusData.dealAnalysis.industry.value | constantToCapitalized }} opportunities in
-        {{ focusData.dealAnalysis.geography.value | constantToCapitalized }}, with
-        {{ focusData.dealAnalysis.companySize.value }} employees. They were of type
-        {{
-          focusData.dealAnalysis.type.value === 'OTHER'
-            ? constantToCapitalized(focusData.dealAnalysis.type.value)
-            : focusData.dealAnalysis.type.value
-        }}
-        {{
-          focusData.dealAnalysis.competitor.value === 'OTHER'
-            ? null
-            : focusData.dealAnalysis.competitor.value === 'YES'
-            ? ', using a competitor'
-            : ', not using a competitor'
-        }}.
+        {{ dealAnalysisSummary }}
       </div>
       <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
         <!-- Industry -->
         <div class="report__deal-analysis__breakdown__category">
-          <div class="report__deal-analysis__breakdown__category__title">
+          <div
+            v-if="isNull(focusData.dealAnalysis.industry.value)"
+            class="report__deal-analysis__breakdown__category__title"
+          >
+            Industry: N/A
+          </div>
+          <div v-else class="report__deal-analysis__breakdown__category__title">
             {{ focusData.dealAnalysis.industry.value | constantToCapitalized }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
@@ -501,14 +572,18 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.industry.percentage }}%
+            {{ focusData.dealAnalysis.industry.percentage || 0 }}%
           </div>
         </div>
 
         <!-- Geography -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.geography.value }}
+            {{
+              isNull(focusData.dealAnalysis.geography.value)
+                ? 'Geography: N/A'
+                : focusData.dealAnalysis.geography.value
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -519,14 +594,18 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.geography.percentage }}%
+            {{ focusData.dealAnalysis.geography.percentage || 0 }}%
           </div>
         </div>
 
         <!-- companySize -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.companySize.value }}
+            {{
+              isNull(focusData.dealAnalysis.companySize.value)
+                ? 'Company Size: N/A'
+                : focusData.dealAnalysis.companySize.value + ' Employees'
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -537,14 +616,20 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.companySize.percentage }}%
+            {{ focusData.dealAnalysis.companySize.percentage || 0 }}%
           </div>
         </div>
 
         <!-- type -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.type.value }}
+            {{
+              isNull(focusData.dealAnalysis.type.value)
+                ? 'Type: N/A'
+                : focusData.dealAnalysis.type.value === localConstants.OTHER
+                ? 'Type: Other'
+                : focusData.dealAnalysis.type.value
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -555,14 +640,22 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.type.percentage }}%
+            {{ focusData.dealAnalysis.type.percentage || 0 }}%
           </div>
         </div>
 
         <!-- competitor -->
         <div class="report__deal-analysis__breakdown__category">
           <div class="report__deal-analysis__breakdown__category__title">
-            {{ focusData.dealAnalysis.competitor.value | constantToCapitalized }} competitor
+            {{
+              isNull(focusData.dealAnalysis.competitor.value)
+                ? 'Competitor: N/A'
+                : focusData.dealAnalysis.competitor.value === localConstants.YES
+                ? 'Competitor Switch'
+                : focusData.dealAnalysis.competitor.value === localConstants.NO
+                ? 'Not using a competitor'
+                : 'Other (Competitor)'
+            }}
           </div>
           <div class="report__deal-analysis__breakdown__category__graphic">
             <ProgressBar
@@ -573,7 +666,7 @@
             />
           </div>
           <div class="report__deal-analysis__breakdown__category__percentage">
-            {{ focusData.dealAnalysis.competitor.percentage }}%
+            {{ focusData.dealAnalysis.competitor.percentage || 0 }}%
           </div>
         </div>
       </div>
@@ -588,9 +681,21 @@
 import pluralize from 'pluralize'
 import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
-import { constantToCapitalized } from '@/services/utils'
-
+import { constantToCapitalized, isNull } from '@/services/utils'
+import { roundToOneDecimalPlace } from '@/services/filters'
 import ProgressBar from '@/components/reports/ProgressBar'
+
+const NA = 'N/A'
+const OTHER = 'OTHER'
+const YES = 'YES'
+const NO = 'NO'
+
+const localConstants = {
+  NA,
+  OTHER,
+  YES,
+  NO,
+}
 
 export default {
   name: 'RepresentativePerformanceReport',
@@ -606,7 +711,9 @@ export default {
   data() {
     return {
       Lead,
+      localConstants,
       constantToCapitalized,
+      isNull,
     }
   },
   methods: {
@@ -644,6 +751,16 @@ export default {
     generateRepDisplayName(rep) {
       return rep.fullName.trim() ? rep.fullName : rep.email.slice(0, 10) + '...'
     },
+    generateProgressBarValue(currentValue, comparativeValue) {
+      // To be used with sales cycle statistics
+      if (isNull(currentValue)) {
+        return 0
+      }
+      if (isNull(comparativeValue) || currentValue > comparativeValue) {
+        return 100
+      }
+      return (currentValue / comparativeValue) * 100
+    },
   },
   computed: {
     dateRangePresetFocus() {
@@ -667,9 +784,6 @@ export default {
       }
       return this.representative.email
     },
-    focusData() {
-      return this.report.data.representative.focus
-    },
     focusTopOpportunities() {
       const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
       return [
@@ -680,7 +794,6 @@ export default {
       ]
     },
     topOpportunitiesSummary() {
-      // this.focusRepDisplayNameShort
       const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
       let str = `${this.focusRepDisplayNameShort} closed ${CLOSED.length} ${pluralize(
         'deal',
@@ -705,6 +818,53 @@ export default {
       }
       return str + '.'
     },
+    canGenerateDealAnalysisSummary() {
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
+      return !!(
+        industry.value ||
+        geography.value ||
+        companySize.value ||
+        type.value ||
+        competitor.value
+      )
+    },
+    dealAnalysisSummary() {
+      if (!this.canGenerateDealAnalysisSummary) {
+        return `Insights regarding ${this.focusRepDisplayNameShort}'s closed deals could not be generated because the needed data is N/A.`
+      }
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
+      let str = `${this.focusRepDisplayNameShort} closed mostly`
+      if (industry.value) {
+        str += ` ${constantToCapitalized(industry.value)}`
+      }
+      str += ' opportunities'
+      if (geography.value) {
+        str += ` in ${geography.value}`
+      }
+      if (geography.value && companySize.value) {
+        str += ','
+      }
+      if (companySize.value) {
+        str += ` with ${companySize.value} employees`
+      }
+      if (industry.value || geography.value || companySize.value) {
+        str += '. They were'
+      }
+      if (type.value) {
+        let value =
+          type.value === this.localConstants.OTHER ? constantToCapitalized(type.value) : type.value
+        str += ` of type ${value}`
+      }
+      if (competitor.value) {
+        str += type.value ? ',' : ''
+        if (competitor.value !== this.localConstants.OTHER) {
+          let usingCompetitor = competitor.value === this.localConstants.YES
+          str += usingCompetitor ? ' using a competitor' : ' not using a competitor'
+        }
+      }
+      str += '.'
+      return str
+    },
     focusRepPerformanceRank() {
       for (let idx in this.organizationFocusData.topPerformers) {
         const rep = this.organizationFocusData.topPerformers[idx]
@@ -718,9 +878,9 @@ export default {
       const focus = this.focusData.forecastTableAdditions
       const typical = this.typicalData.forecastTableAdditions
       if (!typical) {
-        return focus || 'N/A'
+        return focus || this.localConstants.NA
       }
-      return Math.round((focus / typical) * 10) / 10
+      return roundToOneDecimalPlace(focus / typical)
     },
     forecastAdditionsIcon() {
       if (this.forecastAdditionsProportion > 1) {
@@ -730,6 +890,9 @@ export default {
         return 'trending-down.svg'
       }
       return 'no-trend.svg'
+    },
+    focusData() {
+      return this.report.data.representative.focus
     },
     typicalData() {
       return this.report.data.representative.typical

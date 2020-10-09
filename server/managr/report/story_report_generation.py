@@ -19,7 +19,7 @@ from .models import StoryReport
 logger = logging.getLogger("managr")
 
 
-def generate_story_report_data(story_report_id, generated_by_id):
+def generate_story_report_data(story_report_id):
     """
     Given a StoryReport UUID, generate the report's
     data and update the instance with the generated data.
@@ -27,7 +27,7 @@ def generate_story_report_data(story_report_id, generated_by_id):
     user that triggered this story_report to be generated.
     """
     story_report = StoryReport.objects.get(
-        generated_by=generated_by_id, pk=story_report_id
+        pk=story_report_id
     )
 
     lead = story_report.lead

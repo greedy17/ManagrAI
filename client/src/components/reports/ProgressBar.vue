@@ -57,6 +57,11 @@ export default {
       return Math.round(this.percentComplete)
     },
   },
+  watch: {
+    percentComplete() {
+      this.config()
+    },
+  },
 }
 </script>
 

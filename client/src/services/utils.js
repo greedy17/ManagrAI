@@ -21,6 +21,7 @@ const Utils = {
   objectToCamelCase,
   objectToSnakeCase,
   isDefined,
+  isNull,
   formatNumberAsUSD,
   formatDateShort,
   textToKabobCase,
@@ -47,6 +48,10 @@ export function getTimeZone() {
 
 export function isDefined(value) {
   return typeof value !== 'undefined'
+}
+
+export function isNull(value) {
+  return value === null
 }
 
 export function toSnakeCase(value) {
