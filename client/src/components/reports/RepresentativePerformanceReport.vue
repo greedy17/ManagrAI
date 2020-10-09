@@ -447,7 +447,14 @@
               : 'steadied'
           }}
           {{ report.dateRangePreset | constantToCapitalized }} to
-          {{ focusData.ACV | currencyNoCents }} from {{ typicalData.ACV || localConstants.NA }}.
+          <template v-if="isNull(focusData.ACV)"> {{ localConstants.NA }}</template>
+          <template v-else> {{ focusData.ACV | currencyNoCents }}</template>
+          from
+          <template v-if="isNull(typicalData.ACV)"> {{ localConstants.NA }}</template>
+          <template v-else>
+            {{ typicalData.ACV | currencyNoCents }}
+          </template>
+          .
         </div>
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
@@ -774,7 +781,6 @@ export default {
       ]
     },
     topOpportunitiesSummary() {
-      // this.focusRepDisplayNameShort
       const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
       let str = `${this.focusRepDisplayNameShort} closed ${CLOSED.length} ${pluralize(
         'deal',
@@ -828,11 +834,6 @@ export default {
       if (companySize.value) {
         str += ` with ${companySize.value} employees`
       }
-      // if (!industry.value && !geography.value && !companySize.value){
-      //   str += ' '
-      // } else {
-      //   str += '. They were '
-      // }
       if (industry.value || geography.value || companySize.value) {
         str += '. They were'
       }
