@@ -103,6 +103,16 @@ class PerformanceReport(TimeStampModel):
     objects = PerformanceReportQuerySet.as_manager()
 
     @property
+    def is_representative_report(self):
+        # True if the report is representative-specific
+        return bool(self.representative)
+
+    @property
+    def is_organization_report(self):
+        # True if the report is organization-wide
+        return not bool(self.representative)
+
+    @property
     def client_side_url(self):
         base_app_url = get_site_url()
         return f"{base_app_url}/performance-reports/{self.id}"

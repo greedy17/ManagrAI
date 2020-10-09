@@ -813,10 +813,20 @@ class ForecastViewSet(
 
     def _emit_lead_activity_log(self, request):
         lead = Lead.objects.get(pk=request.data["lead"])
-        forecast_value = request.data["forecast"]
+        new_forecast = request.data["forecast"]
+        if lead.forecast:
+            previous_forecast = lead.forecast.forecast
+        else:
+            previous_forecast = lead_constants.FORECAST_NA
+        previously_in_forecast_table = previous_forecast in lead_constants.FORECAST_TABLE
+        now_in_forecast_table = new_forecast in lead_constants.FORECAST_TABLE
         extra_meta = {
             "forecast_update": True,
-            "new_forecast": forecast_value,
+            "new_forecast": new_forecast,
+            "previous_forecast": previous_forecast,
+            "forecast_table_addition": bool(not previously_in_forecast_table and now_in_forecast_table),
+            "forecast_table_substraction": bool(previously_in_forecast_table and not now_in_forecast_table),
+            "forecast_amount": lead.amount,
         }
         emit_event(
                 lead_constants.LEAD_UPDATED,

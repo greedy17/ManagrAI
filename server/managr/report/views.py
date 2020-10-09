@@ -34,6 +34,10 @@ from .serializers import (
 )
 
 
+# NOTE: development purposes only:
+from .performance_report_generation import generate_performance_report_data
+
+
 logger = logging.getLogger("managr")
 
 
@@ -103,4 +107,9 @@ class PerformanceReportViewSet(
         # below is for story report, therefore give it a more specific name or use for
         # both report types
         # emit_report_event(str(report.id), str(generated_by.id))
+
+        # NOTE: development purposes only:
+        generate_performance_report_data(str(report.id))
+        report = PerformanceReport.objects.get(pk=str(report.id))
+
         return Response(data=self.serializer_class(report).data, status=status.HTTP_200_OK)
