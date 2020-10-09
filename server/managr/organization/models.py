@@ -3,7 +3,9 @@ import json
 from django.db import models
 from django.core import serializers
 from django.db.models import Sum, Avg, Q
+from django.db.models.functions import Concat
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils import timezone
 
 from rest_framework.authtoken.models import Token
 
@@ -23,6 +25,8 @@ from . import constants as org_consts
 
 from managr.core.models import UserManager, TimeStampModel
 from managr.core import constants as core_consts
+from managr.core import nylas as email_client
+from managr.lead.models import Notification
 
 from . import constants as org_consts
 
@@ -266,12 +270,35 @@ class Stage(TimeStampModel):
         ordering = ["order"]
 
     def __str__(self):
-        if self.organization:    
+        if self.organization:
             return f"Stage ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
         else:
             return f"Stage ({self.id}) -- Title: {self.title}, Organization: None (is Public)"
 
     def save(self, *args, **kwargs):
+        if self.type == org_consts.STAGE_TYPE_PRIVATE:
+            users = self.organization.users.all()
+            recipients = [
+                {"email": user.email, "name": user.full_name} for user in users
+            ]
+
+            message = {
+                "subject": f"Stages Updated",
+                "body": f"Your organization has added new stages, please log out and login to update your list",
+            }
+            email_client.emails.send_system_email(recipients, message)
+            for user in users:
+                Notification.objects.create(
+                    notify_at=timezone.now(),
+                    title="Stages Updated",
+                    notification_type="SYSTEM",
+                    resource_id=self.id,
+                    user=user,
+                    meta={
+                        "content": "Your organization has added new stages, please log out and login to update your list"
+                    },
+                )
+
         # save all as upper case
         self.title = self.title.upper()
         if (
@@ -284,3 +311,4 @@ class Stage(TimeStampModel):
             )
 
         return super(Stage, self).save(*args, **kwargs)
+
