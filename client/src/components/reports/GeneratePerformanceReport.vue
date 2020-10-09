@@ -2,7 +2,7 @@
   <div class="container">
     <div class="box">
       <div class="box__header">
-        <div class="box__title">Generate Story Report</div>
+        <div class="box__title">Generate Performance Report</div>
       </div>
       <div class="box__content">
         <div class="form">
@@ -14,33 +14,29 @@
             </select>
             <select class="select" v-else v-model="selectedRepresentative">
               <option disabled :value="null">Select Representative</option>
+              <option key="ALL" :value="'ALL'" style="border-bottom: 1px solid grey;">
+                *Select All*
+              </option>
               <option v-for="rep in representatives.list" :key="rep.id" :value="rep.id">
                 {{ rep.fullName.trim() ? rep.fullName : rep.email }}
               </option>
             </select>
           </div>
 
-          <!-- Select Lead -->
+          <!-- Select Time Frame -->
           <div class="form__element" style="margin-top: 1.5rem;">
-            <div class="form__element-header">Lead Closed</div>
-            <select class="select" v-if="leads.refreshing" disabled>
-              <option disabled>Loading...</option>
-            </select>
-            <select class="select" v-else v-model="selectedLead" :disabled="!leads.list.length">
-              <option disabled :value="null">Select Lead</option>
-              <option v-for="lead in leads.list" :key="lead.id" :value="lead.id">
-                {{ lead.title }}
+            <div class="form__element-header">Select Time Frame</div>
+            <select class="select" v-model="selectedDateRange">
+              <option disabled :value="null" key="null">Select Time Frame</option>
+              <option v-for="preset in dateRangePresets" :value="preset.value" :key="preset.value">
+                {{ preset.label }}
               </option>
             </select>
           </div>
 
           <!-- Submit -->
           <div class="form__element" style="margin-top: 1.5rem;">
-            <button
-              class="button"
-              :disabled="!bothFieldsHaveSelections"
-              @click.prevent="generateReport"
-            >
+            <button class="button" :disabled="!formIsValid" @click.prevent="generateReport">
               Generate Report
             </button>
           </div>
@@ -51,73 +47,59 @@
 </template>
 
 <script>
-import CollectionManager from '@/services/collectionManager'
-import Lead from '@/services/leads'
-import StoryReport from '@/services/storyReports'
-import { loadEntireCollection } from '@/services/utils'
+import PerformanceReport from '@/services/performanceReports'
+import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
+
+const dateRangePresets = [
+  { value: PerformanceReport.THIS_MONTH, label: 'This Month' },
+  { value: PerformanceReport.LAST_MONTH, label: 'Last Month' },
+  { value: PerformanceReport.THIS_QUARTER, label: 'This Quarter' },
+  { value: PerformanceReport.LAST_QUARTER, label: 'Last Quarter' },
+  { value: PerformanceReport.THIS_YEAR, label: 'This Year' },
+  { value: PerformanceReport.LAST_YEAR, label: 'Last Year' },
+]
 
 export default {
-  name: 'GenerateStoryReport',
+  name: 'GeneratePerformanceReport',
   props: {
     representatives: {
-      type: CollectionManager,
+      type: Object,
       required: true,
     },
   },
   data() {
     return {
+      dateRangePresets,
       selectedRepresentative: null,
-      selectedLead: null,
-      leads: CollectionManager.create({
-        ModelClass: Lead,
-        filters: {
-          byUser: this.$store.state.user.id,
-          byStatus: this.getIsClosedStatus,
-          orderBy: '-expected_close_date',
-        },
-      }),
+      selectedDateRange: null,
     }
   },
   methods: {
     generateReport() {
-      StoryReport.api.create(this.selectedLead).then(() => {
-        this.clearForm()
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: `Report being generated! You will receive an email once the report is accessible.`,
+      PerformanceReport.api
+        .create(
+          this.selectedRepresentative,
+          this.selectedDateRange,
+          dateRangeParamsFromPreset(this.selectedDateRange),
+        )
+        .then(report => {
+          this.$emit('performance-report-created', report)
+          this.clearForm()
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 3000,
+            message: `Report being generated! You will receive an email once the report is accessible.`,
+          })
         })
-      })
     },
     clearForm() {
-      this.selectedLead = null
-      this.leads.list = []
       this.selectedRepresentative = null
-    },
-  },
-  watch: {
-    selectedRepresentative(repID) {
-      if (repID === null) {
-        return
-      }
-
-      this.leads.pagination.page = 1
-
-      this.selectedLead = null
-      this.leads.filters.byUser = repID
-      this.leads.filters.byStatus = this.getIsClosedStatus
-      loadEntireCollection(this.leads)
+      this.selectedDateRange = null
     },
   },
   computed: {
-    bothFieldsHaveSelections() {
-      return !!this.selectedRepresentative && !!this.selectedLead
-    },
-    getStatuses() {
-      return this.$store.state.stages
-    },
-    getIsClosedStatus() {
-      return this.getStatuses.find(s => s.title == Lead.CLOSED).id
+    formIsValid() {
+      return !!this.selectedRepresentative && !!this.selectedDateRange
     },
   },
 }

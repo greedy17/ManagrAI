@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from .models import StoryReport
-from managr.lead.serializers import LeadRefSerializer
+from .models import StoryReport, PerformanceReport
+from managr.lead.serializers import LeadRefSerializer, UserRefSerializer
 from managr.organization.serializers import AccountRefSerializer
 
 
@@ -18,4 +18,23 @@ class StoryReportSerializer(serializers.ModelSerializer):
             'generated_by',
             'lead_ref',
             'account_ref',
+        )
+
+
+class PerformanceReportSerializer(serializers.ModelSerializer):
+    representative_ref = UserRefSerializer(source='representative', read_only=True)
+
+    class Meta:
+        model = PerformanceReport
+        fields = (
+            'id',
+            'representative',
+            'representative_ref',
+            'date_range_preset',
+            'date_range_from',
+            'date_range_to',
+            'datetime_generated',
+            'datetime_created',
+            'data',
+            'generated_by',
         )

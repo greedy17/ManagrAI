@@ -30,6 +30,7 @@ const Utils = {
   debounce,
   getTimeZone,
   convertToRgba,
+  loadEntireCollection,
 }
 
 export default Utils
@@ -291,4 +292,26 @@ function convertToRgba(color, opacity = 1) {
     blue = 0
   }
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`
+}
+
+/**
+ * @function    loadEntireCollection
+ * Since the list of collection is for populating a dropdown, there is no pagination UI.
+ * Yet, our backend delivers paginated results.
+ * Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
+ * @param   {CollectionManager}  collection  - the collection for which all pages should be loaded.
+ **/
+
+export async function loadEntireCollection(collection) {
+  await collection.refresh()
+  while (collection.pagination.hasNextPage) {
+    await collection.addNextPage()
+  }
+}
+
+export function consantToCapitalized(value) {
+  return value
+    .split('_')
+    .map(capitalizeWord)
+    .join(' ')
 }
