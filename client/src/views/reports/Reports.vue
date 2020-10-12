@@ -12,23 +12,23 @@
         >
           Story Reports
         </div>
-        <!-- <div
+        <div
           class="toolbar__row"
           @click="toggleActivePage('performanceReports')"
           :class="{ toolbar__active: performanceReportsActive }"
-        > -->
-        <div
+        >
+          <!-- <div
           class="toolbar__row WIP"
           @click="() => {}"
           :class="{ toolbar__active: performanceReportsActive }"
-        >
+        > -->
           Performance Reports
         </div>
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
       <GenerateStoryReport v-if="storyReportsActive" :representatives="representatives" />
-      <!-- <GeneratePerformanceReport
+      <GeneratePerformanceReport
         v-if="performanceReportsActive"
         :representatives="representatives"
         @performance-report-created="prependNewPerformanceReport"
@@ -36,7 +36,7 @@
       <PreviousPerformanceReports
         v-if="performanceReportsActive"
         :performanceReports="performanceReports"
-      /> -->
+      />
     </div>
   </div>
 </template>
@@ -102,8 +102,8 @@ export default {
 .toolbar__row {
   @include pointer-on-hover;
 }
-.WIP {
-  cursor: not-allowed !important;
-  color: $mid-gray;
-}
+// .WIP {
+//   cursor: not-allowed !important;
+//   color: $mid-gray;
+// }
 </style>
