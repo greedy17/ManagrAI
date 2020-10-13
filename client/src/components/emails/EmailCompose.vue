@@ -44,7 +44,7 @@
           @remove="removeBCCEmail($event)"
         />
 
-        <div class="form__element" v-if="showSubject">
+        <div class="form__element">
           <div class="form__element-header">Subject</div>
           <input type="text" class="form__input" v-model="subject" />
         </div>
