@@ -1,5 +1,6 @@
 import json
 
+
 from django.db import models
 from django.core import serializers
 from django.db.models import Sum, Avg, Q
@@ -278,8 +279,18 @@ class Stage(TimeStampModel):
     def save(self, *args, **kwargs):
         if self.type == org_consts.STAGE_TYPE_PRIVATE:
             users = self.organization.users.all()
+            allowed_notifications = []
+            for user in users:
+                ## get user selection for this notification
+                user_notif = user.notification_settings.filter(
+                    option__key="ORGANIZATION", option__notification_type="ALERT"
+                ).first()
+                ## if a user has not yet selected a notification get default which is true
+                if not user_notif or user_notif.value == True:
+                    allowed_notifications.append(user)
             recipients = [
-                {"email": user.email, "name": user.full_name} for user in users
+                {"email": user.email, "name": user.full_name}
+                for user in allowed_notifications
             ]
 
             message = {
@@ -288,6 +299,11 @@ class Stage(TimeStampModel):
             }
             email_client.emails.send_system_email(recipients, message)
             for user in users:
+                organization_notif = user.notification_settings.filter(
+                    option__key="ORGANIZATION", option__notification_type="ALERT"
+                ).first()
+                if organization_notif and organization_notif.value != True:
+                    return
                 Notification.objects.create(
                     notify_at=timezone.now(),
                     title="Stages Updated",
