@@ -10,6 +10,7 @@ from django.views import View
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
+from django.core.paginator import Paginator
 
 from django.db.models import F, Q, Count
 
@@ -55,6 +56,8 @@ from .models import (
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
+    NotificationOption,
+    NotificationSelection,
 )
 from .serializers import (
     UserSerializer,
@@ -63,6 +66,8 @@ from .serializers import (
     EmailTemplateSerializer,
     EmailSerializer,
     MessageAuthAccountSerializer,
+    NotificationOptionSerializer,
+    NotificationSelectionSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -496,6 +501,44 @@ class GetFileView(View):
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
+
+
+class NotificationSettingsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
+):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = NotificationOptionSerializer
+
+    def list(self, request, *args, **kwargs):
+        qs = NotificationOption.objects.for_user(request.user)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = NotificationOptionSerializer(
+                qs, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+        serializer = NotificationOptionSerializer(
+            qs, many=True, context={"request": request}
+        )
+        return Response()
+
+    @action(
+        methods=["PATCH"],
+        permission_classes=(permissions.IsAuthenticated,),
+        detail=False,
+        url_path="update-settings",
+    )
+    def update_settings(self, request, *args, **kwargs):
+        data = request.data
+        user = request.user
+        selections = data.get("selections", [])
+        for sel in selections:
+            selection, created = NotificationSelection.objects.get_or_create(
+                option=sel["option"], user=user
+            )
+            selection.value = sel["value"]
+            selection.save()
+        return Response()
 
 
 class NylasMessageWebhook(APIView):

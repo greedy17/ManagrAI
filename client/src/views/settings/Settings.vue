@@ -20,14 +20,7 @@
         >
           Email Templates
         </div>
-        <!-- NOTE (Bruno 6-19-2020) hiding email-test page -->
-        <!-- <div
-          class="toolbar__row"
-          @click="toggleActivePage('emailTest')"
-          :class="{ toolbar__active: emailTestActive }"
-        >
-          Email Test
-        </div> -->
+
         <div
           class="toolbar__row"
           @click="toggleActivePage('textIntegration')"
@@ -35,10 +28,21 @@
         >
           Text Integration
         </div>
+        <div
+          class="toolbar__row"
+          :class="{ toolbar__active: notificationSettingsPageActive }"
+          @click="toggleActivePage('notificationSettingsPage')"
+        >
+          Notification Settings
+        </div>
         <div class="toolbar__row" @click="routeToInviteUser">
           Invite User
         </div>
-        <div class="toolbar__row" @click="toggleActivePage('profile')">
+        <div
+          class="toolbar__row"
+          :class="{ toolbar__active: profileActive }"
+          @click="toggleActivePage('profile')"
+        >
           Profile
         </div>
         <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
@@ -53,6 +57,7 @@
       <TextIntegration v-if="textIntegrationActive" />
       <Profile v-if="profileActive" />
       <Password v-if="passwordActive" />
+      <NotificationSettings v-if="notificationSettingsPageActive" />
     </div>
   </div>
 </template>
@@ -63,6 +68,7 @@ import EmailIntegration from '@/components/settings/EmailIntegration'
 import EmailTemplates from '@/components/settings/EmailTemplates'
 import Profile from '@/components/settings/Profile'
 import Password from '@/components/settings/Password'
+import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
 
 export default {
   name: 'Settings',
@@ -72,6 +78,7 @@ export default {
     TextIntegration,
     Profile,
     Password,
+    NotificationSettings,
   },
   data() {
     return {
@@ -80,6 +87,7 @@ export default {
       textIntegrationActive: false,
       profileActive: false,
       passwordActive: false,
+      notificationSettingsPageActive: false,
     }
   },
   methods: {
@@ -89,11 +97,13 @@ export default {
       this.textIntegrationActive = false
       this.profileActive = false
       this.passwordActive = false
+      this.notificationSettingsPageActive = false
       if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
       if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
       if (pageToActivate === 'textIntegration') this.textIntegrationActive = true
       if (pageToActivate === 'profile') this.profileActive = true
       if (pageToActivate === 'password') this.passwordActive = true
+      if (pageToActivate === 'notificationSettingsPage') this.notificationSettingsPageActive = true
     },
     routeToInviteUser() {
       this.$router.push({ name: 'Invite' })

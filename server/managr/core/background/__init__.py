@@ -63,6 +63,7 @@ def _get_email_notification(account_id, object_id, date):
     """
 
     user = None
+
     try:
         user = User.objects.get(email_auth_account__account_id=account_id)
     except User.DoesNotExist as e:
@@ -106,7 +107,11 @@ def _get_email_notification(account_id, object_id, date):
             )
 
             if leads.count() > 0:
-
+                notification_settings = user.notification_settings.filter(
+                    option__key="EMAIL", option__notification_type="ALERT"
+                ).first()
+                if notification_settings and notification_settings.value != True:
+                    return
                 meta_contacts = "".join(message_contacts)
                 meta_body = thread["snippet"]
                 n = Notification.objects.create(
@@ -179,13 +184,17 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
             # retrieve user leads and contacts
             # create a new leademailaction
             # create a new notification
-            # _get_email_metadata_info('2yyyiu5lq221zmm4dvhmng5gc','5ahzrbuw7jdl0rysvs1s5oiz4','1595304936', **{'count':5})
-            # a=LeadEmail.objects.filter(thread_id="asxshviynv3vlwegqg5om2zaq")
             leads = user.claimed_leads.filter(
                 linked_contacts__email__in=message_contacts
             )
 
             if leads.count() > 0:
+                # check to see notification settings
+                notification_settings = user.notification_settings.filter(
+                    option__key="EMAIL", option__notification_type="ALERT"
+                ).first()
+                if notification_settings and notification_settings.value != True:
+                    return
                 meta_contacts = "".join(message_contacts)
                 meta_body = message["snippet"]
                 n = Notification.objects.create(

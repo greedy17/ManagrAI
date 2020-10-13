@@ -98,5 +98,10 @@ router.register("files", lead_views.FileViewSet, "files")
 router.register("notifications", lead_views.NotificationViewSet, "notifications")
 router.register("stages", organization_views.StageViewSet, "stages")
 router.register("lead-messages", lead_views.LeadMessageViewSet, "lead-messages")
-
+router.register(
+    "notifications/settings",
+    core_views.NotificationSettingsViewSet,
+    "notification-settings",
+)
 urlpatterns += router.urls
+
