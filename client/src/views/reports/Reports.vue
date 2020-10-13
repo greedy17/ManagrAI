@@ -17,11 +17,6 @@
           @click="toggleActivePage('performanceReports')"
           :class="{ toolbar__active: performanceReportsActive }"
         >
-          <!-- <div
-          class="toolbar__row WIP"
-          @click="() => {}"
-          :class="{ toolbar__active: performanceReportsActive }"
-        > -->
           Performance Reports
         </div>
       </div>
@@ -102,8 +97,4 @@ export default {
 .toolbar__row {
   @include pointer-on-hover;
 }
-// .WIP {
-//   cursor: not-allowed !important;
-//   color: $mid-gray;
-// }
 </style>
