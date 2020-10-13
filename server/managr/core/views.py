@@ -74,6 +74,7 @@ from .nylas.emails import (
     generate_preview_email_data,
     return_file_id_from_nylas,
     download_file_from_nylas,
+    send_system_email,
 )
 from .nylas.models import NylasAccountStatus, NylasAccountStatusList
 
@@ -642,6 +643,19 @@ class TwilioMessageWebhook(APIView):
                 #
                 # emit and event with LeadMessage.RECEIVED to create activity log
                 emit_log_event(lead_consts.MESSAGE_RECEIVED, u, lead_message)
+                # send email of received message
+                # TODO: PB when we merge in feature alerts we will check notification settings first
+                message_contacts = [
+                    f"{contact.first_name} {sender}" for contact in contacts_object
+                ]
+                contacts_string = ",".join(message_contacts)
+                message = {
+                    "subject": f"You received a text from {contacts_string}",
+                    "body": body,
+                }
+                recipients = [{"name": u.full_name, "email": u.email}]
+                send_system_email(recipients, message)
+
             # create the notification with resource id being the leadmessage
             # no need to emit an event for this as the notification has no async actions
             contacts = [

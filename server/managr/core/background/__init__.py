@@ -14,6 +14,8 @@ from managr.lead import constants as lead_constants
 from managr.core import constants as core_consts
 from managr.lead.models import Notification, LeadEmail, LeadActivityLog
 from managr.report.story_report_generation import generate_story_report_data
+from managr.report.performance_report_generation import generate_performance_report_data
+from managr.report import constants as report_const
 
 from ..nylas.emails import retrieve_message, retrieve_thread, send_system_email
 
@@ -35,8 +37,11 @@ def emit_event(account_id, object_id, date, action, **kwargs):
         )
 
 
-def emit_report_event(report_id, generated_by_id):
-    _generate_story_report_data(report_id, generated_by_id)
+def emit_report_event(report_id, report_type):
+    if report_type is report_const.STORY_REPORT:
+        _generate_story_report_data(report_id)
+    else:
+        _generate_performance_report_data(report_id)
 
 
 def emit_email_sync_event(user_id, sync_state):
@@ -90,8 +95,13 @@ def _notify_user_of_email_status(user_id, sync_state):
 
 
 @background(schedule=0)
-def _generate_story_report_data(report_id, generated_by_id):
-    return generate_story_report_data(report_id, generated_by_id)
+def _generate_story_report_data(report_id):
+    return generate_story_report_data(report_id)
+
+
+@background(schedule=0)
+def _generate_performance_report_data(report_id):
+    return generate_performance_report_data(report_id)
 
 
 @background(schedule=0)
