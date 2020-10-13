@@ -21,6 +21,7 @@ const Utils = {
   objectToCamelCase,
   objectToSnakeCase,
   isDefined,
+  isNull,
   formatNumberAsUSD,
   formatDateShort,
   textToKabobCase,
@@ -30,6 +31,8 @@ const Utils = {
   debounce,
   getTimeZone,
   convertToRgba,
+  loadEntireCollection,
+  constantToCapitalized,
 }
 
 export default Utils
@@ -45,6 +48,10 @@ export function getTimeZone() {
 
 export function isDefined(value) {
   return typeof value !== 'undefined'
+}
+
+export function isNull(value) {
+  return value === null
 }
 
 export function toSnakeCase(value) {
@@ -137,6 +144,13 @@ export function objectToSnakeCase(value) {
 
 export function isObject(value) {
   return value !== null && value instanceof Object && !Array.isArray(value)
+}
+
+/**
+ * Check whether a value is an Object or Array
+ */
+export function isObjectOrArray(value) {
+  return value !== null && value instanceof Object
 }
 
 /**
@@ -291,4 +305,27 @@ function convertToRgba(color, opacity = 1) {
     blue = 0
   }
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`
+}
+
+/**
+ * @function    loadEntireCollection
+ * Since the list of collection is for populating a dropdown, there is no pagination UI.
+ * Yet, our backend delivers paginated results.
+ * Therefore, continue to retrieve (and append) more results as long as this collection has a next page.
+ * @param   {CollectionManager}  collection  - the collection for which all pages should be loaded.
+ **/
+
+export async function loadEntireCollection(collection) {
+  await collection.refresh()
+  while (collection.pagination.hasNextPage) {
+    await collection.addNextPage()
+  }
+}
+
+export function constantToCapitalized(value) {
+  if (!value) return ''
+  return value
+    .split('_')
+    .map(capitalizeWord)
+    .join(' ')
 }

@@ -19,7 +19,7 @@ from .models import StoryReport
 logger = logging.getLogger("managr")
 
 
-def generate_story_report_data(story_report_id, generated_by_id):
+def generate_story_report_data(story_report_id):
     """
     Given a StoryReport UUID, generate the report's
     data and update the instance with the generated data.
@@ -27,33 +27,33 @@ def generate_story_report_data(story_report_id, generated_by_id):
     user that triggered this story_report to be generated.
     """
     story_report = StoryReport.objects.get(
-        generated_by=generated_by_id, pk=story_report_id
+        pk=story_report_id
     )
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
+        # TODO (Bruno 09-22-2020):
+        # Send an email to user that generated report notifying of failure?
         logger.exception(f"Attempted to generate story report for open lead {lead.id}")
         raise ValidationError(
             f"Attempted to generate story report for open lead {lead.id}"
         )
 
-    # generate report's data
     try:
+        # generate report's data
         story_report.data["lead"] = LeadDataGenerator(lead).as_dict
-
         story_report.data["representative"] = RepresentativeDataGenerator(lead).as_dict
         story_report.data["organization"] = OrganizationDataGenerator(lead).as_dict
         story_report.datetime_generated = timezone.now()
-
         story_report.save()
+        # send email to user that generated report
+        send_email(story_report)
     except Exception as e:
-
+        # TODO (Bruno 09-22-2020):
+        # Send an email to user that generated report notifying of failure?
         logger.exception(
             f"failed to generate a report for {story_report_id}, error: {e}"
         )
-
-    # send email to user that generated report
-    send_email(story_report)
 
 
 def send_email(report):
@@ -409,8 +409,8 @@ class LeadDataGenerator(BaseGenerator):
             "call_count": self.call_count,
             "text_count": self.text_count,
             "email_count": self.email_count,
-            "custom_action_counts": self.custom_action_counts,
-            "action_count": self.action_count,
+            "custom_action_counts": self.custom_action_counts, # now 'actions'
+            "action_count": self.action_count, # now 'activities'
         }
 
 
@@ -419,14 +419,19 @@ class RepresentativeDataGenerator(BaseGenerator):
     Generates representative-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+    def __init__(self, lead):
+        self.__cached__leads = None
+        super().__init__(lead)
 
     @property
     def leads(self):
-        closed_leads = Lead.objects.filter(
-            claimed_by=self._representative,
-            status__title=lead_constants.LEAD_STATUS_CLOSED,
-        )
-        return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
+        if self.__cached__leads is None:
+            closed_leads = Lead.objects.filter(
+                claimed_by=self._representative,
+                status__title=lead_constants.LEAD_STATUS_CLOSED,
+            )
+            self.__cached__leads = [LeadDataGenerator(lead).as_dict for lead in closed_leads]
+        return self.__cached__leads
 
     def average_for(self, property, rounding_places=0, as_integer=True):
         total = 0
@@ -477,8 +482,8 @@ class RepresentativeDataGenerator(BaseGenerator):
             "average_call_count": self.average_for("call_count"),
             "average_text_count": self.average_for("text_count"),
             "average_email_count": self.average_for("email_count"),
-            "average_custom_action_counts": self.average_custom_action_counts,
-            "average_action_count": self.average_for("action_count"),
+            "average_custom_action_counts": self.average_custom_action_counts, # now 'actions'
+            "average_action_count": self.average_for("action_count"), # now 'activities'
         }
 
 
@@ -487,10 +492,15 @@ class OrganizationDataGenerator(BaseGenerator):
     Generates organization-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+    def __init__(self, lead):
+        self.__cached__representatives = None
+        super().__init__(lead)
 
     @property
     def representatives(self):
-        return self._organization.users.all()
+        if self.__cached__representatives is None:
+            self.__cached__representatives = self._organization.users.all()
+        return self.__cached__representatives
 
     def generate_representative_leads(self, representative):
         closed_leads = Lead.objects.filter(

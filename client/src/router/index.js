@@ -17,8 +17,9 @@ import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
 import Settings from '@/views/settings/Settings'
-import GenerateReport from '@/views/reports/GenerateReport'
+import Reports from '@/views/reports/Reports'
 import StoryReportDetail from '@/views/reports/StoryReportDetail'
+import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 // import Styles from '@/views/settings/Styles'
 
 Vue.use(Router)
@@ -97,8 +98,8 @@ export default new Router({
     },
     {
       path: '/reports',
-      name: 'GenerateReport',
-      component: GenerateReport,
+      name: 'Reports',
+      component: Reports,
       beforeEnter: Auth.requireAuth,
     },
     {
@@ -108,6 +109,13 @@ export default new Router({
       component: StoryReportDetail,
       beforeEnter: Auth.requireAuth,
     },
+    // {
+    //   path: '/performance-reports/:id',
+    //   name: 'PerformanceReportDetail',
+    //   props: true,
+    //   component: PerformanceReportDetail,
+    //   beforeEnter: Auth.requireAuth,
+    // },
     // {
     //   path: '/styles',
     //   name: 'Styles',
