@@ -252,6 +252,19 @@
         }
     },
     {
+        "model": "lead.leadactivitylog",
+        "pk": "123911d3-4ce6-4803-a236-b58e260729c7",
+        "fields": {
+            "meta": {},
+            "action_timestamp": "2020-08-05 11:39:23.632256Z",
+            "last_edited": "2020-08-05 11:39:23.632256Z",
+            "lead": "99b5e01e-4c8a-4ba5-be09-5407848aa87a",
+            "activity": "Lead.CLOSED",
+            "action_taken_by":  "3dddd261-93b1-46fe-a83e-bc164551362a",
+            "datetime_created": "2020-08-05 11:39:23.632256Z"
+        }
+    },
+    {
         "model": "lead.action",
         "pk": "7aa287d3-4ce6-4823-a236-b18e260729b7",
         "fields": {

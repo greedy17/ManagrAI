@@ -93,6 +93,7 @@ router.register("action-choices", lead_views.ActionChoiceViewSet, "action-choice
 router.register("actions", lead_views.ActionViewSet, "actions")
 router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
 router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
+router.register("performance-reports", report_views.PerformanceReportViewSet, "performance-reports")
 router.register("files", lead_views.FileViewSet, "files")
 router.register("notifications", lead_views.NotificationViewSet, "notifications")
 router.register("stages", organization_views.StageViewSet, "stages")

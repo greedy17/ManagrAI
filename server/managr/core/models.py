@@ -299,7 +299,7 @@ class EmailTemplate(TimeStampModel):
         "core.User", on_delete=models.CASCADE, related_name="email_templates"
     )
     name = models.CharField(max_length=128)
-    subject = models.TextField()
+    subject = models.TextField(blank=True)
     body_html = models.TextField(
         help_text="WARNING: This content is not auto-escaped. Generally take care not to "
         "render user-provided data to avoid a possible HTML-injection."
