@@ -10,8 +10,5 @@
   "cacheDirectories": [
     "client/node_modules",
     ".cache/Cypress"
-  ],
-  "dependencies": {
-    "vue2-google-maps": "^0.10.7"
-  }
+  ]
 }
