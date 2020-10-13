@@ -80,7 +80,7 @@ class Lead(TimeStampModel):
         "core.User",
         related_name="claimed_leads",
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         help_text="Leads can only be closed by their claimed_by rep",
     )
     last_updated_by = models.ForeignKey(
@@ -173,7 +173,7 @@ class Lead(TimeStampModel):
         return f"Lead '{self.title}' ({self.id})"
 
     def save(self, *args, **kwargs):
-        ## do not allow duplicates of lead titles in a single org
+        # do not allow duplicates of lead titles in a single org
         leads = (
             Lead.objects.filter(
                 title=self.title, account__organization__id=self.account.organization.id
@@ -437,7 +437,7 @@ class LeadActivityLog(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "Lead", null=True, on_delete=models.SET_NULL, related_name="activity_logs",
+        "Lead", null=True, on_delete=models.PROTECT, related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -452,7 +452,7 @@ class LeadActivityLog(TimeStampModel):
         help_text="records any actions taken on a lead",
     )
     action_taken_by = models.ForeignKey(
-        "core.User", on_delete=models.SET_NULL, null=True
+        "core.User", on_delete=models.PROTECT, null=True
     )
     meta = JSONField(help_text="Details about the activity", default=dict)
 
