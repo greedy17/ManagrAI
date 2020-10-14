@@ -1,0 +1,156 @@
+[
+  {
+    "model": "core.NotificationOption",
+    "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa3",
+    "fields": {
+      "title": "Email",
+      "description": "Turn On/Off Alert Notifications for received emails",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "EMAIL"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa1",
+    "fields": {
+      "title": "Organization",
+      "description": "Turn On/Off Email Notifications for updates to my Organization",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "EMAIL",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ORGANIZATION"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "0e0a1e9d-f806-4807-8d09-58e90346edff",
+    "fields": {
+      "title": "Organization",
+      "description": "Turn On/Off Alert Notifications for updates to my Organization",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ORGANIZATION"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "73e2dafe-48b9-4542-924d-6fa606f135da",
+    "fields": {
+      "title": "Reports",
+      "description": "Turn On/Off Email Notifications for generated Reports",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "EMAIL",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REPORTS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "d9c83da9-832b-496a-a27c-1db1e9318875",
+    "fields": {
+      "title": "Reports",
+      "description": "Turn On/Off Alert Notifications for generated Reports",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REPORTS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "2742fedb-a61e-4f2d-9047-9a7e82e1ef3e",
+    "fields": {
+      "title": "Account",
+      "description": "Turn On/Off Email Notifications for changes to my Managr Account",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "EMAIL",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ACCOUNT"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "6d3c7249-4984-4b6e-b525-d8cfdad65264",
+    "fields": {
+      "title": "Account",
+      "description": "Turn On/Off Alert Notifications for changes to my Managr Account",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "ACCOUNT"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "95ab3ae7-2095-4bc3-ad79-bfcddaac041d",
+    "fields": {
+      "title": "Text",
+      "description": "Turn On/Off Email Notifications for Text Messages",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "EMAIL",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "TEXT"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "2f4a0774-5bd3-4f62-87c7-f0aa2c631f51",
+    "fields": {
+      "title": "Text",
+      "description": "Turn On/Off Alert Notifications for Text Messages",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "TEXT"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "383c0457-41d2-48d3-a7e8-049c8a69f728",
+    "fields": {
+      "title": "Reminders",
+      "description": "Turn On/Off Email Notifications for Reminders",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "EMAIL",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REMINDER"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "5c962123-2045-4a93-aea2-ba1b2054faa6",
+    "fields": {
+      "title": "Reminders",
+      "description": "Turn On/Off Alert Notifications for Reminders",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REMINDER"
+    }
+  }
+]

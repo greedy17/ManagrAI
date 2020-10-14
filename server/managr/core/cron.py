@@ -57,6 +57,12 @@ def create_notifications():
         .order_by("-datetime_for")
     ):
         if row.created_for:
+            # check notification settings
+            notification_settings = row.created_by.notification_settings.filter(
+                option__key="REMINDER", option__notification_type="ALERT"
+            ).first()
+            if notification_settings and notification_settings.value != True:
+                return
             n = Notification.objects.create(
                 notify_at=row.datetime_for,
                 title=row.title,
