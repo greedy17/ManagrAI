@@ -82,7 +82,7 @@ def _notify_user_of_email_status(user_id, sync_state):
         try:
             Notification.objects.create(
                 notify_at=timezone.now(),
-                title="Emal Integration",
+                title="Email Integration",
                 notification_type="SYSTEM",
                 resource_id=str(user.email_auth_account.id),
                 user=user,
