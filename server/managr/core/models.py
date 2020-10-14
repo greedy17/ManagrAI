@@ -338,7 +338,7 @@ class NotificationOptionQuerySet(models.QuerySet):
             return None
 
 
-class NotificationSelectionQuerySet(TimeStampModel):
+class NotificationSelectionQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
@@ -349,6 +349,8 @@ class NotificationSelectionQuerySet(TimeStampModel):
 
 
 class NotificationSelection(TimeStampModel):
+    """ a model for the selection made by the user for the option """
+
     option = models.ForeignKey(
         "core.NotificationOption", on_delete=models.CASCADE, related_name="selections"
     )
