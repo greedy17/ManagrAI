@@ -34,6 +34,7 @@ def generate_performance_report_data(performance_report_id):
     user that triggered this performance_report to be generated.
     """
     report = PerformanceReport.objects.get(pk=performance_report_id)
+    print(f"GENERATING DATA FOR REPORT {report.id}")
 
     try:
         # generate report's data
@@ -70,6 +71,7 @@ def generate_performance_report_data(performance_report_id):
 
 
 def send_email(report):
+    print(f"SENDING EMAIL FOR REPORT {report.id}")
     if report.is_representative_report:
         report_type = "Representative"
         report_focus = report.representative.full_name or report.representative.email
@@ -635,24 +637,57 @@ class OrgFocusData(BaseGenerator):
             self.__cached__representatives_data = data
         return self.__cached__representatives_data
 
-    def _generate_top_performers_sorter(self, by_metric):
+    def _generate_top_performers_sorter(self, by_metric, sub_field=False, highest_value_best=True):
         def sorter(rep_data):
+            if sub_field and rep_data["data"][by_metric][sub_field] is None:
+                return -float("inf") if highest_value_best else float("inf")
             if rep_data["data"][by_metric] is None:
-                return -1
+                return -float("inf") if highest_value_best else float("inf")
+            if sub_field:
+                return rep_data["data"][by_metric][sub_field]
             return rep_data["data"][by_metric]
         return sorter
 
     # public:
 
-    def top_performers(self, num_representatives=None, by_metric=None):
-        if not num_representatives or not by_metric:
-            raise ValidationError({"OrgFocusData.top_performers": "keyword arg missing"})
+    def sum_for_field(self, field, sub_field=None, could_be_null=False):
+        if sub_field:
+            target_data = [rep_data["data"][field][sub_field] for rep_data in self._representatives_data]
+        else:
+            target_data = [rep_data["data"][field] for rep_data in self._representatives_data]
+        if could_be_null:
+            target_data = list(filter(lambda x: x is not None, target_data))
+        return sum(target_data)
 
-        sorter = self._generate_top_performers_sorter(by_metric)
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
+        if sub_field:
+            target_data = [rep_data["data"][field][sub_field] for rep_data in self._representatives_data]
+        else:
+            target_data = [rep_data["data"][field] for rep_data in self._representatives_data]
+        if could_be_null:
+            no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
+            numerator = sum(no_nulls_target_data)
+            denominator = len(no_nulls_target_data)
+        else:
+            numerator = sum(target_data)
+            denominator = len(target_data)
+        if denominator is 0:
+            return None
+        return numerator / denominator
+
+    def top_performers(self, num_representatives=None, by_metric=None, highest_value_best=True, sub_field=None):
+        if not num_representatives or not by_metric:
+            raise ValidationError({"OrgFocusData.top_performers": "missing args.num_representatives or args.by_metric"})
+
+        sorter = self._generate_top_performers_sorter(
+                                                by_metric,
+                                                sub_field=sub_field,
+                                                highest_value_best=highest_value_best,
+                                            )
         sorted_data = sorted(
                         self._representatives_data,
                         key=sorter,
-                        reverse=True
+                        reverse=highest_value_best,
                     )
         sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
         top_performers = sorted_reps[0:num_representatives]
@@ -683,14 +718,57 @@ class OrgFocusData(BaseGenerator):
     @property
     def as_dict_for_organization_report(self):
         return {
+            # For Summary Box:
+            "activities_count": self.sum_for_field("activities_count"),
+            "actions_count": self.sum_for_field("actions_count"),
+            "incoming_messages_count": self.sum_for_field("incoming_messages_count"),
+            "forecast_amount": self.sum_for_field("forecast_amount"),
+            "deals_closed_count": self.sum_for_field("deals_closed_count"),
+            "amount_closed": self.sum_for_field("amount_closed"),
+            # For Top Perfomer fields:
             "top_performers_by_A_C_V": self.top_performers(
                                                 by_metric="ACV",
-                                                num_representatives=5
+                                                num_representatives=5,
                                         ),
             "top_performers_by_actions": self.top_performers(
                                                 by_metric="actions_count",
-                                                num_representatives=3
+                                                num_representatives=3,
                                         ),
+            # Other:
+            "forecast_table_additions": {
+                "value": self.sum_for_field("forecast_table_additions"),
+                "top_performer": self.top_performers(
+                                    by_metric="forecast_table_additions",
+                                    num_representatives=1,
+                                ),
+            },
+            "sales_cycle": {
+                "value": self.average_for_field("sales_cycle", could_be_null=True),
+                "top_performer": self.top_performers(
+                                    by_metric="sales_cycle",
+                                    highest_value_best=False,
+                                    num_representatives=1,
+                                ),
+            },
+            "actions_to_close_opportunity": {
+                "value": self.average_for_field(
+                            "actions_to_close_opportunity",
+                            sub_field="average",
+                            could_be_null=True,
+                        ),
+                "top_performer": self.top_performers(
+                                    by_metric="actions_to_close_opportunity",
+                                    sub_field="average",
+                                    num_representatives=1,
+                                ),
+            },
+            "ACV": {
+                "value": self.average_for_field("ACV", could_be_null=True),
+                "top_performer": self.top_performers(
+                                    by_metric="ACV",
+                                    num_representatives=1,
+                                ),
+            },
         }
 
     @property
@@ -746,10 +824,9 @@ class OrgTypicalData(BaseGenerator):
                 ]
         return self.__cached__averages_per_rep
 
-    # public properties:
+    # public:
 
     def average_for_field(self, field, sub_field=None, could_be_null=False):
-        # NOTE: need to only run through averages_per_rep once
         if sub_field:
             target_data = [rep_data[field][sub_field] for rep_data in self._averages_per_rep]
         else:
@@ -775,6 +852,8 @@ class OrgTypicalData(BaseGenerator):
             "forecast_amount": self.average_for_field("forecast_amount"),
             "deals_closed_count": self.average_for_field("deals_closed_count"),
             "amount_closed": self.average_for_field("amount_closed"),
+            # For Forecast Table:
+            "forecast_table_additions": self.average_for_field("forecast_table_additions"),
             # For Sales Cycle:
             "sales_cycle": self.average_for_field("sales_cycle", could_be_null=True),
             # For Actions to Close Opportunity:
