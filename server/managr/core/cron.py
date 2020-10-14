@@ -1,12 +1,15 @@
 import logging
 import kronos
 import requests
+import datetime
 from django.utils import timezone
+
 from django.db.models import Q
 
-from managr.core.nylas.auth import revoke_all_access_tokens
+from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
 from managr.core.models import EmailAuthAccount
 from managr.lead.models import Reminder, Notification
+from managr.lead.core import constants as core_consts
 
 logger = logging.getLogger("managr")
 
@@ -83,3 +86,15 @@ def create_notifications():
         else:
 
             logger.exception(f"The Reminder with id {row.id} does not reference a lead")
+
+
+@kronos.register("0 0 * * *")
+def revoke_tokens():
+    expire = timezone.now() + datetime.timedelta(days=5)
+    """ revokes tokens for email auth accounts in state of sync_error, stopped, invalid """
+    email_auth_accounts = EmailAuthAccount.objects.filter(
+        sync_status__in=core_consts.NYLAS_SYNC_STATUSES_FAILING, last_edited__gte=expire
+    ).values_list("access_token", flat=True)
+    for token in email_auth_accounts:
+        revoke_access_token(token)
+
