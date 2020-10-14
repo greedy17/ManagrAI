@@ -10,6 +10,7 @@ from django.views import View
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
+from django.core.paginator import Paginator
 
 from django.db.models import F, Q, Count
 
@@ -48,13 +49,15 @@ from managr.core.twilio.messages import (
 )
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
-from managr.core.background import emit_event
+from managr.core.background import emit_event, emit_email_sync_event
 
 from .models import (
     User,
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
+    NotificationOption,
+    NotificationSelection,
 )
 from .serializers import (
     UserSerializer,
@@ -63,6 +66,8 @@ from .serializers import (
     EmailTemplateSerializer,
     EmailSerializer,
     MessageAuthAccountSerializer,
+    NotificationOptionSerializer,
+    NotificationSelectionSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -74,7 +79,9 @@ from .nylas.emails import (
     generate_preview_email_data,
     return_file_id_from_nylas,
     download_file_from_nylas,
+    send_system_email,
 )
+from .nylas.models import NylasAccountStatus, NylasAccountStatusList
 
 
 logger = logging.getLogger("managr")
@@ -497,6 +504,44 @@ class GetFileView(View):
         return response
 
 
+class NotificationSettingsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
+):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = NotificationOptionSerializer
+
+    def list(self, request, *args, **kwargs):
+        qs = NotificationOption.objects.for_user(request.user)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = NotificationOptionSerializer(
+                qs, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+        serializer = NotificationOptionSerializer(
+            qs, many=True, context={"request": request}
+        )
+        return Response()
+
+    @action(
+        methods=["PATCH"],
+        permission_classes=(permissions.IsAuthenticated,),
+        detail=False,
+        url_path="update-settings",
+    )
+    def update_settings(self, request, *args, **kwargs):
+        data = request.data
+        user = request.user
+        selections = data.get("selections", [])
+        for sel in selections:
+            selection, created = NotificationSelection.objects.get_or_create(
+                option=sel["option"], user=user
+            )
+            selection.value = sel["value"]
+            selection.save()
+        return Response()
+
+
 class NylasMessageWebhook(APIView):
     permission_classes = (permissions.AllowAny,)
     """
@@ -558,7 +603,34 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
+        """ this endpoint will have to eventually be handled by a different instance
+        unlike the messages endpoint we cannot grab an id and pass it to the async 
+        we can however track the delta and check the api for that delta or we can save it in the cache
+
+        """
         data = request.data
+        deltas = data.get("deltas", [])
+        # a list class wrapper around custom NylasAccountStatus class
+        nylas_data = NylasAccountStatusList(deltas)
+        # calling .values on the NylasAccStatList returns a list of lists using the object keys passed
+        values = [
+            # details is position 0 in the first entry and 1 is resource_status
+            (item[0]["account_id"], item[1])
+            for item in nylas_data.values("details", "resource_status")
+        ]
+        email_accounts = []
+        for v in values:
+            email_account = EmailAuthAccount.objects.filter(account_id=v[0]).first()
+            if email_account:
+                if email_account.sync_state != v[1]:
+                    email_account.sync_state = v[1]
+                    email_accounts.append(email_account)
+                    emit_email_sync_event(str(email_account.user.id), v[1])
+                # if the account is having problems send an email and a notification
+                # we will be removing accounts from our db and from nylas if it has been inactive for 5 days
+
+        EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
+
         return Response()
 
 
@@ -614,6 +686,19 @@ class TwilioMessageWebhook(APIView):
                 #
                 # emit and event with LeadMessage.RECEIVED to create activity log
                 emit_log_event(lead_consts.MESSAGE_RECEIVED, u, lead_message)
+                # send email of received message
+                # TODO: PB when we merge in feature alerts we will check notification settings first
+                message_contacts = [
+                    f"{contact.first_name} {sender}" for contact in contacts_object
+                ]
+                contacts_string = ",".join(message_contacts)
+                message = {
+                    "subject": f"You received a text from {contacts_string}",
+                    "body": body,
+                }
+                recipients = [{"name": u.full_name, "email": u.email}]
+                send_system_email(recipients, message)
+
             # create the notification with resource id being the leadmessage
             # no need to emit an event for this as the notification has no async actions
             contacts = [
