@@ -19,7 +19,7 @@
         <img class="button-icon" src="@/assets/images/undo.svg" alt="icon" />
         <span class="button-content">Reset</span>
       </div>
-      <div v-if="isOwnedByUser" class="banner-button" @click="emitRelease">
+      <div v-if="isOwnedByUser && !isClosed" class="banner-button" @click="emitRelease">
         <img class="button-icon" src="@/assets/images/remove.svg" alt="icon" />
         <span class="button-content">Release</span>
       </div>
@@ -86,6 +86,9 @@ export default {
     },
     isOwnedByAnother() {
       return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id
+    },
+    isClosed() {
+      return this.lead.statusRef && this.lead.statusRef.title === Lead.CLOSED
     },
   },
 }
