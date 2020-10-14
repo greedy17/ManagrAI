@@ -635,17 +635,20 @@ class OrgFocusData(BaseGenerator):
             self.__cached__representatives_data = data
         return self.__cached__representatives_data
 
-    def _top_performers_sorter(self, rep_data):
+    def _top_performers_by_ACV_sorter(self, rep_data):
         if rep_data["data"]["ACV"] is None:
             return -1
         return rep_data["data"]["ACV"]
 
+    def _top_performers_by_actions_count_sorter(self, rep_data):
+        return rep_data["data"]["actions_count"]
+
     # public:
 
-    def top_performers_ACV(self, num_representatives):
+    def top_performers_by_ACV(self, num_representatives):
         sorted_data = sorted(
                         self._representatives_data,
-                        key=self._top_performers_sorter,
+                        key=self._top_performers_by_ACV_sorter,
                         reverse=True
                     )
         sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
@@ -674,16 +677,49 @@ class OrgFocusData(BaseGenerator):
                 serialized_top_performers.append(serialized_rep)
         return serialized_top_performers
 
+    def top_performers_by_actions_count(self, num_representatives):
+        sorted_data = sorted(
+                        self._representatives_data,
+                        key=self._top_performers_by_actions_count_sorter,
+                        reverse=True
+                    )
+        sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
+        top_performers = sorted_reps[0:num_representatives]
+        serialized_top_performers = [
+            UserRefSerializer(rep).data for rep in top_performers
+        ]
+
+        for i in range(len(serialized_top_performers)):
+            serialized_top_performers[i]["rank"] = i + 1
+            serialized_top_performers[i]["actions"] = sorted_data[i]["data"]["actions_count"]
+
+        # if the report is representative-specific AND the focus-rep is missing
+        if self._representative and self._representative not in top_performers:
+            serialized_rep = UserRefSerializer(self._representative).data
+
+            sorted_index = sorted_reps.index(self._representative)
+            serialized_rep["rank"] = sorted_index + 1
+            serialized_rep["actions"] = sorted_data[sorted_index]["data"]["actions_count"]
+            if len(serialized_top_performers) is num_representatives:
+                # if there are three users in the list,
+                # swap the last user for self._representative
+                serialized_top_performers[num_representatives - 1] = serialized_rep
+            else:
+                # else append self._representative to the list
+                serialized_top_performers.append(serialized_rep)
+        return serialized_top_performers
+
     @property
     def as_dict_for_organization_report(self):
         return {
-            "top_performers_by_A_C_V": self.top_performers_ACV(5),
+            "top_performers_by_A_C_V": self.top_performers_by_ACV(5),
+            "top_performers_by_actions": self.top_performers_by_actions_count(3),
         }
 
     @property
     def as_dict_for_representative_report(self):
         return {
-            "top_performers": self.top_performers_ACV(3),
+            "top_performers": self.top_performers_by_ACV(3),
         }
 
 
