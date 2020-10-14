@@ -152,5 +152,19 @@
       "last_edited": "2020-06-09T17:38:38.085Z",
       "key": "REMINDER"
     }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "5c962123-2045-4a93-aea2-ba1b2054faa6",
+    "fields": {
+      "title": "Reminders",
+      "description": "Turn On/Off Alert Notifications ",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "REMINDER"
+    }
   }
 ]

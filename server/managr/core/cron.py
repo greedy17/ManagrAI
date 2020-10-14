@@ -5,8 +5,12 @@ from django.utils import timezone
 from django.db.models import Q
 
 from managr.core.nylas.auth import revoke_all_access_tokens
-from managr.core.models import EmailAuthAccount
-from managr.lead.models import Reminder, Notification
+from managr.core.models import EmailAuthAccount, User
+from managr.lead.models import Reminder, Notification, Lead, LeadActivityLogs
+from managr.core import constants as core_consts
+from managr.lead import constants as lead_consts
+from .nylas.emails import send_system_email
+
 
 logger = logging.getLogger("managr")
 
@@ -83,3 +87,108 @@ def create_notifications():
         else:
 
             logger.exception(f"The Reminder with id {row.id} does not reference a lead")
+
+
+@kronos.register("* * * * *")
+def create_lead_notifications():
+    # alerts for
+    #   activity no activity in last 90 days
+    #   no response from email after 3 days ## LEAVING THIS OUT FOR NOW
+    #   days since expected close date 1 day 14 days 30 days
+    #   stalled in stage
+    #   admins receive only alerts reps recieve alerts and emails admins can choose to remove
+    # 1 get all users who are active will also include super user so mike can also get notifs
+    users = User.objects.filter(is_active=True)
+    for user in users:
+        # 2 get leads for specific user
+        leads = list()
+        # rep level users only get notifs for leads they are claiming except closed leads
+        if user.type == core_consts.ACCOUNT_TYPE_REP:
+            leads = user.claimed_leads.all().exclude(
+                status__title="CLOSED", status__type="PUBLIC"
+            )
+        else:
+            leads = Lead.objects.filter(account__organization=user.organization_id)
+
+        # 3 check if lead meets requirements for each type of alert/email
+        for lead in leads:
+            now = timezone.now()
+            target_date = now + timezone.timedelta(days=90)
+            # last activity
+            latest_activity = (
+                lead.activity_logs.latest("datetime_created").datetime_created
+            ).date()
+            if latest_activity > target_date.date():
+                # 4 check if an alert/email already exists (reps only get alerts not emails)
+                if user.type == core_consts.ACCOUNT_TYPE_REP:
+                    # check notifications for one first
+                    # has_alert = Notification.objects.filter(
+                    #    user=user,
+                    #    notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY,
+                    #    resource_id=str(lead.id),
+                    # ).first()
+                    # TODO: Skipping email check because it is impossible currently to know if it was already sent user will recieve email every day pb 10/13/2020
+                    # if has_alert:
+                    #    continue
+                    # else:
+                    # create alert
+                    title = f"No New Activity on opportunity {lead.title} since {latest_activity}"
+                    Notification.objects.create(
+                        notify_at=timezone.now(),
+                        title=title,
+                        notification_type="LEAD",
+                        resource_id=lead.id,
+                        user=user,
+                        meta={
+                            "id": str(lead.id),
+                            "title": "This opportunity has had no activity for at least 90 days",
+                        },
+                    )
+                    recipient = user.email
+                    message = {
+                        "subject": f"No New Activity on opportunity {lead.title} since {latest_activity}",
+                        "body": f"Your claimed opportunity {lead.title} has had no activity since {latest_activity}",
+                    }
+                    send_system_email(recipient, message)
+
+            target_date_1 = now + timezone.timedelta(days=1)
+            target_date_14 = now + timezone.timedelta(days=14)
+            target_date_30 = now + timezone.timedelta(days=30)
+            expected_close_date = lead.expected_close_date.date()
+            if (
+                lead.expected_close_date.date() > target_date_1
+                or lead.expected_close_date.date() > target_date_14
+                or lead.expected_close_date.date() > target_date_30
+            ):
+                if user.type == core_consts.ACCOUNT_TYPE_REP:
+                    # check notifications for one first
+                    # has_alert = Notification.objects.filter(
+                    #    user=user,
+                    #    notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY,
+                    #    resource_id=str(lead.id),
+                    # ).first()
+                    # TODO: Skipping email check because it is impossible currently to know if it was already sent user will recieve email every day pb 10/13/2020
+                    # if has_alert:
+                    #    continue
+                    # else:
+                    # create alert
+
+                    title = f"Opportunity {lead.title} expected close date lapsed"
+                    Notification.objects.create(
+                        notify_at=timezone.now(),
+                        title=title,
+                        notification_type="LEAD",
+                        resource_id=lead.id,
+                        user=user,
+                        meta={
+                            "id": str(lead.id),
+                            "title": f"This opportunity was expected to close on {expected_close_date}",
+                        },
+                    )
+                    recipient = user.email
+                    message = {
+                        "subject": f"Opportunity {lead.title} expected close date lapsed",
+                        "body": f"Your claimed opportunity was expected to close on {expected_close_date}",
+                    }
+                    send_system_email(recipient, message)
+
