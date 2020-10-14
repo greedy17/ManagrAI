@@ -43,17 +43,19 @@ def generate_performance_report_data(performance_report_id):
         if report.is_representative_report:
             data = {
                 "representative": {
-                    "focus": RepDataForSelectedDateRange(report).as_dict,
-                    "typical": RepDataAverageForSelectedDateRange(report).as_dict,
+                    "focus": RepFocusData(report).as_dict,
+                    "typical": RepTypicalData(report).as_dict,
                 },
                 "organization": {
-                    "focus": OrganizationDataForSelectedDateRange(report).as_dict_for_representative_report,
-                    "typical": OrganizationDataAverageForSelectedDateRange(report).as_dict_for_representative_report,
+                    "focus": OrgFocusData(report).as_dict_for_representative_report,
+                    "typical": OrgTypicalData(report).as_dict_for_representative_report,
                 }
             }
         else:
-            # TODO: generate organization-wide data
-            data = {}
+            data = {
+                "focus": OrgFocusData(report).as_dict_for_organization_report,
+                "typical": OrgTypicalData(report).as_dict_for_organization_report,
+            }
         report.data = data
         report.datetime_generated = timezone.now()
         report.save()
@@ -119,7 +121,7 @@ class BaseGenerator:
         raise (e)
 
 
-class RepDataForSelectedDateRange(BaseGenerator):
+class RepFocusData(BaseGenerator):
     """
     Generates rep-level metrics for PerformanceReport.
     These metrics regard the specific date-range of the report.
@@ -132,7 +134,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
 
     @property
     def __name__(self):
-        return "RepDataForSelectedDateRange"
+        return "RepFocusData"
 
     # private properties:
 
@@ -461,7 +463,7 @@ class RepDataForSelectedDateRange(BaseGenerator):
         }
 
 
-class RepDataAverageForSelectedDateRange(BaseGenerator):
+class RepTypicalData(BaseGenerator):
     """
     Generates average rep-level metrics for PerformanceReport.
     These metrics regard the rep's averages across time for a given date-range.
@@ -474,7 +476,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
 
     @property
     def __name__(self):
-        return "RepDataAverageForSelectedDateRange"
+        return "RepTypicalData"
 
     # private properties:
 
@@ -543,7 +545,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
                     representative=self._representative,
                     generated_by=self._report.generated_by,
                 )
-                data_item = RepDataForSelectedDateRange(non_db_report).as_dict
+                data_item = RepFocusData(non_db_report).as_dict
                 data_list.append(data_item)
             self.__cached__data_for_time_slices = data_list
         return self.__cached__data_for_time_slices
@@ -588,7 +590,7 @@ class RepDataAverageForSelectedDateRange(BaseGenerator):
         }
 
 
-class OrganizationDataForSelectedDateRange(BaseGenerator):
+class OrgFocusData(BaseGenerator):
     """
     Generates org-level metrics for PerformanceReport.
     These metrics regard the specific date-range of the report.
@@ -603,7 +605,7 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
 
     @property
     def __name__(self):
-        return "OrganizationDataForSelectedDateRange"
+        return "OrgFocusData"
 
     # private properties:
 
@@ -626,7 +628,7 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
         if self.__cached__representatives_data is None:
             data = [
                     {
-                        "data": RepDataForSelectedDateRange(report).as_dict,
+                        "data": RepFocusData(report).as_dict,
                         "representative": report.representative,
                     } for report in self._non_db_representative_reports
                 ]
@@ -638,17 +640,16 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             return -1
         return rep_data["data"]["ACV"]
 
-    # public properties:
+    # public:
 
-    @property
-    def top_performers(self):
+    def top_performers_ACV(self, num_representatives):
         sorted_data = sorted(
                         self._representatives_data,
                         key=self._top_performers_sorter,
                         reverse=True
                     )
         sorted_reps = [rep_data["representative"] for rep_data in sorted_data]
-        top_performers = sorted_reps[0:3]
+        top_performers = sorted_reps[0:num_representatives]
         serialized_top_performers = [
             UserRefSerializer(rep).data for rep in top_performers
         ]
@@ -657,16 +658,17 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
             serialized_top_performers[i]["rank"] = i + 1
             serialized_top_performers[i]["ACV"] = sorted_data[i]["data"]["ACV"]
 
-        if self._representative not in top_performers:
+        # if the report is representative-specific AND the focus-rep is missing
+        if self._representative and self._representative not in top_performers:
             serialized_rep = UserRefSerializer(self._representative).data
 
             sorted_index = sorted_reps.index(self._representative)
             serialized_rep["rank"] = sorted_index + 1
             serialized_rep["ACV"] = sorted_data[sorted_index]["data"]["ACV"]
-            if len(serialized_top_performers) is 3:
+            if len(serialized_top_performers) is num_representatives:
                 # if there are three users in the list,
                 # swap the last user for self._representative
-                serialized_top_performers[2] = serialized_rep
+                serialized_top_performers[num_representatives - 1] = serialized_rep
             else:
                 # else append self._representative to the list
                 serialized_top_performers.append(serialized_rep)
@@ -674,16 +676,18 @@ class OrganizationDataForSelectedDateRange(BaseGenerator):
 
     @property
     def as_dict_for_organization_report(self):
-        pass
+        return {
+            "top_performers_by_A_C_V": self.top_performers_ACV(5),
+        }
 
     @property
     def as_dict_for_representative_report(self):
         return {
-            "top_performers": self.top_performers,
+            "top_performers": self.top_performers_ACV(3),
         }
 
 
-class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
+class OrgTypicalData(BaseGenerator):
     """
     Generates average org-level metrics for PerformanceReport.
     These metrics regard the org's averages across time for a given date-range.
@@ -699,7 +703,7 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
 
     @property
     def __name__(self):
-        return "OrganizationDataAverageForSelectedDateRange"
+        return "OrgTypicalData"
 
     # private properties:
 
@@ -721,7 +725,7 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
     def _averages_per_rep(self):
         if self.__cached__averages_per_rep is None:
             self.__cached__averages_per_rep = [
-                        RepDataAverageForSelectedDateRange(report).as_dict
+                        RepTypicalData(report).as_dict
                         for report in self._non_db_representative_reports
                 ]
         return self.__cached__averages_per_rep
@@ -747,7 +751,24 @@ class OrganizationDataAverageForSelectedDateRange(BaseGenerator):
 
     @property
     def as_dict_for_organization_report(self):
-        pass
+        return {
+            # For Summary Box:
+            "activities_count": self.average_for_field("activities_count"),
+            "actions_count": self.average_for_field("actions_count"),
+            "incoming_messages_count": self.average_for_field("incoming_messages_count"),
+            "forecast_amount": self.average_for_field("forecast_amount"),
+            "deals_closed_count": self.average_for_field("deals_closed_count"),
+            "amount_closed": self.average_for_field("amount_closed"),
+            # For Sales Cycle:
+            "sales_cycle": self.average_for_field("sales_cycle", could_be_null=True),
+            # For Actions to Close Opportunity:
+            "actions_to_close_opportunity": self.average_for_field(
+                                                    "actions_to_close_opportunity",
+                                                    could_be_null=True,
+                                            ),
+            # For ACV:
+            "ACV": self.average_for_field("ACV", could_be_null=True),
+        }
 
     @property
     def as_dict_for_representative_report(self):
