@@ -1021,3 +1021,195 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
                 org_data["ACV"]["average"],
                 ACV,
             )
+
+    def test_deal_analysis(self):
+        self.maxDiff = None
+        # Originally, given fixture:
+        expected = {
+            'company_size': {
+                'value': None,
+                'percentage': None,
+            },
+            'industry': {
+                'value': None,
+                'percentage': None,
+            },
+            'type': {
+                'value': None,
+                'percentage': None,
+            },
+            'competitor': {
+                'value': None,
+                'percentage': None,
+            },
+            'geography': {
+                'value': None,
+                'percentage': None,
+            },
+        }
+        data = self.generate_org_focus_data()
+        self.assertDictEqual(data["deal_analysis"], expected)
+
+        # Adding lead-custom-fields to only closed_lead_one
+        self.closed_lead_one.company_size = lead_constants.FIFTYONE_TO_TWOHUNDRED
+        self.closed_lead_one.industry = lead_constants.AGRICULTURE
+        self.closed_lead_one.type = lead_constants.MQL
+        self.closed_lead_one.competitor = lead_constants.YES
+        self.closed_lead_one.geography_address = "8830 Castlebury Ct, Laurel, MD 20723, USA"
+        self.closed_lead_one.geography_address_components = {
+                                                                "streetNumber": {
+                                                                    "long_name": "8830",
+                                                                    "short_name": "8830"
+                                                                },
+                                                                "route": {
+                                                                    "long_name": "Castlebury Court",
+                                                                    "short_name": "Castlebury Ct"
+                                                                },
+                                                                "locality": {
+                                                                    "long_name": "Laurel",
+                                                                    "short_name": "Laurel"
+                                                                },
+                                                                "administrative_area_level_3": {
+                                                                    "long_name": "Savage",
+                                                                    "short_name": "Savage"
+                                                                },
+                                                                "administrative_area_level_2": {
+                                                                    "long_name": "Howard County",
+                                                                    "short_name": "Howard County"
+                                                                },
+                                                                "administrative_area_level_1": {
+                                                                    "long_name": "Maryland",
+                                                                    "short_name": "MD"
+                                                                },
+                                                                "country": {
+                                                                    "long_name": "United States",
+                                                                    "short_name": "US"
+                                                                },
+                                                                "postalCode": {
+                                                                    "long_name": "20723",
+                                                                    "short_name": "20723"
+                                                                },
+                                                                "latitude": 39.124847,
+                                                                "longitude": -76.860657
+                                                            }
+        self.closed_lead_one.save()
+        expected = {
+            'company_size': {
+                'value': lead_constants.FIFTYONE_TO_TWOHUNDRED,
+                'percentage': 50
+            },
+            'industry': {
+                'value': lead_constants.AGRICULTURE,
+                'percentage': 50
+            },
+            'type': {
+                'value': lead_constants.MQL,
+                'percentage': 50
+            },
+            'competitor': {
+                'value': lead_constants.YES,
+                'percentage': 50
+            },
+            'geography': {
+                'value': "Maryland",
+                'percentage': 50
+            }
+        }
+        data = self.generate_org_focus_data()
+        self.assertDictEqual(data["deal_analysis"], expected)
+
+        # Also adding lead-custom-fields to closed_lead_two
+        self.closed_lead_two.company_size = lead_constants.FIFTYONE_TO_TWOHUNDRED
+        self.closed_lead_two.industry = lead_constants.AGRICULTURE
+        self.closed_lead_two.type = lead_constants.MQL
+        self.closed_lead_two.competitor = lead_constants.YES
+        self.closed_lead_two.geography_address = "8830 Castlebury Ct, Laurel, MD 20723, USA"
+        self.closed_lead_two.geography_address_components = {
+                                                                "streetNumber": {
+                                                                    "long_name": "8830",
+                                                                    "short_name": "8830"
+                                                                },
+                                                                "route": {
+                                                                    "long_name": "Castlebury Court",
+                                                                    "short_name": "Castlebury Ct"
+                                                                },
+                                                                "locality": {
+                                                                    "long_name": "Laurel",
+                                                                    "short_name": "Laurel"
+                                                                },
+                                                                "administrative_area_level_3": {
+                                                                    "long_name": "Savage",
+                                                                    "short_name": "Savage"
+                                                                },
+                                                                "administrative_area_level_2": {
+                                                                    "long_name": "Howard County",
+                                                                    "short_name": "Howard County"
+                                                                },
+                                                                "administrative_area_level_1": {
+                                                                    "long_name": "Maryland",
+                                                                    "short_name": "MD"
+                                                                },
+                                                                "country": {
+                                                                    "long_name": "United States",
+                                                                    "short_name": "US"
+                                                                },
+                                                                "postalCode": {
+                                                                    "long_name": "20723",
+                                                                    "short_name": "20723"
+                                                                },
+                                                                "latitude": 39.124847,
+                                                                "longitude": -76.860657
+                                                            }
+        self.closed_lead_two.save()
+        expected = {
+            'company_size': {
+                'value': lead_constants.FIFTYONE_TO_TWOHUNDRED,
+                'percentage': 100,
+            },
+            'industry': {
+                'value': lead_constants.AGRICULTURE,
+                'percentage': 100,
+            },
+            'type': {
+                'value': lead_constants.MQL,
+                'percentage': 100,
+            },
+            'competitor': {
+                'value': lead_constants.YES,
+                'percentage': 100,
+            },
+            'geography': {
+                'value': "Maryland",
+                'percentage': 100,
+            }
+        }
+        data = self.generate_org_focus_data()
+        self.assertDictEqual(data["deal_analysis"], expected)
+
+        # Adding self.rep_two_closed_lead_one, which lacks custom-lead-fields
+        self.generate_rep_two_focus_data()
+
+        expected = {
+            'company_size': {
+                'value': lead_constants.FIFTYONE_TO_TWOHUNDRED,
+                'percentage': 67
+            },
+            'industry': {
+                'value': lead_constants.AGRICULTURE,
+                'percentage': 67
+            },
+            'type': {
+                'value': lead_constants.MQL,
+                'percentage': 67
+            },
+            'competitor': {
+                'value': lead_constants.YES,
+                'percentage': 67
+            },
+            'geography': {
+                'value': "Maryland",
+                'percentage': 67
+            }
+        }
+        data = self.generate_org_focus_data()
+        self.assertDictEqual(data["deal_analysis"], expected)
