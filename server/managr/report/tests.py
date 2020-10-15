@@ -830,7 +830,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
     def generate_rep_one_focus_data(self):
         return RepFocusData(self.rep_performance_report).as_dict
 
-    def generate_rep_two_focus_data(self):
+    def generate_rep_two_focus_data(self, skip_lead_generation=False):
         # generate rep
         representative = User.objects.create(
             email="second_report_tester@reports.com",
@@ -840,24 +840,25 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         )
         self.rep_two = representative
         # generate closed lead
-        lead_one = Lead.objects.create(
-            title="first lead",
-            created_by=representative,
-            claimed_by=representative,
-            status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
-            amount=1000,
-            closing_amount=1000,
-            expected_close_date="2020-08-05T05:00:00Z",
-            account=Account.objects.first(),
-        )
-        self.rep_two_closed_lead_one = lead_one
-        log_one = LeadActivityLog.objects.create(
-                activity=lead_constants.LEAD_CLOSED,
-                lead=lead_one,
-                action_taken_by=representative,
-                action_timestamp="2020-08-05T05:00:00Z",
-                datetime_created="2020-08-05T05:00:00Z",
+        if not skip_lead_generation:
+            lead_one = Lead.objects.create(
+                title="first lead",
+                created_by=representative,
+                claimed_by=representative,
+                status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
+                amount=1000,
+                closing_amount=1000,
+                expected_close_date="2020-08-05T05:00:00Z",
+                account=Account.objects.first(),
             )
+            self.rep_two_closed_lead_one = lead_one
+            log_one = LeadActivityLog.objects.create(
+                    activity=lead_constants.LEAD_CLOSED,
+                    lead=lead_one,
+                    action_taken_by=representative,
+                    action_timestamp="2020-08-05T05:00:00Z",
+                    datetime_created="2020-08-05T05:00:00Z",
+                )
 
         # make sure that leads dates are static regardless of
         # whenever these tests are run
@@ -866,11 +867,12 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         # leads/data to be included in the data generation.
         representative.datetime_created = "2020-06-25T05:00:00Z"
         representative.save()
-        lead_one.datetime_created = "2020-07-05T05:00:00Z"
-        lead_one.save()
-        log_one.datetime_created = "2020-08-05T05:00:00Z"
-        log_one.action_timestamp = "2020-08-05T05:00:00Z"
-        log_one.save()
+        if not skip_lead_generation:
+            lead_one.datetime_created = "2020-07-05T05:00:00Z"
+            lead_one.save()
+            log_one.datetime_created = "2020-08-05T05:00:00Z"
+            log_one.action_timestamp = "2020-08-05T05:00:00Z"
+            log_one.save()
 
         # generate performance report
         performance_report = PerformanceReport.objects.create(
@@ -1263,3 +1265,125 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         data = self.generate_org_focus_data()
         most_performed = data["actions_to_close_opportunity"]["most_performed"]
         self.assertEqual(most_performed, action_type.title)
+
+    def test_top_opportunities(self):
+        # Originally, given fixture:
+        data = self.generate_org_focus_data()
+        top_closed = data["top_opportunities"][lead_constants.FORECAST_CLOSED]
+        top_verbal = data["top_opportunities"][lead_constants.FORECAST_VERBAL]
+        top_strong = data["top_opportunities"][lead_constants.FORECAST_STRONG]
+        top_50_50 = data["top_opportunities"][lead_constants.FORECAST_FIFTY_FIFTY]
+        self.assertEqual(len(top_closed), 2)
+        self.assertEqual(len(top_verbal), 0)
+        self.assertEqual(len(top_strong), 0)
+        self.assertEqual(len(top_50_50), 0)
+
+        # Add one lead that is currenty forecasted as STRONG
+        # This lead belogs to rep_two, and the above should still be the case,
+        # since this is org-level top_opportunities
+        self.generate_rep_two_focus_data(skip_lead_generation=True)
+        lead_three = Lead.objects.create(
+            title="third lead",
+            created_by=self.rep_two,
+            claimed_by=self.rep_two,
+            amount=100,
+            expected_close_date="2020-10-01T05:00:00Z",
+            account=Account.objects.first(),
+        )
+        LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_UPDATED,
+                lead=lead_three,
+                action_taken_by=self.rep_two,
+                action_timestamp="2020-04-01T05:00:00Z",
+                datetime_created="2020-04-01T05:00:00Z",
+                meta={
+                    "extra": {
+                        "forecast_update": True,
+                        "forecast_amount": 100,
+                        "new_forecast": lead_constants.FORECAST_STRONG,
+                        "previous_forecast": lead_constants.FORECAST_NA,
+                    }
+                }
+            )
+        data = self.generate_org_focus_data()
+        top_closed = data["top_opportunities"][lead_constants.FORECAST_CLOSED]
+        top_verbal = data["top_opportunities"][lead_constants.FORECAST_VERBAL]
+        top_strong = data["top_opportunities"][lead_constants.FORECAST_STRONG]
+        top_50_50 = data["top_opportunities"][lead_constants.FORECAST_FIFTY_FIFTY]
+        self.assertEqual(len(top_closed), 2)
+        self.assertEqual(len(top_verbal), 0)
+        self.assertEqual(len(top_strong), 1)
+        self.assertEqual(len(top_50_50), 0)
+
+        # Add another lead with forecast of STRONG, yet should be same output
+        # as last data generated
+        lead_four = Lead.objects.create(
+            title="fourth lead",
+            created_by=self.representative,
+            claimed_by=self.representative,
+            amount=100,
+            expected_close_date="2020-10-01T05:00:00Z",
+            account=Account.objects.first(),
+        )
+        LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_UPDATED,
+                lead=lead_four,
+                action_taken_by=self.representative,
+                action_timestamp="2020-04-01T05:00:00Z",
+                datetime_created="2020-04-01T05:00:00Z",
+                meta={
+                    "extra": {
+                        "forecast_update": True,
+                        "forecast_amount": 100,
+                        "new_forecast": lead_constants.FORECAST_STRONG,
+                        "previous_forecast": lead_constants.FORECAST_NA,
+                    }
+                }
+            )
+        data = self.generate_org_focus_data()
+        top_closed = data["top_opportunities"][lead_constants.FORECAST_CLOSED]
+        top_verbal = data["top_opportunities"][lead_constants.FORECAST_VERBAL]
+        top_strong = data["top_opportunities"][lead_constants.FORECAST_STRONG]
+        top_50_50 = data["top_opportunities"][lead_constants.FORECAST_FIFTY_FIFTY]
+        self.assertEqual(len(top_closed), 2)
+        self.assertEqual(len(top_verbal), 0)
+        self.assertEqual(len(top_strong), 1)
+        self.assertEqual(len(top_50_50), 0)
+
+        # Add lead with forecast of VERBAL,
+        # should be included as third lead alongside two original CLOSED,
+        # and therefore there should be no STRONG leads in top_opportunities.
+        # This lead belogs to rep_two, and the above should still be the case,
+        # since this is org-level top_opportunities
+        lead_five = Lead.objects.create(
+            title="fifth lead",
+            created_by=self.rep_two,
+            claimed_by=self.rep_two,
+            amount=100,
+            expected_close_date="2020-10-01T05:00:00Z",
+            account=Account.objects.first(),
+        )
+        LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_UPDATED,
+                lead=lead_five,
+                action_taken_by=self.rep_two,
+                action_timestamp="2020-04-01T05:00:00Z",
+                datetime_created="2020-04-01T05:00:00Z",
+                meta={
+                    "extra": {
+                        "forecast_update": True,
+                        "forecast_amount": 100,
+                        "new_forecast": lead_constants.FORECAST_VERBAL,
+                        "previous_forecast": lead_constants.FORECAST_NA,
+                    }
+                }
+            )
+        data = self.generate_org_focus_data()
+        top_closed = data["top_opportunities"][lead_constants.FORECAST_CLOSED]
+        top_verbal = data["top_opportunities"][lead_constants.FORECAST_VERBAL]
+        top_strong = data["top_opportunities"][lead_constants.FORECAST_STRONG]
+        top_50_50 = data["top_opportunities"][lead_constants.FORECAST_FIFTY_FIFTY]
+        self.assertEqual(len(top_closed), 2)
+        self.assertEqual(len(top_verbal), 1)
+        self.assertEqual(len(top_strong), 0)
+        self.assertEqual(len(top_50_50), 0)
