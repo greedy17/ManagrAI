@@ -30,7 +30,7 @@ NOTIFICATION_TITLE_LAPSED_30 = (
 logger = logging.getLogger("managr")
 
 
-def __check_days_lead_expected_close_lapsed(lead_expected_close_date):
+def _check_days_lead_expected_close_lapsed(lead_expected_close_date):
     now = timezone.now()
     if (now - lead_expected_close_date).days > 0:
         return (now - lead_expected_close_date).days
@@ -159,13 +159,13 @@ def create_notifications():
             logger.exception(f"The Reminder with id {row.id} does not reference a lead")
 
 
-@kronos.register("* * * * *")
+@kronos.register("0 0 * * *")
 def create_lead_notifications():
     # alerts for
     #   activity no activity in last 90 days
     #   no response from email after 3 days ## LEAVING THIS OUT FOR NOW
     #   days since expected close date 1 day 14 days 30 days
-    #   stalled in stage
+    #   stalled in stage 60days
     #   admins receive only alerts reps recieve alerts and emails admins can choose to remove
     # 1 get all users who are active will also include super user so mike can also get notifs
     users = User.objects.filter(is_active=True)
@@ -189,7 +189,7 @@ def create_lead_notifications():
             latest_activity = None
             if lead.activity_logs.exists():
                 latest_activity = (
-                    lead.activity_logs.latest("datetime_created").datetime_created
+                    lead.activity_logs.latest("action_timestamp").action_timestamp
                 ).date()
             else:
                 latest_activity = (lead.datetime_created).date()
@@ -236,10 +236,10 @@ def create_lead_notifications():
             expected_close_date = None
             if lead.expected_close_date:
                 expected_close_date = lead.expected_close_date
-                is_lapsed = __check_days_lead_expected_close_lapsed(expected_close_date)
-                if is_lapsed == 1:
-                    notification_late_for_days = is_lapsed
-                elif is_lapsed > 1 <= 14:
+                is_lapsed = _check_days_lead_expected_close_lapsed(expected_close_date)
+                if is_lapsed >= 1 and is_lapsed < 14:
+                    notification_late_for_days = 1
+                elif is_lapsed >= 14 and is_lapsed < 30:
                     notification_late_for_days = 14
                 elif is_lapsed >= 30:
                     notification_late_for_days = 30
