@@ -271,7 +271,7 @@
         <div class="report__middle-row__card__title">
           Top Opportunities
         </div>
-        <!-- <div class="report__middle-row__card__summary">
+        <div class="report__middle-row__card__summary">
           {{ topOpportunitiesSummary }}
         </div>
         <div class="report__middle-row__card__content">
@@ -300,7 +300,7 @@
           >
             --
           </div>
-        </div> -->
+        </div>
       </div>
       <div class="report__middle-row__card">
         <div class="report__middle-row__card__title">
@@ -595,6 +595,11 @@ export default {
       }
       return (currentValue / comparativeValue) * 100
     },
+    topOpportunityMapper(status) {
+      return lead => {
+        return { ...lead, status }
+      }
+    },
   },
   computed: {
     organization() {
@@ -635,6 +640,37 @@ export default {
         return 'trending-down.svg'
       }
       return 'no-trend.svg'
+    },
+    topOpportunitiesSummary() {
+      const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
+      let str = `The team closed ${CLOSED.length} ${pluralize('deal', CLOSED.length)}`
+      if (VERBAL.length) {
+        str += `${STRONG.length || FIFTY_FIFTY.length ? ', ' : 'and'} moved ${
+          VERBAL.length
+        } ${pluralize('opportunity', VERBAL.length)} to verbal`
+      }
+      if (STRONG.length) {
+        str += `${FIFTY_FIFTY.length ? ', ' : 'and'} moved ${STRONG.length} ${pluralize(
+          'opportunity',
+          STRONG.length,
+        )} to strong`
+      }
+      if (FIFTY_FIFTY.length) {
+        str += `${VERBAL.length || STRONG.length ? ',' : ''} and moved ${STRONG.length} ${pluralize(
+          'opportunity',
+          STRONG.length,
+        )} to strong`
+      }
+      return str + '.'
+    },
+    focusTopOpportunities() {
+      const { CLOSED, VERBAL, STRONG, '50/50': FIFTY_FIFTY } = this.focusData.topOpportunities
+      return [
+        ...CLOSED.map(this.topOpportunityMapper('CLOSED')),
+        ...VERBAL.map(this.topOpportunityMapper('VERBAL')),
+        ...STRONG.map(this.topOpportunityMapper('STRONG')),
+        ...FIFTY_FIFTY.map(this.topOpportunityMapper('50/50')),
+      ]
     },
     dealAnalysisSummary() {
       if (!this.canGenerateDealAnalysisSummary) {
