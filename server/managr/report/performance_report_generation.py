@@ -603,6 +603,10 @@ class OrgFocusData(BaseGenerator):
     def __init__(self, report, representative=None):
         self.__cached__non_db_representative_reports = None
         self.__cached__representatives_data = None
+        self.__cached__active_organization_reps = None
+        self.__cached__logs_of_closing_events = None
+        self.__cached__closed_leads = None
+
         super().__init__(report)
 
     @property
@@ -610,6 +614,32 @@ class OrgFocusData(BaseGenerator):
         return "OrgFocusData"
 
     # private properties:
+
+    @property
+    def _active_organization_reps(self):
+        if self.__cached__active_organization_reps is None:
+            reps = self._organization.users.filter(is_active=True)
+            self.__cached__active_organization_reps = reps
+        return self.__cached__active_organization_reps
+
+    @property
+    def _logs_of_closing_events(self):
+        if self.__cached__logs_of_closing_events is None:
+            logs = LeadActivityLog.objects.filter(
+                activity=lead_constants.LEAD_CLOSED,
+                action_timestamp__gte=self._report.date_range_from,
+                action_timestamp__lte=self._report.date_range_to,
+                action_taken_by__in=self._active_organization_reps,
+            )
+            self.__cached__logs_of_closing_events = logs
+        return self.__cached__logs_of_closing_events
+
+    @property
+    def _closed_leads(self):
+        if self.__cached__closed_leads is None:
+            leads = {log.lead for log in self._logs_of_closing_events}
+            self.__cached__closed_leads = leads
+        return self.__cached__closed_leads
 
     @property
     def _non_db_representative_reports(self):
@@ -621,7 +651,7 @@ class OrgFocusData(BaseGenerator):
                                                             date_range_preset=self._report.date_range_preset,
                                                             generated_by=self._report.generated_by,
                                                             representative=representative,
-                                                        ) for representative in self._organization.users.filter(is_active=True)
+                                                        ) for representative in self._active_organization_reps
                                                 ]
         return self.__cached__non_db_representative_reports
 
@@ -647,6 +677,25 @@ class OrgFocusData(BaseGenerator):
                 return rep_data["data"][by_metric][sub_field]
             return rep_data["data"][by_metric]
         return sorter
+
+    def _deal_analysis_get_field_values(self, field_map):
+        # need to filter out None
+        num_null = field_map.get(None, 0)
+        if num_null:
+            del field_map[None]
+        if bool(field_map):
+            max_key = max(field_map)
+            proportion = field_map[max_key] / (sum(field_map.values()) + num_null)
+            percentage = round(proportion * 100)
+            return {
+                "value": max_key,
+                "percentage": percentage,
+            }
+        else:
+            return {
+                "value": None,
+                "percentage": None,
+            }
 
     # public:
 
@@ -716,6 +765,65 @@ class OrgFocusData(BaseGenerator):
         return serialized_top_performers
 
     @property
+    def deal_analysis(self):
+        # (value => count) for each lead-custom-field:
+        # -- company_size (char-field-choices)
+        # -- industry (char-field-choices)
+        # -- type (char-field-choices)
+        # -- competitor (Bool)
+        # -- geography (String, based on administrative_area_level_1)
+
+        company_size_map = {}
+        industry_map = {}
+        type_map = {}
+        competitor_map = {}
+        geography_map = {}
+
+        # run through CLOSED LEADS, populating the count-maps accordingly
+        for lead in self._closed_leads:
+            # company_size:
+            if company_size_map.get(lead.company_size, None) is None:
+                company_size_map[lead.company_size] = 1
+            else:
+                company_size_map[lead.company_size] += 1
+            # industry:
+            if industry_map.get(lead.industry, None) is None:
+                industry_map[lead.industry] = 1
+            else:
+                industry_map[lead.industry] += 1
+            # type:
+            if type_map.get(lead.type, None) is None:
+                type_map[lead.type] = 1
+            else:
+                type_map[lead.type] += 1
+            # competitor:
+            if competitor_map.get(lead.competitor, None) is None:
+                competitor_map[lead.competitor] = 1
+            else:
+                competitor_map[lead.competitor] += 1
+            # geography:
+            geography_component = lead.geography_address_components.get("administrative_area_level_1", None)
+            if geography_component is not None:
+                key = geography_component["long_name"]
+                if geography_map.get(key, None) is None:
+                    geography_map[key] = 1
+                else:
+                    geography_map[key] += 1
+            else:
+                if geography_map.get(None, None) is None:
+                    geography_map[None] = 1
+                else:
+                    geography_map[None] = 1
+
+        return {
+            "company_size": self._deal_analysis_get_field_values(company_size_map),
+            "industry": self._deal_analysis_get_field_values(industry_map),
+            "type": self._deal_analysis_get_field_values(type_map),
+            "competitor": self._deal_analysis_get_field_values(competitor_map),
+            "geography": self._deal_analysis_get_field_values(geography_map),
+        }
+
+    @property
     def as_dict_for_organization_report(self):
         return {
             # For Summary Box:
@@ -769,6 +877,8 @@ class OrgFocusData(BaseGenerator):
                                     num_representatives=1,
                                 ),
             },
+            # For Deal Analysis:
+            "deal_analysis": self.deal_analysis,
         }
 
     @property
