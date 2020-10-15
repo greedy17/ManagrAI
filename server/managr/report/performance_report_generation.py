@@ -607,6 +607,7 @@ class OrgFocusData(BaseGenerator):
         self.__cached__active_rep_logs = None
         self.__cached__logs_for_closing_events = None
         self.__cached__closed_leads = None
+        self.__cached__closed_leads_data = None
 
         super().__init__(report)
 
@@ -649,6 +650,13 @@ class OrgFocusData(BaseGenerator):
             leads = {log.lead for log in self._logs_for_closing_events}
             self.__cached__closed_leads = leads
         return self.__cached__closed_leads
+
+    @property
+    def _closed_leads_data(self):
+        if self.__cached__closed_leads_data is None:
+            data = [LeadDataGenerator(lead).as_dict for lead in self._closed_leads]
+            self.__cached__closed_leads_data = data
+        return self.__cached__closed_leads_data
 
     @property
     def _non_db_representative_reports(self):
@@ -848,6 +856,18 @@ class OrgFocusData(BaseGenerator):
         return output
 
     @property
+    def actions_to_close_opportunity_most_performed(self):
+        actions_map = {}
+        for cld in self._closed_leads_data:
+            actions_dict = cld["custom_action_counts"]
+            for key in actions_dict:
+                if actions_map.get(key, None) is None:
+                    actions_map[key] = actions_dict[key]
+                else:
+                    actions_map[key] += actions_dict[key]
+        return max(actions_map) if bool(actions_map) else None
+
+    @property
     def deal_analysis(self):
         # (value => count) for each lead-custom-field:
         # -- company_size (char-field-choices)
@@ -935,7 +955,7 @@ class OrgFocusData(BaseGenerator):
             },
             "top_opportunities": self.top_opportunities,
             "sales_cycle": {
-                "value": self.average_for_field("sales_cycle", could_be_null=True),
+                "average": self.average_for_field("sales_cycle", could_be_null=True),
                 "top_performer": self.top_performers(
                                     by_metric="sales_cycle",
                                     highest_value_best=False,
@@ -943,7 +963,7 @@ class OrgFocusData(BaseGenerator):
                                 ),
             },
             "actions_to_close_opportunity": {
-                "value": self.average_for_field(
+                "average": self.average_for_field(
                             "actions_to_close_opportunity",
                             sub_field="average",
                             could_be_null=True,
@@ -953,9 +973,10 @@ class OrgFocusData(BaseGenerator):
                                     sub_field="average",
                                     num_representatives=1,
                                 ),
+                "most_performed": self.actions_to_close_opportunity_most_performed,
             },
             "ACV": {
-                "value": self.average_for_field("ACV", could_be_null=True),
+                "average": self.average_for_field("ACV", could_be_null=True),
                 "top_performer": self.top_performers(
                                     by_metric="ACV",
                                     num_representatives=1,

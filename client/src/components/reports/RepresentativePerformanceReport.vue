@@ -396,7 +396,7 @@
           {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }} actions to
           close a deal.
           {{
-            focusData.actionsToCloseOpportunity.average
+            !isNull(focusData.actionsToCloseOpportunity.average)
               ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
           action.`
               : null
@@ -522,10 +522,7 @@
           {{ focusRepDisplayNameShort }} is #{{ focusRepPerformanceRank }} in overall performance.
         </div>
         <div class="report__middle-row__card__content">
-          <div
-            class="report__middle-row__card__content__row"
-            style="align-items: unset; padding-top: 1rem;"
-          >
+          <div class="report__middle-row__card__content__row" style="align-items: unset;">
             <div
               v-for="(rep, idx) in organizationFocusData.topPerformers"
               :key="idx"

@@ -313,13 +313,13 @@
         <div class="report__middle-row__card__summary" v-else>
           The team's sales cycle
           {{
-            focusData.salesCycle.value > Number(typicalData.salesCycle)
+            focusData.salesCycle.average > Number(typicalData.salesCycle)
               ? 'extended'
-              : focusData.salesCycle.value < Number(typicalData.salesCycle)
+              : focusData.salesCycle.average < Number(typicalData.salesCycle)
               ? 'contracted'
               : 'steadied'
           }}
-          this month to {{ focusData.salesCycle.value | roundToOneDecimalPlace }} days.
+          this month to {{ focusData.salesCycle.average | roundToOneDecimalPlace }} days.
         </div>
         <div class="report__middle-row__card__content">
           <div>
@@ -330,18 +330,18 @@
               <div
                 class="mid-gray-font"
                 style="font-weight: 600; margin-left: auto;"
-                v-if="isNull(focusData.salesCycle.value)"
+                v-if="isNull(focusData.salesCycle.average)"
               >
                 N/A
               </div>
               <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;" v-else>
-                {{ focusData.salesCycle.value | roundToOneDecimalPlace }} days
+                {{ focusData.salesCycle.average | roundToOneDecimalPlace }} days
               </div>
             </div>
             <div style="padding: 0 1rem;">
               <ProgressBar
                 :percentComplete="
-                  generateProgressBarValue(focusData.salesCycle.value, typicalData.salesCycle)
+                  generateProgressBarValue(focusData.salesCycle.average, typicalData.salesCycle)
                 "
                 :centerPiece="false"
                 :widthValue="100"
@@ -368,12 +368,178 @@
             <div style="padding: 0 1rem;">
               <ProgressBar
                 :percentComplete="
-                  generateProgressBarValue(typicalData.salesCycle, focusData.salesCycle.value)
+                  generateProgressBarValue(typicalData.salesCycle, focusData.salesCycle.average)
                 "
                 :centerPiece="false"
                 :widthValue="100"
                 :widthUnit="'%'"
               />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report__middle-row">
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          Actions to Close an Opportunity
+        </div>
+        <div
+          class="report__middle-row__card__summary"
+          v-if="isNull(focusData.actionsToCloseOpportunity.average)"
+        >
+          An insight could not be generated because no opportunities were closed
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
+          The team took
+          {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }} actions to
+          close a deal.
+          {{
+            !isNull(focusData.actionsToCloseOpportunity.mostPerformed)
+              ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
+          action.`
+              : null
+          }}
+        </div>
+
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row soft-gray-background">
+            <div style="font-weight: 600; width: 65%;">
+              Average Actions on Closed<br />
+              Opportunities {{ report.dateRangePreset | constantToCapitalized }}
+            </div>
+            <div
+              v-if="isNull(focusData.actionsToCloseOpportunity.average)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }}
+            </div>
+          </div>
+          <div class="report__middle-row__card__content__row">
+            <div style="font-weight: 600; width: 65%;">
+              Typical Average Actions on<br />
+              Closed Opportunities
+            </div>
+            <div
+              v-if="isNull(typicalData.actionsToCloseOpportunity)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.actionsToCloseOpportunity | roundToOneDecimalPlace }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          ACV
+        </div>
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.ACV.average)">
+          An insight could not be generated because the team's ACV for
+          {{ report.dateRangePreset | constantToCapitalized }} is N/A.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
+          The team's ACV
+          {{
+            focusData.ACV.average > Number(typicalData.ACV)
+              ? 'increased'
+              : focusData.ACV.average < Number(typicalData.ACV)
+              ? 'decreased'
+              : 'steadied'
+          }}
+          {{ report.dateRangePreset | constantToCapitalized }} to
+          <template v-if="isNull(focusData.ACV.average)"> {{ localConstants.NA }}</template>
+          <template v-else> {{ focusData.ACV.average | currencyNoCents }}</template>
+          from
+          <template v-if="isNull(typicalData.ACV)"> {{ localConstants.NA }}</template>
+          <template v-else>
+            {{ typicalData.ACV | currencyNoCents }}
+          </template>
+          .
+        </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row soft-gray-background">
+            <div style="font-weight: 600; width: 40%;">
+              ACV {{ report.dateRangePreset | constantToCapitalized }}
+            </div>
+            <div
+              v-if="isNull(focusData.ACV.average)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ focusData.ACV.average | currencyNoCents }}
+            </div>
+          </div>
+          <div class="report__middle-row__card__content__row">
+            <div style="font-weight: 600; width: 40%;">
+              Typical ACV
+            </div>
+            <div
+              v-if="isNull(typicalData.ACV)"
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              N/A
+            </div>
+            <div
+              v-else
+              style="font-weight: 600; font-size: 1.5rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ typicalData.ACV | currencyNoCents }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          Top Performers based on Actions
+        </div>
+        <div class="report__middle-row__card__summary">
+          These people performed the most actions.
+        </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row" style="align-items: unset;">
+            <div
+              v-for="(rep, idx) in focusData.topPerformersByActions"
+              :key="idx"
+              class="report__middle-row__card__content__column"
+              style="justify-content: unset;"
+            >
+              <img
+                class="report__middle-row__card__content__column__img"
+                :src="rep.profile_photo ? rep.profile_photo : require('@/assets/images/camera.svg')"
+              />
+              <div class="report__middle-row__card__content__column__text">
+                {{ rep.rank }}. {{ generateRepDisplayName(rep) }}
+              </div>
+              <div class="report__middle-row__card__content__column__text">
+                {{ rep.actions_count }}
+              </div>
             </div>
           </div>
         </div>
