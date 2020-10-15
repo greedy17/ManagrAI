@@ -237,6 +237,149 @@
       </table>
     </div>
 
+    <div class="report__middle-row">
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          Forecast
+        </div>
+        <div class="report__middle-row__card__summary">
+          The team added {{ focusData.forecastTableAdditions.value }} opportunities to the forecast.
+          {{
+            forecastAdditionsProportion !== localConstants.NA
+              ? forecastAdditionsProportion === 1
+                ? 'That is consistent with the typical number.'
+                : `That is ${forecastAdditionsProportion} times the typical number.`
+              : 'Since the typical number of additions is N/A, no trend could be determined.'
+          }}
+        </div>
+        <div class="report__middle-row__card__content">
+          <div class="report__middle-row__card__content__row">
+            <div
+              style="font-weight: 600; font-size: 3rem; margin: 0 1rem 0 auto;"
+              class="dark-green-font"
+            >
+              {{ forecastAdditionsProportion }}
+            </div>
+            <img
+              style="margin: 0 auto 0 1rem; height: 3rem; width: 3rem;"
+              :src="require(`@/assets/images/${forecastAdditionsIcon}`)"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          Top Opportunities
+        </div>
+        <!-- <div class="report__middle-row__card__summary">
+          {{ topOpportunitiesSummary }}
+        </div>
+        <div class="report__middle-row__card__content">
+          <div
+            v-for="(lead, idx) in focusTopOpportunities"
+            :key="idx"
+            class="report__middle-row__card__content__row"
+            :class="{ 'soft-gray-background': idx % 2 !== 0 }"
+          >
+            <div style="font-weight: 600; width: 49%;">
+              {{ lead.title }}
+            </div>
+            <div style="font-weight: 600; margin: 0 1rem 0 auto;" class="mid-gray-font">
+              {{ lead.status | constantToCapitalized }},
+              {{
+                lead.status === Lead.CLOSED ? lead.closing_amount : lead.amount | currencyNoCents
+              }}
+            </div>
+          </div>
+          <div
+            v-for="n in 3 - focusTopOpportunities.length"
+            :key="focusTopOpportunities.length - 1 + n"
+            class="report__middle-row__card__content__row"
+            :class="{ 'soft-gray-background': (focusTopOpportunities.length + n) % 2 == 0 }"
+            style="justify-content: center;"
+          >
+            --
+          </div>
+        </div> -->
+      </div>
+      <div class="report__middle-row__card">
+        <div class="report__middle-row__card__title">
+          Sales Cycle
+        </div>
+        <div class="report__middle-row__card__summary" v-if="isNull(focusData.salesCycle.value)">
+          The team's sales cycle trend could not be determined for
+          {{ report.dateRangePreset | constantToCapitalized }}.
+        </div>
+        <div class="report__middle-row__card__summary" v-else>
+          The team's sales cycle
+          {{
+            focusData.salesCycle.value > Number(typicalData.salesCycle)
+              ? 'extended'
+              : focusData.salesCycle.value < Number(typicalData.salesCycle)
+              ? 'contracted'
+              : 'steadied'
+          }}
+          this month to {{ focusData.salesCycle.value | roundToOneDecimalPlace }} days.
+        </div>
+        <div class="report__middle-row__card__content">
+          <div>
+            <div style="margin: 0 0 0.5rem 0;" class="report__middle-row__card__content__row">
+              <div style="font-weight: 600;">
+                {{ report.dateRangePreset | constantToCapitalized }}
+              </div>
+              <div
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+                v-if="isNull(focusData.salesCycle.value)"
+              >
+                N/A
+              </div>
+              <div class="mid-gray-font" style="font-weight: 600; margin-left: auto;" v-else>
+                {{ focusData.salesCycle.value | roundToOneDecimalPlace }} days
+              </div>
+            </div>
+            <div style="padding: 0 1rem;">
+              <ProgressBar
+                :percentComplete="
+                  generateProgressBarValue(focusData.salesCycle.value, typicalData.salesCycle)
+                "
+                :centerPiece="false"
+                :widthValue="100"
+                :widthUnit="'%'"
+              />
+            </div>
+          </div>
+          <div>
+            <div style="margin: 2rem 0 0.5rem 0;" class="report__middle-row__card__content__row">
+              <div style="font-weight: 600;">
+                Typical {{ dateRangePresetFocus | constantToCapitalized }}
+              </div>
+              <div
+                v-if="isNull(typicalData.salesCycle)"
+                class="mid-gray-font"
+                style="font-weight: 600; margin-left: auto;"
+              >
+                N/A
+              </div>
+              <div v-else class="mid-gray-font" style="font-weight: 600; margin-left: auto;">
+                {{ typicalData.salesCycle | roundToOneDecimalPlace }} days
+              </div>
+            </div>
+            <div style="padding: 0 1rem;">
+              <ProgressBar
+                :percentComplete="
+                  generateProgressBarValue(typicalData.salesCycle, focusData.salesCycle.value)
+                "
+                :centerPiece="false"
+                :widthValue="100"
+                :widthUnit="'%'"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="report__deal-analysis">
       <div class="report__deal-analysis__title">
         Deal Analysis
@@ -442,6 +585,16 @@ export default {
     generateRepDisplayName(rep) {
       return rep.full_name.trim() ? rep.full_name : rep.email.slice(0, 10) + '...'
     },
+    generateProgressBarValue(currentValue, comparativeValue) {
+      // To be used with sales cycle statistics
+      if (isNull(currentValue)) {
+        return 0
+      }
+      if (isNull(comparativeValue) || currentValue > comparativeValue) {
+        return 100
+      }
+      return (currentValue / comparativeValue) * 100
+    },
   },
   computed: {
     organization() {
@@ -456,6 +609,32 @@ export default {
     dateRangePresetFocus() {
       // Remove 'THE' from the dateRangePreset constant (e.g. THIS_MONTH)
       return this.report.dateRangePreset.split('_')[1]
+    },
+    forecastAdditionsProportion() {
+      const focus = this.focusData.forecastTableAdditions.value
+      const typical = this.typicalData.forecastTableAdditions
+      if (isNull(focus) || isNull(typical)) {
+        return this.localConstants.NA
+      }
+      if (!focus && !typical) {
+        return 1
+      }
+      if (!focus) {
+        return 0
+      }
+      if (!typical) {
+        return focus
+      }
+      return roundToOneDecimalPlace(focus / typical)
+    },
+    forecastAdditionsIcon() {
+      if (this.forecastAdditionsProportion > 1) {
+        return 'trending-up.svg'
+      }
+      if (this.forecastAdditionsProportion < 1) {
+        return 'trending-down.svg'
+      }
+      return 'no-trend.svg'
     },
     dealAnalysisSummary() {
       if (!this.canGenerateDealAnalysisSummary) {
