@@ -411,12 +411,6 @@ class NotificationOption(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
-        unique_together = (
-            # only allow a single key with two types per user group
-            "key",
-            "notification_type",
-            "user_groups",
-        )
 
     def get_value(self, user):
         selection = self.selections.filter(user=user)

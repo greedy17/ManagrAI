@@ -6,7 +6,7 @@
       "title": "Email",
       "description": "Turn On/Off Alert Notifications for received emails",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -20,7 +20,7 @@
       "title": "Organization",
       "description": "Turn On/Off Email Notifications for updates to my Organization",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -34,7 +34,7 @@
       "title": "Organization",
       "description": "Turn On/Off Alert Notifications for updates to my Organization",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -48,7 +48,7 @@
       "title": "Reports",
       "description": "Turn On/Off Email Notifications for generated Reports",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -62,7 +62,7 @@
       "title": "Reports",
       "description": "Turn On/Off Alert Notifications for generated Reports",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -76,7 +76,7 @@
       "title": "Account",
       "description": "Turn On/Off Email Notifications for changes to my Managr Account",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -90,7 +90,7 @@
       "title": "Account",
       "description": "Turn On/Off Alert Notifications for changes to my Managr Account",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -104,7 +104,7 @@
       "title": "Text",
       "description": "Turn On/Off Email Notifications for Text Messages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -118,7 +118,7 @@
       "title": "Text",
       "description": "Turn On/Off Alert Notifications for Text Messages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -132,7 +132,7 @@
       "title": "Reminders",
       "description": "Turn On/Off Email Notifications for Reminders",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -146,7 +146,7 @@
       "title": "Reminders",
       "description": "Turn On/Off Alert Notifications for Reminders",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
@@ -155,16 +155,72 @@
   },
   {
     "model": "core.NotificationOption",
-    "pk": "5c962123-2045-4a93-aea2-ba1b2054faa6",
+    "pk": "f9cc3934-f82b-442f-9d63-73de73d5d115",
     "fields": {
-      "title": "Reminders",
-      "description": "Turn On/Off Alert Notifications ",
+      "title": "Opportunity Stalled in Stage",
+      "description": "Turn On/Off Alert Notifications When an opportunity is stalled in a stage for 60days+ ",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "REMINDER"
+      "key": "OPPORTUNITY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "845c1d76-8743-4695-b6cf-9af7b0aaab14",
+    "fields": {
+      "title": "Opportunity Inactive",
+      "description": "Turn On/Off Alert Notifications When an opportunity has no recorded activity in a stage for 90days+ ",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "OPPORTUNITY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "5d19b999-c0bf-429a-a8f5-17b9bc2efdc6",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 1 day",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by 1 day",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "OPPORTUNITY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "2bcddc82-305b-42a8-a295-99b76f418aac",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 14 days",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by at least 14 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "OPPORTUNITY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "0285c84d-10c5-41d8-8a97-d944cc373ad6",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 30 days",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by at least 30 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "key": "OPPORTUNITY"
     }
   }
 ]

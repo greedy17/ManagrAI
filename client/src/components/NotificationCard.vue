@@ -51,7 +51,12 @@ export default {
   },
   computed: {
     notificationIcon() {
-      switch (this.notification.notificationType) {
+      let notification = this.notification.notificationType
+      notification = notification.split('.')
+      notification = notification[0]
+      // special notification types OPPORTUNITY.NOTIF_ACTION we only need OPPORTUNITY
+
+      switch (notification) {
         case NOTIFICATION_TYPES.email:
           return 'email'
         case NOTIFICATION_TYPES.reminder:
@@ -62,12 +67,19 @@ export default {
           return 'sms'
         case NOTIFICATION_TYPES.emailOpened:
           return 'checkmark'
+        case NOTIFICATION_TYPES.opportunity:
+          return 'star'
         default:
           return 'alarm'
       }
     },
     formattedNotificationType() {
-      switch (this.notification.notificationType) {
+      // special notification types OPPORTUNITY.NOTIF_ACTION we only need OPPORTUNITY
+
+      let notification = this.notification.notificationType
+      notification = notification.split('.')
+      notification = notification[0]
+      switch (notification) {
         case NOTIFICATION_TYPES.email:
           return 'email'
         case NOTIFICATION_TYPES.message:
@@ -78,6 +90,8 @@ export default {
           return 'system'
         case NOTIFICATION_TYPES.emailOpened:
           return 'email'
+        case NOTIFICATION_TYPES.opportunity:
+          return 'opportunity'
         default:
           return 'system'
       }
