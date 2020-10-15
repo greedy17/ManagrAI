@@ -245,7 +245,9 @@
           to the forecast.
           {{
             forecastAdditionsProportion !== localConstants.NA
-              ? `That is ${forecastAdditionsProportion} times the typical number.`
+              ? forecastAdditionsProportion === 1
+                ? 'That is consistent with the typical number.'
+                : `That is ${forecastAdditionsProportion} times the typical number.`
               : 'Since the typical number of additions is N/A, no trend could be determined.'
           }}
         </div>
@@ -879,8 +881,17 @@ export default {
     forecastAdditionsProportion() {
       const focus = this.focusData.forecastTableAdditions
       const typical = this.typicalData.forecastTableAdditions
+      if (isNull(focus) || isNull(typical)) {
+        return this.localConstants.NA
+      }
+      if (!focus && !typical) {
+        return 1
+      }
+      if (!focus) {
+        return 0
+      }
       if (!typical) {
-        return focus || this.localConstants.NA
+        return focus
       }
       return roundToOneDecimalPlace(focus / typical)
     },
