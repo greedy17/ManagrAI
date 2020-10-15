@@ -227,7 +227,6 @@ class PerformanceReportRepFocusDataTestCase(TestCase):
             # lead created && lead closed
             action.datetime_created = "2020-06-25 11:39:23.632256Z"
             action.save()
-        # datetime_created not working, so they fall out of range since lead closed long ago
         data = self.generate_report_data()
         average = data["actions_to_close_opportunity"]["average"]
         most_performed = data["actions_to_close_opportunity"]["most_performed"]
@@ -839,6 +838,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             is_active=True,
             organization=self.organization,
         )
+        self.rep_two = representative
         # generate closed lead
         lead_one = Lead.objects.create(
             title="first lead",
@@ -850,6 +850,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             expected_close_date="2020-08-05T05:00:00Z",
             account=Account.objects.first(),
         )
+        self.rep_two_closed_lead_one = lead_one
         log_one = LeadActivityLog.objects.create(
                 activity=lead_constants.LEAD_CLOSED,
                 lead=lead_one,
@@ -1213,3 +1214,52 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         }
         data = self.generate_org_focus_data()
         self.assertDictEqual(data["deal_analysis"], expected)
+
+    def test_actions_to_close_opportunity_most_performed(self):
+        # Fixture data includes one action for lead one,
+        # zero actions for lead two,
+        # and a total of two leads.
+        data = self.generate_org_focus_data()
+        most_performed = data["actions_to_close_opportunity"]["most_performed"]
+        self.assertEqual(most_performed, 'TEST ACTION ONE')
+
+        # add enough actions for closed_lead_one of rep_one that this new action
+        # is most-performed for organization
+        action_type = ActionChoice.objects.create(
+            title="test-choice-one",
+            organization=self.organization,
+        )
+        for n in range(10):
+            action = Action.objects.create(
+                action_type=action_type,
+                created_by=self.representative,
+                lead=self.closed_lead_one,
+            )
+            # datetime_created must be between:
+            # lead created && lead closed
+            action.datetime_created = "2020-06-25 11:39:23.632256Z"
+            action.save()
+        data = self.generate_org_focus_data()
+        most_performed = data["actions_to_close_opportunity"]["most_performed"]
+        self.assertEqual(most_performed, action_type.title)
+
+        # add enough actions for closed_lead_one of rep_two that this new action
+        # is most-performed for organization
+        self.generate_rep_two_focus_data()
+        action_type = ActionChoice.objects.create(
+            title="test-choice-two",
+            organization=self.organization,
+        )
+        for n in range(15):
+            action = Action.objects.create(
+                action_type=action_type,
+                created_by=self.rep_two,
+                lead=self.rep_two_closed_lead_one,
+            )
+            # datetime_created must be between:
+            # lead created && lead closed
+            action.datetime_created = "2020-06-25 11:39:23.632256Z"
+            action.save()
+        data = self.generate_org_focus_data()
+        most_performed = data["actions_to_close_opportunity"]["most_performed"]
+        self.assertEqual(most_performed, action_type.title)
