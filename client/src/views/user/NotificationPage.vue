@@ -69,6 +69,9 @@ export default {
   },
   methods: {
     async markAsViewed(notifications) {
+      if (!notifications.length) {
+        return
+      }
       let ids = notifications.map(n => n.id)
       await Notification.api.markAsViewed(ids)
       for (let n of notifications) {
