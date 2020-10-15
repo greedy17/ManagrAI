@@ -214,7 +214,7 @@
           </td>
           <td
             class="report__summary-container__summary-table__statistic-cell"
-            style="text-align: center; padding: 1.5rem 0;"
+            style="text-align: center; padding: 1rem 0;"
             v-for="performer in focusData.topPerformersByACV"
             :key="performer.id"
           >
@@ -236,11 +236,159 @@
         </tr>
       </table>
     </div>
+
+    <div class="report__deal-analysis">
+      <div class="report__deal-analysis__title">
+        Deal Analysis
+      </div>
+      <div class="report__deal-analysis__summary" v-if="focusData.dealsClosedCount">
+        {{ dealAnalysisSummary }}
+      </div>
+      <div class="report__deal-analysis__breakdown" v-if="focusData.dealsClosedCount">
+        <!-- Industry -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div
+            v-if="isNull(focusData.dealAnalysis.industry.value)"
+            class="report__deal-analysis__breakdown__category__title"
+          >
+            Industry: N/A
+          </div>
+          <div v-else class="report__deal-analysis__breakdown__category__title">
+            {{ focusData.dealAnalysis.industry.value | constantToCapitalized }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.industry.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.industry.percentage || 0 }}%
+          </div>
+        </div>
+
+        <!-- Geography -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{
+              isNull(focusData.dealAnalysis.geography.value)
+                ? 'Geography: N/A'
+                : focusData.dealAnalysis.geography.value
+            }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.geography.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.geography.percentage || 0 }}%
+          </div>
+        </div>
+
+        <!-- companySize -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{
+              isNull(focusData.dealAnalysis.companySize.value)
+                ? 'Company Size: N/A'
+                : focusData.dealAnalysis.companySize.value + ' Employees'
+            }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.companySize.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.companySize.percentage || 0 }}%
+          </div>
+        </div>
+
+        <!-- type -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{
+              isNull(focusData.dealAnalysis.type.value)
+                ? 'Type: N/A'
+                : focusData.dealAnalysis.type.value === localConstants.OTHER
+                ? 'Type: Other'
+                : focusData.dealAnalysis.type.value
+            }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.type.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.type.percentage || 0 }}%
+          </div>
+        </div>
+
+        <!-- competitor -->
+        <div class="report__deal-analysis__breakdown__category">
+          <div class="report__deal-analysis__breakdown__category__title">
+            {{
+              isNull(focusData.dealAnalysis.competitor.value)
+                ? 'Competitor: N/A'
+                : focusData.dealAnalysis.competitor.value === localConstants.YES
+                ? 'Competitor Switch'
+                : focusData.dealAnalysis.competitor.value === localConstants.NO
+                ? 'Not using a competitor'
+                : 'Other (Competitor)'
+            }}
+          </div>
+          <div class="report__deal-analysis__breakdown__category__graphic">
+            <ProgressBar
+              :percentComplete="focusData.dealAnalysis.competitor.percentage"
+              :centerPiece="false"
+              :widthValue="50"
+              :widthUnit="'rem'"
+            />
+          </div>
+          <div class="report__deal-analysis__breakdown__category__percentage">
+            {{ focusData.dealAnalysis.competitor.percentage || 0 }}%
+          </div>
+        </div>
+      </div>
+      <div class="report__deal-analysis__none-closed" v-else>
+        No deals closed.
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import pluralize from 'pluralize'
+import Lead from '@/services/leads'
 import PerformanceReport from '@/services/performanceReports'
+import { constantToCapitalized, isNull } from '@/services/utils'
+import { roundToOneDecimalPlace } from '@/services/filters'
+import ProgressBar from '@/components/reports/ProgressBar'
+
+const NA = 'N/A'
+const OTHER = 'OTHER'
+const YES = 'YES'
+const NO = 'NO'
+
+const localConstants = {
+  NA,
+  OTHER,
+  YES,
+  NO,
+}
 
 export default {
   name: 'OrganizationPerformanceReport',
@@ -249,6 +397,17 @@ export default {
       required: true,
       type: PerformanceReport,
     },
+  },
+  components: {
+    ProgressBar,
+  },
+  data() {
+    return {
+      Lead,
+      localConstants,
+      constantToCapitalized,
+      isNull,
+    }
   },
   created() {
     console.log({ ...this.report.data })
@@ -297,6 +456,53 @@ export default {
     dateRangePresetFocus() {
       // Remove 'THE' from the dateRangePreset constant (e.g. THIS_MONTH)
       return this.report.dateRangePreset.split('_')[1]
+    },
+    dealAnalysisSummary() {
+      if (!this.canGenerateDealAnalysisSummary) {
+        return `Insights regarding the team's closed deals could not be generated because the needed data is N/A.`
+      }
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
+      let str = 'The team closed mostly'
+      if (industry.value) {
+        str += ` ${constantToCapitalized(industry.value)}`
+      }
+      str += ' opportunities'
+      if (geography.value) {
+        str += ` in ${geography.value}`
+      }
+      if (geography.value && companySize.value) {
+        str += ','
+      }
+      if (companySize.value) {
+        str += ` with ${companySize.value} employees`
+      }
+      if (industry.value || geography.value || companySize.value) {
+        str += '. They were'
+      }
+      if (type.value) {
+        let value =
+          type.value === this.localConstants.OTHER ? constantToCapitalized(type.value) : type.value
+        str += ` of type ${value}`
+      }
+      if (competitor.value) {
+        str += type.value ? ',' : ''
+        if (competitor.value !== this.localConstants.OTHER) {
+          let usingCompetitor = competitor.value === this.localConstants.YES
+          str += usingCompetitor ? ' using a competitor' : ' not using a competitor'
+        }
+      }
+      str += '.'
+      return str
+    },
+    canGenerateDealAnalysisSummary() {
+      let { industry, geography, companySize, type, competitor } = this.focusData.dealAnalysis
+      return !!(
+        industry.value ||
+        geography.value ||
+        companySize.value ||
+        type.value ||
+        competitor.value
+      )
     },
   },
 }
