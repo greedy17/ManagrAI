@@ -1,5 +1,242 @@
 <template>
-  <div>Organization Performance Report</div>
+  <div class="report">
+    <div class="report__summary-container">
+      <div class="report__summary-container__report-focus soft-gray-background">
+        <img
+          :src="organization.photo ? organization.photo : require('@/assets/images/camera.svg')"
+        />
+        <div class="report__summary-container__report-focus__date-range-preset">
+          {{ report.dateRangePreset | constantToCapitalized }}
+        </div>
+        <div class="report__summary-container__report-focus__representative-info">
+          {{ organization.name }}
+        </div>
+      </div>
+      <table class="report__summary-container__summary-table">
+        <!-- header row -->
+        <tr class="report__summary-container__summary-table__header-row soft-gray-background">
+          <th></th>
+          <th class="report__summary-container__summary-table__title-cell">Activities</th>
+          <th class="report__summary-container__summary-table__title-cell">Actions</th>
+          <th class="report__summary-container__summary-table__title-cell">
+            Incoming<br />Messages
+          </th>
+          <th class="report__summary-container__summary-table__title-cell">Forecast<br />Amount</th>
+          <th class="report__summary-container__summary-table__title-cell">Deals<br />Closed</th>
+          <th class="report__summary-container__summary-table__title-cell">Amount<br />Closed</th>
+        </tr>
+
+        <!-- content row #1 -->
+        <tr
+          class="report__summary-container__summary-table__content-row report__summary-container__summary-table__focus-row"
+        >
+          <td class="report__summary-container__summary-table__label-cell">
+            {{ report.dateRangePreset | constantToCapitalized }}
+          </td>
+
+          <!-- focusData.activitiesCount -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.activitiesCount }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('activitiesCount')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('activitiesCount') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- focusData.actionsCount -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.actionsCount }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('actionsCount')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('actionsCount') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- focusData.incomingMessagesCount -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.incomingMessagesCount }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('incomingMessagesCount')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('incomingMessagesCount') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- focusData.forecastAmount -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.forecastAmount | currencyNoCents }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('forecastAmount')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('forecastAmount') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- focusData.dealsClosedCount -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.dealsClosedCount }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('dealsClosedCount')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('dealsClosedCount') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- focusData.amountClosed -->
+          <td class="report__summary-container__summary-table__statistic-cell">
+            <div class="report__summary-container__summary-table__statistic-cell__container">
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__value"
+              >
+                {{ focusData.amountClosed | currencyNoCents }}
+              </div>
+              <div
+                class="report__summary-container__summary-table__statistic-cell__container__trend"
+              >
+                <img
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__icon"
+                  :src="require(`@/assets/images/${getTrendIcon('amountClosed')}`)"
+                />
+                <span
+                  class="report__summary-container__summary-table__statistic-cell__container__trend__stat"
+                >
+                  {{ getTrendStat('amountClosed') }}%
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- content row #2 -->
+        <tr class="report__summary-container__summary-table__content-row soft-gray-background">
+          <td class="report__summary-container__summary-table__label-cell">
+            Typical {{ dateRangePresetFocus | constantToCapitalized }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.activitiesCount | roundToOneDecimalPlace }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.actionsCount | roundToOneDecimalPlace }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.incomingMessagesCount | roundToOneDecimalPlace }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.forecastAmount | currencyNoCents }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.dealsClosedCount | roundToOneDecimalPlace }}
+          </td>
+          <td class="report__summary-container__summary-table__statistic-cell">
+            {{ typicalData.amountClosed | currencyNoCents }}
+          </td>
+        </tr>
+
+        <!-- content row #3 -->
+        <tr class="report__summary-container__summary-table__content-row">
+          <td
+            class="report__summary-container__summary-table__label-cell"
+            style="display: flex; flex-flow: column; align-items: flex-start;"
+          >
+            Top Performers
+          </td>
+          <td
+            class="report__summary-container__summary-table__statistic-cell"
+            style="text-align: center; padding: 1.5rem 0;"
+            v-for="performer in focusData.topPerformersByACV"
+            :key="performer.id"
+          >
+            <img
+              class="report__middle-row__card__content__column__img"
+              :src="
+                performer.profile_photo
+                  ? performer.profile_photo
+                  : require('@/assets/images/camera.svg')
+              "
+            />
+            <div class="report__middle-row__card__content__column__text">
+              {{ performer.rank }}. {{ generateRepDisplayName(performer) }}
+            </div>
+            <div class="report__middle-row__card__content__column__text">
+              {{ performer.ACV | currencyNoCents }}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -13,12 +250,279 @@ export default {
       type: PerformanceReport,
     },
   },
-  created() {},
-  methods: {},
-  computed: {},
+  created() {
+    console.log({ ...this.report.data })
+  },
+  methods: {
+    getTrendStat(field) {
+      const focus = this.focusData[field]
+      const typical = this.typicalData[field]
+      if (!typical) {
+        return 0
+      }
+      // | a - b | / b
+      const proportion = Math.abs(focus - typical) / typical
+      // Return as rounded percentage
+      return Math.round(proportion * 100)
+    },
+    getTrendIcon(field) {
+      const focus = this.focusData[field]
+      const typical = this.typicalData[field]
+      if (!typical) {
+        return 'no-trend.svg'
+      }
+      if (typical === focus) {
+        return 'no-trend.svg'
+      }
+      if (focus > typical) {
+        return 'trending-up.svg'
+      } else {
+        return 'trending-down.svg'
+      }
+    },
+    generateRepDisplayName(rep) {
+      return rep.full_name.trim() ? rep.full_name : rep.email.slice(0, 10) + '...'
+    },
+  },
+  computed: {
+    organization() {
+      return this.report.organizationRef
+    },
+    focusData() {
+      return this.report.data.focus
+    },
+    typicalData() {
+      return this.report.data.typical
+    },
+    dateRangePresetFocus() {
+      // Remove 'THE' from the dateRangePreset constant (e.g. THIS_MONTH)
+      return this.report.dateRangePreset.split('_')[1]
+    },
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+.report {
+  padding: 2rem 3rem;
+
+  &__summary-container {
+    border: 1px solid $soft-gray;
+    border-radius: 7px;
+    margin-bottom: 2rem;
+  }
+
+  &__middle-row {
+    display: flex;
+    flex-flow: row;
+    margin-bottom: 2rem;
+  }
+
+  &__deal-analysis {
+    border: 1px solid $soft-gray;
+    border-radius: 7px;
+    padding: 1rem;
+  }
+}
+
+.report__summary-container {
+  &__report-focus {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: row;
+    max-height: 1rem;
+    overflow: visible;
+    padding: 0.5rem;
+
+    img {
+      height: 4rem;
+      width: 4rem;
+      border-radius: 50%;
+      border: 2px solid $yellow;
+      object-fit: cover;
+    }
+
+    &__date-range-preset {
+      font-weight: 600;
+      padding: 0 0.5rem;
+    }
+
+    &__representative-info {
+      font-weight: 600;
+      color: $mid-gray;
+      padding: 0 0.5rem;
+    }
+  }
+
+  &__summary-table {
+    width: 100%;
+    border-spacing: 0;
+    table-layout: fixed;
+
+    &__focus-row {
+      color: $dark-green;
+      font-weight: 600;
+    }
+
+    &__title-cell {
+      padding: 0.6rem 0;
+      text-align: left;
+    }
+
+    &__label-cell {
+      padding: 0.6rem;
+    }
+
+    &__statistic-cell {
+      padding: 0.6rem 0;
+
+      &__container {
+        display: flex;
+        flex-flow: row;
+
+        &__trend {
+          margin-left: 1rem;
+          &__icon {
+            height: 0.7rem;
+          }
+          &__stat {
+            color: $mid-gray;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+.report__middle-row {
+  &__card {
+    border: 1px solid $soft-gray;
+    border-radius: 7px;
+    height: 15rem;
+    min-width: 22rem;
+    width: 30%;
+    max-width: 35rem;
+    display: flex;
+    flex-flow: column;
+
+    &__title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      padding: 1rem 1rem 0 1rem;
+    }
+
+    &__summary {
+      font-weight: 600;
+      color: $mid-gray;
+      padding: 0 1rem 0.5rem 1rem;
+      height: 3.5rem;
+      overflow-y: auto;
+    }
+
+    &__content {
+      flex-grow: 1;
+      display: flex;
+      flex-flow: column;
+
+      &__row {
+        flex-grow: 1;
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+        padding: 0 1rem;
+      }
+
+      &__column {
+        flex-grow: 1;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        // padding: 0 1rem;
+
+        &__img {
+          height: 3.5rem;
+          width: 3.5rem;
+          border-radius: 50%;
+          border: 2px solid $yellow;
+          object-fit: cover;
+        }
+
+        &__text {
+          font-size: 0.8rem;
+          color: $mid-gray;
+          padding-top: 0.5rem;
+        }
+      }
+    }
+  }
+
+  & > &__card:first-of-type {
+    margin-right: auto;
+  }
+
+  & > &__card:last-of-type {
+    margin-left: auto;
+  }
+}
+
+.report__deal-analysis {
+  &__title {
+    font-weight: 600;
+    padding-bottom: 0.4rem;
+  }
+
+  &__summary {
+    font-weight: 600;
+    color: $mid-gray;
+    margin-bottom: 0.5rem;
+  }
+
+  &__none-closed {
+    color: $mid-gray;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  &__breakdown {
+    &__category {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
+      padding: 0.5rem 0;
+
+      &__title {
+        font-weight: 600;
+        width: 15%;
+      }
+
+      &__percentage {
+        font-weight: 600;
+        color: $mid-gray;
+        padding-left: 1rem;
+      }
+    }
+  }
+}
+
+.soft-gray-background {
+  background-color: $soft-gray;
+
+  & > .report__summary-container__summary-table__statistic-cell:last-of-type {
+    box-shadow: 2px 0 0 -1px $soft-gray;
+  }
+
+  & > .report__summary-container__summary-table__title-cell:last-of-type {
+    box-shadow: 2px 0 0 -1px $soft-gray;
+  }
+}
+
+.dark-green-font {
+  color: $dark-green;
+}
+
+.mid-gray-font {
+  color: $mid-gray;
+}
 </style>
