@@ -23,8 +23,8 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 
 
 class OrganizationRefSerializer(serializers.ModelSerializer):
-    """ 
-        Read Only Serializer for ref of the organization used for UserSerializer
+    """
+        Read Only Serializer for ref of the organization
     """
 
     class Meta:
@@ -32,6 +32,7 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "photo",
             "state",
             "org_token",
             "is_externalsyncenabled",
@@ -46,7 +47,7 @@ class StageSerializer(serializers.ModelSerializer):
 
 class AccountRefSerializer(serializers.ModelSerializer):
     """
-        Read only serializer for ref of the Account 
+        Read only serializer for ref of the Account
         used for the AccountSerializer
     """
 
@@ -68,6 +69,7 @@ class OrganizationVerboseSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "photo",
             "state",
             "accounts",
             "accounts_ref",
@@ -91,6 +93,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "photo",
             "state",
             "total_amount_closed_contracts",
             "avg_amount_closed_contracts",
@@ -100,9 +103,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class AccountSerializer(serializers.ModelSerializer):
     """ 
-        Serializer for Accounts tied to organization 
+        Serializer for Accounts tied to organization
         Only Organization Managers can add, update, delete accounts
-        Other users can list  
+        Other users can list
     """
 
     lead_count = serializers.SerializerMethodField()
