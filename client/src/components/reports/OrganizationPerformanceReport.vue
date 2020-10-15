@@ -741,9 +741,6 @@ export default {
       isNull,
     }
   },
-  created() {
-    console.log({ ...this.report.data })
-  },
   methods: {
     getTrendStat(field) {
       const focus = this.focusData[field]
