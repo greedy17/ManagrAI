@@ -1,6 +1,8 @@
 <template>
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0">
+      <button class="mark-all-as-viewed" @click="markAllAsViewed">MARK ALL AS READ</button>
+
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
         <span class="muted" :key="key">
           {{ key }}
@@ -9,7 +11,7 @@
 
         <NotificationCard
           v-for="(item, i) in value"
-          @mark-as-viewed="markAsViewed"
+          @mark-as-viewed="markAsViewed([item])"
           :key="item.id"
           :notification="item"
         />
@@ -66,10 +68,17 @@ export default {
     await this.notifications.refresh()
   },
   methods: {
-    async markAsViewed(notification) {
-      await Notification.api.markAsViewed([notification.id])
-      notification.viewed = true
-      this.$emit('viewed-notif')
+    async markAsViewed(notifications) {
+      let ids = notifications.map(n => n.id)
+      await Notification.api.markAsViewed(ids)
+      for (let n of notifications) {
+        n.viewed = true
+      }
+      this.$emit('viewed-notif', notifications.length)
+    },
+    markAllAsViewed() {
+      let unviewed = this.notifications.list.filter(n => !n.viewed)
+      this.markAsViewed(unviewed)
     },
     formattedNotifications(list) {
       if (list.length <= 0) {
@@ -118,8 +127,14 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/mixins/buttons';
 
 .muted {
   text-transform: capitalize;
+}
+
+.mark-all-as-viewed {
+  @include secondary-button;
+  margin: 1rem auto;
 }
 </style>
