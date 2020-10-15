@@ -266,6 +266,11 @@
             />
           </div>
         </div>
+        <div class="report__middle-row__card__footer">
+          Best Performer:
+          {{ generateRepDisplayName(focusData.forecastTableAdditions.topPerformer[0], true) }}
+          ({{ focusData.forecastTableAdditions.topPerformer[0].forecast_table_additions }})
+        </div>
       </div>
       <div class="report__middle-row__card">
         <div class="report__middle-row__card__title">
@@ -377,6 +382,12 @@
             </div>
           </div>
         </div>
+        <div class="report__middle-row__card__footer">
+          Best Performer:
+          {{ generateRepDisplayName(focusData.salesCycle.topPerformer[0], true) }} ({{
+            focusData.salesCycle.topPerformer[0].sales_cycle
+          }})
+        </div>
       </div>
     </div>
 
@@ -403,7 +414,6 @@
               : null
           }}
         </div>
-
         <div class="report__middle-row__card__content">
           <div class="report__middle-row__card__content__row soft-gray-background">
             <div style="font-weight: 600; width: 65%;">
@@ -445,6 +455,14 @@
               {{ typicalData.actionsToCloseOpportunity | roundToOneDecimalPlace }}
             </div>
           </div>
+        </div>
+        <div class="report__middle-row__card__footer">
+          Best Performer:
+          {{ generateRepDisplayName(focusData.actionsToCloseOpportunity.topPerformer[0], true) }}
+          ({{
+            focusData.actionsToCloseOpportunity.topPerformer[0].actions_to_close_opportunity
+              .average
+          }})
         </div>
       </div>
       <div class="report__middle-row__card">
@@ -513,6 +531,11 @@
               {{ typicalData.ACV | currencyNoCents }}
             </div>
           </div>
+        </div>
+        <div class="report__middle-row__card__footer">
+          Best Performer: {{ generateRepDisplayName(focusData.ACV.topPerformer[0], true) }} ({{
+            focusData.ACV.topPerformer[0].ACV | currencyNoCents
+          }})
         </div>
       </div>
       <div class="report__middle-row__card">
@@ -748,8 +771,12 @@ export default {
         return 'trending-down.svg'
       }
     },
-    generateRepDisplayName(rep) {
-      return rep.full_name.trim() ? rep.full_name : rep.email.slice(0, 10) + '...'
+    generateRepDisplayName(rep, keepWholeEmail) {
+      return rep.full_name.trim()
+        ? rep.full_name
+        : keepWholeEmail
+        ? rep.email
+        : rep.email.slice(0, 10) + '...'
     },
     generateProgressBarValue(currentValue, comparativeValue) {
       // To be used with sales cycle statistics
@@ -987,7 +1014,7 @@ export default {
   &__card {
     border: 1px solid $soft-gray;
     border-radius: 7px;
-    height: 15rem;
+    height: 18rem;
     min-width: 22rem;
     width: 30%;
     max-width: 35rem;
@@ -1042,6 +1069,12 @@ export default {
           padding-top: 0.5rem;
         }
       }
+    }
+
+    &__footer {
+      font-size: 0.8rem;
+      color: $mid-gray;
+      padding: 1rem;
     }
   }
 
