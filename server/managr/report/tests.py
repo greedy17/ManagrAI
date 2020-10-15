@@ -109,7 +109,7 @@ class StoryReportRepresentativeDataGeneratorTestCase(TestCase):
         self.assertEqual(self.rep_data_dict["average_days_ready_to_booked"], average_days_ready_to_booked)
 
 
-class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
+class PerformanceReportRepFocusDataTestCase(TestCase):
     fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
 
     def setUp(self):
@@ -632,7 +632,7 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
         self.assertEqual(len(top_50_50), 0)
 
 
-class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
+class PerformanceReportRepTypicalDataTestCase(TestCase):
     fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
 
     def setUp(self):
@@ -670,7 +670,7 @@ class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
         self.assertEqual(rep_data["sales_cycle"], sales_cycle_average)
 
 
-class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
+class PerformanceReportOrgTypicalDataTestCase(TestCase):
     fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
 
     def setUp(self):
