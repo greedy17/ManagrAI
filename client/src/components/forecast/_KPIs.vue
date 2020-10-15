@@ -94,8 +94,8 @@
                 </span>
               </template>
               <template v-slot:tooltip-content>
-                Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong
-                (expected close rate of 75%) + Verbal (expected close rate of 100%).
+                Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong *
+                (expected close rate of 75%) + Verbal * (expected close rate of 90%).
               </template>
             </Tooltip>
           </span>
