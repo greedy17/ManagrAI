@@ -196,11 +196,8 @@ def create_lead_notifications():
 
             if latest_activity < target_date.date():
                 # 4 check if an alert/email already exists (reps only get alerts not emails)
-                if (
-                    user.type == core_consts.ACCOUNT_TYPE_REP
-                    or _check_if_user_has_enabled_lead_alerts(
-                        user, NOTIFICATION_TITLE_INACTIVE
-                    )
+                if _check_if_user_has_enabled_lead_alerts(
+                    user, NOTIFICATION_TITLE_INACTIVE
                 ):
                     # check notifications for one first
                     has_alert = Notification.objects.filter(
@@ -247,14 +244,9 @@ def create_lead_notifications():
                     notification_type_str = "OPPORTUNITY.LAPSED_EXPECTED_CLOSE_DATE_{}".format(
                         notification_late_for_days
                     )
-                    if (
-                        user.type == core_consts.ACCOUNT_TYPE_REP
-                        or _check_if_user_has_enabled_lead_alerts(
-                            user,
-                            _generate_notification_title_lapsed(
-                                notification_late_for_days
-                            ),
-                        )
+                    if _check_if_user_has_enabled_lead_alerts(
+                        user,
+                        _generate_notification_title_lapsed(notification_late_for_days),
                     ):
                         # check notifications for one first
                         has_alert = Notification.objects.filter(
@@ -290,11 +282,8 @@ def create_lead_notifications():
 
             target_date = (now - timezone.timedelta(days=60)).date()
             if lead.status_last_update.date() < target_date:
-                if (
-                    user.type == core_consts.ACCOUNT_TYPE_REP
-                    or _check_if_user_has_enabled_lead_alerts(
-                        user, NOTIFICATION_TITLE_STALLED_IN_STAGE
-                    )
+                if _check_if_user_has_enabled_lead_alerts(
+                    user, NOTIFICATION_TITLE_STALLED_IN_STAGE
                 ):
                     # check notifications for one first
                     has_alert = Notification.objects.filter(
