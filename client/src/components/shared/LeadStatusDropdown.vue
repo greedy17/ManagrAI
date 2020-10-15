@@ -116,8 +116,8 @@ export default {
       return this.leadItem.statusRef ? this.leadItem.statusRef.title == Lead.CLOSED : false
     },
     leadCanBeClosed() {
-      // All custom-fields must be completed in order to close a lead
-      let fields = ['companySize', 'industry', 'competitor', 'geographyAddress', 'type', 'custom']
+      // Certain custom-fields must be completed in order to close a lead
+      let fields = ['companySize', 'industry', 'competitor', 'geographyAddress', 'type']
       for (let f of fields) {
         if (!this.lead[f]) {
           return false
