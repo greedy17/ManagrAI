@@ -17,6 +17,7 @@ from .story_report_generation import (
 from .performance_report_generation import (
     RepFocusData,
     RepTypicalData,
+    OrgFocusData,
     OrgTypicalData,
 )
 from managr.report import constants as report_const
@@ -800,4 +801,223 @@ class PerformanceReportOrgTypicalDataTestCase(TestCase):
         self.assertEqual(
                 org_averages["amount_closed"],
                 amount_closed,
+            )
+
+
+class PerformanceReportOrgFocusDataTestCase(TestCase):
+    fixtures = ["fixture.json", "report_meta.json", "report_lead_one.json", "report_lead_two.json"]
+
+    def setUp(self):
+        # should be loaded from the fixture, else should error
+        self.representative = User.objects.get(pk="3dddd261-93b1-46fe-a83e-bc164551362a")
+        self.organization = self.representative.organization
+        self.closed_lead_one = Lead.objects.get(pk="99b5e01e-4c8a-4ba5-be09-5407848aa87a")
+        self.closed_lead_two = Lead.objects.get(pk="77d63cfd-dd2d-40a8-9dfb-3c7d6865fd6d")
+        self.rep_performance_report = PerformanceReport.objects.create(
+            representative=self.representative,
+            generated_by=self.representative,
+            date_range_preset=report_const.THIS_YEAR,
+            date_range_from="2020-01-01T04:00:00Z",
+            date_range_to="2020-12-29T03:59:59.999000Z",
+        )
+        self.org_performance_report = PerformanceReport.objects.create(
+            representative=None,
+            generated_by=self.representative,
+            date_range_preset=report_const.THIS_YEAR,
+            date_range_from="2020-01-01T04:00:00Z",
+            date_range_to="2020-12-29T03:59:59.999000Z",
+        )
+
+    def generate_rep_one_focus_data(self):
+        return RepFocusData(self.rep_performance_report).as_dict
+
+    def generate_rep_two_focus_data(self):
+        # generate rep
+        representative = User.objects.create(
+            email="second_report_tester@reports.com",
+            is_invited=True,
+            is_active=True,
+            organization=self.organization,
+        )
+        # generate closed lead
+        lead_one = Lead.objects.create(
+            title="first lead",
+            created_by=representative,
+            claimed_by=representative,
+            status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
+            amount=1000,
+            closing_amount=1000,
+            expected_close_date="2020-08-05T05:00:00Z",
+            account=Account.objects.first(),
+        )
+        log_one = LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_CLOSED,
+                lead=lead_one,
+                action_taken_by=representative,
+                action_timestamp="2020-08-05T05:00:00Z",
+                datetime_created="2020-08-05T05:00:00Z",
+            )
+
+        # make sure that leads dates are static regardless of
+        # whenever these tests are run
+        # All of the dates have to take place before the report's
+        # date_range_from, because that is part of the protocol for
+        # leads/data to be included in the data generation.
+        representative.datetime_created = "2020-06-25T05:00:00Z"
+        representative.save()
+        lead_one.datetime_created = "2020-07-05T05:00:00Z"
+        lead_one.save()
+        log_one.datetime_created = "2020-08-05T05:00:00Z"
+        log_one.action_timestamp = "2020-08-05T05:00:00Z"
+        log_one.save()
+
+        # generate performance report
+        performance_report = PerformanceReport.objects.create(
+            representative=representative,
+            generated_by=representative,
+            date_range_preset=self.rep_performance_report.date_range_preset,
+            date_range_from=self.rep_performance_report.date_range_from,
+            date_range_to=self.rep_performance_report.date_range_to,
+        )
+        return RepFocusData(performance_report).as_dict
+
+    def generate_org_focus_data(self):
+        self.org_data_generator = OrgFocusData(self.org_performance_report)
+        return self.org_data_generator.as_dict_for_organization_report
+
+    def test_sum_for_field(self):
+        """
+        fields that utilize OrgFocusData.sum_for_field:
+        -- activities_count
+        -- actions_count
+        -- incoming_messages_count
+        -- forecast_amount
+        -- deals_closed_count
+        -- amount_closed
+        -- forecast_table_additions.value
+        """
+        # Originally, given fixture:
+        # Only one rep with two leads.
+        # Therefore, averages of OrgFocusData
+        # should be same as the one rep's RepFocusData.
+        rep_one_data = self.generate_rep_one_focus_data()
+        org_data = self.generate_org_focus_data()
+
+        self.assertEqual(
+                org_data["activities_count"],
+                rep_one_data["activities_count"],
+            )
+        self.assertEqual(
+                org_data["actions_count"],
+                rep_one_data["actions_count"],
+            )
+        self.assertEqual(
+                org_data["incoming_messages_count"],
+                rep_one_data["incoming_messages_count"],
+            )
+        self.assertEqual(
+                org_data["forecast_amount"],
+                rep_one_data["forecast_amount"],
+            )
+        self.assertEqual(
+                org_data["deals_closed_count"],
+                rep_one_data["deals_closed_count"],
+            )
+        self.assertEqual(
+                org_data["amount_closed"],
+                rep_one_data["amount_closed"],
+            )
+        self.assertEqual(
+                org_data["forecast_table_additions"]["value"],
+                rep_one_data["forecast_table_additions"],
+            )
+
+        # Add new rep and confirm org_data
+        rep_two_data = self.generate_rep_two_focus_data()
+        org_data = self.generate_org_focus_data()
+
+        activities_count = rep_one_data["activities_count"] + rep_two_data["activities_count"]
+        actions_count = rep_one_data["actions_count"] + rep_two_data["actions_count"]
+        incoming_messages_count = rep_one_data["incoming_messages_count"] + rep_two_data["incoming_messages_count"]
+        forecast_amount = rep_one_data["forecast_amount"] + rep_two_data["forecast_amount"]
+        deals_closed_count = rep_one_data["deals_closed_count"] + rep_two_data["deals_closed_count"]
+        amount_closed = rep_one_data["amount_closed"] + rep_two_data["amount_closed"]
+        forecast_table_additions = rep_one_data["forecast_table_additions"] + rep_two_data["forecast_table_additions"]
+
+        self.assertEqual(
+                org_data["activities_count"],
+                activities_count,
+            )
+        self.assertEqual(
+                org_data["actions_count"],
+                actions_count,
+            )
+        self.assertEqual(
+                org_data["incoming_messages_count"],
+                incoming_messages_count,
+            )
+        self.assertEqual(
+                org_data["forecast_amount"],
+                forecast_amount,
+            )
+        self.assertEqual(
+                org_data["deals_closed_count"],
+                deals_closed_count,
+            )
+        self.assertEqual(
+                org_data["amount_closed"],
+                amount_closed,
+            )
+        self.assertEqual(
+                org_data["forecast_table_additions"]["value"],
+                forecast_table_additions,
+            )
+
+    def test_average_for_field(self):
+        """
+        fields that utilize OrgFocusData.average_for_field:
+        -- sales_cycle.average
+        -- actions_to_close_opportunity.average
+        -- ACV.average
+        """
+        # Originally, given fixture:
+        # Only one rep with two leads.
+        # Therefore, averages of OrgFocusData
+        # should be same as the one rep's RepFocusData.
+        rep_one_data = self.generate_rep_one_focus_data()
+        org_data = self.generate_org_focus_data()
+      
+        self.assertEqual(
+            org_data["sales_cycle"]["average"],
+            rep_one_data["sales_cycle"],
+        )
+        self.assertEqual(
+            org_data["actions_to_close_opportunity"]["average"],
+            rep_one_data["actions_to_close_opportunity"]["average"],
+        )
+        self.assertEqual(
+            org_data["ACV"]["average"],
+            rep_one_data["ACV"],
+        )
+
+        # Add new rep and confirm org_data
+        rep_two_data = self.generate_rep_two_focus_data()
+        org_data = self.generate_org_focus_data()
+        sales_cycle = (rep_one_data["sales_cycle"] + rep_two_data["sales_cycle"]) / 2
+        actions_to_close_opportunity = (
+                        rep_one_data["actions_to_close_opportunity"]["average"] + rep_two_data["actions_to_close_opportunity"]["average"]
+                        ) / 2
+        ACV = (rep_one_data["ACV"] + rep_two_data["ACV"]) / 2
+
+        self.assertEqual(
+                org_data["sales_cycle"]["average"],
+                sales_cycle,
+            )
+        self.assertEqual(
+                org_data["actions_to_close_opportunity"]["average"],
+                actions_to_close_opportunity,
+            )
+        self.assertEqual(
+                org_data["ACV"]["average"],
+                ACV,
             )
