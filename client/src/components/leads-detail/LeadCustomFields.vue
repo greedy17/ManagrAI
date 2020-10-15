@@ -225,15 +225,15 @@ export default {
       let streetNumber = this.getAddressComponent('street_number', address_components)
       let route = this.getAddressComponent('route', address_components)
       let locality = this.getAddressComponent('locality', address_components)
-      let administrativeAreaLevel3 = this.getAddressComponent(
+      let administrative_area_level_3 = this.getAddressComponent(
         'administrative_area_level_3',
         address_components,
       )
-      let administrativeAreaLevel2 = this.getAddressComponent(
+      let administrative_area_level_2 = this.getAddressComponent(
         'administrative_area_level_2',
         address_components,
       )
-      let administrativeAreaLevel1 = this.getAddressComponent(
+      let administrative_area_level_1 = this.getAddressComponent(
         'administrative_area_level_1',
         address_components,
       )
@@ -247,9 +247,9 @@ export default {
         streetNumber,
         route,
         locality,
-        administrativeAreaLevel3,
-        administrativeAreaLevel2,
-        administrativeAreaLevel1,
+        administrative_area_level_3,
+        administrative_area_level_2,
+        administrative_area_level_1,
         country,
         postalCode,
         latitude,
