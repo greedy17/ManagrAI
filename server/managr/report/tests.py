@@ -744,7 +744,7 @@ class PerformanceReportOrgTypicalDataTestCase(TestCase):
         org_data_generator = OrgTypicalData(self.performance_report)
         return org_data_generator.as_dict_for_representative_report
 
-    def test_averages(self):
+    def test_average_for_field(self):
         # Originally, given fixture:
         # Only one rep with two leads.
         # Therefore, averages of OrgTypicalData
