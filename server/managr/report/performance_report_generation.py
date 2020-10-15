@@ -604,7 +604,8 @@ class OrgFocusData(BaseGenerator):
         self.__cached__non_db_representative_reports = None
         self.__cached__representatives_data = None
         self.__cached__active_organization_reps = None
-        self.__cached__logs_of_closing_events = None
+        self.__cached__active_rep_logs = None
+        self.__cached__logs_for_closing_events = None
         self.__cached__closed_leads = None
 
         super().__init__(report)
@@ -623,21 +624,29 @@ class OrgFocusData(BaseGenerator):
         return self.__cached__active_organization_reps
 
     @property
-    def _logs_of_closing_events(self):
-        if self.__cached__logs_of_closing_events is None:
+    def _active_rep_logs(self):
+        if self.__cached__active_rep_logs is None:
             logs = LeadActivityLog.objects.filter(
+                        action_timestamp__gte=self._report.date_range_from,
+                        action_timestamp__lte=self._report.date_range_to,
+                        action_taken_by__in=self._active_organization_reps,
+                    )
+            self.__cached__active_rep_logs = logs
+        return self.__cached__active_rep_logs
+
+    @property
+    def _logs_for_closing_events(self):
+        if self.__cached__logs_for_closing_events is None:
+            logs = self._active_rep_logs.filter(
                 activity=lead_constants.LEAD_CLOSED,
-                action_timestamp__gte=self._report.date_range_from,
-                action_timestamp__lte=self._report.date_range_to,
-                action_taken_by__in=self._active_organization_reps,
             )
-            self.__cached__logs_of_closing_events = logs
-        return self.__cached__logs_of_closing_events
+            self.__cached__logs_for_closing_events = logs
+        return self.__cached__logs_for_closing_events
 
     @property
     def _closed_leads(self):
         if self.__cached__closed_leads is None:
-            leads = {log.lead for log in self._logs_of_closing_events}
+            leads = {log.lead for log in self._logs_for_closing_events}
             self.__cached__closed_leads = leads
         return self.__cached__closed_leads
 
@@ -765,6 +774,80 @@ class OrgFocusData(BaseGenerator):
         return serialized_top_performers
 
     @property
+    def top_opportunities(self):
+        total_needed_count = 3
+        output = {
+            "CLOSED": [],
+            "VERBAL": [],
+            "STRONG": [],
+            "50/50": [],
+        }
+        closed_leads = [
+            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
+        ]
+        output[lead_constants.LEAD_STATUS_CLOSED] = [
+                                                        data["fields"] for data in json.loads(
+                                                            serializers.serialize(
+                                                                "json",
+                                                                closed_leads,
+                                                                fields=("title", "closing_amount", "amount")
+                                                            ))
+                                                    ]
+
+        if len(closed_leads) == total_needed_count:
+            # There is no need to look through logs regarding entrance into FORECAST_TABLE
+            pass
+        else:
+            # Since still need leads, go through FORECAST_TABLE:
+            # (1) largest VERBAL, then
+            # (2) largest STRONG, then
+            # (3) largest 50/50
+            # --- else blank
+
+            # These leads must have ended the report's date_range with this the respective forecast
+            # Example: need to find leads that went into VERBAL and stayed in VERBAL as regards the report's date_range
+
+            # Therefore:
+            # (1) Look through each forecast within FORECAST_TABLE (this list is already ordered).
+            # (2) Look through all logs with meta__extra__forecast_update=True, in newest-first order.
+            # (3) Keep track of leads as iterating:
+            #       If this log's meta__extra__new_forecast == current forecast,
+            #       and is first time seeing this log's lead,
+            #       => this is the forecast with which this lead ended the report's date_range, so keep it!
+            # (4) Stop once total_count_needed is fulfilled
+
+            still_needed_count = total_needed_count - len(closed_leads)
+            logs = self._active_rep_logs.filter(
+                    activity=lead_constants.LEAD_UPDATED,
+                    meta__extra__forecast_update=True,
+                ).exclude(
+                    lead__status__title=lead_constants.LEAD_CLOSED,
+                    lead__expected_close_date__gte=self._report.date_range_from,
+                    lead__expected_close_date__lte=self._report.date_range_to,
+                ).prefetch_related("lead")
+            for forecast in lead_constants.FORECAST_TABLE:
+                if total_needed_count == still_needed_count:
+                    break
+                leads_logged = {}
+                target_leads = []
+                for log in logs:
+                    if log.meta["extra"].get("new_forecast") == forecast and not leads_logged.get(log.lead_id):
+                        target_leads.append(log.lead)
+                    if len(target_leads) == still_needed_count:
+                        break
+                    leads_logged[log.lead_id] = True
+                output[forecast] = [
+                                        data["fields"] for data in json.loads(
+                                                        serializers.serialize(
+                                                            "json",
+                                                            target_leads,
+                                                            fields=("title", "closing_amount", "amount")
+                                                        ))
+                                    ]
+                still_needed_count -= len(target_leads)
+        return output
+
+    @property
     def deal_analysis(self):
         # (value => count) for each lead-custom-field:
         # -- company_size (char-field-choices)
@@ -850,6 +933,7 @@ class OrgFocusData(BaseGenerator):
                                     num_representatives=1,
                                 ),
             },
+            "top_opportunities": self.top_opportunities,
             "sales_cycle": {
                 "value": self.average_for_field("sales_cycle", could_be_null=True),
                 "top_performer": self.top_performers(
