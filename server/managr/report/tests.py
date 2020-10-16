@@ -817,15 +817,15 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             representative=self.representative,
             generated_by=self.representative,
             date_range_preset=report_const.THIS_YEAR,
-            date_range_from="2020-01-01T04:00:00Z",
-            date_range_to="2020-12-29T03:59:59.999000Z",
+            date_range_from=parse_datetime("2020-01-01T04:00:00Z"),
+            date_range_to=parse_datetime("2020-12-29T03:59:59.999000Z"),
         )
         self.org_performance_report = PerformanceReport.objects.create(
             representative=None,
             generated_by=self.representative,
             date_range_preset=report_const.THIS_YEAR,
-            date_range_from="2020-01-01T04:00:00Z",
-            date_range_to="2020-12-29T03:59:59.999000Z",
+            date_range_from=parse_datetime("2020-01-01T04:00:00Z"),
+            date_range_to=parse_datetime("2020-12-29T03:59:59.999000Z"),
         )
 
     def generate_rep_one_focus_data(self):
@@ -849,7 +849,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
                 status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
                 amount=1000,
                 closing_amount=1000,
-                expected_close_date="2020-08-05T05:00:00Z",
+                expected_close_date=parse_datetime("2020-08-05T05:00:00Z"),
                 account=Account.objects.first(),
             )
             self.rep_two_closed_lead_one = lead_one
@@ -857,8 +857,8 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
                     activity=lead_constants.LEAD_CLOSED,
                     lead=lead_one,
                     action_taken_by=representative,
-                    action_timestamp="2020-08-05T05:00:00Z",
-                    datetime_created="2020-08-05T05:00:00Z",
+                    action_timestamp=parse_datetime("2020-08-05T05:00:00Z"),
+                    datetime_created=parse_datetime("2020-08-05T05:00:00Z"),
                 )
 
         # make sure that leads dates are static regardless of
@@ -866,13 +866,13 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         # All of the dates have to take place before the report's
         # date_range_from, because that is part of the protocol for
         # leads/data to be included in the data generation.
-        representative.datetime_created = "2020-06-25T05:00:00Z"
+        representative.datetime_created = parse_datetime("2020-06-25T05:00:00Z")
         representative.save()
         if not skip_lead_generation:
-            lead_one.datetime_created = "2020-07-05T05:00:00Z"
+            lead_one.datetime_created = parse_datetime("2020-07-05T05:00:00Z")
             lead_one.save()
-            log_one.datetime_created = "2020-08-05T05:00:00Z"
-            log_one.action_timestamp = "2020-08-05T05:00:00Z"
+            log_one.datetime_created = parse_datetime("2020-08-05T05:00:00Z")
+            log_one.action_timestamp = parse_datetime("2020-08-05T05:00:00Z")
             log_one.save()
 
         # generate performance report
@@ -1240,7 +1240,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             )
             # datetime_created must be between:
             # lead created && lead closed
-            action.datetime_created = "2020-06-25 11:39:23.632256Z"
+            action.datetime_created = parse_datetime("2020-06-25 11:39:23.632256Z")
             action.save()
         data = self.generate_org_focus_data()
         most_performed = data["actions_to_close_opportunity"]["most_performed"]
@@ -1261,7 +1261,7 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             )
             # datetime_created must be between:
             # lead created && lead closed
-            action.datetime_created = "2020-06-25 11:39:23.632256Z"
+            action.datetime_created = parse_datetime("2020-06-25 11:39:23.632256Z")
             action.save()
         data = self.generate_org_focus_data()
         most_performed = data["actions_to_close_opportunity"]["most_performed"]
@@ -1288,15 +1288,15 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             created_by=self.rep_two,
             claimed_by=self.rep_two,
             amount=100,
-            expected_close_date="2020-10-01T05:00:00Z",
+            expected_close_date=parse_datetime("2020-10-01T05:00:00Z"),
             account=Account.objects.first(),
         )
         LeadActivityLog.objects.create(
                 activity=lead_constants.LEAD_UPDATED,
                 lead=lead_three,
                 action_taken_by=self.rep_two,
-                action_timestamp="2020-04-01T05:00:00Z",
-                datetime_created="2020-04-01T05:00:00Z",
+                action_timestamp=parse_datetime("2020-04-01T05:00:00Z"),
+                datetime_created=parse_datetime("2020-04-01T05:00:00Z"),
                 meta={
                     "extra": {
                         "forecast_update": True,
@@ -1323,15 +1323,15 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             created_by=self.representative,
             claimed_by=self.representative,
             amount=100,
-            expected_close_date="2020-10-01T05:00:00Z",
+            expected_close_date=parse_datetime("2020-10-01T05:00:00Z"),
             account=Account.objects.first(),
         )
         LeadActivityLog.objects.create(
                 activity=lead_constants.LEAD_UPDATED,
                 lead=lead_four,
                 action_taken_by=self.representative,
-                action_timestamp="2020-04-01T05:00:00Z",
-                datetime_created="2020-04-01T05:00:00Z",
+                action_timestamp=parse_datetime("2020-04-01T05:00:00Z"),
+                datetime_created=parse_datetime("2020-04-01T05:00:00Z"),
                 meta={
                     "extra": {
                         "forecast_update": True,
@@ -1361,15 +1361,15 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
             created_by=self.rep_two,
             claimed_by=self.rep_two,
             amount=100,
-            expected_close_date="2020-10-01T05:00:00Z",
+            expected_close_date=parse_datetime("2020-10-01T05:00:00Z"),
             account=Account.objects.first(),
         )
         LeadActivityLog.objects.create(
                 activity=lead_constants.LEAD_UPDATED,
                 lead=lead_five,
                 action_taken_by=self.rep_two,
-                action_timestamp="2020-04-01T05:00:00Z",
-                datetime_created="2020-04-01T05:00:00Z",
+                action_timestamp=parse_datetime("2020-04-01T05:00:00Z"),
+                datetime_created=parse_datetime("2020-04-01T05:00:00Z"),
                 meta={
                     "extra": {
                         "forecast_update": True,
@@ -1446,21 +1446,21 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
                 status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
                 amount=999999,
                 closing_amount=999999,
-                expected_close_date="2020-08-05T05:00:00Z",
+                expected_close_date=parse_datetime("2020-10-05T05:00:00Z"),
                 account=Account.objects.first(),
             )
         log_one = LeadActivityLog.objects.create(
                 activity=lead_constants.LEAD_CLOSED,
                 lead=lead_one,
                 action_taken_by=self.rep_two,
-                action_timestamp="2020-10-06T05:00:00Z",
-                datetime_created="2020-10-06T05:00:00Z",
+                action_timestamp=parse_datetime("2020-10-06T05:00:00Z"),
+                datetime_created=parse_datetime("2020-10-06T05:00:00Z"),
             )
         # force a high sales-cycle avg for rep_two
-        lead_one.datetime_created = "2020-08-05T05:00:00Z"
+        lead_one.datetime_created = parse_datetime("2020-08-05T05:00:00Z")
         lead_one.save()
-        log_one.datetime_created = "2020-10-06T05:00:00Z"
-        log_one.action_timestamp = "2020-10-06T05:00:00Z"
+        log_one.datetime_created = parse_datetime("2020-10-06T05:00:00Z")
+        log_one.action_timestamp = parse_datetime("2020-10-06T05:00:00Z")
         log_one.save()
         action_type = ActionChoice.objects.create(
             title="test-choice-one",
@@ -1472,25 +1472,22 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
                 created_by=self.rep_two,
                 lead=lead_one,
             )
+            action.datetime_created = parse_datetime("2020-08-05T05:00:00Z")
+            action.save()
 
         data = self.generate_org_focus_data()
 
         self.assertEqual(data["top_performers_by_A_C_V"][0]["id"], str(self.rep_two.id))
         self.assertEqual(data["top_performers_by_actions"][0]["id"], str(self.rep_two.id))
         self.assertEqual(data["ACV"]["top_performer"][0]["id"], str(self.rep_two.id))
-        # parse_datetime
-        # set_trace()
-        # self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.representative.id))
 
         # decrease sales-cycle avg for rep_two, by closing lead one in a day :)
-        log_one.datetime_created = "2020-08-06T05:00:00Z"
-        log_one.action_timestamp = "2020-08-06T05:00:00Z"
+        lead_one.expected_close_date = parse_datetime("2020-08-06T05:00:00Z")
+        lead_one.save()
+        log_one.datetime_created = parse_datetime("2020-08-06T05:00:00Z")
+        log_one.action_timestamp = parse_datetime("2020-08-06T05:00:00Z")
         log_one.save()
         data = self.generate_org_focus_data()
 
-        # self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.rep_two.id))
-
-
-        # NOTE:
-        # actions_to_close_opportunity.top_performer
-        # may need to change sorting depending on answer @ Slack
+        self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.rep_two.id))
