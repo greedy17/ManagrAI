@@ -130,6 +130,11 @@ class Lead(TimeStampModel):
         ordering = ["-datetime_created"]
 
     @property
+    def latest_score(self):
+        # LeadScores are ordered by -datetime_created
+        return self.scores.first()
+
+    @property
     def is_claimed(self):
         """ property to define if lead is claimed or not """
         if self.claimed_by:
@@ -715,3 +720,43 @@ class LeadEmail(TimeStampModel):
                 for c in self.linked_contacts.all()
             ],
         }
+
+
+class LeadScoreQuerySet(models.QuerySet):
+    def for_lead(self, lead):
+        return self.filter(lead=lead)
+
+
+class LeadScore(TimeStampModel):
+    """
+    A Lead can have many LeadScores.
+    A LeadScore represents a cached score
+    for a Lead, with the newest LeadScore
+    for a Lead being the active LeadScore.
+    A LeadScore is 1-100.
+    """
+
+    # score should be 0-100, null=False
+    # validation in self.clean()
+    score = models.PositiveIntegerField()
+    lead = models.ForeignKey(
+        "Lead",
+        related_name="scores",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+
+    objects = LeadScoreQuerySet.as_manager()
+
+    def clean(self, *args, **kwargs):
+        # LeadScore.score should be 0-100, null=False
+        if self.score is None or self.score < 0 or self.score > 100:
+            raise ValidationError('LeadScore.score should be 0-100')
+        super().clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ["-datetime_created"]
