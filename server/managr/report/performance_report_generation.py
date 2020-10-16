@@ -970,6 +970,7 @@ class OrgFocusData(BaseGenerator):
                         ),
                 "top_performer": self.top_performers(
                                     by_metric="actions_to_close_opportunity",
+                                    highest_value_best=False,
                                     sub_field="average",
                                     num_representatives=1,
                                 ),
