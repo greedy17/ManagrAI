@@ -159,7 +159,7 @@ export default {
     }
 
     &__title {
-      width: 25rem;
+      width: 80%;
       display: flex;
       justify-content: space-between;
       &--strong {

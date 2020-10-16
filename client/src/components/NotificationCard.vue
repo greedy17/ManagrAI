@@ -68,7 +68,7 @@ export default {
         case NOTIFICATION_TYPES.emailOpened:
           return 'checkmark'
         case NOTIFICATION_TYPES.opportunity:
-          return 'star'
+          return 'flag'
         default:
           return 'alarm'
       }
