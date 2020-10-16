@@ -17,11 +17,14 @@ class IsOrganizationManager(permissions.BasePermission):
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
-        return (
+        if (
             user.type == core_consts.ACCOUNT_TYPE_MANAGER
             and user.organization
             and user.is_active
-        )
+        ):
+            return True
+        else:
+            return False
 
 
 class IsExternalIntegrationAccount(permissions.BasePermission):
@@ -96,7 +99,12 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             """ All users are allowed to perform safe methods GET, OPTIONS"""
             return True
-
+        elif (
+            request.user.is_superuser
+            or request.user.type == "MANAGER"
+            or request.user.type == "INTEGRATION"
+        ):
+            return True
         elif isinstance(obj, Lead):
             """ if obj is Lead check claimed_by unless it is being claimed or unclaimed"""
             return lead_permissions(self, request, view, obj)

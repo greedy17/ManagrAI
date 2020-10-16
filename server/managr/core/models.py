@@ -41,6 +41,23 @@ class TimeStampModel(models.Model):
         abstract = True
 
 
+class UserQuerySet(models.QuerySet):
+    # TODO: Ideally I am trying to attach user roles so that INTEGRATION can assume roles for manager pb 10/15/20
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            if (
+                user.type == core_consts.ACCOUNT_TYPE_MANAGER
+                or user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
+            ):
+                return self.filter(organization=user.organization)
+            if user.type == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(id=user.id)
+        else:
+            return self.none()
+
+
 class UserManager(BaseUserManager):
     """Custom User model manager, eliminating the 'username' field."""
 
@@ -137,7 +154,7 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True
     )
 
-    objects = UserManager()
+    objects = UserManager.from_queryset(UserQuerySet)()
 
     @property
     def full_name(self):

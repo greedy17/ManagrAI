@@ -4,6 +4,7 @@ export default {
   getHeaders,
   requireAuth,
   homepageRedirect,
+  requireUserTypeManagerOrStaff,
 }
 
 //  NOTE(Bruno 4-8-20): login/logout functionality is within the UserAPI.
@@ -14,6 +15,26 @@ function getHeaders() {
   }
   return {
     Authorization: `Token ${store.state.token}`,
+  }
+}
+
+/**
+ * @function    requireUserTypeManager
+ * @description vue-router beforeEnter-style function to check user auth
+ *              status and redirect appropriately.
+ */
+function requireUserTypeManagerOrStaff(to, from, next) {
+  if (!store.getters.userIsLoggedIn) {
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath },
+    })
+  } else if (!store.state.user.isStaff || !store.state.user.type == 'MANAGER') {
+    next({
+      name: 'Settings',
+    })
+  } else {
+    next()
   }
 }
 

@@ -35,7 +35,11 @@
         >
           Notification Settings
         </div>
-        <div class="toolbar__row" @click="routeToInviteUser">
+        <div
+          class="toolbar__row"
+          v-if="$store.state.user.type == 'MANAGER' || $store.state.user.isStaff"
+          @click="routeToInviteUser"
+        >
           Invite User
         </div>
         <div

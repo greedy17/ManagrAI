@@ -32,18 +32,31 @@
         </div>
       </div>
     </div>
+    <div
+      class="filter section-shadow"
+      v-if="$store.state.user.type == 'MANAGER' || $store.state.user.isStaff"
+    >
+      <FilterByRep
+        :repFilterState="formattedRepFilters"
+        @toggle-active-rep="toggleRep"
+        @select-all-reps="toggleAllReps"
+        @deselect-all-reps="toggleAllReps"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import { forecastEnums } from '@/services/leads/enumerables'
 import LeadRating from '@/components/leads-index/LeadRating'
+import FilterByRep from '@/components/shared/FilterByRep'
 import Lead from '@/services/leads'
 
 export default {
   name: 'ListsToolBar',
   components: {
     LeadRating,
+    FilterByRep,
   },
   props: {
     currentFilters: {
@@ -60,6 +73,22 @@ export default {
     this.statuses.forEach(this.fetchStatusCount)
   },
   methods: {
+    toggleAllReps(repArray) {
+      this.$emit('update-filter', { key: 'byReps', value: repArray })
+    },
+    toggleRep(repId) {
+      if (this.formattedRepFilters[repId]) {
+        this.$emit('update-filter', {
+          key: 'byReps',
+          value: this.currentFilters.byReps.filter(rep => rep !== repId),
+        })
+      } else {
+        this.$emit('update-filter', {
+          key: 'byReps',
+          value: [...this.currentFilters.byReps, repId],
+        })
+      }
+    },
     emitUpdateFilter(item) {
       this.$emit('update-filter', item)
     },
@@ -70,6 +99,15 @@ export default {
       Lead.api.count(params).then(data => {
         status.count = data.count
       })
+    },
+  },
+  computed: {
+    formattedRepFilters() {
+      let repFilters = {}
+      if (this.currentFilters.byReps) {
+        this.currentFilters.byReps.forEach(rep => (repFilters[rep] = true))
+      }
+      return repFilters
     },
   },
 }
