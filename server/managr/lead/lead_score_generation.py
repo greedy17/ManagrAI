@@ -127,11 +127,14 @@ class LeadScoreGenerator:
         latest_stage_change = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
-                    lead_cons.LEAD_RESET,
+                    lead_const.LEAD_RESET,
                 ],
                 meta__extra__status_update=True,
             ).exclude(
-                meta__extra__new_status__in=[ready.id, lost.id],
+                meta__extra__new_status__in=[
+                    str(ready.id),
+                    str(lost.id),
+                ],
             ).first()
         if not latest_stage_change:
             return 0
@@ -149,12 +152,14 @@ class LeadScoreGenerator:
             return 5
         return 0
 
-    def _get_forecast_score(previous_forecast=None, new_forecast=None):
+    def _get_forecast_score(self, previous_forecast=None, new_forecast=None):
         # Unforecasted OR Future to 50/50 - 5 pts
         # Unforecasted OR Future OR 50/50 to Strong - 10 pts
         # Unforecasted OR Future OR 50/50 or Strong to Verbal - 20 pts
         if previous_forecast is None or new_forecast is None:
-            raise ValueError('args.previous_forecast & args.new_forecast are required')
+            raise ValueError(
+                    'args.previous_forecast & args.new_forecast are required'
+                )
         map_dict = {}
         map_dict[lead_const.FORECAST_VERBAL] = 20
         map_dict[lead_const.FORECAST_STRONG] = 10
@@ -174,7 +179,7 @@ class LeadScoreGenerator:
         forecast_logs = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
-                    lead_cons.LEAD_RESET,
+                    lead_const.LEAD_RESET,
                 ],
                 meta__extra__forecast_update=True,
             )
@@ -188,7 +193,7 @@ class LeadScoreGenerator:
             oldest_forecast = newest_log_data.get('previous_forecast')
             return self._get_forecast_score(
                             previous_forecast=oldest_forecast,
-                            new_forecast=newest_forecast
+                            new_forecast=newest_forecast,
                         )
         # if there are multiple logs, compare the total change in forecast
         # (oldest and newest, ignoring any middle-stages)
@@ -196,7 +201,7 @@ class LeadScoreGenerator:
         oldest_forecast = oldest_log_data.get('previous_forecast')
         return self._get_forecast_score(
                             previous_forecast=oldest_forecast,
-                            new_forecast=newest_forecast
+                            new_forecast=newest_forecast,
                         )
 
     @property
@@ -213,7 +218,7 @@ class LeadScoreGenerator:
         latest_log = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
-                    lead_cons.LEAD_RESET,
+                    lead_const.LEAD_RESET,
                 ],
                 meta__extra__expected_close_date_update=True,
             ).first()
