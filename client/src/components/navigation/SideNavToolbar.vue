@@ -113,7 +113,7 @@ export default {
   height: 90%;
   > .content {
     display: none;
-    height: 80%;
+    height: 90%;
     overflow-y: scroll;
     > * {
       display: none;
