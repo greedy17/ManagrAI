@@ -1,7 +1,9 @@
 from django.utils import timezone
 
 from managr.lead import constants as lead_const
+from managr.organization import constants as org_const
 from managr.lead.models import Lead, LeadScore, LeadActivityLog
+from managr.organization.models import Stage
 
 
 def generate_lead_scores():
@@ -72,19 +74,36 @@ class LeadScoreGenerator:
         # under 20 days = 10 pts
         # under 10 days = 15 pts
         # under 5 days = 20 pts
-        # Exclude: Ready, Reset, Lost
-        # status = Stage.objects.get(
-        #         title=lead_constants.LEAD_STATUS_READY,
-        #         type=org_constants.STAGE_TYPE_PUBLIC
-        #     )
-
-        #     # get activity log
-        #     logged_ready = self.lead_activity_logs.filter(
-        #         activity=lead_constants.LEAD_UPDATED,
-        #         meta__extra__status_update=True,
-        #         meta__extra__new_status=str(status.id),
-        #     ).first()
-        pass
+        # Exclude: Ready, Lost, Reset
+        ready = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_READY,
+                type=org_constants.STAGE_TYPE_PUBLIC,
+            )
+        lost = Stage.objects.get(
+                title=lead_constants.LEAD_STATUS_LOST,
+                type=org_constants.STAGE_TYPE_PUBLIC,
+            )
+        latest_stage_change = self.lead.activity_logs.filter(
+                activity=lead_constants.LEAD_UPDATED,
+                meta__extra__status_update=True,
+            ).exclude(
+                meta__extra__new_status__in=[ready.id, lost.id],
+            ).first()
+        if not latest_stage_change:
+            return 0
+        five_days_ago = self.upper_bound - timezone.timedelta(days=5)
+        if latest_stage_change.action_timestamp >= five_days_ago:
+            return 20
+        ten_days_ago = self.upper_bound - timezone.timedelta(days=10)
+        if latest_stage_change.action_timestamp >= ten_days_ago:
+            return 15
+        twenty_days_ago = self.upper_bound - timezone.timedelta(days=20)
+        if latest_stage_change.action_timestamp >= twenty_days_ago:
+            return 10
+        thirty_days_ago = self.upper_bound - timezone.timedelta(days=30)
+        if latest_stage_change.action_timestamp >= thirty_days_ago:
+            return 5
+        return 0
 
     @property
     def forecast_table_score(self):
