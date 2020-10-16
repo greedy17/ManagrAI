@@ -1,4 +1,4 @@
-from django.utils import timezone
+from django.utils import timezone, dateparse
 
 from managr.lead import constants as lead_const
 from managr.organization import constants as org_const
@@ -99,15 +99,18 @@ class LeadScoreGenerator:
         # under 5 days = 20 pts
         # Exclude: Ready, Lost, Reset
         ready = Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_READY,
+                title=lead_const.LEAD_STATUS_READY,
                 type=org_constants.STAGE_TYPE_PUBLIC,
             )
         lost = Stage.objects.get(
-                title=lead_constants.LEAD_STATUS_LOST,
+                title=lead_const.LEAD_STATUS_LOST,
                 type=org_constants.STAGE_TYPE_PUBLIC,
             )
         latest_stage_change = self._logs.filter(
-                activity=lead_constants.LEAD_UPDATED,
+                activity__in=[
+                    lead_const.LEAD_UPDATED,
+                    lead_cons.LEAD_RESET,
+                ],
                 meta__extra__status_update=True,
             ).exclude(
                 meta__extra__new_status__in=[ready.id, lost.id],
@@ -151,7 +154,10 @@ class LeadScoreGenerator:
     def forecast_table_score(self):
         # Moved Into into a stronger FC state (up to 20 pts)
         forecast_logs = self._logs.filter(
-                activity=lead_const.LEAD_UPDATED,
+                activity__in=[
+                    lead_const.LEAD_UPDATED,
+                    lead_cons.LEAD_RESET,
+                ],
                 meta__extra__forecast_update=True,
             )
         log_count = forecast_logs.count()
@@ -180,21 +186,69 @@ class LeadScoreGenerator:
         # Expected Close date moved up (15 pts)
         # 1 -- Exp close date moved up to current month (15 pts)
         # 2 -- Exp close date moved up to current quarter (10 pts)
-        # 3 -- Expected closed date moved up by any days (5 pt)
-        # 4 -- Exp close date moved back beyond this month (-10 pts)
-        # 5 -- Exp close date moved back beyond this quarter or NO expected close date (-15 pts)
+        # 3 -- Expected closed date moved up by any days OR now has expected close date(5 pt)
+        # 4 -- Exp close date moved back30 or more days (-10 pts)
+        # 5 -- Exp close date moved back 90 or more OR NO expected close date (-15 pts)
         # 6 -- Expected closed date moved back any days (-5 pt)
-        pass
-        # get clarification in score logic above:
-        # this will be a trailing score ???? think 5 day mving average
+
+        latest_log = self._logs.filter(
+                activity__in=[
+                    lead_const.LEAD_UPDATED,
+                    lead_cons.LEAD_RESET,
+                ],
+                meta__extra__expected_close_date_update=True,
+            ).first()
+        if not latest_log:
+            return 0
+
+        current_datetime = self.upper_bound
+        current_month = current_datetime.month
+        current_quarter = ((current_month - 1) // 3) + 1
+
+        # 'previous' regards the previous value of expected_close_date
+        # so previous_month regards the month of the previous value of expected_close_date
+        previous_from_meta = latest_log.meta.get(
+                                    'extra'
+                                ).get(
+                                    'previous_expected_close_date'
+                                )
+        # 'new' regards the newest / most-recent value of expected_close_date
+        # so new_month regards the month of the current value of expected_close_date
+        new_from_meta = latest_log.meta.get(
+                                    'extra'
+                                ).get(
+                                    'new_expected_close_date'
+                                )
+
+        # TODO: figure out how to move forward given one/both/neither meta === None
+        # if not previous_from_meta
 
 
-        # calculating 'this quarter' could be a pain
-        # 'this month' timezone.now() get month integer => check if expected close date
 
 
-        # doesn't (1) overshadow (2) + (3)
-        # need to start logging expectd_close_date change in meta
-        # keep track of previous_expected_close_data
-        # keep track of new_expected_close_data
+        # -----------------------------------------------------
 
+        # cant do the following if meta is None
+
+        previous_datetime = dateparse.parse_datetime(previous_from_meta)
+        previous_month = previous_datetime.month
+        previous_quarter = ((previous_month - 1) // 3) + 1
+
+        new_datetime = dateparse.parse_datetime(new_from_meta)
+        new_month = new_datetime.month
+        new_quarter = ((new_month - 1) // 3) + 1
+
+        # calculations
+
+        # 1 -- Exp close date moved up to current month (15 pts)
+        hurried_to_current_month = (previous_month is not current_month) and (new_month is current_month)
+        # 2 -- Exp close date moved up to current quarter (10 pts)
+        hurried_to_current_quarter = (previous_quarter is not current_quarter) and (new_quarter is current_quarter)
+        # 3 -- Expected closed date moved up by any days OR now has expected close date(5 pt)
+        hurried_at_all = previous_datetime > new_datetime
+        # 4 -- Exp close date moved back 30 or more days (-10 pts)
+        delayed_more_than_30_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        # 5 -- Exp close date moved back 90 or more OR NO expected close date (-15 pts)
+        delayed_more_than_90_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        # 6 -- Expected closed date moved back any days (-5 pt)
+        delayed_at_all = new_datetime > previous_datetime
