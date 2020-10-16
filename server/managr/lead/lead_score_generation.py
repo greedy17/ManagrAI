@@ -183,14 +183,15 @@ class LeadScoreGenerator:
 
     @property
     def expected_close_date_score(self):
-        # Expected Close date moved up (15 pts)
-        # 1 -- Exp close date moved up to current month (15 pts)
-        # 2 -- Exp close date moved up to current quarter (10 pts)
-        # 3 -- Expected closed date moved up by any days OR now has expected close date(5 pt)
-        # 4 -- Exp close date moved back30 or more days (-10 pts)
-        # 5 -- Exp close date moved back 90 or more OR NO expected close date (-15 pts)
-        # 6 -- Expected closed date moved back any days (-5 pt)
-
+        # Expected Close date change (15 pts)
+        # (1) --  Exp close date moved up to current month (15 pts)
+        # (2) --  Exp close date moved up to current quarter (10 pts)
+        # (3) --  (a) Exp close date moved up by any days,
+        #         (b) OR added exp close date (5 pt)
+        # (4) --  Exp close date moved back 30 or more days (-10 pts)
+        # (5) --  (a) Exp close date moved back 90 or more,
+        #         (b) OR removed expected close date (-15 pts)
+        # (6) --  Expected closed date moved back any days (-5 pt)
         latest_log = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
@@ -200,55 +201,70 @@ class LeadScoreGenerator:
             ).first()
         if not latest_log:
             return 0
-
         current_datetime = self.upper_bound
         current_month = current_datetime.month
         current_quarter = ((current_month - 1) // 3) + 1
-
-        # 'previous' regards the previous value of expected_close_date
+        # NOTE: 'previous' regards the previous value of expected_close_date
         # so previous_month regards the month of the previous value of expected_close_date
         previous_from_meta = latest_log.meta.get(
                                     'extra'
                                 ).get(
                                     'previous_expected_close_date'
                                 )
-        # 'new' regards the newest / most-recent value of expected_close_date
+        if previous_from_meta:
+            previous_datetime = dateparse.parse_datetime(previous_from_meta)
+            previous_month = previous_datetime.month
+            previous_quarter = ((previous_month - 1) // 3) + 1
+        # NOTE: 'new' regards the newest / most-recent value of expected_close_date
         # so new_month regards the month of the current value of expected_close_date
         new_from_meta = latest_log.meta.get(
                                     'extra'
                                 ).get(
                                     'new_expected_close_date'
                                 )
-
-        # TODO: figure out how to move forward given one/both/neither meta === None
-        # if not previous_from_meta
-
-
-
-
-        # -----------------------------------------------------
-
-        # cant do the following if meta is None
-
-        previous_datetime = dateparse.parse_datetime(previous_from_meta)
-        previous_month = previous_datetime.month
-        previous_quarter = ((previous_month - 1) // 3) + 1
-
-        new_datetime = dateparse.parse_datetime(new_from_meta)
-        new_month = new_datetime.month
-        new_quarter = ((new_month - 1) // 3) + 1
-
-        # calculations
-
-        # 1 -- Exp close date moved up to current month (15 pts)
+        if new_from_meta:
+            new_datetime = dateparse.parse_datetime(new_from_meta)
+            new_month = new_datetime.month
+            new_quarter = ((new_month - 1) // 3) + 1
+        # NOTE: they both cannot be null b/c there is a log so there is a change
+        if not previous_from_meta and new_from_meta:
+            set_to_current_month = new_month is current_month
+            if set_to_current_month:
+                # scenario (1) -- Exp close date moved up to current month (15 pts)
+                return 15
+            set_to_current_quarter = new_quarter is current_quarter
+            if set_to_current_quarter:
+                # scenario (2) -- Exp close date moved up to current quarter (10 pts)
+                return 10
+            # scenario (3b) -- Added exp close date (5 pts)
+            return 5
+        if previous_from_meta and not new_from_meta:
+            # scenario (5b) -- Removed expected close date (-15 pts)
+            return -15
+        # NOTE: from this point forward, can assume both values are truthy
+        # scenario (1) -- Exp close date moved up to current month (15 pts)
         hurried_to_current_month = (previous_month is not current_month) and (new_month is current_month)
-        # 2 -- Exp close date moved up to current quarter (10 pts)
+        if hurried_to_current_month:
+            return 15
         hurried_to_current_quarter = (previous_quarter is not current_quarter) and (new_quarter is current_quarter)
-        # 3 -- Expected closed date moved up by any days OR now has expected close date(5 pt)
+        if hurried_to_current_quarter:
+            # scenario (2) -- Exp close date moved up to current quarter (10 pts)
+            return 10
         hurried_at_all = previous_datetime > new_datetime
-        # 4 -- Exp close date moved back 30 or more days (-10 pts)
-        delayed_more_than_30_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
-        # 5 -- Exp close date moved back 90 or more OR NO expected close date (-15 pts)
-        delayed_more_than_90_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
-        # 6 -- Expected closed date moved back any days (-5 pt)
+        if hurried_at_all:
+            # scenario (3a) -- Expected closed date moved up by any days (5 pt)
+            return 5
         delayed_at_all = new_datetime > previous_datetime
+        delayed_30_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        delayed_90_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        if delayed_at_all and (not delayed_30_or_more_days) and (not delayed_90_or_more_days):
+            # scenario (6) -- Expected closed date moved back any days (-5 pt)
+            return -5
+        if delayed_30_or_more_days and (not delayed_90_or_more_days):
+            # scenario (4) -- Exp close date moved back 30 or more days (-10 pts)
+            return -10
+        if delayed_90_or_more_days:
+            # scenario (5a) -- Exp close date moved back 90 or more (-15 pts)
+            return -15
+        # NOTE: should never reach this line!
+        return -1
