@@ -98,7 +98,7 @@ export default {
         this.selectAll()
       }
       if (val == 'deselect-all') {
-        this.deselectAll
+        this.deselectAll()
       }
     },
 

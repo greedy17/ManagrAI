@@ -74,13 +74,24 @@ export default {
   },
   methods: {
     toggleAllReps(repArray) {
+      if (!repArray) {
+        // deselect all is a default from the component
+        // for this view we want it to deselect everyone but self
+        repArray = [this.$store.state.user.id]
+      }
       this.$emit('update-filter', { key: 'byReps', value: repArray })
     },
     toggleRep(repId) {
       if (this.formattedRepFilters[repId]) {
+        let reps = this.currentFilters.byReps.filter(rep => rep !== repId)
+
+        // if the list is empty set it to the current user (aka disable no select)
+        if (!reps.length) {
+          reps = [this.$store.state.user.id]
+        }
         this.$emit('update-filter', {
           key: 'byReps',
-          value: this.currentFilters.byReps.filter(rep => rep !== repId),
+          value: reps,
         })
       } else {
         this.$emit('update-filter', {
