@@ -739,6 +739,8 @@ class LeadScore(TimeStampModel):
     # score should be 0-100, null=False
     # validation in self.clean()
     score = models.PositiveIntegerField()
+    upper_bound = models.DateTimeField()
+    lower_bound = models.DateTimeField()
     lead = models.ForeignKey(
         "Lead",
         related_name="scores",
