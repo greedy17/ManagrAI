@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.utils.dateparse import parse_datetime
 
 from managr.core.models import User
 from managr.organization.models import Organization, Account, Stage
@@ -1387,3 +1388,109 @@ class PerformanceReportOrgFocusDataTestCase(TestCase):
         self.assertEqual(len(top_verbal), 1)
         self.assertEqual(len(top_strong), 0)
         self.assertEqual(len(top_50_50), 0)
+
+    def test_top_performers(self):
+        """
+        fields that utilize OrgFocusData.top_performers:
+        -- top_performers_by_A_C_V
+        -- top_performers_by_actions
+        -- sales_cycle.top_performer
+        -- actions_to_close_opportunity.top_performer
+        -- ACV.top_performer
+        -- forecast_table_additions.top_performer
+        """
+        # given fixture, there is only one rep, so they should
+        # be the one and only top_performer
+        data = self.generate_org_focus_data()
+
+        self.assertEqual(len(data["top_performers_by_A_C_V"]), 1)
+        self.assertEqual(len(data["top_performers_by_actions"]), 1)
+        self.assertEqual(len(data["sales_cycle"]["top_performer"]), 1)
+        self.assertEqual(len(data["actions_to_close_opportunity"]["top_performer"]), 1)
+        self.assertEqual(len(data["ACV"]["top_performer"]), 1)
+        self.assertEqual(len(data["forecast_table_additions"]["top_performer"]), 1)
+
+        self.assertEqual(data["top_performers_by_A_C_V"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["top_performers_by_actions"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["actions_to_close_opportunity"]["top_performer"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["ACV"]["top_performer"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["forecast_table_additions"]["top_performer"][0]["id"], str(self.representative.id))
+
+        # add the second rep, and length of top_performers should update
+        self.generate_rep_two_focus_data()
+        data = self.generate_org_focus_data()
+
+        # increase:
+        self.assertEqual(len(data["top_performers_by_A_C_V"]), 2)
+        self.assertEqual(len(data["top_performers_by_actions"]), 2)
+        # remain the same:
+        self.assertEqual(len(data["sales_cycle"]["top_performer"]), 1)
+        self.assertEqual(len(data["actions_to_close_opportunity"]["top_performer"]), 1)
+        self.assertEqual(len(data["ACV"]["top_performer"]), 1)
+        self.assertEqual(len(data["forecast_table_additions"]["top_performer"]), 1)
+
+        # so far, self.representative has one action and a high ACV
+        # self.rep_two has zero actions and a low ACV,
+        # so self.representative should be top performer for the following fields:
+        self.assertEqual(data["top_performers_by_A_C_V"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["ACV"]["top_performer"][0]["id"], str(self.representative.id))
+        self.assertEqual(data["top_performers_by_actions"][0]["id"], str(self.representative.id))
+
+        # give self.rep_two a new lead with astronomical closing_amount, to be top_by_A_C_V
+        # give self.rep_two a couple of actions, to be top_by_actions
+        lead_one = Lead.objects.create(
+                title="test-lead-one",
+                created_by=self.rep_two,
+                claimed_by=self.rep_two,
+                status=Stage.objects.get(pk="fe89a6fd-f049-4b23-a059-86d45c12b14b"),
+                amount=999999,
+                closing_amount=999999,
+                expected_close_date="2020-08-05T05:00:00Z",
+                account=Account.objects.first(),
+            )
+        log_one = LeadActivityLog.objects.create(
+                activity=lead_constants.LEAD_CLOSED,
+                lead=lead_one,
+                action_taken_by=self.rep_two,
+                action_timestamp="2020-10-06T05:00:00Z",
+                datetime_created="2020-10-06T05:00:00Z",
+            )
+        # force a high sales-cycle avg for rep_two
+        lead_one.datetime_created = "2020-08-05T05:00:00Z"
+        lead_one.save()
+        log_one.datetime_created = "2020-10-06T05:00:00Z"
+        log_one.action_timestamp = "2020-10-06T05:00:00Z"
+        log_one.save()
+        action_type = ActionChoice.objects.create(
+            title="test-choice-one",
+            organization=self.organization,
+        )
+        for n in range(10):
+            action = Action.objects.create(
+                action_type=action_type,
+                created_by=self.rep_two,
+                lead=lead_one,
+            )
+
+        data = self.generate_org_focus_data()
+
+        self.assertEqual(data["top_performers_by_A_C_V"][0]["id"], str(self.rep_two.id))
+        self.assertEqual(data["top_performers_by_actions"][0]["id"], str(self.rep_two.id))
+        self.assertEqual(data["ACV"]["top_performer"][0]["id"], str(self.rep_two.id))
+        # parse_datetime
+        # set_trace()
+        # self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.representative.id))
+
+        # decrease sales-cycle avg for rep_two, by closing lead one in a day :)
+        log_one.datetime_created = "2020-08-06T05:00:00Z"
+        log_one.action_timestamp = "2020-08-06T05:00:00Z"
+        log_one.save()
+        data = self.generate_org_focus_data()
+
+        # self.assertEqual(data["sales_cycle"]["top_performer"][0]["id"], str(self.rep_two.id))
+
+
+        # NOTE:
+        # actions_to_close_opportunity.top_performer
+        # may need to change sorting depending on answer @ Slack
