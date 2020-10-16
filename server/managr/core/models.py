@@ -124,7 +124,7 @@ class User(AbstractUser, TimeStampModel):
     type = models.CharField(
         choices=core_consts.ACCOUNT_TYPES,
         max_length=255,
-        default=core_consts.ACCOUNT_TYPE_MANAGER,
+        default=core_consts.ACCOUNT_TYPE_REP,
     )
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
