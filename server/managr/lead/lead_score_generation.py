@@ -118,11 +118,11 @@ class LeadScoreGenerator:
         # Exclude: Ready, Lost, Reset
         ready = Stage.objects.get(
                 title=lead_const.LEAD_STATUS_READY,
-                type=org_constants.STAGE_TYPE_PUBLIC,
+                type=org_const.STAGE_TYPE_PUBLIC,
             )
         lost = Stage.objects.get(
                 title=lead_const.LEAD_STATUS_LOST,
-                type=org_constants.STAGE_TYPE_PUBLIC,
+                type=org_const.STAGE_TYPE_PUBLIC,
             )
         latest_stage_change = self._logs.filter(
                 activity__in=[
