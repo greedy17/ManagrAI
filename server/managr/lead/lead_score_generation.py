@@ -40,6 +40,19 @@ class LeadScoreGenerator:
         self.lead = lead
         self.upper_bound = upper_bound
         self.lower_bound = lower_bound
+        # cache:
+        self.__cached__logs = None
+
+    @property
+    def _logs(self):
+        # lead's activity logs, time-bound
+        if self.__cached__logs is None:
+            logs = self.lead.activity_logs.filter(
+                    action_timestamp__gte=self.lower_bound,
+                    action_timestamp__lte=self.upper_bound,
+                )
+            self.__cached__logs = logs
+        return self.__cached__logs
 
     @property
     def actions_score(self):
@@ -57,9 +70,7 @@ class LeadScoreGenerator:
         # Count of Incoming Messages ( up to 20 pts) - 5 pts per inbound text or email
         maximum = 20
         points_per = 5
-        count = self.lead.activity_logs.filter(
-                            action_timestamp__gte=self.lower_bound,
-                            action_timestamp__lte=self.upper_bound,
+        count = self._logs.filter(
                             activity__in=[
                                 lead_const.EMAIL_RECEIVED,
                                 lead_const.MESSAGE_RECEIVED,
@@ -83,7 +94,7 @@ class LeadScoreGenerator:
                 title=lead_constants.LEAD_STATUS_LOST,
                 type=org_constants.STAGE_TYPE_PUBLIC,
             )
-        latest_stage_change = self.lead.activity_logs.filter(
+        latest_stage_change = self._logs.filter(
                 activity=lead_constants.LEAD_UPDATED,
                 meta__extra__status_update=True,
             ).exclude(
@@ -105,13 +116,52 @@ class LeadScoreGenerator:
             return 5
         return 0
 
-    @property
-    def forecast_table_score(self):
-        # Moved Into into a stronger FC state (up to 20 pts)
+    def _get_forecast_score(previous_forecast=None, new_forecast=None):
         # Unforecasted OR Future to 50/50 - 5 pts
         # Unforecasted OR Future OR 50/50 to Strong - 10 pts
         # Unforecasted OR Future OR 50/50 or Strong to Verbal - 20 pts
-        pass
+        if previous_forecast is None or new_forecast is None:
+            raise ValueError('args.previous_forecast & args.new_forecast are required')
+        map_dict = {}
+        map_dict[lead_const.FORECAST_VERBAL] = 20
+        map_dict[lead_const.FORECAST_STRONG] = 10
+        map_dict[lead_const.FORECAST_FIFTY_FIFTY] = 5
+        # FORECAST_TABLE is in order, most-weight first
+        if previous_forecast not in lead_const.FORECAST_TABLE:
+            return map_dict.get(new_forecast, 0)
+        if lead_const.FORECAST_TABLE.index(previous_forecast) < lead_const.FORECAST_TABLE.index(new_forecast):
+            # the new forecast weighs less than the old forecast
+            return 0
+        # the new forecast weighs more than the old forecast
+        return map_dict[new_forecast]
+
+    @property
+    def forecast_table_score(self):
+        # Moved Into into a stronger FC state (up to 20 pts)
+        forecast_logs = self._logs.filter(
+                activity=lead_const.LEAD_UPDATED,
+                meta__extra__forecast_update=True,
+            )
+        log_count = forecast_logs.count()
+        if log_count is 0:
+            return 0
+        newest_log_data = forecast_logs.first().meta.get('extra')
+        newest_forecast = newest_log_data.get('new_forecast')
+        if log_count is 1:
+            # these are forecast.forecast constants
+            oldest_forecast = newest_log_data.get('previous_forecast')
+            return self._get_forecast_score(
+                            previous_forecast=oldest_forecast,
+                            new_forecast=newest_forecast
+                        )
+        # if there are multiple logs, compare the total change in forecast
+        # (oldest and newest, ignoring any middle-stages)
+        oldest_log_data = forecast_logs.last().meta.get('extra')
+        oldest_forecast = oldest_log_data.get('previous_forecast')
+        return self._get_forecast_score(
+                            previous_forecast=oldest_forecast,
+                            new_forecast=newest_forecast
+                        )
 
     @property
     def expected_close_date_score(self):
