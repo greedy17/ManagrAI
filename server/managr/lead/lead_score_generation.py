@@ -1,9 +1,12 @@
+import logging
 from django.utils import timezone, dateparse
 
 from managr.lead import constants as lead_const
 from managr.organization import constants as org_const
 from managr.lead.models import Lead, LeadScore, LeadActivityLog
 from managr.organization.models import Stage
+
+logger = logging.getLogger("managr")
 
 
 def generate_lead_scores():
@@ -17,14 +20,29 @@ def generate_lead_scores():
 
 
 def generate(lead, score_upper_bound, score_lower_bound):
-    # given the lead
-    # (1) put lead through score-generator.as_dict
-    # (2) create the LeadScore with the generated score, along with bounds meta-data
-    pass
+    try:
+        # (1) put lead through score-generator
+        score = LeadScoreGenerator(
+                        lead,
+                        score_upper_bound,
+                        score_lower_bound,
+                    ).final_score
+        # (2) create the LeadScore
+        LeadScore.objects.create(
+            lead=lead,
+            score=score,
+            upper_bound=score_lower_bound,
+            lower_bound=score_lower_bound,
+        )
+    except Exception as e:
+        logger.exception(
+            f"Could not generate LeadScore for Lead {lead.id}. ERROR: {e}"
+        )
 
 
 class LeadScoreGenerator:
-    # MVP: get the lead score
+    # NOTE:
+    # Currently MVP => get the lead score
     # later can add things like:
     # "Recently Moved to a new Stage" (20/10 days)
     # "Very recently moved to a new stage" (5 days)
@@ -268,3 +286,18 @@ class LeadScoreGenerator:
             return -15
         # NOTE: should never reach this line!
         return -1
+
+    @property
+    def all_scores(self):
+        return {
+            "actions_score": self.actions_score,
+            "recent_action_score": self.recent_action_score,
+            "incoming_messages_score": self.incoming_messages_score,
+            "days_in_stage_score": self.days_in_stage_score,
+            "forecast_table_score": self.forecast_table_score,
+            "expected_close_date_score": self.expected_close_date_score,
+        }
+
+    @property
+    def final_score(self):
+        return min(sum(self.all_scores.values()), 100)

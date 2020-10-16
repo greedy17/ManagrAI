@@ -10,6 +10,7 @@ from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
 from managr.core.models import EmailAuthAccount
 from managr.lead.models import Reminder, Notification
 from managr.lead.core import constants as core_consts
+from managr.lead.lead_score_generation import generate_lead_scores
 
 logger = logging.getLogger("managr")
 
@@ -98,3 +99,8 @@ def revoke_tokens():
     for token in email_auth_accounts:
         revoke_access_token(token)
 
+
+# Daily, at 11:59:59 PM
+@kronos.register("23 59 59 * *")
+def _generate_lead_scores():
+    generate_lead_scores()
