@@ -66,6 +66,18 @@ class LeadScoreGenerator:
         return min(count * points_per, maximum)
 
     @property
+    def recent_action_score(self):
+        # Any of the 5 actions taken within past day is +5 points
+        lower_bound = self.upper_bound - timezone.timedelta(days=1)
+        count = self.lead.actions.filter(
+                            datetime_created__gte=lower_bound,
+                            datetime_created__lte=self.upper_bound
+                        ).count()
+        if count:
+            return 5
+        return 0
+
+    @property
     def incoming_messages_score(self):
         # Count of Incoming Messages ( up to 20 pts) - 5 pts per inbound text or email
         maximum = 20
@@ -126,9 +138,9 @@ class LeadScoreGenerator:
         map_dict[lead_const.FORECAST_VERBAL] = 20
         map_dict[lead_const.FORECAST_STRONG] = 10
         map_dict[lead_const.FORECAST_FIFTY_FIFTY] = 5
-        # FORECAST_TABLE is in order, most-weight first
         if previous_forecast not in lead_const.FORECAST_TABLE:
             return map_dict.get(new_forecast, 0)
+        # FORECAST_TABLE is in order, most-weight first
         if lead_const.FORECAST_TABLE.index(previous_forecast) < lead_const.FORECAST_TABLE.index(new_forecast):
             # the new forecast weighs less than the old forecast
             return 0
@@ -166,15 +178,23 @@ class LeadScoreGenerator:
     @property
     def expected_close_date_score(self):
         # Expected Close date moved up (15 pts)
-        # Exp close date moved up to current month (15 pts)
-        # Exp close date moved up to current quarter (10 pts)
-        # Expected closed date moved up by any days (5 pt)
-        # Exp close date moved back beyond this month (-10 pts)
-        # Exp close date moved back beyond this quarter or NO expected close date (-15 pts)
-        # Expected closed date moved back any days (-5 pt)
+        # 1 -- Exp close date moved up to current month (15 pts)
+        # 2 -- Exp close date moved up to current quarter (10 pts)
+        # 3 -- Expected closed date moved up by any days (5 pt)
+        # 4 -- Exp close date moved back beyond this month (-10 pts)
+        # 5 -- Exp close date moved back beyond this quarter or NO expected close date (-15 pts)
+        # 6 -- Expected closed date moved back any days (-5 pt)
         pass
+        # get clarification in score logic above:
+        # this will be a trailing score ???? think 5 day mving average
 
-    @property
-    def recent_work_score(self):
-        # Any of the 5 actions taken within that day is +5 points, cannot exceed cap of 100. 
-        pass
+
+        # calculating 'this quarter' could be a pain
+        # 'this month' timezone.now() get month integer => check if expected close date
+
+
+        # doesn't (1) overshadow (2) + (3)
+        # need to start logging expectd_close_date change in meta
+        # keep track of previous_expected_close_data
+        # keep track of new_expected_close_data
+
