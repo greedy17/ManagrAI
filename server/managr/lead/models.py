@@ -135,6 +135,15 @@ class Lead(TimeStampModel):
         return self.scores.first()
 
     @property
+    def last_score(self):
+        # LeadScores are ordered by -datetime_created
+        # this is the second-to-latest score
+        try:
+            return self.scores.all()[:2][1]
+        except Exception:
+            pass
+
+    @property
     def is_claimed(self):
         """ property to define if lead is claimed or not """
         if self.claimed_by:
