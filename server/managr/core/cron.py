@@ -58,27 +58,19 @@ def _create_notification(title, content, notification_type, lead, user):
     )
 
 
-def _check_if_user_has_enabled_lead_alerts(user, notification_title):
-    """ Manager type users can choose to disable alerts, they do not receive the emails"""
-    if user.type == core_consts.ACCOUNT_TYPE_REP:
-        return True
-    else:
-        notification_settings = user.notification_settings.filter(
-            option__key=core_consts.NOTIFICATION_KEY_OPPORTUNITY,
-            option__title=notification_title,
-        ).first()
-
-        if notification_settings:
-            return notification_settings.value
-        else:
-            return True
-
-
-def _generate_notification_title_lapsed(num):
+def _generate_notification_key_lapsed(num):
     if num == 1:
-        return "Opportunity expected close date lapsed by at least 1 day"
-    else:
-        return f"Opportunity expected close date lapsed by at least {num} days"
+        return (
+            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
+        )
+    if num == 14:
+        return (
+            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_14_DAYS
+        )
+    if num == 30:
+        return (
+            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_30_DAYS
+        )
 
     # its not ideal that we are checking against a string, but since these are loaded from the fixture
     # we can assume they will be the same
@@ -129,30 +121,33 @@ def create_notifications():
     ):
         if row.created_for:
             # check notification settings
-            notification_settings = row.created_by.notification_settings.filter(
-                option__key="REMINDER", option__notification_type="ALERT"
-            ).first()
-            if notification_settings and notification_settings.value != True:
-                return
-            n = Notification.objects.create(
-                notify_at=row.datetime_for,
-                title=row.title,
-                notification_type="REMINDER",
-                resource_id=row.id,
-                user=row.created_by,
-                meta={
-                    "id": str(row.id),
-                    "title": row.title,
-                    "content": row.content,
-                    "linked_contacts": [
-                        {"id": str(c.id), "full_name": c.full_name,}
-                        for c in row.linked_contacts.all()
-                    ],
-                    "leads": [
-                        {"id": str(row.created_for.id), "title": row.created_for.title}
-                    ],
-                },
-            )
+            if row.created_by.check_notification_enabled_setting(
+                core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_REMINDER,
+                core_consts.NOTIFICATION_TYPE_ALERT,
+            ):
+
+                n = Notification.objects.create(
+                    notify_at=row.datetime_for,
+                    title=row.title,
+                    notification_type="REMINDER",
+                    resource_id=row.id,
+                    user=row.created_by,
+                    meta={
+                        "id": str(row.id),
+                        "title": row.title,
+                        "content": row.content,
+                        "linked_contacts": [
+                            {"id": str(c.id), "full_name": c.full_name,}
+                            for c in row.linked_contacts.all()
+                        ],
+                        "leads": [
+                            {
+                                "id": str(row.created_for.id),
+                                "title": row.created_for.title,
+                            }
+                        ],
+                    },
+                )
             n.save()
         else:
 
@@ -196,8 +191,9 @@ def create_lead_notifications():
 
             if latest_activity < target_date.date():
                 # 4 check if an alert/email already exists (reps only get alerts not emails)
-                if _check_if_user_has_enabled_lead_alerts(
-                    user, NOTIFICATION_TITLE_INACTIVE
+                if user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_INACTIVE_90_DAYS,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
                 ):
                     # check notifications for one first
                     has_alert = Notification.objects.filter(
@@ -244,9 +240,9 @@ def create_lead_notifications():
                     notification_type_str = "OPPORTUNITY.LAPSED_EXPECTED_CLOSE_DATE_{}".format(
                         notification_late_for_days
                     )
-                    if _check_if_user_has_enabled_lead_alerts(
-                        user,
-                        _generate_notification_title_lapsed(notification_late_for_days),
+                    if user.check_notification_enabled_setting(
+                        _generate_notification_key_lapsed(notification_late_for_days),
+                        core_consts.NOTIFICATION_TYPE_ALERT,
                     ):
                         # check notifications for one first
                         has_alert = Notification.objects.filter(
@@ -282,8 +278,9 @@ def create_lead_notifications():
 
             target_date = (now - timezone.timedelta(days=60)).date()
             if lead.status_last_update.date() < target_date:
-                if _check_if_user_has_enabled_lead_alerts(
-                    user, NOTIFICATION_TITLE_STALLED_IN_STAGE
+                if user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_STALLED_IN_STAGE,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
                 ):
                     # check notifications for one first
                     has_alert = Notification.objects.filter(

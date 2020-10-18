@@ -193,6 +193,16 @@ class User(AbstractUser, TimeStampModel):
     def get_contacts_from_leads(self):
         return self.claimed_leads
 
+    def check_notification_enabled_setting(self, key, type):
+        setting_value = self.notification_settings.filter(
+            option__key=key, option__notification_type=type, user=self
+        ).first()
+        if setting_value:
+            return setting_value.value
+        else:
+            # if a user does not have a value then assume True which is the default
+            return True
+
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
 
@@ -397,12 +407,18 @@ class NotificationOption(TimeStampModel):
         max_length=255,
         help_text="Email or Alert",
     )
-    ## this may get removed and replaced with notification options set on the leads
+
+    resource = models.CharField(
+        max_length=255,
+        choices=core_consts.NOTIFICATION_RESOURCES,
+        null=True,
+        help_text="select a resource to apply notification to",
+    )
     key = models.CharField(
         max_length=255,
-        choices=core_consts.NOTIFICATION_KEYS,
+        blank=True,
         null=True,
-        help_text="select a static key to use when applying filter",
+        help_text="unique identifier for notification option",
     )
     objects = NotificationOptionQuerySet.as_manager()
 
