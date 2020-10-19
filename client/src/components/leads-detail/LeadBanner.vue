@@ -9,7 +9,7 @@
         :disabled="!isOwnedByUser"
       />
     </div>
-    <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser" />
+    <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser && !isManager" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Time In Stage</span>
       <span class="days-in-status">{{ this.lead.statusLastUpdate | timeToNow }}</span>
@@ -83,6 +83,9 @@ export default {
     },
     isOwnedByUser() {
       return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id
+    },
+    isManager() {
+      return this.$store.state.user.type == 'MANAGER'
     },
     isOwnedByAnother() {
       return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id
