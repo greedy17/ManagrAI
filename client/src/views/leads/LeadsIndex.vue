@@ -82,20 +82,21 @@ export default {
         ModelClass: List,
         filters: {
           byUser: this.$store.state.user.id,
+          byReps: [this.$store.state.user.id],
           ordering: 'title',
         },
       }),
       myLeadsAll: CollectionManager.create({
         ModelClass: Lead,
         filters: {
-          byUser: this.$store.state.user.id,
+          byReps: [this.$store.state.user.id],
         },
       }),
       myLeadsNoList: CollectionManager.create({
         ModelClass: Lead,
         filters: {
-          byUser: this.$store.state.user.id,
           onList: false,
+          byReps: [this.$store.state.user.id],
         },
       }),
     }

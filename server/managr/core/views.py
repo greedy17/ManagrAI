@@ -148,16 +148,7 @@ class UserViewSet(
     filter_fields = ("organization",)
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return User.objects.all()
-        elif (
-            self.request.user.type == core_consts.ACCOUNT_TYPE_MANAGER
-            or self.request.user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
-            and self.request.user.is_active
-        ):
-            return User.objects.filter(organization=self.request.user.organization)
-        else:
-            return User.objects.none()
+        return User.objects.for_user(self.request.user)
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
