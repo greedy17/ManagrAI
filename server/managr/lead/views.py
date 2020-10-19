@@ -250,10 +250,7 @@ class LeadViewSet(
 
     authentication_classes = (authentication.TokenAuthentication,)
 
-    permission_classes = (
-        IsSalesPerson,
-        CanEditResourceOrReadOnly,
-    )
+    permission_classes = (CanEditResourceOrReadOnly,)
     serializer_class = lead_serializers.LeadSerializer
     filter_backends = (
         DjangoFilterBackend,
@@ -587,8 +584,7 @@ class LeadViewSet(
             lead.forecast.save()
         else:
             Forecast.objects.create(
-                lead=lead,
-                forecast=lead_constants.FORECAST_CLOSED,
+                lead=lead, forecast=lead_constants.FORECAST_CLOSED,
             )
         lead.save()
         emit_event(lead_constants.LEAD_CLOSED, request.user, lead)
@@ -609,7 +605,7 @@ class LeadViewSet(
         if stage:
             queryset = queryset.filter(status__title=stage)
         count = queryset.count()
-        data = {'count': count}
+        data = {"count": count}
         return Response(data)
 
 
@@ -823,22 +819,25 @@ class ForecastViewSet(
             previous_forecast = lead.forecast.forecast
         else:
             previous_forecast = lead_constants.FORECAST_NA
-        previously_in_forecast_table = previous_forecast in lead_constants.FORECAST_TABLE
+        previously_in_forecast_table = (
+            previous_forecast in lead_constants.FORECAST_TABLE
+        )
         now_in_forecast_table = new_forecast in lead_constants.FORECAST_TABLE
         extra_meta = {
             "forecast_update": True,
             "new_forecast": new_forecast,
             "previous_forecast": previous_forecast,
-            "forecast_table_addition": bool(not previously_in_forecast_table and now_in_forecast_table),
-            "forecast_table_substraction": bool(previously_in_forecast_table and not now_in_forecast_table),
+            "forecast_table_addition": bool(
+                not previously_in_forecast_table and now_in_forecast_table
+            ),
+            "forecast_table_substraction": bool(
+                previously_in_forecast_table and not now_in_forecast_table
+            ),
             "forecast_amount": lead.amount,
         }
         emit_event(
-                lead_constants.LEAD_UPDATED,
-                request.user,
-                lead,
-                extra_meta=extra_meta,
-            )
+            lead_constants.LEAD_UPDATED, request.user, lead, extra_meta=extra_meta,
+        )
 
     def create(self, request, *args, **kwargs):
         self._emit_lead_activity_log(request)

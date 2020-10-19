@@ -40,7 +40,7 @@ export default new Router({
       path: '/invite',
       name: 'Invite',
       component: Invite,
-      beforeEnter: Auth.requireAuth,
+      beforeEnter: Auth.requireUserTypeManagerOrStaff,
     },
     {
       path: '/activation/:uid/:token',

@@ -29,12 +29,16 @@
         <div class="actions">
           <LeadForecastDropdown
             :lead="dataLead"
-            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            :disabled="
+              (!belongsToCurrentUser && !isManager) || dataLead.status == getIsClosedStatus.id
+            "
             @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
           />
           <LeadStatusDropdown
             :lead="dataLead"
-            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            :disabled="
+              (!belongsToCurrentUser && !isManager) || dataLead.status == getIsClosedStatus.id
+            "
             @status-changed="onUpdateLocalStatus"
           />
         </div>
@@ -129,6 +133,9 @@ export default {
         return this.dataLead.claimedBy == this.$store.state.user.id
       }
       return false
+    },
+    isManager() {
+      return this.$store.state.user.type == 'MANAGER'
     },
     headerBackgroundColor() {
       return this.dataLead.statusRef

@@ -9,19 +9,16 @@
             </option>
           </select>
         </div>
-        <Tooltip>
-          <template v-slot:tooltip-target>
-            <span class="toggle-icon" @click="toggleSideToolbar('details')">
-              <svg width="20px" height="20px" viewBox="0 0 15 15">
-                <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
-              </svg>
-            </span>
-          </template>
-          <template v-slot:tooltip-content>
-            You can edit any users' Quota, Commit, and Upside by selecting only that user. If more
-            than one user is selected, all data is aggregated.
-          </template>
-        </Tooltip>
+
+        <span
+          class="toggle-icon"
+          v-tooltip.bottom="kpiTooltipText"
+          @click="toggleSideToolbar('details')"
+        >
+          <svg width="20px" height="20px" viewBox="0 0 15 15">
+            <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+          </svg>
+        </span>
       </div>
       <template v-if="KPIs === null">
         <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
@@ -85,19 +82,14 @@
         <div class="single-statistic section-shadow">
           <span class="title">
             <span>Forecast</span>
-            <Tooltip>
-              <template v-slot:tooltip-target>
-                <span class="toggle-icon" @click="toggleSideToolbar('details')">
-                  <svg width="20px" height="20px" viewBox="0 0 15 15">
-                    <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
-                  </svg>
-                </span>
-              </template>
-              <template v-slot:tooltip-content>
-                Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong *
-                (expected close rate of 75%) + Verbal * (expected close rate of 90%).
-              </template>
-            </Tooltip>
+            <span class="toggle-icon" @click="toggleSideToolbar('details')">
+              <svg width="20px" height="20px" viewBox="0 0 15 15">
+                <use
+                  xlink:href="@/assets/images/help-outline.svg#help-outline"
+                  v-tooltip="forecastTooltip"
+                />
+              </svg>
+            </span>
           </span>
           <span class="statistic">{{ KPIs.forecast | currency }}</span>
         </div>
@@ -264,7 +256,6 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 import Forecast from '@/services/forecasts'
 import User from '@/services/users'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
-import Tooltip from '@/components/shared/Tooltip'
 
 const POLLING_INTERVAL = 10000
 
@@ -297,9 +288,13 @@ export default {
       type: Boolean,
     },
   },
-  components: { Tooltip },
+  components: {},
   data() {
     return {
+      kpiTooltipText:
+        "You can edit any users' Quota, Commit, and Upside by selecting only that user. If more than one user is selected, all data is aggregated.",
+      forecastTooltip:
+        '          Forecast is a weighted sum of 50/50 * (expected close rate of 50%) + Strong * (expected close rate of 75%) + Verbal * (expected close rate of 90%).',
       dateRangePresets,
       dateRange: Forecast.TODAY_ONWARD,
       insights: null,
