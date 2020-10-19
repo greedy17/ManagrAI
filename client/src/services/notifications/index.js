@@ -6,12 +6,14 @@ const NOTIFICATION_TYPE_SYSTEM = 'SYSTEM'
 const NOTIFICATION_TYPE_EMAIL = 'EMAIL'
 const NOTIFICATION_TYPE_EMAIL_OPENED = 'EMAIL_OPENED'
 const NOTIFICATION_TYPE_MESSAGE = 'MESSAGE'
+const NOTIFICATION_TYPE_OPPORTUNITY = 'OPPORTUNITY'
 const NOTIFICATION_TYPES = {
-  reminder: NOTIFICATION_TYPE_REMINDER,
-  system: NOTIFICATION_TYPE_SYSTEM,
-  email: NOTIFICATION_TYPE_EMAIL,
-  emailOpened: NOTIFICATION_TYPE_EMAIL_OPENED,
-  message: NOTIFICATION_TYPE_MESSAGE,
+  [NOTIFICATION_TYPE_REMINDER]: { label: 'reminder', icon: 'alarm' },
+  [NOTIFICATION_TYPE_SYSTEM]: { label: 'system', icon: 'dark-settings' },
+  [NOTIFICATION_TYPE_EMAIL]: { label: 'email', icon: 'email' },
+  [NOTIFICATION_TYPE_EMAIL_OPENED]: { label: 'email', icon: 'checkmark' },
+  [NOTIFICATION_TYPE_MESSAGE]: { label: 'message', icon: 'sms' },
+  [NOTIFICATION_TYPE_OPPORTUNITY]: { label: 'opportunity', icon: 'flag' },
 }
 
 export { NOTIFICATION_TYPES }

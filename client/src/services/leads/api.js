@@ -40,9 +40,18 @@ export default class LeadAPI {
       byAccount: ApiFilter.create({ key: 'by_account' }),
       byStatus: ApiFilter.create({ key: 'by_status' }),
       isClaimed: ApiFilter.create({ key: 'is_claimed' }),
+      // by reps works like by user
+      // setting this key because by_user is used in many places
+      //byReps: ApiFilter.create({ key: 'by_reps' }),
+    }
+    if (filters.byReps) {
+      filters.byUser = filters.byReps.toString()
     }
     const options = {
-      params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+      params: ApiFilter.buildParams(filtersMap, {
+        ...pagination,
+        ...filters,
+      }),
     }
 
     const promise = apiClient()
