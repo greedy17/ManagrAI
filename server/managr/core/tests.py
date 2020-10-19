@@ -2,26 +2,28 @@ from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.test import TestCase
 from django.core.management import call_command
+
+from django.test import RequestFactory
+from django.test import Client
+
+from rest_framework.authtoken.models import Token
+
 from managr.core.factories import UserFactory
 from managr.lead.factories import LeadFactory, LeadActivityLogFactory
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Stage
 from managr.organization.factories import (
     AccountFactory,
     ContactFactory,
     OrganizationFactory,
 )
+
 from managr.lead.models import Notification, LeadActivityLog
 from managr.lead import constants as lead_consts
+from managr.organization import constants as org_consts
 from .models import NotificationOption, NotificationSelection
 from .serializers import EmailSerializer
+from . import constants as core_consts
 from .cron import _check_days_lead_expected_close_lapsed
-
-
-STALLED_IN_STAGE_NOTIF_OPTION_ID = "f9cc3934-f82b-442f-9d63-73de73d5d115"
-INACTIVE_NOTIF_OPTION_ID = "845c1d76-8743-4695-b6cf-9af7b0aaab14"
-LATE_NOTIF_DAY_1_ID = "5d19b999-c0bf-429a-a8f5-17b9bc2efdc6"
-LATE_NOTIF_DAY_14_ID = "2bcddc82-305b-42a8-a295-99b76f418aac"
-LATE_NOTIF_DAY_30_ID = "0285c84d-10c5-41d8-8a97-d944cc373ad6"
 
 
 class MockRequest:
@@ -76,7 +78,7 @@ class EmailSerializerTestCase(TestCase):
 
 
 class AlertsTestCase(TestCase):
-    fixtures = ["notification_options_fixture.json"]
+    fixtures = ["notification_options_fixture.json", "dev.json"]
 
     def setUp(self):
         self.org = OrganizationFactory()
@@ -175,7 +177,9 @@ class AlertsTestCase(TestCase):
         self.assertEqual(
             LeadActivityLog.objects.latest("action_timestamp").id, activity.id
         )
-        opt = NotificationOption.objects.get(pk=INACTIVE_NOTIF_OPTION_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_INACTIVE_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -200,7 +204,9 @@ class AlertsTestCase(TestCase):
         self.assertEqual(
             LeadActivityLog.objects.latest("action_timestamp").id, activity.id
         )
-        opt = NotificationOption.objects.get(pk=INACTIVE_NOTIF_OPTION_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_INACTIVE_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -230,7 +236,9 @@ class AlertsTestCase(TestCase):
         stalled_date = timezone.now() - timezone.timedelta(days=65)
         self.lead_1.status_last_update = stalled_date
         self.lead_1.save()
-        opt = NotificationOption.objects.get(pk=STALLED_IN_STAGE_NOTIF_OPTION_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_STALLED_IN_STAGE_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -264,7 +272,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_1_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_1_DAY_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -285,7 +295,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_2.expected_close_date = expected_close_date
         self.lead_2.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_1_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_1_DAY_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -322,7 +334,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_14_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_14_DAYS_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -343,7 +357,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_2.expected_close_date = expected_close_date
         self.lead_2.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_14_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_14_DAYS_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -380,7 +396,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_30_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_30_DAYS_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -401,7 +419,9 @@ class AlertsTestCase(TestCase):
 
         self.lead_2.expected_close_date = expected_close_date
         self.lead_2.save()
-        opt = NotificationOption.objects.get(pk=LATE_NOTIF_DAY_30_ID)
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_LAPSED_30_DAYS_ID
+        )
 
         selection = NotificationSelection.objects.create(
             option=opt, user=self.manager, value=False
@@ -410,4 +430,28 @@ class AlertsTestCase(TestCase):
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
         self.assertEqual(Notification.objects.count(), 0)
+
+    def test_notification_stage_update(self):
+        """ should yield a notification created for user both users"""
+        Stage.objects.create(
+            title="test random stage",
+            type=org_consts.STAGE_TYPE_PRIVATE,
+            organization=self.org,
+        )
+        self.assertEqual(Notification.objects.count(), 2)
+
+    def test_one_notification_stage_update(self):
+        """ should yield a notification created for user """
+        opt = NotificationOption.objects.get(
+            pk=core_consts.NOTIFICATION_OPTION_STAGE_UPDATE_ID
+        )
+        NotificationSelection.objects.create(option=opt, user=self.rep, value=False)
+
+        Stage.objects.create(
+            title="test random stage",
+            type=org_consts.STAGE_TYPE_PRIVATE,
+            organization=self.org,
+        )
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 

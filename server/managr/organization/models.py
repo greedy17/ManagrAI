@@ -278,7 +278,7 @@ class Stage(TimeStampModel):
 
     def save(self, *args, **kwargs):
         if self.type == org_consts.STAGE_TYPE_PRIVATE:
-            users = self.organization.users.all()
+            users = self.organization.users.filter(is_active=True)
             allowed_notifications = []
             for user in users:
                 ## get user selection for this notification
@@ -301,7 +301,7 @@ class Stage(TimeStampModel):
             for user in users:
                 if user.check_notification_enabled_setting(
                     core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
-                    core_consts.NOTIFICATION_TYPE_EMAIL,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
                 ):
 
                     Notification.objects.create(
