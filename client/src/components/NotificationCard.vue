@@ -54,24 +54,14 @@ export default {
       let notification = this.notification.notificationType
       notification = notification.split('.')
       notification = notification[0]
+
       // special notification types OPPORTUNITY.NOTIF_ACTION we only need OPPORTUNITY
 
-      switch (notification) {
-        case NOTIFICATION_TYPES.email:
-          return 'email'
-        case NOTIFICATION_TYPES.reminder:
-          return 'alarm'
-        case NOTIFICATION_TYPES.system:
-          return 'dark-settings'
-        case NOTIFICATION_TYPES.message:
-          return 'sms'
-        case NOTIFICATION_TYPES.emailOpened:
-          return 'checkmark'
-        case NOTIFICATION_TYPES.opportunity:
-          return 'flag'
-        default:
-          return 'alarm'
+      if (NOTIFICATION_TYPES[notification]) {
+        return NOTIFICATION_TYPES[notification].icon
       }
+      //default
+      return NOTIFICATION_TYPES['SYSTEM'].icon
     },
     formattedNotificationType() {
       // special notification types OPPORTUNITY.NOTIF_ACTION we only need OPPORTUNITY
@@ -79,22 +69,11 @@ export default {
       let notification = this.notification.notificationType
       notification = notification.split('.')
       notification = notification[0]
-      switch (notification) {
-        case NOTIFICATION_TYPES.email:
-          return 'email'
-        case NOTIFICATION_TYPES.message:
-          return 'message'
-        case NOTIFICATION_TYPES.reminder:
-          return 'reminder'
-        case NOTIFICATION_TYPES.system:
-          return 'system'
-        case NOTIFICATION_TYPES.emailOpened:
-          return 'email'
-        case NOTIFICATION_TYPES.opportunity:
-          return 'opportunity'
-        default:
-          return 'system'
+      if (NOTIFICATION_TYPES[notification]) {
+        return NOTIFICATION_TYPES[notification].label
       }
+      //default
+      return NOTIFICATION_TYPES['SYSTEM'].label
     },
     showSideNav() {
       return this.$store.getters.showSideNav

@@ -253,7 +253,7 @@ class NotificationOptionSerializer(serializers.ModelSerializer):
             "description",
             "default_value",
             "notification_type",
-            "resrouce",
+            "resource",
             "key",
             "value",
         )
