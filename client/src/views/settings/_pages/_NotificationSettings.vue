@@ -17,18 +17,12 @@
               }"
               >{{ opt.field.value == true ? 'on' : 'off' }}</span
             >
-            <Tooltip>
-              <template v-slot:tooltip-target>
-                <span class="toggle-icon">
-                  <svg width="20px" height="20px" viewBox="0 0 15 15">
-                    <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
-                  </svg>
-                </span>
-              </template>
-              <template v-slot:tooltip-content>
-                {{ opt.meta.helpText }}
-              </template>
-            </Tooltip>
+            <svg width="20px" height="20px" viewBox="0 0 15 15">
+              <use
+                xlink:href="@/assets/images/help-outline.svg#help-outline"
+                v-tooltip="opt.meta.helpText"
+              />
+            </svg>
           </span>
           <div class="notification-settings__option__options">
             <input
@@ -63,7 +57,7 @@
 
 <script>
 import { FormField } from '@thinknimble/tn-forms'
-import Tooltip from '@/components/shared/Tooltip'
+
 import NotificationSettings, { NotificationSelection } from '@/services/notifications/settings'
 import CollectionManager from '@/services/collectionManager'
 
@@ -71,9 +65,7 @@ import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'NotificationSettings',
-  components: {
-    Tooltip,
-  },
+  components: {},
   data() {
     return {
       settingsOptions: CollectionManager.create({

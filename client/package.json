@@ -29,6 +29,7 @@
     "pluralize": "^8.0.0",
     "randomcolor": "^0.5.3",
     "v-mask": "^2.2.1",
+    "v-tooltip": "^2.0.3",
     "vue": "^2.5.22",
     "vue-datetime": "^1.0.0-beta.13",
     "vue-router": "^3.0.2",
