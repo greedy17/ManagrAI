@@ -3,19 +3,13 @@
     <div class="page__left-nav-bar">
       <SideNavToolbar>
         <template v-slot:trigger>
-          <Tooltip>
-            <template v-slot:tooltip-target>
-              <span
-                class="toggle-icon"
-                @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-              >
-                <img src="@/assets/images/logo.png" style="width: 1.5rem; height: 1.5rem;" />
-              </span>
-            </template>
-            <template v-slot:tooltip-content>
-              Details
-            </template>
-          </Tooltip>
+          <span
+            class="toggle-icon"
+            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+            v-tooltip.right-end="'Details'"
+          >
+            <img src="@/assets/images/logo.png" style="width: 1.5rem; height: 1.5rem;" />
+          </span>
         </template>
         <template v-slot:toolbar>
           <ToolBar
@@ -245,6 +239,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 @import '@/styles/layout';
+
 .leads-index {
   display: flex;
   flex-flow: row;

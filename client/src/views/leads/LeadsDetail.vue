@@ -7,40 +7,30 @@
       <!--        -->
       <SideNavToolbar>
         <template v-slot:trigger>
-          <Tooltip>
-            <template v-slot:tooltip-target>
-              <span class="toggle-icon" @click="toggleSideToolbar('details')">
-                <img
-                  class="tooltip-icon"
-                  src="@/assets/images/logo.png"
-                  style="width: 1.5rem; height: 1.5rem; margin-right: 1rem;"
-                />
-              </span>
-            </template>
-            <template v-slot:tooltip-content>
-              Details
-            </template>
-          </Tooltip>
-          <Tooltip>
-            <template v-slot:tooltip-target>
-              <span class="toggle-icon" @click="toggleSideToolbar('insights')">
-                <img class="tooltip-icon cloud-svg" src="@/assets/images/cloud-outline.png" />
-              </span>
-            </template>
-            <template v-slot:tooltip-content>
-              Insights
-            </template>
-          </Tooltip>
-          <Tooltip>
-            <template v-slot:tooltip-target>
-              <span class="toggle-icon" @click="toggleSideToolbar('custom-fields')">
-                <img class="tooltip-icon building-svg" src="@/assets/images/building.svg" />
-              </span>
-            </template>
-            <template v-slot:tooltip-content>
-              Custom Fields
-            </template>
-          </Tooltip>
+          <span class="toggle-icon" @click="toggleSideToolbar('details')">
+            <img
+              class="tooltip-icon"
+              src="@/assets/images/logo.png"
+              style="width: 1.5rem; height: 1.5rem; margin-right: 1rem;"
+              v-tooltip="'Details'"
+            />
+          </span>
+
+          <span class="toggle-icon" @click="toggleSideToolbar('insights')">
+            <img
+              class="tooltip-icon cloud-svg"
+              src="@/assets/images/cloud-outline.png"
+              v-tooltip="'Insights'"
+            />
+          </span>
+
+          <span class="toggle-icon" @click="toggleSideToolbar('custom-fields')">
+            <img
+              class="tooltip-icon building-svg"
+              src="@/assets/images/building.svg"
+              v-tooltip="'Custom Fields'"
+            />
+          </span>
         </template>
         <template v-slot:toolbar>
           <LeadInsights v-if="showToolbarNav && selectedToolbarView == 'insights'" :lead="lead" />
