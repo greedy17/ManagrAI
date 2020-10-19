@@ -2,29 +2,21 @@
   <div class="filter">
     <span class="title">
       <span>Filter by Rep</span>
-      <div class="menu-container">
-        <img
-          src="@/assets/images/more_horizontal.svg"
-          class="trigger-icon"
-          :class="{ 'full-opacity': menuOpen }"
-          @click="openMenu"
-        />
-        <div style="position: relative; height: 0px; width: 0px;" v-if="menuOpen">
-          <div
-            class="menu"
-            :class="{
-              'menu-for-forecast-page': $route.name === 'Forecast',
-              'menu-for-accounts-page': $route.name !== 'Forecast',
-            }"
-          >
-            <div class="option" @click="selectAll">
-              Select All
-            </div>
-            <div class="option" @click="deselectAll">
-              Deselect All
-            </div>
-          </div>
-        </div>
+      <div class="extra-options">
+        <DropDownMenu
+          @selectedItem="emitSelection"
+          :right="10"
+          :items="[
+            { key: 'Select All', value: 'select-all' },
+            { key: 'Deselect All', value: 'deselect-all' },
+          ]"
+        >
+          <template v-slot:dropdown-trigger="{ toggle }">
+            <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="0 0 24 20">
+              <use xlink:href="@/assets/images/more_horizontal.svg#more" />
+            </svg>
+          </template>
+        </DropDownMenu>
       </div>
     </span>
     <div v-if="!users.refreshing" class="reps-container">
@@ -67,9 +59,11 @@
 import User from '@/services/users'
 import CollectionManager from '@/services/collectionManager'
 import { loadEntireCollection } from '@/services/utils'
+import DropDownMenu from '@/components/forms/DropDownMenu'
 
 export default {
   name: 'FilterByRep',
+  components: { DropDownMenu },
   props: {
     repFilterState: {
       required: true,
@@ -99,18 +93,15 @@ export default {
     loadEntireCollection(this.users)
   },
   methods: {
-    openMenu() {
-      // if showing, close and remove event listener
-      // if not showing, open and add event listener
-      if (!this.showHelp) {
-        this.menuOpen = true
-        setTimeout(() => document.body.addEventListener('click', this.menuCallback), 0)
+    emitSelection(val) {
+      if (val == 'select-all') {
+        this.selectAll()
+      }
+      if (val == 'deselect-all') {
+        this.deselectAll()
       }
     },
-    menuCallback() {
-      this.menuOpen = false
-      document.body.removeEventListener('click', this.menuCallback)
-    },
+
     toggleActiveRep(repID) {
       this.$emit('toggle-active-rep', repID)
     },
@@ -188,56 +179,17 @@ export default {
   flex-flow: row;
   align-items: center;
 
-  .menu-container {
-    display: flex;
-    flex-flow: row;
+  .extra-options {
+    width: 2rem;
     margin-left: auto;
-
-    .trigger-icon {
-      @include pointer-on-hover;
-      opacity: 0.4;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-
-    .full-opacity {
-      opacity: 1;
-    }
-
-    .menu {
-      box-shadow: 0 4px 16px 0 rgba($color: $black, $alpha: 0.3);
-      opacity: 1;
-      width: 9rem;
-      background-color: white;
-      position: absolute;
-
-      .option {
-        @include pointer-on-hover;
-        height: 3rem;
-        display: flex;
-        flex-flow: column;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-
-        &:hover {
-          background-color: $gray;
-        }
-      }
-
-      .border {
-        border: 1px solid $soft-gray;
-      }
+    &:hover {
+      cursor: pointer;
     }
   }
 }
-.menu-for-forecast-page {
-  margin-top: -6.5rem;
-  margin-left: -9rem;
-}
-.menu-for-accounts-page {
-  margin-left: 1rem;
+.dd-icon {
+  width: 20px;
+  height: 15px;
+  fill: #484a6e;
 }
 </style>

@@ -3,6 +3,9 @@ import UserAPI from './api'
 
 export default class User {
   static api = UserAPI.create(User)
+  static USER_TYPE_MANAGER = 'MANAGER'
+  static USER_TYPE_REP = 'REP'
+  static USER_TYPE_INTEGRATION = 'INTEGRATION'
 
   constructor(user) {
     user = user || {}
