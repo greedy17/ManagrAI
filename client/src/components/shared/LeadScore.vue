@@ -1,24 +1,22 @@
 <template>
-  <Tooltip>
-    <template v-slot:tooltip-target>
-      <div class="display">
-        {{ display }}
-      </div>
-    </template>
-    <template v-slot:tooltip-content>
+  <v-popover trigger="hover" placement="right">
+    <div class="display">
+      {{ display }}
+    </div>
+    <template slot="popover">
       <div class="content">
-        {{ content }}
-        <br />
-        <br />
-        Last Score: {{ lead.lastScore ? lead.lastScore.score : 'N/A' }}
+        <div>
+          {{ mainContent }}
+        </div>
+        <div>
+          {{ footerContent }}
+        </div>
       </div>
     </template>
-  </Tooltip>
+  </v-popover>
 </template>
 
 <script>
-import Tooltip from '@/components/shared/Tooltip'
-
 // Help Hover Copy
 // x = engagement score ( 0 - 100 )
 // x >= 25            displays "Engagement is very high"
@@ -30,7 +28,6 @@ import Tooltip from '@/components/shared/Tooltip'
 
 export default {
   name: 'LeadScore',
-  components: { Tooltip },
   props: {
     lead: {
       type: Object,
@@ -42,7 +39,7 @@ export default {
       let { latestScore } = this.lead
       return latestScore ? latestScore.score : 'N/A'
     },
-    content() {
+    mainContent() {
       let { latestScore } = this.lead
       if (!latestScore) {
         return 'No Engagement'
@@ -64,6 +61,9 @@ export default {
         return 'Engagement is low'
       }
       return 'No Engagement'
+    },
+    footerContent() {
+      return `Last Score: ${this.lead.lastScore ? this.lead.lastScore.score : 'N/A'}`
     },
   },
 }
