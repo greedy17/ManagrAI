@@ -60,6 +60,7 @@ class Organization(TimeStampModel):
     """
 
     name = models.CharField(max_length=255, null=True)
+    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, null=True)
     state = models.CharField(
         max_length=255,
         choices=STATE_CHOCIES,

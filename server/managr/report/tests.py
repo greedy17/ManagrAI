@@ -15,9 +15,9 @@ from .story_report_generation import (
     OrganizationDataGenerator
 )
 from .performance_report_generation import (
-    RepDataForSelectedDateRange,
-    RepDataAverageForSelectedDateRange,
-    OrganizationDataAverageForSelectedDateRange,
+    RepFocusData,
+    RepTypicalData,
+    OrgTypicalData,
 )
 from managr.report import constants as report_const
 from pdb import set_trace
@@ -128,7 +128,7 @@ class PerformanceReportRepresentativeFocusedDateRangeTestCase(TestCase):
         )
 
     def generate_report_data(self):
-        return RepDataForSelectedDateRange(self.performance_report).as_dict
+        return RepFocusData(self.performance_report).as_dict
 
     def test_actions_count(self):
         data = self.generate_report_data()
@@ -655,7 +655,7 @@ class PerformanceReportRepresentativeAverageForDateRangeTestCase(TestCase):
         # via average_for_field().
         lead_one_data = LeadDataGenerator(self.closed_lead_one).as_dict
         lead_two_data = LeadDataGenerator(self.closed_lead_two).as_dict
-        rep_data = RepDataAverageForSelectedDateRange(self.performance_report).as_dict
+        rep_data = RepTypicalData(self.performance_report).as_dict
 
         # test activities_count
         numerator = lead_one_data["action_count"] + lead_two_data["action_count"]
@@ -688,7 +688,7 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
         )
 
     def generate_rep_one_data(self):
-        return RepDataAverageForSelectedDateRange(self.performance_report).as_dict
+        return RepTypicalData(self.performance_report).as_dict
 
     def generate_rep_two_data(self):
         # generate rep
@@ -738,17 +738,17 @@ class PerformanceReportOrganizationAverageForDateRangeTestCase(TestCase):
             date_range_from=self.performance_report.date_range_from,
             date_range_to=self.performance_report.date_range_to,
         )
-        return RepDataAverageForSelectedDateRange(performance_report).as_dict
+        return RepTypicalData(performance_report).as_dict
 
     def generate_org_data(self):
-        org_data_generator = OrganizationDataAverageForSelectedDateRange(self.performance_report)
+        org_data_generator = OrgTypicalData(self.performance_report)
         return org_data_generator.as_dict_for_representative_report
 
     def test_averages(self):
         # Originally, given fixture:
         # Only one rep with two leads.
-        # Therefore, averages of OrganizationDataAverageForSelectedDateRange
-        # should be same as the one rep's RepDataAverageForSelectedDateRange.
+        # Therefore, averages of OrgTypicalData
+        # should be same as the one rep's RepTypicalData.
         rep_one_averages = self.generate_rep_one_data()
         org_averages = self.generate_org_data()
 

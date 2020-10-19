@@ -77,7 +77,7 @@ class ForecastKPIs:
     @property
     def forecast(self):
         """
-        Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 100% 'Verbal' values.
+        Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 90% 'Verbal' values.
         """
         # filter for leads whose forecast is 50/50
         temp_1 = Lead.objects.filter(
@@ -106,7 +106,7 @@ class ForecastKPIs:
         strong_sum = strong_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
         verbal_sum = verbal_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
 
-        return (fifty_fifty_sum * 0.5) + (strong_sum * 0.75) + verbal_sum
+        return (fifty_fifty_sum * 0.5) + (strong_sum * 0.75) + (verbal_sum * 0.9)
 
     @property
     def quota(self):

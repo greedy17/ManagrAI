@@ -213,6 +213,9 @@ class List(TimeStampModel):
     leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
+    def __str__(self):
+        return f"LIST '{self.title}' ({self.id})"
+
     class Meta:
         ordering = ["-datetime_created"]
 
