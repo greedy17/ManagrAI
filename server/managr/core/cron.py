@@ -327,7 +327,7 @@ def revoke_tokens():
         revoke_access_token(token)
 
 
-# Daily, at 11:59:59 PM
-@kronos.register("23 59 59 * *")
+# Daily, at 11:59 PM
+@kronos.register("59 23 * * *")
 def _generate_lead_scores():
     generate_lead_scores()
