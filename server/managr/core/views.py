@@ -679,39 +679,53 @@ class TwilioMessageWebhook(APIView):
                 emit_log_event(lead_consts.MESSAGE_RECEIVED, u, lead_message)
                 # send email of received message
                 # TODO: PB when we merge in feature alerts we will check notification settings first
-                message_contacts = [
-                    f"{contact.first_name} {sender}" for contact in contacts_object
-                ]
-                contacts_string = ",".join(message_contacts)
-                message = {
-                    "subject": f"You received a text from {contacts_string}",
-                    "body": body,
-                }
-                recipients = [{"name": u.full_name, "email": u.email}]
-                send_system_email(recipients, message)
 
-            # create the notification with resource id being the leadmessage
-            # no need to emit an event for this as the notification has no async actions
-            contacts = [
-                dict(
-                    first_name=contact.first_name,
-                    last_name=contact.last_name,
-                    email=contact.email,
-                )
-                for contact in contacts_object
-            ]
-            Notification.objects.create(
-                notify_at=timezone.now(),
-                title="Message Received",
-                notification_type="MESSAGE",
-                resource_id=str(lead_message.id),
-                user=u,
-                meta={
-                    "content": body,
-                    "linked_contacts": contacts,
-                    "leads": [{"id": str(l.id), "title": l.title} for l in leads],
-                },
-            )
+                if u.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_TEXT_RECEIVED,
+                    core_consts.NOTIFICATION_TYPE_EMAIL,
+                ):
+
+                    message_contacts = [
+                        f"{contact.first_name} {sender}" for contact in contacts_object
+                    ]
+                    contacts_string = ",".join(message_contacts)
+                    message = {
+                        "subject": f"You received a text from {contacts_string}",
+                        "body": body,
+                    }
+                    recipients = [{"name": u.full_name, "email": u.email}]
+                    send_system_email(recipients, message)
+
+                # create the notification with resource id being the leadmessage
+                # no need to emit an event for this as the notification has no async actions
+
+                if u.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_TEXT_RECEIVED,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
+                ):
+
+                    contacts = [
+                        dict(
+                            first_name=contact.first_name,
+                            last_name=contact.last_name,
+                            email=contact.email,
+                        )
+                        for contact in contacts_object
+                    ]
+                    Notification.objects.create(
+                        notify_at=timezone.now(),
+                        title="Message Received",
+                        notification_type="MESSAGE",
+                        resource_id=str(lead_message.id),
+                        user=u,
+                        meta={
+                            "content": body,
+                            "linked_contacts": contacts,
+                            "leads": [
+                                {"id": str(l.id), "title": l.title} for l in leads
+                            ],
+                        },
+                    )
 
         return Response()
 
