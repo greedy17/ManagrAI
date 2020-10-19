@@ -129,6 +129,8 @@ export default {
       }
     },
   },
+
+  computed: {},
 }
 </script>
 
@@ -151,9 +153,10 @@ export default {
     }
 
     &__title {
-      width: 25rem;
+      width: 80%;
       display: flex;
       justify-content: space-between;
+      text-transform: capitalize;
       &--strong {
         font-style: italic;
       }

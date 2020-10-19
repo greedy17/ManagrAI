@@ -278,16 +278,16 @@ class Stage(TimeStampModel):
 
     def save(self, *args, **kwargs):
         if self.type == org_consts.STAGE_TYPE_PRIVATE:
-            users = self.organization.users.all()
+            users = self.organization.users.filter(is_active=True)
             allowed_notifications = []
             for user in users:
                 ## get user selection for this notification
-                user_notif = user.notification_settings.filter(
-                    option__key="ORGANIZATION", option__notification_type="ALERT"
-                ).first()
-                ## if a user has not yet selected a notification get default which is true
-                if not user_notif or user_notif.value == True:
+                if user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
+                    core_consts.NOTIFICATION_TYPE_EMAIL,
+                ):
                     allowed_notifications.append(user)
+
             recipients = [
                 {"email": user.email, "name": user.full_name}
                 for user in allowed_notifications
@@ -299,21 +299,21 @@ class Stage(TimeStampModel):
             }
             email_client.emails.send_system_email(recipients, message)
             for user in users:
-                organization_notif = user.notification_settings.filter(
-                    option__key="ORGANIZATION", option__notification_type="ALERT"
-                ).first()
-                if organization_notif and organization_notif.value != True:
-                    return
-                Notification.objects.create(
-                    notify_at=timezone.now(),
-                    title="Stages Updated",
-                    notification_type="SYSTEM",
-                    resource_id=self.id,
-                    user=user,
-                    meta={
-                        "content": "Your organization has added new stages, please log out and login to update your list"
-                    },
-                )
+                if user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
+                ):
+
+                    Notification.objects.create(
+                        notify_at=timezone.now(),
+                        title="Stages Updated",
+                        notification_type="SYSTEM",
+                        resource_id=self.id,
+                        user=user,
+                        meta={
+                            "content": "Your organization has added new stages, please log out and login to update your list"
+                        },
+                    )
 
         # save all as upper case
         self.title = self.title.upper()

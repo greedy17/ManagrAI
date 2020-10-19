@@ -160,11 +160,11 @@ def _get_email_notification(account_id, object_id, date):
             )
 
             if leads.count() > 0:
-                notification_settings = user.notification_settings.filter(
-                    option__key="EMAIL", option__notification_type="ALERT"
-                ).first()
-                if notification_settings and notification_settings.value != True:
-                    return
+                if not user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_EMAIL_RECEIVED,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
+                ):
+                    pass
                 meta_contacts = "".join(message_contacts)
                 meta_body = thread["snippet"]
                 n = Notification.objects.create(
@@ -243,11 +243,12 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
 
             if leads.count() > 0:
                 # check to see notification settings
-                notification_settings = user.notification_settings.filter(
-                    option__key="EMAIL", option__notification_type="ALERT"
-                ).first()
-                if notification_settings and notification_settings.value != True:
-                    return
+                # currently all lead email notif settings are using this key
+                if not user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_EMAIL_RECEIVED,
+                    core_consts.NOTIFICATION_TYPE_ALERT,
+                ):
+                    pass
                 meta_contacts = "".join(message_contacts)
                 meta_body = message["snippet"]
                 n = Notification.objects.create(

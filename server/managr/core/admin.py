@@ -57,6 +57,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_superuser",
                     "is_staff",
                     "organization",
+                    "type",
                 )
             },
         ),

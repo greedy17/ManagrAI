@@ -58,7 +58,6 @@ export default {
     },
   },
   components: {
-    Lead,
     Pagination,
     LeadRow,
   },

@@ -3,56 +3,60 @@
     "model": "core.NotificationOption",
     "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa3",
     "fields": {
-      "title": "Email",
-      "description": "Turn On/Off Alert Notifications for received emails",
+      "title": "Opportunity Emails Received",
+      "description": "Turn On/Off Alert Notifications for emails received from Opportunities",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "EMAIL"
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_EMAIL_RECEIVED"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "004c41a0-11c2-4b33-bcec-4e10518d2fa1",
     "fields": {
-      "title": "Organization",
-      "description": "Turn On/Off Email Notifications for updates to my Organization",
+      "title": "Organization Stages Update",
+      "description": "Turn On/Off Email Notifications for updates to my Organization Stages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "ORGANIZATION"
+      "resource": "ORGANIZATION",
+      "key": "ORGANIZATION_STAGES_UPDATE"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "0e0a1e9d-f806-4807-8d09-58e90346edff",
     "fields": {
-      "title": "Organization",
-      "description": "Turn On/Off Alert Notifications for updates to my Organization",
+      "title": "Organization Stages Update",
+      "description": "Turn On/Off Alert Notifications for updates to my Organization Stages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "ORGANIZATION"
+      "resource": "ORGANIZATION",
+      "key": "ORGANIZATION_STAGES_UPDATE"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "73e2dafe-48b9-4542-924d-6fa606f135da",
     "fields": {
-      "title": "Reports",
+      "title": "Reports Generated",
       "description": "Turn On/Off Email Notifications for generated Reports",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "REPORTS"
+      "resource": "REPORTS",
+      "key": "REPORT_GENERATED"
     }
   },
   {
@@ -62,95 +66,177 @@
       "title": "Reports",
       "description": "Turn On/Off Alert Notifications for generated Reports",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "REPORTS"
+      "resource": "REPORTS",
+      "key": "REPORT_GENERATED"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "2742fedb-a61e-4f2d-9047-9a7e82e1ef3e",
     "fields": {
-      "title": "Account",
+      "title": "Updates to User Account",
       "description": "Turn On/Off Email Notifications for changes to my Managr Account",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "ACCOUNT"
+      "resource": "USER",
+      "key": "USER_UPDATE"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "6d3c7249-4984-4b6e-b525-d8cfdad65264",
     "fields": {
-      "title": "Account",
+      "title": "Updates to User Account",
       "description": "Turn On/Off Alert Notifications for changes to my Managr Account",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "ACCOUNT"
+      "resource": "USER",
+      "key": "USER_UPDATE"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "95ab3ae7-2095-4bc3-ad79-bfcddaac041d",
     "fields": {
-      "title": "Text",
+      "title": "Received text messages from Opportunities",
       "description": "Turn On/Off Email Notifications for Text Messages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "TEXT"
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_TEXT_RECEIVED"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "2f4a0774-5bd3-4f62-87c7-f0aa2c631f51",
     "fields": {
-      "title": "Text",
+      "title": "Received text messages from Opportunities",
       "description": "Turn On/Off Alert Notifications for Text Messages",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "TEXT"
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_TEXT_RECEIVED"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "383c0457-41d2-48d3-a7e8-049c8a69f728",
     "fields": {
-      "title": "Reminders",
+      "title": "Reminders for opportunities",
       "description": "Turn On/Off Email Notifications for Reminders",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "EMAIL",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "REMINDER"
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_REMINDER"
     }
   },
   {
     "model": "core.NotificationOption",
     "pk": "5c962123-2045-4a93-aea2-ba1b2054faa6",
     "fields": {
-      "title": "Reminders",
+      "title": "Reminders for opportunities",
       "description": "Turn On/Off Alert Notifications for Reminders",
       "default_value": true,
-      "user_groups": ["MANAGER", "REP", "ADMIN"],
+      "user_groups": ["MANAGER", "REP"],
       "notification_type": "ALERT",
       "datetime_created": "2020-06-09T17:38:38.085Z",
       "last_edited": "2020-06-09T17:38:38.085Z",
-      "key": "REMINDER"
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_REMINDER"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "f9cc3934-f82b-442f-9d63-73de73d5d115",
+    "fields": {
+      "title": "Opportunity Stalled in Stage",
+      "description": "Turn On/Off Alert Notifications When an opportunity is stalled in a stage for 60days+ ",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_STALLED_IN_STAGE"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "845c1d76-8743-4695-b6cf-9af7b0aaab14",
+    "fields": {
+      "title": "Opportunity Inactive",
+      "description": "Turn On/Off Alert Notifications When an opportunity has no recorded activity in a stage for 90days+ ",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_INACTIVE_90_DAYS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "5d19b999-c0bf-429a-a8f5-17b9bc2efdc6",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 1 day",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by 1 day",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_1_DAY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "2bcddc82-305b-42a8-a295-99b76f418aac",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 14 days",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by at least 14 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_14_DAYS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "0285c84d-10c5-41d8-8a97-d944cc373ad6",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 30 days",
+      "description": "Turn On/Off Alert Notifications When an opportunity expected close date has lapsed by at least 30 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "ALERT",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_30_DAYS"
     }
   }
 ]
