@@ -256,7 +256,6 @@ import LeadActivityLog from '@/services/leadActivityLogs'
 import Forecast from '@/services/forecasts'
 import User from '@/services/users'
 import { dateRangeParamsFromPreset } from '@/services/dateRangeFilters'
-import Tooltip from '@/components/shared/Tooltip'
 
 const POLLING_INTERVAL = 10000
 
@@ -289,7 +288,7 @@ export default {
       type: Boolean,
     },
   },
-  components: { Tooltip },
+  components: {},
   data() {
     return {
       kpiTooltipText:

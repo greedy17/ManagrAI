@@ -50,7 +50,6 @@
 
 <script>
 import ToolBar from '@/components/forecast/ToolBar'
-import Tooltip from '@/components/shared/Tooltip'
 
 import ListsContainer from '@/components/forecast/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
@@ -73,7 +72,6 @@ export default {
     ToggleCheckBox,
     ListsContainer,
     SideNavToolbar,
-    Tooltip,
   },
   data() {
     return {

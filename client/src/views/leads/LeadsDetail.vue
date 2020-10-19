@@ -183,7 +183,7 @@ import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 import LeadInsights from '@/components/shared/LeadInsights'
 import DropDownMenu from '@/components/forms/DropDownMenu'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
-import Tooltip from '@/components/shared/Tooltip'
+
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
 import List from '@/services/lists'
@@ -216,7 +216,6 @@ export default {
     DropDownMenu,
     LeadMessages,
     SideNavToolbar,
-    Tooltip,
   },
   data() {
     return {

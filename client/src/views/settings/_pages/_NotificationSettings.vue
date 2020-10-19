@@ -57,7 +57,7 @@
 
 <script>
 import { FormField } from '@thinknimble/tn-forms'
-import Tooltip from '@/components/shared/Tooltip'
+
 import NotificationSettings, { NotificationSelection } from '@/services/notifications/settings'
 import CollectionManager from '@/services/collectionManager'
 
@@ -65,9 +65,7 @@ import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'NotificationSettings',
-  components: {
-    Tooltip,
-  },
+  components: {},
   data() {
     return {
       settingsOptions: CollectionManager.create({
