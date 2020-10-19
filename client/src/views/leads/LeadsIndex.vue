@@ -3,19 +3,16 @@
     <div class="page__left-nav-bar">
       <SideNavToolbar>
         <template v-slot:trigger>
-          <Tooltip>
-            <template v-slot:tooltip-target>
-              <span
-                class="toggle-icon"
-                @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-              >
-                <img src="@/assets/images/logo.png" style="width: 1.5rem; height: 1.5rem;" />
-              </span>
-            </template>
-            <template v-slot:tooltip-content>
-              Details
-            </template>
-          </Tooltip>
+          <span
+            class="toggle-icon"
+            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+          >
+            <img
+              src="@/assets/images/logo.png"
+              style="width: 1.5rem; height: 1.5rem;"
+              v-tooltip="'Details'"
+            />
+          </span>
         </template>
         <template v-slot:toolbar>
           <ToolBar
@@ -59,7 +56,6 @@ import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
-import Tooltip from '@/components/shared/Tooltip'
 
 import Lead from '@/services/leads'
 import List from '@/services/lists'
@@ -73,7 +69,6 @@ export default {
     ToggleCheckBox,
     ListsContainer,
     SideNavToolbar,
-    Tooltip,
   },
   data() {
     return {
@@ -82,20 +77,21 @@ export default {
         ModelClass: List,
         filters: {
           byUser: this.$store.state.user.id,
+          byReps: [this.$store.state.user.id],
           ordering: 'title',
         },
       }),
       myLeadsAll: CollectionManager.create({
         ModelClass: Lead,
         filters: {
-          byUser: this.$store.state.user.id,
+          byReps: [this.$store.state.user.id],
         },
       }),
       myLeadsNoList: CollectionManager.create({
         ModelClass: Lead,
         filters: {
-          byUser: this.$store.state.user.id,
           onList: false,
+          byReps: [this.$store.state.user.id],
         },
       }),
     }

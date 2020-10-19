@@ -1,5 +1,8 @@
 <template>
   <div class="lead-banner" :style="{ 'background-color': bannerBackgroundColor }">
+    <div style="margin: 0 0.5rem 0 1rem;">
+      <LeadScore :lead="lead" />
+    </div>
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
       <LeadForecastDropdown
@@ -9,7 +12,7 @@
         :disabled="!isOwnedByUser"
       />
     </div>
-    <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser" />
+    <LeadStatusDropdown :lead="lead" :disabled="!isOwnedByUser && !isManager" />
     <div class="days-in-status-container">
       <span class="days-in-status-label">Time In Stage</span>
       <span class="days-in-status">{{ this.lead.statusLastUpdate | timeToNow }}</span>
@@ -40,10 +43,13 @@
 </template>
 
 <script>
-import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
-import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import Lead from '@/services/leads'
 import { getLightenedColor } from '@/services/getColorFromLeadStatus'
+
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import LeadScore from '@/components/shared/LeadScore'
+
 export default {
   name: 'LeadBanner',
   props: {
@@ -55,6 +61,7 @@ export default {
   components: {
     LeadForecastDropdown,
     LeadStatusDropdown,
+    LeadScore,
   },
   methods: {
     emitReset() {
@@ -83,6 +90,9 @@ export default {
     },
     isOwnedByUser() {
       return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id
+    },
+    isManager() {
+      return this.$store.state.user.type == 'MANAGER'
     },
     isOwnedByAnother() {
       return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id

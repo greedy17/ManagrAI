@@ -41,6 +41,23 @@ class TimeStampModel(models.Model):
         abstract = True
 
 
+class UserQuerySet(models.QuerySet):
+    # TODO: Ideally I am trying to attach user roles so that INTEGRATION can assume roles for manager pb 10/15/20
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_active:
+            if (
+                user.type == core_consts.ACCOUNT_TYPE_MANAGER
+                or user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
+            ):
+                return self.filter(organization=user.organization)
+            if user.type == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(id=user.id)
+        else:
+            return self.none()
+
+
 class UserManager(BaseUserManager):
     """Custom User model manager, eliminating the 'username' field."""
 
@@ -107,7 +124,7 @@ class User(AbstractUser, TimeStampModel):
     type = models.CharField(
         choices=core_consts.ACCOUNT_TYPES,
         max_length=255,
-        default=core_consts.ACCOUNT_TYPE_MANAGER,
+        default=core_consts.ACCOUNT_TYPE_REP,
     )
     first_name = models.CharField(max_length=255, blank=True, null=False)
     last_name = models.CharField(max_length=255, blank=True, null=False)
@@ -137,7 +154,7 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True
     )
 
-    objects = UserManager()
+    objects = UserManager.from_queryset(UserQuerySet)()
 
     @property
     def full_name(self):
@@ -192,6 +209,16 @@ class User(AbstractUser, TimeStampModel):
 
     def get_contacts_from_leads(self):
         return self.claimed_leads
+
+    def check_notification_enabled_setting(self, key, type):
+        setting_value = self.notification_settings.filter(
+            option__key=key, option__notification_type=type, user=self
+        ).first()
+        if setting_value:
+            return setting_value.value
+        else:
+            # if a user does not have a value then assume True which is the default
+            return True
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
@@ -397,12 +424,18 @@ class NotificationOption(TimeStampModel):
         max_length=255,
         help_text="Email or Alert",
     )
-    ## this may get removed and replaced with notification options set on the leads
+
+    resource = models.CharField(
+        max_length=255,
+        choices=core_consts.NOTIFICATION_RESOURCES,
+        null=True,
+        help_text="select a resource to apply notification to",
+    )
     key = models.CharField(
         max_length=255,
-        choices=core_consts.NOTIFICATION_KEYS,
+        blank=True,
         null=True,
-        help_text="select a static key to use when applying filter",
+        help_text="unique identifier for notification option",
     )
     objects = NotificationOptionQuerySet.as_manager()
 
@@ -411,12 +444,6 @@ class NotificationOption(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
-        unique_together = (
-            # only allow a single key with two types per user group
-            "key",
-            "notification_type",
-            "user_groups",
-        )
 
     def get_value(self, user):
         selection = self.selections.filter(user=user)

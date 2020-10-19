@@ -7,6 +7,7 @@
     >
       <div class="lead__container__left">
         <slot name="left"></slot>
+        <span class="score"><LeadScore :lead="lead"/></span>
         <span class="title">{{ dataLead.title }}</span>
         <span class="rating">{{ dataLead.rating }}</span>
       </div>
@@ -28,12 +29,16 @@
         <div class="actions">
           <LeadForecastDropdown
             :lead="dataLead"
-            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            :disabled="
+              (!belongsToCurrentUser && !isManager) || dataLead.status == getIsClosedStatus.id
+            "
             @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
           />
           <LeadStatusDropdown
             :lead="dataLead"
-            :disabled="!belongsToCurrentUser || dataLead.status == getIsClosedStatus.id"
+            :disabled="
+              (!belongsToCurrentUser && !isManager) || dataLead.status == getIsClosedStatus.id
+            "
             @status-changed="onUpdateLocalStatus"
           />
         </div>
@@ -69,12 +74,13 @@
 
 <script>
 import Lead from '@/services/leads'
+import { getLightenedColor } from '@/services/getColorFromLeadStatus'
 
 import LeadDetails from '@/components/leads-index/LeadDetails'
 import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
 import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import Checkbox from '@/components/leads-new/CheckBox'
-import { getLightenedColor } from '@/services/getColorFromLeadStatus'
+import LeadScore from '@/components/shared/LeadScore'
 
 export default {
   name: 'LeadRow',
@@ -89,6 +95,7 @@ export default {
     LeadForecastDropdown,
     LeadStatusDropdown,
     Checkbox,
+    LeadScore,
   },
   data() {
     return {
@@ -126,6 +133,9 @@ export default {
         return this.dataLead.claimedBy == this.$store.state.user.id
       }
       return false
+    },
+    isManager() {
+      return this.$store.state.user.type == 'MANAGER'
     },
     headerBackgroundColor() {
       return this.dataLead.statusRef
@@ -187,6 +197,9 @@ export default {
     justify-content: space-between;
     margin: 0 0.2rem;
 
+    .score {
+      margin: 0 0.5rem 0 0.3rem;
+    }
     .title {
       font-size: 14px;
       width: 10rem;

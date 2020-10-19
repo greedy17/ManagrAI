@@ -1,8 +1,9 @@
 import random
 import factory
+from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from .models import Lead, CallNote
+from .models import Lead, CallNote, LeadActivityLog
 
 
 class LeadFactory(DjangoModelFactory):
@@ -23,3 +24,11 @@ class CallNoteFactory(DjangoModelFactory):
 
     class Meta:
         model = CallNote
+
+
+class LeadActivityLogFactory(DjangoModelFactory):
+    action_timestamp = timezone.now()
+    activity = "Lead.UPDATED"
+
+    class Meta:
+        model = LeadActivityLog

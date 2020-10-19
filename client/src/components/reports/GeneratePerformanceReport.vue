@@ -14,9 +14,9 @@
             </select>
             <select class="select" v-else v-model="selectedRepresentative">
               <option disabled :value="null">Select Representative</option>
-              <!-- <option key="ALL" :value="'ALL'" style="border-bottom: 1px solid grey;">
-                *Select All*
-              </option> -->
+              <option key="ALL" :value="'ALL'" style="border-bottom: 1px solid grey;">
+                *Select All (Organization-wide Report)*
+              </option>
               <option v-for="rep in representatives.list" :key="rep.id" :value="rep.id">
                 {{ rep.fullName.trim() ? rep.fullName : rep.email }}
               </option>

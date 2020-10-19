@@ -5,18 +5,7 @@
 
       <div class="errors">
         <!-- client side validations -->
-        <div v-if="isStaff" class="invite-form__organization">
-          <DropDownSelect
-            :items="organizations.list"
-            :itemsRef.sync="organizationRef"
-            v-model="organization"
-            displayKey="name"
-            valueKey="id"
-            nullDisplay="Select an Org"
-            searchable
-            :haseNext="!!organizations.pagination.next"
-          />
-        </div>
+
         <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
           Fields may not be blank.
         </div>
@@ -26,6 +15,9 @@
         <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
           Must be a valid email address.
         </div>
+        <div v-if="isFormValid !== null && !isFormValid && errors.invalidUserType">
+          Must be a valid user type
+        </div>
         <!-- server side validations -->
         <div v-if="success !== null && !success && errors[500]">
           Something went wrong. Please try again later.
@@ -33,6 +25,18 @@
         <div v-if="success !== null && !success && errors[400]">
           The provided email is associated with an existing account.
         </div>
+      </div>
+      <div v-if="isStaff" class="group">
+        <DropDownSelect
+          :items="organizations.list"
+          :itemsRef.sync="organizationRef"
+          v-model="organization"
+          displayKey="name"
+          valueKey="id"
+          nullDisplay="Select an Org"
+          searchable
+          :haseNext="!!organizations.pagination.next"
+        />
       </div>
       <!-- type="text" instead of type="email" so we can control UI when invalid -->
       <input class="invite-form__form-input" v-model="email" type="text" placeholder="email" />
@@ -42,15 +46,9 @@
         type="text"
         placeholder="confirm email"
       />
-      <div class="group" v-if="isStaff && isIntegrationEnabled">
-        <label for="is-integration-account">Integration Account</label>
-        <input
-          type="checkbox"
-          class="checkbox"
-          v-model="isIntegrationAccount"
-          :checked="type == 'INTEGRATION'"
-          id="is-integration-account"
-        />
+
+      <div class="group">
+        <DropDownSelect :items="userTypes" v-model="selectedUserType" />
       </div>
 
       <button type="submit">Invite</button>
@@ -69,7 +67,7 @@
 
 <script>
 import User from '@/services/users'
-import DropDownSelect from '@/components/forms/DropDownSelect'
+import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 
@@ -81,27 +79,18 @@ export default {
   data() {
     return {
       email: '',
-      emailConfirmation: '',
-      type: 'MANAGER', // TODO(Bruno 4-9-20): Make this dynamic
+      emailConfirmation: '', // TODO(Bruno 4-9-20): Make this dynamic
       isFormValid: null,
       errors: {},
       success: null,
       link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
-      isIntegrationAccount: false,
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
+      selectedUserType: User.USER_TYPE_REP,
     }
   },
-  watch: {
-    isIntegrationAccount(val) {
-      if (val) {
-        this.type = 'INTEGRATION'
-      } else {
-        this.type = 'MANAGER'
-      }
-    },
-  },
+  watch: {},
   async created() {
     if (this.isStaff) {
       await this.organizations.refresh()
@@ -124,7 +113,7 @@ export default {
         return
       }
 
-      let invitePromise = User.api.invite(this.email, this.type, this.organization)
+      let invitePromise = User.api.invite(this.email, this.selectedUserType, this.organization)
 
       invitePromise
         .then(response => {
@@ -149,25 +138,28 @@ export default {
         emailsDontMatch: this.emailsDontMatch,
         invalidEmail: this.invalidEmail,
         invalidOrganization: this.invalidOrganization,
+        invalidUserType: this.invalidUserType,
       }
       let isFormValid =
         !this.emailIsBlank &&
         !this.emailsDontMatch &&
         !this.invalidEmail &&
-        !this.invalidOrganization
+        !this.invalidOrganization &&
+        !this.invalidUserType
 
       return [isFormValid, formErrors]
     },
     resetData() {
       this.email = ''
       this.emailConfirmation = ''
-      this.type = 'MANAGER' // TODO(Bruno 4-9-20): Make this dynamic
+      this.type = User.USER_TYPE_MANAGER // TODO(Bruno 4-9-20): Make this dynamic
       this.isFormValid = null
       this.errors = {}
       this.success = null
       this.link = '' // NOTE(Bruno 4-20-20): temporary, for staging purposes
       this.isIntegrationAccount = false
       this.organization = null
+      this.selectedUserType = User.USER_TYPE_REP
     },
   },
   computed: {
@@ -184,6 +176,16 @@ export default {
       }
       return false
     },
+    userTypes() {
+      let userTypes = [
+        { key: 'Manager', value: User.USER_TYPE_MANAGER },
+        { key: 'Representative', value: User.USER_TYPE_REP },
+      ]
+      if (this.isIntegrationEnabled) {
+        userTypes.push({ key: 'Integration', value: User.USER_TYPE_INTEGRATION })
+      }
+      return userTypes
+    },
     emailIsBlank() {
       return !this.email.length
     },
@@ -198,6 +200,9 @@ export default {
     },
     invalidOrganization() {
       return !this.organization
+    },
+    invalidUserType() {
+      return !this.selectedUserType
     },
   },
 }

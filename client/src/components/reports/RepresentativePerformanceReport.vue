@@ -245,7 +245,9 @@
           to the forecast.
           {{
             forecastAdditionsProportion !== localConstants.NA
-              ? `That is ${forecastAdditionsProportion} times the typical number.`
+              ? forecastAdditionsProportion === 1
+                ? 'That is consistent with the typical number.'
+                : `That is ${forecastAdditionsProportion} times the typical number.`
               : 'Since the typical number of additions is N/A, no trend could be determined.'
           }}
         </div>
@@ -394,7 +396,7 @@
           {{ focusData.actionsToCloseOpportunity.average | roundToOneDecimalPlace }} actions to
           close a deal.
           {{
-            focusData.actionsToCloseOpportunity.average
+            !isNull(focusData.actionsToCloseOpportunity.average)
               ? `${focusData.actionsToCloseOpportunity.mostPerformed} was the most frequently performed
           action.`
               : null
@@ -520,10 +522,7 @@
           {{ focusRepDisplayNameShort }} is #{{ focusRepPerformanceRank }} in overall performance.
         </div>
         <div class="report__middle-row__card__content">
-          <div
-            class="report__middle-row__card__content__row"
-            style="align-items: unset; padding-top: 1rem;"
-          >
+          <div class="report__middle-row__card__content__row" style="align-items: unset;">
             <div
               v-for="(rep, idx) in organizationFocusData.topPerformers"
               :key="idx"
@@ -879,8 +878,17 @@ export default {
     forecastAdditionsProportion() {
       const focus = this.focusData.forecastTableAdditions
       const typical = this.typicalData.forecastTableAdditions
+      if (isNull(focus) || isNull(typical)) {
+        return this.localConstants.NA
+      }
+      if (!focus && !typical) {
+        return 1
+      }
+      if (!focus) {
+        return 0
+      }
       if (!typical) {
-        return focus || this.localConstants.NA
+        return focus
       }
       return roundToOneDecimalPlace(focus / typical)
     },

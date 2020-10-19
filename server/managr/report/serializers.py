@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from .models import StoryReport, PerformanceReport
 from managr.lead.serializers import LeadRefSerializer, UserRefSerializer
-from managr.organization.serializers import AccountRefSerializer
+from managr.organization.serializers import AccountRefSerializer, OrganizationRefSerializer
 
 
 class StoryReportSerializer(serializers.ModelSerializer):
@@ -23,6 +23,10 @@ class StoryReportSerializer(serializers.ModelSerializer):
 
 class PerformanceReportSerializer(serializers.ModelSerializer):
     representative_ref = UserRefSerializer(source='representative', read_only=True)
+    organization_ref = serializers.SerializerMethodField()
+
+    def get_organization_ref(self, instance):
+        return OrganizationRefSerializer(instance.generated_by.organization).data
 
     class Meta:
         model = PerformanceReport
@@ -30,6 +34,7 @@ class PerformanceReportSerializer(serializers.ModelSerializer):
             'id',
             'representative',
             'representative_ref',
+            'organization_ref',
             'date_range_preset',
             'date_range_from',
             'date_range_to',
