@@ -14,7 +14,7 @@
 
     <SideNavBar
       v-if="userIsLoggedIn"
-      @viewed-notif="updateUnviewedNotifCount(unviewedNotifCount - 1)"
+      @viewed-notif="countViewed => updateUnviewedNotifCount(unviewedNotifCount - countViewed)"
     />
   </div>
 </template>

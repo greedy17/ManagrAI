@@ -7,16 +7,14 @@
         src="@/assets/images/keyboard-arrow-left.svg"
         @click.stop.prevent="onLeftArrowClick"
       />
-      <div class="pages">
-        <span
-          v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
-          class="page"
-          :class="{ 'current-page': collection.pagination.page === n }"
-          :key="n"
-          @click.stop.prevent="onPageClick(n)"
-        >
-          {{ n }}
-        </span>
+      <div
+        v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
+        class="page"
+        :class="{ 'current-page': collection.pagination.page === n }"
+        :key="n"
+        @click.stop.prevent="onPageClick(n)"
+      >
+        {{ n }}
       </div>
       <img
         class="arrow"
@@ -118,22 +116,12 @@ export default {
   align-items: center;
   font-size: 0.875rem;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .controls {
   display: flex;
   flex-flow: row;
   align-items: center;
-}
-
-.pages {
-  margin: 0 0.5rem;
-  padding-top: 0.5rem;
-  max-width: 50px;
-  display: flex;
-  align-items: center;
-  overflow: scroll;
 }
 
 .arrow,
