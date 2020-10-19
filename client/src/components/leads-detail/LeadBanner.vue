@@ -1,5 +1,8 @@
 <template>
   <div class="lead-banner" :style="{ 'background-color': bannerBackgroundColor }">
+    <div style="margin: 0 0.5rem 0 1rem;">
+      <LeadScore :lead="lead" />
+    </div>
     <div class="forecast-container">
       <span class="forecast-label">Forecast</span>
       <LeadForecastDropdown
@@ -40,10 +43,13 @@
 </template>
 
 <script>
-import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
-import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
 import Lead from '@/services/leads'
 import { getLightenedColor } from '@/services/getColorFromLeadStatus'
+
+import LeadForecastDropdown from '@/components/shared/LeadForecastDropdown'
+import LeadStatusDropdown from '@/components/shared/LeadStatusDropdown'
+import LeadScore from '@/components/shared/LeadScore'
+
 export default {
   name: 'LeadBanner',
   props: {
@@ -55,6 +61,7 @@ export default {
   components: {
     LeadForecastDropdown,
     LeadStatusDropdown,
+    LeadScore,
   },
   methods: {
     emitReset() {

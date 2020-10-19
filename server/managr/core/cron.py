@@ -13,6 +13,7 @@ from managr.core import constants as core_consts
 from managr.lead import constants as lead_consts
 from .nylas.emails import send_system_email
 from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
+from managr.lead.lead_score_generation import generate_lead_scores
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
 NOTIFICATION_TITLE_INACTIVE = "Opportunity Inactive"
@@ -325,3 +326,8 @@ def revoke_tokens():
     for token in email_auth_accounts:
         revoke_access_token(token)
 
+
+# Daily, at 11:59 PM
+@kronos.register("59 23 * * *")
+def _generate_lead_scores():
+    generate_lead_scores()

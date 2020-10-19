@@ -380,7 +380,12 @@ class LeadViewSet(
         extra_meta = {}
         if "status" in data:
             extra_meta["status_update"] = True
+            extra_meta["previous_status"] = str(current_lead.status.id) if current_lead.status else None
             extra_meta["new_status"] = data["status"]
+        if "expected_close_date" in data:
+            extra_meta["expected_close_date_update"] = True
+            extra_meta["previous_expected_close_date"] = str(current_lead.expected_close_date) if current_lead.expected_close_date else None
+            extra_meta["new_expected_close_date"] = data["expected_close_date"]
 
         self.perform_update(serializer)
         if reset_flag:

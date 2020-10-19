@@ -265,7 +265,9 @@ export default {
   display: flex;
   align-items: center;
   > * {
-    width: 150px;
+    max-width: 9.375rem;
+    margin-left: 1rem;
+    margin-right: 2rem;
   }
   .muted {
     font-size: 10px;

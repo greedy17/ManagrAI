@@ -22,9 +22,6 @@ from .story_report_generation import LeadDataGenerator
 
 logger = logging.getLogger("managr")
 
-# NOTE: remove import:
-from pdb import set_trace
-
 
 def generate_performance_report_data(performance_report_id):
     """
@@ -34,7 +31,6 @@ def generate_performance_report_data(performance_report_id):
     user that triggered this performance_report to be generated.
     """
     report = PerformanceReport.objects.get(pk=performance_report_id)
-    print(f"GENERATING DATA FOR REPORT {report.id}")
 
     try:
         # generate report's data
@@ -71,7 +67,6 @@ def generate_performance_report_data(performance_report_id):
 
 
 def send_email(report):
-    print(f"SENDING EMAIL FOR REPORT {report.id}")
     if report.is_representative_report:
         report_type = "Representative"
         report_focus = report.representative.full_name or report.representative.email
