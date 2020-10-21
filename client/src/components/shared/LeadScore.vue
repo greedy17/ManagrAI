@@ -4,7 +4,7 @@
       {{ scoreDisplay }}
     </div>
     <template slot="popover">
-      <div class="content">
+      <div class="content" v-if="score">
         <div>
           How did we get this score?
         </div>
@@ -30,6 +30,9 @@
         <div class="footer">
           {{ footer }}
         </div>
+      </div>
+      <div class="content" v-else>
+        Check back tomorrow!
       </div>
     </template>
   </v-popover>
