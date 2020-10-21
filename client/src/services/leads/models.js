@@ -62,8 +62,7 @@ export default class Lead {
     competitorDescription = null,
     geographyAddress = null,
     geographyAddressComponents = null,
-    latestScore = null,
-    lastScore = null,
+    score = null,
   } = {}) {
     Object.assign(this, {
       id,
@@ -107,8 +106,7 @@ export default class Lead {
       competitorDescription,
       geographyAddress,
       geographyAddressComponents,
-      latestScore,
-      lastScore,
+      score,
     })
   }
 
