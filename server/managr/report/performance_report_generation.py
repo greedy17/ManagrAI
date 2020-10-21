@@ -261,7 +261,8 @@ class RepFocusData(BaseGenerator):
         closed_leads = [
             log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
         ]
-        output[lead_constants.LEAD_STATUS_CLOSED] = [
+
+        output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
                                                                 "json",
@@ -270,10 +271,8 @@ class RepFocusData(BaseGenerator):
                                                             ))
                                                     ]
 
-        if len(closed_leads) == total_needed_count:
-            # There is no need to look through logs regarding entrance into FORECAST_TABLE
-            pass
-        else:
+        total_needed_count = total_needed_count - len(closed_leads)
+        if total_needed_count:
             # Since still need leads, go through FORECAST_TABLE:
             # (1) largest VERBAL, then
             # (2) largest STRONG, then
@@ -292,7 +291,6 @@ class RepFocusData(BaseGenerator):
             #       => this is the forecast with which this lead ended the report's date_range, so keep it!
             # (4) Stop once total_count_needed is fulfilled
 
-            still_needed_count = total_needed_count - len(closed_leads)
             logs = self.activity_logs.filter(
                     activity=lead_constants.LEAD_UPDATED,
                     meta__extra__forecast_update=True,
@@ -301,26 +299,32 @@ class RepFocusData(BaseGenerator):
                     lead__expected_close_date__gte=self._report.date_range_from,
                     lead__expected_close_date__lte=self._report.date_range_to,
                 ).prefetch_related("lead")
+
             for forecast in lead_constants.FORECAST_TABLE:
-                if total_needed_count == still_needed_count:
+                if not total_needed_count:
                     break
-                leads_logged = {}
-                target_leads = []
-                for log in logs:
-                    if log.meta["extra"].get("new_forecast") == forecast and not leads_logged.get(log.lead_id):
-                        target_leads.append(log.lead)
-                    if len(target_leads) == still_needed_count:
+
+                # Get unique leads
+                # NOTE: Tried adding .distinct("lead")[:total_needed_count] to queryset, but error on distinct.
+                # See: https://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
+                # Therefore, going at it manually
+                logs_for_forecast = logs.filter(meta__extra__new_forecast=forecast)
+                leads_for_forecast = []
+                for index, log in enumerate(logs_for_forecast):
+                    if not total_needed_count:
                         break
-                    leads_logged[log.lead_id] = True
+                    lead = log.lead
+                    if lead not in leads_for_forecast:
+                        leads_for_forecast.append(lead)
+                        total_needed_count -= 1
                 output[forecast] = [
                                         data["fields"] for data in json.loads(
                                                         serializers.serialize(
                                                             "json",
-                                                            target_leads,
+                                                            leads_for_forecast,
                                                             fields=("title", "closing_amount", "amount")
                                                         ))
                                     ]
-                still_needed_count -= len(target_leads)
         return output
 
     @property
@@ -788,7 +792,8 @@ class OrgFocusData(BaseGenerator):
         closed_leads = [
             log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
         ]
-        output[lead_constants.LEAD_STATUS_CLOSED] = [
+
+        output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
                                                                 "json",
@@ -797,10 +802,8 @@ class OrgFocusData(BaseGenerator):
                                                             ))
                                                     ]
 
-        if len(closed_leads) == total_needed_count:
-            # There is no need to look through logs regarding entrance into FORECAST_TABLE
-            pass
-        else:
+        total_needed_count = total_needed_count - len(closed_leads)
+        if total_needed_count:
             # Since still need leads, go through FORECAST_TABLE:
             # (1) largest VERBAL, then
             # (2) largest STRONG, then
@@ -819,7 +822,6 @@ class OrgFocusData(BaseGenerator):
             #       => this is the forecast with which this lead ended the report's date_range, so keep it!
             # (4) Stop once total_count_needed is fulfilled
 
-            still_needed_count = total_needed_count - len(closed_leads)
             logs = self._active_rep_logs.filter(
                     activity=lead_constants.LEAD_UPDATED,
                     meta__extra__forecast_update=True,
@@ -828,26 +830,32 @@ class OrgFocusData(BaseGenerator):
                     lead__expected_close_date__gte=self._report.date_range_from,
                     lead__expected_close_date__lte=self._report.date_range_to,
                 ).prefetch_related("lead")
+
             for forecast in lead_constants.FORECAST_TABLE:
-                if total_needed_count == still_needed_count:
+                if not total_needed_count:
                     break
-                leads_logged = {}
-                target_leads = []
-                for log in logs:
-                    if log.meta["extra"].get("new_forecast") == forecast and not leads_logged.get(log.lead_id):
-                        target_leads.append(log.lead)
-                    if len(target_leads) == still_needed_count:
+
+                # Get unique leads
+                # NOTE: Tried adding .distinct("lead")[:total_needed_count] to queryset, but error on distinct.
+                # See: https://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
+                # Therefore, going at it manually
+                logs_for_forecast = logs.filter(meta__extra__new_forecast=forecast)
+                leads_for_forecast = []
+                for index, log in enumerate(logs_for_forecast):
+                    if not total_needed_count:
                         break
-                    leads_logged[log.lead_id] = True
+                    lead = log.lead
+                    if lead not in leads_for_forecast:
+                        leads_for_forecast.append(lead)
+                        total_needed_count -= 1
                 output[forecast] = [
                                         data["fields"] for data in json.loads(
                                                         serializers.serialize(
                                                             "json",
-                                                            target_leads,
+                                                            leads_for_forecast,
                                                             fields=("title", "closing_amount", "amount")
                                                         ))
                                     ]
-                still_needed_count -= len(target_leads)
         return output
 
     @property
