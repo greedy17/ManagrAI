@@ -121,10 +121,7 @@ export default {
       return this.$store.state.user.isStaff
     },
     organization() {
-      if (this.isStaff) {
-        return null
-      }
-      return this.$store.state.user.organizationRef.name
+      return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name
     },
   },
 }
