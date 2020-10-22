@@ -597,13 +597,27 @@ class LeadViewSet(
         url_path="count",
     )
     def count(self, request, *args, **kwargs):
-        # NOTE (Bruno): this endpoint could be expanded to leverage
-        # more query_params. Currently, it assumes filtering by_user.
-        user = request.user
+        rep_string = request.query_params.get("representatives")
         stage = request.query_params.get("stage")
-        queryset = lead_models.Lead.objects.filter(claimed_by=user)
+        rating = request.query_params.get("rating")
+        score_range = request.query_params.get("score_range")
+
+        queryset = lead_models.Lead.objects
+        if rep_string:
+            rep_ids = rep_string.split(',')
+            queryset = queryset.filter(claimed_by__in=rep_ids)
         if stage:
-            queryset = queryset.filter(status__title=stage)
+            queryset = queryset.filter(status=stage)
+        if rating:
+            queryset = queryset.filter(rating=rating)
+        if score_range:
+            score_bounds = score_range.split("-")
+            lower_bound = score_bounds[0]
+            upper_bound = score_bounds[1]
+            queryset = queryset.filter(
+                            current_score__final_score__gte=lower_bound,
+                            current_score__final_score__lte=upper_bound,
+                        )
         count = queryset.count()
         data = {"count": count}
         return Response(data)

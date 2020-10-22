@@ -77,4 +77,7 @@ export default class User {
   get textConnected() {
     return this.messageAuthAccount && this.messageAuthAccountRef.phoneNumber
   }
+  get isManager() {
+    return this.type && this.type == User.USER_TYPE_MANAGER
+  }
 }

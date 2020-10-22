@@ -49,6 +49,15 @@ class Lead(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
+    current_score = models.ForeignKey(
+        "LeadScore",
+        related_name="leads",
+        on_delete=models.PROTECT,
+        null=True,
+        help_text="The has-many to this field should never be greater than 1. "
+                  "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
+                  "even though Lead has-many LeadScores (see LeadScore.lead).",
+    )
     amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
     closing_amount = models.PositiveIntegerField(
         help_text="This field is set at close and non-editable", default=0
@@ -128,11 +137,6 @@ class Lead(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
-
-    @property
-    def current_score(self):
-        # LeadScores are ordered by -datetime_created
-        return self.scores.first()
 
     @property
     def is_claimed(self):
@@ -738,6 +742,8 @@ class LeadScore(TimeStampModel):
     """
 
     # score validations in self.clean()
+    final_score = models.IntegerField()
+
     actions_score = models.IntegerField()
     actions_insight = models.CharField(
                                 max_length=255,
@@ -798,16 +804,10 @@ class LeadScore(TimeStampModel):
 
     objects = LeadScoreQuerySet.as_manager()
 
-    @property
-    def final_score(self):
-        aggregate = (
-                    self.actions_score + self.recent_action_score +
-                    self.incoming_messages_score + self.days_in_stage_score +
-                    self.forecast_table_score + self.expected_close_date_score
-                    )
-        return min(aggregate, 100)
-
     def clean(self, *args, **kwargs):
+        # validate final_score, 0-100
+        if self.final_score < 0 or self.final_score > 100:
+            raise ValidationError('LeadScore.final_score should be 0-100')
         # validate actions_score, 0-25
         if self.actions_score < 0 or self.actions_score > 25:
             raise ValidationError('LeadScore.actions_score should be 0-25')

@@ -92,7 +92,7 @@ export default {
       return this.lead.claimedBy && this.lead.claimedBy == this.$store.state.user.id
     },
     isManager() {
-      return this.$store.state.user.type == 'MANAGER'
+      return this.$store.state.user.isManager
     },
     isOwnedByAnother() {
       return this.lead.claimedBy && this.lead.claimedBy != this.$store.state.user.id
