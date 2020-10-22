@@ -385,7 +385,7 @@
         <div class="report__middle-row__card__footer">
           Best Performer:
           {{ generateRepDisplayName(focusData.salesCycle.topPerformer[0], true) }} ({{
-            focusData.salesCycle.topPerformer[0].sales_cycle
+            focusData.salesCycle.topPerformer[0].sales_cycle | roundToOneDecimalPlace
           }})
         </div>
       </div>
@@ -461,7 +461,7 @@
           {{ generateRepDisplayName(focusData.actionsToCloseOpportunity.topPerformer[0], true) }}
           ({{
             focusData.actionsToCloseOpportunity.topPerformer[0].actions_to_close_opportunity
-              .average
+              .average | roundToOneDecimalPlace
           }})
         </div>
       </div>
