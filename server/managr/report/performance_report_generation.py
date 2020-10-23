@@ -9,7 +9,7 @@ from django.core import serializers
 from django.db.models import Q, Sum
 
 from managr.core.models import EmailAuthAccount
-from managr.lead.models import LeadActivityLog
+from managr.lead.models import Lead, LeadActivityLog
 
 from managr.lead import constants as lead_constants
 from managr.lead.serializers import LeadRefSerializer, UserRefSerializer
@@ -136,15 +136,15 @@ class RepFocusData(BaseGenerator):
     # private properties:
 
     @property
-    def _logs_for_closing_events(self):
-        return self.activity_logs.filter(
-            activity=lead_constants.LEAD_CLOSED,
-        )
-
-    @property
     def _closed_leads(self):
         if self.__cached__closed_leads is None:
-            self.__cached__closed_leads = {log.lead for log in self._logs_for_closing_events.prefetch_related("lead")}
+            leads = Lead.objects.filter(
+                status__title=lead_constants.LEAD_STATUS_CLOSED,
+                claimed_by=self._representative,
+                expected_close_date__gte=self._report.date_range_from,
+                expected_close_date__lte=self._report.date_range_to,
+            )
+            self.__cached__closed_leads = leads
         return self.__cached__closed_leads
 
     @property
@@ -232,14 +232,12 @@ class RepFocusData(BaseGenerator):
 
     @property
     def deals_closed_count(self):
-        return self._logs_for_closing_events.count()
+        return len(self._closed_leads)
 
     @property
     def amount_closed(self):
-        return self._logs_for_closing_events.prefetch_related(
-            "lead"
-        ).aggregate(
-            sum=Sum("lead__closing_amount")
+        return self._closed_leads.aggregate(
+            sum=Sum("closing_amount")
         )["sum"] or 0
 
     @property
@@ -258,9 +256,7 @@ class RepFocusData(BaseGenerator):
             "STRONG": [],
             "50/50": [],
         }
-        closed_leads = [
-            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
-        ]
+        closed_leads = self._closed_leads.order_by('-closing_amount')[:total_needed_count]
 
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
@@ -604,7 +600,6 @@ class OrgFocusData(BaseGenerator):
         self.__cached__representatives_data = None
         self.__cached__active_organization_reps = None
         self.__cached__active_rep_logs = None
-        self.__cached__logs_for_closing_events = None
         self.__cached__closed_leads = None
         self.__cached__closed_leads_data = None
 
@@ -635,18 +630,14 @@ class OrgFocusData(BaseGenerator):
         return self.__cached__active_rep_logs
 
     @property
-    def _logs_for_closing_events(self):
-        if self.__cached__logs_for_closing_events is None:
-            logs = self._active_rep_logs.filter(
-                activity=lead_constants.LEAD_CLOSED,
-            )
-            self.__cached__logs_for_closing_events = logs
-        return self.__cached__logs_for_closing_events
-
-    @property
     def _closed_leads(self):
         if self.__cached__closed_leads is None:
-            leads = {log.lead for log in self._logs_for_closing_events}
+            leads = Lead.objects.filter(
+                status__title=lead_constants.LEAD_STATUS_CLOSED,
+                claimed_by__in=self._active_organization_reps,
+                expected_close_date__gte=self._report.date_range_from,
+                expected_close_date__lte=self._report.date_range_to,
+            )
             self.__cached__closed_leads = leads
         return self.__cached__closed_leads
 
@@ -789,9 +780,7 @@ class OrgFocusData(BaseGenerator):
             "STRONG": [],
             "50/50": [],
         }
-        closed_leads = [
-            log.lead for log in self._logs_for_closing_events.prefetch_related("lead").order_by('-lead__closing_amount')[:total_needed_count]
-        ]
+        closed_leads = self._closed_leads.order_by('closing_amount')[:total_needed_count]
 
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
