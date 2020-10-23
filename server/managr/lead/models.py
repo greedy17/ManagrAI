@@ -790,10 +790,7 @@ class LeadScore(TimeStampModel):
     date_range_start = models.DateTimeField()
 
     lead = models.ForeignKey(
-        "Lead",
-        related_name="scores",
-        on_delete=models.CASCADE,
-        null=False,
+        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
     )
     previous_score = models.ForeignKey(
         "LeadScore",
