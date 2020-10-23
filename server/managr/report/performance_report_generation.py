@@ -549,20 +549,18 @@ class RepTypicalData(BaseGenerator):
 
     # public properties:
 
-    def average_for_field(self, field, sub_field=None, could_be_null=False, force_floats=False):
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
             target_data = [data_item[field][sub_field] for data_item in self._data_for_time_slices]
         else:
             target_data = [data_item[field] for data_item in self._data_for_time_slices]
         if could_be_null:
             no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
-            if force_floats:
-                no_nulls_target_data = [float(item) for item in no_nulls_target_data]
+            no_nulls_target_data = [float(item) for item in no_nulls_target_data]
             numerator = sum(no_nulls_target_data)
             denominator = len(no_nulls_target_data)
         else:
-            if force_floats:
-                target_data = [float(item) for item in target_data]
+            target_data = [float(item) for item in target_data]
             numerator = sum(target_data)
             denominator = len(target_data)
         if denominator is 0:
@@ -578,7 +576,7 @@ class RepTypicalData(BaseGenerator):
             "incoming_messages_count": self.average_for_field("incoming_messages_count"),
             "forecast_amount": self.average_for_field("forecast_amount"),
             "deals_closed_count": self.average_for_field("deals_closed_count"),
-            "amount_closed": self.average_for_field("amount_closed", force_floats=True),
+            "amount_closed": self.average_for_field("amount_closed"),
             # Other:
             "forecast_table_additions": self.average_for_field("forecast_table_additions"),
             "sales_cycle": self.average_for_field("sales_cycle", could_be_null=True),
@@ -587,7 +585,7 @@ class RepTypicalData(BaseGenerator):
                                                     sub_field="average",
                                                     could_be_null=True,
                                                 ),
-            "ACV": self.average_for_field("ACV", could_be_null=True, force_floats=True),
+            "ACV": self.average_for_field("ACV", could_be_null=True),
         }
 
 
@@ -710,31 +708,28 @@ class OrgFocusData(BaseGenerator):
 
     # public:
 
-    def sum_for_field(self, field, sub_field=None, could_be_null=False, force_floats=False):
+    def sum_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
             target_data = [rep_data["data"][field][sub_field] for rep_data in self._representatives_data]
         else:
             target_data = [rep_data["data"][field] for rep_data in self._representatives_data]
         if could_be_null:
             target_data = list(filter(lambda x: x is not None, target_data))
-        if force_floats:
-            target_data = [float(item) for item in target_data]
+        target_data = [float(item) for item in target_data]
         return sum(target_data)
 
-    def average_for_field(self, field, sub_field=None, could_be_null=False, force_floats=False):
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
             target_data = [rep_data["data"][field][sub_field] for rep_data in self._representatives_data]
         else:
             target_data = [rep_data["data"][field] for rep_data in self._representatives_data]
         if could_be_null:
             no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
-            if force_floats:
-                no_nulls_target_data = [float(item) for item in no_nulls_target_data]
+            no_nulls_target_data = [float(item) for item in no_nulls_target_data]
             numerator = sum(no_nulls_target_data)
             denominator = len(no_nulls_target_data)
         else:
-            if force_floats:
-                target_data = [float(item) for item in target_data]
+            target_data = [float(item) for item in target_data]
             numerator = sum(target_data)
             denominator = len(target_data)
         if denominator is 0:
@@ -937,7 +932,7 @@ class OrgFocusData(BaseGenerator):
             "incoming_messages_count": self.sum_for_field("incoming_messages_count"),
             "forecast_amount": self.sum_for_field("forecast_amount"),
             "deals_closed_count": self.sum_for_field("deals_closed_count"),
-            "amount_closed": self.sum_for_field("amount_closed", force_floats=True),
+            "amount_closed": self.sum_for_field("amount_closed"),
             # For Top Perfomer fields:
             "top_performers_by_A_C_V": self.top_performers(
                                                 by_metric="ACV",
@@ -979,7 +974,7 @@ class OrgFocusData(BaseGenerator):
                 "most_performed": self.actions_to_close_opportunity_most_performed,
             },
             "ACV": {
-                "average": self.average_for_field("ACV", could_be_null=True, force_floats=True),
+                "average": self.average_for_field("ACV", could_be_null=True),
                 "top_performer": self.top_performers(
                                     by_metric="ACV",
                                     num_representatives=1,
@@ -1044,20 +1039,18 @@ class OrgTypicalData(BaseGenerator):
 
     # public:
 
-    def average_for_field(self, field, sub_field=None, could_be_null=False, force_floats=False):
+    def average_for_field(self, field, sub_field=None, could_be_null=False):
         if sub_field:
             target_data = [rep_data[field][sub_field] for rep_data in self._averages_per_rep]
         else:
             target_data = [rep_data[field] for rep_data in self._averages_per_rep]
         if could_be_null:
             no_nulls_target_data = list(filter(lambda x: x is not None, target_data))
-            if force_floats:
-                no_nulls_target_data = [float(item) for item in no_nulls_target_data]
+            no_nulls_target_data = [float(item) for item in no_nulls_target_data]
             numerator = sum(no_nulls_target_data)
             denominator = len(no_nulls_target_data)
         else:
-            if force_floats:
-                target_data = [float(item) for item in target_data]
+            target_data = [float(item) for item in target_data]
             numerator = sum(target_data)
             denominator = len(target_data)
         if denominator is 0:
@@ -1073,7 +1066,7 @@ class OrgTypicalData(BaseGenerator):
             "incoming_messages_count": self.average_for_field("incoming_messages_count"),
             "forecast_amount": self.average_for_field("forecast_amount"),
             "deals_closed_count": self.average_for_field("deals_closed_count"),
-            "amount_closed": self.average_for_field("amount_closed", force_floats=True),
+            "amount_closed": self.average_for_field("amount_closed"),
             # For Forecast Table:
             "forecast_table_additions": self.average_for_field("forecast_table_additions"),
             # For Sales Cycle:
@@ -1084,7 +1077,7 @@ class OrgTypicalData(BaseGenerator):
                                                     could_be_null=True,
                                             ),
             # For ACV:
-            "ACV": self.average_for_field("ACV", could_be_null=True, force_floats=True),
+            "ACV": self.average_for_field("ACV", could_be_null=True),
         }
 
     @property
@@ -1096,5 +1089,5 @@ class OrgTypicalData(BaseGenerator):
             "incoming_messages_count": self.average_for_field("incoming_messages_count"),
             "forecast_amount": self.average_for_field("forecast_amount"),
             "deals_closed_count": self.average_for_field("deals_closed_count"),
-            "amount_closed": self.average_for_field("amount_closed", force_floats=True),
+            "amount_closed": self.average_for_field("amount_closed"),
         }
