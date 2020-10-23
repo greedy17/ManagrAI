@@ -4,7 +4,9 @@
       <div class="toolbar">
         <div class="toolbar__header">
           <span class="toolbar__title">Settings</span>
-          <h5 class="org-statement">You're viewing settings for {{ organization }}</h5>
+          <h5 class="org-statement" v-if="organization">
+            You're viewing settings for {{ organization }}
+          </h5>
         </div>
         <div
           class="toolbar__row"
@@ -37,7 +39,7 @@
         </div>
         <div
           class="toolbar__row"
-          v-if="$store.state.user.type == 'MANAGER' || $store.state.user.isStaff"
+          v-if="$store.state.user.isManager || $store.state.user.isStaff"
           @click="routeToInviteUser"
         >
           Invite User

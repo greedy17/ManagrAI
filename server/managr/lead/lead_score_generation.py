@@ -21,33 +21,39 @@ def generate_lead_scores():
 
 def generate_score(lead, date_range_end, date_range_start):
     try:
-        # (1) put lead through score-generator
+        # (1)   put lead through score-generator
         data = LeadScoreGenerator(
                         lead,
                         date_range_end,
                         date_range_start,
                     )
-        # (2) create the LeadScore
-        LeadScore.objects.create(
-            lead=lead,
-            previous_score=lead.scores.first(),
-            date_range_end=date_range_end,
-            date_range_start=date_range_start,
-            # scores
-            actions_score=data.actions_score,
-            recent_action_score=data.recent_action_score,
-            incoming_messages_score=data.incoming_messages_score,
-            days_in_stage_score=data.days_in_stage_score,
-            forecast_table_score=data.forecast_table_score,
-            expected_close_date_score=data.expected_close_date_score,
-            # insights
-            actions_insight=data.actions_insight,
-            recent_action_insight=data.recent_action_insight,
-            incoming_messages_insight=data.incoming_messages_insight,
-            days_in_stage_insight=data.days_in_stage_insight,
-            forecast_table_insight=data.forecast_table_insight,
-            expected_close_date_insight=data.expected_close_date_insight,
-        )
+        # (2)   create the LeadScore
+        score = LeadScore.objects.create(
+                    lead=lead,
+                    previous_score=lead.current_score,
+                    date_range_end=date_range_end,
+                    date_range_start=date_range_start,
+                    # scores
+                    final_score=data.final_score,
+                    actions_score=data.actions_score,
+                    recent_action_score=data.recent_action_score,
+                    incoming_messages_score=data.incoming_messages_score,
+                    days_in_stage_score=data.days_in_stage_score,
+                    forecast_table_score=data.forecast_table_score,
+                    expected_close_date_score=data.expected_close_date_score,
+                    # insights
+                    actions_insight=data.actions_insight,
+                    recent_action_insight=data.recent_action_insight,
+                    incoming_messages_insight=data.incoming_messages_insight,
+                    days_in_stage_insight=data.days_in_stage_insight,
+                    forecast_table_insight=data.forecast_table_insight,
+                    expected_close_date_insight=data.expected_close_date_insight,
+                )
+        # (3)   link this new score directly to the lead.
+        #       this is done for queryset purposes.
+        #       see: Lead.current_score.help_text
+        lead.current_score = score
+        lead.save()
     except Exception as e:
         logger.warning(
             f"Could not generate LeadScore for Lead {lead.id}. ERROR: {e}"
@@ -389,3 +395,12 @@ class LeadScoreGenerator:
             return "Timeline was pushed back."
         if score is 0:
             return "No timeline to close."
+
+    @property
+    def final_score(self):
+        aggregate = (
+                    self.actions_score + self.recent_action_score +
+                    self.incoming_messages_score + self.days_in_stage_score +
+                    self.forecast_table_score + self.expected_close_date_score
+                    )
+        return min(aggregate, 100)

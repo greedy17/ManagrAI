@@ -103,10 +103,19 @@ class LeadFilterSet(FilterSet):
     by_user = django_filters.CharFilter(method="leads_by_user")
     by_account = django_filters.CharFilter(method="list_leads_by_account")
     by_rating = django_filters.CharFilter(method="leads_by_rating")
+    by_score = django_filters.CharFilter(method="leads_by_score")
 
     class Meta:
         model = Lead
-        fields = ["rating", "on_list", "is_claimed", "by_list", "by_user", "by_account"]
+        fields = [
+            "rating",
+            "on_list",
+            "is_claimed",
+            "by_list",
+            "by_user",
+            "by_account",
+            "by_score",
+        ]
 
     def leads_by_user(self, queryset, name, value):
         u = self.request.user
@@ -194,6 +203,20 @@ class LeadFilterSet(FilterSet):
             return queryset.filter(account__in=account_list).order_by(
                 "account", "title"
             )
+        return queryset
+
+    def leads_by_score(self, queryset, name, value):
+        if value:
+            range_list = value.split("-")
+            try:
+                score_lower_bound = int(range_list[0])
+                score_upper_bound = int(range_list[1])
+            except ValueError:
+                return queryset
+            return queryset.filter(
+                            current_score__final_score__gte=score_lower_bound,
+                            current_score__final_score__lte=score_upper_bound,
+                        )
         return queryset
 
 
