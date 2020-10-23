@@ -751,10 +751,7 @@ class LeadScore(TimeStampModel):
     upper_bound = models.DateTimeField()
     lower_bound = models.DateTimeField()
     lead = models.ForeignKey(
-        "Lead",
-        related_name="scores",
-        on_delete=models.CASCADE,
-        null=False,
+        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
     )
 
     objects = LeadScoreQuerySet.as_manager()
@@ -762,7 +759,7 @@ class LeadScore(TimeStampModel):
     def clean(self, *args, **kwargs):
         # LeadScore.score should be 0-100, null=False
         if self.score is None or self.score < 0 or self.score > 100:
-            raise ValidationError('LeadScore.score should be 0-100')
+            raise ValidationError("LeadScore.score should be 0-100")
         super().clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
