@@ -95,7 +95,7 @@ export default {
       unviewedNotifications.filters.wasViewed = false
       await loadEntireCollection(unviewedNotifications)
       await this.markAsViewed(unviewedNotifications.list, true)
-      this.markAllAsViewed = false
+      this.markingAllAsViewed = false
     },
     formattedNotifications(list) {
       if (list.length <= 0) {
