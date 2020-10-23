@@ -159,6 +159,12 @@ export default {
     },
   },
   watch: {
+    /* NOTE: Utilizing a deep watcher so that whenever the current filters
+      (which reside at view-level) are changed, then the counts of each
+      scoreRange option and status also update.
+      This is because these counts take into account the currentFilters
+      and therefore give an accurate view of “how many of the current Leads
+      match this specific option?” */
     currentFilters: {
       deep: true,
       handler() {
