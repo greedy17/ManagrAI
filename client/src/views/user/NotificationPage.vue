@@ -87,11 +87,10 @@ export default {
       this.$emit('viewed-notif', notifications.length)
     },
     async markAllAsViewed() {
-      let cloneCollection = this.notifications.shallowClone()
-      cloneCollection.filters.wasViewed = false
-      await loadEntireCollection(cloneCollection)
-      let unviewed = cloneCollection.list.filter(n => !n.viewed)
-      this.markAsViewed(unviewed)
+      let unviewedNotifications = this.notifications.shallowClone()
+      unviewedNotifications.filters.wasViewed = false
+      await loadEntireCollection(unviewedNotifications)
+      this.markAsViewed(unviewedNotifications.list)
     },
     formattedNotifications(list) {
       if (list.length <= 0) {
