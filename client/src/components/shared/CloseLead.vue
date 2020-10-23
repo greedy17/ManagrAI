@@ -15,7 +15,13 @@
           <label>Final Contract Amount</label>
           <div class="flex-container bordered">
             <img class="icon" alt="icon" src="@/assets/images/claimed.svg" />
-            <input v-model="amount" type="number" placeholder="Final Dollar Amount" />
+            <input
+              v-model="amount"
+              type="number"
+              placeholder="Final Dollar Amount"
+              step="any"
+              min="0"
+            />
           </div>
         </div>
         <div class="form-field">

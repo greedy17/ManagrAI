@@ -90,7 +90,7 @@
     <div v-else class="amount-editable">
       Amount:
       <form class="amount-form" @submit.prevent="updateAmount">
-        <input v-model="tempAmount" type="number" />
+        <input v-model="tempAmount" type="number" step="any" min="0" />
         <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
         <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
       </form>

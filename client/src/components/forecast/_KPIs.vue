@@ -112,7 +112,7 @@
           </span>
           <div v-else-if="oneRepSelected && editKPIs.editingCommit" style="width: 100%;">
             <form class="kpi-form" @submit.prevent="updateCommit">
-              <input type="number" v-model="editKPIs.tempCommit" />
+              <input type="number" v-model="editKPIs.tempCommit" step="any" min="0" />
               <img
                 class="save"
                 src="@/assets/images/checkmark.svg"
@@ -146,7 +146,7 @@
           </span>
           <div v-else-if="oneRepSelected && editKPIs.editingUpside" style="width: 100%;">
             <form class="kpi-form" @submit.prevent="updateUpside">
-              <input type="number" v-model="editKPIs.tempUpside" />
+              <input type="number" v-model="editKPIs.tempUpside" step="any" min="0" />
               <img
                 class="save"
                 src="@/assets/images/checkmark.svg"
