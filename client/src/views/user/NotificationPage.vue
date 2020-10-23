@@ -72,13 +72,13 @@ export default {
     await this.notifications.refresh()
   },
   methods: {
-    async markAsViewed(notifications) {
+    async markAsViewed(notifications, markAll = false) {
       if (!notifications.length) {
         return
       }
       let ids = notifications.map(n => n.id)
       await Notification.api.markAsViewed(ids)
-      if (notifications.length >= 25) {
+      if (markAll) {
         for (let n of this.notifications.list) {
           n.viewed = true
         }
@@ -94,7 +94,7 @@ export default {
       let unviewedNotifications = this.notifications.shallowClone()
       unviewedNotifications.filters.wasViewed = false
       await loadEntireCollection(unviewedNotifications)
-      await this.markAsViewed(unviewedNotifications.list)
+      await this.markAsViewed(unviewedNotifications.list, true)
       this.markAllAsViewed = false
     },
     formattedNotifications(list) {
