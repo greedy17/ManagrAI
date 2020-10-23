@@ -36,6 +36,7 @@ import Notification from '@/services/notifications/'
 import CollectionManager from '@/services/collectionManager'
 import moment from 'moment'
 import Pagination from '@/components/shared/Pagination'
+import { loadEntireCollection } from '@/services/utils'
 
 export default {
   name: 'NotificationPage',
@@ -74,13 +75,22 @@ export default {
       }
       let ids = notifications.map(n => n.id)
       await Notification.api.markAsViewed(ids)
-      for (let n of notifications) {
-        n.viewed = true
+      if (notifications.length >= 25) {
+        for (let n of this.notifications.list) {
+          n.viewed = true
+        }
+      } else {
+        for (let n of notifications) {
+          n.viewed = true
+        }
       }
       this.$emit('viewed-notif', notifications.length)
     },
-    markAllAsViewed() {
-      let unviewed = this.notifications.list.filter(n => !n.viewed)
+    async markAllAsViewed() {
+      let cloneCollection = this.notifications.shallowClone()
+      cloneCollection.filters.wasViewed = false
+      await loadEntireCollection(cloneCollection)
+      let unviewed = cloneCollection.list.filter(n => !n.viewed)
       this.markAsViewed(unviewed)
     },
     formattedNotifications(list) {

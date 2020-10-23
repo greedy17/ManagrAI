@@ -325,3 +325,19 @@ class ReminderFilterSet(FilterSet):
         for n in ns:
             query |= Q(id=n)
         return qs.filter(datetime_for__gte=min).exclude(query).order_by("datetime_for")
+
+
+class NotificationFilterSet(FilterSet):
+    was_viewed = django_filters.BooleanFilter(method="viewed_status")
+
+    class Meta:
+        model = Notification
+        fields = ["was_viewed"]
+
+    def viewed_status(self, queryset, name, value):
+        """ checks if the claimed_by field is null """
+        if value is True:
+            return queryset.filter(viewed=True)
+        if value is False:
+            return queryset.filter(viewed=False)
+        return queryset
