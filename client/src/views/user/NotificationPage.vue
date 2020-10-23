@@ -88,6 +88,7 @@ export default {
     },
     async markAllAsViewed() {
       let cloneCollection = this.notifications.shallowClone()
+      cloneCollection.filters.wasViewed = false
       await loadEntireCollection(cloneCollection)
       let unviewed = cloneCollection.list.filter(n => !n.viewed)
       this.markAsViewed(unviewed)

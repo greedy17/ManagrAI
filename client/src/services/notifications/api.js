@@ -19,6 +19,7 @@ export default class NotificationAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      wasViewed: ApiFilter.create({ key: 'was_viewed' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

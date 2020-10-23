@@ -188,6 +188,7 @@ class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         CanEditResourceOrReadOnly,
     )
     serializer_class = lead_serializers.NotificationSerializer
+    filter_class = lead_filters.NotificationFilterSet
 
     def get_queryset(self):
         return Notification.objects.for_user(self.request.user)
