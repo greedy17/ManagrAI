@@ -848,7 +848,7 @@ class ForecastViewSet(
             "forecast_table_substraction": bool(
                 previously_in_forecast_table and not now_in_forecast_table
             ),
-            "forecast_amount": lead.amount,
+            "forecast_amount": float(lead.amount),
         }
         emit_event(
             lead_constants.LEAD_UPDATED, request.user, lead, extra_meta=extra_meta,

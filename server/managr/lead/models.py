@@ -58,10 +58,18 @@ class Lead(TimeStampModel):
                   "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
                   "even though Lead has-many LeadScores (see LeadScore.lead).",
     )
-    amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
-    closing_amount = models.PositiveIntegerField(
-        help_text="This field is set at close and non-editable", default=0
-    )
+    amount = models.DecimalField(
+                        max_digits=13,
+                        decimal_places=2,
+                        default=0.00,
+                        help_text="This field is editable",
+                    )
+    closing_amount = models.DecimalField(
+                        max_digits=13,
+                        decimal_places=2,
+                        default=0.00,
+                        help_text="This field is set at close and non-editable",
+                    )
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
@@ -199,8 +207,23 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        else:
-            return super(Lead, self).save(*args, **kwargs)
+        if self.amount < 0:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_amount": "Amount must be a positive integer or float"
+                    }
+                }
+            )
+        if self.closing_amount < 0:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_closing_amount": "Closing Amount must be a positive integer or float"
+                    }
+                }
+            )
+        return super(Lead, self).save(*args, **kwargs)
 
 
 class ListQuerySet(models.QuerySet):

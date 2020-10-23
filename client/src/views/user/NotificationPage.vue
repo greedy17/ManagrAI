@@ -1,7 +1,9 @@
 <template>
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0">
-      <button class="mark-all-as-viewed" @click="markAllAsViewed">MARK ALL AS READ</button>
+      <button class="mark-all-as-viewed" :disabled="markingAllAsViewed" @click="markAllAsViewed">
+        MARK ALL AS READ
+      </button>
 
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
         <span class="muted" :key="key">
@@ -46,6 +48,7 @@ export default {
       notifications: CollectionManager.create({ ModelClass: Notification }),
       hasNextPageData: false,
       pollingTimeout: null,
+      markingAllAsViewed: false,
     }
   },
   watch: {
@@ -69,13 +72,13 @@ export default {
     await this.notifications.refresh()
   },
   methods: {
-    async markAsViewed(notifications) {
+    async markAsViewed(notifications, markAll = false) {
       if (!notifications.length) {
         return
       }
       let ids = notifications.map(n => n.id)
       await Notification.api.markAsViewed(ids)
-      if (notifications.length >= 25) {
+      if (markAll) {
         for (let n of this.notifications.list) {
           n.viewed = true
         }
@@ -87,11 +90,12 @@ export default {
       this.$emit('viewed-notif', notifications.length)
     },
     async markAllAsViewed() {
-      let cloneCollection = this.notifications.shallowClone()
-      cloneCollection.filters.wasViewed = false
-      await loadEntireCollection(cloneCollection)
-      let unviewed = cloneCollection.list.filter(n => !n.viewed)
-      this.markAsViewed(unviewed)
+      this.markingAllAsViewed = true
+      let unviewedNotifications = this.notifications.shallowClone()
+      unviewedNotifications.filters.wasViewed = false
+      await loadEntireCollection(unviewedNotifications)
+      await this.markAsViewed(unviewedNotifications.list, true)
+      this.markingAllAsViewed = false
     },
     formattedNotifications(list) {
       if (list.length <= 0) {
