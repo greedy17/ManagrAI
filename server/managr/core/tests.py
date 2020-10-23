@@ -153,11 +153,18 @@ class AlertsTestCase(TestCase):
         """
         time_occured = timezone.now() - timezone.timedelta(days=100)
         activity = LeadActivityLogFactory(
-            action_timestamp=time_occured, action_taken_by=self.rep
+            action_timestamp=time_occured,
+            action_taken_by=self.rep,
+            activity=lead_consts.EMAIL_RECEIVED,
         )
         self.lead_1.activity_logs.add(activity)
         self.assertEqual(
-            LeadActivityLog.objects.latest("action_timestamp").id, activity.id
+            LeadActivityLog.objects.filter(
+                activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
+            )
+            .latest("action_timestamp")
+            .id,
+            activity.id,
         )
         call_command("createleadnotifications")
         self.assertEqual(Notification.objects.count(), 2)
@@ -171,11 +178,18 @@ class AlertsTestCase(TestCase):
         """
         time_occured = timezone.now() - timezone.timedelta(days=100)
         activity = LeadActivityLogFactory(
-            action_timestamp=time_occured, action_taken_by=self.rep
+            action_timestamp=time_occured,
+            action_taken_by=self.rep,
+            activity=lead_consts.EMAIL_RECEIVED,
         )
         self.lead_1.activity_logs.add(activity)
         self.assertEqual(
-            LeadActivityLog.objects.latest("action_timestamp").id, activity.id
+            LeadActivityLog.objects.filter(
+                activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
+            )
+            .latest("action_timestamp")
+            .id,
+            activity.id,
         )
         opt = NotificationOption.objects.get(
             pk=core_consts.NOTIFICATION_OPTION_INACTIVE_ID
@@ -198,11 +212,18 @@ class AlertsTestCase(TestCase):
         """
         time_occured = timezone.now() - timezone.timedelta(days=100)
         activity = LeadActivityLogFactory(
-            action_timestamp=time_occured, action_taken_by=self.rep
+            action_timestamp=time_occured,
+            action_taken_by=self.rep,
+            activity=lead_consts.EMAIL_RECEIVED,
         )
         self.lead_2.activity_logs.add(activity)
         self.assertEqual(
-            LeadActivityLog.objects.latest("action_timestamp").id, activity.id
+            LeadActivityLog.objects.filter(
+                activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
+            )
+            .latest("action_timestamp")
+            .id,
+            activity.id,
         )
         opt = NotificationOption.objects.get(
             pk=core_consts.NOTIFICATION_OPTION_INACTIVE_ID
