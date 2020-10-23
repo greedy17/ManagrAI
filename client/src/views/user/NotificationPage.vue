@@ -1,7 +1,9 @@
 <template>
   <div class="notification-page-container">
     <template v-if="notifications.list.length > 0">
-      <button class="mark-all-as-viewed" @click="markAllAsViewed">MARK ALL AS READ</button>
+      <button class="mark-all-as-viewed" :disabled="markingAllAsViewed" @click="markAllAsViewed">
+        MARK ALL AS READ
+      </button>
 
       <template v-for="(value, key) in formattedNotifications(this.notifications.list)">
         <span class="muted" :key="key">
@@ -36,6 +38,7 @@ import Notification from '@/services/notifications/'
 import CollectionManager from '@/services/collectionManager'
 import moment from 'moment'
 import Pagination from '@/components/shared/Pagination'
+import { loadEntireCollection } from '@/services/utils'
 
 export default {
   name: 'NotificationPage',
@@ -45,6 +48,7 @@ export default {
       notifications: CollectionManager.create({ ModelClass: Notification }),
       hasNextPageData: false,
       pollingTimeout: null,
+      markingAllAsViewed: false,
     }
   },
   watch: {
@@ -68,20 +72,30 @@ export default {
     await this.notifications.refresh()
   },
   methods: {
-    async markAsViewed(notifications) {
+    async markAsViewed(notifications, markAll = false) {
       if (!notifications.length) {
         return
       }
       let ids = notifications.map(n => n.id)
       await Notification.api.markAsViewed(ids)
-      for (let n of notifications) {
-        n.viewed = true
+      if (markAll) {
+        for (let n of this.notifications.list) {
+          n.viewed = true
+        }
+      } else {
+        for (let n of notifications) {
+          n.viewed = true
+        }
       }
       this.$emit('viewed-notif', notifications.length)
     },
-    markAllAsViewed() {
-      let unviewed = this.notifications.list.filter(n => !n.viewed)
-      this.markAsViewed(unviewed)
+    async markAllAsViewed() {
+      this.markingAllAsViewed = true
+      let unviewedNotifications = this.notifications.shallowClone()
+      unviewedNotifications.filters.wasViewed = false
+      await loadEntireCollection(unviewedNotifications)
+      await this.markAsViewed(unviewedNotifications.list, true)
+      this.markingAllAsViewed = false
     },
     formattedNotifications(list) {
       if (list.length <= 0) {

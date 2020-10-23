@@ -135,7 +135,7 @@ export default {
       return false
     },
     isManager() {
-      return this.$store.state.user.type == 'MANAGER'
+      return this.$store.state.user.isManager
     },
     headerBackgroundColor() {
       return this.dataLead.statusRef

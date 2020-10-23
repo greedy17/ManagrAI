@@ -40,6 +40,7 @@ export default class LeadAPI {
       byAccount: ApiFilter.create({ key: 'by_account' }),
       byStatus: ApiFilter.create({ key: 'by_status' }),
       isClaimed: ApiFilter.create({ key: 'is_claimed' }),
+      byScore: ApiFilter.create({ key: 'by_score' }),
       // by reps works like by user
       // setting this key because by_user is used in many places
       //byReps: ApiFilter.create({ key: 'by_reps' }),
@@ -132,7 +133,7 @@ export default class LeadAPI {
       params,
     }
     const promise = apiClient()
-      .get(LEADS_COUNT_ENDPOINT, options)
+      .get(LEADS_COUNT_ENDPOINT, this.cls.toAPI(options))
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'LeadAPI.count' }))
     return promise

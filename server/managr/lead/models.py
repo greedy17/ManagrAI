@@ -49,10 +49,27 @@ class Lead(TimeStampModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.PositiveIntegerField(help_text="This field is editable", default=0)
-    closing_amount = models.PositiveIntegerField(
-        help_text="This field is set at close and non-editable", default=0
+    current_score = models.ForeignKey(
+        "LeadScore",
+        related_name="leads",
+        on_delete=models.PROTECT,
+        null=True,
+        help_text="The has-many to this field should never be greater than 1. "
+                  "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
+                  "even though Lead has-many LeadScores (see LeadScore.lead).",
     )
+    amount = models.DecimalField(
+                        max_digits=13,
+                        decimal_places=2,
+                        default=0.00,
+                        help_text="This field is editable",
+                    )
+    closing_amount = models.DecimalField(
+                        max_digits=13,
+                        decimal_places=2,
+                        default=0.00,
+                        help_text="This field is set at close and non-editable",
+                    )
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
@@ -130,20 +147,6 @@ class Lead(TimeStampModel):
         ordering = ["-datetime_created"]
 
     @property
-    def latest_score(self):
-        # LeadScores are ordered by -datetime_created
-        return self.scores.first()
-
-    @property
-    def last_score(self):
-        # LeadScores are ordered by -datetime_created
-        # this is the second-to-latest score
-        try:
-            return self.scores.all()[:2][1]
-        except Exception:
-            pass
-
-    @property
     def is_claimed(self):
         """ property to define if lead is claimed or not """
         if self.claimed_by:
@@ -204,8 +207,23 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        else:
-            return super(Lead, self).save(*args, **kwargs)
+        if self.amount < 0:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_amount": "Amount must be a positive integer or float"
+                    }
+                }
+            )
+        if self.closing_amount < 0:
+            raise ValidationError(
+                {
+                    "non_form_errors": {
+                        "lead_closing_amount": "Closing Amount must be a positive integer or float"
+                    }
+                }
+            )
+        return super(Lead, self).save(*args, **kwargs)
 
 
 class ListQuerySet(models.QuerySet):
@@ -740,29 +758,94 @@ class LeadScore(TimeStampModel):
     """
     A Lead can have many LeadScores.
     A LeadScore represents a cached score
-    for a Lead, with the newest LeadScore
-    for a Lead being the active LeadScore.
-    A LeadScore is 1-100.
+    for a Lead, with the current LeadScore
+    for a Lead being the newest LeadScore.
+    A LeadScore is 1-100, and is made up of
+    an aggregate of the 6 sub-scores.
     """
 
-    # score should be 0-100, null=False
-    # validation in self.clean()
-    score = models.PositiveIntegerField()
-    upper_bound = models.DateTimeField()
-    lower_bound = models.DateTimeField()
+    # score validations in self.clean()
+    final_score = models.IntegerField()
+
+    actions_score = models.IntegerField()
+    actions_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    recent_action_score = models.IntegerField()
+    recent_action_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    incoming_messages_score = models.IntegerField()
+    incoming_messages_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    days_in_stage_score = models.IntegerField()
+    days_in_stage_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    forecast_table_score = models.IntegerField()
+    forecast_table_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    expected_close_date_score = models.IntegerField()
+    expected_close_date_insight = models.CharField(
+                                max_length=255,
+                                blank=True,
+                                null=True,
+                            )
+
+    date_range_end = models.DateTimeField()
+    date_range_start = models.DateTimeField()
+
     lead = models.ForeignKey(
-        "Lead",
-        related_name="scores",
+        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
+    )
+    previous_score = models.ForeignKey(
+        "LeadScore",
         on_delete=models.CASCADE,
-        null=False,
+        null=True,
+        blank=True,
     )
 
     objects = LeadScoreQuerySet.as_manager()
 
     def clean(self, *args, **kwargs):
-        # LeadScore.score should be 0-100, null=False
-        if self.score is None or self.score < 0 or self.score > 100:
-            raise ValidationError('LeadScore.score should be 0-100')
+        # validate final_score, 0-100
+        if self.final_score < 0 or self.final_score > 100:
+            raise ValidationError('LeadScore.final_score should be 0-100')
+        # validate actions_score, 0-25
+        if self.actions_score < 0 or self.actions_score > 25:
+            raise ValidationError('LeadScore.actions_score should be 0-25')
+        # validate recent_action_score, 0-5
+        if self.recent_action_score < 0 or self.recent_action_score > 25:
+            raise ValidationError('LeadScore.recent_action_score should be 0-5')
+        # validate incoming_messages_score, 0-20
+        if self.incoming_messages_score < 0 or self.incoming_messages_score > 20:
+            raise ValidationError('LeadScore.incoming_messages_score should be 0-20')
+        # validate days_in_stage_score, 0-20
+        if self.days_in_stage_score < 0 or self.days_in_stage_score > 20:
+            raise ValidationError('LeadScore.days_in_stage_score should be 0-20')
+        # validate forecast_table_score, 0-20
+        if self.forecast_table_score < 0 or self.forecast_table_score > 20:
+            raise ValidationError('LeadScore.forecast_table_score should be 0-20')
+        # validate expected_close_date_score, -15-15
+        if self.expected_close_date_score < -15 or self.expected_close_date_score > 15:
+            raise ValidationError('LeadScore.expected_close_date_score should be -15-15')
         super().clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):

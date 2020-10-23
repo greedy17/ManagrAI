@@ -29,7 +29,7 @@ function requireUserTypeManagerOrStaff(to, from, next) {
       name: 'Login',
       query: { redirect: to.fullPath },
     })
-  } else if (!store.state.user.isStaff && store.state.user.type !== 'MANAGER') {
+  } else if (!store.state.user.isStaff && !store.state.user.isManager) {
     next({
       name: 'Settings',
     })

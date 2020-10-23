@@ -32,9 +32,25 @@
         </div>
       </div>
     </div>
+    <div class="filter section-shadow">
+      <div class="filter-header">Score</div>
+      <div class="filter-options">
+        <div
+          class="option"
+          v-for="option in scoreOptions"
+          @click="emitUpdateFilter({ key: 'byScore', value: option.value })"
+          :key="option.value"
+          :class="{
+            active: currentFilters.byScore ? currentFilters.byScore == option.value : false,
+          }"
+        >
+          {{ option.value }} ({{ option.count }})
+        </div>
+      </div>
+    </div>
     <div
       class="filter section-shadow"
-      v-if="$store.state.user.type == 'MANAGER' || $store.state.user.isStaff"
+      v-if="$store.state.user.isManager || $store.state.user.isStaff"
     >
       <FilterByRep
         :repFilterState="formattedRepFilters"
@@ -52,6 +68,8 @@ import LeadRating from '@/components/leads-index/LeadRating'
 import FilterByRep from '@/components/shared/FilterByRep'
 import Lead from '@/services/leads'
 
+const LEAD_SCORE_RANGES = ['0-25', '26-50', '51-75', '76-100']
+
 export default {
   name: 'ListsToolBar',
   components: {
@@ -67,12 +85,39 @@ export default {
     return {
       forecastEnums,
       statuses: this.$store.state.stages.map(s => ({ obj: s, count: null })),
+      scoreOptions: LEAD_SCORE_RANGES.map(r => ({ value: r, count: null })),
     }
   },
   created() {
-    this.statuses.forEach(this.fetchStatusCount)
+    this.getAllCounts()
   },
   methods: {
+    getAllCounts() {
+      this.statuses.forEach(this.fetchStatusCount)
+      this.scoreOptions.forEach(this.fetchScoreOptionCount)
+    },
+    fetchStatusCount(status) {
+      let params = {
+        stage: status.obj.id,
+        representatives: this.currentFilters.byReps.join(','),
+        scoreRange: this.currentFilters.byScore,
+        rating: this.currentFilters.byRating,
+      }
+      Lead.api.count(params).then(data => {
+        status.count = data.count
+      })
+    },
+    fetchScoreOptionCount(scoreOption) {
+      let params = {
+        stage: this.currentFilters.byStatus,
+        representatives: this.currentFilters.byReps.join(','),
+        scoreRange: scoreOption.value,
+        rating: this.currentFilters.byRating,
+      }
+      Lead.api.count(params).then(data => {
+        scoreOption.count = data.count
+      })
+    },
     toggleAllReps(repArray) {
       if (!repArray) {
         // deselect all is a default from the component
@@ -103,14 +148,6 @@ export default {
     emitUpdateFilter(item) {
       this.$emit('update-filter', item)
     },
-    fetchStatusCount(status) {
-      let params = {
-        stage: status.obj.title,
-      }
-      Lead.api.count(params).then(data => {
-        status.count = data.count
-      })
-    },
   },
   computed: {
     formattedRepFilters() {
@@ -119,6 +156,20 @@ export default {
         this.currentFilters.byReps.forEach(rep => (repFilters[rep] = true))
       }
       return repFilters
+    },
+  },
+  watch: {
+    /* NOTE: Utilizing a deep watcher so that whenever the current filters
+      (which reside at view-level) are changed, then the counts of each
+      scoreRange option and status also update.
+      This is because these counts take into account the currentFilters
+      and therefore give an accurate view of “how many of the current Leads
+      match this specific option?” */
+    currentFilters: {
+      deep: true,
+      handler() {
+        this.getAllCounts()
+      },
     },
   },
 }

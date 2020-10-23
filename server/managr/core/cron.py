@@ -183,9 +183,15 @@ def create_lead_notifications():
             now = timezone.now()
             target_date = now - timezone.timedelta(days=90)
             latest_activity = None
-            if lead.activity_logs.exists():
+            if lead.activity_logs.filter(
+                activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
+            ).exists():
                 latest_activity = (
-                    lead.activity_logs.latest("action_timestamp").action_timestamp
+                    lead.activity_logs.filter(
+                        activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
+                    )
+                    .latest("action_timestamp")
+                    .action_timestamp
                 ).date()
             else:
                 latest_activity = (lead.datetime_created).date()

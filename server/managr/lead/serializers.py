@@ -50,6 +50,42 @@ class UserRefSerializer(serializers.ModelSerializer):
         return f"{instance.first_name} {instance.last_name}"
 
 
+class PrevLeadScoreSerializer(serializers.ModelSerializer):
+    score = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LeadScore
+        fields = (
+            "id",
+            "score",
+        )
+
+    def get_score(self, instance):
+        return instance.final_score
+
+
+class LeadScoreSerializer(serializers.ModelSerializer):
+    previous_ref = PrevLeadScoreSerializer(source="previous_score", read_only=True)
+    current = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LeadScore
+        fields = (
+            "id",
+            "current",
+            "previous_ref",
+            "actions_insight",
+            "recent_action_insight",
+            "incoming_messages_insight",
+            "days_in_stage_insight",
+            "forecast_table_insight",
+            "expected_close_date_insight",
+        )
+
+    def get_current(self, instance):
+        return instance.final_score
+
+
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
@@ -148,8 +184,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
     last_action_taken = serializers.SerializerMethodField()
     status_ref = StageSerializer(source="status", read_only=True)
     forecast_ref = ForecastRefSerializer(source="forecast", read_only=True)
-    latest_score = serializers.SerializerMethodField()
-    last_score = serializers.SerializerMethodField()
+    score = LeadScoreSerializer(source="current_score", read_only=True)
 
     class Meta:
         model = Lead
@@ -171,8 +206,7 @@ class LeadRefSerializer(serializers.ModelSerializer):
             "closing_amount",
             "forecast",
             "forecast_ref",
-            "latest_score",
-            "last_score",
+            "score",
         )
 
     def get_last_action_taken(self, instance):
@@ -181,16 +215,6 @@ class LeadRefSerializer(serializers.ModelSerializer):
             .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
             .first()
         ).data
-
-    def get_latest_score(self, instance):
-        score = instance.latest_score
-        if score:
-            return LeadScoreSerializer(score).data
-
-    def get_last_score(self, instance):
-        score = instance.last_score
-        if score:
-            return LeadScoreSerializer(score).data
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -449,8 +473,7 @@ class LeadSerializer(serializers.ModelSerializer):
     files_ref = FileSerializer(source="files", read_only=True, many=True)
     last_action_taken = serializers.SerializerMethodField()
     status_ref = StageSerializer(source="status", read_only=True)
-    latest_score = serializers.SerializerMethodField()
-    last_score = serializers.SerializerMethodField()
+    score = LeadScoreSerializer(source="current_score", read_only=True)
 
     class Meta:
         model = Lead
@@ -493,8 +516,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "competitor_description",
             "geography_address",
             "geography_address_components",
-            "latest_score",
-            "last_score",
+            "score",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the
         # create/update/delete end points for forecasts
@@ -515,16 +537,6 @@ class LeadSerializer(serializers.ModelSerializer):
             .first()
         ).data
 
-    def get_latest_score(self, instance):
-        score = instance.latest_score
-        if score:
-            return LeadScoreSerializer(score).data
-
-    def get_last_score(self, instance):
-        score = instance.last_score
-        if score:
-            return LeadScoreSerializer(score).data
-
 
 class LeadVerboseSerializer(serializers.ModelSerializer):
     """ verbose seriliazer for leads"""
@@ -544,8 +556,7 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
     linked_contacts_ref = ContactSerializer(
         source="linked_contacts", read_only=True, many=True
     )
-    latest_score = serializers.SerializerMethodField()
-    last_score = serializers.SerializerMethodField()
+    score = LeadScoreSerializer(source="current_score", read_only=True)
 
     class Meta:
         model = Lead
@@ -578,8 +589,7 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
             "files",
             "lists",
             "lists_ref",
-            "latest_score",
-            "last_score",
+            "score",
         )
         # forecasts are set on the forecast table, in order to add a forecast hit the create/update/delete end points for forecasts
         read_only_fields = (
@@ -591,19 +601,3 @@ class LeadVerboseSerializer(serializers.ModelSerializer):
 
     def get_contract(self, instance):
         return instance.contract_file
-
-    def get_latest_score(self, instance):
-        score = instance.latest_score
-        if score:
-            return LeadScoreSerializer(score).data
-
-    def get_last_score(self, instance):
-        score = instance.last_score
-        if score:
-            return LeadScoreSerializer(score).data
-
-
-class LeadScoreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LeadScore
-        fields = '__all__'

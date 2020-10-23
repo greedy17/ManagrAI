@@ -58,7 +58,7 @@ class UserQuerySet(models.QuerySet):
             return self.none()
 
 
-class UserManager(BaseUserManager):
+class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
     """Custom User model manager, eliminating the 'username' field."""
 
     use_in_migrations = True
@@ -154,7 +154,7 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True
     )
 
-    objects = UserManager.from_queryset(UserQuerySet)()
+    objects = UserManager()
 
     @property
     def full_name(self):
