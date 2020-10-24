@@ -241,10 +241,10 @@ class RepFocusData(BaseGenerator):
 
     @property
     def amount_closed(self):
-        # COULD_BE_HERE
-        return self._closed_leads.aggregate(
+        value = self._closed_leads.aggregate(
             sum=Sum("closing_amount")
         )["sum"] or 0
+        return float(value)
 
     @property
     def forecast_table_additions(self):
@@ -263,7 +263,7 @@ class RepFocusData(BaseGenerator):
             "50/50": [],
         }
         closed_leads = self._closed_leads.order_by('-closing_amount')[:total_needed_count]
-        # COULD_BE_HERE
+
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
@@ -792,7 +792,7 @@ class OrgFocusData(BaseGenerator):
             "50/50": [],
         }
         closed_leads = self._closed_leads.order_by('closing_amount')[:total_needed_count]
-        # COULD_BE_HERE
+
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
