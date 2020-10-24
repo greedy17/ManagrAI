@@ -21,6 +21,7 @@ from .models import PerformanceReport
 from .story_report_generation import LeadDataGenerator
 
 logger = logging.getLogger("managr")
+import pdb
 
 
 def generate_performance_report_data(performance_report_id):
@@ -55,6 +56,10 @@ def generate_performance_report_data(performance_report_id):
             }
         report.data = data
         report.datetime_generated = timezone.now()
+        # RepFocusData.amount_closed
+        # RepFocusData.top_opportunities
+        # OrgFocusData.top_opportunities
+        pdb.set_trace()
         report.save()
         # send email to user that generated report
         send_email(report)
@@ -236,6 +241,7 @@ class RepFocusData(BaseGenerator):
 
     @property
     def amount_closed(self):
+        # COULD_BE_HERE
         return self._closed_leads.aggregate(
             sum=Sum("closing_amount")
         )["sum"] or 0
@@ -257,7 +263,7 @@ class RepFocusData(BaseGenerator):
             "50/50": [],
         }
         closed_leads = self._closed_leads.order_by('-closing_amount')[:total_needed_count]
-
+        # COULD_BE_HERE
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
@@ -786,7 +792,7 @@ class OrgFocusData(BaseGenerator):
             "50/50": [],
         }
         closed_leads = self._closed_leads.order_by('closing_amount')[:total_needed_count]
-
+        # COULD_BE_HERE
         output[lead_constants.FORECAST_CLOSED] = [
                                                         data["fields"] for data in json.loads(
                                                             serializers.serialize(
