@@ -185,6 +185,8 @@ class LeadRefSerializer(serializers.ModelSerializer):
     status_ref = StageSerializer(source="status", read_only=True)
     forecast_ref = ForecastRefSerializer(source="forecast", read_only=True)
     score = LeadScoreSerializer(source="current_score", read_only=True)
+    amount = serializers.SerializerMethodField()
+    closing_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Lead
@@ -215,6 +217,16 @@ class LeadRefSerializer(serializers.ModelSerializer):
             .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
             .first()
         ).data
+
+    def get_amount(self, instance):
+        # ADd note here
+        if instance.amount is not None:
+            return float(instance.amount)
+
+    def get_closing_amount(self, instance):
+        # ADd note here
+        if instance.closing_amount is not None:
+            return float(instance.closing_amount)
 
 
 class FileSerializer(serializers.ModelSerializer):
