@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav id="nav">
-      <div class="logo">
+      <div class="logo" @click="goToHome">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
       <div v-if="userIsLoggedIn" class="links">
@@ -143,6 +143,9 @@ export default {
       this.$store.commit('CLEAR_POLLING_DATA')
       this.toggleUserMenu()
     },
+    goToHome() {
+      this.$router.push({ name: 'LeadsIndex' })
+    },
   },
   watch: {
     shouldRefreshPolling(val) {
@@ -189,6 +192,10 @@ nav {
   margin-left: 1.5rem;
   display: flex;
   align-items: center;
+
+  &:hover {
+    cursor: pointer;
+  }
 
   img {
     height: 10rem;
