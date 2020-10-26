@@ -260,13 +260,12 @@ class LeadScoreGenerator:
             )
         log_count = forecast_logs.count()
         if not log_count:
-            # score == 0
             return score
         newest_log_data = forecast_logs.first().meta.get('extra')
         newest_forecast = newest_log_data.get('new_forecast')
         if log_count is 1:
+            oldest_forecast = newest_log_data.get('previous_forecast')
             try:
-                oldest_forecast = newest_log_data.get('previous_forecast')
                 score = self._get_forecast_score(
                                 previous_forecast=oldest_forecast,
                                 new_forecast=newest_forecast,
