@@ -250,6 +250,7 @@ class LeadScoreGenerator:
 
     def _generate_forecast_table_score(self):
         # Moved Into into a stronger FC state (up to 20 pts)
+        score = 0
         forecast_logs = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
@@ -258,22 +259,25 @@ class LeadScoreGenerator:
                 meta__extra__forecast_update=True,
             )
         log_count = forecast_logs.count()
-        if log_count is 0:
-            return 0
+        if not log_count:
+            # score == 0
+            return score
         newest_log_data = forecast_logs.first().meta.get('extra')
         newest_forecast = newest_log_data.get('new_forecast')
         if log_count is 1:
-            # these are forecast.forecast constants
-            oldest_forecast = newest_log_data.get('previous_forecast')
-            return self._get_forecast_score(
-                            previous_forecast=oldest_forecast,
-                            new_forecast=newest_forecast,
-                        )
+            try:
+                oldest_forecast = newest_log_data.get('previous_forecast')
+                score = self._get_forecast_score(
+                                previous_forecast=oldest_forecast,
+                                new_forecast=newest_forecast,
+                            )
+            except ValueError:
+                pass
+            return score
         # if there are multiple logs, compare the total change in forecast
         # (oldest and newest, ignoring any middle-stages)
         oldest_log_data = forecast_logs.last().meta.get('extra')
         oldest_forecast = oldest_log_data.get('previous_forecast')
-        score = 0
         try:
             score = self._get_forecast_score(
                             previous_forecast=oldest_forecast,
