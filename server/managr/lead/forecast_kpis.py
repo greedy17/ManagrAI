@@ -106,7 +106,7 @@ class ForecastKPIs:
         strong_sum = strong_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
         verbal_sum = verbal_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
 
-        return (fifty_fifty_sum * 0.5) + (strong_sum * 0.75) + (verbal_sum * 0.9)
+        return (float(fifty_fifty_sum) * 0.5) + (float(strong_sum) * 0.75) + (float(verbal_sum) * 0.9)
 
     @property
     def quota(self):

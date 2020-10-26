@@ -250,6 +250,7 @@ class LeadScoreGenerator:
 
     def _generate_forecast_table_score(self):
         # Moved Into into a stronger FC state (up to 20 pts)
+        score = 0
         forecast_logs = self._logs.filter(
                 activity__in=[
                     lead_const.LEAD_UPDATED,
@@ -258,23 +259,35 @@ class LeadScoreGenerator:
                 meta__extra__forecast_update=True,
             )
         log_count = forecast_logs.count()
-        if log_count is 0:
-            return 0
+        if not log_count:
+            return score
         newest_log_data = forecast_logs.first().meta.get('extra')
         newest_forecast = newest_log_data.get('new_forecast')
         if log_count is 1:
-            # these are forecast.forecast constants
             oldest_forecast = newest_log_data.get('previous_forecast')
-            return self._get_forecast_score(
-                            previous_forecast=oldest_forecast,
-                            new_forecast=newest_forecast,
-                        )
+            try:
+                # NOTE: self._get_forecast_score purposefully throws a
+                # ValueError if either of these arguments are None.
+                # This is because both arguments are needed to generate
+                # a valid score.
+                # Hence it is OK to ignore it and yield a score of zero.
+                score = self._get_forecast_score(
+                                previous_forecast=oldest_forecast,
+                                new_forecast=newest_forecast,
+                            )
+            except ValueError:
+                pass
+            return score
         # if there are multiple logs, compare the total change in forecast
         # (oldest and newest, ignoring any middle-stages)
         oldest_log_data = forecast_logs.last().meta.get('extra')
         oldest_forecast = oldest_log_data.get('previous_forecast')
-        score = 0
         try:
+            # NOTE: self._get_forecast_score purposefully throws a
+            # ValueError if either of these arguments are None.
+            # This is because both arguments are needed to generate
+            # a valid score.
+            # Hence it is OK to ignore it and yield a score of zero.
             score = self._get_forecast_score(
                             previous_forecast=oldest_forecast,
                             new_forecast=newest_forecast,
@@ -388,13 +401,20 @@ class LeadScoreGenerator:
 
     @property
     def expected_close_date_insight(self):
+        # If lead.ECD is None, then return
+        # "No timeline to close."
+        if not self.lead.expected_close_date:
+            return "No timeline to close."
         score = self.expected_close_date_score
         if score > 0:
             return "Timeline was moved up."
         if score < 0:
             return "Timeline was pushed back."
-        if score is 0:
-            return "No timeline to close."
+        # NOTE: score == 0 does not mean
+        # that there is no close date.
+        # It means that there has not been
+        # an expected_close_date UPDATE in last 30 days
+        return "Expected close date unchanged."
 
     @property
     def final_score(self):
