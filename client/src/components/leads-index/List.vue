@@ -28,10 +28,10 @@
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing || pagination.loading" />
       <template v-else>
-        <div class="list-leads__row" v-if="collectionList.length">
+        <div class="list-leads__select" v-if="collectionList.length">
           <span
             class="list-leads__row__lead"
-            :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
+            :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '1rem' }"
           >
             <div class="lead-select">
               <Checkbox
@@ -249,7 +249,14 @@ export default {
 .list-leads {
   margin-left: 1%;
   margin-right: 1%;
-  padding-top: 0.5rem;
+  padding-top: 1rem;
+
+  &__select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
   &__row {
     display: flex;
     flex-direction: row;
