@@ -393,7 +393,15 @@ class LeadScoreGenerator:
             return "Timeline was moved up."
         if score < 0:
             return "Timeline was pushed back."
-        if score is 0:
+        # NOTE: score == 0 does not mean
+        # that there is no close date.
+        # Simply means that there has not been
+        # an expected_close_date UPDATE in last 30 days
+        # If score is 0 return None (No insight), due
+        # to a Longstanding ECD.
+        # If lead.ECD is None, then return
+        # "No timeline to close."
+        if not self.expected_close_date:
             return "No timeline to close."
 
     @property
