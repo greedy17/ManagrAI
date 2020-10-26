@@ -266,6 +266,11 @@ class LeadScoreGenerator:
         if log_count is 1:
             oldest_forecast = newest_log_data.get('previous_forecast')
             try:
+                # NOTE: self._get_forecast_score purposefully throws a
+                # ValueError if either of these arguments are None.
+                # This is because both arguments are needed to generate
+                # a valid score.
+                # Hence it is OK to ignore it and yield a score of zero.
                 score = self._get_forecast_score(
                                 previous_forecast=oldest_forecast,
                                 new_forecast=newest_forecast,
@@ -278,6 +283,11 @@ class LeadScoreGenerator:
         oldest_log_data = forecast_logs.last().meta.get('extra')
         oldest_forecast = oldest_log_data.get('previous_forecast')
         try:
+            # NOTE: self._get_forecast_score purposefully throws a
+            # ValueError if either of these arguments are None.
+            # This is because both arguments are needed to generate
+            # a valid score.
+            # Hence it is OK to ignore it and yield a score of zero.
             score = self._get_forecast_score(
                             previous_forecast=oldest_forecast,
                             new_forecast=newest_forecast,
