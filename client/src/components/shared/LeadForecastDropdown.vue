@@ -2,22 +2,16 @@
   <div class="forecast-dropdown" @click.stop.prevent>
     <select @change="updateForecast" :style="computedStyles" :disabled="disabled">
       <template v-if="Forecast.CLOSED == forecast">
-        <option selected>
-          Closed
-        </option>
+        <option selected>Closed</option>
       </template>
       <template v-else>
-        <option disabled :selected="forecast == null" :value="null">
-          Select Forecast
-        </option>
+        <option disabled :selected="forecast == null" :value="null">Select Forecast</option>
         <option
           v-for="option in selectableOptions"
           :selected="option.toUpperCase() === forecast"
           :key="option"
           :value="option"
-        >
-          {{ option == Forecast.NA ? 'Unforecasted' : option }}
-        </option>
+        >{{ option == Forecast.NA ? 'Unforecasted' : option }}</option>
       </template>
     </select>
   </div>

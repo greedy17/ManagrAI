@@ -1,39 +1,19 @@
 <template>
   <v-popover trigger="hover" placement="right">
-    <div class="display">
-      {{ scoreDisplay }}
-    </div>
+    <div class="display">{{ scoreDisplay }}</div>
     <template slot="popover">
       <div class="content" v-if="score">
-        <div>
-          How did we get this score?
-        </div>
+        <div>How did we get this score?</div>
         <hr />
-        <div v-if="score && score.incomingMessagesInsight">
-          {{ score.incomingMessagesInsight }}
-        </div>
-        <div v-if="score && score.actionsInsight">
-          {{ score.actionsInsight }}
-        </div>
-        <div v-if="score && score.daysInStageInsight">
-          {{ score.daysInStageInsight }}
-        </div>
-        <div v-if="score && score.forecastTableInsight">
-          {{ score.forecastTableInsight }}
-        </div>
-        <div v-if="score && score.expectedCloseDateInsight">
-          {{ score.expectedCloseDateInsight }}
-        </div>
-        <div v-if="score && score.recentActionInsight">
-          {{ score.recentActionInsight }}
-        </div>
-        <div class="footer">
-          {{ footer }}
-        </div>
+        <div v-if="score && score.incomingMessagesInsight">{{ score.incomingMessagesInsight }}</div>
+        <div v-if="score && score.actionsInsight">{{ score.actionsInsight }}</div>
+        <div v-if="score && score.daysInStageInsight">{{ score.daysInStageInsight }}</div>
+        <div v-if="score && score.forecastTableInsight">{{ score.forecastTableInsight }}</div>
+        <div v-if="score && score.expectedCloseDateInsight">{{ score.expectedCloseDateInsight }}</div>
+        <div v-if="score && score.recentActionInsight">{{ score.recentActionInsight }}</div>
+        <div class="footer">{{ footer }}</div>
       </div>
-      <div class="content" v-else>
-        Check back tomorrow!
-      </div>
+      <div class="content" v-else>Check back tomorrow!</div>
     </template>
   </v-popover>
 </template>
@@ -104,7 +84,7 @@ export default {
   border-color: $soft-gray;
   background-color: $white;
   color: $main-font-gray;
-  font-weight: 600;
+  font-size: 0.625rem;
   display: flex;
   align-items: center;
   justify-content: center;
