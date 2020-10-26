@@ -236,9 +236,10 @@ class RepFocusData(BaseGenerator):
 
     @property
     def amount_closed(self):
-        return self._closed_leads.aggregate(
+        value = self._closed_leads.aggregate(
             sum=Sum("closing_amount")
         )["sum"] or 0
+        return float(value)
 
     @property
     def forecast_table_additions(self):
