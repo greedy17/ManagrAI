@@ -21,7 +21,6 @@ from .models import PerformanceReport
 from .story_report_generation import LeadDataGenerator
 
 logger = logging.getLogger("managr")
-import pdb
 
 
 def generate_performance_report_data(performance_report_id):
@@ -56,10 +55,6 @@ def generate_performance_report_data(performance_report_id):
             }
         report.data = data
         report.datetime_generated = timezone.now()
-        # RepFocusData.amount_closed
-        # RepFocusData.top_opportunities
-        # OrgFocusData.top_opportunities
-        pdb.set_trace()
         report.save()
         # send email to user that generated report
         send_email(report)
