@@ -219,12 +219,16 @@ class LeadRefSerializer(serializers.ModelSerializer):
         ).data
 
     def get_amount(self, instance):
-        # ADd note here
+        # Lead.amount is a DecimalField which by default is
+        # typecasted to string on serialization, which messes with
+        # client-side math. This custom method fixes that.
         if instance.amount is not None:
             return float(instance.amount)
 
     def get_closing_amount(self, instance):
-        # ADd note here
+        # Lead.amount is a DecimalField which by default is
+        # typecasted to string on serialization, which messes with
+        # client-side math. This custom method fixes that.
         if instance.closing_amount is not None:
             return float(instance.closing_amount)
 
