@@ -6,7 +6,7 @@
       </div>
       <div v-if="userIsLoggedIn" class="links">
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
-        <NavLink icon="forecast" :to="'Forecast'">Forecast + Deals</NavLink>
+        <NavLink icon="forecast2" :to="'Forecast'">Forecast + Deals</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
