@@ -7,22 +7,9 @@
             class="toggle-icon"
             @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
           >
-            <!-- <img
-              src="@/assets/images/logo.png"
-              style="width: 1.5rem; height: 1.5rem; border: 2px solid red;"
-              v-tooltip="'Details'"
-            /> -->
-            <!-- <Button
-              text="Add Filter"
-              theme="secondary"
-              icon="left"
-              class="filter__button"
-              v-show="!$store.state.showToolbarNav"
-            > -->
             <div class="filter__button" v-show="!$store.state.showToolbarNav">
               <div class="filter__image">+</div>
               <div class="filter__text">Add Filter</div>
-              <!-- </Button> -->
             </div>
           </span>
         </template>
@@ -31,6 +18,7 @@
             class="toolbar"
             @update-filter="updateFilters"
             :currentFilters="currentFilters"
+            @delete-filters="deleteFilters"
           />
         </template>
       </SideNavToolbar>
@@ -175,6 +163,19 @@ export default {
       this.$set(this.myLists.filters, filter.key, filter.value)
       this.$set(this.myLeadsAll.filters, filter.key, filter.value)
       this.$set(this.myLeadsNoList.filters, filter.key, filter.value)
+
+      this.refreshCollections()
+    },
+    deleteFilters() {
+      const user = this.$store.state.user.id
+      const clearedFilter = {
+        byReps: [user],
+        byUser: user,
+      }
+      console.log(clearedFilter)
+      this.myLists.filters = clearedFilter
+      this.myLeadsAll.filters = clearedFilter
+      this.myLeadsNoList.filters = clearedFilter
 
       this.refreshCollections()
     },

@@ -159,6 +159,11 @@
         v-show="showRep"
       />
     </div>
+    <div class="filter section-shadow">
+      <div class="filter__button__container">
+        <div class="filter__button" @click="$emit('delete-filters')">Clear</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -299,6 +304,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/buttons';
 
 .toolbar {
   @include disable-text-select();
@@ -370,6 +376,18 @@ export default {
       cursor: pointer;
       max-width: 6rem;
       text-transform: capitalize;
+    }
+  }
+
+  &__button {
+    @include secondary-button();
+    margin: 1rem 1rem 1rem 0;
+    &__container {
+      height: 5rem;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      align-items: center;
     }
   }
 }
