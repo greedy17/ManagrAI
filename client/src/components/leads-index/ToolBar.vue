@@ -75,7 +75,9 @@
           :class="{
             active: currentFilters.byStatus ? currentFilters.byStatus == status.obj.id : false,
           }"
-        >{{ status.obj.title.toLowerCase() }} ({{ status.count }})</div>
+        >
+          {{ status.obj.title.toLowerCase() }} ({{ status.count }})
+        </div>
       </div>
     </div>
     <div class="filter section-shadow">
@@ -113,7 +115,9 @@
           :class="{
             active: currentFilters.byScore ? currentFilters.byScore == option.value : false,
           }"
-        >{{ option.value }} ({{ option.count }})</div>
+        >
+          {{ option.value }} ({{ option.count }})
+        </div>
       </div>
     </div>
     <div class="filter section-shadow">

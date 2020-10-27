@@ -7,11 +7,23 @@
             class="toggle-icon"
             @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
           >
-            <img
+            <!-- <img
               src="@/assets/images/logo.png"
-              style="width: 1.5rem; height: 1.5rem;"
+              style="width: 1.5rem; height: 1.5rem; border: 2px solid red;"
               v-tooltip="'Details'"
-            />
+            /> -->
+            <!-- <Button
+              text="Add Filter"
+              theme="secondary"
+              icon="left"
+              class="filter__button"
+              v-show="!$store.state.showToolbarNav"
+            > -->
+            <div class="filter__button" v-show="!$store.state.showToolbarNav">
+              <div class="filter__image">+</div>
+              <div class="filter__text">Add Filter</div>
+              <!-- </Button> -->
+            </div>
           </span>
         </template>
         <template v-slot:toolbar>
@@ -52,6 +64,8 @@
 </template>
 
 <script>
+import Button from '@thinknimble/button'
+
 import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
@@ -69,6 +83,7 @@ export default {
     ToggleCheckBox,
     ListsContainer,
     SideNavToolbar,
+    Button,
   },
   data() {
     return {
@@ -171,6 +186,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 @import '@/styles/layout';
+@import '@/styles/mixins/buttons';
 
 .view-toggle-container {
   @include base-font-styles();
@@ -214,6 +230,31 @@ export default {
 .toggle-icon {
   &:hover {
     cursor: pointer;
+  }
+}
+
+.filter {
+  &__button {
+    @include secondary-button();
+    margin-left: 1rem;
+    width: 9rem;
+
+    // --theme-height: 2.5rem;
+  }
+  &__text {
+    font-weight: bold;
+    margin-left: 1rem;
+    font-size: 1.2rem;
+  }
+  &__image {
+    font-size: 1.8rem;
+    color: $dark-green;
+  }
+}
+
+.page {
+  &__main-content-area {
+    margin-left: 12rem;
   }
 }
 </style>

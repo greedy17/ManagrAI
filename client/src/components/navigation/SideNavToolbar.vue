@@ -111,6 +111,7 @@ export default {
   width: 0rem;
   max-width: 15rem;
   height: 90%;
+
   > .content {
     display: none;
     height: 90%;
@@ -136,8 +137,9 @@ export default {
 }
 
 .sidenav.expanded {
-  @include standard-border();
-  background-color: lighten($soft-gray, 5%);
+  // @include standard-border();
+
+  background-color: transparent !important;
   animation: expandmenu forwards;
   animation-duration: 1s;
   animation-iteration-count: 1;
@@ -196,7 +198,7 @@ export default {
   }
   100% {
     width: 15rem;
-    background-color: lighten($soft-gray, 5%);
+    background-color: transparent !important;
   }
 }
 @keyframes closemenu {
@@ -205,12 +207,12 @@ export default {
     background-color: transparent;
   }
   50% {
-    background-color: lighten($soft-gray, 2%);
+    background-color: transparent;
   }
 
   100% {
     width: 0vw;
-    background-color: lighten($soft-gray, 5%);
+    background-color: transparent;
   }
 }
 .view-toggle-container {
