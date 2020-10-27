@@ -41,8 +41,32 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Stage</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('stage')">
+        Stage
+        <span class="icon__container">
+          <svg
+            v-if="!showStage"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showStage"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+      <div class="filter-options" v-show="showStage">
         <div
           class="option"
           @click="emitUpdateFilter({ key: 'byStatus', value: status.obj.id })"
@@ -55,8 +79,32 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Score</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('score')">
+        Score
+        <span class="icon__container">
+          <svg
+            v-if="!showScore"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showScore"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+      <div class="filter-options" v-show="showScore">
         <div
           class="option"
           v-for="option in scoreOptions"
@@ -68,6 +116,33 @@
         >{{ option.value }} ({{ option.count }})</div>
       </div>
     </div>
+    <div class="filter section-shadow">
+      <div class="filter-header" @click="expand('representative')">
+        Filter by Representative
+        <span class="icon__container">
+          <svg
+            v-if="!showRep"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showRep"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+    </div>
     <div
       class="filter section-shadow"
       v-if="$store.state.user.isManager || $store.state.user.isStaff"
@@ -77,6 +152,7 @@
         @toggle-active-rep="toggleRep"
         @select-all-reps="toggleAllReps"
         @deselect-all-reps="toggleAllReps"
+        v-show="showRep"
       />
     </div>
   </div>
@@ -89,6 +165,12 @@ import FilterByRep from '@/components/shared/FilterByRep'
 import Lead from '@/services/leads'
 
 const LEAD_SCORE_RANGES = ['0-25', '26-50', '51-75', '76-100']
+const EXPAND_SECTIONS = {
+  RATING: 'rating',
+  STAGE: 'stage',
+  SCORE: 'score',
+  REP: 'representative',
+}
 
 export default {
   name: 'ListsToolBar',
@@ -107,6 +189,9 @@ export default {
       statuses: this.$store.state.stages.map(s => ({ obj: s, count: null })),
       scoreOptions: LEAD_SCORE_RANGES.map(r => ({ value: r, count: null })),
       showRating: false,
+      showStage: false,
+      showScore: false,
+      showRep: false,
     }
   },
   created() {
@@ -170,8 +255,14 @@ export default {
       this.$emit('update-filter', item)
     },
     expand(section) {
-      if (section === 'rating') {
+      if (section === EXPAND_SECTIONS.RATING) {
         this.showRating = !this.showRating
+      } else if (section === EXPAND_SECTIONS.STAGE) {
+        this.showStage = !this.showStage
+      } else if (section === EXPAND_SECTIONS.SCORE) {
+        this.showScore = !this.showScore
+      } else if (section === EXPAND_SECTIONS.REP) {
+        this.showRep = !this.showRep
       }
     },
   },
@@ -209,7 +300,6 @@ export default {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-
   height: auto;
   display: flex;
   flex-flow: column;
