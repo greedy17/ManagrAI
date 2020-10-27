@@ -172,7 +172,7 @@ export default {
         byReps: [user],
         byUser: user,
       }
-      console.log(clearedFilter)
+
       this.myLists.filters = clearedFilter
       this.myLeadsAll.filters = clearedFilter
       this.myLeadsNoList.filters = clearedFilter
