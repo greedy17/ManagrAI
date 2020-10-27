@@ -1,11 +1,35 @@
 <template>
   <div class="toolbar">
-    <div class="header section-shadow">
-      Filter
-    </div>
+    <div class="header section-shadow">Filter</div>
+
     <div class="filter section-shadow">
-      <div class="filter-header">Rating</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('rating')">
+        Rating
+        <span class="icon__container">
+          <svg
+            v-if="!showRating"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showRating"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+
+      <div class="filter-options" v-show="showRating">
         <LeadRating
           v-for="(n, i) in 5"
           :key="'rating' + '-' + (5 - i)"
@@ -27,9 +51,7 @@
           :class="{
             active: currentFilters.byStatus ? currentFilters.byStatus == status.obj.id : false,
           }"
-        >
-          {{ status.obj.title.toLowerCase() }} ({{ status.count }})
-        </div>
+        >{{ status.obj.title.toLowerCase() }} ({{ status.count }})</div>
       </div>
     </div>
     <div class="filter section-shadow">
@@ -43,9 +65,7 @@
           :class="{
             active: currentFilters.byScore ? currentFilters.byScore == option.value : false,
           }"
-        >
-          {{ option.value }} ({{ option.count }})
-        </div>
+        >{{ option.value }} ({{ option.count }})</div>
       </div>
     </div>
     <div
@@ -86,6 +106,7 @@ export default {
       forecastEnums,
       statuses: this.$store.state.stages.map(s => ({ obj: s, count: null })),
       scoreOptions: LEAD_SCORE_RANGES.map(r => ({ value: r, count: null })),
+      showRating: false,
     }
   },
   created() {
@@ -147,6 +168,11 @@ export default {
     },
     emitUpdateFilter(item) {
       this.$emit('update-filter', item)
+    },
+    expand(section) {
+      if (section === 'rating') {
+        this.showRating = !this.showRating
+      }
     },
   },
   computed: {
@@ -229,10 +255,14 @@ export default {
   .filter-header {
     height: 3rem;
     display: flex;
-    flex-flow: column;
-    justify-content: center;
-    padding-left: 10%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10%;
     font-weight: normal;
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   .filter-options {
@@ -255,5 +285,17 @@ export default {
 }
 .active {
   color: rgba($color: $dark-green, $alpha: 1);
+}
+
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
+  }
 }
 </style>

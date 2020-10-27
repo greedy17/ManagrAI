@@ -4,7 +4,7 @@
    <div class="top-menu">
       <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
       <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
-    </div> -->
+    </div>-->
     <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
       <h2>{{ lead.title }}</h2>
     </div>
@@ -52,9 +52,7 @@
             </div>
           </template>
         </Modal>
-        <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">
-          None
-        </span>
+        <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">None</span>
         <LeadList
           @remove-lead="removeLeadFromList($event, i)"
           v-else
@@ -76,7 +74,10 @@
         rel="noopener noreferrer"
       >
         {{ lead.accountRef.name }}
-        <img style="opacity: 0.4; margin-left: 0.5rem;" src="@/assets/images/link.svg" />
+        <img
+          style="opacity: 0.4; margin-left: 0.5rem;"
+          src="@/assets/images/link.svg"
+        />
       </a>
     </div>
     <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
@@ -101,7 +102,8 @@
       class="expected-close-date section-shadow"
     >
       <div>
-        Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+        Close Date:
+        <span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
     </div>
     <div
@@ -110,10 +112,12 @@
       @click.stop.prevent="editExpectedCloseDate = true"
     >
       <div v-if="!lead.expectedCloseDate">
-        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+        Expected Close Date:
+        <span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
       <div v-else style="display: flex; flex-flow: column; align-items: center;">
-        Expected Close Date:<span>{{ lead.expectedCloseDate | dateShort }}</span>
+        Expected Close Date:
+        <span>{{ lead.expectedCloseDate | dateShort }}</span>
       </div>
     </div>
     <div v-else class="expected-close-date-editable">
@@ -125,11 +129,7 @@
           type="date"
           class="form__input"
         />
-        <img
-          class="reset"
-          src="@/assets/images/remove.svg"
-          @click="editExpectedCloseDate = false"
-        />
+        <img class="reset" src="@/assets/images/remove.svg" @click="editExpectedCloseDate = false" />
       </form>
     </div>
     <div class="contacts">
@@ -151,9 +151,9 @@
             <div>{{ contactInitials(contact) }}</div>
           </div>
           <div class="contact-info-container">
-            <span class="contact-name">
-              {{ contact.fullName.trim() ? contact.fullName : contact.email }}
-            </span>
+            <span
+              class="contact-name"
+            >{{ contact.fullName.trim() ? contact.fullName : contact.email }}</span>
             <div class="contact-title" v-if="contact.title">
               <img class="icon" src="@/assets/images/contact.svg" alt="icon" />
               <span>{{ contact.title }}</span>
@@ -187,9 +187,12 @@
         <template v-if="this.lead.filesRef.length > 0">
           <div class="file section-shadow" v-for="file in sortedFiles" :key="file.id">
             <img class="icon" src="@/assets/images/document.svg" alt="icon" />
-            <a class="file-link" :href="file.file" target="_blank" rel="noopener noreferrer">
-              {{ file.filename }}
-            </a>
+            <a
+              class="file-link"
+              :href="file.file"
+              target="_blank"
+              rel="noopener noreferrer"
+            >{{ file.filename }}</a>
             <img
               class="add"
               style="margin: 0 1rem 0 auto;"
@@ -239,9 +242,7 @@
           </label>
         </div>
         <div class="button-container">
-          <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">
-            Update
-          </button>
+          <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">Update</button>
           <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
         </div>
       </div>
