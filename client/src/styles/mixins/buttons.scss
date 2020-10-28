@@ -1,5 +1,5 @@
-@import "../variables";
-@import "./utils";
+@import '../variables';
+@import './utils';
 
 // NOTE: There are global button classes in forms.scss. I figured since buttons will be the
 // same across the app, it's okay to create a global 'button' class for most cases, and
@@ -40,7 +40,7 @@
   color: $main-font-gray;
 }
 
-@mixin button-danger () {
+@mixin button-danger() {
   @include base-button();
   background-color: $coral;
   color: $white;
