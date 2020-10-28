@@ -182,7 +182,7 @@ export default {
 
 .insights {
   height: auto;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+
   border: solid 1px $soft-gray;
   background-color: $white;
   display: flex;

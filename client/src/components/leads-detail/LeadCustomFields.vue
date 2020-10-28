@@ -330,7 +330,7 @@ export default {
 
 .custom-fields {
   @include standard-border();
-  border-top: 0;
+
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   display: flex;

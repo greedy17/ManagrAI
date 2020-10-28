@@ -18,7 +18,6 @@
           </span>
         </template>
         <template v-slot:toolbar>
-          <LeadInsights v-if="showToolbarNav" :lead="lead" />
           <ToolBar
             v-if="showToolbarNav"
             :lead="lead"
@@ -29,7 +28,6 @@
             @updated-expected-close-date="updateExpectedCloseDate"
             @updated-title="updateTitle"
           />
-          <LeadCustomFields v-if="showToolbarNav" :lead="lead" />
         </template>
       </SideNavToolbar>
     </div>
@@ -152,7 +150,7 @@ import LeadCustomFields from '@/components/leads-detail/LeadCustomFields'
 import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
-import LeadInsights from '@/components/shared/LeadInsights'
+
 import DropDownMenu from '@/components/forms/DropDownMenu'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
@@ -182,7 +180,7 @@ export default {
     LeadBanner,
     LeadActions,
     PinnedNotes,
-    LeadInsights,
+
     LeadHistory,
     LeadEmails,
     DropDownMenu,

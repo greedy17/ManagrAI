@@ -55,79 +55,8 @@
           />
         </div>
       </div>
-
-      <div style="display: flex; flex-flow: row; justify-content: center;">
-        <a
-          class="account-link"
-          :href="lead.accountRef.url | prependUrlProtocol"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {{ lead.accountRef.name }}
-          <img
-            style="opacity: 0.4; margin-left: 0.5rem;"
-            src="@/assets/images/link.svg"
-          />
-        </a>
-      </div>
-      <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
-        Amount:
-        <span>{{ lead.closingAmount | currency }}</span>
-      </div>
-      <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
-        Amount:
-        <span>{{ lead.amount | currency }}</span>
-      </div>
-      <div v-else class="amount-editable">
-        Amount:
-        <form class="amount-form" @submit.prevent="updateAmount">
-          <input v-model="tempAmount" type="number" step="any" min="0" />
-          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
-          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
-        </form>
-      </div>
-
-      <div
-        v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
-        class="expected-close-date section-shadow"
-      >
-        <div>
-          Close Date:
-          <span>{{ lead.expectedCloseDate | dateShort }}</span>
-        </div>
-      </div>
-      <div
-        v-else-if="!editExpectedCloseDate"
-        class="expected-close-date section-shadow"
-        @click.stop.prevent="editExpectedCloseDate = true"
-      >
-        <div v-if="!lead.expectedCloseDate">
-          Expected Close Date:
-          <span>{{ lead.expectedCloseDate | dateShort }}</span>
-        </div>
-        <div v-else style="display: flex; flex-flow: column; align-items: center;">
-          Expected Close Date:
-          <span>{{ lead.expectedCloseDate | dateShort }}</span>
-        </div>
-      </div>
-      <div v-else class="expected-close-date-editable">
-        Expected Close Date:
-        <form class="expected-close-date-form" @submit.prevent="() => {}">
-          <input
-            v-model="tempExpectedCloseDate"
-            @change="updateExpectedCloseDate"
-            type="date"
-            class="form__input"
-          />
-          <img
-            class="reset"
-            src="@/assets/images/remove.svg"
-            @click="editExpectedCloseDate = false"
-          />
-        </form>
-      </div>
     </div>
-
+    <LeadInsights :lead="lead" />
     <div class="toolbar__header section-shadow" @click="expandSection('details')">
       Details
       <span class="icon__container">
@@ -155,16 +84,6 @@
     </div>
 
     <div v-show="showDetails">
-      <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
-        <h2>{{ lead.title }}</h2>
-      </div>
-      <div v-else class="title-editable">
-        <form class="title-form" @submit.prevent="updateTitle">
-          <input v-model="tempTitle" type="text" />
-          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
-          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
-        </form>
-      </div>
       <div class="rating">
         <LeadRating
           :label="true"
@@ -172,48 +91,6 @@
           @close-modal="listModal.isOpen = false"
           @updated-rating="emitUpdatedRating"
         />
-      </div>
-      <div class="lead-lists">
-        <div :style="{ display: 'flex', flexFlow: 'row', justifyContent: 'center' }">
-          <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
-        </div>
-        <div class="header">Lists</div>
-        <div class="container">
-          <Modal v-if="listModal.isOpen" dimmed :width="40" @close-modal="closeListModal">
-            <ComponentLoadingSVG v-if="myLists.refreshing" />
-            <template v-else>
-              <h3>Check all lists this lead should be in:</h3>
-              <div v-for="list in myLists.list" :key="list.id" class="list-items">
-                <span
-                  class="list-items__item__select"
-                  :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center' }"
-                >
-                  <Checkbox
-                    name="lists"
-                    @checkbox-clicked="toggleSelectedList(list)"
-                    :checked="!!selectedLists[list.id]"
-                  />
-                  <span class="list-items__item">{{ list.title }}</span>
-                </span>
-              </div>
-              <h5>To remove Opportunity from all lists, leave all checkboxes blank</h5>
-              <div :style="{ display: 'flex', flexFlow: 'row' }">
-                <button class="update-lists" @click="onUpdateLists">Save</button>
-              </div>
-            </template>
-          </Modal>
-          <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">None</span>
-          <LeadList
-            @remove-lead="removeLeadFromList($event, i)"
-            v-else
-            class="list"
-            v-for="(list, i) in allLists"
-            :key="list.id"
-            :listName="list.title"
-            :listId="list.id"
-            :dark="true"
-          />
-        </div>
       </div>
 
       <div style="display: flex; flex-flow: row; justify-content: center;">
@@ -456,6 +333,7 @@
         </div>
       </Modal>
     </div>
+    <LeadCustomFields :lead="lead" />
   </div>
 </template>
 
@@ -466,11 +344,13 @@ import List from '@/services/lists'
 import Contact from '@/services/contacts'
 import Lead from '@/services/leads'
 
+import LeadCustomFields from '@/components/leads-detail/LeadCustomFields'
 import LeadRating from '@/components/leads-detail/LeadRating'
 import LeadList from '@/components/shared/LeadList'
 import Checkbox from '@/components/leads-new/CheckBox'
 import ContactCheckBox from '@/components/leads-new/ContactCheckBox'
 import AddContact from '@/components/leads-new/AddContact'
+import LeadInsights from '@/components/shared/LeadInsights'
 
 function fileSorter(firstFile, secondFile) {
   if (firstFile.filename.toLowerCase() > secondFile.filename.toLowerCase()) {
@@ -507,6 +387,8 @@ export default {
   components: {
     LeadRating,
     LeadList,
+    LeadInsights,
+    LeadCustomFields,
     Checkbox,
     ContactCheckBox,
     AddContact,
@@ -915,7 +797,6 @@ export default {
 
 .toolbar {
   @include standard-border();
-  border-top: 0 !important;
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
   display: flex;
@@ -1020,6 +901,7 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
+  padding-top: 1rem;
 }
 
 .lead-lists {
