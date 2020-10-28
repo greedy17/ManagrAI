@@ -202,6 +202,10 @@ export default {
   font-weight: bold;
   line-height: 1.14;
   color: $main-font-gray;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .insight-container {

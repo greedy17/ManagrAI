@@ -1,140 +1,194 @@
 <template>
   <div class="toolbar">
-    <!-- Hidding WIP as Marcy requested PB 05/15/2020
-   <div class="top-menu">
-      <img class="edit icon" src="@/assets/images/pencil.svg" alt="icon" />
-      <img class="more icon" src="@/assets/images/more_horizontal.svg" alt="icon" />
-    </div>-->
-    <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
-      <h2>{{ lead.title }}</h2>
-    </div>
-    <div v-else class="title-editable">
-      <form class="title-form" @submit.prevent="updateTitle">
-        <input v-model="tempTitle" type="text" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
-        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
-      </form>
-    </div>
-    <div class="rating">
-      <LeadRating
-        :label="true"
-        :rating="lead.rating"
-        @close-modal="listModal.isOpen = false"
-        @updated-rating="emitUpdatedRating"
-      />
-    </div>
-    <div class="lead-lists">
-      <div :style="{ display: 'flex', flexFlow: 'row', justifyContent: 'center' }">
-        <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
-      </div>
-      <div class="header">Lists</div>
-      <div class="container">
-        <Modal v-if="listModal.isOpen" dimmed :width="40" @close-modal="closeListModal">
-          <ComponentLoadingSVG v-if="myLists.refreshing" />
-          <template v-else>
-            <h3>Check all lists this lead should be in:</h3>
-            <div v-for="list in myLists.list" :key="list.id" class="list-items">
-              <span
-                class="list-items__item__select"
-                :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center' }"
-              >
-                <Checkbox
-                  name="lists"
-                  @checkbox-clicked="toggleSelectedList(list)"
-                  :checked="!!selectedLists[list.id]"
-                />
-                <span class="list-items__item">{{ list.title }}</span>
-              </span>
-            </div>
-            <h5>To remove Opportunity from all lists, leave all checkboxes blank</h5>
-            <div :style="{ display: 'flex', flexFlow: 'row' }">
-              <button class="update-lists" @click="onUpdateLists">Save</button>
-            </div>
-          </template>
-        </Modal>
-        <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">None</span>
-        <LeadList
-          @remove-lead="removeLeadFromList($event, i)"
-          v-else
-          class="list"
-          v-for="(list, i) in allLists"
-          :key="list.id"
-          :listName="list.title"
-          :listId="list.id"
-          :dark="true"
-        />
-      </div>
+    <div class="toolbar__header section-shadow" @click="expandSection('details')">
+      Details
+      <span class="icon__container">
+        <svg
+          v-if="!showDetails"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="showDetails"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
     </div>
 
-    <div style="display: flex; flex-flow: row; justify-content: center;">
-      <a
-        class="account-link"
-        :href="lead.accountRef.url | prependUrlProtocol"
-        target="_blank"
-        rel="noopener noreferrer"
+    <div v-show="showDetails">
+      <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
+        <h2>{{ lead.title }}</h2>
+      </div>
+      <div v-else class="title-editable">
+        <form class="title-form" @submit.prevent="updateTitle">
+          <input v-model="tempTitle" type="text" />
+          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
+          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
+        </form>
+      </div>
+      <div class="rating">
+        <LeadRating
+          :label="true"
+          :rating="lead.rating"
+          @close-modal="listModal.isOpen = false"
+          @updated-rating="emitUpdatedRating"
+        />
+      </div>
+      <div class="lead-lists">
+        <div :style="{ display: 'flex', flexFlow: 'row', justifyContent: 'center' }">
+          <button class="add-to-a-list" @click="openListsModal">Add to a List</button>
+        </div>
+        <div class="header">Lists</div>
+        <div class="container">
+          <Modal v-if="listModal.isOpen" dimmed :width="40" @close-modal="closeListModal">
+            <ComponentLoadingSVG v-if="myLists.refreshing" />
+            <template v-else>
+              <h3>Check all lists this lead should be in:</h3>
+              <div v-for="list in myLists.list" :key="list.id" class="list-items">
+                <span
+                  class="list-items__item__select"
+                  :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center' }"
+                >
+                  <Checkbox
+                    name="lists"
+                    @checkbox-clicked="toggleSelectedList(list)"
+                    :checked="!!selectedLists[list.id]"
+                  />
+                  <span class="list-items__item">{{ list.title }}</span>
+                </span>
+              </div>
+              <h5>To remove Opportunity from all lists, leave all checkboxes blank</h5>
+              <div :style="{ display: 'flex', flexFlow: 'row' }">
+                <button class="update-lists" @click="onUpdateLists">Save</button>
+              </div>
+            </template>
+          </Modal>
+          <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">None</span>
+          <LeadList
+            @remove-lead="removeLeadFromList($event, i)"
+            v-else
+            class="list"
+            v-for="(list, i) in allLists"
+            :key="list.id"
+            :listName="list.title"
+            :listId="list.id"
+            :dark="true"
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; flex-flow: row; justify-content: center;">
+        <a
+          class="account-link"
+          :href="lead.accountRef.url | prependUrlProtocol"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ lead.accountRef.name }}
+          <img
+            style="opacity: 0.4; margin-left: 0.5rem;"
+            src="@/assets/images/link.svg"
+          />
+        </a>
+      </div>
+      <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
+        Amount:
+        <span>{{ lead.closingAmount | currency }}</span>
+      </div>
+      <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
+        Amount:
+        <span>{{ lead.amount | currency }}</span>
+      </div>
+      <div v-else class="amount-editable">
+        Amount:
+        <form class="amount-form" @submit.prevent="updateAmount">
+          <input v-model="tempAmount" type="number" step="any" min="0" />
+          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
+          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
+        </form>
+      </div>
+
+      <div
+        v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
+        class="expected-close-date section-shadow"
       >
-        {{ lead.accountRef.name }}
-        <img
-          style="opacity: 0.4; margin-left: 0.5rem;"
-          src="@/assets/images/link.svg"
-        />
-      </a>
-    </div>
-    <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
-      Amount:
-      <span>{{ lead.closingAmount | currency }}</span>
-    </div>
-    <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
-      Amount:
-      <span>{{ lead.amount | currency }}</span>
-    </div>
-    <div v-else class="amount-editable">
-      Amount:
-      <form class="amount-form" @submit.prevent="updateAmount">
-        <input v-model="tempAmount" type="number" step="any" min="0" />
-        <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
-        <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
-      </form>
+        <div>
+          Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+      </div>
+      <div
+        v-else-if="!editExpectedCloseDate"
+        class="expected-close-date section-shadow"
+        @click.stop.prevent="editExpectedCloseDate = true"
+      >
+        <div v-if="!lead.expectedCloseDate">
+          Expected Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+        <div v-else style="display: flex; flex-flow: column; align-items: center;">
+          Expected Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+      </div>
+      <div v-else class="expected-close-date-editable">
+        Expected Close Date:
+        <form class="expected-close-date-form" @submit.prevent="() => {}">
+          <input
+            v-model="tempExpectedCloseDate"
+            @change="updateExpectedCloseDate"
+            type="date"
+            class="form__input"
+          />
+          <img
+            class="reset"
+            src="@/assets/images/remove.svg"
+            @click="editExpectedCloseDate = false"
+          />
+        </form>
+      </div>
     </div>
 
-    <div
-      v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
-      class="expected-close-date section-shadow"
-    >
-      <div>
-        Close Date:
-        <span>{{ lead.expectedCloseDate | dateShort }}</span>
-      </div>
+    <div class="toolbar__header section-shadow" @click="expandSection('contacts')">
+      Contacts
+      <span class="icon__container">
+        <svg
+          v-if="!showContacts"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="showContacts"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
     </div>
-    <div
-      v-else-if="!editExpectedCloseDate"
-      class="expected-close-date section-shadow"
-      @click.stop.prevent="editExpectedCloseDate = true"
-    >
-      <div v-if="!lead.expectedCloseDate">
-        Expected Close Date:
-        <span>{{ lead.expectedCloseDate | dateShort }}</span>
-      </div>
-      <div v-else style="display: flex; flex-flow: column; align-items: center;">
-        Expected Close Date:
-        <span>{{ lead.expectedCloseDate | dateShort }}</span>
-      </div>
-    </div>
-    <div v-else class="expected-close-date-editable">
-      Expected Close Date:
-      <form class="expected-close-date-form" @submit.prevent="() => {}">
-        <input
-          v-model="tempExpectedCloseDate"
-          @change="updateExpectedCloseDate"
-          type="date"
-          class="form__input"
-        />
-        <img class="reset" src="@/assets/images/remove.svg" @click="editExpectedCloseDate = false" />
-      </form>
-    </div>
-    <div class="contacts">
-      <div class="header section-shadow">
-        <span>Contacts</span>
+
+    <div class="contacts" v-show="showContacts">
+      <div class="header">
+        <span></span>
         <img
           class="contacts-modal-icon"
           style="margin: 0 1rem 0 auto;"
@@ -165,16 +219,42 @@
         <span class="no-items-message">No Contacts</span>
       </div>
     </div>
-    <div class="files">
+
+    <div class="toolbar__header section-shadow" @click="expandSection('files')">
+      Files
+      <span class="icon__container">
+        <svg
+          v-if="!showFiles"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="showFiles"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+    <div class="files" v-show="showFiles">
       <div
-        class="header section-shadow"
+        class="header"
         :style="
           leadContacts.list.length
             ? ' margin-top: 1rem;'
             : 'border-top: 1px solid #eeeeee; margin-top: 1rem;'
         "
       >
-        <span>Files</span>
+        <span></span>
         <img
           class="add"
           style="margin: 0 1rem 0 auto;"
@@ -203,50 +283,51 @@
         </template>
         <span v-else class="no-items-message">No Files</span>
       </div>
-    </div>
-    <Modal v-if="fileUploadLoading" :width="10">
-      <ComponentLoadingSVG />
-    </Modal>
-    <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
-      <ComponentLoadingSVG v-if="accountContacts.refreshing" />
-      <div v-else>
-        <div class="form-field">
-          <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
-          <label>Account Contacts</label>
-          <p v-if="!accountContacts.list.length">No contacts available.</p>
-          <ContactCheckBox
-            v-else
-            v-for="contact in accountContacts.list"
-            :key="contact.id"
-            :contact="contact"
-            :checked="!!contactsModal.selectedContacts[contact.id]"
-            :editable="true"
-            @checkbox-clicked="handleCheckboxClick"
-            @updated-contact="onUpdateContact"
-          />
-        </div>
-        <div class="form-field">
-          <AddContact
-            v-for="(contactForm, idx) in contactsModal.addContactForms"
-            :key="idx"
-            :form="contactForm"
-            :error="
+
+      <Modal v-if="fileUploadLoading" :width="10">
+        <ComponentLoadingSVG />
+      </Modal>
+      <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
+        <ComponentLoadingSVG v-if="accountContacts.refreshing" />
+        <div v-else>
+          <div class="form-field">
+            <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
+            <label>Account Contacts</label>
+            <p v-if="!accountContacts.list.length">No contacts available.</p>
+            <ContactCheckBox
+              v-else
+              v-for="contact in accountContacts.list"
+              :key="contact.id"
+              :contact="contact"
+              :checked="!!contactsModal.selectedContacts[contact.id]"
+              :editable="true"
+              @checkbox-clicked="handleCheckboxClick"
+              @updated-contact="onUpdateContact"
+            />
+          </div>
+          <div class="form-field">
+            <AddContact
+              v-for="(contactForm, idx) in contactsModal.addContactForms"
+              :key="idx"
+              :form="contactForm"
+              :error="
               contactsModal.errors.addContactForms && contactsModal.errors.addContactForms[idx]
             "
-          />
+            />
+          </div>
+          <div class="form-field">
+            <label @click="addAnotherContactForm" class="add-another-button">
+              <img class="icon" src="@/assets/images/add.svg" alt="icon" />
+              Add Another
+            </label>
+          </div>
+          <div class="button-container">
+            <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">Update</button>
+            <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
+          </div>
         </div>
-        <div class="form-field">
-          <label @click="addAnotherContactForm" class="add-another-button">
-            <img class="icon" src="@/assets/images/add.svg" alt="icon" />
-            Add Another
-          </label>
-        </div>
-        <div class="button-container">
-          <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">Update</button>
-          <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
-        </div>
-      </div>
-    </Modal>
+      </Modal>
+    </div>
   </div>
 </template>
 
@@ -362,6 +443,10 @@ export default {
       contactsLoading: false,
       // start @ true once things built out, if going the ContactAPI.retrieve route
       selectedLists: {},
+      showDetails: false,
+      showContacts: false,
+      showFiles: false,
+      showCustomFields: false,
     }
   },
   created() {},
@@ -678,6 +763,17 @@ export default {
       }
       return initials
     },
+    expandSection(section) {
+      if (section === 'details') {
+        this.showDetails = !this.showDetails
+      } else if (section === 'contacts') {
+        this.showContacts = !this.showContacts
+      } else if (section === 'files') {
+        this.showFiles = !this.showFiles
+      } else if (section === 'custom') {
+        this.showCustomFields = !this.showCustomFields
+      }
+    },
   },
 }
 </script>
@@ -693,9 +789,28 @@ export default {
   @include standard-border();
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  min-height: 50rem;
+  // min-height: 50rem;
   display: flex;
   flex-flow: column;
+
+  &__header {
+    @include base-font-styles();
+    height: 3rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 10%;
+    font-size: 0.875rem;
+    font-weight: bold;
+    line-height: 1.14;
+    color: $main-font-gray;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
 }
 
 .toolbar,
@@ -1160,6 +1275,17 @@ export default {
 
   &:hover {
     color: $dark-green;
+  }
+}
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
   }
 }
 </style>
