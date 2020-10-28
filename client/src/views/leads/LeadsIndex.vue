@@ -23,7 +23,7 @@
         </template>
       </SideNavToolbar>
     </div>
-    <div class="page__main-content-area">
+    <div class="page__main-content-area-with-panel">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -250,12 +250,6 @@ export default {
   &__image {
     font-size: 1.8rem;
     color: $dark-green;
-  }
-}
-
-.page {
-  &__main-content-area {
-    margin-left: 12rem;
   }
 }
 </style>
