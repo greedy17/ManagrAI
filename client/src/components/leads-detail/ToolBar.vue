@@ -787,9 +787,9 @@ export default {
 
 .toolbar {
   @include standard-border();
+  border-top: 0 !important;
   background-color: $white;
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  // min-height: 50rem;
   display: flex;
   flex-flow: column;
 
