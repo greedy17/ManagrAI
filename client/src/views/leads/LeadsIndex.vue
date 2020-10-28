@@ -245,7 +245,7 @@ export default {
   &__text {
     font-weight: bold;
     margin-left: 1rem;
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   &__image {
     font-size: 1.8rem;
