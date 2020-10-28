@@ -56,34 +56,11 @@
         </div>
       </div>
     </div>
-    <LeadInsights :lead="lead" />
-    <div class="toolbar__header section-shadow" @click="expandSection('details')">
-      Details
-      <span class="icon__container">
-        <svg
-          v-if="!showDetails"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="showDetails"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
+    <LeadCustomFields :lead="lead" v-show="expandedSection === 'custom'" />
 
-    <div v-show="showDetails">
+    <!-- this is the section that shows the actual expanded sections, since they are supposed to appear at the top. The collapsible headers are below -->
+    <LeadInsights :lead="lead" v-show="expandedSection === 'insights'" />
+    <div v-show="expandedSection === 'details'">
       <div class="rating">
         <LeadRating
           :label="true"
@@ -164,34 +141,7 @@
         </form>
       </div>
     </div>
-
-    <div class="toolbar__header section-shadow" @click="expandSection('contacts')">
-      Contacts
-      <span class="icon__container">
-        <svg
-          v-if="!showContacts"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="showContacts"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
-
-    <div class="contacts" v-show="showContacts">
+    <div class="contacts" v-show="expandedSection === 'contacts'">
       <div class="header">
         <span></span>
         <img
@@ -224,33 +174,7 @@
         <span class="no-items-message">No Contacts</span>
       </div>
     </div>
-
-    <div class="toolbar__header section-shadow" @click="expandSection('files')">
-      Files
-      <span class="icon__container">
-        <svg
-          v-if="!showFiles"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="showFiles"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
-    <div class="files" v-show="showFiles">
+    <div class="files" v-show="expandedSection === 'files'">
       <div
         class="header"
         :style="
@@ -333,7 +257,137 @@
         </div>
       </Modal>
     </div>
-    <LeadCustomFields :lead="lead" />
+
+    <!-- collapsible headers -->
+
+    <div class="toolbar__header section-shadow" @click="expandSection('insights')">
+      Insights
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'insights'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'insights'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+
+    <div class="toolbar__header section-shadow" @click="expandSection('details')">
+      Details
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'details'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'details'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+
+    <div class="toolbar__header section-shadow" @click="expandSection('contacts')">
+      Contacts
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'contacts'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'contacts'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+
+    <div class="toolbar__header section-shadow" @click="expandSection('files')">
+      Files
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'files'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'files'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+    <div class="toolbar__header section-shadow" @click="expandSection('custom')">
+      Custom Fields
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'custom'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'custom'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
   </div>
 </template>
 
@@ -457,6 +511,7 @@ export default {
       showContacts: false,
       showFiles: false,
       showCustomFields: false,
+      expandedSection: null,
     }
   },
   created() {},
@@ -774,14 +829,10 @@ export default {
       return initials
     },
     expandSection(section) {
-      if (section === 'details') {
-        this.showDetails = !this.showDetails
-      } else if (section === 'contacts') {
-        this.showContacts = !this.showContacts
-      } else if (section === 'files') {
-        this.showFiles = !this.showFiles
-      } else if (section === 'custom') {
-        this.showCustomFields = !this.showCustomFields
+      if (this.expandedSection === section) {
+        this.expandedSection = null
+      } else if (this.expandedSection !== section) {
+        this.expandedSection = section
       }
     },
   },

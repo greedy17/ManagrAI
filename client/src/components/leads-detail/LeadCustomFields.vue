@@ -1,32 +1,6 @@
 <template>
   <div class="custom-fields">
-    <div class="custom-fields__header section-shadow" @click="expand">
-      Custom Fields
-      <span class="icon__container">
-        <svg
-          v-if="!showFields"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="showFields"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
-
-    <div v-show="showFields">
+    <div>
       <!-- Company Size -->
       <div class="dropdown-field section-shadow">
         <div class="label">Company Size</div>
@@ -332,7 +306,7 @@ export default {
   @include standard-border();
 
   background-color: $white;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+
   display: flex;
   flex-flow: column;
 

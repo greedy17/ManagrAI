@@ -1,32 +1,6 @@
 <template>
   <div class="insights">
-    <div class="insights-header section-shadow" @click="expandInsights">
-      Insights
-      <span class="icon__container">
-        <svg
-          v-if="!showInsights"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="showInsights"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
-
-    <div v-show="showInsights">
+    <div>
       <div class="insight-container section-shadow" v-if="refreshedOnce && apiFailing">
         <div style="padding: 1rem;">
           <p>We're having trouble fetching insights for this lead. Please try again later.</p>
