@@ -1,87 +1,113 @@
 <template>
   <div class="insights">
-    <div class="insights-header section-shadow">Insights</div>
-
-    <div class="insight-container section-shadow" v-if="refreshedOnce && apiFailing">
-      <div style="padding: 1rem;">
-        <p>We're having trouble fetching insights for this lead. Please try again later.</p>
-      </div>
+    <div class="insights-header section-shadow" @click="expandInsights">
+      Insights
+      <span class="icon__container">
+        <svg
+          v-if="!showInsights"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="showInsights"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
     </div>
 
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
+    <div v-show="showInsights">
+      <div class="insight-container section-shadow" v-if="refreshedOnce && apiFailing">
+        <div style="padding: 1rem;">
+          <p>We're having trouble fetching insights for this lead. Please try again later.</p>
+        </div>
       </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.calls.count }}
-          {{ 'Call' | pluralize(insights.calls.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.calls.latest | timeAgo }}</span>
-      </div>
-    </div>
 
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/pencil.svg" alt="icon" />
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/telephone.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.calls.count }}
+            {{ 'Call' | pluralize(insights.calls.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.calls.latest | timeAgo }}</span>
+        </div>
       </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.notes.count }}
-          {{ 'Note' | pluralize(insights.notes.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.notes.latest | timeAgo }}</span>
-      </div>
-    </div>
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/alarm.svg" alt="icon" />
-      </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.reminders.count }}
-          {{ 'Reminder' | pluralize(insights.reminders.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.reminders.latest | timeAgo }}</span>
-      </div>
-    </div>
 
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/checkmark.svg" alt="icon" />
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/pencil.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.notes.count }}
+            {{ 'Note' | pluralize(insights.notes.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.notes.latest | timeAgo }}</span>
+        </div>
       </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.actions.count }}
-          {{ 'Action' | pluralize(insights.actions.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.actions.latest | timeAgo }}</span>
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/alarm.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.reminders.count }}
+            {{ 'Reminder' | pluralize(insights.reminders.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.reminders.latest | timeAgo }}</span>
+        </div>
       </div>
-    </div>
 
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/checkmark.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.actions.count }}
+            {{ 'Action' | pluralize(insights.actions.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.actions.latest | timeAgo }}</span>
+        </div>
       </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.emails.count }}
-          {{ 'Email' | pluralize(insights.emails.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.emails.latest | timeAgo }}</span>
-      </div>
-    </div>
 
-    <div class="insight-container section-shadow" v-if="insights && !apiFailing">
-      <div class="icon-container">
-        <img class="insight-icon" src="@/assets/images/messages.svg" alt="icon" />
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/email.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.emails.count }}
+            {{ 'Email' | pluralize(insights.emails.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.emails.latest | timeAgo }}</span>
+        </div>
       </div>
-      <div class="insight-info">
-        <span class="insight-top">
-          {{ insights.messages.count }}
-          {{ 'Message' | pluralize(insights.messages.count) }}
-        </span>
-        <span class="insight-bottom">{{ insights.messages.latest | timeAgo }}</span>
+
+      <div class="insight-container section-shadow" v-if="insights && !apiFailing">
+        <div class="icon-container">
+          <img class="insight-icon" src="@/assets/images/messages.svg" alt="icon" />
+        </div>
+        <div class="insight-info">
+          <span class="insight-top">
+            {{ insights.messages.count }}
+            {{ 'Message' | pluralize(insights.messages.count) }}
+          </span>
+          <span class="insight-bottom">{{ insights.messages.latest | timeAgo }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -105,6 +131,7 @@ export default {
       insights: null,
       refreshedOnce: false,
       apiFailing: false,
+      showInsights: false,
     }
   },
   created() {
@@ -142,6 +169,9 @@ export default {
           this.refreshedOnce = true
         })
     },
+    expandInsights() {
+      this.showInsights = !this.showInsights
+    },
   },
 }
 </script>
@@ -163,10 +193,11 @@ export default {
   @include base-font-styles();
   height: 3rem;
   display: flex;
-  flex-flow: row;
+  flex-direction: row;
   align-items: center;
+  justify-content: space-between;
 
-  padding-left: 1rem;
+  padding: 0 10%;
   font-size: 0.875rem;
   font-weight: bold;
   line-height: 1.14;
@@ -214,5 +245,17 @@ export default {
 
 a {
   text-decoration: none;
+}
+
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
+  }
 }
 </style>

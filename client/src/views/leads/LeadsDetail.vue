@@ -18,9 +18,9 @@
           </span>
         </template>
         <template v-slot:toolbar>
-          <LeadInsights v-if="showToolbarNav && selectedToolbarView == 'insights'" :lead="lead" />
+          <LeadInsights v-if="showToolbarNav" :lead="lead" />
           <ToolBar
-            v-if="showToolbarNav && selectedToolbarView == 'details'"
+            v-if="showToolbarNav"
             :lead="lead"
             :lists="lists"
             :leadContacts="contacts"
@@ -29,10 +29,7 @@
             @updated-expected-close-date="updateExpectedCloseDate"
             @updated-title="updateTitle"
           />
-          <LeadCustomFields
-            v-if="showToolbarNav && selectedToolbarView == 'custom-fields'"
-            :lead="lead"
-          />
+          <LeadCustomFields v-if="showToolbarNav" :lead="lead" />
         </template>
       </SideNavToolbar>
     </div>
