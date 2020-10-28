@@ -1,5 +1,133 @@
 <template>
   <div class="toolbar">
+    <div>
+      <div class="lead-title" v-if="!editTitle" @click.stop.prevent="onEditTitle">
+        <h2>{{ lead.title }}</h2>
+      </div>
+      <div v-else class="title-editable">
+        <form class="title-form" @submit.prevent="updateTitle">
+          <input v-model="tempTitle" type="text" />
+          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateTitle" />
+          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetTitle" />
+        </form>
+      </div>
+
+      <div class="lead-lists">
+        <div :style="{ display: 'flex', flexFlow: 'row', justifyContent: 'center' }"></div>
+        <div class="lead-lists__header">
+          Lists
+          <div class="add-to-a-list" @click="openListsModal">+</div>
+        </div>
+        <div class="container">
+          <Modal v-if="listModal.isOpen" dimmed :width="40" @close-modal="closeListModal">
+            <ComponentLoadingSVG v-if="myLists.refreshing" />
+            <template v-else>
+              <h3>Check all lists this lead should be in:</h3>
+              <div v-for="list in myLists.list" :key="list.id" class="list-items">
+                <span
+                  class="list-items__item__select"
+                  :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center' }"
+                >
+                  <Checkbox
+                    name="lists"
+                    @checkbox-clicked="toggleSelectedList(list)"
+                    :checked="!!selectedLists[list.id]"
+                  />
+                  <span class="list-items__item">{{ list.title }}</span>
+                </span>
+              </div>
+              <h5>To remove Opportunity from all lists, leave all checkboxes blank</h5>
+              <div :style="{ display: 'flex', flexFlow: 'row' }">
+                <button class="update-lists" @click="onUpdateLists">Save</button>
+              </div>
+            </template>
+          </Modal>
+          <span v-if="lists.list.length <= 0" class="list" :style="{ marginLeft: '1rem' }">None</span>
+          <LeadList
+            @remove-lead="removeLeadFromList($event, i)"
+            v-else
+            class="list"
+            v-for="(list, i) in allLists"
+            :key="list.id"
+            :listName="list.title"
+            :listId="list.id"
+            :dark="true"
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; flex-flow: row; justify-content: center;">
+        <a
+          class="account-link"
+          :href="lead.accountRef.url | prependUrlProtocol"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ lead.accountRef.name }}
+          <img
+            style="opacity: 0.4; margin-left: 0.5rem;"
+            src="@/assets/images/link.svg"
+          />
+        </a>
+      </div>
+      <div v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED" class="amount">
+        Amount:
+        <span>{{ lead.closingAmount | currency }}</span>
+      </div>
+      <div v-else-if="!editAmount" class="amount" @click.stop.prevent="onEditAmount">
+        Amount:
+        <span>{{ lead.amount | currency }}</span>
+      </div>
+      <div v-else class="amount-editable">
+        Amount:
+        <form class="amount-form" @submit.prevent="updateAmount">
+          <input v-model="tempAmount" type="number" step="any" min="0" />
+          <img class="save" src="@/assets/images/checkmark.svg" @click.stop.prevent="updateAmount" />
+          <img class="reset" src="@/assets/images/remove.svg" @click.stop.prevent="resetAmount" />
+        </form>
+      </div>
+
+      <div
+        v-if="lead.statusRef && lead.statusRef.title === Lead.CLOSED"
+        class="expected-close-date section-shadow"
+      >
+        <div>
+          Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+      </div>
+      <div
+        v-else-if="!editExpectedCloseDate"
+        class="expected-close-date section-shadow"
+        @click.stop.prevent="editExpectedCloseDate = true"
+      >
+        <div v-if="!lead.expectedCloseDate">
+          Expected Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+        <div v-else style="display: flex; flex-flow: column; align-items: center;">
+          Expected Close Date:
+          <span>{{ lead.expectedCloseDate | dateShort }}</span>
+        </div>
+      </div>
+      <div v-else class="expected-close-date-editable">
+        Expected Close Date:
+        <form class="expected-close-date-form" @submit.prevent="() => {}">
+          <input
+            v-model="tempExpectedCloseDate"
+            @change="updateExpectedCloseDate"
+            type="date"
+            class="form__input"
+          />
+          <img
+            class="reset"
+            src="@/assets/images/remove.svg"
+            @click="editExpectedCloseDate = false"
+          />
+        </form>
+      </div>
+    </div>
+
     <div class="toolbar__header section-shadow" @click="expandSection('details')">
       Details
       <span class="icon__container">
@@ -844,7 +972,6 @@ export default {
 
 .lead-title {
   @include pointer-on-hover;
-  margin-top: 1rem;
   text-align: center;
   padding: 1rem;
   word-wrap: break-word;
@@ -852,11 +979,12 @@ export default {
 
 .title-editable {
   @include pointer-on-hover();
-  margin-top: 2rem;
   height: 4rem;
+  padding-top: 1rem;
   display: flex;
-  flex-flow: column;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   font-size: 1.125rem;
 
   form {
@@ -895,12 +1023,14 @@ export default {
 }
 
 .lead-lists {
-  padding: 1.25rem 1.25rem 0.625rem 1.25rem;
-  border-bottom: 5px solid $coral;
+  padding: 0 1.25rem 0rem 1.25rem;
+  border-bottom: 5px solid $dark-green;
 
-  .header {
+  &__header {
     margin-bottom: 0.625rem;
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
   }
 
   .container {
@@ -1162,9 +1292,11 @@ export default {
 }
 
 .add-to-a-list {
-  @include primary-button;
-  width: 70%;
-  margin-bottom: 1rem;
+  font-size: 1.3rem;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .update-lists {
