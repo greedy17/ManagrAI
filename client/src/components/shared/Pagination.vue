@@ -7,14 +7,59 @@
         src="@/assets/images/keyboard-arrow-left.svg"
         @click.stop.prevent="onLeftArrowClick"
       />
+
       <div
-        v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
-        class="page"
-        :class="{ 'current-page': collection.pagination.page === n }"
-        :key="n"
-        @click.stop.prevent="onPageClick(n)"
+        v-if="collection.pagination.calcTotalPages(collection.pagination) < 10"
+        class="numbers__container"
       >
-        {{ n }}
+        <div
+          v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
+          class="page"
+          :class="{ 'current-page': collection.pagination.page === n }"
+          :key="n"
+          @click.stop.prevent="onPageClick(n)"
+        >
+          {{ n }}
+        </div>
+      </div>
+      <div
+        v-if="collection.pagination.calcTotalPages(collection.pagination) > 10"
+        class="numbers__container"
+      >
+        <div
+          v-for="n in collection.pagination.calcTotalPages(collection.pagination)"
+          class="page"
+          :class="{ 'current-page': collection.pagination.page === n }"
+          :key="n"
+          @click.stop.prevent="onPageClick(n)"
+        >
+          <!-- below makes it so that pagination smoothly moves between showing the first 9 numbers, and if more, once its over 5, the current page is in the middle and 4 below and above show, and once its close to the end, it keeps the paginator full of numbes, but the highlighted one more towards the end -->
+          <div v-if="collection.pagination.page <= 5 && n < 10" class="numbers">
+            {{ n }}
+          </div>
+          <div
+            class="numbers"
+            v-if="
+              collection.pagination.page > 5 &&
+                n >= collection.pagination.page - 4 &&
+                n <= collection.pagination.page + 4 &&
+                collection.pagination.page <
+                  collection.pagination.calcTotalPages(collection.pagination) - 4
+            "
+          >
+            {{ n }}
+          </div>
+          <div
+            class="numbers"
+            v-if="
+              collection.pagination.page >=
+                collection.pagination.calcTotalPages(collection.pagination) - 4 &&
+                n >= collection.pagination.calcTotalPages(collection.pagination) - 8
+            "
+          >
+            {{ n }}
+          </div>
+        </div>
       </div>
       <img
         class="arrow"
@@ -114,6 +159,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+  justify-content: center;
   font-size: 0.875rem;
   flex-wrap: wrap;
 }
@@ -122,6 +168,23 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+  max-width: 12rem;
+  justify-content: space-evenly;
+  border: 2px solid green;
+  width: auto;
+  max-width: 100%;
+}
+
+.numbers {
+  margin: 0 0.1rem;
+
+  &__container {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 12rem;
+  }
 }
 
 .arrow,
@@ -141,7 +204,6 @@ export default {
 }
 
 .page {
-  margin: 0 0.25rem;
 }
 
 .current-page {
