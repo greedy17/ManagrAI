@@ -37,15 +37,16 @@
           </select>
         </div>
 
-        <span
-          class="toggle-icon"
-          v-tooltip.bottom="kpiTooltipText"
-          @click="toggleSideToolbar('details')"
-        >
-          <svg width="20px" height="20px" viewBox="0 0 15 15">
-            <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
-          </svg>
-        </span>
+        <v-popover trigger="hover" placement="bottom">
+          <span class="toggle-icon" @click="toggleSideToolbar('details')">
+            <svg width="20px" height="20px" viewBox="0 0 15 15">
+              <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+            </svg>
+          </span>
+          <template slot="popover">
+            <div style="width: 10rem">{{ kpiTooltipText }}</div>
+          </template>
+        </v-popover>
       </div>
       <template v-if="KPIs === null">
         <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
@@ -107,16 +108,22 @@
           <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
         </div>
         <div class="single-statistic section-shadow">
-          <span class="title">
+          <span class="title" style="display: flex">
             <span>Forecast</span>
-            <span class="toggle-icon" @click="toggleSideToolbar('details')">
-              <svg width="20px" height="20px" viewBox="0 0 15 15">
-                <use
-                  xlink:href="@/assets/images/help-outline.svg#help-outline"
-                  v-tooltip="forecastTooltip"
-                />
-              </svg>
-            </span>
+            <v-popover trigger="hover" placement="bottom">
+              <span
+                class="toggle-icon"
+                style="margin-left: .5rem"
+                @click="toggleSideToolbar('details')"
+              >
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
+                  <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+                </svg>
+              </span>
+              <template slot="popover">
+                <div style="width: 10rem">{{ forecastTooltip }}</div>
+              </template>
+            </v-popover>
           </span>
           <span class="statistic">{{ KPIs.forecast | currency }}</span>
         </div>
