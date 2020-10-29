@@ -5,7 +5,7 @@
         class="arrow"
         :class="{ 'disabled-arrow': !collection.pagination.hasPrevPage }"
         src="@/assets/images/keyboard-arrow-left.svg"
-        @click.stop.prevent="onLeftArrowClick"
+        @click.stop.prevent="onPageClick(1)"
       />
 
       <div
@@ -65,7 +65,9 @@
         class="arrow"
         :class="{ 'disabled-arrow': !collection.pagination.hasNextPage }"
         src="@/assets/images/keyboard-arrow-right.svg"
-        @click.stop.prevent="onRightArrowClick"
+        @click.stop.prevent="
+          onPageClick(collection.pagination.calcTotalPages(collection.pagination))
+        "
       />
     </div>
     <div class="statistics">
@@ -168,21 +170,22 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
-  max-width: 12rem;
   justify-content: space-evenly;
-  border: 2px solid green;
+
   width: auto;
   max-width: 100%;
 }
 
 .numbers {
-  margin: 0 0.1rem;
+  width: 1.25rem;
+  text-align: center;
 
   &__container {
     display: flex;
     flex-flow: row;
+
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     width: 12rem;
   }
 }
