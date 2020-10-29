@@ -144,7 +144,9 @@ export default {
       this.toggleUserMenu()
     },
     goToHome() {
-      this.$router.push({ name: 'LeadsIndex' })
+      if (this.$route.name !== 'LeadsIndex') {
+        this.$router.push({ name: 'LeadsIndex' })
+      }
     },
   },
   watch: {
