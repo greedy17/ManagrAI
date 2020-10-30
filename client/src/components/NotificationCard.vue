@@ -2,9 +2,9 @@
   <div class="notificaion-container">
     <div class="notification-card" :class="{ unviewed: !notification.viewed }">
       <div class="notification-card__title">
-        <span @click="toggleCard" class="notification-card__title__text">
-          {{ notification.notificationType !== 'EMAIL_OPENED' ? notification.title : 'Read' }}</span
-        >
+        <span @click="toggleCard" class="notification-card__title__text">{{
+          notification.notificationType !== 'EMAIL_OPENED' ? notification.title : 'Read'
+        }}</span>
         <span class="notification-card__title__type">
           <svg class="icon-notification">
             <use :xlink:href="require('@/assets/images/svg-repo.svg') + '#' + notificationIcon" />
@@ -12,9 +12,7 @@
         </span>
       </div>
       <div class="notification-card__content" :class="{ expand: expand }">
-        <span class="muted">
-          {{ notification.notifyAt | dateShortWithTime }}
-        </span>
+        <span class="muted">{{ notification.notifyAt | dateShortWithTime }}</span>
         {{ notification.meta ? notification.meta.content : '' }}
         <template v-if="notification.meta">
           <div
@@ -26,14 +24,12 @@
             {{ lead.title }}
           </div>
         </template>
-        <template v-else>
-          {{ notification }}
-        </template>
+        <template v-else>{{ notification }}</template>
       </div>
       <div class="notification-card__footer" :class="{ expand: expand }">
-        <span class="notification-card__footer__type">
-          {{ formattedNotificationType.toUpperCase() }}
-        </span>
+        <span class="notification-card__footer__type">{{
+          formattedNotificationType.toUpperCase()
+        }}</span>
       </div>
     </div>
   </div>
@@ -116,6 +112,7 @@ export default {
 @import '@/styles/variables';
 .notification-card {
   @include card();
+
   &:hover {
     cursor: pointer;
   }
@@ -140,6 +137,12 @@ export default {
     &__leads {
       display: flex;
       justify-content: flex-end;
+
+      text-decoration: underline;
+
+      &:hover {
+        color: blue;
+      }
     }
   }
   &__footer {

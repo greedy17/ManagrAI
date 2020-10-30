@@ -97,9 +97,15 @@ export default {
     justify-content: center;
     flex-direction: column;
     overflow: hidden;
+
     &__leads {
       display: flex;
       justify-content: flex-end;
+      text-decoration: underline;
+
+      &:hover {
+        color: blue;
+      }
     }
   }
   &__footer {

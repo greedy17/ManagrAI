@@ -1,6 +1,33 @@
 <template>
   <div>
-    <div>
+    <div class="filter section-shadow">
+      <div class="filter-header" @click="expand('KPI')">
+        KPIs
+        <span class="icon__container">
+          <svg
+            v-if="!showKPI"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showKPI"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+    </div>
+    <div v-show="showKPI">
       <div class="daterange-container section-shadow">
         <div class="dropdown-container">
           <select class="daterange" v-model="dateRange" @change="onDateRangeFilterChange">
@@ -10,15 +37,16 @@
           </select>
         </div>
 
-        <span
-          class="toggle-icon"
-          v-tooltip.bottom="kpiTooltipText"
-          @click="toggleSideToolbar('details')"
-        >
-          <svg width="20px" height="20px" viewBox="0 0 15 15">
-            <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
-          </svg>
-        </span>
+        <v-popover trigger="hover" placement="bottom">
+          <span class="toggle-icon" @click="toggleSideToolbar('details')">
+            <svg width="20px" height="20px" viewBox="0 0 15 15">
+              <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+            </svg>
+          </span>
+          <template slot="popover">
+            <div style="width: 10rem">{{ kpiTooltipText }}</div>
+          </template>
+        </v-popover>
       </div>
       <template v-if="KPIs === null">
         <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
@@ -80,16 +108,22 @@
           <span class="statistic"> {{ KPIs.averageContractValue | currency }}</span>
         </div>
         <div class="single-statistic section-shadow">
-          <span class="title">
+          <span class="title" style="display: flex">
             <span>Forecast</span>
-            <span class="toggle-icon" @click="toggleSideToolbar('details')">
-              <svg width="20px" height="20px" viewBox="0 0 15 15">
-                <use
-                  xlink:href="@/assets/images/help-outline.svg#help-outline"
-                  v-tooltip="forecastTooltip"
-                />
-              </svg>
-            </span>
+            <v-popover trigger="hover" placement="bottom">
+              <span
+                class="toggle-icon"
+                style="margin-left: .5rem"
+                @click="toggleSideToolbar('details')"
+              >
+                <svg width="20px" height="20px" viewBox="0 0 15 15">
+                  <use xlink:href="@/assets/images/help-outline.svg#help-outline" />
+                </svg>
+              </span>
+              <template slot="popover">
+                <div style="width: 10rem">{{ forecastTooltip }}</div>
+              </template>
+            </v-popover>
           </span>
           <span class="statistic">{{ KPIs.forecast | currency }}</span>
         </div>
@@ -164,88 +198,116 @@
       </template>
     </div>
 
-    <div
-      class="single-statistic section-shadow"
-      v-if="refreshedOnce && apiFailing"
-      style="padding: 1rem;"
-    >
-      <p>We are unable to retrieve Activities at this time. Please try again later.</p>
+    <div class="filter section-shadow">
+      <div class="filter-header" @click="expand('activities')">
+        Activities
+        <span class="icon__container">
+          <svg
+            v-if="!showActivities"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showActivities"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
     </div>
-    <div v-if="refreshedOnce && !apiFailing">
-      <div class="statistics-container section-shadow">
-        <span class="title">Activities</span>
-        <template v-if="insightsLoadingDueToFilterChange">
-          <div style="height: 3rem;">
-            <ComponentLoadingSVG />
-          </div>
-        </template>
-        <template v-else>
-          <div class="graphic-statistic section-shadow">
-            <div class="icon-container">
-              <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+    <div v-show="showActivities">
+      <div
+        class="single-statistic section-shadow"
+        v-if="refreshedOnce && apiFailing"
+        style="padding: 1rem;"
+      >
+        <p>We are unable to retrieve Activities at this time. Please try again later.</p>
+      </div>
+      <div v-if="refreshedOnce && !apiFailing">
+        <div class="statistics-container section-shadow">
+          <template v-if="insightsLoadingDueToFilterChange">
+            <div style="height: 3rem;">
+              <ComponentLoadingSVG />
             </div>
-            <div class="information">
-              <span class="top">
-                {{ insights && insights.calls.count }}
-                {{ 'Call' | pluralize(insights ? insights.calls.count : 0) }}
-              </span>
-              <span class="bottom">
-                {{ insights && insights.calls.latest | timeAgo }}
-              </span>
+          </template>
+          <template v-else>
+            <div class="graphic-statistic section-shadow">
+              <div class="icon-container">
+                <img class="icon" src="@/assets/images/telephone.svg" alt="icon" />
+              </div>
+              <div class="information">
+                <span class="top">
+                  {{ insights && insights.calls.count }}
+                  {{ 'Call' | pluralize(insights ? insights.calls.count : 0) }}
+                </span>
+                <span class="bottom">
+                  {{ insights && insights.calls.latest | timeAgo }}
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="graphic-statistic section-shadow">
-            <div class="icon-container">
-              <img class="icon" src="@/assets/images/checkmark.svg" alt="icon" />
+            <div class="graphic-statistic section-shadow">
+              <div class="icon-container">
+                <img class="icon" src="@/assets/images/checkmark.svg" alt="icon" />
+              </div>
+              <div class="information">
+                <span class="top">
+                  {{ insights && insights.actions.count }}
+                  {{ 'Action' | pluralize(insights ? insights.actions.count : 0) }}
+                </span>
+                <span class="bottom">
+                  {{ insights && insights.actions.latest | timeAgo }}
+                </span>
+              </div>
             </div>
-            <div class="information">
-              <span class="top">
-                {{ insights && insights.actions.count }}
-                {{ 'Action' | pluralize(insights ? insights.actions.count : 0) }}
-              </span>
-              <span class="bottom">
-                {{ insights && insights.actions.latest | timeAgo }}
-              </span>
+            <div class="graphic-statistic section-shadow">
+              <div class="icon-container">
+                <img class="icon" src="@/assets/images/email.svg" alt="icon" />
+              </div>
+              <div class="information">
+                <span class="top">
+                  {{ insights && insights.emails.count }}
+                  {{ 'Email' | pluralize(insights ? insights.emails.count : 0) }}
+                </span>
+                <span class="bottom">
+                  {{ insights && insights.emails.latest | timeAgo }}
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="graphic-statistic section-shadow">
-            <div class="icon-container">
-              <img class="icon" src="@/assets/images/email.svg" alt="icon" />
-            </div>
-            <div class="information">
-              <span class="top">
-                {{ insights && insights.emails.count }}
-                {{ 'Email' | pluralize(insights ? insights.emails.count : 0) }}
-              </span>
-              <span class="bottom">
-                {{ insights && insights.emails.latest | timeAgo }}
-              </span>
-            </div>
-          </div>
 
-          <div class="graphic-statistic section-shadow">
-            <div class="icon-container">
-              <img class="icon" src="@/assets/images/messages.svg" alt="icon" />
+            <div class="graphic-statistic section-shadow">
+              <div class="icon-container">
+                <img class="icon" src="@/assets/images/messages.svg" alt="icon" />
+              </div>
+              <div class="information">
+                <span class="top">
+                  {{ insights && insights.messages.count
+                  }}{{ ' Message' | pluralize(insights.messages.count) }}
+                </span>
+                <span class="bottom"> </span>
+              </div>
             </div>
-            <div class="information">
-              <span class="top">
-                {{ insights && insights.messages.count
-                }}{{ ' Message' | pluralize(insights.messages.count) }}
-              </span>
-              <span class="bottom"> </span>
-            </div>
-          </div>
 
-          <div class="graphic-statistic section-shadow">
-            <div class="icon-container">
-              <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
+            <div class="graphic-statistic section-shadow">
+              <div class="icon-container">
+                <img class="icon" src="@/assets/images/check-box-filled-checked.svg" alt="icon" />
+              </div>
+              <div class="information">
+                <span class="top"> {{ insights && insights.closedLeads.count }} Closed </span>
+                <span class="bottom"> </span>
+              </div>
             </div>
-            <div class="information">
-              <span class="top"> {{ insights && insights.closedLeads.count }} Closed </span>
-              <span class="bottom"> </span>
-            </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
     </div>
   </div>
@@ -312,6 +374,8 @@ export default {
       },
       showDateRangeHelp: false,
       showForecastHelp: false,
+      showKPI: false,
+      showActivities: false,
     }
   },
   created() {
@@ -468,6 +532,13 @@ export default {
     resetUpside() {
       this.editKPIs.editingUpside = false
       this.editKPIs.tempUpside = 0
+    },
+    expand(section) {
+      if (section === 'KPI') {
+        this.showKPI = !this.showKPI
+      } else if (section === 'activities') {
+        this.showActivities = !this.showActivities
+      }
     },
   },
   watch: {
@@ -719,6 +790,47 @@ export default {
     border-radius: 3px;
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+.filter {
+  .filter-header {
+    height: 3rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10%;
+    font-weight: normal;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .filter-options {
+    padding-left: 14%;
+    margin-bottom: 1.25rem;
+    color: rgba($color: $main-font-gray, $alpha: 0.4);
+
+    .option {
+      height: 1.75rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      max-width: 6rem;
+      text-transform: capitalize;
+    }
+  }
+}
+
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
   }
 }
 </style>

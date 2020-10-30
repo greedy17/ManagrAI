@@ -14,6 +14,7 @@
     "test:e2e": "vue-cli-service test:e2e"
   },
   "dependencies": {
+    "@thinknimble/button": "^0.4.0",
     "@thinknimble/dropdownselect": "0.0.4",
     "@thinknimble/tn-forms": "^1.0.3",
     "@thinknimble/tn-utils": "^1.4.0",

@@ -9,6 +9,7 @@
               : require('@/assets/images/camera.svg')
           "
         />
+
         <div class="report__summary-container__report-focus__date-range-preset">
           {{ report.dateRangePreset | constantToCapitalized }}
         </div>

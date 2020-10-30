@@ -7,7 +7,7 @@
       :class="{ open: showLeads, closed: !showLeads }"
     >
       <img class="icon" src="@/assets/images/toc.svg" alt="icon" />
-      <span class="list-title"> {{ title }} </span>
+      <span class="list-title">{{ title }}</span>
       <span class="list-length">
         {{ numOfLeads }}
         {{ numOfLeads > 1 || numOfLeads === 0 ? 'Opportunities' : 'Opportunity' }}
@@ -24,11 +24,12 @@
             :lead="lead.leadRef"
             @move-lead-in-forecast-list="data => $emit('move-lead-in-forecast-list', data)"
           >
-            <template v-slot:left> </template>
+            <template v-slot:left></template>
             <template v-slot:center>
               <div class="lead-items">
                 <span class="muted">
-                  {{ isLeadClosed(lead) ? 'Closed On' : 'Expected Close By' }}: <br />
+                  {{ isLeadClosed(lead) ? 'Closed On' : 'Expected Close By' }}:
+                  <br />
                   {{ lead.leadRef.expectedCloseDate | dateShort }}
                 </span>
                 <span class="muted">
@@ -150,6 +151,7 @@ export default {
 .lead-items {
   display: flex;
   align-items: center;
+
   > * {
     max-width: 9.375rem;
     margin-left: 1rem;

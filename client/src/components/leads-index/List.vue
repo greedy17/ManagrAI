@@ -28,10 +28,10 @@
     <div class="list-leads" v-if="showLeads">
       <ComponentLoadingSVG v-if="collection.refreshing || pagination.loading" />
       <template v-else>
-        <div class="list-leads__row" v-if="collectionList.length">
+        <div class="list-leads__select" v-if="collectionList.length">
           <span
             class="list-leads__row__lead"
-            :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '3rem' }"
+            :style="{ display: 'flex', flexFlow: 'row', alignItems: 'center', height: '1rem' }"
           >
             <div class="lead-select">
               <Checkbox
@@ -40,15 +40,17 @@
               />
             </div>
 
-            <span>{{
+            <span>
+              {{
               leadCountInView == checkedLeads.length ? 'UnSelect All' : 'Select All'
-            }}</span>
-            <button class="bulk-action-button" v-if="checkedLeads.length > 0" @click="onBulkAction">
-              Take Action
-            </button>
-            <button class="bulk-action-button" :style="{ visibility: 'hidden' }" v-else>
-              Hidden
-            </button>
+              }}
+            </span>
+            <button
+              class="bulk-action-button"
+              v-if="checkedLeads.length > 0"
+              @click="onBulkAction"
+            >Take Action</button>
+            <button class="bulk-action-button" :style="{ visibility: 'hidden' }" v-else>Hidden</button>
             <Modal v-if="modal.isOpen" dimmed @close-modal="onCloseModal" :includeMargin="false">
               <BulkLeadActions
                 :leads="checkedLeads"
@@ -72,7 +74,8 @@
               <template v-slot:center>
                 <div class="lead-items">
                   <span class="muted">
-                    {{ isLeadClosed(lead) ? 'Closed On' : 'Expected Close By' }}: <br />
+                    {{ isLeadClosed(lead) ? 'Closed On' : 'Expected Close By' }}:
+                    <br />
                     {{ lead.expectedCloseDate | dateShort }}
                   </span>
                   <span class="muted">
@@ -86,9 +89,7 @@
             </LeadRow>
           </span>
         </div>
-        <span v-if="collectionList.length <= 0" class="no-items-message">
-          No Opportunities On List
-        </span>
+        <span v-if="collectionList.length <= 0" class="no-items-message">No Opportunities On List</span>
       </template>
       <Pagination
         v-if="!collection.refreshing"
@@ -249,7 +250,14 @@ export default {
 .list-leads {
   margin-left: 1%;
   margin-right: 1%;
-  padding-top: 0.5rem;
+  padding-top: 1rem;
+
+  &__select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
   &__row {
     display: flex;
     flex-direction: row;
@@ -264,10 +272,11 @@ export default {
 .lead-items {
   display: flex;
   align-items: center;
+
   > * {
     max-width: 9.375rem;
     margin-left: 1rem;
-    margin-right: 2rem;
+    margin-right: 1rem;
   }
   .muted {
     font-size: 10px;

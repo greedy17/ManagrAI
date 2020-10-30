@@ -6,9 +6,11 @@
           <span
             class="toggle-icon"
             @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-            v-tooltip.right-end="'Details'"
           >
-            <img src="@/assets/images/logo.png" style="width: 1.5rem; height: 1.5rem;" />
+            <div class="filter__button" v-show="!$store.state.showToolbarNav">
+              <img class="filter__image" src="@/assets/images/logo.png" />
+              <div class="filter__text">At a Glance</div>
+            </div>
           </span>
         </template>
         <template v-slot:toolbar>
@@ -24,7 +26,7 @@
       </SideNavToolbar>
     </div>
 
-    <div class="page__main-content-area">
+    <div class="page__main-content-area-with-panel">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: isCurrentRoute }">Forecast</span>
         <ToggleCheckBox
@@ -237,6 +239,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 @import '@/styles/layout';
+@import '@/styles/mixins/buttons';
 
 .leads-index {
   display: flex;
@@ -311,5 +314,22 @@ export default {
   color: $gray;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.filter {
+  &__button {
+    @include secondary-button();
+    margin-left: 1rem;
+    width: 9rem;
+  }
+  &__text {
+    font-weight: bold;
+    margin-left: 1rem;
+    font-size: 1rem;
+  }
+  &__image {
+    height: 1.8rem;
+    color: $dark-green;
+  }
 }
 </style>

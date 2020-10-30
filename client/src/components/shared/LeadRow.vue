@@ -7,7 +7,9 @@
     >
       <div class="lead__container__left">
         <slot name="left"></slot>
-        <span class="score"><LeadScore :lead="lead"/></span>
+        <span class="score">
+          <LeadScore :lead="lead" />
+        </span>
         <span class="title">{{ dataLead.title }}</span>
         <span class="rating">{{ dataLead.rating }}</span>
       </div>
@@ -20,11 +22,13 @@
           <div class="secondary">{{ dataLead.secondaryDescription || '-Secondary Not Set-' }}</div>
         </div>
         <div v-else class="description">No Descriptions</div>
-        <span class="amount">{{
-          dataLead.statusRef && dataLead.statusRef.title == Lead.CLOSED
-            ? dataLead.closingAmount
-            : dataLead.amount | currency
-        }}</span>
+        <span class="amount">
+          {{
+            dataLead.statusRef && dataLead.statusRef.title == Lead.CLOSED
+              ? dataLead.closingAmount
+              : dataLead.amount | currency
+          }}
+        </span>
 
         <div class="actions">
           <LeadForecastDropdown
@@ -62,7 +66,7 @@
           </span>
         </slot>
         <span class="go-to" @click="openLeadDetail">
-          <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
+          <svg class="icon" fill="black" width="28px" height="28px" viewBox="0 0 30 30">
             <use xlink:href="@/assets/images/svg-repo.svg#caret" />
           </svg>
         </span>
@@ -163,6 +167,7 @@ export default {
   align-items: center;
   height: 50px;
   font-size: 12px;
+
   > * {
     align-items: center;
   }
@@ -181,6 +186,7 @@ export default {
       display: flex;
       flex-direction: column;
       width: 5rem;
+      font-size: 0.625rem;
       > * {
         white-space: nowrap;
         overflow: hidden;
@@ -189,6 +195,7 @@ export default {
     }
     .amount {
       width: 4rem;
+      font-size: 0.625rem;
     }
   }
   &__left {
@@ -209,6 +216,7 @@ export default {
     }
     .rating {
       width: 3rem;
+      font-size: 0.625rem;
     }
   }
   &__right {
@@ -218,5 +226,13 @@ export default {
     .go-to {
     }
   }
+}
+
+.claim-label {
+  font-size: 0.625rem;
+}
+
+.go-to {
+  margin-right: 0.5rem;
 }
 </style>
