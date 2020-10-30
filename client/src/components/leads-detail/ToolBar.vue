@@ -59,34 +59,6 @@
       </div>
     </div>
 
-    <div class="toolbar__header section-shadow" @click="expandSection('insights')">
-      Insights
-      <span class="icon__container">
-        <svg
-          v-if="expandedSection !== 'insights'"
-          class="icon--unclicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-        <svg
-          v-if="expandedSection === 'insights'"
-          class="icon--clicked"
-          fill="black"
-          width="24px"
-          height="24px"
-          viewBox="0 0 30 30"
-        >
-          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
-        </svg>
-      </span>
-    </div>
-
-    <LeadInsights :lead="lead" v-show="expandedSection === 'insights'" />
-
     <div class="toolbar__header section-shadow" @click="expandSection('details')">
       Details
       <span class="icon__container">
@@ -195,6 +167,34 @@
         </form>
       </div>
     </div>
+
+    <div class="toolbar__header section-shadow" @click="expandSection('insights')">
+      Insights
+      <span class="icon__container">
+        <svg
+          v-if="expandedSection !== 'insights'"
+          class="icon--unclicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+        <svg
+          v-if="expandedSection === 'insights'"
+          class="icon--clicked"
+          fill="black"
+          width="24px"
+          height="24px"
+          viewBox="0 0 30 30"
+        >
+          <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+        </svg>
+      </span>
+    </div>
+
+    <LeadInsights :lead="lead" v-show="expandedSection === 'insights'" />
 
     <div class="toolbar__header section-shadow" @click="expandSection('contacts')">
       Contacts

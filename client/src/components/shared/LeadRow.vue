@@ -24,9 +24,9 @@
         <div v-else class="description">No Descriptions</div>
         <span class="amount">
           {{
-          dataLead.statusRef && dataLead.statusRef.title == Lead.CLOSED
-          ? dataLead.closingAmount
-          : dataLead.amount | currency
+            dataLead.statusRef && dataLead.statusRef.title == Lead.CLOSED
+              ? dataLead.closingAmount
+              : dataLead.amount | currency
           }}
         </span>
 
@@ -56,17 +56,17 @@
             <br />
             <span class="claim-info">
               {{
-              belongsToCurrentUser
-              ? 'You'
-              : dataLead.claimedByRef.fullName.trim()
-              ? dataLead.claimedByRef.fullName
-              : dataLead.claimedByRef.email
+                belongsToCurrentUser
+                  ? 'You'
+                  : dataLead.claimedByRef.fullName.trim()
+                  ? dataLead.claimedByRef.fullName
+                  : dataLead.claimedByRef.email
               }}
             </span>
           </span>
         </slot>
         <span class="go-to" @click="openLeadDetail">
-          <svg class="icon" fill="black" width="24px" height="24px" viewBox="0 0 30 30">
+          <svg class="icon" fill="black" width="28px" height="28px" viewBox="0 0 30 30">
             <use xlink:href="@/assets/images/svg-repo.svg#caret" />
           </svg>
         </span>
@@ -233,6 +233,6 @@ export default {
 }
 
 .go-to {
-  margin-right: 1rem;
+  margin-right: 0.5rem;
 }
 </style>
