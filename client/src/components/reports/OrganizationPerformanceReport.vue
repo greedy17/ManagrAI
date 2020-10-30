@@ -226,6 +226,7 @@
                   : require('@/assets/images/camera.svg')
               "
             />
+
             <div class="report__middle-row__card__content__column__text">
               {{ performer.rank }}. {{ generateRepDisplayName(performer) }}
             </div>
