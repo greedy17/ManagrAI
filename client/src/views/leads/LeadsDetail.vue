@@ -7,35 +7,19 @@
       <!--        -->
       <SideNavToolbar>
         <template v-slot:trigger>
-          <span class="toggle-icon" @click="toggleSideToolbar('details')">
-            <img
-              class="tooltip-icon"
-              src="@/assets/images/logo.png"
-              style="width: 1.5rem; height: 1.5rem; margin-right: 1rem;"
-              v-tooltip="'Details'"
-            />
-          </span>
-
-          <span class="toggle-icon" @click="toggleSideToolbar('insights')">
-            <img
-              class="tooltip-icon cloud-svg"
-              src="@/assets/images/cloud-outline.png"
-              v-tooltip="'Insights'"
-            />
-          </span>
-
-          <span class="toggle-icon" @click="toggleSideToolbar('custom-fields')">
-            <img
-              class="tooltip-icon building-svg"
-              src="@/assets/images/building.svg"
-              v-tooltip="'Custom Fields'"
-            />
+          <span
+            class="toggle-icon"
+            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
+          >
+            <div class="filter__button" v-show="!$store.state.showToolbarNav">
+              <img class="filter__image" src="@/assets/images/logo.png" />
+              <div class="filter__text">At a Glance</div>
+            </div>
           </span>
         </template>
         <template v-slot:toolbar>
-          <LeadInsights v-if="showToolbarNav && selectedToolbarView == 'insights'" :lead="lead" />
           <ToolBar
-            v-if="showToolbarNav && selectedToolbarView == 'details'"
+            v-if="showToolbarNav"
             :lead="lead"
             :lists="lists"
             :leadContacts="contacts"
@@ -44,14 +28,10 @@
             @updated-expected-close-date="updateExpectedCloseDate"
             @updated-title="updateTitle"
           />
-          <LeadCustomFields
-            v-if="showToolbarNav && selectedToolbarView == 'custom-fields'"
-            :lead="lead"
-          />
         </template>
       </SideNavToolbar>
     </div>
-    <div class="details__main-content-area">
+    <div class="page__main-content-area-with-panel">
       <div class="lead-header">
         <h3>{{ lead.title }}</h3>
       </div>
@@ -170,7 +150,7 @@ import LeadCustomFields from '@/components/leads-detail/LeadCustomFields'
 import LeadBanner from '@/components/leads-detail/LeadBanner'
 import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
-import LeadInsights from '@/components/shared/LeadInsights'
+
 import DropDownMenu from '@/components/forms/DropDownMenu'
 import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
@@ -200,7 +180,7 @@ export default {
     LeadBanner,
     LeadActions,
     PinnedNotes,
-    LeadInsights,
+
     LeadHistory,
     LeadEmails,
     DropDownMenu,
@@ -413,6 +393,7 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/variables';
 @import '@/styles/forms';
+@import '@/styles/mixins/buttons';
 
 .check-email-btn {
   flex: 1 1 0%;
@@ -497,12 +478,20 @@ export default {
   padding: 0 0.3rem;
 }
 
-.details {
-  &__main-content-area {
-    width: 100vw;
-    min-width: 65rem;
-    padding-left: 4rem;
-    padding-right: 1rem;
+.filter {
+  &__button {
+    @include secondary-button();
+    margin-left: 1rem;
+    width: 9rem;
+  }
+  &__text {
+    font-weight: bold;
+    margin-left: 1rem;
+    font-size: 1rem;
+  }
+  &__image {
+    height: 1.8rem;
+    color: $dark-green;
   }
 }
 </style>

@@ -1,152 +1,152 @@
 <template>
   <div class="custom-fields">
-    <div class="header section-shadow">Custom Fields</div>
-
-    <!-- Company Size -->
-    <div class="dropdown-field section-shadow">
-      <div class="label">Company Size</div>
-      <div class="dropdown-container">
-        <select v-model="lead.companySize">
-          <option :value="null" :key="'null'" disabled>-Select Company Size-</option>
-          <option
-            v-for="(option, i) in LeadModel.COMPANY_SIZE_CHOICES"
-            :value="option.value"
-            :key="i"
-          >
-            {{ option.label }}
-          </option>
-        </select>
+    <div>
+      <!-- Company Size -->
+      <div class="dropdown-field section-shadow">
+        <div class="label">Company Size</div>
+        <div class="dropdown-container">
+          <select v-model="lead.companySize">
+            <option :value="null" :key="'null'" disabled>-Select Company Size-</option>
+            <option
+              v-for="(option, i) in LeadModel.COMPANY_SIZE_CHOICES"
+              :value="option.value"
+              :key="i"
+            >{{ option.label }}</option>
+          </select>
+        </div>
       </div>
-    </div>
 
-    <!-- Industry -->
-    <div class="dropdown-field section-shadow">
-      <div class="label">Industry</div>
-      <div class="dropdown-container">
-        <select v-model="lead.industry">
-          <option :value="null" :key="'null'" disabled>-Select Industry-</option>
-          <option v-for="(option, i) in LeadModel.INDUSTRY_CHOICES" :value="option.value" :key="i">
-            {{ option.label }}
-          </option>
-        </select>
+      <!-- Industry -->
+      <div class="dropdown-field section-shadow">
+        <div class="label">Industry</div>
+        <div class="dropdown-container">
+          <select v-model="lead.industry">
+            <option :value="null" :key="'null'" disabled>-Select Industry-</option>
+            <option
+              v-for="(option, i) in LeadModel.INDUSTRY_CHOICES"
+              :value="option.value"
+              :key="i"
+            >{{ option.label }}</option>
+          </select>
+        </div>
       </div>
-    </div>
 
-    <!-- Competitor -->
-    <div class="dropdown-field section-shadow">
-      <div class="label">Competitor</div>
-      <div class="dropdown-container">
-        <select v-model="lead.competitor">
-          <option :value="null" :key="'null'" disabled>-Select Competitor-</option>
-          <option
-            v-for="(option, i) in LeadModel.COMPETITOR_CHOICES"
-            :value="option.value"
-            :key="i"
-          >
-            {{ option.label }}
-          </option>
-        </select>
+      <!-- Competitor -->
+      <div class="dropdown-field section-shadow">
+        <div class="label">Competitor</div>
+        <div class="dropdown-container">
+          <select v-model="lead.competitor">
+            <option :value="null" :key="'null'" disabled>-Select Competitor-</option>
+            <option
+              v-for="(option, i) in LeadModel.COMPETITOR_CHOICES"
+              :value="option.value"
+              :key="i"
+            >{{ option.label }}</option>
+          </select>
+        </div>
+        <!-- Competitor Description -->
+        <div class="text-field" style="padding: 1rem 0 0 0;">
+          <div class="display-mode-container" v-if="!competitorDescription.editing">
+            <div class="value">{{ lead.competitorDescription || '-Empty-' }}</div>
+            <div class="edit-icon-container">
+              <img
+                src="@/assets/images/pencil.svg"
+                class="edit-icon"
+                @click.stop.prevent="editTextField('competitorDescription')"
+              />
+            </div>
+          </div>
+          <div class="edit-mode-container" v-else-if="competitorDescription.editing">
+            <form @submit.prevent="updateTextField('competitorDescription')">
+              <input type="text" v-model="competitorDescription.temp" placeholder="Description" />
+              <img
+                class="save"
+                src="@/assets/images/checkmark.svg"
+                @click.stop.prevent="updateTextField('competitorDescription')"
+              />
+              <img
+                class="reset"
+                src="@/assets/images/remove.svg"
+                @click.stop.prevent="resetTextField('competitorDescription')"
+              />
+            </form>
+          </div>
+        </div>
       </div>
-      <!-- Competitor Description -->
-      <div class="text-field" style="padding: 1rem 0 0 0;">
-        <div class="display-mode-container" v-if="!competitorDescription.editing">
-          <div class="value">{{ lead.competitorDescription || '-Empty-' }}</div>
+
+      <!-- Geography -->
+      <div class="text-field section-shadow">
+        <div class="label">Geography</div>
+        <div class="display-mode-container" v-if="!geography.editing">
+          <div class="value">{{ lead.geographyAddress || '-Empty-' }}</div>
           <div class="edit-icon-container">
             <img
               src="@/assets/images/pencil.svg"
               class="edit-icon"
-              @click.stop.prevent="editTextField('competitorDescription')"
+              @click.stop.prevent="editTextField('geography')"
             />
           </div>
         </div>
-        <div class="edit-mode-container" v-else-if="competitorDescription.editing">
-          <form @submit.prevent="updateTextField('competitorDescription')">
-            <input type="text" v-model="competitorDescription.temp" placeholder="Description" />
+        <div class="edit-mode-container" v-else-if="geography.editing">
+          <form @submit.prevent="updateGeography">
+            <GmapAutocomplete :placeholder="'Geography'" @place_changed="setGeographyTemp" />
             <img
               class="save"
               src="@/assets/images/checkmark.svg"
-              @click.stop.prevent="updateTextField('competitorDescription')"
+              @click.stop.prevent="updateGeography"
             />
             <img
               class="reset"
               src="@/assets/images/remove.svg"
-              @click.stop.prevent="resetTextField('competitorDescription')"
+              @click.stop.prevent="resetGeography"
             />
           </form>
         </div>
       </div>
-    </div>
 
-    <!-- Geography -->
-    <div class="text-field section-shadow">
-      <div class="label">Geography</div>
-      <div class="display-mode-container" v-if="!geography.editing">
-        <div class="value">{{ lead.geographyAddress || '-Empty-' }}</div>
-        <div class="edit-icon-container">
-          <img
-            src="@/assets/images/pencil.svg"
-            class="edit-icon"
-            @click.stop.prevent="editTextField('geography')"
-          />
+      <!-- Type -->
+      <div class="dropdown-field section-shadow">
+        <div class="label">Type</div>
+        <div class="dropdown-container">
+          <select v-model="lead.type">
+            <option :value="null" :key="'null'" disabled>-Select Type-</option>
+            <option
+              v-for="(option, i) in LeadModel.TYPE_CHOICES"
+              :value="option.value"
+              :key="i"
+            >{{ option.label }}</option>
+          </select>
         </div>
       </div>
-      <div class="edit-mode-container" v-else-if="geography.editing">
-        <form @submit.prevent="updateGeography">
-          <GmapAutocomplete :placeholder="'Geography'" @place_changed="setGeographyTemp" />
-          <img
-            class="save"
-            src="@/assets/images/checkmark.svg"
-            @click.stop.prevent="updateGeography"
-          />
-          <img
-            class="reset"
-            src="@/assets/images/remove.svg"
-            @click.stop.prevent="resetGeography"
-          />
-        </form>
-      </div>
-    </div>
 
-    <!-- Type -->
-    <div class="dropdown-field section-shadow">
-      <div class="label">Type</div>
-      <div class="dropdown-container">
-        <select v-model="lead.type">
-          <option :value="null" :key="'null'" disabled>-Select Type-</option>
-          <option v-for="(option, i) in LeadModel.TYPE_CHOICES" :value="option.value" :key="i">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Custom -->
-    <div class="text-field section-shadow">
-      <div class="label">Custom</div>
-      <div class="display-mode-container" v-if="!custom.editing">
-        <div class="value">{{ lead.custom || '-Empty-' }}</div>
-        <div class="edit-icon-container">
-          <img
-            src="@/assets/images/pencil.svg"
-            class="edit-icon"
-            @click.stop.prevent="editTextField('custom')"
-          />
+      <!-- Custom -->
+      <div class="text-field section-shadow">
+        <div class="label">Custom</div>
+        <div class="display-mode-container" v-if="!custom.editing">
+          <div class="value">{{ lead.custom || '-Empty-' }}</div>
+          <div class="edit-icon-container">
+            <img
+              src="@/assets/images/pencil.svg"
+              class="edit-icon"
+              @click.stop.prevent="editTextField('custom')"
+            />
+          </div>
         </div>
-      </div>
-      <div class="edit-mode-container" v-else-if="custom.editing">
-        <form @submit.prevent="updateTextField('custom')">
-          <input type="text" v-model="custom.temp" placeholder="Custom" />
-          <img
-            class="save"
-            src="@/assets/images/checkmark.svg"
-            @click.stop.prevent="updateTextField('custom')"
-          />
-          <img
-            class="reset"
-            src="@/assets/images/remove.svg"
-            @click.stop.prevent="resetTextField('custom')"
-          />
-        </form>
+        <div class="edit-mode-container" v-else-if="custom.editing">
+          <form @submit.prevent="updateTextField('custom')">
+            <input type="text" v-model="custom.temp" placeholder="Custom" />
+            <img
+              class="save"
+              src="@/assets/images/checkmark.svg"
+              @click.stop.prevent="updateTextField('custom')"
+            />
+            <img
+              class="reset"
+              src="@/assets/images/remove.svg"
+              @click.stop.prevent="resetTextField('custom')"
+            />
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -181,6 +181,7 @@ export default {
         editing: false,
         temp: this.lead.custom,
       },
+      showFields: false,
     }
   },
   watch: {
@@ -289,6 +290,9 @@ export default {
       this.geography.tempAddress = null
       this.geography.tempAddressComponents = {}
     },
+    expand() {
+      this.showFields = !this.showFields
+    },
   },
 }
 </script>
@@ -300,10 +304,30 @@ export default {
 
 .custom-fields {
   @include standard-border();
+
   background-color: $white;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+
   display: flex;
   flex-flow: column;
+
+  &__header {
+    @include base-font-styles();
+    height: 3rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 10%;
+    font-size: 0.875rem;
+    font-weight: bold;
+    line-height: 1.14;
+    color: $main-font-gray;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
 }
 
 .custom-fields,
@@ -312,13 +336,6 @@ export default {
   line-height: 1.14;
   color: $main-font-gray;
   font-size: 0.875rem;
-}
-
-.header {
-  padding: 1rem 0;
-  text-align: center;
-  font-weight: 600;
-  font-size: 1rem;
 }
 
 .dropdown-field {
@@ -424,6 +441,18 @@ export default {
       border-radius: 3px;
       margin: 0 1rem 0 0.5rem;
     }
+  }
+}
+
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
   }
 }
 </style>

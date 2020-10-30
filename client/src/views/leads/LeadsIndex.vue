@@ -239,8 +239,6 @@ export default {
     @include secondary-button();
     margin-left: 1rem;
     width: 9rem;
-
-    // --theme-height: 2.5rem;
   }
   &__text {
     font-weight: bold;
