@@ -71,7 +71,6 @@ from .serializers import (
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
-
 from .nylas.emails import (
     send_new_email_legacy,
     retrieve_threads,
@@ -501,8 +500,15 @@ class NotificationSettingsViewSet(
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = NotificationOptionSerializer
 
+    def get_queryset(self):
+        return NotificationOption.objects.for_user(self.request.user)
+
     def list(self, request, *args, **kwargs):
-        qs = NotificationOption.objects.for_user(request.user)
+        # qs = NotificationOption.objects.for_user(request.user)
+        qs = self.get_queryset()
+        resource_param = request.query_params.get("resource", None)
+        if resource_param:
+            qs = qs.filter(resource=resource_param)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = NotificationOptionSerializer(
