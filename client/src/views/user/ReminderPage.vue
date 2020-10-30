@@ -1,27 +1,27 @@
 <template>
   <div class="notification-page-container">
-    <small class="muted">last checked at {{ lastChecked | dateShortWithTime }} </small>
+    <small class="muted">last checked at {{ lastChecked | dateShortWithTime }}</small>
     <br />
-    <small class="muted"> to refresh toggle back </small>
+    <small class="muted">to refresh toggle back</small>
     <br />
     <br />
 
-    <template v-if="reminders.list.length > 0">
+    <ComponentLoadingSVG v-if=" reminders.refreshing" />
+    <template v-if="reminders.list.length > 0 && !reminders.refreshing">
       <template v-for="(value, key) in formattedReminders(reminders.list)">
         <span class="muted" :key="key">
           {{ key }}
           <br />
         </span>
+
         <template v-for="(reminder, i) in value">
           <ReminderCard @delete="onDelete" :key="reminder + '-' + i" :reminder="reminder" />
         </template>
       </template>
     </template>
-    <template v-else>
+    <template v-if="reminders.list.length === 0 && !reminders.refreshing">
       <br />
-      <br />
-
-      No Upcoming Reminders
+      <br />No Upcoming Reminders
     </template>
   </div>
 </template>
@@ -31,10 +31,11 @@ import ReminderCard from '@/components/ReminderCard'
 import Reminder from '@/services/reminders/'
 import CollectionManager from '@/services/collectionManager'
 import moment from 'moment'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 
 export default {
   name: 'ReminderPage',
-  components: { ReminderCard },
+  components: { ReminderCard, ComponentLoadingSVG },
   data() {
     return {
       // will not be auto refreshing to cut down on automatic calls
@@ -46,6 +47,7 @@ export default {
           byRemindOn: moment().format(),
         },
       }),
+      loading: false,
     }
   },
   async created() {
@@ -55,6 +57,7 @@ export default {
     async onDelete(event) {
       try {
         await Reminder.api.delete(event)
+
         this.reminders.refresh()
       } catch (e) {
         return

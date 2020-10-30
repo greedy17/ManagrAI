@@ -10,9 +10,7 @@
             @toggle-view="toggleView"
             :eventToEmit="'toggle-view'"
           />
-          <span class="right" :class="{ bold: selectedView == notificationsView }"
-            >Notifications</span
-          >
+          <span class="right" :class="{ bold: selectedView == notificationsView }">Notifications</span>
         </div>
         <NotificationPage
           v-if="selectedView == notificationsView"

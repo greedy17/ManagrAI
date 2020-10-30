@@ -51,11 +51,9 @@
         </template>
       </SideNavToolbar>
     </div>
-    <div class="page__main-content-area">
+    <div class="details__main-content-area">
       <div class="lead-header">
-        <h3>
-          {{ lead.title }}
-        </h3>
+        <h3>{{ lead.title }}</h3>
       </div>
       <LeadBanner
         :lead="lead"
@@ -87,32 +85,24 @@
                 activityTabSelected = HISTORY
               }
             "
-          >
-            History
-          </div>
+          >History</div>
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
             @click="activityTabSelected = EMAILS"
-          >
-            Emails
-          </div>
+          >Emails</div>
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === MESSAGES }"
             @click="activityTabSelected = MESSAGES"
-          >
-            Messages
-          </div>
+          >Messages</div>
 
           <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isEmailConnected">
             <button
               class="primary-button"
               @click="() => $refs.Emails.refresh()"
               :disabled="$refs.Emails && $refs.Emails.threads.refreshing"
-            >
-              Check for Mail
-            </button>
+            >Check for Mail</button>
           </div>
 
           <div class="history-search-container" v-if="activityTabSelected === HISTORY">
@@ -154,9 +144,9 @@
           <template v-if="!isEmailConnected">
             <div>
               <span class="muted">
-                <span class="muted">
-                  Please Enable Email Integration to use this feature in your settings
-                </span>
+                <span
+                  class="muted"
+                >Please Enable Email Integration to use this feature in your settings</span>
               </span>
             </div>
           </template>
@@ -170,7 +160,7 @@
     <!-- 
     <div class="page__right-panel">
       
-    </div> -->
+    </div>-->
   </div>
 </template>
 
@@ -505,5 +495,14 @@ export default {
 .building-svg {
   height: 1.4rem;
   padding: 0 0.3rem;
+}
+
+.details {
+  &__main-content-area {
+    width: 100vw;
+    min-width: 65rem;
+    padding-left: 4rem;
+    padding-right: 1rem;
+  }
 }
 </style>

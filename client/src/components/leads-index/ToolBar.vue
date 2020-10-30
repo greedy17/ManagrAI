@@ -1,11 +1,35 @@
 <template>
   <div class="toolbar">
-    <div class="header section-shadow">
-      Filter
-    </div>
+    <div class="header section-shadow">Filter</div>
+
     <div class="filter section-shadow">
-      <div class="filter-header">Rating</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('rating')">
+        Rating
+        <span class="icon__container">
+          <svg
+            v-if="!showRating"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showRating"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+
+      <div class="filter-options" v-show="showRating">
         <LeadRating
           v-for="(n, i) in 5"
           :key="'rating' + '-' + (5 - i)"
@@ -17,8 +41,32 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Stage</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('stage')">
+        Stage
+        <span class="icon__container">
+          <svg
+            v-if="!showStage"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showStage"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+      <div class="filter-options" v-show="showStage">
         <div
           class="option"
           @click="emitUpdateFilter({ key: 'byStatus', value: status.obj.id })"
@@ -33,8 +81,32 @@
       </div>
     </div>
     <div class="filter section-shadow">
-      <div class="filter-header">Score</div>
-      <div class="filter-options">
+      <div class="filter-header" @click="expand('score')">
+        Score
+        <span class="icon__container">
+          <svg
+            v-if="!showScore"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showScore"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+      <div class="filter-options" v-show="showScore">
         <div
           class="option"
           v-for="option in scoreOptions"
@@ -48,6 +120,33 @@
         </div>
       </div>
     </div>
+    <div class="filter section-shadow">
+      <div class="filter-header" @click="expand('representative')">
+        Filter by Representative
+        <span class="icon__container">
+          <svg
+            v-if="!showRep"
+            class="icon--unclicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+          <svg
+            v-if="showRep"
+            class="icon--clicked"
+            fill="black"
+            width="24px"
+            height="24px"
+            viewBox="0 0 30 30"
+          >
+            <use xlink:href="@/assets/images/svg-repo.svg#caret" />
+          </svg>
+        </span>
+      </div>
+    </div>
     <div
       class="filter section-shadow"
       v-if="$store.state.user.isManager || $store.state.user.isStaff"
@@ -57,7 +156,13 @@
         @toggle-active-rep="toggleRep"
         @select-all-reps="toggleAllReps"
         @deselect-all-reps="toggleAllReps"
+        v-show="showRep"
       />
+    </div>
+    <div class="filter section-shadow">
+      <div class="filter__button__container">
+        <div class="filter__button" @click="$emit('delete-filters')">Clear</div>
+      </div>
     </div>
   </div>
 </template>
@@ -69,6 +174,12 @@ import FilterByRep from '@/components/shared/FilterByRep'
 import Lead from '@/services/leads'
 
 const LEAD_SCORE_RANGES = ['0-25', '26-50', '51-75', '76-100']
+const EXPAND_SECTIONS = {
+  RATING: 'rating',
+  STAGE: 'stage',
+  SCORE: 'score',
+  REP: 'representative',
+}
 
 export default {
   name: 'ListsToolBar',
@@ -86,6 +197,10 @@ export default {
       forecastEnums,
       statuses: this.$store.state.stages.map(s => ({ obj: s, count: null })),
       scoreOptions: LEAD_SCORE_RANGES.map(r => ({ value: r, count: null })),
+      showRating: false,
+      showStage: false,
+      showScore: false,
+      showRep: false,
     }
   },
   created() {
@@ -148,6 +263,17 @@ export default {
     emitUpdateFilter(item) {
       this.$emit('update-filter', item)
     },
+    expand(section) {
+      if (section === EXPAND_SECTIONS.RATING) {
+        this.showRating = !this.showRating
+      } else if (section === EXPAND_SECTIONS.STAGE) {
+        this.showStage = !this.showStage
+      } else if (section === EXPAND_SECTIONS.SCORE) {
+        this.showScore = !this.showScore
+      } else if (section === EXPAND_SECTIONS.REP) {
+        this.showRep = !this.showRep
+      }
+    },
   },
   computed: {
     formattedRepFilters() {
@@ -178,12 +304,12 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/buttons';
 
 .toolbar {
   @include disable-text-select();
   @include standard-border();
   background-color: $white;
-
   height: auto;
   display: flex;
   flex-flow: column;
@@ -229,10 +355,14 @@ export default {
   .filter-header {
     height: 3rem;
     display: flex;
-    flex-flow: column;
-    justify-content: center;
-    padding-left: 10%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10%;
     font-weight: normal;
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   .filter-options {
@@ -248,6 +378,18 @@ export default {
       text-transform: capitalize;
     }
   }
+
+  &__button {
+    @include secondary-button();
+    margin: 1rem 1rem 1rem 0;
+    &__container {
+      height: 5rem;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      align-items: center;
+    }
+  }
 }
 
 .list {
@@ -255,5 +397,17 @@ export default {
 }
 .active {
   color: rgba($color: $dark-green, $alpha: 1);
+}
+
+.icon {
+  &__container {
+    display: flex;
+  }
+  &--unclicked {
+    transform: rotate(-90deg);
+  }
+  &--clicked {
+    transform: rotate(90deg);
+  }
 }
 </style>

@@ -34,7 +34,7 @@
         <img class="button-icon" alt="icon" src="@/assets/images/claimed.svg" />
         <span class="button-content">
           {{
-            lead.claimedByRef.fullName.trim() ? lead.claimedByRef.fullName : lead.claimedByRef.email
+          lead.claimedByRef.fullName.trim() ? lead.claimedByRef.fullName : lead.claimedByRef.email
           }}
         </span>
       </div>
@@ -127,8 +127,8 @@ export default {
 
   .forecast-label {
     @include base-font-styles();
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 0.625rem;
+
     line-height: 2.25;
     color: $main-font-gray;
   }
@@ -148,7 +148,7 @@ export default {
 
 .days-in-status-label {
   @include base-font-styles();
-  font-size: 12px;
+  font-size: 0.625rem;
   font-weight: bold;
   line-height: 1.71;
   color: $main-font-gray;
@@ -157,7 +157,7 @@ export default {
 
 .days-in-status {
   @include base-font-styles();
-  font-size: 12px;
+  font-size: 0.625rem;
   line-height: 2.25;
   color: $main-font-gray;
 }
@@ -167,6 +167,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+  padding-right: 1rem;
 }
 
 .banner-button {

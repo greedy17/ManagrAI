@@ -2,22 +2,17 @@
   <div class="forecast-dropdown" @click.stop.prevent>
     <select @change="updateForecast" :style="computedStyles" :disabled="disabled">
       <template v-if="Forecast.CLOSED == forecast">
-        <option selected>
-          Closed
-        </option>
+        <option class="forecast-dropdown__options" selected>Closed</option>
       </template>
       <template v-else>
-        <option disabled :selected="forecast == null" :value="null">
-          Select Forecast
-        </option>
+        <option disabled :selected="forecast == null" :value="null">Select Forecast</option>
         <option
+          class="forecast-dropdown__options"
           v-for="option in selectableOptions"
           :selected="option.toUpperCase() === forecast"
           :key="option"
           :value="option"
-        >
-          {{ option == Forecast.NA ? 'Unforecasted' : option }}
-        </option>
+        >{{ option == Forecast.NA ? 'Unforecasted' : option }}</option>
       </template>
     </select>
   </div>
@@ -137,14 +132,14 @@ export default {
         return {
           'background-color': 'rgba(149, 150, 180, 0)',
           color: '#110f24',
-          'font-size': '12px',
+          'font-size': '.625rem',
           'font-weight': 'normal',
         }
       } else {
         return {
           'background-color': '#9596b4',
           color: '#fff',
-          'font-size': '10px',
+          'font-size': '.625rem',
           'font-weight': 'bold',
         }
       }
@@ -167,7 +162,7 @@ export default {
     @include base-font-styles();
     width: 96%;
     height: 100%;
-    padding: 0.125rem 1rem;
+    padding: 0.125rem 1.25rem;
     line-height: 1.6;
     border: unset;
 

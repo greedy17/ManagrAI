@@ -1,7 +1,7 @@
 <template>
   <div class="filter">
     <span class="title">
-      <span>Filter by Rep</span>
+      <span></span>
       <div class="extra-options">
         <DropDownMenu
           @selectedItem="emitSelection"
@@ -25,18 +25,14 @@
         @click="toggleActiveRep(currentUser.id)"
         :key="currentUser.id"
         :class="{ active: repFilterState[currentUser.id] }"
-      >
-        You
-      </span>
+      >You</span>
       <span
         v-if="filterByUnclaimed"
         class="rep"
         @click="$emit('toggle-unclaimed')"
         :key="'unclaimed'"
         :class="{ active: unclaimedFilterState }"
-      >
-        Unclaimed
-      </span>
+      >Unclaimed</span>
       <div class="divider" />
       <span
         class="rep"
@@ -45,9 +41,7 @@
         :key="rep.id"
         :class="{ active: repFilterState[rep.id] }"
         :style="{ marginBottom: i == otherReps.length - 1 ? '0.5rem' : null }"
-      >
-        {{ rep.fullName.trim() ? rep.fullName : rep.email }}
-      </span>
+      >{{ rep.fullName.trim() ? rep.fullName : rep.email }}</span>
     </div>
     <div v-else class="reps-container">
       <ComponentLoadingSVG />
@@ -178,6 +172,7 @@ export default {
   display: flex;
   flex-flow: row;
   align-items: center;
+  padding-top: 0.5rem;
 
   .extra-options {
     width: 2rem;
