@@ -34,7 +34,7 @@
         <img class="button-icon" alt="icon" src="@/assets/images/claimed.svg" />
         <span class="button-content">
           {{
-          lead.claimedByRef.fullName.trim() ? lead.claimedByRef.fullName : lead.claimedByRef.email
+            lead.claimedByRef.fullName.trim() ? lead.claimedByRef.fullName : lead.claimedByRef.email
           }}
         </span>
       </div>

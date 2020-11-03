@@ -65,24 +65,32 @@
                 activityTabSelected = HISTORY
               }
             "
-          >History</div>
+          >
+            History
+          </div>
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === EMAILS }"
             @click="activityTabSelected = EMAILS"
-          >Emails</div>
+          >
+            Emails
+          </div>
           <div
             class="box__tab"
             :class="{ 'box__tab--active': activityTabSelected === MESSAGES }"
             @click="activityTabSelected = MESSAGES"
-          >Messages</div>
+          >
+            Messages
+          </div>
 
           <div class="check-email-btn" v-if="activityTabSelected === EMAILS && isEmailConnected">
             <button
               class="primary-button"
               @click="() => $refs.Emails.refresh()"
               :disabled="$refs.Emails && $refs.Emails.threads.refreshing"
-            >Check for Mail</button>
+            >
+              Check for Mail
+            </button>
           </div>
 
           <div class="history-search-container" v-if="activityTabSelected === HISTORY">
@@ -124,9 +132,9 @@
           <template v-if="!isEmailConnected">
             <div>
               <span class="muted">
-                <span
-                  class="muted"
-                >Please Enable Email Integration to use this feature in your settings</span>
+                <span class="muted">
+                  Please Enable Email Integration to use this feature in your settings
+                </span>
               </span>
             </div>
           </template>
@@ -395,6 +403,9 @@ export default {
 @import '@/styles/forms';
 @import '@/styles/mixins/buttons';
 
+.page__left-nav-bar {
+  z-index: 5;
+}
 .check-email-btn {
   flex: 1 1 0%;
   display: flex;
