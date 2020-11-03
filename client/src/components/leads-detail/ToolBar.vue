@@ -254,6 +254,48 @@
       <div v-else class="container">
         <span class="no-items-message">No Contacts</span>
       </div>
+      <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
+        <ComponentLoadingSVG v-if="accountContacts.refreshing" />
+        <div v-else>
+          <div class="form-field">
+            <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
+            <label>Account Contacts</label>
+            <p v-if="!accountContacts.list.length">No contacts available.</p>
+            <ContactCheckBox
+              v-else
+              v-for="contact in accountContacts.list"
+              :key="contact.id"
+              :contact="contact"
+              :checked="!!contactsModal.selectedContacts[contact.id]"
+              :editable="true"
+              @checkbox-clicked="handleCheckboxClick"
+              @updated-contact="onUpdateContact"
+            />
+          </div>
+          <div class="form-field">
+            <AddContact
+              v-for="(contactForm, idx) in contactsModal.addContactForms"
+              :key="idx"
+              :form="contactForm"
+              :error="
+                contactsModal.errors.addContactForms && contactsModal.errors.addContactForms[idx]
+              "
+            />
+          </div>
+          <div class="form-field">
+            <label @click="addAnotherContactForm" class="add-another-button">
+              <img class="icon" src="@/assets/images/add.svg" alt="icon" />
+              Add Another
+            </label>
+          </div>
+          <div class="button-container">
+            <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">
+              Update
+            </button>
+            <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
+          </div>
+        </div>
+      </Modal>
     </div>
 
     <div class="toolbar__header section-shadow" @click="expandSection('files')">
@@ -320,48 +362,6 @@
 
       <Modal v-if="fileUploadLoading" :width="10">
         <ComponentLoadingSVG />
-      </Modal>
-      <Modal v-if="contactsModal.isOpen" :width="70" dimmed @close-modal="closeContactsModal">
-        <ComponentLoadingSVG v-if="accountContacts.refreshing" />
-        <div v-else>
-          <div class="form-field">
-            <h2 style="text-align: center; margin-bottom: 3.5rem;">Manage Contacts</h2>
-            <label>Account Contacts</label>
-            <p v-if="!accountContacts.list.length">No contacts available.</p>
-            <ContactCheckBox
-              v-else
-              v-for="contact in accountContacts.list"
-              :key="contact.id"
-              :contact="contact"
-              :checked="!!contactsModal.selectedContacts[contact.id]"
-              :editable="true"
-              @checkbox-clicked="handleCheckboxClick"
-              @updated-contact="onUpdateContact"
-            />
-          </div>
-          <div class="form-field">
-            <AddContact
-              v-for="(contactForm, idx) in contactsModal.addContactForms"
-              :key="idx"
-              :form="contactForm"
-              :error="
-                contactsModal.errors.addContactForms && contactsModal.errors.addContactForms[idx]
-              "
-            />
-          </div>
-          <div class="form-field">
-            <label @click="addAnotherContactForm" class="add-another-button">
-              <img class="icon" src="@/assets/images/add.svg" alt="icon" />
-              Add Another
-            </label>
-          </div>
-          <div class="button-container">
-            <button tabindex="0" v-if="!contactsModal.loading" @click="updateContacts">
-              Update
-            </button>
-            <ComponentLoadingSVG v-else style="margin: 1rem 1rem 0 auto;" />
-          </div>
-        </div>
       </Modal>
     </div>
     <div class="toolbar__header section-shadow" @click="expandSection('custom')">
