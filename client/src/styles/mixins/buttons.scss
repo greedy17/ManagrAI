@@ -32,6 +32,10 @@
   @include base-button();
   background-color: $dark-green;
   color: $white;
+
+  &:hover {
+    background-color: $dark-green;
+  }
 }
 
 @mixin secondary-button() {
@@ -50,5 +54,10 @@
   &:disabled {
     background-color: $light-gray-blue;
     color: $dark-gray-blue;
+
+    &:hover {
+      background-color: $light-gray-blue;
+      cursor: default;
+    }
   }
 }
