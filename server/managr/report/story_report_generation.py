@@ -394,7 +394,7 @@ class LeadDataGenerator(BaseGenerator):
 
     @property
     def contract_value(self):
-        return self._lead.closing_amount
+        return float(self._lead.closing_amount)
 
     @property
     def as_dict(self):
