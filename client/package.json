@@ -16,7 +16,8 @@
   "dependencies": {
     "@thinknimble/button": "^0.4.0",
     "@thinknimble/dropdownselect": "0.0.4",
-    "@thinknimble/tn-forms": "^1.0.3",
+    "@thinknimble/tn-forms": "^1.0.5",
+    "@thinknimble/tn-models": "^1.1.34",
     "@thinknimble/tn-utils": "^1.4.0",
     "@thinknimble/tn-validators": "^1.0.5",
     "axios": "^0.18.0",

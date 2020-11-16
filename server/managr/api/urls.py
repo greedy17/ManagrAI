@@ -7,6 +7,8 @@ from managr.polling import views as poll_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
 
+from managr.zoom import views as zoom_views
+
 
 app_name = "api"
 
@@ -35,6 +37,9 @@ urlpatterns = [
         "users/revoke-email-auth/",
         core_views.revoke_access_token,
         name="revoke_email_auth",
+    ),
+    path(
+        "users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"
     ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path(
@@ -69,6 +74,16 @@ urlpatterns = [
         name="nylas_account_webhook",
     ),
     path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
+    path(
+        "users/zoom/authenticate",
+        zoom_views.get_zoom_authentication,
+        name="get_zoom_authentication",
+    ),
+    path(
+        "users/zoom/authorization",
+        zoom_views.get_zoom_auth_link,
+        name="get_zoom_auth_link",
+    ),
 ]
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
@@ -93,7 +108,9 @@ router.register("action-choices", lead_views.ActionChoiceViewSet, "action-choice
 router.register("actions", lead_views.ActionViewSet, "actions")
 router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
 router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
-router.register("performance-reports", report_views.PerformanceReportViewSet, "performance-reports")
+router.register(
+    "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
+)
 router.register("files", lead_views.FileViewSet, "files")
 router.register("notifications", lead_views.NotificationViewSet, "notifications")
 router.register("stages", organization_views.StageViewSet, "stages")

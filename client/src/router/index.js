@@ -22,6 +22,14 @@ import StoryReportDetail from '@/views/reports/StoryReportDetail'
 import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 // import Styles from '@/views/settings/Styles'
 
+// Settings
+
+import EmailIntegration from '@/components/settings/EmailIntegration'
+import EmailTemplates from '@/components/settings/EmailTemplates'
+import Profile from '@/components/settings/Profile'
+import Password from '@/components/settings/Password'
+import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
+
 Vue.use(Router)
 
 export default new Router({
@@ -36,12 +44,7 @@ export default new Router({
       name: 'Login',
       component: Login,
     },
-    {
-      path: '/invite',
-      name: 'Invite',
-      component: Invite,
-      beforeEnter: Auth.requireUserTypeManagerOrStaff,
-    },
+
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
@@ -95,6 +98,65 @@ export default new Router({
       name: 'Settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
+      children: [
+        {
+          path: 'zoom-integration',
+          name: 'ZoomIntegration',
+          components: {
+            'user-settings': () =>
+              import(
+                /* webpackChunkName: "settings" */ '../views/settings/_pages/_ZoomIntegration'
+              ),
+          },
+        },
+        {
+          path: 'text-integration',
+          name: 'TextIntegration',
+          components: {
+            'user-settings': () =>
+              import(/* webpackChunkName: "settings" */ '../components/settings/TextIntegration'),
+          },
+        },
+        {
+          path: 'email-integration',
+          name: 'EmailIntegration',
+          components: {
+            'user-settings': EmailIntegration,
+          },
+        },
+        {
+          path: 'email-templates',
+          name: 'EmailTemplates',
+          components: {
+            'user-settings': EmailTemplates,
+          },
+        },
+        {
+          path: 'profile',
+          name: 'Profile',
+          components: {
+            'user-settings': Profile,
+          },
+        },
+        {
+          path: 'password',
+          name: 'Password',
+          components: {
+            'user-settings': Password,
+          },
+        },
+        {
+          path: '/invite',
+          name: 'Invite',
+          components: { 'user-settings': Invite },
+          beforeEnter: Auth.requireUserTypeManagerOrStaff,
+        },
+        {
+          path: '/notification-settings',
+          name: 'NotificationSettings',
+          components: { 'user-settings': NotificationSettings },
+        },
+      ],
     },
     {
       path: '/reports',
