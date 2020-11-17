@@ -24,6 +24,7 @@ from .models import (
     MessageAuthAccount,
     NotificationOption,
     NotificationSelection,
+    UserSlackIntegration,
 )
 from .models import EmailTemplate
 
@@ -40,6 +41,12 @@ class MessageAuthAccountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class UserSlackIntegrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSlackIntegration
+        fields = "__all__"
+
+
 class UserRefSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -52,8 +59,8 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """ UserSerializer to update user fields, only managers with admin access and
-    superusers can update email """
+    """UserSerializer to update user fields, only managers with admin access and
+    superusers can update email"""
 
     organization_ref = OrganizationRefSerializer(
         many=False, source="organization", read_only=True
@@ -66,6 +73,9 @@ class UserSerializer(serializers.ModelSerializer):
     )
     message_auth_account_ref = MessageAuthAccountSerializer(
         source="message_auth_account", read_only=True
+    )
+    slack_ref = UserSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
     )
 
     class Meta:
@@ -94,6 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
             "commit",
             "unviewed_notifications_count",
             "profile_photo",
+            "slack_ref",
         )
 
     read_only_fields = (
@@ -139,8 +150,8 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
 class UserInvitationSerializer(serializers.ModelSerializer):
     """
-        Serializer for Inviting users to the platform.
-        Only Managers can invite users, and only to their organization
+    Serializer for Inviting users to the platform.
+    Only Managers can invite users, and only to their organization
     """
 
     organization_ref = OrganizationRefSerializer(
@@ -177,7 +188,10 @@ class EmailSerializer(serializers.Serializer):
     lead = serializers.UUIDField(required=True)
 
     to = serializers.ListField(
-        child=ContactDictField(), required=True, allow_empty=False, allow_null=False,
+        child=ContactDictField(),
+        required=True,
+        allow_empty=False,
+        allow_null=False,
     )
     cc = serializers.ListField(
         child=ContactDictField(), required=False, allow_null=True
@@ -213,7 +227,10 @@ class EmailSerializer(serializers.Serializer):
     def preview(self):
         """Render the email to be sent and return data to preview the result."""
         sender = self.context["request"].user
-        return nylas_emails.generate_preview_email_data(sender, **self.validated_data,)
+        return nylas_emails.generate_preview_email_data(
+            sender,
+            **self.validated_data,
+        )
 
 
 class EmailTemplateSerializer(serializers.ModelSerializer):
@@ -263,4 +280,3 @@ class NotificationOptionSerializer(serializers.ModelSerializer):
         serializer = NotificationSelectionSerializer(selection)
 
         return serializer.data
-

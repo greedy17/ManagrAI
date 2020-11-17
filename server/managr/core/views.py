@@ -38,7 +38,11 @@ from managr.lead import constants as lead_consts
 from managr.lead.models import LeadMessage, Notification, Lead
 from managr.lead.background import emit_event as emit_log_event
 
-from managr.organization.models import Organization, Contact
+from managr.organization.models import (
+    Organization,
+    Contact,
+    OrganizationSlackIntegration,
+)
 
 from managr.core.twilio.messages import (
     create_new_account,
@@ -53,6 +57,7 @@ from managr.core.background import emit_event, emit_email_sync_event
 
 from .models import (
     User,
+    UserSlackIntegration,
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
@@ -63,6 +68,7 @@ from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
+    UserSlackIntegrationSerializer,
     EmailTemplateSerializer,
     EmailSerializer,
     MessageAuthAccountSerializer,
@@ -341,7 +347,10 @@ class UserViewSet(
             # will add try catch TODO:-PB 07/28
             try:
                 msg = send_message(
-                    body, sender, recipient, has_auth_account.status_callback,
+                    body,
+                    sender,
+                    recipient,
+                    has_auth_account.status_callback,
                 )
                 message_id = msg.sid
 
@@ -445,6 +454,33 @@ class UserViewSet(
         message_auth_account.delete()
         return Response()
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=True,
+        url_path="integrate-slack",
+    )
+    def integrate_slack(self, request, *args, **kwargs):
+        """
+        Create a UserSlackIntegration associated with user
+        """
+        pk = kwargs.get("pk", None)
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # must be self making the integration
+        if user != request.user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        data = request.data
+        slack_id = data.get("slack_id", None)
+        if not slack_id:
+            raise ValidationError("Missing Slack ID")
+
+        integration = UserSlackIntegration.objects.create(user=user, slack_id=slack_id)
+        return Response(self.serializer_class(integration.user).data)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -469,11 +505,13 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
-    """ This endpoint is used to generate a user specific link with a magic token to
+    """This endpoint is used to generate a user specific link with a magic token to
     authorize their accounts on Nylas when the user authenticates we will use
     the magic token to approve the authentication and ensure the user has not
     tried to authenticate an alternate email (from the one they have registered
@@ -600,8 +638,8 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
-        """ this endpoint will have to eventually be handled by a different instance
-        unlike the messages endpoint we cannot grab an id and pass it to the async 
+        """this endpoint will have to eventually be handled by a different instance
+        unlike the messages endpoint we cannot grab an id and pass it to the async
         we can however track the delta and check the api for that delta or we can save it in the cache
 
         """
@@ -640,8 +678,8 @@ class TwilioMessageWebhook(APIView):
 
     def post(self, request):
         """
-            this endpoint is used for the status of messages when they are sent
-            twilio will hit this endpoint defined on status_url
+        this endpoint is used for the status of messages when they are sent
+        twilio will hit this endpoint defined on status_url
         """
         # receive message
 
@@ -738,7 +776,9 @@ class TwilioMessageWebhook(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def list_available_twilio_numbers(request):
     region = request.query_params.get("region", None)
@@ -748,7 +788,9 @@ def list_available_twilio_numbers(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def list_twilio_messages(request):
 
@@ -793,7 +835,9 @@ def list_twilio_messages(request):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def message_status(request):
     # get the message sid and status
@@ -822,7 +866,9 @@ def message_status(request):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     """Nylas OAuth callback.
@@ -912,13 +958,13 @@ def email_auth_token(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_access_token(request):
-    """ endpoint to revoke access for a token
-        currently users can only revoke their own access
-        if an account needs to revoke someone elses they may
-        email the superuser, when we create a list of admins
-        for each org they will have access to delete their user's tokens
-        alternatively they can set a user to is_active=false and this will
-        call the revoke endpoint for the user in an org
+    """endpoint to revoke access for a token
+    currently users can only revoke their own access
+    if an account needs to revoke someone elses they may
+    email the superuser, when we create a list of admins
+    for each org they will have access to delete their user's tokens
+    alternatively they can set a user to is_active=false and this will
+    call the revoke endpoint for the user in an org
     """
     if request.user.email_auth_account.access_token:
         try:
@@ -1007,8 +1053,8 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             try:
                 send_new_email_legacy(token, sender, recipient, message)
             except Exception as e:
-                """ this error is most likely going to be an error on our set
-                up rather than the user_token """
+                """this error is most likely going to be an error on our set
+                up rather than the user_token"""
                 pass
         response_data["activation_link"] = user.activation_link
 

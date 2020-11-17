@@ -7,6 +7,7 @@ from django.db.models import Sum, Avg, Q
 from django.db.models.functions import Concat
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
 
 from rest_framework.authtoken.models import Token
 
@@ -15,12 +16,9 @@ from managr.utils.numbers import format_phone_number
 from django.db.models import Sum, Avg, Q
 from rest_framework.exceptions import ValidationError
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db.models import Sum, Avg
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
 
-from managr.core.models import UserManager, TimeStampModel
 from . import constants as org_consts
 
 
@@ -30,9 +28,6 @@ from managr.core import nylas as email_client
 from managr.lead.models import Notification
 
 from . import constants as org_consts
-
-
-# Create your models here.
 
 
 ACCOUNT_TYPE_RENEWAL = "RENEWAL"
@@ -55,12 +50,14 @@ class OrganizationQuerySet(models.QuerySet):
 
 class Organization(TimeStampModel):
     """
-        Main Organization Model, Users are attached to this model
-        Users can either be limited, or Manager (possibly also have a main admin for the org)
+    Main Organization Model, Users are attached to this model
+    Users can either be limited, or Manager (possibly also have a main admin for the org)
     """
 
     name = models.CharField(max_length=255, null=True)
-    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, null=True)
+    photo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
+    )
     state = models.CharField(
         max_length=255,
         choices=STATE_CHOCIES,
@@ -114,8 +111,66 @@ class Organization(TimeStampModel):
                     auth_token, token_created = Token.objects.get_or_create(
                         user=integration
                     )
-                    token = json.loads(serializers.serialize("json", [auth_token,]))
+                    token = json.loads(
+                        serializers.serialize(
+                            "json",
+                            [
+                                auth_token,
+                            ],
+                        )
+                    )
                     return token[0]["pk"]
+
+
+class OrganizationSlackIntegrationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser or user.is_serviceaccount:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization_id)
+        else:
+            return None
+
+
+class OrganizationSlackIntegration(TimeStampModel):
+    scope = models.CharField(
+        max_length=255,
+        null=False,
+        help_text="permissions that the Managr Slack App has in the Organization's Slack Workspace",
+    )
+    organization = models.OneToOneField(
+        "Organization",
+        related_name="slack_integration",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    team_name = models.CharField(
+        max_length=255, null=False, help_text="name of the Organization's Slack Team"
+    )
+    team_id = models.CharField(
+        max_length=255, null=False, help_text="ID of the Organization's Slack Team"
+    )
+    bot_user_id = models.CharField(
+        max_length=255, null=False, help_text="ID of the Managr Bot"
+    )
+    access_token = models.CharField(
+        max_length=255, null=False, help_text="Slack API access token"
+    )
+    incoming_webhook = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+        help_text="data leveraged to post messages from external sources into Slack",
+    )
+    enterprise = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+        help_text="data on the Organization's Enterprise Slack Team, if any",
+    )
+
+    objects = OrganizationSlackIntegrationQuerySet.as_manager()
 
 
 class AccountQuerySet(models.QuerySet):
@@ -130,8 +185,8 @@ class AccountQuerySet(models.QuerySet):
 
 class Account(TimeStampModel):
     """
-        Accounts are potential and exisiting clients that 
-        can be made into leads and added to lists
+    Accounts are potential and exisiting clients that
+    can be made into leads and added to lists
 
     """
 
@@ -179,11 +234,11 @@ class ContactQuerySet(models.QuerySet):
 
 class Contact(TimeStampModel):
     """
-        Contacts are the point of contacts that belong to 
-        an account, they must be unique (by email) and can 
-        only belong to one account
-        If we have multiple organizations per account 
-        then that will also be unique and added here
+    Contacts are the point of contacts that belong to
+    an account, they must be unique (by email) and can
+    only belong to one account
+    If we have multiple organizations per account
+    then that will also be unique and added here
     """
 
     title = models.CharField(max_length=255, blank=True)
@@ -243,9 +298,9 @@ class StageQuerySet(models.QuerySet):
 
 
 class Stage(TimeStampModel):
-    """ 
-        Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
-        There are some static stages available to all organizations and private ones that belong only to certain organizations. 
+    """
+    Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
+    There are some static stages available to all organizations and private ones that belong only to certain organizations.
     """
 
     title = models.CharField(max_length=255)
@@ -328,4 +383,3 @@ class Stage(TimeStampModel):
             )
 
         return super(Stage, self).save(*args, **kwargs)
-

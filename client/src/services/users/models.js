@@ -30,6 +30,7 @@ export default class User {
       quota = null,
       upside = null,
       commit = null,
+      slackRef = null,
     } = user
     Object.assign(this, {
       id,
@@ -51,6 +52,7 @@ export default class User {
       quota,
       upside,
       commit,
+      slackRef,
     })
   }
 

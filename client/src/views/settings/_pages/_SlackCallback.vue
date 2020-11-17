@@ -15,6 +15,7 @@
  * redirects back to the settings page.
  */
 import SlackOAuthModel from '@/services/slack'
+import User from '@/services/users'
 
 export default {
   name: 'SlackCallback',
@@ -33,11 +34,25 @@ export default {
       this.$router.push({ name: 'SlackIntegration' })
       return
     }
-    // Now will need to exchange the params.code for an access token using the oauth.access method.
-    // https://api.slack.com/methods/oauth.v2.access
-    slackOAuth.getAccessToken().then(data => {
-      debugger
-    })
+    // Now will need to exchange the params.code for an access token.
+    slackOAuth
+      .getAccessToken()
+      .then(data => {
+        if (data.tokenType === 'bot') {
+          //
+        } else {
+          // if data.team.id !== orgRef.slackIntegration.teamId
+          // $Alert.alert "You signed into the wrong Slack Workspace, please try again."
+          // abort
+          User.api.integrateSlack(this.$store.state.user.id, data.authedUser.id).then(user => {
+            // update store state with new user (has user.slackRef)
+            // success $Alert
+          })
+        }
+      })
+      .finally(() => {
+        this.$router.push({ name: 'SlackIntegration' })
+      })
   },
 }
 </script>

@@ -5,6 +5,7 @@ from django import forms
 from django.forms import ModelForm, Textarea
 from .models import (
     User,
+    UserSlackIntegration,
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
@@ -13,7 +14,13 @@ from .models import (
 )
 from . import constants as core_consts
 
-TRUE_FALSE_CHOICES = (("True", "ON",), ("False", "OFF"))
+TRUE_FALSE_CHOICES = (
+    (
+        "True",
+        "ON",
+    ),
+    ("False", "OFF"),
+)
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -64,7 +71,17 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),}),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                ),
+            },
+        ),
     )
 
     list_display = ("email", "first_name", "last_name")
@@ -128,9 +145,9 @@ class CustomNotificationOption(admin.ModelAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(UserSlackIntegration)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
 admin.site.register(EmailTemplate)
 admin.site.register(MessageAuthAccount)
 admin.site.register(NotificationOption, CustomNotificationOption)
 admin.site.register(NotificationSelection, CustomNotificationSelection)
-

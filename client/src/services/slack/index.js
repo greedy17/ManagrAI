@@ -1,4 +1,4 @@
-import { urlQueryParams } from '@/services/utils'
+import { urlQueryParams, objectToCamelCase } from '@/services/utils'
 import store from '@/store'
 
 const WORKSPACE_SCOPES = [
@@ -123,6 +123,8 @@ export default class SlackOAuth {
       'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
       body: new URLSearchParams(payload),
     }
-    return fetch(endpoint, config).then(r => r.json())
+    return fetch(endpoint, config)
+      .then(r => r.json())
+      .then(json => objectToCamelCase(json))
   }
 }

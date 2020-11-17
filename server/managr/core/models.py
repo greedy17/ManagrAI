@@ -182,7 +182,10 @@ class User(AbstractUser, TimeStampModel):
         if self.magic_token_expired:
             self.regen_magic_token()
 
-        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
+        return gen_auth_url(
+            email=self.email,
+            magic_token=str(self.magic_token),
+        )
 
     @property
     def unviewed_notifications_count(self):
@@ -225,6 +228,31 @@ class User(AbstractUser, TimeStampModel):
 
     class Meta:
         ordering = ["email"]
+
+
+class UserSlackIntegrationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser or user.is_serviceaccount:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+        else:
+            return None
+
+
+class UserSlackIntegration(TimeStampModel):
+    user = models.OneToOneField(
+        "User",
+        related_name="slack_integration",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    slack_id = models.CharField(
+        max_length=255, null=False, help_text="Slack ID of the User, for this workspace"
+    )
+
+    objects = UserSlackIntegrationQuerySet.as_manager()
 
 
 class EmailAuthAccount(TimeStampModel):
@@ -401,8 +429,8 @@ class NotificationSelection(TimeStampModel):
 
 
 class NotificationOption(TimeStampModel):
-    """ Manage Email and Alert Notifications (Alerts are notfications
-     they receive on the Notifications side nav) options """
+    """Manage Email and Alert Notifications (Alerts are notfications
+    they receive on the Notifications side nav) options"""
 
     # user groups will be used to populate the options for each user type
     title = models.CharField(max_length=128, help_text="Friendly Name")
@@ -455,4 +483,3 @@ class NotificationOption(TimeStampModel):
                 option=self, user=user, value=self.default_value
             )
             return selection
-

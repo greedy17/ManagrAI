@@ -12,6 +12,7 @@ const USERS_ENDPOINT = '/users/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
+const GENERATE_SLACK_INTEGRATION_ENDPOINT = uid => `/users/${uid}/integrate-slack/`
 
 export default class UserAPI {
   get client() {
@@ -157,5 +158,14 @@ export default class UserAPI {
     } catch {
       apiErrorHandler({ apiName: 'UserAPI.Messaging' })
     }
+  }
+
+  integrateSlack(uid, slackId) {
+    const data = { slackId }
+    const promise = this.client
+      .post(GENERATE_SLACK_INTEGRATION_ENDPOINT(uid), this.cls.toAPI(data))
+      .then(r => this.cls.fromAPI(r.data))
+      .catch(apiErrorHandler({ apiName: 'UserAPI.integrateSlack' }))
+    return promise
   }
 }
