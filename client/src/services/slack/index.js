@@ -1,7 +1,7 @@
 import { urlQueryParams } from '@/services/utils'
 import store from '@/store'
 
-const workspaceScopes = [
+const WORKSPACE_SCOPES = [
   'app_mentions:read',
   'channels:join',
   'channels:read',
@@ -21,14 +21,14 @@ const workspaceScopes = [
   'users:read.email',
 ]
 
+const USER_SCOPES = ['identity.basic']
+
 /* 
   If the OAuth request was accepted, the URL will contain a temporary code in a GET code parameter.
   If the OAuth request was denied, the URL will contain a GET error parameter.
   In either case, the URL will also contain the state provided in the initial redirect step in a state parameter.
 */
 export default class SlackOAuth {
-  static workspaceScopes = workspaceScopes
-
   constructor() {
     this.params = urlQueryParams()
     this.userID = store.state.user.id
@@ -51,32 +51,55 @@ export default class SlackOAuth {
     )
   }
 
-  get workspaceScopesParams() {
-    return SlackOAuth.workspaceScopes.join(',')
+  get slackRootURI() {
+    return 'https://slack.com/oauth/v2/authorize'
   }
 
-  get workspaceOptionalParams() {
-    // Can specify the following three optional parameters:
-    // redirect_uri -- The URL to redirect back to upon authorization
-    // state -- unique string to be passed back upon completion
-    // team -- Slack team ID of the authenticated user to the integration or app to that team
-    const params = {
-      redirect_uri: this.redirectURI,
-      state: this.userID,
-      //   team: ?
-    }
-    return `redirect_uri=${params.redirect_uri}&state=${params.state}`
+  // parameters:
+  get workspaceScopesParam() {
+    return 'scope=' + WORKSPACE_SCOPES.join(',')
   }
+
+  get userScopesParam() {
+    return 'user_scope=' + USER_SCOPES.join(',')
+  }
+
+  get clientIdParam() {
+    return 'client_id=' + this.clientID
+  }
+
+  get redirectUriParam() {
+    return 'redirect_uri=' + this.redirectURI
+  }
+
+  get stateParam() {
+    return 'state=' + this.userID
+  }
+
+  /*
+   * STEP 1: For use in SlacIntegration.vue
+   */
 
   get addToWorkspaceLink() {
-    return `https://slack.com/oauth/v2/authorize?scope=${this.workspaceScopesParams}&client_id=${this.clientID}&${this.workspaceOptionalParams}`
+    let params = [
+      this.workspaceScopesParam,
+      this.clientIdParam,
+      this.stateParam,
+      this.redirectUriParam,
+    ]
+    return this.slackRootURI + '?' + params.join('&')
   }
+
+  //TODO: add teamParam and add it to userSignIn
 
   get userSignInLink() {
-    return `https://slack.com/oauth/v2/authorize?user_scope=identity.basic&client_id=${this.clientID}`
+    let params = [this.userScopesParam, this.clientIdParam, this.stateParam, this.redirectUriParam]
+    return this.slackRootURI + '?' + params.join('&')
   }
 
-  // STEP 2:
+  /*
+   * STEP 2: For use in _SlackCallback.vue
+   */
 
   // If the states don't match, the request has been created by a third party and the process should be aborted.
   get stateParamIsValid() {
