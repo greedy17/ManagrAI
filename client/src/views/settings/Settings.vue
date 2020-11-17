@@ -121,7 +121,6 @@ export default {
       return this.$store.state.user.isStaff
     },
     isManager() {
-      // used to check superuser if is staff then they currently do not have an org
       return this.$store.state.user.isStaff
     },
     organization() {

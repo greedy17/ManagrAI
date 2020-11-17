@@ -22,14 +22,14 @@ import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 
 // settings -related views
 import Settings from '@/views/settings/Settings'
-import EmailIntegration from '@/components/settings/EmailIntegration'
-import EmailTemplates from '@/components/settings/EmailTemplates'
-import TextIntegration from '@/components/settings/TextIntegration'
-import Profile from '@/components/settings/Profile'
-import Invite from '@/components/settings/Invite'
-// import Password from '@/components/settings/Password'
+import EmailIntegration from '@/views/settings/_pages/_EmailIntegration'
+import EmailTemplates from '@/views/settings/_pages/_EmailTemplates'
+import TextIntegration from '@/views/settings/_pages/_TextIntegration'
+import Profile from '@/views/settings/_pages/_Profile'
+import Invite from '@/views/settings/_pages/_Invite'
+// import Password from '@/views/settings/_pages/_Password'
 import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
-import SlackIntegration from '@/components/settings/SlackIntegration'
+import SlackIntegration from '@/views/settings/_pages/_SlackIntegration'
 
 Vue.use(Router)
 
