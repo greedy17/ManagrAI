@@ -26,8 +26,6 @@
 </template>
 
 <script>
-import SlackOAuthModel from '@/services/slack'
-
 const standardOptions = [
   {
     value: 'EmailIntegration',
@@ -69,39 +67,7 @@ const adminOptions = [
 
 export default {
   name: 'Settings',
-  created() {
-    // check to see if this page is loaded as result of Slack OAuth redirect
-    this.handleSlackOAuth()
-  },
   methods: {
-    handleSlackOAuth() {
-      /*
-        If the OAuth request was accepted, the URL will contain a temporary code in a GET code parameter.
-        If the OAuth request was denied, the URL will contain a GET error parameter.
-        In either case, the URL will also contain the state provided in the initial redirect step in a state parameter.
-      */
-      let slackOAuth = new SlackOAuthModel()
-      if (!slackOAuth.isSlackOAuthRedirect) {
-        return
-      }
-      // If the states don't match, the request has been created by a third party and the process should be aborted.
-      if (!slackOAuth.stateParamIsValid) {
-        return
-      }
-      if (slackOAuth.params.error) {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 3000,
-          message: 'Slack Integration declined.',
-        })
-        return
-      }
-      // Now will need to exchange the params.code for an access token using the oauth.access method.
-      // https://api.slack.com/methods/oauth.v2.access
-      slackOAuth.getAccessToken().then(data => {
-        debugger
-      })
-    },
     toggleActivePage(name) {
       this.$router.push({ name })
     },

@@ -30,6 +30,7 @@ import Invite from '@/views/settings/_pages/_Invite'
 // import Password from '@/views/settings/_pages/_Password'
 import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
 import SlackIntegration from '@/views/settings/_pages/_SlackIntegration'
+import SlackCallback from '@/views/settings/_pages/_SlackCallback'
 
 Vue.use(Router)
 
@@ -135,6 +136,11 @@ export default new Router({
           name: 'NotificationSettings',
           path: 'notification-settings',
           component: NotificationSettings,
+        },
+        {
+          name: 'SlackCallback',
+          path: 'slack-integration/callback',
+          component: SlackCallback,
         },
         {
           name: 'SlackIntegration',

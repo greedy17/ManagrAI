@@ -43,7 +43,12 @@ export default class SlackOAuth {
   }
 
   get redirectURI() {
-    return window.location.protocol + '//' + window.location.host + '/settings'
+    return (
+      window.location.protocol +
+      '//' +
+      window.location.host +
+      '/settings/slack-integration/callback'
+    )
   }
 
   get workspaceScopesParams() {
@@ -73,18 +78,15 @@ export default class SlackOAuth {
 
   // STEP 2:
 
-  get isSlackOAuthRedirect() {
-    return !!((this.params.code || this.params.error) && this.params.state)
-  }
-
   // If the states don't match, the request has been created by a third party and the process should be aborted.
   get stateParamIsValid() {
     return this.params.state === this.userID
   }
 
+  // NOTE: getAccessToken() works for both workspace and user OAuth.
+  // https://api.slack.com/methods/oauth.v2.access
   getAccessToken = () => {
     // Exchange the params.code for an access token using Slack's oauth.access method.
-    // https://api.slack.com/methods/oauth.v2.access
     const endpoint = 'https://slack.com/api/oauth.v2.access'
     const payload = {
       code: this.params.code,
