@@ -7,7 +7,6 @@ import Auth from '@/services/auth'
 
 // views
 import Login from '@/views/auth/Login'
-import Invite from '@/views/auth/Invite'
 import Activation from '@/views/auth/Activation'
 import LeadsIndex from '@/views/leads/LeadsIndex'
 import LeadsDetail from '@/views/leads/LeadsDetail'
@@ -16,11 +15,21 @@ import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
-import Settings from '@/views/settings/Settings'
 import Reports from '@/views/reports/Reports'
 import StoryReportDetail from '@/views/reports/StoryReportDetail'
 import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 // import Styles from '@/views/settings/Styles'
+
+// settings -related views
+import Settings from '@/views/settings/Settings'
+import EmailIntegration from '@/components/settings/EmailIntegration'
+import EmailTemplates from '@/components/settings/EmailTemplates'
+import TextIntegration from '@/components/settings/TextIntegration'
+import Profile from '@/components/settings/Profile'
+import Invite from '@/components/settings/Invite'
+// import Password from '@/components/settings/Password'
+import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
+import SlackIntegration from '@/components/settings/SlackIntegration'
 
 Vue.use(Router)
 
@@ -35,12 +44,6 @@ export default new Router({
       path: '/login',
       name: 'Login',
       component: Login,
-    },
-    {
-      path: '/invite',
-      name: 'Invite',
-      component: Invite,
-      beforeEnter: Auth.requireUserTypeManagerOrStaff,
     },
     {
       path: '/activation/:uid/:token',
@@ -92,9 +95,54 @@ export default new Router({
     },
     {
       path: '/settings',
-      name: 'Settings',
+      // name: 'Settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
+      children: [
+        {
+          name: 'EmailIntegration',
+          path: 'email-integration',
+          component: EmailIntegration,
+        },
+        {
+          name: 'EmailTemplates',
+          path: 'email-templates',
+          component: EmailTemplates,
+        },
+        {
+          name: 'TextIntegration',
+          path: 'text-integration',
+          component: TextIntegration,
+        },
+        {
+          name: 'Profile',
+          path: 'profile',
+          component: Profile,
+        },
+        {
+          name: 'Invite',
+          path: 'invite',
+          component: Invite,
+          beforeEnter: Auth.requireUserTypeManagerOrStaff,
+        },
+        // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
+        // {
+        //   name: 'Password',
+        //   path: 'password',
+        //   component: Password,
+        // },
+        {
+          name: 'NotificationSettings',
+          path: 'notification-settings',
+          component: NotificationSettings,
+        },
+        {
+          name: 'SlackIntegration',
+          path: 'slack-integration',
+          component: SlackIntegration,
+        },
+        { path: '', redirect: '/settings/email-integration' },
+      ],
     },
     {
       path: '/reports',

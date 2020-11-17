@@ -48,7 +48,7 @@ export default {
         })
       })
       .finally(() => {
-        this.$router.replace({ name: 'Settings' })
+        this.$router.replace({ name: 'EmailIntegration' })
         this.$store.dispatch('refreshCurrentUser')
       })
   },

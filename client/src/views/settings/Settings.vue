@@ -9,114 +9,118 @@
           </h5>
         </div>
         <div
+          v-for="option in options"
+          :key="option.value"
           class="toolbar__row"
-          @click="toggleActivePage('emailIntegration')"
-          :class="{ toolbar__active: emailIntegrationActive }"
+          @click="toggleActivePage(option.value)"
+          :class="{ toolbar__active: isActivePage(option.value) }"
         >
-          Email Integration
+          {{ option.label }}
         </div>
-        <div
-          class="toolbar__row"
-          @click="toggleActivePage('emailTemplates')"
-          :class="{ toolbar__active: emailTemplatesActive }"
-        >
-          Email Templates
-        </div>
-
-        <div
-          class="toolbar__row"
-          @click="toggleActivePage('textIntegration')"
-          :class="{ toolbar__active: textIntegrationActive }"
-        >
-          Text Integration
-        </div>
-        <div
-          class="toolbar__row"
-          :class="{ toolbar__active: notificationSettingsPageActive }"
-          @click="toggleActivePage('notificationSettingsPage')"
-        >
-          Notification Settings
-        </div>
-        <div
-          class="toolbar__row"
-          v-if="$store.state.user.isManager || $store.state.user.isStaff"
-          @click="routeToInviteUser"
-        >
-          Invite User
-        </div>
-        <div
-          class="toolbar__row"
-          :class="{ toolbar__active: profileActive }"
-          @click="toggleActivePage('profile')"
-        >
-          Profile
-        </div>
-        <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
-        <!-- <div class="toolbar__row" @click="toggleActivePage('password')">
-          Password
-        </div> -->
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
-      <EmailIntegration v-if="emailIntegrationActive" />
-      <EmailTemplates v-if="emailTemplatesActive" />
-      <TextIntegration v-if="textIntegrationActive" />
-      <Profile v-if="profileActive" />
-      <Password v-if="passwordActive" />
-      <NotificationSettings v-if="notificationSettingsPageActive" />
+      <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script>
-import TextIntegration from '@/components/settings/TextIntegration'
-import EmailIntegration from '@/components/settings/EmailIntegration'
-import EmailTemplates from '@/components/settings/EmailTemplates'
-import Profile from '@/components/settings/Profile'
-import Password from '@/components/settings/Password'
-import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
+import SlackOAuthModel from '@/services/slack'
+
+const standardOptions = [
+  {
+    value: 'EmailIntegration',
+    label: 'Email Integration',
+  },
+  {
+    value: 'EmailTemplates',
+    label: 'Email Templates',
+  },
+  {
+    value: 'TextIntegration',
+    label: 'Text Integration',
+  },
+  {
+    value: 'SlackIntegration',
+    label: 'Slack Integration',
+  },
+  {
+    value: 'NotificationSettings',
+    label: 'Notification Settings',
+  },
+  {
+    value: 'Profile',
+    label: 'Profile',
+  },
+  // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
+  // {
+  //   value: 'Password',
+  //   label: 'Password'
+  // },
+]
+
+const adminOptions = [
+  {
+    value: 'Invite',
+    label: 'Invite User',
+  },
+]
 
 export default {
   name: 'Settings',
-  components: {
-    EmailIntegration,
-    EmailTemplates,
-    TextIntegration,
-    Profile,
-    Password,
-    NotificationSettings,
-  },
-  data() {
-    return {
-      emailIntegrationActive: true,
-      emailTemplatesActive: false,
-      textIntegrationActive: false,
-      profileActive: false,
-      passwordActive: false,
-      notificationSettingsPageActive: false,
-    }
+  created() {
+    // check to see if this page is loaded as result of Slack OAuth redirect
+    this.handleSlackOAuth()
   },
   methods: {
-    toggleActivePage(pageToActivate) {
-      this.emailIntegrationActive = false
-      this.emailTemplatesActive = false
-      this.textIntegrationActive = false
-      this.profileActive = false
-      this.passwordActive = false
-      this.notificationSettingsPageActive = false
-      if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
-      if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
-      if (pageToActivate === 'textIntegration') this.textIntegrationActive = true
-      if (pageToActivate === 'profile') this.profileActive = true
-      if (pageToActivate === 'password') this.passwordActive = true
-      if (pageToActivate === 'notificationSettingsPage') this.notificationSettingsPageActive = true
+    handleSlackOAuth() {
+      /*
+        If the OAuth request was accepted, the URL will contain a temporary code in a GET code parameter.
+        If the OAuth request was denied, the URL will contain a GET error parameter.
+        In either case, the URL will also contain the state provided in the initial redirect step in a state parameter.
+      */
+      let slackOAuth = new SlackOAuthModel()
+      if (!slackOAuth.isSlackOAuthRedirect) {
+        return
+      }
+      // If the states don't match, the request has been created by a third party and the process should be aborted.
+      if (!slackOAuth.stateParamIsValid) {
+        return
+      }
+      if (slackOAuth.params.error) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 3000,
+          message: 'Slack Integration declined.',
+        })
+        return
+      }
+      // Now will need to exchange the params.code for an access token using the oauth.access method.
+      // https://api.slack.com/methods/oauth.v2.access
+      slackOAuth.getAccessToken().then(data => {
+        debugger
+      })
     },
-    routeToInviteUser() {
-      this.$router.push({ name: 'Invite' })
+    toggleActivePage(name) {
+      this.$router.push({ name })
+    },
+    isActivePage(pageName) {
+      return pageName === this.$route.name
     },
   },
   computed: {
+    options() {
+      if (this.isStaff || this.isManager) {
+        return [...standardOptions, ...adminOptions]
+      }
+      return standardOptions
+    },
     isStaff() {
+      // used to check superuser if is staff then they currently do not have an org
+      return this.$store.state.user.isStaff
+    },
+    isManager() {
       // used to check superuser if is staff then they currently do not have an org
       return this.$store.state.user.isStaff
     },
