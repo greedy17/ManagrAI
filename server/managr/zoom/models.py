@@ -1,10 +1,12 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.utils import timezone
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
 
 from . import constants as zoom_consts
+from .zoom_helper.models import ZoomAcct
 
 
 class ZoomAuthAccountQuerySet(models.QuerySet):
@@ -21,7 +23,7 @@ class ZoomAuthAccountQuerySet(models.QuerySet):
 
 
 class ZoomAuthAccount(TimeStampModel):
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="zoom_account"
     )
     zoom_id = models.CharField(max_length=255, unique=True)
@@ -30,7 +32,7 @@ class ZoomAuthAccount(TimeStampModel):
     email = models.CharField(max_length=255)
     type = models.PositiveSmallIntegerField()
     role_name = models.CharField(max_length=255, null=True, blank=True)
-    personal_meeting_uri = models.CharField(max_length=255)
+    personal_meeting_url = models.CharField(max_length=255)
     timezone = models.CharField(max_length=255)
     verified = models.PositiveSmallIntegerField()
     dept = models.CharField(max_length=255, blank=True, null=True)
@@ -38,23 +40,43 @@ class ZoomAuthAccount(TimeStampModel):
     pmi = models.CharField(
         max_length=255, blank=True, null=True, help_text="personal meeting id"
     )
-    user_pmi = models.BooleanField(default=False)
+    use_pmi = models.BooleanField(default=False)
     host_key = models.CharField(max_length=255)
     jid = models.CharField(max_length=255)
-    account_id = models.CharField(max_length=255, unique=True)
+    account_id = models.CharField(max_length=255)
     language = models.CharField(max_length=150, null=True, blank=True)
     phone_country = models.CharField(max_length=150, null=True, blank=True)
     phone_number = models.CharField(max_length=150, null=True, blank=True)
     status = models.CharField(max_length=150)
-    token = models.CharField(max_length=255)
-    refresh_token = models.CharField(max_length=255)
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    token_generated_date = models.DateTimeField()
+    token_scope = models.CharField(max_length=150, null=True, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def helper_class(self):
+        data = self.__data
+        return ZoomAcct(**data)
+
+    @property
+    def is_expired(self):
+        return self.token_generated_date < timezone.now()
+
+    def generate_token(self):
+        res = self.helper_class.refresh_token()
+        self.token_generated_date = timezone.now()
+        self.access_token = res.access_token
+        self.refresh_token = res.refresh_token
+
+
+"""
+BLOCKED THIS OUT FOR NOW SO IT DOES NOT CREATE A MIGRATION
 
 class ZoomMeeting(TimeStampModel):
-    # account_id might refer to organization account (not entirely sure so making it an FK)
+
     account_id = models.CharField(max_length=255, blank=True, null=True)
     operator = models.EmailField()
     meeting_id = models.CharField(max_length=255, help_text="Aka meeting number")
@@ -104,7 +126,5 @@ class ZoomMeeting(TimeStampModel):
         blank=True,
     )
 
-    def get_meeting_meta(self):
-        """ helper to get meeting not passed down from webhook"""
-        return
 
+"""

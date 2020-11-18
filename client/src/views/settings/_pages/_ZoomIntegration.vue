@@ -1,8 +1,8 @@
 <template>
   <div class="zoom-integration">
-    <button @click="getZoomAuthLink">Get Link</button>
-
-    {{ authLink }}
+    <button :disabled="$store.state.user.zoomAccount" @click="getZoomAuthLink">
+      Get Link
+    </button>
   </div>
 </template>
 
@@ -21,9 +21,22 @@ export default {
       this.generatingToken = true
       // send the code to the backend for processing
       try {
-        await ZoomAccount.api.getAuthData(this.$route.query.code)
+        const res = await ZoomAccount.api.getAuthData(this.$route.query.code)
+
+        if (res) {
+          await this.$store.dispatch('refreshCurrentUser')
+
+          this.$router.replace({
+            name: 'ZoomIntegration',
+            params: {},
+          })
+        }
       } catch (e) {
-        console.log(e)
+        this.$Alert.alert({
+          message: 'There was an error validating your token',
+          type: 'error',
+          timeout: 3000,
+        })
       } finally {
         this.generatingToken = false
       }
@@ -31,10 +44,20 @@ export default {
   },
   methods: {
     async getZoomAuthLink() {
-      const res = await ZoomAccount.api.getAuthLink()
-      this.authLink = res
-      if (res.link) {
-        window.open(res.link)
+      this.generatingToken = true
+      try {
+        const res = await ZoomAccount.api.getAuthLink()
+        if (res.link) {
+          window.location.href = res.link
+        }
+      } catch (e) {
+        console.log(e)
+        this.generatingToken = false
+        this.$Alert.alert({
+          message: 'There was a problem generating your link',
+          type: 'error',
+          timeout: 3000,
+        })
       }
     },
   },

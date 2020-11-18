@@ -14,7 +14,7 @@ from managr.utils.misc import get_site_url
 CLIENT_ID = settings.ZOOM_CLIENT_ID
 AUTHORIZATION_URI = "https://zoom.us/oauth/authorize"
 AUTHENTICATION_URI = "https://zoom.us/oauth/token"
-
+ZOOM_API_ENDPOINT = "https://api.zoom.us/v2"
 
 uri = get_site_url()
 # must be same as on zoom app
@@ -39,6 +39,10 @@ AUTHENTICATION_QUERY_PARAMS = lambda x: {
     "grant_type": "authorization_code",
     "code": x,
     "redirect_uri": REDIRECT_URI,
+}
+REAUTHENTICATION_QUERY_PARAMS = lambda x: {
+    "grant_type": "refresh_token",
+    "code": x,
 }
 
 ZOOM_CLIENT_ID = settings.ZOOM_CLIENT_ID

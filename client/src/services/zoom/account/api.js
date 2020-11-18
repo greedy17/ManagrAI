@@ -23,7 +23,8 @@ export default class CeremonyAPI extends ModelAPI {
   }
   async getAuthData(code) {
     try {
-      await this.client.post(CeremonyAPI.ENDPOINT + 'authenticate', { code: code })
+      const res = await this.client.post(CeremonyAPI.ENDPOINT + 'authenticate', { code: code })
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
     }
