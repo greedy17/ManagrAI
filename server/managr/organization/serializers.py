@@ -25,7 +25,11 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationSlackIntegration
-        fields = "__all__"
+        fields = (
+            "datetime_created",
+            "team_name",
+            "team_id",
+        )
 
 
 class OrganizationRefSerializer(serializers.ModelSerializer):
