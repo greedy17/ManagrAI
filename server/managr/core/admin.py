@@ -23,6 +23,10 @@ TRUE_FALSE_CHOICES = (
 )
 
 
+class UserSlackIntegrationInline(admin.StackedInline):
+    model = UserSlackIntegration
+
+
 class EmailAuthAccForm(forms.ModelForm):
     linked_at = forms.IntegerField()
 
@@ -42,6 +46,7 @@ class EmailAuthAccForm(forms.ModelForm):
 
 class CustomUserAdmin(UserAdmin):
     model = User
+    inlines = (UserSlackIntegrationInline,)
 
     fieldsets = (
         (

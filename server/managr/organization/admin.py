@@ -5,8 +5,13 @@ from django.contrib import admin
 from .models import Organization, OrganizationSlackIntegration, Account, Contact, Stage
 
 
+class OrganizationSlackIntegrationInline(admin.StackedInline):
+    model = OrganizationSlackIntegration
+
+
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
+    inlines = (OrganizationSlackIntegrationInline,)
     list_display = (
         "name",
         "message_auth_count",
