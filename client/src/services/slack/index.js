@@ -31,7 +31,7 @@ const USER_SCOPES = ['identity.basic']
 export default class SlackOAuth {
   constructor() {
     this.params = urlQueryParams()
-    this.userID = store.state.user.id
+    this.user = store.state.user
   }
 
   get clientID() {
@@ -73,7 +73,11 @@ export default class SlackOAuth {
   }
 
   get stateParam() {
-    return 'state=' + this.userID
+    return 'state=' + this.user.id
+  }
+
+  get teamIdParam() {
+    return 'team=' + this.user.organizationRef.slackRef.teamId
   }
 
   /*
@@ -82,18 +86,22 @@ export default class SlackOAuth {
 
   get addToWorkspaceLink() {
     let params = [
-      this.workspaceScopesParam,
       this.clientIdParam,
       this.stateParam,
       this.redirectUriParam,
+      this.workspaceScopesParam,
     ]
     return this.slackRootURI + '?' + params.join('&')
   }
 
-  //TODO: add teamParam and add it to userSignIn
-
   get userSignInLink() {
-    let params = [this.userScopesParam, this.clientIdParam, this.stateParam, this.redirectUriParam]
+    let params = [
+      this.clientIdParam,
+      this.stateParam,
+      this.redirectUriParam,
+      this.userScopesParam,
+      this.teamIdParam,
+    ]
     return this.slackRootURI + '?' + params.join('&')
   }
 
@@ -103,7 +111,7 @@ export default class SlackOAuth {
 
   // If the states don't match, the request has been created by a third party and the process should be aborted.
   get stateParamIsValid() {
-    return this.params.state === this.userID
+    return this.params.state === this.user.id
   }
 
   // NOTE: getAccessToken() works for both workspace and user OAuth.
