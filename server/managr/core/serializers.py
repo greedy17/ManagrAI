@@ -44,7 +44,10 @@ class MessageAuthAccountSerializer(serializers.ModelSerializer):
 class UserSlackIntegrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSlackIntegration
-        fields = "__all__"
+        fields = (
+            "slack_id",
+            "datetime_created",
+        )
 
 
 class UserRefSerializer(serializers.ModelSerializer):
