@@ -87,7 +87,7 @@ export default {
       return this.$store.state.user.isStaff
     },
     isManager() {
-      return this.$store.state.user.isStaff
+      return this.$store.state.user.type === 'MANAGER'
     },
     organization() {
       return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name

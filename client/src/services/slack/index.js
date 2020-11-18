@@ -81,7 +81,7 @@ export default class SlackOAuth {
   }
 
   /*
-   * STEP 1: For use in SlacIntegration.vue
+   * STEP 1: For use in _SlackIntegration.vue
    */
 
   get addToWorkspaceLink() {
