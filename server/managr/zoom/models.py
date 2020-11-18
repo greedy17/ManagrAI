@@ -58,7 +58,8 @@ class ZoomAuthAccount(TimeStampModel):
 
     @property
     def helper_class(self):
-        data = self.__data
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
         return ZoomAcct(**data)
 
     @property
@@ -73,19 +74,26 @@ class ZoomAuthAccount(TimeStampModel):
 
 
 """
-BLOCKED THIS OUT FOR NOW SO IT DOES NOT CREATE A MIGRATION
 
 class ZoomMeeting(TimeStampModel):
-
+    zoom_account = models.ForeignKey(
+        "ZoomAuthAccount", related_name="meetings", on_delete=models.CASCADE,
+    )
     account_id = models.CharField(max_length=255, blank=True, null=True)
     operator = models.EmailField()
     meeting_id = models.CharField(max_length=255, help_text="Aka meeting number")
-    meeting_uuid = models.CharField(max_length=255)
+    meeting_uuid = models.CharField(max_length=255, unique=True)
     host_id = models.CharField(max_length=255)
     topic = models.CharField(max_length=255)
     type = models.PositiveSmallIntegerField()
     start_time = models.DateTimeField()
     duration = models.PositiveSmallIntegerField()
+    operation = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Operation on all or single occurences",
+    )
     timezone = models.CharField(max_length=255)
     occurences = ArrayField(
         JSONField(max_length=128, default=dict),
@@ -94,12 +102,7 @@ class ZoomMeeting(TimeStampModel):
         help_text="if recurring meeting",
     )
     password = models.CharField(max_length=255, blank=True, null=True)
-    operator_id = models.ForeignKey(
-        ZoomAuthAccount,
-        on_delete=models.CASCADE,
-        related_name="meetings",
-        to_field="zoom_id",
-    )
+    operator_id = models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(
         max_length=255,
         choices=zoom_consts.MEETING_STATUSES,
@@ -126,5 +129,11 @@ class ZoomMeeting(TimeStampModel):
         blank=True,
     )
 
+    should_track = models.CharField(
+        max_length=255,
+        default="NOT_SELECTED",
+        choices=zoom_consts.MEETING_TRACKING_OPTIONS,
+        help_text="FUTURE DEVELOPMENT",
+    )
 
 """

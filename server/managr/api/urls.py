@@ -75,6 +75,11 @@ urlpatterns = [
     ),
     path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
     path(
+        "users/zoom/api/meetings",
+        zoom_views.create_zoom_meeting,
+        name="create_zoom_meeting",
+    ),
+    path(
         "users/zoom/authenticate",
         zoom_views.get_zoom_authentication,
         name="get_zoom_authentication",
@@ -84,6 +89,7 @@ urlpatterns = [
         zoom_views.get_zoom_auth_link,
         name="get_zoom_auth_link",
     ),
+    ## this is a dev/staging endpoint only for creating meetings for easier testing
 ]
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")

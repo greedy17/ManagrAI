@@ -9,9 +9,10 @@ from .exceptions import ZoomAPIException
 
 
 class ZoomAcct:
-    def __init__(self, managr_id, zoom_id, **kwargs):
-        self.user = str(managr_id)
-        self.zoom_id = zoom_id
+    def __init__(self, **kwargs):
+        self.user = kwargs.get("user", None)
+        self.zoom_id = kwargs.get("zoom_id", None)
+        self.id = kwargs.get("id", None)
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
         self.token_type = kwargs.get("token_type", None)
@@ -44,23 +45,12 @@ class ZoomAcct:
         query = zoom_model_consts.REAUTHENTICATION_QUERY_PARAMS(token)
         query = urlencode(query)
         ## error handling here
-        try:
-            r = requests.post(
-                f"{zoom_model_consts.AUTHENTICATION_URI}?{query}",
-                headers=dict(
-                    Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")
-                ),
-            )
-            data = r.json()
-        except Exception as e:
-            if e.__class__.__name__ == "JSONDecodeError":
-                ZoomAPIException(e, "get_auth_token")
-            else:
-                raise e
-        except HTTPError as e:
-            ZoomAPIException(e, "get_auth_token")
 
-        return data
+        r = requests.post(
+            f"{zoom_model_consts.AUTHENTICATION_URI}?{query}",
+            headers=dict(Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")),
+        )
+        return ZoomAcct._handle_response(r)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -114,10 +104,46 @@ class ZoomAcct:
         return ZoomAcct._handle_response(r)
 
     @classmethod
-    def create_account(cls, code: str, managr_id):
+    def create_account(cls, code: str, managr_user_id):
         auth_data = cls.get_auth_token(code)
         user_data = cls._get_user_data(auth_data["access_token"])
         data = {**auth_data, **user_data}
-        zoom_id = data.pop("id", None)
+        data["user"] = str(managr_user_id)
 
-        return cls(str(managr_id), zoom_id, **data)
+        zoom_id = data.pop("id", None)
+        data["zoom_id"] = zoom_id
+
+        return cls(**data)
+
+
+class ZoomMtg:
+    def __init__(self):
+        self.id = self.kwargs.get("meeting_managr_id", None)
+        self.account_id = self.kwargs.get("account_id", None)
+        self.operator = self.kwargs.get("operator", None)
+        self.meeting_id = self.kwargs.get("meeting_id", None)
+        self.meeting_uuid = self.kwargs.get("meeting_uuid", None)
+        self.host_id = self.kwargs.get("host_id", None)
+        self.topic = self.kwargs.get("topic", None)
+        self.type = self.kwargs.get("type", None)
+        self.start_time = self.kwargs.get("start_time", None)
+        self.timezone = self.kwargs.get("timezone", None)
+        self.duration = self.kwargs.get("duration", None)
+        self.occurences = self.kwargs.get("occurences", None)
+        self.operator_id = self.kwargs.get("operator_id", None)
+        self.operation = self.kwargs.get("operation", None)
+
+    @classmethod
+    def from_webhook(cls, data):
+        meeting_uuid = data.pop("uuid", None)
+        meeting_id = data.pop("id", None)
+        data["meeting_uuid"] = meeting_uuid
+        data["meeting_id"] = meeting_id
+        return cls(**data)
+
+    def get_meeting_details(self):
+        return
+
+    def get_meeting_participants(self):
+        return
+

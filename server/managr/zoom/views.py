@@ -1,4 +1,9 @@
+import logging
+import requests
+import json
+from faker import Faker
 from urllib.parse import urlencode
+from datetime import datetime
 
 from django.shortcuts import render, redirect
 from django.conf import settings
@@ -25,9 +30,10 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct
 from .serializers import ZoomAuthRefSerializer, ZoomAuthSerializer
-
+from . import constants as zoom_consts
 
 # Create your views here.
+logger = logging.getLogger("managr")
 
 
 @api_view(["get"])
@@ -64,4 +70,54 @@ def redirect_from_zoom(request):
         return redirect(f"{zoom_model_consts.ZOOM_FRONTEND_REDIRECT}?{q}")
     else:
         return redirect(f"{zoom_model_consts.ZOOM_FRONTEND_REDIRECT}")
+
+
+@api_view(["post"])
+def zoom_meetings_webhook(request):
+    event = request.data.get("event", None)
+    if not event:
+        logger.info(f"Received and empty request form Zoom {request}")
+        return
+    if event in zoom_consts.MEETING_EVENTS_CREATED:
+        # get or create
+        return
+    elif event in zoom_consts.MEETING_EVENTS_DELETED:
+        # get or create to update
+        return
+    elif event in zoom_consts.MEETING_EVENT_STARTED:
+        # get or create to update
+        return
+    elif event in zoom_consts.MEETING_EVENT_ENDED:
+        # get or create
+        # send to task to go and get meeting meta and participants
+        #
+        # slack user
+
+        return
+    return
+
+
+###### DEV ONLY CREATE MEETINGS ON THE FLY FOR TESTING WEBHOOK ENDPOINTS
+
+
+@api_view(["post"])
+def create_zoom_meeting(request):
+    if settings.IN_DEV or settings.IN_STAGING:
+        faker = Faker()
+        topic = faker.name()
+        type = 1
+        # stripe endpoing /users/userid/meetings
+        user_zoom_token = request.user.zoom_account.access_token
+        d = json.dumps({"topic": topic, "type": type})
+        r = requests.post(
+            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/me/meetings",
+            data=d,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {user_zoom_token}",
+            },
+        )
+        print(r.json())
+
+        return Response()
 
