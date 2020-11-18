@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, OrganizationSlackIntegration, Account, Contact, Stage
 
 
 class CustomOrganization(admin.ModelAdmin):
@@ -43,5 +43,6 @@ class CustomContact(admin.ModelAdmin):
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 
+admin.site.register(OrganizationSlackIntegration)
 admin.site.register(Contact)
 admin.site.register(Stage)

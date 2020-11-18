@@ -44,7 +44,7 @@ from managr.core.permissions import (
 )
 
 
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, OrganizationSlackIntegration, Account, Contact, Stage
 from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,
@@ -95,6 +95,60 @@ class OrganizationViewSet(
         serializer = OrganizationRefSerializer(qs, many=True)
 
         return Response(serializer.data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=True,
+        url_path="integrate-slack",
+    )
+    def integrate_slack(self, request, *args, **kwargs):
+        """
+        Create an OrganizationSlackIntegration associated with org
+        """
+        pk = kwargs.get("pk", None)
+        try:
+            org = Organization.objects.get(pk=pk)
+        except Organization.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # must be self making the integration
+        if org != request.user.organization:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        data = request.data
+        required_fields = [
+            "scope",
+            "team_name",
+            "team_id",
+            "bot_user_id",
+            "access_token",
+            "incoming_webhook",
+        ]
+        # Note: enterprise is an optional field
+        for field in required_fields:
+            if data.get(field, None) is None:
+                raise ValidationError(f"Missing {field}")
+
+        scope = data.get("scope", None)
+        team_name = data.get("team_name", None)
+        team_id = data.get("team_id", None)
+        bot_user_id = data.get("bot_user_id", None)
+        access_token = data.get("access_token", None)
+        incoming_webhook = data.get("incoming_webhook", None)
+        enterprise = data.get("enterprise", None)
+
+        integration = OrganizationSlackIntegration.objects.create(
+            organization=org,
+            scope=scope,
+            team_name=team_name,
+            team_id=team_id,
+            bot_user_id=bot_user_id,
+            access_token=access_token,
+            incoming_webhook=incoming_webhook,
+            enterprise=enterprise,
+        )
+
+        return Response(self.get_serializer_class()(integration.organization).data)
 
 
 class AccountViewSet(

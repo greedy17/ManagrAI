@@ -1,5 +1,5 @@
 <template>
-  <div>callback</div>
+  <div></div>
 </template>
 
 <script>
@@ -15,11 +15,12 @@
  * redirects back to the settings page.
  */
 import SlackOAuthModel from '@/services/slack'
+import Organization from '@/services/organizations'
 import User from '@/services/users'
 
 export default {
   name: 'SlackCallback',
-  created() {
+  async created() {
     let slackOAuth = new SlackOAuthModel()
     // If the states don't match, the request has been created by a third party and the process should be aborted.
     if (!slackOAuth.stateParamIsValid) {
@@ -34,25 +35,77 @@ export default {
       this.$router.push({ name: 'SlackIntegration' })
       return
     }
-    // Now will need to exchange the params.code for an access token.
-    slackOAuth
-      .getAccessToken()
-      .then(data => {
-        if (data.tokenType === 'bot') {
-          //
-        } else {
-          // if data.team.id !== orgRef.slackIntegration.teamId
-          // $Alert.alert "You signed into the wrong Slack Workspace, please try again."
-          // abort
-          User.api.integrateSlack(this.$store.state.user.id, data.authedUser.id).then(user => {
-            // update store state with new user (has user.slackRef)
-            // success $Alert
-          })
+    // Exchange the params.code for an access token.
+    await slackOAuth.getAccessToken().then(this.handleAccessToken)
+    // Take user back to Settings page.
+    this.$router.push({ name: 'SlackIntegration' })
+  },
+  methods: {
+    async handleAccessToken(data) {
+      /*
+       NOTE:
+       Only AddToWorkspace yields tokenType == 'bot'.
+       Both AddToWorkspace and UserSignIn yield data.authedUser, and in both cases
+       the user needs to integrate slack.
+       Therefore User.integrateSlack can and should take place regardless.
+      */
+
+      // STEP 1: if addToWorkspace, integrateSlack at Organization-level
+      if (data.tokenType === 'bot') {
+        let {
+          scope,
+          team: { name: teamName, id: teamId },
+          botUserId,
+          accessToken,
+          incomingWebhook,
+          enterprise,
+        } = data
+
+        let payload = {
+          scope,
+          teamName,
+          teamId,
+          botUserId,
+          accessToken,
+          incomingWebhook,
+          enterprise,
         }
+
+        await Organization.api
+          .integrateSlack(this.$store.state.user.organizationRef.id, payload)
+          .then(organization => {
+            // update store state with user's updated orgRef (has org.slackRef)
+            let user = { ...this.$store.state.user }
+            user.organizationRef = organization
+            return this.$store.dispatch('updateUser', user)
+          })
+      }
+
+      // STEP 2: integrate slack at the user-level
+      let {
+        team: { id: teamId },
+        authedUser: { id: slackId },
+      } = data
+      // check to see if user selected proper workspace to sign into.
+      // abort if invalid workspace
+      if (teamId !== this.$store.state.user.organizationRef.slackRef.teamId) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 3000,
+          message: 'You signed into the wrong Slack workspace, please try again.',
+        })
+        return
+      }
+      await User.api.integrateSlack(this.$store.state.user.id, slackId).then(user => {
+        // update store state with new user (has user.slackRef)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Slack integration successful.',
+        })
+        return this.$store.dispatch('updateUser', user)
       })
-      .finally(() => {
-        this.$router.push({ name: 'SlackIntegration' })
-      })
+    },
   },
 }
 </script>
