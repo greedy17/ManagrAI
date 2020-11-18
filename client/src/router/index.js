@@ -96,6 +96,14 @@ export default new Router({
     },
     {
       path: '/settings',
+      /*
+        NOTE:
+        The route name is removed due to the following warning:
+        [vue-router] Named Route 'Settings' has a default child route.
+        When navigating to this named route (:to="{name: 'Settings'"),
+        the default child route will not be rendered. Remove the name from
+        this route and use the name of the default child route for named links instead.
+       */
       // name: 'Settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
