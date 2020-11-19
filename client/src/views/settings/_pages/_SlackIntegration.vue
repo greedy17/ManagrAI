@@ -4,8 +4,12 @@
       <div class="box__header">
         <div class="box__title">
           SLACK INTEGRATION
-          <div class="test-message" v-if="organizationHasIntegration" @click="handleTest">
-            Send Test Message
+          <div
+            class="test-message"
+            v-if="organizationHasIntegration && userHasIntegration"
+            @click="handleTest"
+          >
+            Test {{ userCanAddIntegrationToOrganization ? 'Channel' : 'DM' }} Message
           </div>
         </div>
       </div>

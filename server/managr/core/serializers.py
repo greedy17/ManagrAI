@@ -11,6 +11,7 @@ from managr.organization.serializers import (
     AccountRefSerializer,
 )
 from managr.organization.models import Account
+from managr.slack.serializers import UserSlackIntegrationSerializer
 
 from .nylas import emails as nylas_emails
 
@@ -24,7 +25,6 @@ from .models import (
     MessageAuthAccount,
     NotificationOption,
     NotificationSelection,
-    UserSlackIntegration,
 )
 from .models import EmailTemplate
 
@@ -39,15 +39,6 @@ class MessageAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessageAuthAccount
         fields = "__all__"
-
-
-class UserSlackIntegrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserSlackIntegration
-        fields = (
-            "slack_id",
-            "datetime_created",
-        )
 
 
 class UserRefSerializer(serializers.ModelSerializer):

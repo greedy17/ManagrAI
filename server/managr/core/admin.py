@@ -3,9 +3,11 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
+
+from managr.slack.models import UserSlackIntegration
+
 from .models import (
     User,
-    UserSlackIntegration,
     EmailAuthAccount,
     EmailTemplate,
     MessageAuthAccount,
@@ -150,7 +152,6 @@ class CustomNotificationOption(admin.ModelAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(UserSlackIntegration)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
 admin.site.register(EmailTemplate)
 admin.site.register(MessageAuthAccount)

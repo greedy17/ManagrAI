@@ -6,6 +6,7 @@ from managr.lead import views as lead_views
 from managr.polling import views as poll_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
+from managr.slack import views as slack_views
 
 
 app_name = "api"
@@ -38,7 +39,7 @@ urlpatterns = [
     ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path(
-        "slack-test-message/", core_views.slack_test_message, name="slack_test_message"
+        "slack-test-message/", slack_views.slack_test_message, name="slack_test_message"
     ),
     path(
         "get-file/<str:file_id>/",
@@ -112,4 +113,5 @@ router.register(
     core_views.NotificationSettingsViewSet,
     "notification-settings",
 )
+# router.register("slack", slack_views.ExampleViewSet, "slack")
 urlpatterns += router.urls

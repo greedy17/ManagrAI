@@ -230,36 +230,6 @@ class User(AbstractUser, TimeStampModel):
         ordering = ["email"]
 
 
-class UserSlackIntegrationQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser or user.is_serviceaccount:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(user=user.id)
-        else:
-            return None
-
-
-class UserSlackIntegration(TimeStampModel):
-    user = models.OneToOneField(
-        "User",
-        related_name="slack_integration",
-        blank=False,
-        null=False,
-        on_delete=models.CASCADE,
-    )
-    slack_id = models.CharField(
-        max_length=255, null=False, help_text="Slack ID of the User, for this workspace"
-    )
-    channel = models.CharField(
-        max_length=255,
-        null=True,
-        help_text="Channel ID for the DM conversation between user and Managr bot",
-    )
-
-    objects = UserSlackIntegrationQuerySet.as_manager()
-
-
 class EmailAuthAccount(TimeStampModel):
     """Records Nylas OAuth authentication information for a user.
 

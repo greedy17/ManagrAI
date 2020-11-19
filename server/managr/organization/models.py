@@ -122,57 +122,6 @@ class Organization(TimeStampModel):
                     return token[0]["pk"]
 
 
-class OrganizationSlackIntegrationQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser or user.is_serviceaccount:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
-        else:
-            return None
-
-
-class OrganizationSlackIntegration(TimeStampModel):
-    scope = models.CharField(
-        max_length=255,
-        null=False,
-        help_text="permissions that the Managr Slack App has in the Organization's Slack Workspace",
-    )
-    organization = models.OneToOneField(
-        "Organization",
-        related_name="slack_integration",
-        blank=False,
-        null=False,
-        on_delete=models.CASCADE,
-    )
-    team_name = models.CharField(
-        max_length=255, null=False, help_text="name of the Organization's Slack Team"
-    )
-    team_id = models.CharField(
-        max_length=255, null=False, help_text="ID of the Organization's Slack Team"
-    )
-    bot_user_id = models.CharField(
-        max_length=255, null=False, help_text="ID of the Managr Bot"
-    )
-    access_token = models.CharField(
-        max_length=255, null=False, help_text="Slack API access token"
-    )
-    incoming_webhook = JSONField(
-        default=dict,
-        null=True,
-        blank=True,
-        help_text="data leveraged to post messages from external sources into Slack",
-    )
-    enterprise = JSONField(
-        default=dict,
-        null=True,
-        blank=True,
-        help_text="data on the Organization's Enterprise Slack Team, if any",
-    )
-
-    objects = OrganizationSlackIntegrationQuerySet.as_manager()
-
-
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:

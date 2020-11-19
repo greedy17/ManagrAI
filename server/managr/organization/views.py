@@ -30,7 +30,7 @@ from rest_framework.authtoken.models import Token
 
 
 from managr.lead.models import Lead
-
+from managr.slack.models import OrganizationSlackIntegration
 
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from managr.core import constants as core_consts
@@ -44,7 +44,7 @@ from managr.core.permissions import (
 )
 
 
-from .models import Organization, OrganizationSlackIntegration, Account, Contact, Stage
+from .models import Organization, Account, Contact, Stage
 from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,

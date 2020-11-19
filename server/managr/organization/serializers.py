@@ -1,12 +1,13 @@
 import json
-from rest_framework import serializers
+from rest_framework import serializers, status, filters, permissions
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Contact, Stage, OrganizationSlackIntegration
-from managr.lead.models import ActionChoice
-
-from rest_framework import status, filters, permissions
 from rest_framework.response import Response
+
+from managr.lead.models import ActionChoice
+from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
+
+from .models import Organization, Account, Contact, Stage
 
 
 class ActionChoiceRefSerializer(serializers.ModelSerializer):
@@ -19,16 +20,6 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
         fields = (
             "title",
             "description",
-        )
-
-
-class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrganizationSlackIntegration
-        fields = (
-            "datetime_created",
-            "team_name",
-            "team_id",
         )
 
 

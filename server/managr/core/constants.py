@@ -161,13 +161,3 @@ NOTIFICATION_OPTION_LAPSED_1_DAY_ID = "5d19b999-c0bf-429a-a8f5-17b9bc2efdc6"
 NOTIFICATION_OPTION_LAPSED_14_DAYS_ID = "2bcddc82-305b-42a8-a295-99b76f418aac"
 NOTIFICATION_OPTION_LAPSED_30_DAYS_ID = "0285c84d-10c5-41d8-8a97-d944cc373ad6"
 NOTIFICATION_OPTION_STAGE_UPDATE_ID = "0e0a1e9d-f806-4807-8d09-58e90346edff"
-
-
-# Slack-integration -related
-SLACK_API_ROOT = "https://slack.com/api/"
-
-# https://api.slack.com/methods/conversations.open
-CONVERSATIONS_OPEN = "conversations.open"
-
-# https://api.slack.com/methods/chat.postMessage
-POST_MESSAGE = "chat.postMessage"
