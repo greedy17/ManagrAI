@@ -8,6 +8,53 @@ from . import constants as zoom_model_consts
 from .exceptions import ZoomAPIException
 
 
+class ZoomMtg:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("meeting_managr_id", None)
+        self.zoom_account = kwargs.get("zoom_account", None)
+        self.account_id = kwargs.get("account_id", None)
+        self.operator = kwargs.get("operator", None)
+        self.meeting_id = kwargs.get("meeting_id", None)
+        self.meeting_uuid = kwargs.get("meeting_uuid", None)
+        self.host_id = kwargs.get("host_id", None)
+        self.topic = kwargs.get("topic", None)
+        self.type = kwargs.get("type", None)
+        self.start_time = kwargs.get("start_time", None)
+        self.timezone = kwargs.get("timezone", None)
+        self.duration = kwargs.get("duration", None)
+        self.occurences = kwargs.get("occurences", None)
+        self.operator_id = kwargs.get("operator_id", None)
+        self.operation = kwargs.get("operation", None)
+        self.participants = kwargs.get("participants", None)
+
+    @classmethod
+    def from_webhook(cls, payload):
+        data = payload
+        obj = data.pop("object", None)
+        if obj:
+            data = {**data, **obj}
+
+        meeting_uuid = data.pop("uuid", None)
+        meeting_id = data.pop("id", None)
+        data["meeting_uuid"] = meeting_uuid
+        data["meeting_id"] = meeting_id
+
+        return cls(**data)
+
+    def get_meeting_participants(self, access_token):
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/{self.meeting_uuid}"
+        # TODO check if access_token is expired and refresh PB 11/20/20
+        headers = dict(Authorization=(f"Bearer {self.access_token}"))
+        r = requests.get(url, headers=headers)
+        data = ZoomAcct._handle_response(r)
+        self.participants = data.get("participants", None)
+        return self
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
 class ZoomAcct:
     def __init__(self, **kwargs):
         self.user = kwargs.get("user", None)
@@ -36,6 +83,19 @@ class ZoomAcct:
         self.status = kwargs.get("status", None)
         self.token_generated_date = datetime.now()
         self.token_scope = kwargs.get("scope", None)
+
+    def get_meeting(self, meeting_id):
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}"
+        # TODO check if access_token is expired and refresh PB 11/20/20
+        headers = dict(Authorization=(f"Bearer {self.access_token}"))
+        r = requests.get(url, headers=headers)
+        data = ZoomAcct._handle_response(r)
+        meeting_uuid = data.pop("uuid", None)
+        meeting_id = data.pop("id", None)
+        data["meeting_uuid"] = meeting_uuid
+        data["meeting_id"] = meeting_id
+        data["zoom_account"] = str(self.id)
+        return ZoomMtg(**data)
 
     @property
     def as_dict(self):
@@ -114,36 +174,4 @@ class ZoomAcct:
         data["zoom_id"] = zoom_id
 
         return cls(**data)
-
-
-class ZoomMtg:
-    def __init__(self):
-        self.id = self.kwargs.get("meeting_managr_id", None)
-        self.account_id = self.kwargs.get("account_id", None)
-        self.operator = self.kwargs.get("operator", None)
-        self.meeting_id = self.kwargs.get("meeting_id", None)
-        self.meeting_uuid = self.kwargs.get("meeting_uuid", None)
-        self.host_id = self.kwargs.get("host_id", None)
-        self.topic = self.kwargs.get("topic", None)
-        self.type = self.kwargs.get("type", None)
-        self.start_time = self.kwargs.get("start_time", None)
-        self.timezone = self.kwargs.get("timezone", None)
-        self.duration = self.kwargs.get("duration", None)
-        self.occurences = self.kwargs.get("occurences", None)
-        self.operator_id = self.kwargs.get("operator_id", None)
-        self.operation = self.kwargs.get("operation", None)
-
-    @classmethod
-    def from_webhook(cls, data):
-        meeting_uuid = data.pop("uuid", None)
-        meeting_id = data.pop("id", None)
-        data["meeting_uuid"] = meeting_uuid
-        data["meeting_id"] = meeting_id
-        return cls(**data)
-
-    def get_meeting_details(self):
-        return
-
-    def get_meeting_participants(self):
-        return
 

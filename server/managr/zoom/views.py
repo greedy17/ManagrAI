@@ -28,8 +28,13 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from managr.zoom.zoom_helper import constants as zoom_model_consts
-from managr.zoom.zoom_helper.models import ZoomAcct
-from .serializers import ZoomAuthRefSerializer, ZoomAuthSerializer
+from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
+from .models import ZoomAuthAccount, ZoomMeeting
+from .serializers import (
+    ZoomAuthRefSerializer,
+    ZoomAuthSerializer,
+    ZoomMeetingWebhookSerializer,
+)
 from . import constants as zoom_consts
 
 # Create your views here.
@@ -76,26 +81,23 @@ def redirect_from_zoom(request):
 @permission_classes([permissions.AllowAny])
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
-    if not event:
-        logger.info(f"Received and empty request form Zoom {request}")
-        return
-    if event in zoom_consts.MEETING_EVENTS_CREATED:
-        # get or create
-        return
-    elif event in zoom_consts.MEETING_EVENTS_DELETED:
-        # get or create to update
-        return
-    elif event in zoom_consts.MEETING_EVENT_STARTED:
-        # get or create to update
-        return
-    elif event in zoom_consts.MEETING_EVENT_ENDED:
-        # get or create
-        # send to task to go and get meeting meta and participants
-        #
-        # slack user
+    obj = request.data.get("payload", None)
 
-        return
-    return
+    # for v1 only tracking meeting.ended
+    if event == zoom_consts.MEETING_EVENT_ENDED:
+        extra_obj = obj.pop("object", {})
+        obj = {**obj, **extra_obj}
+        host_id = obj.get("host_id", None)
+        meeting_id = obj.get("id", None)
+        zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+        if zoom_account:
+            meeting = zoom_account.helper_class.get_meeting(meeting_id)
+            meeting.get_meeting_participants()
+            # save meeting now if it has the right people
+
+        # retrieve meeting participants from zoom as background task
+
+    return Response()
 
 
 ###### DEV ONLY CREATE MEETINGS ON THE FLY FOR TESTING WEBHOOK ENDPOINTS
@@ -118,7 +120,5 @@ def create_zoom_meeting(request):
                 "Authorization": f"Bearer {user_zoom_token}",
             },
         )
-        print(r.json())
-
         return Response()
 

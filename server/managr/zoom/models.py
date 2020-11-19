@@ -73,8 +73,6 @@ class ZoomAuthAccount(TimeStampModel):
         self.refresh_token = res.refresh_token
 
 
-"""
-
 class ZoomMeeting(TimeStampModel):
     zoom_account = models.ForeignKey(
         "ZoomAuthAccount", related_name="meetings", on_delete=models.CASCADE,
@@ -83,11 +81,11 @@ class ZoomMeeting(TimeStampModel):
     operator = models.EmailField()
     meeting_id = models.CharField(max_length=255, help_text="Aka meeting number")
     meeting_uuid = models.CharField(max_length=255, unique=True)
-    host_id = models.CharField(max_length=255)
-    topic = models.CharField(max_length=255)
+    host_id = models.CharField(max_length=255, null=True, blank=True)
+    topic = models.CharField(max_length=255, null=True, blank=True)
     type = models.PositiveSmallIntegerField()
-    start_time = models.DateTimeField()
-    duration = models.PositiveSmallIntegerField()
+    start_time = models.DateTimeField(null=True, blank=True)
+    duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
         max_length=255,
         blank=True,
@@ -99,6 +97,7 @@ class ZoomMeeting(TimeStampModel):
         JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
+        null=True,
         help_text="if recurring meeting",
     )
     password = models.CharField(max_length=255, blank=True, null=True)
@@ -115,6 +114,7 @@ class ZoomMeeting(TimeStampModel):
         JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
+        null=True,
         help_text="if recurring meeting",
     )
 
@@ -136,4 +136,3 @@ class ZoomMeeting(TimeStampModel):
         help_text="FUTURE DEVELOPMENT",
     )
 
-"""

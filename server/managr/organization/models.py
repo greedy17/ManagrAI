@@ -60,7 +60,9 @@ class Organization(TimeStampModel):
     """
 
     name = models.CharField(max_length=255, null=True)
-    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, null=True)
+    photo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
+    )
     state = models.CharField(
         max_length=255,
         choices=STATE_CHOCIES,
@@ -199,6 +201,14 @@ class Contact(TimeStampModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # since we are no longer requiring accounts we support orgs
+    organization = models.ForeignKey(
+        "Organization",
+        related_name="contacts",
+        blank=False,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     objects = ContactQuerySet.as_manager()
 
     class Meta:
@@ -206,11 +216,11 @@ class Contact(TimeStampModel):
         # unique hash so only one contact with the same email can be created per account
         unique_together = (
             "email",
-            "account",
+            "organization",
         )
 
     def __str__(self):
-        return f"{self.full_name} {self.account}"
+        return f"{self.full_name} {self.organization}"
 
     @property
     def full_name(self):
@@ -229,6 +239,16 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
+        contact = Contact.objects.exclude(
+            email=self.email, account=self.account
+        ).first()
+        if contact:
+            raise ValidationError(
+                detail={
+                    "contact_exists": "A contact in the same org and account already exist"
+                }
+            )
+
         return super(Contact, self).save(*args, **kwargs)
 
 
