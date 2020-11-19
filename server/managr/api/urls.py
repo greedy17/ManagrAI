@@ -39,9 +39,6 @@ urlpatterns = [
     ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path(
-        "slack-test-message/", slack_views.slack_test_message, name="slack_test_message"
-    ),
-    path(
         "get-file/<str:file_id>/",
         core_views.GetFileView.as_view(),
         name="get_file_from_nylas",
@@ -113,5 +110,5 @@ router.register(
     core_views.NotificationSettingsViewSet,
     "notification-settings",
 )
-# router.register("slack", slack_views.ExampleViewSet, "slack")
+router.register("slack", slack_views.SlackViewSet, "slack")
 urlpatterns += router.urls

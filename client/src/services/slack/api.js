@@ -1,7 +1,7 @@
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 
-const TEST_MESSAGE_ENDPOINT = '/slack-test-message/'
+const TEST_MESSAGE_ENDPOINT = '/slack/test-message/'
 
 export default class SlackAPI {
   constructor(cls) {
