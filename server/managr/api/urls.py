@@ -89,6 +89,11 @@ urlpatterns = [
         zoom_views.get_zoom_auth_link,
         name="get_zoom_auth_link",
     ),
+    path(
+        "zoom/webhooks/meetings",
+        zoom_views.zoom_meetings_webhook,
+        name="get_zoom_auth_link",
+    ),
     ## this is a dev/staging endpoint only for creating meetings for easier testing
 ]
 

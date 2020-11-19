@@ -7,7 +7,7 @@ from datetime import datetime
 
 from django.shortcuts import render, redirect
 from django.conf import settings
-
+from rest_framework.views import APIView
 from rest_framework import (
     authentication,
     filters,
@@ -73,6 +73,7 @@ def redirect_from_zoom(request):
 
 
 @api_view(["post"])
+@permission_classes([permissions.AllowAny])
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     if not event:
