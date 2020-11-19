@@ -1,7 +1,8 @@
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 
-const TEST_MESSAGE_ENDPOINT = '/slack/test-message/'
+const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
+const TEST_DM_ENDPOINT = '/slack/test-dm/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -14,11 +15,17 @@ export default class SlackAPI {
     return apiClient()
   }
 
-  sendTestMessage(data) {
+  testChannel = () => {
     const promise = this.client
-      .post(TEST_MESSAGE_ENDPOINT, objectToSnakeCase(data))
-      .then(r => objectToCamelCase(r.data))
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.sendTestMessage' }))
+      .get(TEST_CHANNEL_ENDPOINT)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.testChannel' }))
+    return promise
+  }
+
+  testDM = () => {
+    const promise = this.client
+      .get(TEST_DM_ENDPOINT)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.testDM' }))
     return promise
   }
 }

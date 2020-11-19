@@ -60,10 +60,10 @@ export default {
   methods: {
     handleTest() {
       // todo: disable the button in the meantime and $Alert success
-      const data = {
-        isUserTest: !this.userCanAddIntegrationToOrganization,
-      }
-      SlackOAuthModel.api.sendTestMessage(data).then(() => {
+      const { testChannel, testDM } = SlackOAuthModel.api
+      let isChannelTest = this.userCanAddIntegrationToOrganization
+      let apiCall = isChannelTest ? testChannel : testDM
+      apiCall().then(() => {
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,

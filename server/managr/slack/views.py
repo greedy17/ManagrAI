@@ -16,8 +16,8 @@ from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
 from managr.slack import constants as slack_const
+from managr.slack import helpers as slack_helpers
 
-# TODO: split test-message into channel test and user test
 # TODO add action: get access token
 
 
@@ -25,64 +25,57 @@ class SlackViewSet(
     viewsets.GenericViewSet,
 ):
     @action(
-        methods=["post"],
+        methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="test-message",
+        url_path="test-channel",
     )
-    def send_test_message(self, request, *args, **kwargs):
-        """_"""
+    def test_channel(self, request, *args, **kwargs):
+        """
+        Interact with the SlackAPI to trigger a test message in the Organization's
+        default Slack Channel for the Managr app
+        """
+
         organization_slack = request.user.organization.slack_integration
-        is_user_test = request.data.get("is_user_test", None)
-
-        if is_user_test is None:
-            raise ValidationError("missing data.is_user_test")
-
-        if is_user_test:
-            # send DM to requesting user
-            user_slack = request.user.slack_integration
-            if not user_slack.channel:
-                url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
-                data = {"users": request.user.slack_integration.slack_id}
-                response = requests.post(
-                    url,
-                    data=json.dumps(data),
-                    headers={
-                        "Authorization": "Bearer " + organization_slack.access_token,
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Accept": "application/json",
-                    },
-                )
-                # save channel id to slack integration
-                channel = response.json().get("channel").get("id")
-                user_slack.channel = channel
-                user_slack.save()
-
-            # DM user
-            url = slack_const.SLACK_API_ROOT + slack_const.POST_MESSAGE
-            data = {
-                "channel": user_slack.channel,
-                "text": "Testing, testing... 1, 2. Hello, Friend!",
-            }
-            response = requests.post(
-                url,
-                data=json.dumps(data),
-                headers={
-                    "Authorization": "Bearer " + organization_slack.access_token,
-                    "Content-Type": "application/json; charset=utf-8",
-                    "Accept": "application/json",
-                },
-            )
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        # send message to standard channel
+        url = organization_slack.incoming_webhook.get("url")
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
+
         requests.post(
-            organization_slack.incoming_webhook.get("url"),
+            url,
             data=json.dumps(data),
             headers={
                 "Content-Type": "application/json; charset=utf-8",
                 "Accept": "application/json",
             },
         )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="test-dm",
+    )
+    def test_DM(self, request, *args, **kwargs):
+        """
+        Interact with the SlackAPI to trigger a test direct message for the
+        requesting user
+        """
+        user = request.user
+        user_slack = user.slack_integration
+        access_token = user.organization.slack_integration.access_token
+
+        if not user_slack.channel:
+            # request the Slack Channel ID to DM this user
+            response = slack_helpers.request_user_dm_channel(
+                user_slack.slack_id, access_token
+            )
+            # save Slack Channel ID
+            channel = response.json().get("channel").get("id")
+            user_slack.channel = channel
+            user_slack.save()
+
+        # DM user
+        text = "Testing, testing... 1, 2. Hello, Friend!"
+        slack_helpers.dm_user(user_slack.channel, text, access_token)
         return Response(status=status.HTTP_204_NO_CONTENT)
