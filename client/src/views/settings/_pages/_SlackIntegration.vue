@@ -9,7 +9,7 @@
             v-if="organizationHasIntegration && userHasIntegration"
             @click="handleTest"
           >
-            Test {{ userCanAddIntegrationToOrganization ? 'Channel' : 'DM' }} Message
+            Send Test Message
           </div>
         </div>
       </div>
