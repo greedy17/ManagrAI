@@ -1,5 +1,6 @@
 import { urlQueryParams, objectToCamelCase } from '@/services/utils'
 import store from '@/store'
+import SlackAPI from './api'
 
 const WORKSPACE_SCOPES = [
   'app_mentions:read',
@@ -29,6 +30,7 @@ const USER_SCOPES = ['identity.basic']
   In either case, the URL will also contain the state provided in the initial redirect step in a state parameter.
 */
 export default class SlackOAuth {
+  static api = SlackAPI.create(SlackOAuth)
   constructor() {
     this.params = urlQueryParams()
     this.user = store.state.user

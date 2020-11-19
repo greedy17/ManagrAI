@@ -1,4 +1,6 @@
 import requests
+import json
+
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 import logging
@@ -87,7 +89,7 @@ from .nylas.emails import (
     send_system_email,
 )
 from .nylas.models import NylasAccountStatus, NylasAccountStatusList
-
+import pdb
 
 logger = logging.getLogger("managr")
 
@@ -1084,3 +1086,63 @@ class MessageAuthAccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin
 
     def get_queryset(self):
         return MessageAuthAccount.objects.filter(user=self.request.user)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def slack_test_message(request):
+    """_"""
+    organization_slack = request.user.organization.slack_integration
+    is_user_test = request.data.get("is_user_test", None)
+
+    if is_user_test is None:
+        raise ValidationError("missing data.is_user_test")
+
+    if is_user_test:
+        # send DM to requesting user
+        user_slack = request.user.slack_integration
+        if not user_slack.channel:
+            url = core_consts.SLACK_API_ROOT + core_consts.CONVERSATIONS_OPEN
+            data = {"users": request.user.slack_integration.slack_id}
+            response = requests.post(
+                url,
+                data=json.dumps(data),
+                headers={
+                    "Authorization": "Bearer " + organization_slack.access_token,
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Accept": "application/json",
+                },
+            )
+            # save channel id to slack integration
+            channel = response.json().get("channel").get("id")
+            user_slack.channel = channel
+            user_slack.save()
+
+        # DM user
+        url = core_consts.SLACK_API_ROOT + core_consts.POST_MESSAGE
+        data = {
+            "channel": user_slack.channel,
+            "text": "Testing, testing... 1, 2. Hello, Friend!",
+        }
+        response = requests.post(
+            url,
+            data=json.dumps(data),
+            headers={
+                "Authorization": "Bearer " + organization_slack.access_token,
+                "Content-Type": "application/json; charset=utf-8",
+                "Accept": "application/json",
+            },
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # send message to standard channel
+    data = {"text": "Testing, testing... 1, 2. Hello, World!"}
+    requests.post(
+        organization_slack.incoming_webhook.get("url"),
+        data=json.dumps(data),
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "Accept": "application/json",
+        },
+    )
+    return Response(status=status.HTTP_204_NO_CONTENT)

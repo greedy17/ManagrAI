@@ -2,7 +2,12 @@
   <div class="container">
     <div class="box">
       <div class="box__header">
-        <div class="box__title">SLACK INTEGRATION</div>
+        <div class="box__title">
+          SLACK INTEGRATION
+          <div class="test-message" v-if="organizationHasIntegration" @click="handleTest">
+            Send Test Message
+          </div>
+        </div>
       </div>
       <div class="box__content">
         <template v-if="organizationHasIntegration && userHasIntegration">
@@ -48,6 +53,21 @@ export default {
       slackOAuth: new SlackOAuthModel(),
     }
   },
+  methods: {
+    handleTest() {
+      // todo: disable the button in the meantime and $Alert success
+      const data = {
+        isUserTest: !this.userCanAddIntegrationToOrganization,
+      }
+      SlackOAuthModel.api.sendTestMessage(data).then(() => {
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Test sent.',
+        })
+      })
+    },
+  },
   computed: {
     organizationHasIntegration() {
       let { organizationRef } = this.$store.state.user
@@ -77,5 +97,19 @@ export default {
 
 a {
   cursor: pointer;
+}
+
+.box__title {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  width: 100%;
+}
+
+.test-message {
+  @include primary-button;
+  margin-left: auto;
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
 }
 </style>

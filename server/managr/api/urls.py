@@ -38,6 +38,9 @@ urlpatterns = [
     ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path(
+        "slack-test-message/", core_views.slack_test_message, name="slack_test_message"
+    ),
+    path(
         "get-file/<str:file_id>/",
         core_views.GetFileView.as_view(),
         name="get_file_from_nylas",
@@ -68,7 +71,11 @@ urlpatterns = [
         core_views.NylasAccountWebhook.as_view(),
         name="nylas_account_webhook",
     ),
-    path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
+    path(
+        "polling/count",
+        poll_views.list_polling_counts,
+        name="list_polling_counts",
+    ),
 ]
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
@@ -93,7 +100,9 @@ router.register("action-choices", lead_views.ActionChoiceViewSet, "action-choice
 router.register("actions", lead_views.ActionViewSet, "actions")
 router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
 router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
-router.register("performance-reports", report_views.PerformanceReportViewSet, "performance-reports")
+router.register(
+    "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
+)
 router.register("files", lead_views.FileViewSet, "files")
 router.register("notifications", lead_views.NotificationViewSet, "notifications")
 router.register("stages", organization_views.StageViewSet, "stages")
@@ -104,4 +113,3 @@ router.register(
     "notification-settings",
 )
 urlpatterns += router.urls
-

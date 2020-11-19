@@ -251,6 +251,11 @@ class UserSlackIntegration(TimeStampModel):
     slack_id = models.CharField(
         max_length=255, null=False, help_text="Slack ID of the User, for this workspace"
     )
+    channel = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="Channel ID for the DM conversation between user and Managr bot",
+    )
 
     objects = UserSlackIntegrationQuerySet.as_manager()
 
