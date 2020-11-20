@@ -17,6 +17,7 @@ from rest_framework.response import Response
 
 from managr.slack import constants as slack_const
 from managr.slack import helpers as slack_helpers
+import pdb
 
 # TODO add action: get access token
 
@@ -24,6 +25,32 @@ from managr.slack import helpers as slack_helpers
 class SlackViewSet(
     viewsets.GenericViewSet,
 ):
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-oauth-link",
+    )
+    def get_oauth_link(self, request, *args, **kwargs):
+        redirect_uri = request.data.get("redirect_uri", None)
+        link_type = request.data.get("link_type", None)
+        if redirect_uri is None:
+            raise ValidationError("Missing data.redirect_uri")
+        if link_type is None:
+            raise ValidationError("Missing data.link_type")
+        if link_type not in slack_const.OAUTH_LINK_TYPES:
+            raise ValidationError("Invalid link type")
+        t = slack_helpers.OAuthLinkBuilder(request.user, redirect_uri)
+        pdb.set_trace()
+
+        # data = {
+        #     "link": slack_helpers.OAuthLinkBuilder(
+        #         request.user, redirect_uri
+        #     ).link_for_type(link_type)
+        # }
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
     @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],

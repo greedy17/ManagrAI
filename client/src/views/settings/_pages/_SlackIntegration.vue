@@ -19,25 +19,25 @@
           {{ userIntegrationDate | dateShort }}.
         </template>
         <template v-else-if="organizationHasIntegration">
-          <a :href="slackOAuth.userSignInLink">
-            <img src="https://api.slack.com/img/sign_in_with_slack.png" />
-          </a>
+          <img
+            src="https://api.slack.com/img/sign_in_with_slack.png"
+            @click.prevent="oAuthAttempt(SlackOAuth.options.USER)"
+          />
         </template>
         <template v-else-if="userCanAddIntegrationToOrganization">
           Your organization has not enabled this feature, but you can do so: <br />
-          <a :href="slackOAuth.addToWorkspaceLink">
-            <img
-              style="margin-top: 1rem;"
-              alt="Add to Slack"
-              height="40"
-              width="139"
-              src="https://platform.slack-edge.com/img/add_to_slack.png"
-              srcset="
-                https://platform.slack-edge.com/img/add_to_slack.png    1x,
-                https://platform.slack-edge.com/img/add_to_slack@2x.png 2x
-              "
-            />
-          </a>
+          <img
+            @click.prevent="oAuthAttempt(SlackOAuth.options.WORKSPACE)"
+            style="margin-top: 1rem;"
+            alt="Add to Slack"
+            height="40"
+            width="139"
+            src="https://platform.slack-edge.com/img/add_to_slack.png"
+            srcset="
+              https://platform.slack-edge.com/img/add_to_slack.png    1x,
+              https://platform.slack-edge.com/img/add_to_slack@2x.png 2x
+            "
+          />
         </template>
         <template v-else>
           Your organization has not enabled this feature.
@@ -48,19 +48,35 @@
 </template>
 
 <script>
-import SlackOAuthModel from '@/services/slack'
+import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'SlackIntegration',
   data() {
     return {
-      slackOAuth: new SlackOAuthModel(),
+      SlackOAuth,
+      fetching: false,
     }
   },
   methods: {
+    oAuthAttempt(linkType) {
+      if (this.fetching) {
+        return
+      }
+      this.fetching = true
+      SlackOAuth.api
+        .getOAuthLink(linkType)
+        .then(link => {
+          // .then(({ link }) => {
+          console.log('oAuthAttempt', link)
+        })
+        .finally(() => {
+          this.fetching = false
+        })
+    },
     handleTest() {
       // todo: disable the button in the meantime and $Alert success
-      const { testChannel, testDM } = SlackOAuthModel.api
+      const { testChannel, testDM } = SlackOAuth.api
       let isChannelTest = this.userCanAddIntegrationToOrganization
       let apiCall = isChannelTest ? testChannel : testDM
       apiCall().then(() => {
@@ -99,7 +115,7 @@ export default {
 @import '@/styles/forms';
 @import '@/styles/mixins/utils';
 
-a {
+img {
   cursor: pointer;
 }
 
