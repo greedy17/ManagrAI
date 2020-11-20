@@ -42,9 +42,9 @@ class ZoomMtg:
         return cls(**data)
 
     def get_meeting_participants(self, access_token):
-        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/{self.meeting_uuid}"
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{self.meeting_uuid}/participants"
         # TODO check if access_token is expired and refresh PB 11/20/20
-        headers = dict(Authorization=(f"Bearer {self.access_token}"))
+        headers = dict(Authorization=(f"Bearer {access_token}"))
         r = requests.get(url, headers=headers)
         data = ZoomAcct._handle_response(r)
         self.participants = data.get("participants", None)

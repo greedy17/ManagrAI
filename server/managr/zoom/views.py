@@ -92,7 +92,8 @@ def zoom_meetings_webhook(request):
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account:
             meeting = zoom_account.helper_class.get_meeting(meeting_id)
-            meeting.get_meeting_participants()
+            meeting.get_meeting_participants(zoom_account.access_token)
+            print(meeting)
             # save meeting now if it has the right people
 
         # retrieve meeting participants from zoom as background task
