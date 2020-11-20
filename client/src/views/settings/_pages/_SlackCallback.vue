@@ -14,19 +14,15 @@
  * box. Whether success or failure, the page generates an alert and
  * redirects back to the settings page.
  */
-import SlackOAuthModel from '@/services/slack'
-import Organization from '@/services/organizations'
-import User from '@/services/users'
+import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'SlackCallback',
   async created() {
-    let slackOAuth = new SlackOAuthModel()
+    const { state, error, code } = this.$route.query
     // If the states don't match, the request has been created by a third party and the process should be aborted.
-    if (!slackOAuth.stateParamIsValid) {
-      return
-    }
-    if (slackOAuth.params.error) {
+    let invalidStateParam = state !== this.$store.state.user.id
+    if (invalidStateParam || error) {
       this.$Alert.alert({
         type: 'error',
         timeout: 3000,
@@ -35,8 +31,25 @@ export default {
       this.$router.push({ name: 'SlackIntegration' })
       return
     }
-    // Exchange the params.code for an access token.
-    await slackOAuth.getAccessToken().then(this.handleAccessToken)
+    // Ask our server to exchange the params.code for an access token.
+    await SlackOAuth.api
+      .generateAccessToken(code)
+      .then(data => {
+        // TODO: this is a user, so make a user instance since will end up in state
+        // return this.$store.dispatch('updateUser', user)
+        // this.$Alert.alert({
+        //     type: 'success',
+        //     timeout: 3000,
+        //     message: 'Slack integration successful.',
+        //   })
+      })
+      .catch(error => {
+        //  this.$Alert.alert({
+        //     type: 'error',
+        //     timeout: 3000,
+        //     message: 'You signed into the wrong Slack workspace, please try again.',
+        //   })
+      })
     // Take user back to Settings page.
     this.$router.push({ name: 'SlackIntegration' })
   },
@@ -71,14 +84,14 @@ export default {
           enterprise,
         }
 
-        await Organization.api
-          .integrateSlack(this.$store.state.user.organizationRef.id, payload)
-          .then(organization => {
-            // update store state with user's updated orgRef (has org.slackRef)
-            let user = { ...this.$store.state.user }
-            user.organizationRef = organization
-            return this.$store.dispatch('updateUser', user)
-          })
+        // await Organization.api
+        //   .integrateSlack(this.$store.state.user.organizationRef.id, payload)
+        //   .then(organization => {
+        //     // update store state with user's updated orgRef (has org.slackRef)
+        //     let user = { ...this.$store.state.user }
+        //     user.organizationRef = organization
+        //     return this.$store.dispatch('updateUser', user)
+        //   })
       }
 
       // STEP 2: integrate slack at the user-level
@@ -96,15 +109,6 @@ export default {
         })
         return
       }
-      await User.api.integrateSlack(this.$store.state.user.id, slackId).then(user => {
-        // update store state with new user (has user.slackRef)
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: 'Slack integration successful.',
-        })
-        return this.$store.dispatch('updateUser', user)
-      })
     },
   },
 }

@@ -1,5 +1,8 @@
 SLACK_API_ROOT = "https://slack.com/api/"
-SLAC_OAUTH_ROOT = "https://slack.com/oauth/v2/authorize"
+SLACK_OAUTH_AUTHORIZE_ROOT = "https://slack.com/oauth/v2/authorize"
+
+# https://api.slack.com/methods/oauth.v2.access
+OAUTH_V2_ACCESS = "oauth.v2.access"
 
 # https://api.slack.com/methods/conversations.open
 CONVERSATIONS_OPEN = "conversations.open"

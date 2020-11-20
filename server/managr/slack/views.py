@@ -41,14 +41,31 @@ class SlackViewSet(
         if link_type not in slack_const.OAUTH_LINK_TYPES:
             raise ValidationError("Invalid link type")
         t = slack_helpers.OAuthLinkBuilder(request.user, redirect_uri)
+        data = {
+            "link": slack_helpers.OAuthLinkBuilder(
+                request.user, redirect_uri
+            ).link_for_type(link_type)
+        }
+        return Response(data=data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="generate-access-token",
+    )
+    def generate_access_token(self, request, *args, **kwargs):
+        code = request.data.get("code", None)
+        redirect_uri = request.data.get("redirect_uri", None)
+        if code is None:
+            raise ValidationError("Missing data.code")
+        if redirect_uri is None:
+            raise ValidationError("Missing data.redirect_uri")
+        response = slack_helpers.request_access_token(code, redirect_uri)
+        # here depending on token_type (bot or user) generate slack_integration
         pdb.set_trace()
 
-        # data = {
-        #     "link": slack_helpers.OAuthLinkBuilder(
-        #         request.user, redirect_uri
-        #     ).link_for_type(link_type)
-        # }
-
+        # return serialized user because client-side needs updated slackRef(s)
         return Response(data=data, status=status.HTTP_200_OK)
 
     @action(

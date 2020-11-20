@@ -13,6 +13,25 @@ def get_headers(access_token):
     }
 
 
+def request_access_token(code, redirect_uri):
+    url = slack_const.SLACK_API_ROOT + slack_const.OAUTH_V2_ACCESS
+    data = {
+        "code": code,
+        "redirect_uri": redirect_uri,
+        "client_id": os.environ.get("SLACK_CLIENT_ID"),
+        "client_secret": os.environ.get("SLACK_SECRET"),
+    }
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+    }
+    return requests.post(
+        url,
+        data=data,
+        headers=headers,
+    )
+
+
 def request_user_dm_channel(slack_id, access_token):
     """
     Request the Slack Channel ID for a 1:1 conversation
@@ -55,9 +74,7 @@ class OAuthLinkBuilder:
 
     @property
     def client_id_param(self):
-        return os.environ.get("SLACK_CLIENT_ID")
-
-    # return 'client_id=' + this.clientID
+        return "client_id=" + os.environ.get("SLACK_CLIENT_ID")
 
     @property
     def redirect_uri_param(self):
@@ -79,7 +96,7 @@ class OAuthLinkBuilder:
             self.redirect_uri_param,
             self.workspace_scopes_param,
         ]
-        return slack_const.SLAC_OAUTH_ROOT + "?" + "&".join(params)
+        return slack_const.SLACK_OAUTH_AUTHORIZE_ROOT + "?" + "&".join(params)
 
     @property
     def user_sign_in_link(self):
@@ -90,9 +107,9 @@ class OAuthLinkBuilder:
             self.user_scopes_param,
             self.team_id_param,
         ]
-        return slack_const.SLAC_OAUTH_ROOT + "?" + "&".join(params)
+        return slack_const.SLACK_OAUTH_AUTHORIZE_ROOT + "?" + "&".join(params)
 
     def link_for_type(self, link_type):
-        if link_type is slack_const.WORKSPACE:
+        if link_type == slack_const.WORKSPACE:
             return self.add_to_workspace_link
         return self.user_sign_in_link
