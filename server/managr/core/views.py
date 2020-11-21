@@ -54,7 +54,6 @@ from managr.core.twilio.messages import (
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
 from managr.core.background import emit_event, emit_email_sync_event
-from managr.slack.models import UserSlackIntegration
 
 from .models import (
     User,
