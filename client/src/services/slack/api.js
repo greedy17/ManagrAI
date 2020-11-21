@@ -1,5 +1,6 @@
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
+import User from '@/services/users'
 
 const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
 const TEST_DM_ENDPOINT = '/slack/test-dm/'
@@ -30,7 +31,7 @@ export default class SlackAPI {
     const payload = { code, redirectUri: this.cls.redirectURI }
     const promise = this.client
       .post(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
-      .then(r => objectToCamelCase(r.data))
+      .then(r => new User(objectToCamelCase(r.data)))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.generateAccessToken' }))
     return promise
   }

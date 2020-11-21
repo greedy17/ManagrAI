@@ -454,33 +454,6 @@ class UserViewSet(
         message_auth_account.delete()
         return Response()
 
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=True,
-        url_path="integrate-slack",
-    )
-    def integrate_slack(self, request, *args, **kwargs):
-        """
-        Create a UserSlackIntegration associated with user
-        """
-        pk = kwargs.get("pk", None)
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        # must be self making the integration
-        if user != request.user:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        data = request.data
-        slack_id = data.get("slack_id", None)
-        if not slack_id:
-            raise ValidationError("Missing Slack ID")
-
-        integration = UserSlackIntegration.objects.create(user=user, slack_id=slack_id)
-        return Response(self.serializer_class(integration.user).data)
-
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)

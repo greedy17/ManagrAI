@@ -70,7 +70,7 @@ class OAuthLinkBuilder:
 
     @property
     def user_scopes_param(self):
-        return "scope=" + ",".join(slack_const.USER_SCOPES)
+        return "user_scope=" + ",".join(slack_const.USER_SCOPES)
 
     @property
     def client_id_param(self):

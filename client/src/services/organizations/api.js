@@ -1,7 +1,6 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
-const GENERATE_SLACK_INTEGRATION_ENDPOINT = uid => `/organizations/${uid}/integrate-slack/`
 
 export default class OrganizationAPI {
   constructor(cls) {
@@ -33,13 +32,5 @@ export default class OrganizationAPI {
     } catch {
       apiErrorHandler({ apiName: 'Organization.list' })
     }
-  }
-
-  integrateSlack(uid, data) {
-    const promise = this.client
-      .post(GENERATE_SLACK_INTEGRATION_ENDPOINT(uid), this.cls.toAPI(data))
-      .then(r => this.cls.fromAPI(r.data))
-      .catch(apiErrorHandler({ apiName: 'OrganizationAPI.integrateSlack' }))
-    return promise
   }
 }

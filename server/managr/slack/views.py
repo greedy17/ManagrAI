@@ -17,9 +17,8 @@ from rest_framework.response import Response
 
 from managr.slack import constants as slack_const
 from managr.slack import helpers as slack_helpers
-import pdb
-
-# TODO add action: get access token
+from managr.core.serializers import UserSerializer
+from .models import OrganizationSlackIntegration, UserSlackIntegration
 
 
 class SlackViewSet(
@@ -62,11 +61,42 @@ class SlackViewSet(
         if redirect_uri is None:
             raise ValidationError("Missing data.redirect_uri")
         response = slack_helpers.request_access_token(code, redirect_uri)
-        # here depending on token_type (bot or user) generate slack_integration
-        pdb.set_trace()
-
+        data = response.json()
+        # NOTE:
+        # Only AddToWorkspace yields tokenType == 'bot'.
+        # Both AddToWorkspace and UserSignIn yield data.authedUser, and in both cases
+        # the user needs to integrate slack.
+        # Therefore user slack integration can and should take place regardless.
+        if data.get("token_type") == slack_const.TOKEN_TYPE_BOT:
+            scope = data.get("scope")
+            team_name = data.get("team").get("name")
+            team_id = data.get("team").get("id")
+            bot_user_id = data.get("bot_user_id")
+            access_token = data.get("access_token")
+            incoming_webhook = data.get("incoming_webhook")
+            enterprise = data.get("enterprise")
+            integration = OrganizationSlackIntegration.objects.create(
+                organization=request.user.organization,
+                scope=scope,
+                team_name=team_name,
+                team_id=team_id,
+                bot_user_id=bot_user_id,
+                access_token=access_token,
+                incoming_webhook=incoming_webhook,
+                enterprise=enterprise,
+            )
+        else:
+            team_id = data.get("team").get("id")
+            if team_id != request.user.organization.slack_integration.team_id:
+                raise ValidationError(
+                    "You signed into the wrong Slack workspace, please try again."
+                )
+        slack_id = data.get("authed_user").get("id")
+        UserSlackIntegration.objects.create(user=request.user, slack_id=slack_id)
         # return serialized user because client-side needs updated slackRef(s)
-        return Response(data=data, status=status.HTTP_200_OK)
+        return Response(
+            data=UserSerializer(request.user).data, status=status.HTTP_200_OK
+        )
 
     @action(
         methods=["get"],
