@@ -30,7 +30,6 @@ from rest_framework.authtoken.models import Token
 
 
 from managr.lead.models import Lead
-from managr.slack.models import OrganizationSlackIntegration
 
 from managr.core.models import ACCOUNT_TYPE_MANAGER
 from managr.core import constants as core_consts

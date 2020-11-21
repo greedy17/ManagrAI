@@ -7,7 +7,6 @@ from django.db.models import Sum, Avg, Q
 from django.db.models.functions import Concat
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
 
 from rest_framework.authtoken.models import Token
 
