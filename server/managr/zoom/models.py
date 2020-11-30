@@ -72,9 +72,6 @@ class ZoomAuthAccount(TimeStampModel):
         self.access_token = res.access_token
         self.refresh_token = res.refresh_token
 
-    def revoke_token(self):
-        return
-
     def delete(self, *args, **kwargs):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data

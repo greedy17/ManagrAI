@@ -41,7 +41,7 @@ class ZoomMtg:
 
         return cls(**data)
 
-    def get_meeting_participants(self, access_token):
+    def get_past_meeting_participants(self, access_token):
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{self.meeting_uuid}/participants"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {access_token}"))
@@ -84,8 +84,8 @@ class ZoomAcct:
         self.token_generated_date = datetime.now()
         self.token_scope = kwargs.get("scope", None)
 
-    def get_meeting(self, meeting_id):
-        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}"
+    def get_past_meeting(self, meeting_id):
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id}"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {self.access_token}"))
         r = requests.get(url, headers=headers)
@@ -102,7 +102,7 @@ class ZoomAcct:
         return vars(self)
 
     def refresh_token(self):
-        query = zoom_model_consts.REAUTHENTICATION_QUERY_PARAMS(token)
+        query = zoom_model_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
         ## error handling here
 

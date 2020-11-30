@@ -65,9 +65,9 @@ def get_zoom_authentication(request):
 
 @api_view(["delete"])
 @permission_classes([permissions.IsAuthenticated])
-def revoke_zoom_token(request):
+def revoke_zoom_access_token(request):
     if hasattr(request.user, "zoom_account"):
-        request.user.zoom_account.revoke_access_token
+        request.user.zoom_account.delete()
         return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -96,12 +96,14 @@ def zoom_meetings_webhook(request):
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}
         host_id = obj.get("host_id", None)
-        meeting_id = obj.get("id", None)
+        meeting_uuid = obj.get("uuid", None)
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account:
-            meeting = zoom_account.helper_class.get_meeting(meeting_id)
-            meeting.get_meeting_participants(zoom_account.access_token)
-            print(meeting)
+            meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
+            participants = meeting.get_past_meeting_participants(
+                zoom_account.access_token
+            )
+
             # save meeting now if it has the right people
 
         # retrieve meeting participants from zoom as background task
