@@ -10,6 +10,7 @@ from managr.organization.serializers import (
     OrganizationRefSerializer,
     AccountRefSerializer,
 )
+from managr.zoom.serializers import ZoomAuthSerializer
 from managr.organization.models import Account
 from managr.slack.serializers import UserSlackIntegrationSerializer
 
@@ -99,6 +100,7 @@ class UserSerializer(serializers.ModelSerializer):
             "unviewed_notifications_count",
             "profile_photo",
             "slack_ref",
+            "zoom_account",
         )
 
     read_only_fields = (

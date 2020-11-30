@@ -5,7 +5,7 @@ from django import forms
 from django.forms import ModelForm, Textarea
 
 from managr.slack.models import UserSlackIntegration
-
+from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
     EmailAuthAccount,
@@ -14,6 +14,7 @@ from .models import (
     NotificationOption,
     NotificationSelection,
 )
+
 from . import constants as core_consts
 
 TRUE_FALSE_CHOICES = (
@@ -27,6 +28,10 @@ TRUE_FALSE_CHOICES = (
 
 class UserSlackIntegrationInline(admin.StackedInline):
     model = UserSlackIntegration
+
+
+class ZoomAuthAccountInline(admin.StackedInline):
+    model = ZoomAuthAccount
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -90,7 +95,7 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-
+    inlines = (ZoomAuthAccountInline,)
     list_display = ("email", "first_name", "last_name")
 
     list_display_links = (

@@ -8,80 +8,68 @@
             You're viewing settings for {{ organization }}
           </h5>
         </div>
-        <div
-          v-for="option in options"
-          :key="option.value"
-          class="toolbar__row"
-          @click="toggleActivePage(option.value)"
-          :class="{ toolbar__active: isActivePage(option.value) }"
+        <router-link :to="{ name: 'ZoomIntegration' }">
+          <div class="toolbar__row">
+            Zoom Integration
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'SlackIntegration' }">
+          <div class="toolbar__row">
+            Slack Integration
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'EmailIntegration' }">
+          <div class="toolbar__row">
+            Email Integration
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'EmailTemplates' }">
+          <div class="toolbar__row">
+            Email Templates
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'TextIntegration' }">
+          <div class="toolbar__row">
+            Text Integration
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'NotificationSettings' }">
+          <div class="toolbar__row">
+            Notification Settings
+          </div>
+        </router-link>
+        <router-link
+          v-if="$store.state.user.isManager || $store.state.user.isStaff"
+          :to="{ name: 'Invite' }"
         >
-          {{ option.label }}
-        </div>
+          <div class="toolbar__row">
+            Invite User
+          </div>
+        </router-link>
+
+        <router-link :to="{ name: 'Profile' }">
+          <div class="toolbar__row">
+            Profile
+          </div>
+        </router-link>
+        <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
+        <!-- <router-link :to="{ name: 'Profile' }">
+          <div class="toolbar__row">
+            Profile
+          </div>
+        </router-link> -->
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
-      <router-view></router-view>
+      <router-view name="user-settings" :key="$route.fullPath"></router-view>
     </div>
   </div>
 </template>
 
 <script>
-const standardOptions = [
-  {
-    value: 'EmailIntegration',
-    label: 'Email Integration',
-  },
-  {
-    value: 'EmailTemplates',
-    label: 'Email Templates',
-  },
-  {
-    value: 'TextIntegration',
-    label: 'Text Integration',
-  },
-  {
-    value: 'SlackIntegration',
-    label: 'Slack Integration',
-  },
-  {
-    value: 'NotificationSettings',
-    label: 'Notification Settings',
-  },
-  {
-    value: 'Profile',
-    label: 'Profile',
-  },
-  // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
-  // {
-  //   value: 'Password',
-  //   label: 'Password'
-  // },
-]
-
-const adminOptions = [
-  {
-    value: 'Invite',
-    label: 'Invite User',
-  },
-]
-
 export default {
   name: 'Settings',
-  methods: {
-    toggleActivePage(name) {
-      this.$router.push({ name })
-    },
-    isActivePage(pageName) {
-      return pageName === this.$route.name
-    },
-  },
   computed: {
-    options() {
-      if (this.isStaff || this.isManager) {
-        return [...standardOptions, ...adminOptions]
-      }
-      return standardOptions
-    },
     isStaff() {
       // used to check superuser if is staff then they currently do not have an org
       return this.$store.state.user.isStaff
@@ -111,5 +99,14 @@ export default {
   color: $mid-gray;
   margin-top: 1rem;
   margin-bottom: 0;
+}
+a {
+  text-decoration: none;
+}
+::v-deep .router-link-exact-active.router-link-active {
+  .toolbar__row {
+    background-color: #e5f2ea;
+    border-bottom: 4px #199e54 solid;
+  }
 }
 </style>

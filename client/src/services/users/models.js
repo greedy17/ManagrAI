@@ -31,6 +31,7 @@ export default class User {
       upside = null,
       commit = null,
       slackRef = null,
+      zoomAccount = null,
     } = user
     Object.assign(this, {
       id,
@@ -53,6 +54,7 @@ export default class User {
       upside,
       commit,
       slackRef,
+      zoomAccount,
     })
   }
 

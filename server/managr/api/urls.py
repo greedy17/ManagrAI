@@ -8,6 +8,8 @@ from managr.organization import views as organization_views
 from managr.report import views as report_views
 from managr.slack import views as slack_views
 
+from managr.zoom import views as zoom_views
+
 
 app_name = "api"
 
@@ -36,6 +38,9 @@ urlpatterns = [
         "users/revoke-email-auth/",
         core_views.revoke_access_token,
         name="revoke_email_auth",
+    ),
+    path(
+        "users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"
     ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path(
@@ -74,6 +79,22 @@ urlpatterns = [
         poll_views.list_polling_counts,
         name="list_polling_counts",
     ),
+    path(
+        "users/zoom/api/meetings",
+        zoom_views.create_zoom_meeting,
+        name="create_zoom_meeting",
+    ),
+    path(
+        "users/zoom/authenticate",
+        zoom_views.get_zoom_authentication,
+        name="get_zoom_authentication",
+    ),
+    path(
+        "users/zoom/authorization",
+        zoom_views.get_zoom_auth_link,
+        name="get_zoom_auth_link",
+    ),
+    ## this is a dev/staging endpoint only for creating meetings for easier testing
 ]
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")

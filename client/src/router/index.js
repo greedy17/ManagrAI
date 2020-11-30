@@ -24,7 +24,6 @@ import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 import Settings from '@/views/settings/Settings'
 import EmailIntegration from '@/views/settings/_pages/_EmailIntegration'
 import EmailTemplates from '@/views/settings/_pages/_EmailTemplates'
-import TextIntegration from '@/views/settings/_pages/_TextIntegration'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
 // import Password from '@/views/settings/_pages/_Password'
@@ -109,51 +108,78 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       children: [
         {
-          name: 'EmailIntegration',
-          path: 'email-integration',
-          component: EmailIntegration,
+          path: 'slack-integration/callback',
+          name: 'SlackCallback',
+          components: {
+            'user-settings': SlackCallback,
+          },
         },
         {
-          name: 'EmailTemplates',
-          path: 'email-templates',
-          component: EmailTemplates,
+          path: 'slack-integration',
+          name: 'SlackIntegration',
+          components: {
+            'user-settings': SlackIntegration,
+          },
         },
         {
-          name: 'TextIntegration',
+          path: 'zoom-integration',
+          name: 'ZoomIntegration',
+          components: {
+            'user-settings': () =>
+              import(
+                /* webpackChunkName: "settings" */ '../views/settings/_pages/_ZoomIntegration'
+              ),
+          },
+        },
+        {
           path: 'text-integration',
-          component: TextIntegration,
+          name: 'TextIntegration',
+          components: {
+            'user-settings': () =>
+              import(
+                /* webpackChunkName: "settings" */ '../views/settings/_pages/_TextIntegration'
+              ),
+          },
         },
         {
-          name: 'Profile',
+          path: 'email-integration',
+          name: 'EmailIntegration',
+          components: {
+            'user-settings': EmailIntegration,
+          },
+        },
+        {
+          path: 'email-templates',
+          name: 'EmailTemplates',
+          components: {
+            'user-settings': EmailTemplates,
+          },
+        },
+        {
           path: 'profile',
-          component: Profile,
-        },
-        {
-          name: 'Invite',
-          path: 'invite',
-          component: Invite,
-          beforeEnter: Auth.requireUserTypeManagerOrStaff,
+          name: 'Profile',
+          components: {
+            'user-settings': Profile,
+          },
         },
         // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
         // {
-        //   name: 'Password',
         //   path: 'password',
-        //   component: Password,
+        //   name: 'Password',
+        //   components: {
+        //     'user-settings': Password,
+        //   },
         // },
         {
-          name: 'NotificationSettings',
+          path: 'invite',
+          name: 'Invite',
+          components: { 'user-settings': Invite },
+          beforeEnter: Auth.requireUserTypeManagerOrStaff,
+        },
+        {
           path: 'notification-settings',
-          component: NotificationSettings,
-        },
-        {
-          name: 'SlackCallback',
-          path: 'slack-integration/callback',
-          component: SlackCallback,
-        },
-        {
-          name: 'SlackIntegration',
-          path: 'slack-integration',
-          component: SlackIntegration,
+          name: 'NotificationSettings',
+          components: { 'user-settings': NotificationSettings },
         },
         { path: '', redirect: '/settings/email-integration' },
       ],
