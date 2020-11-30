@@ -175,3 +175,10 @@ class ZoomAcct:
 
         return cls(**data)
 
+    def revoke(self):
+        r = requests.post(
+            f"{zoom_model_consts.BASE_AUTH_URI}revoke?token={self.access_token}",
+            headers=dict(Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")),
+        )
+
+        return ZoomAcct._handle_response(r)

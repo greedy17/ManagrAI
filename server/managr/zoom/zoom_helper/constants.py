@@ -12,6 +12,7 @@ from managr.utils.misc import get_site_url
 
 
 CLIENT_ID = settings.ZOOM_CLIENT_ID
+BASE_AUTH_URI = "https://zoom.us/oauth/"
 AUTHORIZATION_URI = "https://zoom.us/oauth/authorize"
 AUTHENTICATION_URI = "https://zoom.us/oauth/token"
 ZOOM_API_ENDPOINT = "https://api.zoom.us/v2"

@@ -63,6 +63,14 @@ def get_zoom_authentication(request):
     return Response(data={"success": True})
 
 
+@api_view(["delete"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_zoom_token(request):
+    if hasattr(request.user, "zoom_account"):
+        request.user.zoom_account.revoke_access_token
+        return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
+
+
 def redirect_from_zoom(request):
     ## this is only for dev, since the redirect url to localhost will not work
     if settings.IN_DEV:
