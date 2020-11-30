@@ -26,6 +26,7 @@ class ZoomMtg:
         self.operator_id = kwargs.get("operator_id", None)
         self.operation = kwargs.get("operation", None)
         self.participants = kwargs.get("participants", None)
+        self.review = kwargs.get("review", None)
 
     @classmethod
     def from_webhook(cls, payload):
