@@ -3,6 +3,8 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
+
+from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
     EmailAuthAccount,
@@ -11,9 +13,14 @@ from .models import (
     NotificationOption,
     NotificationSelection,
 )
+
 from . import constants as core_consts
 
 TRUE_FALSE_CHOICES = (("True", "ON",), ("False", "OFF"))
+
+
+class ZoomAuthAccountInline(admin.StackedInline):
+    model = ZoomAuthAccount
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -66,7 +73,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),}),
     )
-
+    inlines = (ZoomAuthAccountInline,)
     list_display = ("email", "first_name", "last_name")
 
     list_display_links = (

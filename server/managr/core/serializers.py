@@ -10,6 +10,7 @@ from managr.organization.serializers import (
     OrganizationRefSerializer,
     AccountRefSerializer,
 )
+from managr.zoom.serializers import ZoomAuthSerializer
 from managr.organization.models import Account
 
 from .nylas import emails as nylas_emails
@@ -94,6 +95,7 @@ class UserSerializer(serializers.ModelSerializer):
             "commit",
             "unviewed_notifications_count",
             "profile_photo",
+            "zoom_account",
         )
 
     read_only_fields = (

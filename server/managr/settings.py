@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "managr.organization",
     "managr.polling",
     "managr.report",
+    "managr.zoom",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -340,4 +341,20 @@ if USE_TWILIO:
         if not IN_CI
         else os.environ.get("TWILIO_BASE_CALLBACK_URL", "")
     )
+
+
+USE_ZOOM = os.environ.get("USE_ZOOM") == "True"
+if USE_ZOOM:
+    if IN_DEV:
+        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_DEV")
+        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_DEV")
+        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_DEV")
+    elif IN_STAGING:
+        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_STAGING")
+        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_STAGING")
+        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_STAGING")
+    elif IN_PROD:
+        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_PROD")
+        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_PROD")
+        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_PROD")
 
