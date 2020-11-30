@@ -53,7 +53,6 @@ class EmailAuthAccForm(forms.ModelForm):
 
 class CustomUserAdmin(UserAdmin):
     model = User
-    inlines = (UserSlackIntegrationInline,)
 
     fieldsets = (
         (
@@ -95,7 +94,10 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    inlines = (ZoomAuthAccountInline,)
+    inlines = (
+        UserSlackIntegrationInline,
+        ZoomAuthAccountInline,
+    )
     list_display = ("email", "first_name", "last_name")
 
     list_display_links = (
