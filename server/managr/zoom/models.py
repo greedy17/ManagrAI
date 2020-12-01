@@ -184,6 +184,6 @@ class MeetinReview(TimeStampModel):
     sentiment = models.CharField(
         max_length=255,
         choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
-        default=core_consts.MEETING_SENTIMENT_NA,
+        default=zoom_consts.MEETING_SENTIMENT_NA,
     )
 
