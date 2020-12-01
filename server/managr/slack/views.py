@@ -117,6 +117,7 @@ class SlackViewSet(
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
+        # data = {"blocks": get_block_set("zoom_meeting_initial")}
         slack_requests.generic_request(url, data)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
