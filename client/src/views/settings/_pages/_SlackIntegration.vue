@@ -66,11 +66,7 @@ export default {
       this.fetching = true
       SlackOAuth.api
         .getOAuthLink(linkType)
-        .then(({ link }) => {
-          let a = document.createElement('a')
-          a.href = link
-          a.click()
-        })
+        .then(({ link }) => (window.location.href = link))
         .finally(() => {
           this.fetching = false
         })
