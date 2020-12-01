@@ -38,3 +38,10 @@ USER = "USER"
 OAUTH_LINK_TYPES = [WORKSPACE, USER]
 
 TOKEN_TYPE_BOT = "bot"
+
+# Interactive payload types
+BLOCK_ACTIONS = "block_actions"
+
+# Action IDs of different interactive UI in the Managr Slack App
+ZOOM_MEETING__GREAT = "ZOOM_MEETING__GREAT"
+ZOOM_MEETING__NOT_WELL = "ZOOM_MEETING__NOT_WELL"

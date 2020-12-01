@@ -16,9 +16,14 @@ from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.response import Response
 
 from managr.slack import constants as slack_const
-from managr.slack import helpers as slack_helpers
+from managr.slack.helpers import auth as slack_auth
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import interactions as slack_interactions
+from managr.slack.helpers.blocks import get_block_set
+
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration
+import pdb
 
 
 class SlackViewSet(
@@ -39,9 +44,8 @@ class SlackViewSet(
             raise ValidationError("Missing data.link_type")
         if link_type not in slack_const.OAUTH_LINK_TYPES:
             raise ValidationError("Invalid link type")
-        t = slack_helpers.OAuthLinkBuilder(request.user, redirect_uri)
         data = {
-            "link": slack_helpers.OAuthLinkBuilder(
+            "link": slack_auth.OAuthLinkBuilder(
                 request.user, redirect_uri
             ).link_for_type(link_type)
         }
@@ -60,7 +64,7 @@ class SlackViewSet(
             raise ValidationError("Missing data.code")
         if redirect_uri is None:
             raise ValidationError("Missing data.redirect_uri")
-        response = slack_helpers.request_access_token(code, redirect_uri)
+        response = slack_requests.request_access_token(code, redirect_uri)
         data = response.json()
         # NOTE:
         # Only AddToWorkspace yields tokenType == 'bot'.
@@ -113,15 +117,7 @@ class SlackViewSet(
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
-
-        requests.post(
-            url,
-            data=json.dumps(data),
-            headers={
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json",
-            },
-        )
+        slack_requests.generic_request(url, data)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -141,7 +137,7 @@ class SlackViewSet(
 
         if not user_slack.channel:
             # request the Slack Channel ID to DM this user
-            response = slack_helpers.request_user_dm_channel(
+            response = slack_requests.request_user_dm_channel(
                 user_slack.slack_id, access_token
             )
             # save Slack Channel ID
@@ -150,6 +146,29 @@ class SlackViewSet(
             user_slack.save()
 
         # DM user
-        text = "Testing, testing... 1, 2. Hello, Friend!"
-        slack_helpers.dm_user(user_slack.channel, text, access_token)
+        test_text = "Testing, testing... 1, 2. Hello, Friend!"
+        slack_requests.dm_user(user_slack.channel, access_token, text=test_text)
+        # NOTE: use below request to trigger the initial zoom_meeting UI in a DM
+        # slack_requests.dm_user(
+        #     user_slack.channel, access_token, block_set="zoom_meeting_initial"
+        # )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        methods=["post"],
+        permission_classes=[],
+        detail=False,
+        url_path="interactive-endpoint",
+    )
+    def interactive_endpoint(self, request):
+        """
+        Open webhook for the SlackAPI to send data when users
+        interact with our Slack App's interface.
+        The body of that request will contain a JSON payload parameter.
+        Will have a type field that indicates the source of the interaction.
+        """
+        # TODO: verify is from Slack
+        # https://api.slack.com/authentication/verifying-requests-from-slack
+        payload = json.loads(request.data.get("payload"))
+        slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_204_NO_CONTENT)
