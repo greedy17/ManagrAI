@@ -56,12 +56,11 @@ def dm_user(channel, access_token, text=None, block_set=None):
     )
 
 
-def generic_request(url, data):
+def generic_request(url, data, access_token=None):
     return requests.post(
         url,
         data=json.dumps(data),
-        headers={
-            "Content-Type": "application/json; charset=utf-8",
-            "Accept": "application/json",
-        },
+        headers=slack_auth.auth_headers(access_token)
+        if access_token
+        else slack_auth.json_headers(),
     )

@@ -65,27 +65,23 @@ zoom_meeting_initial = [
     },
 ]
 
-test = [
+zoom_meeting_complete_form = [
+    {"type": "divider"},
     {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "Next 5 Results"},
-                "value": "click_me_123",
-            }
+        "type": "section",
+        "fields": [
+            {"type": "mrkdwn", "text": "*Opportunity:*"},
+            {"type": "plain_text", "text": ":dart: Dunder Mifflin", "emoji": True},
         ],
     },
     {"type": "divider"},
     {
         "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*<fakeLink.toYourApp.com|Comprehensive Benefits Catalogue - 2019>*\nInformation about all the benfits we offer is...",
-        },
+        "text": {"type": "mrkdwn", "text": "*Meeting Type*"},
         "accessory": {
             "type": "static_select",
-            "placeholder": {"type": "plain_text", "text": "Manage"},
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "Select"},
             "options": [
                 {
                     "text": {"type": "plain_text", "text": "Manage it"},
@@ -104,13 +100,11 @@ test = [
     },
     {
         "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*<fakeLink.toYourApp.com|Use Case Catalogue - CF Presentation - [June 12, 2018]>*\nThis is presentation will continue to be updated as...",
-        },
+        "text": {"type": "mrkdwn", "text": "*Update Stage*"},
         "accessory": {
             "type": "static_select",
-            "placeholder": {"type": "plain_text", "text": "Manage"},
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "Select"},
             "options": [
                 {
                     "text": {"type": "plain_text", "text": "Manage it"},
@@ -129,13 +123,11 @@ test = [
     },
     {
         "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*<fakeLink.toYourApp.com|Self-Serve Learning Options Catalogue>*\nSee the learning and development options we...",
-        },
+        "text": {"type": "mrkdwn", "text": "*Forecast Strength*"},
         "accessory": {
             "type": "static_select",
-            "placeholder": {"type": "plain_text", "text": "Manage"},
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "Select"},
             "options": [
                 {
                     "text": {"type": "plain_text", "text": "Manage it"},
@@ -153,59 +145,118 @@ test = [
         },
     },
     {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*<fakeLink.toYourApp.com|Customer Support - Workflow Diagram Catalogue>*\nThis resource was put together by members of...",
-        },
-        "accessory": {
-            "type": "static_select",
-            "placeholder": {"type": "plain_text", "text": "Manage"},
-            "options": [
-                {
-                    "text": {"type": "plain_text", "text": "Manage it"},
-                    "value": "value-0",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Read it"},
-                    "value": "value-1",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Save it"},
-                    "value": "value-2",
-                },
-            ],
+        "type": "input",
+        "optional": True,
+        # "block_id": "input123",
+        "label": {"type": "plain_text", "text": "Description"},
+        "element": {
+            "type": "plain_text_input",
+            "multiline": True,
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "How'd it go?"},
         },
     },
     {
         "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*<fakeLink.toYourApp.com|Use Case Catalogue>*\nUse Case Catalogue for the following departments/roles...",
-        },
+        "text": {"type": "mrkdwn", "text": "*Expected Close Date*"},
         "accessory": {
-            "type": "static_select",
-            "placeholder": {"type": "plain_text", "text": "Manage"},
-            "options": [
-                {
-                    "text": {"type": "plain_text", "text": "Edit it"},
-                    "value": "value-0",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Read it"},
-                    "value": "value-1",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Save it"},
-                    "value": "value-2",
-                },
-            ],
+            "type": "datepicker",
+            "initial_date": "1990-04-28",
+            "placeholder": {"type": "plain_text", "text": "Select a date"},
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
         },
+    },
+    {
+        "type": "input",
+        "optional": True,
+        # "block_id": "input123",
+        "label": {"type": "plain_text", "text": "Next Steps"},
+        "element": {
+            "type": "plain_text_input",
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "What's the plan?"},
+        },
+    },
+]
+
+zoom_meeting_limited_form = [
+    {"type": "divider"},
+    {
+        "type": "section",
+        "fields": [
+            {"type": "mrkdwn", "text": "*Opportunity:*"},
+            {"type": "plain_text", "text": ":dart: Dunder Mifflin", "emoji": True},
+        ],
     },
     {"type": "divider"},
     {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": ":mag: Search results for *Cata*"},
+        "text": {"type": "mrkdwn", "text": "*Meeting Type*"},
+        "accessory": {
+            "type": "static_select",
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "Select"},
+            "options": [
+                {
+                    "text": {"type": "plain_text", "text": "Manage it"},
+                    "value": "value-0",
+                },
+                {
+                    "text": {"type": "plain_text", "text": "Read it"},
+                    "value": "value-1",
+                },
+                {
+                    "text": {"type": "plain_text", "text": "Save it"},
+                    "value": "value-2",
+                },
+            ],
+        },
+    },
+    {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": "*Update Stage*"},
+        "accessory": {
+            "type": "static_select",
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "Select"},
+            "options": [
+                {
+                    "text": {"type": "plain_text", "text": "Manage it"},
+                    "value": "value-0",
+                },
+                {
+                    "text": {"type": "plain_text", "text": "Read it"},
+                    "value": "value-1",
+                },
+                {
+                    "text": {"type": "plain_text", "text": "Save it"},
+                    "value": "value-2",
+                },
+            ],
+        },
+    },
+    {
+        "type": "input",
+        "optional": True,
+        # "block_id": "input123",
+        "label": {"type": "plain_text", "text": "Description"},
+        "element": {
+            "type": "plain_text_input",
+            "multiline": True,
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "How'd it go?"},
+        },
+    },
+    {
+        "type": "input",
+        "optional": True,
+        # "block_id": "input123",
+        "label": {"type": "plain_text", "text": "Next Steps"},
+        "element": {
+            "type": "plain_text_input",
+            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "placeholder": {"type": "plain_text", "text": "What's the plan?"},
+        },
     },
 ]
 
@@ -213,8 +264,7 @@ test = [
 def get_block_set(set_name):
     switcher = {
         "zoom_meeting_initial": zoom_meeting_initial,
-        # "zoom_meeting_complete_form": zoom_meeting_complete_form,
-        # "zoom_meeting_limited_form": zoom_meeting_limited_form,
-        "test": test,
+        "zoom_meeting_complete_form": zoom_meeting_complete_form,
+        "zoom_meeting_limited_form": zoom_meeting_limited_form,
     }
     return switcher.get(set_name)
