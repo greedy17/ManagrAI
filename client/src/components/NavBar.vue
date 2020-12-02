@@ -9,6 +9,7 @@
         <NavLink icon="forecast2" :to="'Forecast'">Forecast + Deals</NavLink>
         <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
         <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
+        <NavLink icon="zoom" to="Meetings">Meetings</NavLink>
         <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
 

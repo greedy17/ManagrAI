@@ -76,9 +76,7 @@ urlpatterns = [
     path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
     ## this is a dev/staging endpoint only for creating meetings for easier testing
     path(
-        "users/zoom/api/meetings",
-        zoom_views.create_zoom_meeting,
-        name="create_zoom_meeting",
+        "zoom/api/meetings", zoom_views.create_zoom_meeting, name="create_zoom_meeting",
     ),
     path(
         "users/zoom/authenticate",
@@ -136,5 +134,6 @@ router.register(
     core_views.NotificationSettingsViewSet,
     "notification-settings",
 )
+router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
 urlpatterns += router.urls
 

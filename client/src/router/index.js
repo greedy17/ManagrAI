@@ -20,6 +20,7 @@ import Settings from '@/views/settings/Settings'
 import Reports from '@/views/reports/Reports'
 import StoryReportDetail from '@/views/reports/StoryReportDetail'
 import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
+import ZoomPage from '@/views/zoom/ZoomPage'
 // import Styles from '@/views/settings/Styles'
 
 // Settings
@@ -54,6 +55,12 @@ export default new Router({
       path: '/leads',
       name: 'LeadsIndex',
       component: LeadsIndex,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/meetings',
+      name: 'Meetings',
+      component: ZoomPage,
       beforeEnter: Auth.requireAuth,
     },
     {

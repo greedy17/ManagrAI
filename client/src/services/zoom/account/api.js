@@ -37,4 +37,15 @@ export default class ZoomAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
     }
   }
+  /**
+   * Endpoint to create instant zoom meeting this is available for Dev and Staging only
+   */
+  async createMeeting() {
+    try {
+      const res = await this.client.post('zoom/api/meetings')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)
+    }
+  }
 }

@@ -53,6 +53,8 @@ class ZoomAuthAccount(TimeStampModel):
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
 
+    objects = ZoomAuthAccountQuerySet.as_manager()
+
     class Meta:
         ordering = ["-datetime_created"]
 
@@ -76,8 +78,23 @@ class ZoomAuthAccount(TimeStampModel):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data
         # - cannot refresh a token
-        self.helper_class.revoke()
+        if not self.is_expired:
+            # if expired can't revoke by deleting we also lose the refresh token so it is cleared anyway
+            self.helper_class.revoke()
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
+
+
+class ZoomMeetingQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
+                return self.filter(zoom_account__user__organization=user.organization)
+            elif user.type == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(zoom_account__user=user)
+            else:
+                return self.none()
 
 
 class ZoomMeeting(TimeStampModel):
@@ -142,4 +159,7 @@ class ZoomMeeting(TimeStampModel):
         choices=zoom_consts.MEETING_TRACKING_OPTIONS,
         help_text="FUTURE DEVELOPMENT",
     )
+    objects = ZoomMeetingQuerySet.as_manager()
 
+    class Meta:
+        ordering = ["-datetime_created"]

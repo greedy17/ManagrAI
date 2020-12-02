@@ -27,6 +27,13 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from managr.core.permissions import (
+    IsOrganizationManager,
+    IsSuperUser,
+    IsSalesPerson,
+    CanEditResourceOrReadOnly,
+)
+
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from .models import ZoomAuthAccount, ZoomMeeting
@@ -34,6 +41,7 @@ from .serializers import (
     ZoomAuthRefSerializer,
     ZoomAuthSerializer,
     ZoomMeetingWebhookSerializer,
+    ZoomMeetingSerializer,
 )
 from . import constants as zoom_consts
 
@@ -67,6 +75,7 @@ def get_zoom_authentication(request):
 @permission_classes([permissions.IsAuthenticated])
 def revoke_zoom_access_token(request):
     if hasattr(request.user, "zoom_account"):
+
         request.user.zoom_account.delete()
         return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
 
@@ -115,6 +124,7 @@ def zoom_meetings_webhook(request):
 
 
 @api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
 def create_zoom_meeting(request):
     if settings.IN_DEV or settings.IN_STAGING:
         faker = Faker()
@@ -131,5 +141,19 @@ def create_zoom_meeting(request):
                 "Authorization": f"Bearer {user_zoom_token}",
             },
         )
-        return Response()
+        return Response(r.json())
+
+
+class ZoomMeetingViewSet(
+    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (
+        IsSalesPerson,
+        CanEditResourceOrReadOnly,
+    )
+    serializer_class = ZoomMeetingSerializer
+
+    def get_queryset(self):
+        return ZoomMeeting.objects.for_user(self.request.user)
 
