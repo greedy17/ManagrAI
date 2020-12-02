@@ -166,10 +166,16 @@ class SlackViewSet(
         Open webhook for the SlackAPI to send data when users
         interact with our Slack App's interface.
         The body of that request will contain a JSON payload parameter.
-        Will have a type field that indicates the source of the interaction.
+        Will have a TYPE field that is used to handle request accordingly.
         """
         # TODO: verify is from Slack
         # https://api.slack.com/authentication/verifying-requests-from-slack
         payload = json.loads(request.data.get("payload"))
-        slack_interactions.handle_interaction(payload)
+        output = slack_interactions.handle_interaction(payload)
+        if not isinstance(output, dict):
+            raise TypeError(
+                "SlackIntegration: all interaction Processors must return dict"
+            )
+        if output.get("send_response_data"):
+            return Response(status=status.HTTP_200_OK, data=output["data"])
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -102,23 +102,12 @@ zoom_meeting_complete_form = [
         "type": "section",
         "text": {"type": "mrkdwn", "text": "*Update Stage*"},
         "accessory": {
-            "type": "static_select",
-            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "type": "external_select",
+            "action_id": slack_const.GET_ORGANIZATION_STAGES,
             "placeholder": {"type": "plain_text", "text": "Select"},
-            "options": [
-                {
-                    "text": {"type": "plain_text", "text": "Manage it"},
-                    "value": "value-0",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Read it"},
-                    "value": "value-1",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Save it"},
-                    "value": "value-2",
-                },
-            ],
+            "min_query_length": 0,
+            # "initial_option": {
+            # }
         },
     },
     {

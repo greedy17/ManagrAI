@@ -271,6 +271,13 @@ class Stage(TimeStampModel):
 
     objects = StageQuerySet.as_manager()
 
+    @property
+    def as_slack_option(self):
+        return {
+            "text": {"type": "plain_text", "text": self.title},
+            "value": str(self.id),
+        }
+
     class Meta:
         ordering = ["order"]
 
