@@ -33,6 +33,7 @@ const Utils = {
   convertToRgba,
   loadEntireCollection,
   constantToCapitalized,
+  urlQueryParams,
 }
 
 export default Utils
@@ -328,4 +329,26 @@ export function constantToCapitalized(value) {
     .split('_')
     .map(capitalizeWord)
     .join(' ')
+}
+
+/**
+ * @function    urlQueryParams
+ * Looks to the current URL and produces a dictionary with keys as paramName and values as paramValue.
+ * For example, URL of 'https://example.com?one=uno&two=dos'
+ * Yields an output of
+ * { one: 'uno', two: 'dos' }
+ * Array params are handled as follows. With a url of 'https://example.com?one[]=uno,1&two=dos'
+ * Yields an output of
+ * { one: ['uno', '1'], two: 'dos' }
+ **/
+export function urlQueryParams() {
+  const params = new URLSearchParams(window.location.search)
+  const output = {}
+  for (let e of params.entries()) {
+    let isArrayParam = e[0].includes('[]')
+    let key = isArrayParam ? e[0].replace('[]', '') : e[0]
+    let value = isArrayParam ? e[1].split(',') : e[1]
+    output[key] = value
+  }
+  return output
 }

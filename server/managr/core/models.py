@@ -182,7 +182,10 @@ class User(AbstractUser, TimeStampModel):
         if self.magic_token_expired:
             self.regen_magic_token()
 
-        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
+        return gen_auth_url(
+            email=self.email,
+            magic_token=str(self.magic_token),
+        )
 
     @property
     def unviewed_notifications_count(self):
@@ -401,8 +404,8 @@ class NotificationSelection(TimeStampModel):
 
 
 class NotificationOption(TimeStampModel):
-    """ Manage Email and Alert Notifications (Alerts are notfications
-     they receive on the Notifications side nav) options """
+    """Manage Email and Alert Notifications (Alerts are notfications
+    they receive on the Notifications side nav) options"""
 
     # user groups will be used to populate the options for each user type
     title = models.CharField(max_length=128, help_text="Friendly Name")
@@ -455,4 +458,3 @@ class NotificationOption(TimeStampModel):
                 option=self, user=user, value=self.default_value
             )
             return selection
-

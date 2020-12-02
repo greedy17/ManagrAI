@@ -1,17 +1,18 @@
 import json
-from rest_framework import serializers
+from rest_framework import serializers, status, filters, permissions
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import Organization, Account, Contact, Stage
-from managr.lead.models import ActionChoice
-
-from rest_framework import status, filters, permissions
 from rest_framework.response import Response
+
+from managr.lead.models import ActionChoice
+from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
+
+from .models import Organization, Account, Contact, Stage
 
 
 class ActionChoiceRefSerializer(serializers.ModelSerializer):
     """
-        Read Only Ref Serializer for ActionChoices Tied to an Organization
+    Read Only Ref Serializer for ActionChoices Tied to an Organization
     """
 
     class Meta:
@@ -24,8 +25,12 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 
 class OrganizationRefSerializer(serializers.ModelSerializer):
     """
-        Read Only Serializer for ref of the organization
+    Read Only Serializer for ref of the organization
     """
+
+    slack_ref = OrganizationSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
+    )
 
     class Meta:
         model = Organization
@@ -36,6 +41,7 @@ class OrganizationRefSerializer(serializers.ModelSerializer):
             "state",
             "org_token",
             "is_externalsyncenabled",
+            "slack_ref",
         )
 
 
@@ -47,8 +53,8 @@ class StageSerializer(serializers.ModelSerializer):
 
 class AccountRefSerializer(serializers.ModelSerializer):
     """
-        Read only serializer for ref of the Account
-        used for the AccountSerializer
+    Read only serializer for ref of the Account
+    used for the AccountSerializer
     """
 
     class Meta:
@@ -62,6 +68,9 @@ class OrganizationVerboseSerializer(serializers.ModelSerializer):
     accounts_ref = AccountRefSerializer(many=True, source="accounts", read_only=True)
     action_choices_ref = ActionChoiceRefSerializer(
         source="action_choices", many=True, read_only=True
+    )
+    slack_ref = OrganizationSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
     )
 
     class Meta:
@@ -78,6 +87,7 @@ class OrganizationVerboseSerializer(serializers.ModelSerializer):
             "total_amount_closed_contracts",
             "avg_amount_closed_contracts",
             "is_externalsyncenabled",
+            "slack_ref",
         )
         read_only_fields = (
             "accounts",
@@ -87,6 +97,10 @@ class OrganizationVerboseSerializer(serializers.ModelSerializer):
 
 class OrganizationSerializer(serializers.ModelSerializer):
     """ Only Super Users can create, edit and delete Organizations """
+
+    slack_ref = OrganizationSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
+    )
 
     class Meta:
         model = Organization
@@ -98,14 +112,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "total_amount_closed_contracts",
             "avg_amount_closed_contracts",
             "is_externalsyncenabled",
+            "slack_ref",
         )
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    """ 
-        Serializer for Accounts tied to organization
-        Only Organization Managers can add, update, delete accounts
-        Other users can list
+    """
+    Serializer for Accounts tied to organization
+    Only Organization Managers can add, update, delete accounts
+    Other users can list
     """
 
     lead_count = serializers.SerializerMethodField()

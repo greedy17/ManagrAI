@@ -231,7 +231,7 @@ h2 {
 form,
 .success-prompt {
   @include standard-border();
-  margin-top: 3.125rem;
+  //   margin-top: 3.125rem;
   width: 31.25rem;
 
   background-color: $white;
