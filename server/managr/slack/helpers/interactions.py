@@ -2,24 +2,25 @@ from django.db.models import Q
 
 from managr.organization.models import Stage
 from managr.lead import constants as lead_const
+from managr.lead.models import Lead
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import utils as slack_utils
 from managr.slack.helpers.blocks import get_block_set
-from managr.slack.models import UserSlackIntegration
 import pdb
 
+TEMPORARY_CONTEXT = {"lead": Lead.objects.first()}  # for dev purposes
+
 # NOTE:
-# - The method handle_interaction is the entry point into this architecture,
-#   and is essentially a Router.
-# - ROUTERS (methods starting with route_) leverage a switcher to route
+# - The method handle_interaction is the entry point into this architecture.
+
+# - HANDLERS (methods starting with handle_) leverage a switcher to route
 #   payload towards proper processing method.
+#   They may do some data preparation that gets passed on to the next method.
 #   There may be some preparation of data to pass into a Processor.
 # - PROCESSORS (methods starting with process_) do the actual processing of
 #   the interaction.
-# - GETTERS (methods starting with get_) are helper methods that query DB and
-#   return desired Model instance.
 
 # - The architecture is designed so that ultimately the return value of a
 #   PROCESSOR is outputted to the view handling the request from the Slack API.
@@ -29,38 +30,24 @@ import pdb
 #   their dict as follows: { "send_response_data": True, "data": data_here }
 
 
-def get_access_token_from_user_slack_id(user_slack_id):
-    return (
-        UserSlackIntegration.objects.select_related(
-            "user__organization__slack_integration"
-        )
-        .get(slack_id=user_slack_id)
-        .user.organization.slack_integration.access_token
-    )
-
-
-def get_organization_from_user_slack_id(user_slack_id):
-    return (
-        UserSlackIntegration.objects.select_related("user__organization")
-        .get(slack_id=user_slack_id)
-        .user.organization
-    )
-
-
-def process_zoom_meeting_great(payload):
+def process_zoom_meeting_great(payload, params):
     # TODO: somehow need to keep track of what lead etc (i.e. STATE across interactions)
     # such as with values (i.e. button value)
     # submit next UI
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    access_token = get_access_token_from_user_slack_id(payload["user"]["id"])
+    access_token = slack_utils.get_access_token_from_user_slack_id(
+        payload["user"]["id"]
+    )
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": "modal-identifier",
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_complete_form"),
+            "blocks": get_block_set(
+                "zoom_meeting_complete_form", context=TEMPORARY_CONTEXT
+            ),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
     }
@@ -70,17 +57,21 @@ def process_zoom_meeting_great(payload):
     }
 
 
-def process_zoom_meeting_not_well(payload):
+def process_zoom_meeting_not_well(payload, params):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    access_token = get_access_token_from_user_slack_id(payload["user"]["id"])
+    access_token = slack_utils.get_access_token_from_user_slack_id(
+        payload["user"]["id"]
+    )
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": "modal-identifier",
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_limited_form"),
+            "blocks": get_block_set(
+                "zoom_meeting_limited_form", context=TEMPORARY_CONTEXT
+            ),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
     }
@@ -90,8 +81,11 @@ def process_zoom_meeting_not_well(payload):
     }
 
 
-def process_get_organization_stages(payload):
-    organization = get_organization_from_user_slack_id(payload["user"]["id"])
+def process_get_organization_stages(payload, params):
+    # TODO: could add user_id to action_query_string upsteam
+    organization = slack_utils.get_organization_from_user_slack_id(
+        payload["user"]["id"]
+    )
     data = {
         "options": [
             s.as_slack_option
@@ -104,7 +98,7 @@ def process_get_organization_stages(payload):
     return {"send_response_data": True, "data": data}
 
 
-def process_get_lead_forecasts(payload):
+def process_get_lead_forecasts(payload, params):
     data = {
         "options": [
             slack_utils.generate_slack_option(text=f[1], value=f[0])
@@ -116,7 +110,7 @@ def process_get_lead_forecasts(payload):
     return {"send_response_data": True, "data": data}
 
 
-def route_block_actions(payload):
+def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
     such as clicking a button.
@@ -125,12 +119,14 @@ def route_block_actions(payload):
         slack_const.ZOOM_MEETING__GREAT: process_zoom_meeting_great,
         slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well,
     }
-    action_id = payload["actions"][0]["action_id"]
-    # TODO: here add query_param hack
-    return switcher.get(action_id)(payload)
+    action_query_string = payload["actions"][0]["action_id"]
+    processed_string = slack_utils.process_action_id(action_query_string)
+    action_id = processed_string.get("true_id")
+    action_params = processed_string.get("params")
+    return switcher.get(action_id)(payload, action_params)
 
 
-def route_block_suggestion(payload):
+def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
     to populate its options.
@@ -139,14 +135,16 @@ def route_block_suggestion(payload):
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
         slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
     }
-    action_id = payload["action_id"]
-    # TODO: here add query_param hack, processors should have context=None arg wherein to add Lead. etc
-    return switcher.get(action_id)(payload)
+    action_query_string = payload["action_id"]
+    processed_string = slack_utils.process_action_id(action_query_string)
+    action_id = processed_string.get("true_id")
+    action_params = processed_string.get("params")
+    return switcher.get(action_id)(payload, action_params)
 
 
 def handle_interaction(payload):
     switcher = {
-        slack_const.BLOCK_ACTIONS: route_block_actions,
-        slack_const.BLOCK_SUGGESTION: route_block_suggestion,
+        slack_const.BLOCK_ACTIONS: handle_block_actions,
+        slack_const.BLOCK_SUGGESTION: handle_block_suggestion,
     }
     return switcher.get(payload["type"])(payload)

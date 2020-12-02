@@ -117,7 +117,7 @@ class SlackViewSet(
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
-        # data = {"blocks": get_block_set("zoom_meeting_initial")}
+        # data = {"blocks": get_block_set("zoom_meeting_initial")} # add context
         slack_requests.generic_request(url, data)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -149,8 +149,10 @@ class SlackViewSet(
         # DM user
         test_text = "Testing, testing... 1, 2. Hello, Friend!"
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
-        slack_requests.dm_user(user_slack.channel, access_token, text=test_text)
-        # slack_requests.dm_user(
+        slack_requests.send_channel_message(
+            user_slack.channel, access_token, text=test_text
+        )
+        # slack_requests.send_channel_message(
         #     user_slack.channel, access_token, block_set="zoom_meeting_initial"
         # )
         return Response(status=status.HTTP_204_NO_CONTENT)
