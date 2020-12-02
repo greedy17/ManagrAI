@@ -171,11 +171,11 @@ class SlackViewSet(
         # TODO: verify is from Slack
         # https://api.slack.com/authentication/verifying-requests-from-slack
         payload = json.loads(request.data.get("payload"))
-        output = slack_interactions.handle_interaction(payload)
-        if not isinstance(output, dict):
+        process_output = slack_interactions.handle_interaction(payload)
+        if not isinstance(process_output, dict):
             raise TypeError(
                 "SlackIntegration: all interaction Processors must return dict"
             )
-        if output.get("send_response_data"):
-            return Response(status=status.HTTP_200_OK, data=output["data"])
+        if process_output.get("send_response_data"):
+            return Response(status=status.HTTP_200_OK, data=process_output["data"])
         return Response(status=status.HTTP_204_NO_CONTENT)

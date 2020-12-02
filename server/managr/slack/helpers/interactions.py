@@ -1,21 +1,25 @@
 from django.db.models import Q
 
 from managr.organization.models import Stage
+from managr.lead import constants as lead_const
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import utils as slack_utils
 from managr.slack.helpers.blocks import get_block_set
 from managr.slack.models import UserSlackIntegration
 import pdb
 
 # NOTE:
 # - The method handle_interaction is the entry point into this architecture,
-#   and is essentially a Router
+#   and is essentially a Router.
 # - ROUTERS (methods starting with route_) leverage a switcher to route
-#   payload towards proper processing method
+#   payload towards proper processing method.
+#   There may be some preparation of data to pass into a Processor.
 # - PROCESSORS (methods starting with process_) do the actual processing of
-#   the interaction
+#   the interaction.
 # - GETTERS (methods starting with get_) are helper methods that query DB and
-#   return desired Model instance
+#   return desired Model instance.
 
 # - The architecture is designed so that ultimately the return value of a
 #   PROCESSOR is outputted to the view handling the request from the Slack API.
@@ -94,8 +98,21 @@ def process_get_organization_stages(payload):
             for s in Stage.objects.filter(
                 Q(type="PUBLIC") | Q(organization=organization)
             )
-        ]
+        ],
+        # "initial_option": {},
     }
+    return {"send_response_data": True, "data": data}
+
+
+def process_get_lead_forecasts(payload):
+    data = {
+        "options": [
+            slack_utils.generate_slack_option(text=f[1], value=f[0])
+            for f in lead_const.FORECAST_CHOICES
+        ],
+        # "initial_option": {},
+    }
+
     return {"send_response_data": True, "data": data}
 
 
@@ -109,6 +126,7 @@ def route_block_actions(payload):
         slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well,
     }
     action_id = payload["actions"][0]["action_id"]
+    # TODO: here add query_param hack
     return switcher.get(action_id)(payload)
 
 
@@ -119,8 +137,10 @@ def route_block_suggestion(payload):
     """
     switcher = {
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
+        slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
     }
     action_id = payload["action_id"]
+    # TODO: here add query_param hack, processors should have context=None arg wherein to add Lead. etc
     return switcher.get(action_id)(payload)
 
 

@@ -10,7 +10,6 @@ from managr.slack import constants as slack_const
 # These forms need to leverage proper managr.slack.constants for action_ids, so we can
 # identify the action properly later on when it is triggered by user and we receive data via webhook
 
-
 zoom_meeting_initial = [
     {
         "type": "section",
@@ -114,23 +113,12 @@ zoom_meeting_complete_form = [
         "type": "section",
         "text": {"type": "mrkdwn", "text": "*Forecast Strength*"},
         "accessory": {
-            "type": "static_select",
-            # "action_id": slack_const.ZOOM_MEETING__GREAT,
+            "type": "external_select",
+            "action_id": slack_const.GET_LEAD_FORECASTS,
             "placeholder": {"type": "plain_text", "text": "Select"},
-            "options": [
-                {
-                    "text": {"type": "plain_text", "text": "Manage it"},
-                    "value": "value-0",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Read it"},
-                    "value": "value-1",
-                },
-                {
-                    "text": {"type": "plain_text", "text": "Save it"},
-                    "value": "value-2",
-                },
-            ],
+            "min_query_length": 0,
+            # "initial_option": {
+            # }
         },
     },
     {
