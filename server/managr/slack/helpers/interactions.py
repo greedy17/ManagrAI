@@ -7,6 +7,7 @@ from managr.lead.models import Lead
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import utils as slack_utils
+from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 import pdb
 
@@ -98,8 +99,7 @@ def process_get_organization_stages(payload, params):
 def process_get_lead_forecasts(payload, params):
     data = {
         "options": [
-            slack_utils.generate_slack_option(text=f[1], value=f[0])
-            for f in lead_const.FORECAST_CHOICES
+            block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES
         ],
         # "initial_option": {},
     }

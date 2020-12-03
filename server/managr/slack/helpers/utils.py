@@ -1,19 +1,6 @@
 from managr.slack.models import UserSlackIntegration
 
 
-def generate_slack_option(text=None, value=None):
-    """
-    Returns a dict formatted to be an option for a
-    Slack select_field
-    """
-    if text is None or value is None:
-        raise TypeError("Required args: text=, value=")
-    return {
-        "text": {"type": "plain_text", "text": text},
-        "value": value,
-    }
-
-
 def action_with_params(action, params=[]):
     if not isinstance(action, str):
         raise TypeError("action must be str")

@@ -25,7 +25,7 @@ from managr.core.models import UserManager, TimeStampModel
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.lead.models import Notification
-from managr.slack.helpers import utils as slack_utils
+from managr.slack.helpers import block_builders
 
 from . import constants as org_consts
 
@@ -274,7 +274,7 @@ class Stage(TimeStampModel):
 
     @property
     def as_slack_option(self):
-        return slack_utils.generate_slack_option(text=self.title, value=str(self.id))
+        return block_builders.option(self.title, str(self.id))
 
     class Meta:
         ordering = ["order"]
