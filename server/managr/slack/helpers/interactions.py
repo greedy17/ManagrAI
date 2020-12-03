@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from managr.organization.models import Stage
+from managr.organization.models import Organization, Stage
 from managr.lead import constants as lead_const
 from managr.lead.models import Lead
 
@@ -78,12 +78,7 @@ def process_zoom_meeting_not_well(payload, params):
 
 
 def process_get_organization_stages(payload, params):
-    # TODO: could add user_id to action_query_string upsteam
-    # TODO: params should include lead_id,
-    # need current stage for initial_option
-    organization = slack_utils.get_organization_from_user_slack_id(
-        payload["user"]["id"]
-    )
+    organization = Organization.objects.get(pk=params["organization_id"])
     data = {
         "options": [
             s.as_slack_option
@@ -91,7 +86,14 @@ def process_get_organization_stages(payload, params):
                 Q(type="PUBLIC") | Q(organization=organization)
             )
         ],
-        # "initial_option": {},
+    }
+    return {"send_response_data": True, "data": data}
+
+
+def process_get_organization_action_choices(payload, params):
+    organization = Organization.objects.get(pk=params["organization_id"])
+    data = {
+        "options": [ac.as_slack_option for ac in organization.action_choices.all()],
     }
     return {"send_response_data": True, "data": data}
 
@@ -130,6 +132,7 @@ def handle_block_suggestion(payload):
     """
     switcher = {
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
     }
     action_query_string = payload["action_id"]

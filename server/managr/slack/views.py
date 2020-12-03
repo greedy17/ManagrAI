@@ -28,7 +28,11 @@ import pdb
 
 from managr.lead.models import Lead  # for dev purposes
 
-TEMPORARY_CONTEXT = {"lead": Lead.objects.first()}  # for dev purposes
+TEMPORARY_CONTEXT = {
+    "lead": Lead.objects.first(),
+    "user": Lead.objects.first().claimed_by,
+    "organization": Lead.objects.first().claimed_by.organization,
+}  # for dev purposes
 
 
 class SlackViewSet(
@@ -162,8 +166,7 @@ class SlackViewSet(
         # slack_requests.send_channel_message(
         #     user_slack.channel,
         #     access_token,
-        #     block_set="zoom_meeting_initial",
-        #     context=TEMPORARY_CONTEXT,
+        #     block_set=get_block_set("zoom_meeting_initial", TEMPORARY_CONTEXT),
         # )
         return Response(status=status.HTTP_204_NO_CONTENT)
 

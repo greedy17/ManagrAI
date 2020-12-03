@@ -599,6 +599,10 @@ class ActionChoice(TimeStampModel):
 
     objects = ActionChoiceQuerySet.as_manager()
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
+
     class Meta:
         ordering = ["title"]
 

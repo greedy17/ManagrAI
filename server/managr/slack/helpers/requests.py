@@ -41,7 +41,7 @@ def request_user_dm_channel(slack_id, access_token):
     )
 
 
-def send_channel_message(channel, access_token, text=None, block_set=None, context={}):
+def send_channel_message(channel, access_token, text=None, block_set=None):
     """
     Posts a message to a public channel, private channel, or DM channel.
     Initial context for block_set goes here!
@@ -52,7 +52,7 @@ def send_channel_message(channel, access_token, text=None, block_set=None, conte
     if text:
         data["text"] = text
     if block_set:
-        data["blocks"] = get_block_set(block_set, context)
+        data["blocks"] = block_set
     return requests.post(
         url,
         data=json.dumps(data),

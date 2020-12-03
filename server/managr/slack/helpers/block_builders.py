@@ -23,6 +23,29 @@ def external_select(
     return block
 
 
+def static_select(
+    label,
+    options,
+    action_id=None,
+    initial_option=None,
+    placeholder="Select",
+):
+    block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"*{label}*"},
+        "accessory": {
+            "type": "static_select",
+            "placeholder": {"type": "plain_text", "text": placeholder},
+            "options": options,
+        },
+    }
+    if initial_option:
+        block["accessory"]["initial_option"] = initial_option
+    if action_id:
+        block["accessory"]["action_id"] = action_id
+    return block
+
+
 def datepicker(
     date=None, action_id=None, label="Select Date", placeholder="Select a date"
 ):
