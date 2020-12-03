@@ -4,7 +4,7 @@ import os
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
-from managr.slack.helpers.blocks import get_block_set
+from managr.slack.helpers.block_sets import get_block_set
 import pdb
 
 
@@ -61,10 +61,14 @@ def send_channel_message(channel, access_token, text=None, block_set=None, conte
 
 
 def generic_request(url, data, access_token=None):
-    return requests.post(
+    r = requests.post(
         url,
         data=json.dumps(data),
         headers=slack_auth.auth_headers(access_token)
         if access_token
         else slack_auth.json_headers(),
     )
+    print("________")
+    print(r.status_code)
+    if r.status_code > 299:
+        print(r.json())

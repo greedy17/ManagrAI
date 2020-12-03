@@ -19,7 +19,7 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
-from managr.slack.helpers.blocks import get_block_set
+from managr.slack.helpers.block_sets import get_block_set
 
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration
@@ -156,15 +156,15 @@ class SlackViewSet(
         # DM user
         test_text = "Testing, testing... 1, 2. Hello, Friend!"
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
-        # slack_requests.send_channel_message(
-        #     user_slack.channel, access_token, text=test_text
-        # )
         slack_requests.send_channel_message(
-            user_slack.channel,
-            access_token,
-            block_set="zoom_meeting_initial",
-            context=TEMPORARY_CONTEXT,
+            user_slack.channel, access_token, text=test_text
         )
+        # slack_requests.send_channel_message(
+        #     user_slack.channel,
+        #     access_token,
+        #     block_set="zoom_meeting_initial",
+        #     context=TEMPORARY_CONTEXT,
+        # )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -183,6 +183,8 @@ class SlackViewSet(
         # TODO: verify is from Slack
         # https://api.slack.com/authentication/verifying-requests-from-slack
         payload = json.loads(request.data.get("payload"))
+        # print("-=-=-==-=-=-=-==-=-")
+        # print(payload.get("type"))
         process_output = slack_interactions.handle_interaction(payload)
         if not isinstance(process_output, dict):
             raise TypeError(

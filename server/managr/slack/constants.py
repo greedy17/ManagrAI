@@ -13,6 +13,9 @@ POST_MESSAGE = "chat.postMessage"
 # https://api.slack.com/methods/views.open
 VIEWS_OPEN = "views.open"
 
+# https://api.slack.com/methods/chat.getPermalink
+CHAT_GET_PERMALINK = "chat.getPermalink"
+
 WORKSPACE_SCOPES = [
     "app_mentions:read",
     "channels:join",

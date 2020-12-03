@@ -7,7 +7,7 @@ from managr.lead.models import Lead
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import utils as slack_utils
-from managr.slack.helpers.blocks import get_block_set
+from managr.slack.helpers.block_sets import get_block_set
 import pdb
 
 # NOTE:
@@ -17,6 +17,7 @@ import pdb
 #   payload towards proper processing method.
 #   They may do some data preparation that gets passed on to the next method.
 #   There may be some preparation of data to pass into a Processor.
+
 # - PROCESSORS (methods starting with process_) do the actual processing of
 #   the interaction.
 
@@ -77,6 +78,8 @@ def process_zoom_meeting_not_well(payload, params):
 
 def process_get_organization_stages(payload, params):
     # TODO: could add user_id to action_query_string upsteam
+    # TODO: params should include lead_id,
+    # need current stage for initial_option
     organization = slack_utils.get_organization_from_user_slack_id(
         payload["user"]["id"]
     )

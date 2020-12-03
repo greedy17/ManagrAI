@@ -1,5 +1,7 @@
+from managr.lead.models import Lead
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, get_lead_rating_emoji
+import pdb
 
 # TODO: build block_sets for zoom meeting forms.
 # Mockups, page 3: https://docs.google.com/document/d/1KIvznxOqPb7WuFOXsFcKMawxq8-8T2gpb2sYNdIqLL4/edit#heading=h.xa1nnwnl2is5
@@ -110,6 +112,12 @@ def zoom_meeting_complete_form(context):
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
+    lead = Lead.objects.get(pk=context.get("lead_id"))
+    target = "1990-04-28"
+    expected_close_date = (
+        str(lead.expected_close_date.date()) if lead.expected_close_date else None
+    )
+    # pdb.set_trace()
     # make params here
     lead_id_param = "lead=" + context.get("lead_id")
 
@@ -119,7 +127,7 @@ def zoom_meeting_complete_form(context):
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": "*Opportunity:*"},
-                {"type": "plain_text", "text": ":dart: Dunder Mifflin", "emoji": True},
+                {"type": "plain_text", "text": f":dart: {lead.title}", "emoji": True},
             ],
         },
         {"type": "divider"},
@@ -189,7 +197,7 @@ def zoom_meeting_complete_form(context):
             "text": {"type": "mrkdwn", "text": "*Expected Close Date*"},
             "accessory": {
                 "type": "datepicker",
-                "initial_date": "1990-04-28",
+                # "initial_date": expected_close_date, TODO
                 "placeholder": {"type": "plain_text", "text": "Select a date"},
                 # "action_id": slack_const.ZOOM_MEETING__GREAT,
             },
@@ -198,7 +206,7 @@ def zoom_meeting_complete_form(context):
             "type": "input",
             "optional": True,
             # "block_id": "input123",
-            "label": {"type": "plain_text", "text": "Next Steps"},
+            "label": {"type": "plain_text", "text": "Next Step"},
             "element": {
                 "type": "plain_text_input",
                 # "action_id": slack_const.ZOOM_MEETING__GREAT,
@@ -221,8 +229,9 @@ def zoom_meeting_limited_form(context):
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
+    lead = Lead.objects.get(pk=context.get("lead_id"))
     # make params here
-    lead_id_param = "lead=" + context.get("lead_id")
+    lead_id_param = "lead_id=" + context.get("lead_id")
 
     return [
         {"type": "divider"},
@@ -230,7 +239,7 @@ def zoom_meeting_limited_form(context):
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": "*Opportunity:*"},
-                {"type": "plain_text", "text": ":dart: Dunder Mifflin", "emoji": True},
+                {"type": "plain_text", "text": f":dart: {lead.title}", "emoji": True},
             ],
         },
         {"type": "divider"},
@@ -285,7 +294,7 @@ def zoom_meeting_limited_form(context):
             "type": "input",
             "optional": True,
             # "block_id": "input123",
-            "label": {"type": "plain_text", "text": "Next Steps"},
+            "label": {"type": "plain_text", "text": "Next Step"},
             "element": {
                 "type": "plain_text_input",
                 # "action_id": slack_const.ZOOM_MEETING__GREAT,
