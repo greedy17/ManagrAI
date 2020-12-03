@@ -134,7 +134,7 @@ export default {
       this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
     },
     routeToSettings() {
-      this.$router.push({ name: 'Settings' })
+      this.$router.push({ name: 'EmailIntegration' })
       this.toggleUserMenu()
     },
     logOut() {

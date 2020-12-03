@@ -10,7 +10,8 @@
 </template>
 
 <script>
-import LeadActions from '@/components/shared/LeadActions'
+// import LeadActions from '@/components/shared/LeadActions'
+import LeadActions from '@/components/shared/TEMP_LeadActions'
 
 export default {
   name: 'LeadDetails',

@@ -7,7 +7,6 @@ import Auth from '@/services/auth'
 
 // views
 import Login from '@/views/auth/Login'
-import Invite from '@/views/auth/Invite'
 import Activation from '@/views/auth/Activation'
 import LeadsIndex from '@/views/leads/LeadsIndex'
 import LeadsDetail from '@/views/leads/LeadsDetail'
@@ -16,19 +15,21 @@ import Prospect from '@/views/leads/Prospect'
 import Forecast from '@/views/leads/Forecast'
 import Nylas from '@/views/nylas-integration/Nylas'
 import NylasCallback from '@/views/nylas-integration/NylasCallback'
-import Settings from '@/views/settings/Settings'
 import Reports from '@/views/reports/Reports'
 import StoryReportDetail from '@/views/reports/StoryReportDetail'
 import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
 // import Styles from '@/views/settings/Styles'
 
-// Settings
-
-import EmailIntegration from '@/components/settings/EmailIntegration'
-import EmailTemplates from '@/components/settings/EmailTemplates'
-import Profile from '@/components/settings/Profile'
-import Password from '@/components/settings/Password'
+// settings -related views
+import Settings from '@/views/settings/Settings'
+import EmailIntegration from '@/views/settings/_pages/_EmailIntegration'
+import EmailTemplates from '@/views/settings/_pages/_EmailTemplates'
+import Profile from '@/views/settings/_pages/_Profile'
+import Invite from '@/views/settings/_pages/_Invite'
+// import Password from '@/views/settings/_pages/_Password'
 import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
+import SlackIntegration from '@/views/settings/_pages/_SlackIntegration'
+import SlackCallback from '@/views/settings/_pages/_SlackCallback'
 
 Vue.use(Router)
 
@@ -44,7 +45,6 @@ export default new Router({
       name: 'Login',
       component: Login,
     },
-
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
@@ -95,10 +95,32 @@ export default new Router({
     },
     {
       path: '/settings',
-      name: 'Settings',
+      /*
+        NOTE:
+        The route name is removed due to the following warning:
+        [vue-router] Named Route 'Settings' has a default child route.
+        When navigating to this named route (:to="{name: 'Settings'"),
+        the default child route will not be rendered. Remove the name from
+        this route and use the name of the default child route for named links instead.
+       */
+      // name: 'Settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
       children: [
+        {
+          path: 'slack-integration/callback',
+          name: 'SlackCallback',
+          components: {
+            'user-settings': SlackCallback,
+          },
+        },
+        {
+          path: 'slack-integration',
+          name: 'SlackIntegration',
+          components: {
+            'user-settings': SlackIntegration,
+          },
+        },
         {
           path: 'zoom-integration',
           name: 'ZoomIntegration',
@@ -114,7 +136,9 @@ export default new Router({
           name: 'TextIntegration',
           components: {
             'user-settings': () =>
-              import(/* webpackChunkName: "settings" */ '../components/settings/TextIntegration'),
+              import(
+                /* webpackChunkName: "settings" */ '../views/settings/_pages/_TextIntegration'
+              ),
           },
         },
         {
@@ -138,24 +162,26 @@ export default new Router({
             'user-settings': Profile,
           },
         },
+        // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
+        // {
+        //   path: 'password',
+        //   name: 'Password',
+        //   components: {
+        //     'user-settings': Password,
+        //   },
+        // },
         {
-          path: 'password',
-          name: 'Password',
-          components: {
-            'user-settings': Password,
-          },
-        },
-        {
-          path: '/invite',
+          path: 'invite',
           name: 'Invite',
           components: { 'user-settings': Invite },
           beforeEnter: Auth.requireUserTypeManagerOrStaff,
         },
         {
-          path: '/notification-settings',
+          path: 'notification-settings',
           name: 'NotificationSettings',
           components: { 'user-settings': NotificationSettings },
         },
+        { path: '', redirect: '/settings/email-integration' },
       ],
     },
     {
