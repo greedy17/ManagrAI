@@ -11,7 +11,7 @@ export default class ZoomMeeting extends Model {
   static startTime = new fields.CharField({ readOnly: true })
   static timeZone = new fields.CharField({ readOnly: true })
   static participants = new fields.ModelField({
-    modelClass: Contact,
+    ModelClass: Contact,
     many: true,
   })
   static lead = new fields.CharField()

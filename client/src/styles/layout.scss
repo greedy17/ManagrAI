@@ -37,3 +37,18 @@
     padding-right: 1rem;
   }
 }
+@mixin page {
+  display: flex;
+  justify-content: center;
+  &__main-content-area {
+    width: 80vw;
+    min-width: 65rem;
+  }
+
+  &__main-content-area-with-panel {
+    width: 80vw;
+    min-width: 65rem;
+    margin-right: 1rem;
+    margin-left: 12rem;
+  }
+}

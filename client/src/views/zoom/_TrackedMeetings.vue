@@ -1,5 +1,12 @@
 <template>
-  <div class="zoom-page"></div>
+  <div class="tracked-meetings-subpage">
+    <div class="tracked-meetings-subpage__header">
+      <div class="tracked-meetings-subpage__title">
+        Tracked Meetings
+      </div>
+    </div>
+    <div class="tracked-meetings-subpage__content"></div>
+  </div>
 </template>
 
 <script>
@@ -10,8 +17,37 @@
  * A special section for dev and staging to test against
  *
  */
-
-export default {}
+import ZoomMeeting from '@/services/zoommeetings'
+import CollectionManager from '@thinknimble/tn-models'
+export default {
+  name: 'TrackedMeetings',
+  components: {},
+  data() {
+    return {
+      meetings: CollectionManager.create({
+        ModelClass: ZoomMeeting,
+        filters: {},
+      }),
+    }
+  },
+  created() {
+    console.log(ZoomMeeting)
+  },
+  methods: {},
+}
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import '@/styles/layout';
+@import '@/styles/containers';
+.tracked-meetings-subpage {
+  @include box--bordered();
+  &__content {
+    &-create {
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+}
+</style>
