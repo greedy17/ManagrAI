@@ -10,8 +10,6 @@ from managr.slack.helpers import utils as slack_utils
 from managr.slack.helpers.blocks import get_block_set
 import pdb
 
-TEMPORARY_CONTEXT = {"lead": Lead.objects.first()}  # for dev purposes
-
 # NOTE:
 # - The method handle_interaction is the entry point into this architecture.
 
@@ -45,9 +43,7 @@ def process_zoom_meeting_great(payload, params):
             "type": "modal",
             "callback_id": "modal-identifier",
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set(
-                "zoom_meeting_complete_form", context=TEMPORARY_CONTEXT
-            ),
+            "blocks": get_block_set("zoom_meeting_complete_form", context=params),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
     }
@@ -69,9 +65,7 @@ def process_zoom_meeting_not_well(payload, params):
             "type": "modal",
             "callback_id": "modal-identifier",
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set(
-                "zoom_meeting_limited_form", context=TEMPORARY_CONTEXT
-            ),
+            "blocks": get_block_set("zoom_meeting_limited_form", context=params),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
     }

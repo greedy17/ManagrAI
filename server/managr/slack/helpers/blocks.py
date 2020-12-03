@@ -1,5 +1,5 @@
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers.utils import action_with_params, get_lead_rating_emoji
 
 # TODO: build block_sets for zoom meeting forms.
 # Mockups, page 3: https://docs.google.com/document/d/1KIvznxOqPb7WuFOXsFcKMawxq8-8T2gpb2sYNdIqLL4/edit#heading=h.xa1nnwnl2is5
@@ -21,12 +21,25 @@ def zoom_meeting_initial(context):
     }
     """
     # TODO: ^. Currently leveraging Lead.objects.first() upstream.
+    # validate context
+    required_context = ["lead"]
+    for prop in required_context:
+        if context.get(prop) is None:
+            raise ValueError(f"context missing: {prop}")
+
+    lead = context.get("lead")
+    primary_description = lead.primary_description or "No Primary Description"
+    secondary_description = lead.secondary_description or "No Secondary Description"
+
+    # make params here
+    lead_id_param = "lead_id=" + str(lead.id)
+
     return [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Your meeting with *{{account.lead}}* just ended, how'd it go?",
+                "text": f"Your meeting regarding *{lead.title}* just ended, how'd it go?",
             },
         },
         {"type": "divider"},
@@ -47,7 +60,7 @@ def zoom_meeting_initial(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Lead Name Here*\n:star::star::star::star:Lead Rating Here\n Lead.PrimaryDescription here.\n Lead.SecondaryDescription here.",
+                "text": f"*{lead.title}*\n{get_lead_rating_emoji(lead.rating)}\n{primary_description}\n{secondary_description}",
             },
             "accessory": {
                 "type": "image",
@@ -63,7 +76,9 @@ def zoom_meeting_initial(context):
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Great!", "emoji": True},
                     "value": "GREAT",
-                    "action_id": slack_const.ZOOM_MEETING__GREAT,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__GREAT, params=[lead_id_param]
+                    ),
                 },
                 {
                     "type": "button",
@@ -73,7 +88,9 @@ def zoom_meeting_initial(context):
                         "emoji": True,
                     },
                     "value": "NOT_WELL",
-                    "action_id": slack_const.ZOOM_MEETING__NOT_WELL,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__NOT_WELL, params=[lead_id_param]
+                    ),
                 },
             ],
         },
@@ -84,17 +101,17 @@ def zoom_meeting_complete_form(context):
     """
     Required context:
     {
-       lead
+       lead_id
     }
     """
     # validate context
-    required_context = ["lead"]
+    required_context = ["lead_id"]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
     # make params here
-    lead_param = "lead=" + str(context.get("lead").id)
+    lead_id_param = "lead=" + context.get("lead_id")
 
     return [
         {"type": "divider"},
@@ -147,7 +164,7 @@ def zoom_meeting_complete_form(context):
             "accessory": {
                 "type": "external_select",
                 "action_id": action_with_params(
-                    slack_const.GET_LEAD_FORECASTS, params=[lead_param]
+                    slack_const.GET_LEAD_FORECASTS, params=[lead_id_param]
                 ),
                 "placeholder": {"type": "plain_text", "text": "Select"},
                 "min_query_length": 0,
@@ -195,17 +212,17 @@ def zoom_meeting_limited_form(context):
     """
     Required context:
     {
-       lead
+       lead_id
     }
     """
     # validate context
-    required_context = ["lead"]
+    required_context = ["lead_id"]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
     # make params here
-    lead_param = "lead=" + str(context.get("lead").id)
+    lead_id_param = "lead=" + context.get("lead_id")
 
     return [
         {"type": "divider"},

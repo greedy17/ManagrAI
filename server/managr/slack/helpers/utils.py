@@ -51,3 +51,13 @@ def get_organization_from_user_slack_id(user_slack_id):
         .get(slack_id=user_slack_id)
         .user.organization
     )
+
+
+def get_lead_rating_emoji(rating):
+    placeholder_count = 5 - rating
+    output = ""
+    for i in range(rating):
+        output += ":star: "
+    for i in range(placeholder_count):
+        output += ":black_small_square: "
+    return output
