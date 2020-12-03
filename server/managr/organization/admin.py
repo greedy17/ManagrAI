@@ -1,12 +1,17 @@
 from django.contrib import admin
 
-# Register your models here.
+from managr.slack.models import OrganizationSlackIntegration
 
 from .models import Organization, Account, Contact, Stage
 
 
+class OrganizationSlackIntegrationInline(admin.StackedInline):
+    model = OrganizationSlackIntegration
+
+
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
+    inlines = (OrganizationSlackIntegrationInline,)
     list_display = (
         "name",
         "message_auth_count",

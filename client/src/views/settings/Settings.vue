@@ -13,6 +13,11 @@
             Zoom Integration
           </div>
         </router-link>
+        <router-link :to="{ name: 'SlackIntegration' }">
+          <div class="toolbar__row">
+            Slack Integration
+          </div>
+        </router-link>
         <router-link :to="{ name: 'EmailIntegration' }">
           <div class="toolbar__row">
             Email Integration
@@ -48,9 +53,11 @@
           </div>
         </router-link>
         <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
-        <!-- <div class="toolbar__row" @click="toggleActivePage('password')">
-          Password
-        </div> -->
+        <!-- <router-link :to="{ name: 'Profile' }">
+          <div class="toolbar__row">
+            Profile
+          </div>
+        </router-link> -->
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
@@ -62,15 +69,13 @@
 <script>
 export default {
   name: 'Settings',
-  components: {},
-  data() {
-    return {}
-  },
-  methods: {},
   computed: {
     isStaff() {
       // used to check superuser if is staff then they currently do not have an org
       return this.$store.state.user.isStaff
+    },
+    isManager() {
+      return this.$store.state.user.type === 'MANAGER'
     },
     organization() {
       return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name

@@ -1,6 +1,7 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
+
 export default class OrganizationAPI {
   constructor(cls) {
     this.cls = cls
