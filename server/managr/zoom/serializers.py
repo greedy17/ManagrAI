@@ -89,7 +89,6 @@ class ZoomMeetingSerializer(serializers.ModelSerializer):
             "password",
             "operator_id",
             "status",
-            "start",
             "start_url",
             "join_url",
             "recurrence",
