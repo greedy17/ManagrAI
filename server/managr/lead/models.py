@@ -9,9 +9,10 @@ from django.core import serializers
 import json
 from managr.core.models import TimeStampModel
 from managr.utils.misc import datetime_appended_filepath
+from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
-from . import constants as lead_constants
 from managr.core import constants as core_consts
+from . import constants as lead_constants
 
 
 class LeadQuerySet(models.QuerySet):
@@ -55,21 +56,21 @@ class Lead(TimeStampModel):
         on_delete=models.PROTECT,
         null=True,
         help_text="The has-many to this field should never be greater than 1. "
-                  "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
-                  "even though Lead has-many LeadScores (see LeadScore.lead).",
+        "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
+        "even though Lead has-many LeadScores (see LeadScore.lead).",
     )
     amount = models.DecimalField(
-                        max_digits=13,
-                        decimal_places=2,
-                        default=0.00,
-                        help_text="This field is editable",
-                    )
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is editable",
+    )
     closing_amount = models.DecimalField(
-                        max_digits=13,
-                        decimal_places=2,
-                        default=0.00,
-                        help_text="This field is set at close and non-editable",
-                    )
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is set at close and non-editable",
+    )
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
@@ -104,19 +105,27 @@ class Lead(TimeStampModel):
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL
     )
     company_size = models.CharField(
-        choices=lead_constants.COMPANY_SIZE_CHOICES, max_length=255, null=True,
+        choices=lead_constants.COMPANY_SIZE_CHOICES,
+        max_length=255,
+        null=True,
     )
     industry = models.CharField(
-        choices=lead_constants.INDUSTRY_CHOICES, max_length=255, null=True,
+        choices=lead_constants.INDUSTRY_CHOICES,
+        max_length=255,
+        null=True,
     )
     type = models.CharField(
-        choices=lead_constants.TYPE_CHOICES, max_length=255, null=True,
+        choices=lead_constants.TYPE_CHOICES,
+        max_length=255,
+        null=True,
     )
     custom = models.CharField(
         max_length=255, null=True, blank=True, help_text="Custom field"
     )
     competitor = models.CharField(
-        choices=lead_constants.COMPETITOR_CHOICES, max_length=255, null=True,
+        choices=lead_constants.COMPETITOR_CHOICES,
+        max_length=255,
+        null=True,
     )
     competitor_description = models.CharField(
         max_length=255,
@@ -124,7 +133,11 @@ class Lead(TimeStampModel):
         blank=True,
         help_text="Describes the value chosen in the Lead's competitor field",
     )
-    geography_address = models.CharField(max_length=255, null=True, blank=True,)
+    geography_address = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+    )
     geography_address_components = JSONField(
         default=dict,
         blank=True,
@@ -177,7 +190,12 @@ class Lead(TimeStampModel):
         linked_contacts = serializers.serialize("json", self.linked_contacts.all())
         linked_contacts = json.loads(linked_contacts)
         linked_contacts = [c["fields"] for c in linked_contacts]
-        activity = serializers.serialize("json", [self,])
+        activity = serializers.serialize(
+            "json",
+            [
+                self,
+            ],
+        )
         activity = json.loads(activity)
 
         activity = activity[0]
@@ -309,10 +327,10 @@ class BaseNoteQuerySet(models.QuerySet):
 
 class BaseNote(TimeStampModel):
     """
-        This is a Base model for all note style models
-        Reminders, Notes and CallNotes all inherit from this base model
-        Notes does not override or add any extra fields, however the other two do.
-        Note all models inherit the parent queryset manager
+    This is a Base model for all note style models
+    Reminders, Notes and CallNotes all inherit from this base model
+    Notes does not override or add any extra fields, however the other two do.
+    Note all models inherit the parent queryset manager
     """
 
     title = models.CharField(max_length=500, blank=False, null=False)
@@ -358,7 +376,10 @@ class BaseNote(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {
+                    "id": str(c.id),
+                    "full_name": c.full_name,
+                }
                 for c in self.linked_contacts.all()
             ],
         }
@@ -451,6 +472,10 @@ class Forecast(TimeStampModel):
 
     objects = ForecastQuerySet.as_manager()
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.forecast, str(self.id))
+
     # 'created by' and 'updated by' are not used here since they can be taken from logs
 
     class Meta:
@@ -472,7 +497,10 @@ class LeadActivityLog(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "Lead", null=True, on_delete=models.PROTECT, related_name="activity_logs",
+        "Lead",
+        null=True,
+        on_delete=models.PROTECT,
+        related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -507,12 +535,12 @@ class NotificationQuerySet(models.QuerySet):
 
 class Notification(TimeStampModel):
     """
-        Pari: There are various types of notifications (that are not going to be built until V2)
-        in order to handle all notification in one central location we are creating a quick
-        version here.
+    Pari: There are various types of notifications (that are not going to be built until V2)
+    in order to handle all notification in one central location we are creating a quick
+    version here.
 
-        One of those notifications is a reminder, in order to be reminded of a reminder it
-        must have a notification attached to it.
+    One of those notifications is a reminder, in order to be reminded of a reminder it
+    must have a notification attached to it.
     """
 
     notify_at = models.DateTimeField(
@@ -630,7 +658,10 @@ class Action(TimeStampModel):
             },
             "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
             "linked_contacts_ref": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {
+                    "id": str(c.id),
+                    "full_name": c.full_name,
+                }
                 for c in self.linked_contacts.all()
             ],
         }
@@ -696,7 +727,10 @@ class LeadMessage(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {
+                    "id": str(c.id),
+                    "full_name": c.full_name,
+                }
                 for c in self.linked_contacts.all()
             ],
         }
@@ -743,7 +777,10 @@ class LeadEmail(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
+                {
+                    "id": str(c.id),
+                    "full_name": c.full_name,
+                }
                 for c in self.linked_contacts.all()
             ],
         }
@@ -769,51 +806,54 @@ class LeadScore(TimeStampModel):
 
     actions_score = models.IntegerField()
     actions_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     recent_action_score = models.IntegerField()
     recent_action_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     incoming_messages_score = models.IntegerField()
     incoming_messages_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     days_in_stage_score = models.IntegerField()
     days_in_stage_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     forecast_table_score = models.IntegerField()
     forecast_table_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     expected_close_date_score = models.IntegerField()
     expected_close_date_insight = models.CharField(
-                                max_length=255,
-                                blank=True,
-                                null=True,
-                            )
+        max_length=255,
+        blank=True,
+        null=True,
+    )
 
     date_range_end = models.DateTimeField()
     date_range_start = models.DateTimeField()
 
     lead = models.ForeignKey(
-        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
+        "Lead",
+        related_name="scores",
+        on_delete=models.CASCADE,
+        null=False,
     )
     previous_score = models.ForeignKey(
         "LeadScore",
@@ -827,25 +867,27 @@ class LeadScore(TimeStampModel):
     def clean(self, *args, **kwargs):
         # validate final_score, 0-100
         if self.final_score < 0 or self.final_score > 100:
-            raise ValidationError('LeadScore.final_score should be 0-100')
+            raise ValidationError("LeadScore.final_score should be 0-100")
         # validate actions_score, 0-25
         if self.actions_score < 0 or self.actions_score > 25:
-            raise ValidationError('LeadScore.actions_score should be 0-25')
+            raise ValidationError("LeadScore.actions_score should be 0-25")
         # validate recent_action_score, 0-5
         if self.recent_action_score < 0 or self.recent_action_score > 25:
-            raise ValidationError('LeadScore.recent_action_score should be 0-5')
+            raise ValidationError("LeadScore.recent_action_score should be 0-5")
         # validate incoming_messages_score, 0-20
         if self.incoming_messages_score < 0 or self.incoming_messages_score > 20:
-            raise ValidationError('LeadScore.incoming_messages_score should be 0-20')
+            raise ValidationError("LeadScore.incoming_messages_score should be 0-20")
         # validate days_in_stage_score, 0-20
         if self.days_in_stage_score < 0 or self.days_in_stage_score > 20:
-            raise ValidationError('LeadScore.days_in_stage_score should be 0-20')
+            raise ValidationError("LeadScore.days_in_stage_score should be 0-20")
         # validate forecast_table_score, 0-20
         if self.forecast_table_score < 0 or self.forecast_table_score > 20:
-            raise ValidationError('LeadScore.forecast_table_score should be 0-20')
+            raise ValidationError("LeadScore.forecast_table_score should be 0-20")
         # validate expected_close_date_score, -15-15
         if self.expected_close_date_score < -15 or self.expected_close_date_score > 15:
-            raise ValidationError('LeadScore.expected_close_date_score should be -15-15')
+            raise ValidationError(
+                "LeadScore.expected_close_date_score should be -15-15"
+            )
         super().clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
