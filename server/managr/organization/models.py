@@ -110,14 +110,7 @@ class Organization(TimeStampModel):
                     auth_token, token_created = Token.objects.get_or_create(
                         user=integration
                     )
-                    token = json.loads(
-                        serializers.serialize(
-                            "json",
-                            [
-                                auth_token,
-                            ],
-                        )
-                    )
+                    token = json.loads(serializers.serialize("json", [auth_token,],))
                     return token[0]["pk"]
 
 
@@ -240,9 +233,7 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
-        contact = Contact.objects.exclude(
-            email=self.email, account=self.account
-        ).first()
+        contact = Contact.objects.filter(email=self.email, account=self.account).first()
         if contact:
             raise ValidationError(
                 detail={
