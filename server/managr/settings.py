@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "managr.organization",
     "managr.polling",
     "managr.report",
+    "managr.slack",
     "managr.zoom",
     # Django
     "django.contrib.admin",
@@ -341,7 +342,6 @@ if USE_TWILIO:
         if not IN_CI
         else os.environ.get("TWILIO_BASE_CALLBACK_URL", "")
     )
-
 
 USE_ZOOM = os.environ.get("USE_ZOOM") == "True"
 if USE_ZOOM:
