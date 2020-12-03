@@ -239,9 +239,7 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
-        contact = Contact.objects.exclude(
-            email=self.email, account=self.account
-        ).first()
+        contact = Contact.objects.filter(email=self.email, account=self.account).first()
         if contact:
             raise ValidationError(
                 detail={
