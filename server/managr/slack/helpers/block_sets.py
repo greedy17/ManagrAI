@@ -1,6 +1,7 @@
 from managr.lead.models import Lead
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, get_lead_rating_emoji
+from managr.slack.helpers import block_builders
 import pdb
 
 # TODO: build block_sets for zoom meeting forms.
@@ -113,11 +114,12 @@ def zoom_meeting_complete_form(context):
             raise ValueError(f"context missing: {prop}")
 
     lead = Lead.objects.get(pk=context.get("lead_id"))
-    target = "1990-04-28"
+    stage = lead.status.as_slack_option if lead.status else None
+    forecast = lead.forecast.as_slack_option if lead.forecast else None
     expected_close_date = (
         str(lead.expected_close_date.date()) if lead.expected_close_date else None
     )
-    # pdb.set_trace()
+
     # make params here
     lead_id_param = "lead=" + context.get("lead_id")
 
@@ -154,32 +156,16 @@ def zoom_meeting_complete_form(context):
                 ],
             },
         },
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "*Update Stage*"},
-            "accessory": {
-                "type": "external_select",
-                "action_id": slack_const.GET_ORGANIZATION_STAGES,
-                "placeholder": {"type": "plain_text", "text": "Select"},
-                "min_query_length": 0,
-                # "initial_option": {
-                # }
-            },
-        },
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "*Forecast Strength*"},
-            "accessory": {
-                "type": "external_select",
-                "action_id": action_with_params(
-                    slack_const.GET_LEAD_FORECASTS, params=[lead_id_param]
-                ),
-                "placeholder": {"type": "plain_text", "text": "Select"},
-                "min_query_length": 0,
-                # "initial_option": {
-                # }
-            },
-        },
+        block_builders.external_select(
+            "Update Stage",
+            slack_const.GET_ORGANIZATION_STAGES,
+            initial_option=stage,
+        ),
+        block_builders.external_select(
+            "Forecast Strength",
+            action_with_params(slack_const.GET_LEAD_FORECASTS, params=[lead_id_param]),
+            initial_option=forecast,
+        ),
         {
             "type": "input",
             "optional": True,
@@ -192,16 +178,9 @@ def zoom_meeting_complete_form(context):
                 "placeholder": {"type": "plain_text", "text": "How'd it go?"},
             },
         },
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "*Expected Close Date*"},
-            "accessory": {
-                "type": "datepicker",
-                # "initial_date": expected_close_date, TODO
-                "placeholder": {"type": "plain_text", "text": "Select a date"},
-                # "action_id": slack_const.ZOOM_MEETING__GREAT,
-            },
-        },
+        block_builders.datepicker(
+            date=expected_close_date, label="Expected Close Date"
+        ),
         {
             "type": "input",
             "optional": True,
@@ -230,6 +209,7 @@ def zoom_meeting_limited_form(context):
             raise ValueError(f"context missing: {prop}")
 
     lead = Lead.objects.get(pk=context.get("lead_id"))
+    stage = lead.status.as_slack_option if lead.status else None
     # make params here
     lead_id_param = "lead_id=" + context.get("lead_id")
 
@@ -266,18 +246,11 @@ def zoom_meeting_limited_form(context):
                 ],
             },
         },
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "*Update Stage*"},
-            "accessory": {
-                "type": "external_select",
-                "action_id": slack_const.GET_ORGANIZATION_STAGES,
-                "placeholder": {"type": "plain_text", "text": "Select"},
-                "min_query_length": 0,
-                # "initial_option": {
-                # }
-            },
-        },
+        block_builders.external_select(
+            "Update Stage",
+            slack_const.GET_ORGANIZATION_STAGES,
+            initial_option=stage,
+        ),
         {
             "type": "input",
             "optional": True,
