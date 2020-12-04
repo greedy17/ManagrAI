@@ -13,7 +13,7 @@ class OrganizationSlackIntegrationQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(organization=user.organization_id)
         else:
-            return None
+            return self.none()
 
 
 class OrganizationSlackIntegration(TimeStampModel):
@@ -64,7 +64,7 @@ class UserSlackIntegrationQuerySet(models.QuerySet):
         elif user.organization and user.is_active:
             return self.filter(user=user.id)
         else:
-            return None
+            return self.none()
 
 
 class UserSlackIntegration(TimeStampModel):
