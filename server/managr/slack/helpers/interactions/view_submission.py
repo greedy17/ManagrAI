@@ -12,6 +12,7 @@ from managr.slack.helpers.block_sets import get_block_set
 @processor(
     required_context=[
         "o",
+        "l",
         "original_message_channel",
         "original_message_timestamp",
     ]
@@ -75,14 +76,29 @@ def process_zoom_meeting_great_submit(payload, context):
     # NOTE: stage/forecast may be the original stage and therefore unchanged.
     # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
     #       if it is one of lead_const.FORECAST_CHOICES then it is a new selection.
-    # TODO: remember to close/edit the original  Slack message after.
-    #       To do this, see process_zoom_meeting_different_opportunity_submit
-    pass
+
+    block_set_context = {
+        "l": context["l"],
+    }
+
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=context["o"])
+        .slack_integration.access_token
+    )
+
+    slack_requests.update_channel_message(
+        context["original_message_channel"],
+        context["original_message_timestamp"],
+        access_token,
+        block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+    )
 
 
 @processor(
     required_context=[
         "o",
+        "l",
         "original_message_channel",
         "original_message_timestamp",
     ]
@@ -132,10 +148,25 @@ def process_zoom_meeting_not_well_submit(payload, context):
         "description": description,
         "next_step": next_step,
     }
+
     # NOTE: stage may be the original stage and therefore unchanged.
-    # TODO: remember to close/edit the original  Slack message after.
-    #       To do this, see process_zoom_meeting_different_opportunity_submit
-    pass
+
+    block_set_context = {
+        "l": context["l"],
+    }
+
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=context["o"])
+        .slack_integration.access_token
+    )
+
+    slack_requests.update_channel_message(
+        context["original_message_channel"],
+        context["original_message_timestamp"],
+        access_token,
+        block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+    )
 
 
 @processor(
@@ -177,9 +208,6 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
         "o": context["o"],
     }
 
-    original_message_channel = context["original_message_channel"]
-    original_message_timestamp = context["original_message_timestamp"]
-
     access_token = (
         Organization.objects.select_related("slack_integration")
         .get(pk=context["o"])
@@ -187,8 +215,8 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
     )
 
     slack_requests.update_channel_message(
-        original_message_channel,
-        original_message_timestamp,
+        context["original_message_channel"],
+        context["original_message_timestamp"],
         access_token,
         block_set=get_block_set("zoom_meeting_initial", context=block_set_context),
     )

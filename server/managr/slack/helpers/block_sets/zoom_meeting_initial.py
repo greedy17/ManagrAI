@@ -27,7 +27,7 @@ def zoom_meeting_initial(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"Your meeting regarding *{lead.title}* just ended, how'd it go?",
+                "text": f"Your meeting regarding :dart: *{lead.title}* just ended, how'd it go?",
             },
         },
         {"type": "divider"},

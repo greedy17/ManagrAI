@@ -2,6 +2,7 @@ from .zoom_meeting_initial import zoom_meeting_initial
 from .zoom_meeting_complete_form import zoom_meeting_complete_form
 from .zoom_meeting_limited_form import zoom_meeting_limited_form
 from .selected_different_opportunity import select_different_opportunity
+from .confirm_meeting_logged import confirm_meeting_logged
 
 # Mockups, page 3: https://docs.google.com/document/d/1KIvznxOqPb7WuFOXsFcKMawxq8-8T2gpb2sYNdIqLL4/edit#heading=h.xa1nnwnl2is5
 # Slack Block-Builder: https://app.slack.com/block-kit-builder/
@@ -22,5 +23,6 @@ def get_block_set(set_name, context={}):
         "zoom_meeting_complete_form": zoom_meeting_complete_form,
         "zoom_meeting_limited_form": zoom_meeting_limited_form,
         "select_different_opportunity": select_different_opportunity,
+        "confirm_meeting_logged": confirm_meeting_logged,
     }
     return switcher.get(set_name)(context)
