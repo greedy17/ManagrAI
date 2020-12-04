@@ -9,27 +9,27 @@ from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
 
 
-@processor(required_params=["o", "u", "l"])
-def process_zoom_meeting_great(payload, params):
+@processor(required_context=["o", "u", "l"])
+def process_zoom_meeting_great(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["o"])
+        .get(pk=context["o"])
         .slack_integration.access_token
     )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    private_metadata.update(params)
+    private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__GREAT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_complete_form", context=params),
+            "blocks": get_block_set("zoom_meeting_complete_form", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
         },
@@ -37,27 +37,27 @@ def process_zoom_meeting_great(payload, params):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_params=["o", "u", "l"])
-def process_zoom_meeting_not_well(payload, params):
+@processor(required_context=["o", "u", "l"])
+def process_zoom_meeting_not_well(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["o"])
+        .get(pk=context["o"])
         .slack_integration.access_token
     )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    private_metadata.update(params)
+    private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__NOT_WELL,
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_limited_form", context=params),
+            "blocks": get_block_set("zoom_meeting_limited_form", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
         },
@@ -65,13 +65,13 @@ def process_zoom_meeting_not_well(payload, params):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_params=["o", "u", "l"])
-def process_zoom_meeting_different_opportunity(payload, params):
+@processor(required_context=["o", "u", "l"])
+def process_zoom_meeting_different_opportunity(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["o"])
+        .get(pk=context["o"])
         .slack_integration.access_token
     )
 
@@ -79,7 +79,7 @@ def process_zoom_meeting_different_opportunity(payload, params):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    private_metadata.update(params)
+    private_metadata.update(context)
 
     data = {
         "trigger_id": trigger_id,
@@ -87,7 +87,7 @@ def process_zoom_meeting_different_opportunity(payload, params):
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
             "title": {"type": "plain_text", "text": "Change Opportunity"},
-            "blocks": get_block_set("select_different_opportunity", context=params),
+            "blocks": get_block_set("select_different_opportunity", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
         },

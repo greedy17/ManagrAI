@@ -64,17 +64,17 @@ class block_set:
 
 class processor:
     """
-    Decorator. Checks for required params for a processor.
+    Decorator. Checks for required context for a processor.
     """
 
-    def __init__(self, required_params=[]):
-        self.required_params = required_params
+    def __init__(self, required_context=[]):
+        self.required_context = required_context
 
     def __call__(self, f):
-        def wrapped_f(payload, params):
-            for param in self.required_params:
-                if params.get(param) is None:
-                    raise ValueError(f"param missing: {param}, in {f.__name__}")
-            return f(payload, params)
+        def wrapped_f(payload, context):
+            for prop in self.required_context:
+                if context.get(prop) is None:
+                    raise ValueError(f"context missing: {prop}, in {f.__name__}")
+            return f(payload, context)
 
         return wrapped_f

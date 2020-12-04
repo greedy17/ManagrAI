@@ -10,9 +10,9 @@ from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers import block_builders
 
 
-@processor(required_params=["o"])
-def process_get_organization_stages(payload, params):
-    organization = Organization.objects.get(pk=params["o"])
+@processor(required_context=["o"])
+def process_get_organization_stages(payload, context):
+    organization = Organization.objects.get(pk=context["o"])
     return {
         "options": [
             s.as_slack_option
@@ -23,16 +23,16 @@ def process_get_organization_stages(payload, params):
     }
 
 
-@processor(required_params=["o"])
-def process_get_organization_action_choices(payload, params):
-    organization = Organization.objects.get(pk=params["o"])
+@processor(required_context=["o"])
+def process_get_organization_action_choices(payload, context):
+    organization = Organization.objects.get(pk=context["o"])
     return {
         "options": [ac.as_slack_option for ac in organization.action_choices.all()],
     }
 
 
 @processor()
-def process_get_lead_forecasts(payload, params):
+def process_get_lead_forecasts(payload, context):
     return {
         "options": [
             block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES
@@ -40,9 +40,9 @@ def process_get_lead_forecasts(payload, params):
     }
 
 
-@processor(required_params=["u"])
-def process_get_user_opportunities(payload, params):
-    user = User.objects.get(pk=params["u"])
+@processor(required_context=["u"])
+def process_get_user_opportunities(payload, context):
+    user = User.objects.get(pk=context["u"])
     return {
         "options": [l.as_slack_option for l in user.claimed_leads.all()],
     }

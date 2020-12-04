@@ -5,18 +5,19 @@ from managr.organization.models import Organization
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import utils as slack_utils
+from managr.slack.helpers.utils import action_with_params, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
 
-# TODO: params -> context!
-# TODO: add view_context as context for these processors
-# TODO: add decorator to processors
 
-
-def process_zoom_meeting_not_well_submit(payload):
-    # required: o,
-    view_context = json.loads(payload["view"]["private_metadata"])
-    organization_id_param = "o=" + view_context["o"]
+@processor(
+    required_context=[
+        "o",
+        "original_message_channel",
+        "original_message_timestamp",
+    ]
+)
+def process_zoom_meeting_not_well_submit(payload, context):
+    organization_id_param = "o=" + context["o"]
 
     state = payload["view"]["state"]["values"]
     meeting_type_state = state["meeting_type"]
@@ -24,7 +25,7 @@ def process_zoom_meeting_not_well_submit(payload):
     description_state = state["description"]
     next_step_state = state["next_step"]
 
-    a_id = slack_utils.action_with_params(
+    a_id = action_with_params(
         slack_const.GET_ORGANIZATION_ACTION_CHOICES,
         params=[
             organization_id_param,
@@ -41,7 +42,7 @@ def process_zoom_meeting_not_well_submit(payload):
         }
         return data
 
-    a_id = slack_utils.action_with_params(
+    a_id = action_with_params(
         slack_const.GET_ORGANIZATION_STAGES,
         params=[
             organization_id_param,
@@ -64,16 +65,25 @@ def process_zoom_meeting_not_well_submit(payload):
 
     # NOTE: stage may be the original stage and therefore unchanged.
     # TODO: remember to close/edit the original  Slack message after.
+    #       To do this, see process_zoom_meeting_different_opportunity_submit
     pass
 
 
-def process_zoom_meeting_different_opportunity_submit(payload):
-    view_context = json.loads(payload["view"]["private_metadata"])
-    user_id_param = "u=" + view_context["u"]
-    lead_id_param = "l=" + view_context["l"]
-    organization_id_param = "o=" + view_context["o"]
+@processor(
+    required_context=[
+        "u",
+        "l",
+        "o",
+        "original_message_channel",
+        "original_message_timestamp",
+    ]
+)
+def process_zoom_meeting_different_opportunity_submit(payload, context):
+    user_id_param = "u=" + context["u"]
+    lead_id_param = "l=" + context["l"]
+    organization_id_param = "o=" + context["o"]
 
-    target_action_id = slack_utils.action_with_params(
+    target_action_id = action_with_params(
         slack_const.GET_USER_OPPORTUNITIES,
         params=[
             user_id_param,
@@ -94,26 +104,26 @@ def process_zoom_meeting_different_opportunity_submit(payload):
 
     new_lead_id = selection["value"]
 
-    original_message_channel = view_context["original_message_channel"]
-    original_message_timestamp = view_context["original_message_timestamp"]
+    original_message_channel = context["original_message_channel"]
+    original_message_timestamp = context["original_message_timestamp"]
 
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=view_context["o"])
+        .get(pk=context["o"])
         .slack_integration.access_token
     )
 
-    context = {
+    block_set_context = {
         "l": new_lead_id,
-        "u": view_context["u"],
-        "o": view_context["o"],
+        "u": context["u"],
+        "o": context["o"],
     }
 
     slack_requests.update_channel_message(
         original_message_channel,
         original_message_timestamp,
         access_token,
-        block_set=get_block_set("zoom_meeting_initial", context=context),
+        block_set=get_block_set("zoom_meeting_initial", context=block_set_context),
     )
 
 
@@ -126,4 +136,5 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
     }
     callback_id = payload["view"]["callback_id"]
-    return switcher.get(callback_id, slack_utils.NO_OP)(payload)
+    view_context = json.loads(payload["view"]["private_metadata"])
+    return switcher.get(callback_id, NO_OP)(payload, view_context)
