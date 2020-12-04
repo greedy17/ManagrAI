@@ -6,11 +6,16 @@ def option(text, value):
 
 
 def external_select(
-    label, action_id, initial_option=None, min_query_length=0, placeholder="Select"
+    label,
+    action_id,
+    initial_option=None,
+    block_id=None,
+    min_query_length=0,
+    placeholder="Select",
 ):
     block = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": f"*{label}*"},
+        "text": {"type": "mrkdwn", "text": f"{label}"},
         "accessory": {
             "type": "external_select",
             "action_id": action_id,
@@ -20,6 +25,8 @@ def external_select(
     }
     if initial_option:
         block["accessory"]["initial_option"] = initial_option
+    if block_id:
+        block["block_id"] = block_id
     return block
 
 
@@ -32,7 +39,7 @@ def static_select(
 ):
     block = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": f"*{label}*"},
+        "text": {"type": "mrkdwn", "text": f"{label}"},
         "accessory": {
             "type": "static_select",
             "placeholder": {"type": "plain_text", "text": placeholder},
@@ -51,7 +58,7 @@ def datepicker(
 ):
     block = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": f"*{label}*"},
+        "text": {"type": "mrkdwn", "text": f"{label}"},
         "accessory": {
             "type": "datepicker",
             "placeholder": {"type": "plain_text", "text": f"{placeholder}"},

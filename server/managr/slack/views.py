@@ -29,9 +29,9 @@ import pdb
 from managr.lead.models import Lead  # for dev purposes
 
 TEMPORARY_CONTEXT = {
-    "lead": Lead.objects.first(),
-    "user": Lead.objects.first().claimed_by,
-    "organization": Lead.objects.first().claimed_by.organization,
+    "lead_id": str(Lead.objects.first().id),
+    "user_id": str(Lead.objects.first().claimed_by.id),
+    "organization_id": str(Lead.objects.first().claimed_by.organization.id),
 }  # for dev purposes
 
 
@@ -186,13 +186,5 @@ class SlackViewSet(
         # TODO: verify is from Slack
         # https://api.slack.com/authentication/verifying-requests-from-slack
         payload = json.loads(request.data.get("payload"))
-        # print("-=-=-==-=-=-=-==-=-")
-        # print(payload.get("type"))
         process_output = slack_interactions.handle_interaction(payload)
-        if not isinstance(process_output, dict):
-            raise TypeError(
-                "SlackIntegration: all interaction Processors must return dict"
-            )
-        if process_output.get("send_response_data"):
-            return Response(status=status.HTTP_200_OK, data=process_output["data"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK, data=process_output)

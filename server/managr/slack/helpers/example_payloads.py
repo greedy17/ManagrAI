@@ -319,3 +319,68 @@ block_suggestions_type = {
         "bot_id": "B01EV93U1M0",
     },
 }
+
+view_submission_type = {
+    "type": "view_submission",
+    "team": {"id": "T03EVK2FC", "domain": "thinknimble"},
+    "user": {
+        "id": "UUTLULA84",
+        "username": "bruno",
+        "name": "bruno",
+        "team_id": "T03EVK2FC",
+    },
+    "api_app_id": "A01ERE1QAE9",
+    "token": "CVwUTl7hjscZVSzOtPDw76JK",
+    "trigger_id": "1561704066449.3505648522.f19fee2542ffdecfb185344e2e835c40",
+    "view": {
+        "id": "V01GB6YN1NY",
+        "team_id": "T03EVK2FC",
+        "type": "modal",
+        "blocks": [
+            {
+                "type": "section",
+                "block_id": "target_block_1",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Opportunity:* :dart: _Montgomery County_",
+                    "verbatim": False,
+                },
+                "accessory": {
+                    "type": "external_select",
+                    "action_id": "GET_USER_OPPORTUNITIES?user_id=3dddd261-93b1-46fe-a83e-bc064551362a&lead_id=2e248459-62b1-479d-871f-c468caaebf95&organization_id=700287d3-4ce6-4803-a236-b18e160729a7",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select Other",
+                        "emoji": True,
+                    },
+                    "min_query_length": 0,
+                },
+            }
+        ],
+        "private_metadata": '{"original_message_channel": "D01F4KWEAH0", "original_message_timestamp": "1607047508.000200", "action_query_string": "ZOOM_MEETING__DIFFERENT_OPPORTUNITY?user_id=3dddd261-93b1-46fe-a83e-bc064551362a&lead_id=2e248459-62b1-479d-871f-c468caaebf95&organization_id=700287d3-4ce6-4803-a236-b18e160729a7", "user_id": "3dddd261-93b1-46fe-a83e-bc064551362a", "lead_id": "2e248459-62b1-479d-871f-c468caaebf95", "organization_id": "700287d3-4ce6-4803-a236-b18e160729a7"}',
+        "callback_id": "ZOOM_MEETING__DIFFERENT_OPPORTUNITY",
+        "state": {
+            "values": {
+                "target_block_1": {
+                    "GET_USER_OPPORTUNITIES?user_id=3dddd261-93b1-46fe-a83e-bc064551362a&lead_id=2e248459-62b1-479d-871f-c468caaebf95&organization_id=700287d3-4ce6-4803-a236-b18e160729a7": {
+                        "type": "external_select",
+                        "selected_option": None,
+                    }
+                }
+            }
+        },
+        "hash": "1607048962.taeODcd8",
+        "title": {"type": "plain_text", "text": "Change Opportunity", "emoji": True},
+        "clear_on_close": False,
+        "notify_on_close": False,
+        "close": None,
+        "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+        "previous_view_id": None,
+        "root_view_id": "V01GB6YN1NY",
+        "app_id": "A01ERE1QAE9",
+        "external_id": "",
+        "app_installed_team_id": "T03EVK2FC",
+        "bot_id": "B01EV93U1M0",
+    },
+    "response_urls": [],
+}

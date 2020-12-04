@@ -60,15 +60,32 @@ def send_channel_message(channel, access_token, text=None, block_set=None):
     )
 
 
+def update_channel_message(
+    channel, message_timestamp, access_token, text=None, block_set=None
+):
+    """
+    Updates a message.
+    """
+    url = slack_const.SLACK_API_ROOT + slack_const.CHAT_UPDATE
+    data = {}
+    data["channel"] = channel
+    data["ts"] = message_timestamp
+    if text:
+        data["text"] = text
+    if block_set:
+        data["blocks"] = block_set
+    return requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
+
+
 def generic_request(url, data, access_token=None):
-    r = requests.post(
+    return requests.post(
         url,
         data=json.dumps(data),
         headers=slack_auth.auth_headers(access_token)
         if access_token
         else slack_auth.json_headers(),
     )
-    print("________")
-    print(r.status_code)
-    if r.status_code > 299:
-        print(r.json())

@@ -16,6 +16,9 @@ VIEWS_OPEN = "views.open"
 # https://api.slack.com/methods/chat.getPermalink
 CHAT_GET_PERMALINK = "chat.getPermalink"
 
+# https://api.slack.com/methods/chat.update
+CHAT_UPDATE = "chat.update"
+
 WORKSPACE_SCOPES = [
     "app_mentions:read",
     "channels:join",
@@ -48,10 +51,13 @@ TOKEN_TYPE_BOT = "bot"
 # Interactive payload types
 BLOCK_ACTIONS = "block_actions"
 BLOCK_SUGGESTION = "block_suggestion"
+VIEW_SUBMISSION = "view_submission"
 
 # Action IDs of different interactive UI in the Managr Slack App
 ZOOM_MEETING__GREAT = "ZOOM_MEETING__GREAT"
 ZOOM_MEETING__NOT_WELL = "ZOOM_MEETING__NOT_WELL"
+ZOOM_MEETING__DIFFERENT_OPPORTUNITY = "ZOOM_MEETING__DIFFERENT_OPPORTUNITY"
 GET_ORGANIZATION_STAGES = "GET_ORGANIZATION_STAGES"
 GET_LEAD_FORECASTS = "GET_LEAD_FORECASTS"
 GET_ORGANIZATION_ACTION_CHOICES = "GET_ORGANIZATION_ACTION_CHOICES"
+GET_USER_OPPORTUNITIES = "GET_USER_OPPORTUNITIES"

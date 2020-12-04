@@ -204,6 +204,10 @@ class Lead(TimeStampModel):
 
         return activity["fields"]
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
+
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
 

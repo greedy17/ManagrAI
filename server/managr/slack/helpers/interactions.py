@@ -1,5 +1,7 @@
+import json
 from django.db.models import Q
 
+from managr.core.models import User
 from managr.organization.models import Organization, Stage
 from managr.lead import constants as lead_const
 from managr.lead.models import Lead
@@ -21,65 +23,149 @@ import pdb
 
 # - PROCESSORS (methods starting with process_) do the actual processing of
 #   the interaction.
-
 # - The architecture is designed so that ultimately the return value of a
 #   PROCESSOR is outputted to the view handling the request from the Slack API.
-#   Therefore,  PROCESSORS are expected to return a dict, so that the view can
-#   include data in its response or not, accordingly.
-# - PROCESSORS whose output should be a part of the HttpResponse should format
-#   their dict as follows: { "send_response_data": True, "data": data_here }
 
 
 def process_zoom_meeting_great(payload, params):
-    # TODO: somehow need to keep track of what lead etc (i.e. STATE across interactions)
-    # such as with values (i.e. button value)
-    # submit next UI
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    access_token = slack_utils.get_access_token_from_user_slack_id(
-        payload["user"]["id"]
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=params["organization_id"])
+        .slack_integration.access_token
     )
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    private_metadata.update(params)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": "modal-identifier",
+            "callback_id": slack_const.ZOOM_MEETING__GREAT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("zoom_meeting_complete_form", context=params),
             "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(private_metadata),
         },
     }
-    return {
-        "send_response_data": False,
-        "data": slack_requests.generic_request(url, data, access_token=access_token),
-    }
+    slack_requests.generic_request(url, data, access_token=access_token)
 
 
 def process_zoom_meeting_not_well(payload, params):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    access_token = slack_utils.get_access_token_from_user_slack_id(
-        payload["user"]["id"]
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=params["organization_id"])
+        .slack_integration.access_token
     )
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    private_metadata.update(params)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": "modal-identifier",
+            "callback_id": slack_const.ZOOM_MEETING__NOT_WELL,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("zoom_meeting_limited_form", context=params),
             "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(private_metadata),
         },
     }
-    return {
-        "send_response_data": False,
-        "data": slack_requests.generic_request(url, data, access_token=access_token),
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def process_zoom_meeting_different_opportunity(payload, params):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=params["organization_id"])
+        .slack_integration.access_token
+    )
+
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
     }
+    private_metadata.update(params)
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
+            "title": {"type": "plain_text", "text": "Change Opportunity"},
+            "blocks": get_block_set("select_different_opportunity", context=params),
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def process_zoom_meeting_different_opportunity_submit(payload):
+    view_context = json.loads(payload["view"]["private_metadata"])
+    user_id_param = "user_id=" + view_context["user_id"]
+    lead_id_param = "lead_id=" + view_context["lead_id"]
+    organization_id_param = "organization_id=" + view_context["organization_id"]
+
+    target_action_id = slack_utils.action_with_params(
+        slack_const.GET_USER_OPPORTUNITIES,
+        params=[
+            user_id_param,
+            lead_id_param,
+            organization_id_param,
+        ],
+    )
+
+    selection = payload["view"]["state"]["values"]["select_new_opportunity"][
+        target_action_id
+    ]["selected_option"]
+
+    # new_lead_id = selection["value"] if selection is not None
+    if selection is None:
+        # User did not select an option, show them error
+        data = {
+            "response_action": "errors",
+            "errors": {"select_new_opportunity": "You must select an option."},
+        }
+        return data
+
+    new_lead_id = selection["value"]
+
+    original_message_channel = view_context["original_message_channel"]
+    original_message_timestamp = view_context["original_message_timestamp"]
+
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=view_context["organization_id"])
+        .slack_integration.access_token
+    )
+
+    context = {
+        "lead_id": new_lead_id,
+        "user_id": view_context["user_id"],
+        "organization_id": view_context["organization_id"],
+    }
+
+    slack_requests.update_channel_message(
+        original_message_channel,
+        original_message_timestamp,
+        access_token,
+        block_set=get_block_set("zoom_meeting_initial", context=context),
+    )
 
 
 def process_get_organization_stages(payload, params):
     organization = Organization.objects.get(pk=params["organization_id"])
-    data = {
+    return {
         "options": [
             s.as_slack_option
             for s in Stage.objects.filter(
@@ -87,26 +173,28 @@ def process_get_organization_stages(payload, params):
             )
         ],
     }
-    return {"send_response_data": True, "data": data}
 
 
 def process_get_organization_action_choices(payload, params):
     organization = Organization.objects.get(pk=params["organization_id"])
-    data = {
+    return {
         "options": [ac.as_slack_option for ac in organization.action_choices.all()],
     }
-    return {"send_response_data": True, "data": data}
 
 
 def process_get_lead_forecasts(payload, params):
-    data = {
+    return {
         "options": [
             block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES
         ],
-        # "initial_option": {},
     }
 
-    return {"send_response_data": True, "data": data}
+
+def process_get_user_opportunities(payload, params):
+    user = User.objects.get(pk=params["user_id"])
+    return {
+        "options": [l.as_slack_option for l in user.claimed_leads.all()],
+    }
 
 
 def handle_block_actions(payload):
@@ -117,12 +205,14 @@ def handle_block_actions(payload):
     switcher = {
         slack_const.ZOOM_MEETING__GREAT: process_zoom_meeting_great,
         slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well,
+        slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = slack_utils.process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
     action_params = processed_string.get("params")
-    return switcher.get(action_id)(payload, action_params)
+    print(f"ID: {action_query_string}")
+    return switcher.get(action_id, slack_utils.NO_OP)(payload, action_params)
 
 
 def handle_block_suggestion(payload):
@@ -134,17 +224,33 @@ def handle_block_suggestion(payload):
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
+        slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
     }
     action_query_string = payload["action_id"]
     processed_string = slack_utils.process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
     action_params = processed_string.get("params")
-    return switcher.get(action_id)(payload, action_params)
+    print(f"ID: {action_query_string}")
+    return switcher.get(action_id, slack_utils.NO_OP)(payload, action_params)
+
+
+def handle_view_submission(payload):
+    """
+    This takes place when a modal's Submit button is clicked.
+    """
+    switcher = {
+        slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
+    }
+    callback_id = payload["view"]["callback_id"]
+    return switcher.get(callback_id, slack_utils.NO_OP)(payload)
 
 
 def handle_interaction(payload):
     switcher = {
         slack_const.BLOCK_ACTIONS: handle_block_actions,
         slack_const.BLOCK_SUGGESTION: handle_block_suggestion,
+        slack_const.VIEW_SUBMISSION: handle_view_submission,
     }
-    return switcher.get(payload["type"])(payload)
+    typ = payload["type"]
+    print(f"TYPE: {typ}")
+    return switcher.get(payload["type"], slack_utils.NO_OP)(payload)

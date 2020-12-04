@@ -1,7 +1,19 @@
 from managr.slack.models import UserSlackIntegration
 
 
+def NO_OP(*args):
+    """
+    No operation.
+    """
+    pass
+
+
 def action_with_params(action, params=[]):
+    """
+    Max length of return is 255 characters.
+    Slack will return a 200 but not display UI
+    whose action_id is greater than this limit.
+    """
     if not isinstance(action, str):
         raise TypeError("action must be str")
     if not isinstance(params, list):
@@ -20,24 +32,6 @@ def process_action_id(action_string):
             b = param_str.split("=")
             output["params"][b[0]] = b[1]
     return output
-
-
-def get_access_token_from_user_slack_id(user_slack_id):
-    return (
-        UserSlackIntegration.objects.select_related(
-            "user__organization__slack_integration"
-        )
-        .get(slack_id=user_slack_id)
-        .user.organization.slack_integration.access_token
-    )
-
-
-def get_organization_from_user_slack_id(user_slack_id):
-    return (
-        UserSlackIntegration.objects.select_related("user__organization")
-        .get(slack_id=user_slack_id)
-        .user.organization
-    )
 
 
 def get_lead_rating_emoji(rating):

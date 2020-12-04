@@ -22,34 +22,26 @@ def zoom_meeting_initial(context):
     """
     Required context:
     {
-        user,
-        lead,
-        organization,
-        zoom meeting?
+        user_id,
+        lead_id,
+        organization_id,
+        meeting_id?
     }
     """
     # validate context
-    required_context = ["lead", "organization", "user"]
+    required_context = ["lead_id", "organization_id", "user_id"]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
-    user = context.get("user")
-    lead = context.get("lead")
-    organization = context.get("organization")
-    if not isinstance(user, User):
-        raise TypeError("context.organization must be an Organization")
-    if not isinstance(lead, Lead):
-        raise TypeError("context.lead must be a Lead")
-    if not isinstance(organization, Organization):
-        raise TypeError("context.organization must be an Organization")
 
+    lead = Lead.objects.get(pk=context["lead_id"])
     primary_description = lead.primary_description or "No Primary Description"
     secondary_description = lead.secondary_description or "No Secondary Description"
 
     # make params here
-    user_id_param = "user_id=" + str(user.id)
-    lead_id_param = "lead_id=" + str(lead.id)
-    organization_id_param = "organization_id=" + str(organization.id)
+    user_id_param = "user_id=" + context["user_id"]
+    lead_id_param = "lead_id=" + context["lead_id"]
+    organization_id_param = "organization_id=" + context["organization_id"]
 
     return [
         {
@@ -91,8 +83,8 @@ def zoom_meeting_initial(context):
             "elements": [
                 {
                     "type": "button",
-                    "text": {"type": "plain_text", "text": "Great!", "emoji": True},
-                    "value": "GREAT",
+                    "text": {"type": "plain_text", "text": "Great!"},
+                    "value": slack_const.ZOOM_MEETING__GREAT,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__GREAT,
                         params=[user_id_param, lead_id_param, organization_id_param],
@@ -103,11 +95,22 @@ def zoom_meeting_initial(context):
                     "text": {
                         "type": "plain_text",
                         "text": "Not well...",
-                        "emoji": True,
                     },
-                    "value": "NOT_WELL",
+                    "value": slack_const.ZOOM_MEETING__NOT_WELL,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__NOT_WELL,
+                        params=[user_id_param, lead_id_param, organization_id_param],
+                    ),
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Different Opportunity",
+                    },
+                    "value": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
                         params=[user_id_param, lead_id_param, organization_id_param],
                     ),
                 },
@@ -122,11 +125,15 @@ def zoom_meeting_complete_form(context):
     {
         user_id,
         lead_id,
-        organization_id
+        organization_id,
     }
     """
     # validate context
-    required_context = ["user_id", "lead_id", "organization_id"]
+    required_context = [
+        "user_id",
+        "lead_id",
+        "organization_id",
+    ]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
@@ -144,7 +151,6 @@ def zoom_meeting_complete_form(context):
     organization_id_param = "organization_id=" + context.get("organization_id")
 
     return [
-        {"type": "divider"},
         {
             "type": "section",
             "fields": [
@@ -154,14 +160,14 @@ def zoom_meeting_complete_form(context):
         },
         {"type": "divider"},
         block_builders.external_select(
-            "Meeting Type",
+            "*Meeting Type*",
             action_with_params(
                 slack_const.GET_ORGANIZATION_ACTION_CHOICES,
                 params=[organization_id_param],
             ),
         ),
         block_builders.external_select(
-            "Update Stage",
+            "*Update Stage*",
             action_with_params(
                 slack_const.GET_ORGANIZATION_STAGES,
                 params=[organization_id_param],
@@ -169,7 +175,7 @@ def zoom_meeting_complete_form(context):
             initial_option=stage,
         ),
         block_builders.external_select(
-            "Forecast Strength",
+            "*Forecast Strength*",
             action_with_params(slack_const.GET_LEAD_FORECASTS, params=[lead_id_param]),
             initial_option=forecast,
         ),
@@ -186,7 +192,7 @@ def zoom_meeting_complete_form(context):
             },
         },
         block_builders.datepicker(
-            date=expected_close_date, label="Expected Close Date"
+            date=expected_close_date, label="*Expected Close Date*"
         ),
         {
             "type": "input",
@@ -208,11 +214,15 @@ def zoom_meeting_limited_form(context):
     {
         user_id,
         lead_id,
-        organization_id
+        organization_id,
     }
     """
     # validate context
-    required_context = ["user_id", "lead_id", "organization_id"]
+    required_context = [
+        "user_id",
+        "lead_id",
+        "organization_id",
+    ]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
@@ -226,7 +236,6 @@ def zoom_meeting_limited_form(context):
     organization_id_param = "organization_id=" + context.get("organization_id")
 
     return [
-        {"type": "divider"},
         {
             "type": "section",
             "fields": [
@@ -236,14 +245,14 @@ def zoom_meeting_limited_form(context):
         },
         {"type": "divider"},
         block_builders.external_select(
-            "Meeting Type",
+            "*Meeting Type*",
             action_with_params(
                 slack_const.GET_ORGANIZATION_ACTION_CHOICES,
                 params=[organization_id_param],
             ),
         ),
         block_builders.external_select(
-            "Update Stage",
+            "*Update Stage*",
             action_with_params(
                 slack_const.GET_ORGANIZATION_STAGES,
                 params=[organization_id_param],
@@ -276,6 +285,49 @@ def zoom_meeting_limited_form(context):
     ]
 
 
+def select_different_opportunity(context):
+    """
+    Required context:
+    {
+        user_id,
+        lead_id,
+        organization_id,
+    }
+    """
+    # validate context
+    required_context = [
+        "user_id",
+        "lead_id",
+        "organization_id",
+    ]
+    for prop in required_context:
+        if context.get(prop) is None:
+            raise ValueError(f"context missing: {prop}")
+
+    lead = Lead.objects.get(pk=context.get("lead_id"))
+
+    # make params here
+    user_id_param = "user_id=" + context.get("user_id")
+    lead_id_param = "lead_id=" + context.get("lead_id")
+    organization_id_param = "organization_id=" + context.get("organization_id")
+
+    return [
+        block_builders.external_select(
+            f"*Opportunity:* :dart: _{lead.title}_",
+            action_with_params(
+                slack_const.GET_USER_OPPORTUNITIES,
+                params=[
+                    user_id_param,
+                    lead_id_param,
+                    organization_id_param,
+                ],
+            ),
+            placeholder="Select Other",
+            block_id="select_new_opportunity",
+        ),
+    ]
+
+
 def get_block_set(set_name, context={}):
     """
     Returns array of Slack UI blocks
@@ -284,5 +336,6 @@ def get_block_set(set_name, context={}):
         "zoom_meeting_initial": zoom_meeting_initial,
         "zoom_meeting_complete_form": zoom_meeting_complete_form,
         "zoom_meeting_limited_form": zoom_meeting_limited_form,
+        "select_different_opportunity": select_different_opportunity,
     }
     return switcher.get(set_name)(context)
