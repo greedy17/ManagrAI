@@ -10,22 +10,22 @@ def zoom_meeting_complete_form(context):
     """
     Required context:
     {
-        user_id,
-        lead_id,
-        organization_id,
+        u,
+        l,
+        o,
     }
     """
     # validate context
     required_context = [
-        "user_id",
-        "lead_id",
-        "organization_id",
+        "u",
+        "l",
+        "o",
     ]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
-    lead = Lead.objects.get(pk=context.get("lead_id"))
+    lead = Lead.objects.get(pk=context.get("l"))
     stage = lead.status.as_slack_option if lead.status else None
     forecast = lead.forecast.as_slack_option if lead.forecast else None
     expected_close_date = (
@@ -33,9 +33,9 @@ def zoom_meeting_complete_form(context):
     )
 
     # make params here
-    user_id_param = "user_id=" + context.get("user_id")
-    lead_id_param = "lead_id=" + context.get("lead_id")
-    organization_id_param = "organization_id=" + context.get("organization_id")
+    user_id_param = "u=" + context.get("u")
+    lead_id_param = "l=" + context.get("l")
+    organization_id_param = "o=" + context.get("o")
 
     return [
         {

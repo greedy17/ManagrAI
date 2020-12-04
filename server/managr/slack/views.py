@@ -29,9 +29,9 @@ import pdb
 from managr.lead.models import Lead  # for dev purposes
 
 TEMPORARY_CONTEXT = {
-    "lead_id": str(Lead.objects.first().id),
-    "user_id": str(Lead.objects.first().claimed_by.id),
-    "organization_id": str(Lead.objects.first().claimed_by.organization.id),
+    "l": str(Lead.objects.first().id),
+    "u": str(Lead.objects.first().claimed_by.id),
+    "o": str(Lead.objects.first().claimed_by.organization.id),
 }  # for dev purposes
 
 

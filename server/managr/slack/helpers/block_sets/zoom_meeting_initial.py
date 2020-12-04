@@ -9,26 +9,26 @@ def zoom_meeting_initial(context):
     """
     Required context:
     {
-        user_id,
-        lead_id,
-        organization_id,
+        u,
+        l,
+        o,
         meeting_id?
     }
     """
     # validate context
-    required_context = ["lead_id", "organization_id", "user_id"]
+    required_context = ["l", "o", "u"]
     for prop in required_context:
         if context.get(prop) is None:
             raise ValueError(f"context missing: {prop}")
 
-    lead = Lead.objects.get(pk=context["lead_id"])
+    lead = Lead.objects.get(pk=context["l"])
     primary_description = lead.primary_description or "No Primary Description"
     secondary_description = lead.secondary_description or "No Secondary Description"
 
     # make params here
-    user_id_param = "user_id=" + context["user_id"]
-    lead_id_param = "lead_id=" + context["lead_id"]
-    organization_id_param = "organization_id=" + context["organization_id"]
+    user_id_param = "u=" + context["u"]
+    lead_id_param = "l=" + context["l"]
+    organization_id_param = "o=" + context["o"]
 
     return [
         {

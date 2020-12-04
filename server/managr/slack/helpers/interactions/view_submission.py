@@ -11,9 +11,9 @@ from managr.slack.helpers.block_sets import get_block_set
 
 def process_zoom_meeting_different_opportunity_submit(payload):
     view_context = json.loads(payload["view"]["private_metadata"])
-    user_id_param = "user_id=" + view_context["user_id"]
-    lead_id_param = "lead_id=" + view_context["lead_id"]
-    organization_id_param = "organization_id=" + view_context["organization_id"]
+    user_id_param = "u=" + view_context["u"]
+    lead_id_param = "l=" + view_context["l"]
+    organization_id_param = "o=" + view_context["o"]
 
     target_action_id = slack_utils.action_with_params(
         slack_const.GET_USER_OPPORTUNITIES,
@@ -43,14 +43,14 @@ def process_zoom_meeting_different_opportunity_submit(payload):
 
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=view_context["organization_id"])
+        .get(pk=view_context["o"])
         .slack_integration.access_token
     )
 
     context = {
-        "lead_id": new_lead_id,
-        "user_id": view_context["user_id"],
-        "organization_id": view_context["organization_id"],
+        "l": new_lead_id,
+        "u": view_context["u"],
+        "o": view_context["o"],
     }
 
     slack_requests.update_channel_message(

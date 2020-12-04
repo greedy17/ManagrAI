@@ -11,7 +11,7 @@ from managr.slack.helpers import block_builders
 
 
 def process_get_organization_stages(payload, params):
-    organization = Organization.objects.get(pk=params["organization_id"])
+    organization = Organization.objects.get(pk=params["o"])
     return {
         "options": [
             s.as_slack_option
@@ -23,7 +23,7 @@ def process_get_organization_stages(payload, params):
 
 
 def process_get_organization_action_choices(payload, params):
-    organization = Organization.objects.get(pk=params["organization_id"])
+    organization = Organization.objects.get(pk=params["o"])
     return {
         "options": [ac.as_slack_option for ac in organization.action_choices.all()],
     }
@@ -38,7 +38,7 @@ def process_get_lead_forecasts(payload, params):
 
 
 def process_get_user_opportunities(payload, params):
-    user = User.objects.get(pk=params["user_id"])
+    user = User.objects.get(pk=params["u"])
     return {
         "options": [l.as_slack_option for l in user.claimed_leads.all()],
     }

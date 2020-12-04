@@ -14,7 +14,7 @@ def process_zoom_meeting_great(payload, params):
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["organization_id"])
+        .get(pk=params["o"])
         .slack_integration.access_token
     )
     private_metadata = {
@@ -41,7 +41,7 @@ def process_zoom_meeting_not_well(payload, params):
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["organization_id"])
+        .get(pk=params["o"])
         .slack_integration.access_token
     )
     private_metadata = {
@@ -68,7 +68,7 @@ def process_zoom_meeting_different_opportunity(payload, params):
     trigger_id = payload["trigger_id"]
     access_token = (
         Organization.objects.select_related("slack_integration")
-        .get(pk=params["organization_id"])
+        .get(pk=params["o"])
         .slack_integration.access_token
     )
 
