@@ -20,6 +20,7 @@ from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.utils import validate_slack_request
 
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration
@@ -185,6 +186,9 @@ class SlackViewSet(
         """
         # TODO: verify is from Slack
         # https://api.slack.com/authentication/verifying-requests-from-slack
+        # NOTE: current implementation below does not work
+        # if not validate_slack_request(request):
+        #     return Response(status=status.HTTP_401_UNAUTHORIZED)
         payload = json.loads(request.data.get("payload"))
         process_output = slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_200_OK, data=process_output)
