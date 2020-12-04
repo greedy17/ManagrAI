@@ -13,3 +13,10 @@ SLACK_CLIENT_ID=3505648522.1501477826485
 SLACK_SECRET= __
 
 ```
+
+Important Notes:
+
+- rotating/expiring Slack access tokens has not been implemented.
+  - https://api.slack.com/legacy/workspace-apps/rotating-and-refreshing-credentials
+- validating an incoming webhook is from Slack is not currently working.
+  - managr.slack.helpers.utils
