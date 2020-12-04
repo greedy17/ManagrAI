@@ -54,7 +54,11 @@ def static_select(
 
 
 def datepicker(
-    date=None, action_id=None, label="Select Date", placeholder="Select a date"
+    date=None,
+    action_id=None,
+    block_id=None,
+    label="Select Date",
+    placeholder="Select a date",
 ):
     block = {
         "type": "section",
@@ -68,4 +72,6 @@ def datepicker(
         block["accessory"]["initial_date"] = date
     if action_id:
         block["accessory"]["action_id"] = action_id
+    if block_id:
+        block["block_id"] = block_id
     return block

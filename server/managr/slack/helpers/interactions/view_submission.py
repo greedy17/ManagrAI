@@ -16,15 +16,85 @@ from managr.slack.helpers.block_sets import get_block_set
         "original_message_timestamp",
     ]
 )
-def process_zoom_meeting_not_well_submit(payload, context):
-    organization_id_param = "o=" + context["o"]
+def process_zoom_meeting_great_submit(payload, context):
+    state = payload["view"]["state"]["values"]
+    meeting_type_state = state["meeting_type"]
+    stage_state = state["stage"]
+    forecast_state = state["forecast"]
+    description_state = state["description"]
+    expected_close_date_state = state["expected_close_date"]
+    next_step_state = state["next_step"]
 
+    organization_id_param = "o=" + context["o"]
+    a_id = action_with_params(
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES,
+        params=[
+            organization_id_param,
+        ],
+    )
+    meeting_type = meeting_type_state[a_id]["selected_option"]
+    if meeting_type:
+        meeting_type = meeting_type["value"]
+    else:
+        # user did not select an option, show them error
+        data = {
+            "response_action": "errors",
+            "errors": {"meeting_type": "You must select an option."},
+        }
+        return data
+
+    a_id = action_with_params(
+        slack_const.GET_ORGANIZATION_STAGES,
+        params=[
+            organization_id_param,
+        ],
+    )
+    stage = stage_state[a_id]["selected_option"]
+    if stage:
+        stage = stage["value"]
+
+    a_id = slack_const.GET_LEAD_FORECASTS
+    forecast = forecast_state[a_id]["selected_option"]
+    if forecast:
+        forecast = forecast["value"]
+
+    a_id = slack_const.DEFAULT_ACTION_ID
+    description = description_state[a_id]["value"]
+    expected_close_date = expected_close_date_state[a_id]["selected_date"]
+    next_step = next_step_state[a_id]["value"]
+
+    data = {
+        "meeting_type": meeting_type,
+        "stage": stage,
+        "forecast": forecast,
+        "description": description,
+        "expected_close_date": expected_close_date,
+        "next_step": next_step,
+    }
+
+    # NOTE: stage/forecast may be the original stage and therefore unchanged.
+    # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
+    #       if it is one of lead_const.FORECAST_CHOICES then it is a new selection.
+    # TODO: remember to close/edit the original  Slack message after.
+    #       To do this, see process_zoom_meeting_different_opportunity_submit
+    pass
+
+
+@processor(
+    required_context=[
+        "o",
+        "original_message_channel",
+        "original_message_timestamp",
+    ]
+)
+def process_zoom_meeting_not_well_submit(payload, context):
     state = payload["view"]["state"]["values"]
     meeting_type_state = state["meeting_type"]
     stage_state = state["stage"]
     description_state = state["description"]
     next_step_state = state["next_step"]
 
+    organization_id_param = "o=" + context["o"]
     a_id = action_with_params(
         slack_const.GET_ORGANIZATION_ACTION_CHOICES,
         params=[
@@ -62,7 +132,6 @@ def process_zoom_meeting_not_well_submit(payload, context):
         "description": description,
         "next_step": next_step,
     }
-
     # NOTE: stage may be the original stage and therefore unchanged.
     # TODO: remember to close/edit the original  Slack message after.
     #       To do this, see process_zoom_meeting_different_opportunity_submit
@@ -79,22 +148,22 @@ def process_zoom_meeting_not_well_submit(payload, context):
     ]
 )
 def process_zoom_meeting_different_opportunity_submit(payload, context):
-    user_id_param = "u=" + context["u"]
-    lead_id_param = "l=" + context["l"]
-    organization_id_param = "o=" + context["o"]
+    state = payload["view"]["state"]["values"]
+    new_opportunity_state = state["new_opportunity"]
 
-    target_action_id = action_with_params(
+    user_id_param = "u=" + context["u"]
+    a_id = action_with_params(
         slack_const.GET_USER_OPPORTUNITIES,
         params=[
             user_id_param,
         ],
     )
 
-    selection = payload["view"]["state"]["values"]["new_opportunity"][target_action_id][
-        "selected_option"
-    ]
+    new_opportunity = new_opportunity_state[a_id]["selected_option"]
 
-    if selection is None:
+    if new_opportunity:
+        new_opportunity = new_opportunity["value"]
+    else:
         # user did not select an option, show them error
         data = {
             "response_action": "errors",
@@ -102,7 +171,11 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
         }
         return data
 
-    new_lead_id = selection["value"]
+    block_set_context = {
+        "l": new_opportunity,
+        "u": context["u"],
+        "o": context["o"],
+    }
 
     original_message_channel = context["original_message_channel"]
     original_message_timestamp = context["original_message_timestamp"]
@@ -112,12 +185,6 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
         .get(pk=context["o"])
         .slack_integration.access_token
     )
-
-    block_set_context = {
-        "l": new_lead_id,
-        "u": context["u"],
-        "o": context["o"],
-    }
 
     slack_requests.update_channel_message(
         original_message_channel,
@@ -132,6 +199,7 @@ def handle_view_submission(payload):
     This takes place when a modal's Submit button is clicked.
     """
     switcher = {
+        slack_const.ZOOM_MEETING__GREAT: process_zoom_meeting_great_submit,
         slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well_submit,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
     }
