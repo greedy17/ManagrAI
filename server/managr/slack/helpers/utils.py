@@ -46,7 +46,7 @@ def get_lead_rating_emoji(rating):
 
 class block_set:
     """
-    Decorator. Checks for required context for a block_set
+    Decorator. Checks for required context for a block_set.
     """
 
     def __init__(self, required_context=[]):
@@ -58,5 +58,23 @@ class block_set:
                 if context.get(prop) is None:
                     raise ValueError(f"context missing: {prop}, in {f.__name__}")
             return f(context)
+
+        return wrapped_f
+
+
+class processor:
+    """
+    Decorator. Checks for required params for a processor.
+    """
+
+    def __init__(self, required_params=[]):
+        self.required_params = required_params
+
+    def __call__(self, f):
+        def wrapped_f(payload, params):
+            for param in self.required_params:
+                if params.get(param) is None:
+                    raise ValueError(f"param missing: {param}, in {f.__name__}")
+            return f(payload, params)
 
         return wrapped_f

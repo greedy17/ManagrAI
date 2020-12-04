@@ -5,10 +5,11 @@ from managr.organization.models import Organization
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import utils as slack_utils
+from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
 
 
+@processor(required_params=["o", "u", "l"])
 def process_zoom_meeting_great(payload, params):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -36,6 +37,7 @@ def process_zoom_meeting_great(payload, params):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_params=["o", "u", "l"])
 def process_zoom_meeting_not_well(payload, params):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -63,6 +65,7 @@ def process_zoom_meeting_not_well(payload, params):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_params=["o", "u", "l"])
 def process_zoom_meeting_different_opportunity(payload, params):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -103,8 +106,8 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
     }
     action_query_string = payload["actions"][0]["action_id"]
-    processed_string = slack_utils.process_action_id(action_query_string)
+    processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
     action_params = processed_string.get("params")
     print(f"ID: {action_query_string}")
-    return switcher.get(action_id, slack_utils.NO_OP)(payload, action_params)
+    return switcher.get(action_id, NO_OP)(payload, action_params)
