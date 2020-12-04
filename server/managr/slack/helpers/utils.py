@@ -42,3 +42,21 @@ def get_lead_rating_emoji(rating):
     for i in range(placeholder_count):
         output += ":black_small_square: "
     return output
+
+
+class block_set:
+    """
+    Decorator. Checks for required context for a block_set
+    """
+
+    def __init__(self, required_context=[]):
+        self.required_context = required_context
+
+    def __call__(self, f):
+        def wrapped_f(context):
+            for prop in self.required_context:
+                if context.get(prop) is None:
+                    raise ValueError(f"context missing: {prop}, in {f.__name__}")
+            return f(context)
+
+        return wrapped_f

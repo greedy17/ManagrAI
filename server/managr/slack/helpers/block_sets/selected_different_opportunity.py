@@ -2,29 +2,12 @@ import pdb
 
 from managr.lead.models import Lead
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
+@block_set(required_context=["o", "u", "l"])
 def select_different_opportunity(context):
-    """
-    Required context:
-    {
-        u,
-        l,
-        o,
-    }
-    """
-    # validate context
-    required_context = [
-        "u",
-        "l",
-        "o",
-    ]
-    for prop in required_context:
-        if context.get(prop) is None:
-            raise ValueError(f"context missing: {prop}")
-
     lead = Lead.objects.get(pk=context.get("l"))
 
     # make params here
