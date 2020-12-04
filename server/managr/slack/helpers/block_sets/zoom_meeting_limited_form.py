@@ -6,14 +6,12 @@ from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
-@block_set(required_context=["o", "u", "l"])
+@block_set(required_context=["o", "l"])
 def zoom_meeting_limited_form(context):
     lead = Lead.objects.get(pk=context.get("l"))
     stage = lead.status.as_slack_option if lead.status else None
 
     # make params here
-    user_id_param = "u=" + context.get("u")
-    lead_id_param = "l=" + context.get("l")
     organization_id_param = "o=" + context.get("o")
 
     return [

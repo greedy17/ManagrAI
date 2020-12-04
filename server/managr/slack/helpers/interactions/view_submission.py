@@ -19,8 +19,6 @@ def process_zoom_meeting_different_opportunity_submit(payload):
         slack_const.GET_USER_OPPORTUNITIES,
         params=[
             user_id_param,
-            lead_id_param,
-            organization_id_param,
         ],
     )
 
