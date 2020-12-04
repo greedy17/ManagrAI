@@ -41,10 +41,13 @@ def process_get_lead_forecasts(payload, context):
 
 
 @processor(required_context=["u"])
-def process_get_user_opportunities(payload, context):
+def process_get_user_leads(payload, context):
     user = User.objects.get(pk=context["u"])
+    value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.claimed_leads.all()],
+        "options": [
+            l.as_slack_option for l in user.claimed_leads.filter(title__icontains=value)
+        ],
     }
 
 
@@ -57,7 +60,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
-        slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
+        slack_const.GET_USER_OPPORTUNITIES: process_get_user_leads,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

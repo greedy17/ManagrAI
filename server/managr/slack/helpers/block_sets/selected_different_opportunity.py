@@ -24,5 +24,6 @@ def select_different_opportunity(context):
             ),
             placeholder="Select Other",
             block_id="new_opportunity",
+            min_query_length=1,
         ),
     ]
