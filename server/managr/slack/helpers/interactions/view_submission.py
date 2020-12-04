@@ -8,6 +8,64 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import utils as slack_utils
 from managr.slack.helpers.block_sets import get_block_set
 
+# TODO: params -> context!
+# TODO: add view_context as context for these processors
+# TODO: add decorator to processors
+
+
+def process_zoom_meeting_not_well_submit(payload):
+    # required: o,
+    view_context = json.loads(payload["view"]["private_metadata"])
+    organization_id_param = "o=" + view_context["o"]
+
+    state = payload["view"]["state"]["values"]
+    meeting_type_state = state["meeting_type"]
+    stage_state = state["stage"]
+    description_state = state["description"]
+    next_step_state = state["next_step"]
+
+    a_id = slack_utils.action_with_params(
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES,
+        params=[
+            organization_id_param,
+        ],
+    )
+    meeting_type = meeting_type_state[a_id]["selected_option"]
+    if meeting_type:
+        meeting_type = meeting_type["value"]
+    else:
+        # user did not select an option, show them error
+        data = {
+            "response_action": "errors",
+            "errors": {"meeting_type": "You must select an option."},
+        }
+        return data
+
+    a_id = slack_utils.action_with_params(
+        slack_const.GET_ORGANIZATION_STAGES,
+        params=[
+            organization_id_param,
+        ],
+    )
+    stage = stage_state[a_id]["selected_option"]
+    if stage:
+        stage = stage["value"]
+
+    a_id = slack_const.DEFAULT_ACTION_ID
+    description = description_state[a_id]["value"]
+    next_step = next_step_state[a_id]["value"]
+
+    data = {
+        "meeting_type": meeting_type,
+        "stage": stage,
+        "description": description,
+        "next_step": next_step,
+    }
+
+    # NOTE: stage may be the original stage and therefore unchanged.
+    # TODO: remember to close/edit the original  Slack message after.
+    pass
+
 
 def process_zoom_meeting_different_opportunity_submit(payload):
     view_context = json.loads(payload["view"]["private_metadata"])
@@ -22,15 +80,15 @@ def process_zoom_meeting_different_opportunity_submit(payload):
         ],
     )
 
-    selection = payload["view"]["state"]["values"]["select_new_opportunity"][
-        target_action_id
-    ]["selected_option"]
+    selection = payload["view"]["state"]["values"]["new_opportunity"][target_action_id][
+        "selected_option"
+    ]
 
     if selection is None:
         # user did not select an option, show them error
         data = {
             "response_action": "errors",
-            "errors": {"select_new_opportunity": "You must select an option."},
+            "errors": {"new_opportunity": "You must select an option."},
         }
         return data
 
@@ -64,6 +122,7 @@ def handle_view_submission(payload):
     This takes place when a modal's Submit button is clicked.
     """
     switcher = {
+        slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well_submit,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
     }
     callback_id = payload["view"]["callback_id"]

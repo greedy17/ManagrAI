@@ -29,6 +29,7 @@ def zoom_meeting_limited_form(context):
                 slack_const.GET_ORGANIZATION_ACTION_CHOICES,
                 params=[organization_id_param],
             ),
+            block_id="meeting_type",
         ),
         block_builders.external_select(
             "*Update Stage*",
@@ -37,28 +38,29 @@ def zoom_meeting_limited_form(context):
                 params=[organization_id_param],
             ),
             initial_option=stage,
+            block_id="stage",
         ),
         {
             "type": "input",
             "optional": True,
-            # "block_id": "input123",
             "label": {"type": "plain_text", "text": "Description"},
             "element": {
                 "type": "plain_text_input",
                 "multiline": True,
-                # "action_id": slack_const.ZOOM_MEETING__GREAT,
+                "action_id": slack_const.DEFAULT_ACTION_ID,
                 "placeholder": {"type": "plain_text", "text": "How'd it go?"},
             },
+            "block_id": "description",
         },
         {
             "type": "input",
             "optional": True,
-            # "block_id": "input123",
             "label": {"type": "plain_text", "text": "Next Step"},
             "element": {
                 "type": "plain_text_input",
-                # "action_id": slack_const.ZOOM_MEETING__GREAT,
+                "action_id": slack_const.DEFAULT_ACTION_ID,
                 "placeholder": {"type": "plain_text", "text": "What's the plan?"},
             },
+            "block_id": "next_step",
         },
     ]

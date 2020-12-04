@@ -23,6 +23,6 @@ def select_different_opportunity(context):
                 ],
             ),
             placeholder="Select Other",
-            block_id="select_new_opportunity",
+            block_id="new_opportunity",
         ),
     ]
