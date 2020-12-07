@@ -36,9 +36,7 @@ TEMPORARY_CONTEXT = {
 }  # for dev purposes
 
 
-class SlackViewSet(
-    viewsets.GenericViewSet,
-):
+class SlackViewSet(viewsets.GenericViewSet,):
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],

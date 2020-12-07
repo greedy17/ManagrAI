@@ -1,5 +1,7 @@
 import os
 
+from django.conf import settings
+
 from managr.slack import constants as slack_const
 
 
@@ -33,7 +35,7 @@ class OAuthLinkBuilder:
 
     @property
     def client_id_param(self):
-        return "client_id=" + os.environ.get("SLACK_CLIENT_ID")
+        return "client_id=" + settings.SLACK_CLIENT_ID
 
     @property
     def redirect_uri_param(self):

@@ -514,16 +514,16 @@ class NotificationQuerySet(models.QuerySet):
             return self.filter(user=user.id)
 
 
-class NotificationAlertManager(models.Manager):
+# class NotificationAlertManager(models.Manager):
 
-    """ 
+""" 
     previously Notificaitons were always of one expected type Alert
     Since we are now providing email alerts and slack alerts as well which are harder to track
     we will be using this manager to default to alerts but also give access to all types 
     when checking to see if an email alert or slack alert was sent out
-    """
+"""
 
-    return
+#    return
 
 
 class Notification(TimeStampModel):
@@ -554,7 +554,11 @@ class Notification(TimeStampModel):
         null=True,
         help_text="Id of the resource if it is an email it will be the thread id",
     )
-
+    notification_class = models.CharField(
+        max_length=255,
+        help_text="Classification of notification, email, alert, slack",
+        choices=core_consts.NOTIFICATION_TYPES,
+    )
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
     user = models.ForeignKey(

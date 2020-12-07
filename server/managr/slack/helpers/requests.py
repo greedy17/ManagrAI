@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-
+from django.conf import settings
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers.block_sets import get_block_set
@@ -13,18 +13,14 @@ def request_access_token(code, redirect_uri):
     data = {
         "code": code,
         "redirect_uri": redirect_uri,  # TODO: redirect_URI also ENV
-        "client_id": os.environ.get("SLACK_CLIENT_ID"),
-        "client_secret": os.environ.get("SLACK_SECRET"),
+        "client_id": settings.SLACK_CLIENT_ID,
+        "client_secret": settings.SLACK_SECRET,
     }
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
-    return requests.post(
-        url,
-        data=data,
-        headers=headers,
-    )
+    return requests.post(url, data=data, headers=headers,)
 
 
 def request_user_dm_channel(slack_id, access_token):
@@ -35,9 +31,7 @@ def request_user_dm_channel(slack_id, access_token):
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
     data = {"users": slack_id}
     return requests.post(
-        url,
-        data=json.dumps(data),
-        headers=slack_auth.auth_headers(access_token),
+        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
     )
 
 
@@ -54,9 +48,7 @@ def send_channel_message(channel, access_token, text=None, block_set=None):
     if block_set:
         data["blocks"] = block_set
     return requests.post(
-        url,
-        data=json.dumps(data),
-        headers=slack_auth.auth_headers(access_token),
+        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
     )
 
 
@@ -75,9 +67,7 @@ def update_channel_message(
     if block_set:
         data["blocks"] = block_set
     return requests.post(
-        url,
-        data=json.dumps(data),
-        headers=slack_auth.auth_headers(access_token),
+        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
     )
 
 
