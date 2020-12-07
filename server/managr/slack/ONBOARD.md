@@ -20,3 +20,6 @@ Important Notes:
   - https://api.slack.com/legacy/workspace-apps/rotating-and-refreshing-credentials
 - validating an incoming webhook is from Slack is not currently working.
   - managr.slack.helpers.utils
+- endpoint for getting the Slack URL for a message is not implemented.
+  - managr.slack.constants.CHAT_GET_PERMALINK
+  - can leverage managr.slack.helpers.requests

@@ -45,13 +45,16 @@ def action_with_params(action, params=[]):
     """
     Max length of return is 255 characters.
     Slack will return a 200 but not display UI
-    whose action_id is greater than this limit.
+    if action_id is greater than this limit.
     """
     if not isinstance(action, str):
         raise TypeError("action must be str")
     if not isinstance(params, list):
         raise TypeError("params must be list")
-    return action + "?" + "&".join(params)
+    output = action + "?" + "&".join(params)
+    if len(output) > 255:
+        raise ValueError("action_id would be longer than 255 characters")
+    return output
 
 
 def process_action_id(action_string):
