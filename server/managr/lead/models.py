@@ -105,27 +105,19 @@ class Lead(TimeStampModel):
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL
     )
     company_size = models.CharField(
-        choices=lead_constants.COMPANY_SIZE_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.COMPANY_SIZE_CHOICES, max_length=255, null=True,
     )
     industry = models.CharField(
-        choices=lead_constants.INDUSTRY_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.INDUSTRY_CHOICES, max_length=255, null=True,
     )
     type = models.CharField(
-        choices=lead_constants.TYPE_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.TYPE_CHOICES, max_length=255, null=True,
     )
     custom = models.CharField(
         max_length=255, null=True, blank=True, help_text="Custom field"
     )
     competitor = models.CharField(
-        choices=lead_constants.COMPETITOR_CHOICES,
-        max_length=255,
-        null=True,
+        choices=lead_constants.COMPETITOR_CHOICES, max_length=255, null=True,
     )
     competitor_description = models.CharField(
         max_length=255,
@@ -133,11 +125,7 @@ class Lead(TimeStampModel):
         blank=True,
         help_text="Describes the value chosen in the Lead's competitor field",
     )
-    geography_address = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-    )
+    geography_address = models.CharField(max_length=255, null=True, blank=True,)
     geography_address_components = JSONField(
         default=dict,
         blank=True,
@@ -190,12 +178,7 @@ class Lead(TimeStampModel):
         linked_contacts = serializers.serialize("json", self.linked_contacts.all())
         linked_contacts = json.loads(linked_contacts)
         linked_contacts = [c["fields"] for c in linked_contacts]
-        activity = serializers.serialize(
-            "json",
-            [
-                self,
-            ],
-        )
+        activity = serializers.serialize("json", [self,],)
         activity = json.loads(activity)
 
         activity = activity[0]
@@ -380,10 +363,7 @@ class BaseNote(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {
-                    "id": str(c.id),
-                    "full_name": c.full_name,
-                }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -501,10 +481,7 @@ class LeadActivityLog(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "Lead",
-        null=True,
-        on_delete=models.PROTECT,
-        related_name="activity_logs",
+        "Lead", null=True, on_delete=models.PROTECT, related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -537,14 +514,22 @@ class NotificationQuerySet(models.QuerySet):
             return self.filter(user=user.id)
 
 
-class Notification(TimeStampModel):
-    """
-    Pari: There are various types of notifications (that are not going to be built until V2)
-    in order to handle all notification in one central location we are creating a quick
-    version here.
+class NotificationAlertManager(models.Manager):
 
-    One of those notifications is a reminder, in order to be reminded of a reminder it
-    must have a notification attached to it.
+    """ 
+    previously Notificaitons were always of one expected type Alert
+    Since we are now providing email alerts and slack alerts as well which are harder to track
+    we will be using this manager to default to alerts but also give access to all types 
+    when checking to see if an email alert or slack alert was sent out
+    """
+
+    return
+
+
+class Notification(TimeStampModel):
+    """ By default Notifications will only return alerts 
+        We also will allow the code to access all types of notificaitons 
+        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
     """
 
     notify_at = models.DateTimeField(
@@ -666,10 +651,7 @@ class Action(TimeStampModel):
             },
             "linked_contacts": [str(c.id) for c in self.linked_contacts.all()],
             "linked_contacts_ref": [
-                {
-                    "id": str(c.id),
-                    "full_name": c.full_name,
-                }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -735,10 +717,7 @@ class LeadMessage(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {
-                    "id": str(c.id),
-                    "full_name": c.full_name,
-                }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -785,10 +764,7 @@ class LeadEmail(TimeStampModel):
                 "full_name": self.created_by.full_name,
             },
             "linked_contacts": [
-                {
-                    "id": str(c.id),
-                    "full_name": c.full_name,
-                }
+                {"id": str(c.id), "full_name": c.full_name,}
                 for c in self.linked_contacts.all()
             ],
         }
@@ -813,61 +789,33 @@ class LeadScore(TimeStampModel):
     final_score = models.IntegerField()
 
     actions_score = models.IntegerField()
-    actions_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
+    actions_insight = models.CharField(max_length=255, blank=True, null=True,)
 
     recent_action_score = models.IntegerField()
-    recent_action_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
+    recent_action_insight = models.CharField(max_length=255, blank=True, null=True,)
 
     incoming_messages_score = models.IntegerField()
-    incoming_messages_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
+    incoming_messages_insight = models.CharField(max_length=255, blank=True, null=True,)
 
     days_in_stage_score = models.IntegerField()
-    days_in_stage_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
+    days_in_stage_insight = models.CharField(max_length=255, blank=True, null=True,)
 
     forecast_table_score = models.IntegerField()
-    forecast_table_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
+    forecast_table_insight = models.CharField(max_length=255, blank=True, null=True,)
 
     expected_close_date_score = models.IntegerField()
     expected_close_date_insight = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
+        max_length=255, blank=True, null=True,
     )
 
     date_range_end = models.DateTimeField()
     date_range_start = models.DateTimeField()
 
     lead = models.ForeignKey(
-        "Lead",
-        related_name="scores",
-        on_delete=models.CASCADE,
-        null=False,
+        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
     )
     previous_score = models.ForeignKey(
-        "LeadScore",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        "LeadScore", on_delete=models.CASCADE, null=True, blank=True,
     )
 
     objects = LeadScoreQuerySet.as_manager()

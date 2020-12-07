@@ -43,6 +43,10 @@ def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
 
 
+def _create_slack_alert(title, content, notification_type, lead, user):
+    return
+
+
 def _create_notification(title, content, notification_type, lead, user):
     Notification.objects.create(
         notify_at=timezone.now(),
