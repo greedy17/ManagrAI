@@ -29,17 +29,16 @@ class ZoomMtg:
 
     @classmethod
     def from_webhook(cls, payload):
-        data = payload
-        obj = data.pop("object", None)
+        obj = payload.pop("object", None)
         if obj:
-            data = {**data, **obj}
+            payload = {**payload, **obj}
 
-        meeting_uuid = data.pop("uuid", None)
-        meeting_id = data.pop("id", None)
-        data["meeting_uuid"] = meeting_uuid
-        data["meeting_id"] = meeting_id
+        meeting_uuid = payload.pop("uuid", None)
+        meeting_id = payload.pop("id", None)
+        payload["meeting_uuid"] = meeting_uuid
+        payload["meeting_id"] = meeting_id
 
-        return cls(**data)
+        return cls(**payload)
 
     def get_past_meeting_participants(self, access_token):
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{self.meeting_uuid}/participants"
@@ -92,6 +91,7 @@ class ZoomAcct:
         data = ZoomAcct._handle_response(r)
         meeting_uuid = data.pop("uuid", None)
         meeting_id = data.pop("id", None)
+        # Rename uuid and uid so that they fit the django model and are not confused with django id's
         data["meeting_uuid"] = meeting_uuid
         data["meeting_id"] = meeting_id
         data["zoom_account"] = str(self.id)
