@@ -7,7 +7,6 @@ from managr.polling import views as poll_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
 from managr.slack import views as slack_views
-
 from managr.zoom import views as zoom_views
 
 
