@@ -182,14 +182,21 @@ class User(AbstractUser, TimeStampModel):
         if self.magic_token_expired:
             self.regen_magic_token()
 
-        return gen_auth_url(
-            email=self.email,
-            magic_token=str(self.magic_token),
-        )
+        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
     @property
     def unviewed_notifications_count(self):
         return self.notifications.filter(viewed=False).count()
+
+    @property
+    def send_email_to_integrate_slack(self):
+        """ 
+            if a users org has slack integrated but the user does not
+            we send an email to remind them to integrate, to received notifs
+        """
+        return not hasattr(self, "slack_integration") and hasattr(
+            self.organization, "slack_integration"
+        )
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""

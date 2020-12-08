@@ -12,6 +12,7 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
+from managr.core import background as bg_task
 from . import constants as lead_constants
 
 
@@ -228,6 +229,14 @@ class Lead(TimeStampModel):
                     }
                 }
             )
+        if (
+            self.status
+            and self.status.title == lead_constants.LEAD_STATUS_CLOSED
+            and self.status.type == "PUBLIC"
+        ):
+            # emit generate a story report and notify the slack DM
+            bg_task.emit_generate_story_report_on_close(self.id, self.claimed_by)
+
         return super(Lead, self).save(*args, **kwargs)
 
 

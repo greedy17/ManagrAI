@@ -102,5 +102,26 @@
       "status": "in-use",
       "user": "3dddd261-93b1-46fe-a83e-bc064551362a"
     }
+  },
+  {
+    "model": "slack.organizationslackintegration",
+    "pk": "4c5e0ec0-14b0-422f-9139-b615abf75761",
+    "fields": {
+      "datetime_created": "2020-11-20T23:45:04.727Z",
+      "last_edited": "2020-11-20T23:45:04.727Z",
+      "scope": "app_mentions:read,channels:join,channels:read,chat:write,chat:write.public,commands,im:history,im:write,incoming-webhook,links:read,links:write,mpim:history,mpim:read,mpim:write,team:read,users:read,users:read.email",
+      "organization": "700287d3-4ce6-4803-a236-b18e160729a7",
+      "team_name": "ThinkNimble",
+      "team_id": "T03EVK2FC",
+      "bot_user_id": "U01FK4G9LG0",
+      "access_token": "xoxb-3505648522-1529152326544-PTNM1bdxAtnMgS1CJ0Ud2ztB",
+      "incoming_webhook": {
+        "url": "https://hooks.slack.com/services/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",
+        "channel": "#managr",
+        "channel_id": "CUXS9MYT0",
+        "configuration_url": "https://thinknimble.slack.com/services/B01F24E6BF0"
+      },
+      "enterprise": null
+    }
   }
 ]
