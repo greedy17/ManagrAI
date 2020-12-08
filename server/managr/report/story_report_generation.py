@@ -8,7 +8,7 @@ from django.db.models import Q
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.lead import constants as lead_constants
-from managr.lead.models import ActionChoice, Action, Lead
+from managr.lead.models import ActionChoice, Action
 from managr.organization import constants as org_constants
 from managr.organization.models import Contact, Stage
 from managr.organization.serializers import ContactSerializer

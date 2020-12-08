@@ -15,7 +15,7 @@ from managr.core import constants as core_consts
 from managr.lead.models import Notification, LeadEmail, LeadActivityLog
 from managr.report.models import StoryReport
 from managr.report.story_report_generation import generate_story_report_data
-from managr.report.performance_report_generation import generate_performance_report_data
+
 from managr.report import constants as report_const
 
 from ..nylas.emails import retrieve_message, retrieve_thread, send_system_email
