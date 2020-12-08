@@ -3,16 +3,10 @@ from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.lead.models import Lead, List
-from managr.zoom.zoom_helper import constants as zoom_helper_consts
+
 from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts
 from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
-
-
-class IsZoomEvent(permissions.BasePermission):
-    def has_permission(self, request, view):
-        token = request.headers.get("Authorization", None)
-        return token == zoom_helper_consts.ZOOM_WEBHOOK_TOKEN
 
 
 class IsOrganizationManager(permissions.BasePermission):

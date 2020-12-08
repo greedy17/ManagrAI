@@ -36,6 +36,7 @@ export default {
       .generateAccessToken(code)
       .then(updatedUser => {
         this.$store.dispatch('updateUser', updatedUser)
+        SlackOAuth.api.testDM()
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,

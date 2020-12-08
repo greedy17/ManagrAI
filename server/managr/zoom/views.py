@@ -21,12 +21,14 @@ from rest_framework import (
 from rest_framework.decorators import (
     api_view,
     permission_classes,
+    authentication_classes,
 )
 
 
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from .models import ZoomAuthAccount, ZoomMeeting
@@ -88,6 +90,7 @@ def redirect_from_zoom(request):
 
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
