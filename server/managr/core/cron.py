@@ -47,12 +47,15 @@ def _create_slack_alert(title, content, notification_type, lead, user):
     return
 
 
-def _create_notification(title, content, notification_type, lead, user):
+def _create_notification(
+    title, content, notification_type, lead, user, notification_class="ALERT"
+):
     Notification.objects.create(
         notify_at=timezone.now(),
         title=title,
         notification_type=notification_type,
         resource_id=lead.id,
+        notification_class=notification_class,
         user=user,
         meta={
             "id": str(lead.id),
@@ -137,6 +140,7 @@ def create_notifications():
                     notification_type="REMINDER",
                     resource_id=row.id,
                     user=row.created_by,
+                    notification_class="ALERT",
                     meta={
                         "id": str(row.id),
                         "title": row.title,
@@ -209,6 +213,7 @@ def create_lead_notifications():
                     # check notifications for one first
                     has_alert = Notification.objects.filter(
                         user=user,
+                        notification_class="ALERT",
                         notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
                         resource_id=str(lead.id),
                     ).first()
@@ -228,15 +233,35 @@ def create_lead_notifications():
                             lead,
                             user,
                         )
-                        if user.type == core_consts.ACCOUNT_TYPE_REP:
-                            recipient = [{"name": user.full_name, "email": user.email}]
-                            title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-                            message = {
-                                "subject": title,
-                                "body": content,
-                            }
-                            send_system_email(recipient, message)
+                if user.check_notification_enabled_setting(
+                    core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_INACTIVE_90_DAYS,
+                    core_consts.NOTIFICATION_TYPE_EMAIL,
+                ):
+                    # check if email alert already sent
+                    has_alert = Notification.objects.filter(
+                        user=user,
+                        notification_class=core_consts.NOTIFICATION_TYPE_EMAIL,
+                        notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                        resource_id=str(lead.id),
+                    ).first()
+                    if not has_alert and user.type == core_consts.ACCOUNT_TYPE_REP:
+                        recipient = [{"name": user.full_name, "email": user.email}]
+                        title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
+                        message = {
+                            "subject": title,
+                            "body": content,
+                        }
+                        send_system_email(recipient, message)
+                        # create notification of that class in notifications
 
+                        _create_notification(
+                            title,
+                            content,
+                            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                            lead,
+                            user,
+                            core_consts.NOTIFICATION_TYPE_EMAIL,
+                        )
             expected_close_date = None
             if lead.expected_close_date:
                 expected_close_date = lead.expected_close_date
@@ -258,6 +283,7 @@ def create_lead_notifications():
                         # check notifications for one first
                         has_alert = Notification.objects.filter(
                             user=user,
+                            notification_class="ALERT",
                             notification_type=notification_type_str,
                             resource_id=str(lead.id),
                         ).first()
@@ -276,17 +302,34 @@ def create_lead_notifications():
                             _create_notification(
                                 title, content, notification_type_str, lead, user
                             )
-                            if user.type == core_consts.ACCOUNT_TYPE_REP:
-                                recipient = [
-                                    {"name": user.full_name, "email": user.email}
-                                ]
-                                title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
-                                message = {
-                                    "subject": title,
-                                    "body": content,
-                                }
-                                send_system_email(recipient, message)
+                    if user.check_notification_enabled_setting(
+                        core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_INACTIVE_90_DAYS,
+                        core_consts.NOTIFICATION_TYPE_EMAIL,
+                    ):
+                        # check if email alert already sent
+                        has_alert = Notification.objects.filter(
+                            user=user,
+                            notification_class=core_consts.NOTIFICATION_TYPE_EMAIL,
+                            notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                            resource_id=str(lead.id),
+                        ).first()
 
+                    if not has_alert and user.type == core_consts.ACCOUNT_TYPE_REP:
+                        recipient = [{"name": user.full_name, "email": user.email}]
+                        title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
+                        message = {
+                            "subject": title,
+                            "body": content,
+                        }
+                        send_system_email(recipient, message)
+                        _create_notification(
+                            title,
+                            content,
+                            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                            lead,
+                            user,
+                            core_consts.NOTIFICATION_TYPE_EMAIL,
+                        )
             target_date = (now - timezone.timedelta(days=60)).date()
             if lead.status_last_update.date() < target_date:
                 if user.check_notification_enabled_setting(
@@ -296,6 +339,7 @@ def create_lead_notifications():
                     # check notifications for one first
                     has_alert = Notification.objects.filter(
                         user=user,
+                        notification_class="ALERT",
                         notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
                         resource_id=str(lead.id),
                     ).first()
@@ -316,7 +360,17 @@ def create_lead_notifications():
                             lead,
                             user,
                         )
-                        if user.type == core_consts.ACCOUNT_TYPE_REP:
+                    if user.check_notification_enabled_setting(
+                        core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_INACTIVE_90_DAYS,
+                        core_consts.NOTIFICATION_TYPE_EMAIL,
+                    ):
+                        has_alert = Notification.objects.filter(
+                            user=user,
+                            notification_class=core_consts.NOTIFICATION_TYPE_EMAIL,
+                            notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                            resource_id=str(lead.id),
+                        ).first()
+                        if not has_alert and user.type == core_consts.ACCOUNT_TYPE_REP:
                             recipient = [{"name": user.full_name, "email": user.email}]
                             title = "Opportunity stalled in stage for over 60 days"
                             message = {
@@ -324,6 +378,14 @@ def create_lead_notifications():
                                 "body": content,
                             }
                             send_system_email(recipient, message)
+                            _create_notification(
+                                title,
+                                content,
+                                lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+                                lead,
+                                user,
+                                core_consts.NOTIFICATION_TYPE_EMAIL,
+                            )
 
 
 @kronos.register("0 0 * * *")

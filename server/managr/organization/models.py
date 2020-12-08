@@ -111,14 +111,7 @@ class Organization(TimeStampModel):
                     auth_token, token_created = Token.objects.get_or_create(
                         user=integration
                     )
-                    token = json.loads(
-                        serializers.serialize(
-                            "json",
-                            [
-                                auth_token,
-                            ],
-                        )
-                    )
+                    token = json.loads(serializers.serialize("json", [auth_token,],))
                     return token[0]["pk"]
 
 
@@ -318,6 +311,7 @@ class Stage(TimeStampModel):
                         title="Stages Updated",
                         notification_type="SYSTEM",
                         resource_id=self.id,
+                        notification_class="ALERT",
                         user=user,
                         meta={
                             "content": "Your organization has added new stages, please log out and login to update your list"

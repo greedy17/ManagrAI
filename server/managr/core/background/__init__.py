@@ -171,6 +171,7 @@ def _get_email_notification(account_id, object_id, date):
                     notify_at=timezone.now(),
                     title=message["subject"],
                     notification_type="EMAIL",
+                    notification_class="ALERT",
                     resource_id=object_id,
                     user=user,
                     meta={
@@ -256,6 +257,7 @@ def _get_email_metadata_info(account_id, object_id, date, **kwargs):
                     title=message["subject"],
                     notification_type="EMAIL_OPENED",
                     resource_id=thread_id,
+                    notification_class="ALERT",
                     user=user,
                     meta={
                         "content": meta_body,
