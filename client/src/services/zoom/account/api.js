@@ -29,4 +29,12 @@ export default class ZoomAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
     }
   }
+
+  async revokeAccess() {
+    try {
+      await this.client.delete(ZoomAPI.ENDPOINT + 'revoke')
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
+    }
+  }
 }

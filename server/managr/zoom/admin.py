@@ -5,3 +5,4 @@ from . import models
 
 
 admin.site.register(models.ZoomAuthAccount)
+admin.site.register(models.ZoomMeeting)

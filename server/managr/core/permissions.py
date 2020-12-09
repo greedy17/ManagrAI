@@ -3,6 +3,7 @@ from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.lead.models import Lead, List
+
 from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts
 from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
