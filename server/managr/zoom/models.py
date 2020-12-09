@@ -143,3 +143,47 @@ class ZoomMeeting(TimeStampModel):
         help_text="FUTURE DEVELOPMENT",
     )
 
+
+class MeetingReview(TimeStampModel):
+
+    # work required to get limit choices to by orgs not currently available
+    # could use thread locals or check on save method
+    # https://stackoverflow.com/questions/232435/how-do-i-restrict-foreign-keys-choices-to-related-objects-only-in-django
+
+    meeting = models.OneToOneField(
+        "ZoomMeeting",
+        on_delete=models.CASCADE,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    meeting_type = models.ForeignKey(
+        "lead.ActionChoice",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    forecast_strength = models.ForeignKey(
+        "lead.Forecast",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    update_stage = models.ForeignKey(
+        "organization.Stage",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    description = models.TextField(blank=True, null=True)
+    updated_close_date = models.DateTimeField(null=True, blank=True)
+    next_steps = models.TextField(blank=True, null=True)
+    sentiment = models.CharField(
+        max_length=255,
+        choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
+        default=zoom_consts.MEETING_SENTIMENT_NA,
+    )
+
