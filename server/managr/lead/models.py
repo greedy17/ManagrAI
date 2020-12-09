@@ -9,9 +9,10 @@ from django.core import serializers
 import json
 from managr.core.models import TimeStampModel
 from managr.utils.misc import datetime_appended_filepath
+from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
-from . import constants as lead_constants
 from managr.core import constants as core_consts
+from . import constants as lead_constants
 
 
 class LeadQuerySet(models.QuerySet):
@@ -177,7 +178,7 @@ class Lead(TimeStampModel):
         linked_contacts = serializers.serialize("json", self.linked_contacts.all())
         linked_contacts = json.loads(linked_contacts)
         linked_contacts = [c["fields"] for c in linked_contacts]
-        activity = serializers.serialize("json", [self,])
+        activity = serializers.serialize("json", [self,],)
         activity = json.loads(activity)
 
         activity = activity[0]
@@ -185,6 +186,10 @@ class Lead(TimeStampModel):
         activity["fields"]["linked_contacts_ref"] = linked_contacts
 
         return activity["fields"]
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
@@ -309,10 +314,10 @@ class BaseNoteQuerySet(models.QuerySet):
 
 class BaseNote(TimeStampModel):
     """
-        This is a Base model for all note style models
-        Reminders, Notes and CallNotes all inherit from this base model
-        Notes does not override or add any extra fields, however the other two do.
-        Note all models inherit the parent queryset manager
+    This is a Base model for all note style models
+    Reminders, Notes and CallNotes all inherit from this base model
+    Notes does not override or add any extra fields, however the other two do.
+    Note all models inherit the parent queryset manager
     """
 
     title = models.CharField(max_length=500, blank=False, null=False)
@@ -451,6 +456,10 @@ class Forecast(TimeStampModel):
 
     objects = ForecastQuerySet.as_manager()
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.forecast, str(self.id))
+
     # 'created by' and 'updated by' are not used here since they can be taken from logs
 
     class Meta:
@@ -507,12 +516,12 @@ class NotificationQuerySet(models.QuerySet):
 
 class Notification(TimeStampModel):
     """
-        Pari: There are various types of notifications (that are not going to be built until V2)
-        in order to handle all notification in one central location we are creating a quick
-        version here.
+    Pari: There are various types of notifications (that are not going to be built until V2)
+    in order to handle all notification in one central location we are creating a quick
+    version here.
 
-        One of those notifications is a reminder, in order to be reminded of a reminder it
-        must have a notification attached to it.
+    One of those notifications is a reminder, in order to be reminded of a reminder it
+    must have a notification attached to it.
     """
 
     notify_at = models.DateTimeField(
@@ -570,6 +579,10 @@ class ActionChoice(TimeStampModel):
     )
 
     objects = ActionChoiceQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
 
     class Meta:
         ordering = ["title"]
