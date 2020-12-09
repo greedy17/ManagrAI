@@ -12,6 +12,7 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
+from managr.report.models import StoryReport
 
 # from managr.core import background as bg_task
 from . import constants as lead_constants
@@ -214,7 +215,7 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        if self.amount < 0:
+        if float(self.amount) < 0:
             raise ValidationError(
                 {
                     "non_form_errors": {
@@ -222,7 +223,7 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        if self.closing_amount < 0:
+        if float(self.closing_amount) < 0:
             raise ValidationError(
                 {
                     "non_form_errors": {
@@ -230,14 +231,15 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        """         if (
-                    self.status
-                    and self.status.title == lead_constants.LEAD_STATUS_CLOSED
-                    and self.status.type == "PUBLIC"
-                ):
-                    # emit generate a story report and notify the slack DM
-                    bg_task.emit_generate_story_report_on_close(self)
-        """
+        if (
+            self.status
+            and self.status.title == lead_constants.LEAD_STATUS_CLOSED
+            and self.status.type == "PUBLIC"
+        ):
+            # emit generate a story report and notify the slack DM
+            report = StoryReport.objects.create(lead=self, generated_by=self.claimed_by)
+            report.emit_story_event(True)
+
         return super(Lead, self).save(*args, **kwargs)
 
 
@@ -522,18 +524,6 @@ class NotificationQuerySet(models.QuerySet):
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(user=user.id)
-
-
-# class NotificationAlertManager(models.Manager):
-
-""" 
-    previously Notificaitons were always of one expected type Alert
-    Since we are now providing email alerts and slack alerts as well which are harder to track
-    we will be using this manager to default to alerts but also give access to all types 
-    when checking to see if an email alert or slack alert was sent out
-"""
-
-#    return
 
 
 class Notification(TimeStampModel):

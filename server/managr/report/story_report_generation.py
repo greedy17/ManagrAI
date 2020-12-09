@@ -13,6 +13,8 @@ from managr.organization import constants as org_constants
 from managr.organization.models import Contact, Stage
 from managr.organization.serializers import ContactSerializer
 from managr.utils.sites import get_site_url
+from managr.slack.helpers.requests import generic_request, send_channel_message
+from managr.slack.helpers.block_sets import get_block_set
 
 from .models import StoryReport
 
@@ -48,7 +50,17 @@ def generate_story_report_data(story_report_id, share_to_channel=False):
         send_email(story_report)
         ## auto shares to channel if a lead is closed
         if share_to_channel:
-            return
+            org = lead.account.organization
+            if hasattr(org, "slack_integration"):
+                block_set = get_block_set(
+                    "opp_closed_report_generated",
+                    {"l": str(lead.id), "r": str(story_report.id)},
+                )
+                send_channel_message(
+                    org.slack_integration.incoming_webhook["channel"],
+                    org.slack_integration.access_token,
+                    block_set=block_set,
+                )
 
     except Exception as e:
         # TODO (Bruno 09-22-2020):
@@ -432,9 +444,8 @@ class RepresentativeDataGenerator(BaseGenerator):
     @property
     def leads(self):
         if self.__cached__leads is None:
-            closed_leads = Lead.objects.filter(
-                claimed_by=self._representative,
-                status__title=lead_constants.LEAD_STATUS_CLOSED,
+            closed_leads = self._representative.claimed_leads.filter(
+                status__title=lead_constants.LEAD_STATUS_CLOSED, status__type="PUBLIC"
             )
             self.__cached__leads = [
                 LeadDataGenerator(lead).as_dict for lead in closed_leads
@@ -514,8 +525,8 @@ class OrganizationDataGenerator(BaseGenerator):
         return self.__cached__representatives
 
     def generate_representative_leads(self, representative):
-        closed_leads = Lead.objects.filter(
-            claimed_by=representative, status__title=lead_constants.LEAD_STATUS_CLOSED,
+        closed_leads = representative.claimed_leads.filter(
+            status__title=lead_constants.LEAD_STATUS_CLOSED, status__type="PUBLIC"
         )
         return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
 

@@ -71,10 +71,7 @@ def zoom_meeting_initial(context):
                 },
                 {
                     "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Not well...",
-                    },
+                    "text": {"type": "plain_text", "text": "Not well...",},
                     "value": slack_const.ZOOM_MEETING__NOT_WELL,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__NOT_WELL,
@@ -83,10 +80,7 @@ def zoom_meeting_initial(context):
                 },
                 {
                     "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Different Opportunity",
-                    },
+                    "text": {"type": "plain_text", "text": "Different Opportunity",},
                     "value": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,

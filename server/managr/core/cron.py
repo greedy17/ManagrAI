@@ -48,10 +48,6 @@ def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
 
 
-def _create_slack_alert(title, content, notification_type, lead, user):
-    return
-
-
 def _has_alert(user, notification_class, notification_type, resource_id):
     return Notification.objects.filter(
         user=user,
@@ -81,7 +77,7 @@ def _create_notification(
         notify_at=timezone.now(),
         title=title,
         notification_type=notification_type,
-        resource_id=lead.id,
+        resource_id=str(lead.id),
         notification_class=notification_class,
         user=user,
         meta={
@@ -192,47 +188,41 @@ def create_notifications():
                 # when checking slack notification settings, if the user has opted to
                 # receive slack notifs but has not integrated slack send them an email (assuming their org has set it up)
                 # reminding them to set up slack
-                if not hasattr(user, "slack_integration") and hasattr(
-                    user.organization, "slack_integration"
-                ):
-                    recipient = [{"name": user.full_name, "email": user.email}]
-                    message = {
-                        "subject": "Enable Slack",
-                        "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
-                    }
-                    send_system_email(recipient, message)
-                    return
-                user_slack_channel = user.slack_integration.channel
-                slack_org_access_token = (
-                    user.organization.slack_integration.access_token
-                )
-                block_set = get_block_set("reminder_block_set", {"n": str(n.id)})
-                slack_requests.send_channel_message(
-                    user_slack_channel, slack_org_access_token, block_set=block_set
-                )
-                n = Notification.objects.create(
-                    notify_at=row.datetime_for,
-                    title=row.title,
-                    notification_type="REMINDER",
-                    resource_id=row.id,
-                    user=user,
-                    notification_class="SLACK",
-                    meta={
-                        "id": str(row.id),
-                        "title": row.title,
-                        "content": row.content,
-                        "linked_contacts": [
-                            {"id": str(c.id), "full_name": c.full_name,}
-                            for c in row.linked_contacts.all()
-                        ],
-                        "leads": [
-                            {
-                                "id": str(row.created_for.id),
-                                "title": row.created_for.title,
-                            }
-                        ],
-                    },
-                )
+
+                if user.send_email_to_integrate_slack:
+                    _send_slack_int_email(user)
+                if hasattr(user, "slack_integration"):
+                    user_slack_channel = user.slack_integration.channel
+                    slack_org_access_token = (
+                        user.organization.slack_integration.access_token
+                    )
+                    block_set = get_block_set("reminder_block_set", {"r": str(row.id)})
+                    slack_requests.send_channel_message(
+                        user_slack_channel, slack_org_access_token, block_set=block_set
+                    )
+                    n = Notification.objects.create(
+                        notify_at=row.datetime_for,
+                        title=row.title,
+                        notification_type="REMINDER",
+                        resource_id=row.id,
+                        user=user,
+                        notification_class="SLACK",
+                        meta={
+                            "id": str(row.id),
+                            "title": row.title,
+                            "content": row.content,
+                            "linked_contacts": [
+                                {"id": str(c.id), "full_name": c.full_name,}
+                                for c in row.linked_contacts.all()
+                            ],
+                            "leads": [
+                                {
+                                    "id": str(row.created_for.id),
+                                    "title": row.created_for.title,
+                                }
+                            ],
+                        },
+                    )
 
         else:
 
@@ -618,3 +608,4 @@ def revoke_tokens():
 @kronos.register("59 23 * * *")
 def _generate_lead_scores():
     generate_lead_scores()
+

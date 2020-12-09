@@ -28,10 +28,7 @@ def process_zoom_meeting_great_submit(payload, context):
 
     organization_id_param = "o=" + context["o"]
     a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_ACTION_CHOICES,
-        params=[
-            organization_id_param,
-        ],
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
     )
     meeting_type = meeting_type_state[a_id]["selected_option"]
     if meeting_type:
@@ -45,10 +42,7 @@ def process_zoom_meeting_great_submit(payload, context):
         return data
 
     a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_STAGES,
-        params=[
-            organization_id_param,
-        ],
+        slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],
     )
     stage = stage_state[a_id]["selected_option"]
     if stage:
@@ -112,10 +106,7 @@ def process_zoom_meeting_not_well_submit(payload, context):
 
     organization_id_param = "o=" + context["o"]
     a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_ACTION_CHOICES,
-        params=[
-            organization_id_param,
-        ],
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
     )
     meeting_type = meeting_type_state[a_id]["selected_option"]
     if meeting_type:
@@ -129,10 +120,7 @@ def process_zoom_meeting_not_well_submit(payload, context):
         return data
 
     a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_STAGES,
-        params=[
-            organization_id_param,
-        ],
+        slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],
     )
     stage = stage_state[a_id]["selected_option"]
     if stage:
@@ -184,10 +172,7 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
 
     user_id_param = "u=" + context["u"]
     a_id = action_with_params(
-        slack_const.GET_USER_OPPORTUNITIES,
-        params=[
-            user_id_param,
-        ],
+        slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],
     )
 
     new_opportunity = new_opportunity_state[a_id]["selected_option"]

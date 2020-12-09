@@ -13,8 +13,9 @@ from managr.lead.background import emit_event as log_event
 from managr.lead import constants as lead_constants
 from managr.core import constants as core_consts
 from managr.lead.models import Notification, LeadEmail, LeadActivityLog
-from managr.report.models import StoryReport
+
 from managr.report.story_report_generation import generate_story_report_data
+from managr.report.performance_report_generation import generate_performance_report_data
 
 from managr.report import constants as report_const
 
@@ -38,10 +39,10 @@ def emit_event(account_id, object_id, date, action, **kwargs):
         )
 
 
-def emit_generate_story_report_on_close(lead):
+def emit_generate_story_report_on_close(report, share_to_channel):
     # auto generates report with claimed by user on close
-    report = StoryReport.objects.create(lead=lead, generated_by=lead.claimed_by)
-    return _generate_story_report_data(report.id, True)
+
+    return _generate_story_report_data(str(report.id), share_to_channel)
 
 
 def emit_report_event(report_id, report_type):
