@@ -144,7 +144,7 @@ class ZoomMeeting(TimeStampModel):
     )
 
 
-class MeetinReview(TimeStampModel):
+class MeetingReview(TimeStampModel):
 
     # work required to get limit choices to by orgs not currently available
     # could use thread locals or check on save method
