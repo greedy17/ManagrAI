@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError
+from django.conf import settings
 from django.utils import timezone
 from django.test import TestCase
 from django.core.management import call_command
@@ -7,6 +7,7 @@ from django.test import RequestFactory
 from django.test import Client
 
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import ValidationError
 
 from managr.core.factories import UserFactory
 from managr.lead.factories import LeadFactory, LeadActivityLogFactory
@@ -20,6 +21,8 @@ from managr.organization.factories import (
 from managr.lead.models import Notification, LeadActivityLog
 from managr.lead import constants as lead_consts
 from managr.organization import constants as org_consts
+from managr.slack.models import OrganizationSlackIntegration
+
 from .models import NotificationOption, NotificationSelection
 from .serializers import EmailSerializer
 from . import constants as core_consts
@@ -79,6 +82,31 @@ class EmailSerializerTestCase(TestCase):
 
 class AlertsTestCase(TestCase):
     fixtures = ["notification_options_fixture.json", "dev.json"]
+
+    @classmethod
+    def setUpTestData(cls):
+        # create the thinknimble slack org integration
+        # using .env variables for sensitive data
+        # only if settings USE_SLACK and TEST_SLACK
+
+        if settings.USE_SLACK and settings.TEST_SLACK:
+            org_slack = OrganizationSlackIntegration.objects.first()
+
+            org_slack.team_name = settings.SLACK_TEST_TEAM_NAME
+            org_slack.team_id = settings.SLACK_TEST_TEAM_ID
+            org_slack.bot_user_id = settings.SLACK_TEST_BOT_USER_ID
+            org_slack.access_token = settings.SLACK_TEST_ACCESS_TOKEN
+            org_slack.incoming_webhook = (
+                dict(
+                    url=settings.SLACK_TEST_INCOMING_WEBHOOK_URL,
+                    channel=settings.SLACK_TEST_INCOMING_WEBHOOK_CHANNEL,
+                    channel_id=settings.SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID,
+                    configuration_url=settings.SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL,
+                ),
+            )
+
+            org_slack.save()
+        return super().setUpTestData()
 
     def setUp(self):
         self.org = OrganizationFactory()
@@ -167,8 +195,8 @@ class AlertsTestCase(TestCase):
             activity.id,
         )
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_inactive(self):
@@ -201,8 +229,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_inactive_unclaimed_lead(self):
@@ -245,8 +273,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.status_last_update = stalled_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_stalled_in_stage(self):
@@ -267,8 +295,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_all_alert_days_1(self):
@@ -280,8 +308,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_days_1(self):
@@ -303,8 +331,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_1_unclaimed_lead(self):
@@ -337,8 +365,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
         self.assertEqual(
             Notification.objects.filter(user=self.manager).first().notification_type,
@@ -365,8 +393,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_14_unclaimed_lead(self):
@@ -399,8 +427,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
         self.assertEqual(
             Notification.objects.filter(user=self.manager).first().notification_type,
@@ -427,19 +455,22 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_30_unclaimed_lead(self):
         """ sets the expected close date to be 30+ days late 
         also sets manager user's notification settings to not alert on this trigger
-        this should create one new notification for the rep only
+        this should create no notifications
         """
         expected_close_date = timezone.now() - timezone.timedelta(days=31)
 
         self.lead_2.expected_close_date = expected_close_date
+        self.lead_2.claimed_by = None
         self.lead_2.save()
+        self.lead_1.claimed_by = None
+        self.lead_1.save()
         opt = NotificationOption.objects.get(
             pk=core_consts.NOTIFICATION_OPTION_LAPSED_30_DAYS_ID
         )

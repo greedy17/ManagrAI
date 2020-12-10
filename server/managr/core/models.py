@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -39,6 +39,14 @@ class TimeStampModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ZoomWebhookAuthUser(AnonymousUser):
+    @property
+    def is_authenticated(self):
+        # this purposefully always returns True and gives us a user for the webhook auth
+        # the check for the token occurs in the custom authentication class
+        return True
 
 
 class UserQuerySet(models.QuerySet):
@@ -182,14 +190,21 @@ class User(AbstractUser, TimeStampModel):
         if self.magic_token_expired:
             self.regen_magic_token()
 
-        return gen_auth_url(
-            email=self.email,
-            magic_token=str(self.magic_token),
-        )
+        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
     @property
     def unviewed_notifications_count(self):
         return self.notifications.filter(viewed=False).count()
+
+    @property
+    def send_email_to_integrate_slack(self):
+        """ 
+            if a users org has slack integrated but the user does not
+            we send an email to remind them to integrate, to received notifs
+        """
+        return not hasattr(self, "slack_integration") and hasattr(
+            self.organization, "slack_integration"
+        )
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""

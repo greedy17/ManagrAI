@@ -25,6 +25,7 @@ from managr.core.models import UserManager, TimeStampModel
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.lead.models import Notification
+from managr.slack.helpers import block_builders
 
 from . import constants as org_consts
 
@@ -110,14 +111,7 @@ class Organization(TimeStampModel):
                     auth_token, token_created = Token.objects.get_or_create(
                         user=integration
                     )
-                    token = json.loads(
-                        serializers.serialize(
-                            "json",
-                            [
-                                auth_token,
-                            ],
-                        )
-                    )
+                    token = json.loads(serializers.serialize("json", [auth_token,],))
                     return token[0]["pk"]
 
 
@@ -202,6 +196,14 @@ class Contact(TimeStampModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # since we are no longer requiring accounts we support orgs
+    organization = models.ForeignKey(
+        "Organization",
+        related_name="contacts",
+        blank=False,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     objects = ContactQuerySet.as_manager()
 
     class Meta:
@@ -209,11 +211,11 @@ class Contact(TimeStampModel):
         # unique hash so only one contact with the same email can be created per account
         unique_together = (
             "email",
-            "account",
+            "organization",
         )
 
     def __str__(self):
-        return f"{self.full_name} {self.account}"
+        return f"{self.full_name} {self.organization}"
 
     @property
     def full_name(self):
@@ -232,6 +234,14 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
+        contact = Contact.objects.filter(email=self.email, account=self.account).first()
+        if contact:
+            raise ValidationError(
+                detail={
+                    "contact_exists": "A contact in the same org and account already exist"
+                }
+            )
+
         return super(Contact, self).save(*args, **kwargs)
 
 
@@ -270,6 +280,10 @@ class Stage(TimeStampModel):
     order = models.IntegerField(blank=False, null=False, default=6)
 
     objects = StageQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
 
     class Meta:
         ordering = ["order"]
@@ -313,6 +327,7 @@ class Stage(TimeStampModel):
                         title="Stages Updated",
                         notification_type="SYSTEM",
                         resource_id=self.id,
+                        notification_class="ALERT",
                         user=user,
                         meta={
                             "content": "Your organization has added new stages, please log out and login to update your list"

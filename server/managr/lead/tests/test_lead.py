@@ -76,10 +76,12 @@ class LeadMessageTestCase(TestCase):
 
         # create 2 contacts and set them to each lead 1 to 1
         self.contact = ContactFactory(
-            account=self.account, phone_number_1="+18888888888"
+            organization=self.org, account=self.account, phone_number_1="+18888888888"
         )
         self.contact_1 = ContactFactory(
-            account=self.account_1, phone_number_1="+18888888888"
+            organization=self.org_1,
+            account=self.account_1,
+            phone_number_1="+18888888888",
         )
         self.lead.linked_contacts.add(self.contact)
         self.lead_1.linked_contacts.add(self.contact_1)

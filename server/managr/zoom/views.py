@@ -7,7 +7,7 @@ from datetime import datetime
 
 from django.shortcuts import render, redirect
 from django.conf import settings
-
+from rest_framework.views import APIView
 from rest_framework import (
     authentication,
     filters,
@@ -21,15 +21,23 @@ from rest_framework import (
 from rest_framework.decorators import (
     api_view,
     permission_classes,
+    authentication_classes,
 )
 
 
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.zoom.zoom_helper import constants as zoom_model_consts
-from managr.zoom.zoom_helper.models import ZoomAcct
-from .serializers import ZoomAuthRefSerializer, ZoomAuthSerializer
+from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
+from .models import ZoomAuthAccount, ZoomMeeting
+from .serializers import (
+    ZoomAuthRefSerializer,
+    ZoomAuthSerializer,
+    ZoomMeetingWebhookSerializer,
+    ZoomMeetingSerializer,
+)
 from . import constants as zoom_consts
 
 # Create your views here.
@@ -58,6 +66,14 @@ def get_zoom_authentication(request):
     return Response(data={"success": True})
 
 
+@api_view(["delete"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_zoom_access_token(request):
+    if hasattr(request.user, "zoom_account"):
+        request.user.zoom_account.delete()
+        return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
+
+
 def redirect_from_zoom(request):
     ## this is only for dev, since the redirect url to localhost will not work
     if settings.IN_DEV:
@@ -73,28 +89,45 @@ def redirect_from_zoom(request):
 
 
 @api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
-    if not event:
-        logger.info(f"Received and empty request form Zoom {request}")
-        return
-    if event in zoom_consts.MEETING_EVENTS_CREATED:
-        # get or create
-        return
-    elif event in zoom_consts.MEETING_EVENTS_DELETED:
-        # get or create to update
-        return
-    elif event in zoom_consts.MEETING_EVENT_STARTED:
-        # get or create to update
-        return
-    elif event in zoom_consts.MEETING_EVENT_ENDED:
-        # get or create
-        # send to task to go and get meeting meta and participants
-        #
-        # slack user
+    obj = request.data.get("payload", None)
 
-        return
-    return
+    # for v1 only tracking meeting.ended
+    if event == zoom_consts.MEETING_EVENT_ENDED:
+        extra_obj = obj.pop("object", {})
+        obj = {**obj, **extra_obj}
+        host_id = obj.get("host_id", None)
+        meeting_uuid = obj.get("uuid", None)
+        ### move all this to a background task, zoom requires response in 60s
+        zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+
+        if zoom_account:
+            meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
+            meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+            participants = meeting.as_dict.get("participants", None)
+            if participants:
+                user = zoom_account.user
+                participant_emails = [
+                    participant["user_email"] for participant in participants
+                ]
+                lead = user.claimed_leads.filter(
+                    linked_contacts__email__in=participant_emails
+                ).first()
+                # for v1 will only be able to assign to one lead
+                if lead:
+                    meeting.lead = lead.id
+                    serializer = ZoomMeetingSerializer(data=meeting.as_dict)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+
+        # retrieve meeting participants from zoom as background task
+
+        # save meeting now if it has the right people
+
+    return Response()
 
 
 ###### DEV ONLY CREATE MEETINGS ON THE FLY FOR TESTING WEBHOOK ENDPOINTS
@@ -117,7 +150,5 @@ def create_zoom_meeting(request):
                 "Authorization": f"Bearer {user_zoom_token}",
             },
         )
-        print(r.json())
-
         return Response()
 

@@ -25,14 +25,12 @@ class StoryReport(TimeStampModel):
     """
 
     lead = models.ForeignKey(
-        "lead.Lead",
-        related_name="story_reports",
-        on_delete=models.PROTECT,
-        null=False,
+        "lead.Lead", related_name="story_reports", on_delete=models.PROTECT, null=False,
     )
     data = JSONField(help_text="Content of the StoryReport", default=dict)
     datetime_generated = models.DateTimeField(
-        null=True, help_text="date time when the report was populated with computed data"
+        null=True,
+        help_text="date time when the report was populated with computed data",
     )
     generated_by = models.ForeignKey(
         "core.User",
@@ -48,6 +46,13 @@ class StoryReport(TimeStampModel):
     def client_side_url(self):
         base_app_url = get_site_url()
         return f"{base_app_url}/story-reports/{self.id}"
+
+    def emit_story_event(self, share_to_channel):
+        # from .story_report_generation import generate_story_report_data
+        from managr.core.background import emit_generate_story_report_on_close
+
+        emit_generate_story_report_on_close(self, share_to_channel)
+        # generate_story_report_data(self.id, share_to_channel=share_to_channel)
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -80,17 +85,17 @@ class PerformanceReport(TimeStampModel):
         on_delete=models.PROTECT,
         null=True,
         help_text="If populated, refers to the representative that is the focus of the report. "
-                  "If it is NULL, it means that this is an organization-wide (all representatives) report.",
+        "If it is NULL, it means that this is an organization-wide (all representatives) report.",
     )
     date_range_preset = models.CharField(
-        choices=report_const.DATE_RANGES,
-        max_length=255,
+        choices=report_const.DATE_RANGES, max_length=255,
     )
     date_range_from = models.DateTimeField()
     date_range_to = models.DateTimeField()
     data = JSONField(help_text="Content of the PerformanceReport", default=dict)
     datetime_generated = models.DateTimeField(
-        null=True, help_text="date time when the report was populated with computed data"
+        null=True,
+        help_text="date time when the report was populated with computed data",
     )
     generated_by = models.ForeignKey(
         "core.User",

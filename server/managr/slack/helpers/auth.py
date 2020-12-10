@@ -1,11 +1,11 @@
-import requests
-import json
 import os
+
+from django.conf import settings
 
 from managr.slack import constants as slack_const
 
 
-def get_headers(access_token):
+def auth_headers(access_token):
     return {
         "Authorization": "Bearer " + access_token,
         "Content-Type": "application/json; charset=utf-8",
@@ -13,50 +13,11 @@ def get_headers(access_token):
     }
 
 
-def request_access_token(code, redirect_uri):
-    url = slack_const.SLACK_API_ROOT + slack_const.OAUTH_V2_ACCESS
-    data = {
-        "code": code,
-        "redirect_uri": redirect_uri,
-        "client_id": os.environ.get("SLACK_CLIENT_ID"),
-        "client_secret": os.environ.get("SLACK_SECRET"),
-    }
-    headers = {
+def json_headers():
+    return {
+        "Content-Type": "application/json; charset=utf-8",
         "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
-    return requests.post(
-        url,
-        data=data,
-        headers=headers,
-    )
-
-
-def request_user_dm_channel(slack_id, access_token):
-    """
-    Request the Slack Channel ID for a 1:1 conversation
-    between the user and the Managr app
-    """
-    url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
-    data = {"users": slack_id}
-    return requests.post(
-        url,
-        data=json.dumps(data),
-        headers=get_headers(access_token),
-    )
-
-
-def dm_user(channel, text, access_token):
-    url = slack_const.SLACK_API_ROOT + slack_const.POST_MESSAGE
-    data = {
-        "channel": channel,
-        "text": text,
-    }
-    return requests.post(
-        url,
-        data=json.dumps(data),
-        headers=get_headers(access_token),
-    )
 
 
 class OAuthLinkBuilder:
@@ -74,7 +35,7 @@ class OAuthLinkBuilder:
 
     @property
     def client_id_param(self):
-        return "client_id=" + os.environ.get("SLACK_CLIENT_ID")
+        return "client_id=" + settings.SLACK_CLIENT_ID
 
     @property
     def redirect_uri_param(self):

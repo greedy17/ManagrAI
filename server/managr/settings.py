@@ -95,9 +95,7 @@ ROOT_URLCONF = "managr.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "../client/dist/"),
-        ],
+        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"),],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -142,13 +140,9 @@ AUTH_USER_MODEL = "core.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {
-            "min_length": 10,
-        },
+        "OPTIONS": {"min_length": 10,},
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
 #
@@ -249,9 +243,7 @@ LOGGING = {
     "disable_existing_loggers": True,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "require_debug_true": {
-            "()": "django.utils.log.RequireDebugTrue",
-        },
+        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue",},
     },
     "formatters": {
         "verbose": {
@@ -276,16 +268,10 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {
-            "handlers": ["console", "mail_admins"],
-            "level": "INFO",
-        },
+        "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
         # The logger name matters -- it MUST match the name of the app
         "managr": {
-            "handlers": [
-                "console",
-                "mail_admins",
-            ],
+            "handlers": ["console", "mail_admins",],
             "level": "DEBUG",
             "propagate": True,
         },
@@ -363,11 +349,39 @@ if USE_ZOOM:
         ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_DEV")
         ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_DEV")
         ZOOM_SECRET = _env_get_required("ZOOM_SECRET_DEV")
+        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_DEV")
     elif IN_STAGING:
         ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_STAGING")
         ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_STAGING")
         ZOOM_SECRET = _env_get_required("ZOOM_SECRET_STAGING")
+        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_STAGING")
     elif IN_PROD:
         ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_PROD")
         ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_PROD")
         ZOOM_SECRET = _env_get_required("ZOOM_SECRET_PROD")
+        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_PROD")
+
+USE_SLACK = os.environ.get("USE_SLACK") == "True"
+if USE_SLACK:
+    SLACK_SECRET = _env_get_required("SLACK_SECRET")
+    SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
+
+TEST_SLACK = os.environ.get("TEST_SLACK") == "True"
+if USE_SLACK and TEST_SLACK:
+    SLACK_TEST_TEAM_NAME = _env_get_required("SLACK_TEST_TEAM_NAME")
+    SLACK_TEST_TEAM_ID = _env_get_required("SLACK_TEST_TEAM_ID")
+    SLACK_TEST_BOT_USER_ID = _env_get_required("SLACK_TEST_BOT_USER_ID")
+    SLACK_TEST_ACCESS_TOKEN = _env_get_required("SLACK_TEST_ACCESS_TOKEN")
+    SLACK_TEST_INCOMING_WEBHOOK_URL = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_URL"
+    )
+    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL"
+    )
+    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID"
+    )
+    SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL"
+    )
+
