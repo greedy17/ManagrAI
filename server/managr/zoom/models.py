@@ -5,6 +5,8 @@ from django.utils import timezone
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
+from managr.lead.models import Forecast, Action, ActionChoice
+from managr.organization.models import Stage
 from managr.lead import constants as lead_consts
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -233,4 +235,54 @@ class MeetingReview(TimeStampModel):
         blank=True,
         null=True,
     )
+    prev_forecast = models.CharField(
+        choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
+    )
+    prev_stage = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+        help_text="The values must correspond to the values in the Stage model and by Org",
+    )
+    prev_expected_close_date = models.DateTimeField(
+        null=True, blank=True, max_length=255
+    )
+
+    def save(self, *args, **kwargs):
+        lead = self.meeting.lead
+
+        # adjust lead data based on these fields
+        if self.forecast_strength:
+            if hasattr(lead, "forecast"):
+                self.prev_forecast = lead.forecast.forecast
+                lead.forecast.forecast = self.forecast_strength
+
+            else:
+                Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
+            # update lead forcecase
+
+        if self.update_stage:
+            self.prev_stage = lead.status.id
+            lead.status = Stage.objects.filter(id=self.update_stage).first()
+
+            # update stage
+        if self.next_steps:
+            lead.secondary_description = self.next_steps
+            # update secondary desc
+
+        if self.meeting_type:
+            # create action from action choice
+            Action.objects.create(
+                lead=lead,
+                created_by=lead.claimed_by,
+                action_detail=self.description,
+                action_type=ActionChoice.objects.filter(id=self.meeting_type).first(),
+            )
+        if self.updated_close_date:
+            self.prev_expected_close_date = lead.expected_close_date
+            lead.expected_close_date = self.updated_close_date
+
+        lead.save()
+
+        return super(MeetingReview, self).save(*args, **kwargs)
 
