@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -39,6 +39,14 @@ class TimeStampModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ZoomWebhookAuthUser(AnonymousUser):
+    @property
+    def is_authenticated(self):
+        # this purposefully always returns True and gives us a user for the webhook auth
+        # the check for the token occurs in the custom authentication class
+        return True
 
 
 class UserQuerySet(models.QuerySet):

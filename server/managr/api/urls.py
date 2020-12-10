@@ -73,11 +73,7 @@ urlpatterns = [
         core_views.NylasAccountWebhook.as_view(),
         name="nylas_account_webhook",
     ),
-    path(
-        "polling/count",
-        poll_views.list_polling_counts,
-        name="list_polling_counts",
-    ),
+    path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
     path(
         "users/zoom/api/meetings",
         zoom_views.create_zoom_meeting,
@@ -93,7 +89,16 @@ urlpatterns = [
         zoom_views.get_zoom_auth_link,
         name="get_zoom_auth_link",
     ),
-    ## this is a dev/staging endpoint only for creating meetings for easier testing
+    path(
+        "users/zoom/revoke",
+        zoom_views.revoke_zoom_access_token,
+        name="revoke_zoom_access_token",
+    ),
+    path(
+        "zoom/webhooks/meetings",
+        zoom_views.zoom_meetings_webhook,
+        name="get_zoom_auth_link",
+    ),
 ]
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")

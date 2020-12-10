@@ -72,8 +72,13 @@ class ZoomAuthAccount(TimeStampModel):
         self.access_token = res.access_token
         self.refresh_token = res.refresh_token
 
+    def delete(self, *args, **kwargs):
+        ## revoking a token is the same as deleting
+        # - we no longer have a token to access data
+        # - cannot refresh a token
+        self.helper_class.revoke()
+        return super(ZoomAuthAccount, self).delete(*args, **kwargs)
 
-"""
 
 class ZoomMeeting(TimeStampModel):
     zoom_account = models.ForeignKey(
@@ -83,11 +88,11 @@ class ZoomMeeting(TimeStampModel):
     operator = models.EmailField()
     meeting_id = models.CharField(max_length=255, help_text="Aka meeting number")
     meeting_uuid = models.CharField(max_length=255, unique=True)
-    host_id = models.CharField(max_length=255)
-    topic = models.CharField(max_length=255)
+    host_id = models.CharField(max_length=255, null=True, blank=True)
+    topic = models.CharField(max_length=255, null=True, blank=True)
     type = models.PositiveSmallIntegerField()
-    start_time = models.DateTimeField()
-    duration = models.PositiveSmallIntegerField()
+    start_time = models.DateTimeField(null=True, blank=True)
+    duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
         max_length=255,
         blank=True,
@@ -99,6 +104,7 @@ class ZoomMeeting(TimeStampModel):
         JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
+        null=True,
         help_text="if recurring meeting",
     )
     password = models.CharField(max_length=255, blank=True, null=True)
@@ -115,6 +121,7 @@ class ZoomMeeting(TimeStampModel):
         JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
+        null=True,
         help_text="if recurring meeting",
     )
 
@@ -136,4 +143,47 @@ class ZoomMeeting(TimeStampModel):
         help_text="FUTURE DEVELOPMENT",
     )
 
-"""
+
+class MeetingReview(TimeStampModel):
+
+    # work required to get limit choices to by orgs not currently available
+    # could use thread locals or check on save method
+    # https://stackoverflow.com/questions/232435/how-do-i-restrict-foreign-keys-choices-to-related-objects-only-in-django
+
+    meeting = models.OneToOneField(
+        "ZoomMeeting",
+        on_delete=models.CASCADE,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    meeting_type = models.ForeignKey(
+        "lead.ActionChoice",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    forecast_strength = models.ForeignKey(
+        "lead.Forecast",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    update_stage = models.ForeignKey(
+        "organization.Stage",
+        on_delete=models.SET_NULL,
+        related_name="meeting_reviews",
+        blank=True,
+        null=True,
+    )
+    description = models.TextField(blank=True, null=True)
+    updated_close_date = models.DateTimeField(null=True, blank=True)
+    next_steps = models.TextField(blank=True, null=True)
+    sentiment = models.CharField(
+        max_length=255,
+        choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
+        default=zoom_consts.MEETING_SENTIMENT_NA,
+    )
+

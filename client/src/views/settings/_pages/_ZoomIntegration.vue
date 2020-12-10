@@ -1,7 +1,10 @@
 <template>
   <div class="zoom-integration">
     <button :disabled="$store.state.user.zoomAccount" @click="getZoomAuthLink">
-      Get Link
+      Integrate Zoom
+    </button>
+    <button :disabled="!$store.state.user.zoomAccount" @click="revokeAccess">
+      Revoke Access
     </button>
   </div>
 </template>
@@ -51,10 +54,29 @@ export default {
           window.location.href = res.link
         }
       } catch (e) {
-        console.log(e)
         this.generatingToken = false
         this.$Alert.alert({
           message: 'There was a problem generating your link',
+          type: 'error',
+          timeout: 3000,
+        })
+      }
+    },
+    async revokeAccess() {
+      this.generatingToken = true
+
+      try {
+        await ZoomAccount.api.revokeAccess()
+
+        await this.$store.dispatch('refreshCurrentUser')
+        this.$Alert.alert({
+          message: 'Successfully removed your integration with zoom',
+          type: 'success',
+          timeout: 3000,
+        })
+      } catch {
+        this.$Alert.alert({
+          message: 'There was an error removing your integration, please try again later',
           type: 'error',
           timeout: 3000,
         })
