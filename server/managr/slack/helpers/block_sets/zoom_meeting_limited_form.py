@@ -6,7 +6,7 @@ from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
-@block_set(required_context=["o", "l"])
+@block_set(required_context=["o", "l", "m"])
 def zoom_meeting_limited_form(context):
     lead = Lead.objects.get(pk=context.get("l"))
     stage = lead.status.as_slack_option if lead.status else None
@@ -34,8 +34,7 @@ def zoom_meeting_limited_form(context):
         block_builders.external_select(
             "*Update Stage*",
             action_with_params(
-                slack_const.GET_ORGANIZATION_STAGES,
-                params=[organization_id_param],
+                slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param],
             ),
             initial_option=stage,
             block_id="stage",

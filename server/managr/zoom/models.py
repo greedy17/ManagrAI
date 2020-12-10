@@ -2,9 +2,10 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
 
+
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-
+from managr.lead import constants as lead_consts
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
 
@@ -85,7 +86,7 @@ class ZoomMeeting(TimeStampModel):
         "ZoomAuthAccount", related_name="meetings", on_delete=models.CASCADE,
     )
     account_id = models.CharField(max_length=255, blank=True, null=True)
-    operator = models.EmailField()
+    operator = models.EmailField(null=True, blank=True)
     meeting_id = models.CharField(max_length=255, help_text="Aka meeting number")
     meeting_uuid = models.CharField(max_length=255, unique=True)
     host_id = models.CharField(max_length=255, null=True, blank=True)
@@ -99,7 +100,7 @@ class ZoomMeeting(TimeStampModel):
         null=True,
         help_text="Operation on all or single occurences",
     )
-    timezone = models.CharField(max_length=255)
+    timezone = models.CharField(max_length=255, null=True, blank=True)
     occurences = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -113,9 +114,11 @@ class ZoomMeeting(TimeStampModel):
         max_length=255,
         choices=zoom_consts.MEETING_STATUSES,
         help_text="Status of the meeting, only takes 2 values and is supplied by retrieve from zoom",
+        null=True,
+        blank=True,
     )
-    start_url = models.CharField(max_length=255)
-    join_url = models.CharField(max_length=255)
+    start_url = models.CharField(max_length=255, blank=True, null=True)
+    join_url = models.CharField(max_length=255, blank=True, null=True)
 
     recurrence = ArrayField(
         JSONField(max_length=128, default=dict),
@@ -143,6 +146,53 @@ class ZoomMeeting(TimeStampModel):
         help_text="FUTURE DEVELOPMENT",
     )
 
+    notification_attempts = models.PositiveSmallIntegerField(
+        help_text="We make an attempt immedietly and after 2 hours", default=0
+    )
+    scoring_in_progress = models.BooleanField(
+        default=False,
+        help_text="if an event is emitted to generate a score dont do it again",
+    )
+    current_interaction = models.PositiveSmallIntegerField(
+        default=1, help_text="current slack form"
+    )
+    is_closed = models.BooleanField(
+        default=False,
+        help_text="is closed is true when we expire attempts or a user has completed all steps",
+    )
+    latest_attempt = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    interaction_status = models.CharField(
+        choices=zoom_consts.MEETING_INTERACTION_STATUSES,
+        max_length=255,
+        default=zoom_consts.MEETING_INTERACTION_STATUS_NOT_STARTED,
+    )
+    participants_count = models.SmallIntegerField(null=True, blank=True)
+    total_minutes = models.SmallIntegerField(null=True, blank=True)
+
+    @property
+    def should_retry(self):
+        # is complete
+        # is_closed
+        # notification_attempts <=1
+        # latest_attempt > 2hrs
+        # if the latest attempt is 2 hours after the first attempt try again
+        two_hour_timeline = (timezone.now() - self.latest_attempt).seconds >= (
+            60 * 3600
+        )
+        return (
+            self.interaction_status != zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
+            or not self.is_closed
+            and (self.notification_attempts <= 1 and two_hour_timeline)
+        )
+
+    def retry_slack_integration(self):
+        # retries slack message at a step
+        from .background import _kick_off_slack_interaction
+
+        return _kick_off_slack_interaction(
+            str(self.zoom_account.user.id), str(self.id), self.current_interaction
+        )
+
 
 class MeetingReview(TimeStampModel):
 
@@ -153,37 +203,34 @@ class MeetingReview(TimeStampModel):
     meeting = models.OneToOneField(
         "ZoomMeeting",
         on_delete=models.CASCADE,
-        related_name="meeting_reviews",
+        related_name="meeting_review",
         blank=True,
         null=True,
     )
-    meeting_type = models.ForeignKey(
-        "lead.ActionChoice",
-        on_delete=models.SET_NULL,
-        related_name="meeting_reviews",
+    meeting_type = models.CharField(
         blank=True,
         null=True,
+        max_length=255,
+        help_text="The value must corespond to the values in the ActionChoice Model",
     )
-    forecast_strength = models.ForeignKey(
-        "lead.Forecast",
-        on_delete=models.SET_NULL,
-        related_name="meeting_reviews",
+    forecast_strength = models.CharField(
+        choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
+    )
+    update_stage = models.CharField(
         blank=True,
         null=True,
+        max_length=255,
+        help_text="The values must correspond to the values in the Stage model and by Org",
     )
-    update_stage = models.ForeignKey(
-        "organization.Stage",
-        on_delete=models.SET_NULL,
-        related_name="meeting_reviews",
-        blank=True,
-        null=True,
+    description = models.TextField(blank=True, null=True, max_length=255)
+    updated_close_date = models.DateTimeField(null=True, blank=True, max_length=255)
+    next_steps = models.TextField(
+        blank=True, null=True, help_text="populates secondary description"
     )
-    description = models.TextField(blank=True, null=True)
-    updated_close_date = models.DateTimeField(null=True, blank=True)
-    next_steps = models.TextField(blank=True, null=True)
     sentiment = models.CharField(
         max_length=255,
         choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
-        default=zoom_consts.MEETING_SENTIMENT_NA,
+        blank=True,
+        null=True,
     )
 

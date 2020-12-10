@@ -8,11 +8,15 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import action_with_params, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
 
+from managr.zoom import constants as zoom_consts
+from managr.zoom.background import emit_save_meeting_review_data
+
 
 @processor(
     required_context=[
         "o",
         "l",
+        "m",
         "original_message_channel",
         "original_message_timestamp",
     ]
@@ -59,13 +63,16 @@ def process_zoom_meeting_great_submit(payload, context):
     next_step = next_step_state[a_id]["value"]
 
     data = {
+        "sentiment": zoom_consts.MEETING_SENTIMENT_GREAT,
+        "meeting_id": context.get("m", None),
         "meeting_type": meeting_type,
         "stage": stage,
         "forecast": forecast,
         "description": description,
         "expected_close_date": expected_close_date,
-        "next_step": next_step,
+        "next_steps": next_step,
     }
+    emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
     # NOTE: stage/forecast may be the original stage and therefore unchanged.
     # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
@@ -93,6 +100,7 @@ def process_zoom_meeting_great_submit(payload, context):
     required_context=[
         "o",
         "l",
+        "m",
         "original_message_channel",
         "original_message_timestamp",
     ]
@@ -131,6 +139,8 @@ def process_zoom_meeting_not_well_submit(payload, context):
     next_step = next_step_state[a_id]["value"]
 
     data = {
+        "sentiment": zoom_consts.MEETING_SENTIMENT_NOT_WELL,
+        "meeting_id": context.get("m", None),
         "meeting_type": meeting_type,
         "stage": stage,
         "description": description,
@@ -138,6 +148,7 @@ def process_zoom_meeting_not_well_submit(payload, context):
     }
 
     # NOTE: stage may be the original stage and therefore unchanged.
+    emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
     block_set_context = {
         "l": context["l"],
