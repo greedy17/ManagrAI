@@ -1,3 +1,5 @@
+import jwt
+from datetime import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
@@ -58,15 +60,32 @@ class ZoomAuthAccount(TimeStampModel):
 
     @property
     def helper_class(self):
+        if self.is_token_expired and self.is_refresh_token_expired:
+            self.delete()
+
+        elif self.is_token_expired and not self.is_refresh_token_expired:
+            self.refresh_token()
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return ZoomAcct(**data)
 
     @property
-    def is_expired(self):
-        return self.token_generated_date < timezone.now()
+    def is_refresh_token_expired(self):
+        if self.refresh_token:
+            decoded = jwt.decode(self.refresh_token, verify=False)
+            exp = datetime.fromtimestamp(decoded["exp"])
+            return exp <= (timezone.now() - timezone.timedelta(minutes=5))
+        return True
 
-    def generate_token(self):
+    @property
+    def is_token_expired(self):
+        if self.access_token:
+            decoded = jwt.decode(self.access_token, verify=False)
+            exp = datetime.fromtimestamp(decoded["exp"])
+            return exp <= (timezone.now() - timezone.timedelta(minutes=5))
+        return True
+
+    def refresh_token(self):
         res = self.helper_class.refresh_token()
         self.token_generated_date = timezone.now()
         self.access_token = res.access_token
@@ -75,8 +94,15 @@ class ZoomAuthAccount(TimeStampModel):
     def delete(self, *args, **kwargs):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data
-        # - cannot refresh a token
-        self.helper_class.revoke()
+        # - cannot refresh a token if it is also expired
+
+        if self.is_refresh_token_expired and self.is_token_expired:
+            pass
+        elif self.is_token_expired and not self.is_refresh_token_expired:
+            # first refresh and then revoke
+            self.refresh_token()
+            self.helper_class.revoke_token()
+
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
 
 
