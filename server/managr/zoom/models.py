@@ -1,4 +1,5 @@
 import jwt
+import pytz
 from datetime import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -64,7 +65,7 @@ class ZoomAuthAccount(TimeStampModel):
             self.delete()
 
         elif self.is_token_expired and not self.is_refresh_token_expired:
-            self.refresh_token()
+            self.regenerate_token()
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return ZoomAcct(**data)
@@ -73,7 +74,8 @@ class ZoomAuthAccount(TimeStampModel):
     def is_refresh_token_expired(self):
         if self.refresh_token:
             decoded = jwt.decode(self.refresh_token, verify=False)
-            exp = datetime.fromtimestamp(decoded["exp"])
+            exp = pytz.utc.localize(datetime.fromtimestamp(decoded["exp"]))
+
             return exp <= (timezone.now() - timezone.timedelta(minutes=5))
         return True
 
@@ -82,14 +84,20 @@ class ZoomAuthAccount(TimeStampModel):
         if self.access_token:
             decoded = jwt.decode(self.access_token, verify=False)
             exp = datetime.fromtimestamp(decoded["exp"])
+            exp = pytz.utc.localize(datetime.fromtimestamp(decoded["exp"]))
             return exp <= (timezone.now() - timezone.timedelta(minutes=5))
         return True
 
-    def refresh_token(self):
-        res = self.helper_class.refresh_token()
+    def regenerate_token(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+
+        helper = ZoomAcct(**data)
+        res = helper.refresh_access_token()
         self.token_generated_date = timezone.now()
-        self.access_token = res.access_token
-        self.refresh_token = res.refresh_token
+        self.access_token = res.get("access_token", None)
+        self.refresh_token = res.get("refresh_token", None)
+        self.save()
 
     def delete(self, *args, **kwargs):
         ## revoking a token is the same as deleting
@@ -100,8 +108,10 @@ class ZoomAuthAccount(TimeStampModel):
             pass
         elif self.is_token_expired and not self.is_refresh_token_expired:
             # first refresh and then revoke
-            self.refresh_token()
-            self.helper_class.revoke_token()
+            self.regenerate_token()
+            self.helper_class.revoke()
+        else:
+            self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
 

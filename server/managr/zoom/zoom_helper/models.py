@@ -102,7 +102,7 @@ class ZoomAcct:
     def as_dict(self):
         return vars(self)
 
-    def refresh_token(self):
+    def refresh_access_token(self):
         query = zoom_model_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
         ## error handling here
