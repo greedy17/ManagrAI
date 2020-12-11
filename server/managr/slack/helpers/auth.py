@@ -1,8 +1,54 @@
 import os
-
+import math
+import hmac
+import hashlib
+from datetime import datetime
 from django.conf import settings
+from django.utils import timezone
 
+from rest_framework import authentication
+from rest_framework import exceptions
+
+from managr.core.models import WebhookAuthUser
 from managr.slack import constants as slack_const
+
+
+class SlackWebhookAuthentication(authentication.BaseAuthentication):
+    def _check_time_stamp(self, rqst):
+        time_stamp = rqst.headers.get("X-Slack-Request-Timestamp", None)
+        if not time_stamp:
+            raise exceptions.AuthenticationFailed("Invalid token header")
+        is_expired = int(time_stamp) <= math.floor(
+            datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
+        )
+        if is_expired:
+            raise exceptions.AuthenticationFailed("Expired Request")
+
+        return time_stamp
+
+    def authenticate(self, request):
+        time_stamp = self._check_time_stamp(request)
+        slack_signature = request.headers.get("X-Slack-Signature", None)
+        if not slack_signature:
+            raise exceptions.AuthenticationFailed("Invalid or Missing Token")
+        data = request.body.decode("utf-8")
+        sig_basedstring = (
+            f"{slack_const.SLACK_APP_VERSION}:{time_stamp}:{data}"
+        ).encode("utf-8")
+        my_sig = (
+            slack_const.SLACK_APP_VERSION
+            + "="
+            + hmac.new(
+                slack_const.SLACK_SIGNING_SECRET.encode("utf-8"),
+                sig_basedstring,
+                hashlib.sha256,
+            ).hexdigest()
+        )
+        if hmac.compare_digest(my_sig, slack_signature):
+            user = WebhookAuthUser()
+            return user, None
+
+        raise exceptions.AuthenticationFailed("Invalid Token")
 
 
 def auth_headers(access_token):
