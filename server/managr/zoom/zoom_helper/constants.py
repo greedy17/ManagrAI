@@ -43,7 +43,7 @@ AUTHENTICATION_QUERY_PARAMS = lambda x: {
 }
 REAUTHENTICATION_QUERY_PARAMS = lambda x: {
     "grant_type": "refresh_token",
-    "code": x,
+    "refresh_token": x,
 }
 
 ZOOM_CLIENT_ID = settings.ZOOM_CLIENT_ID
