@@ -91,7 +91,7 @@ def redirect_from_zoom(request):
 
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
-# @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)

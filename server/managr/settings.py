@@ -345,26 +345,19 @@ if USE_TWILIO:
 
 USE_ZOOM = os.environ.get("USE_ZOOM") == "True"
 if USE_ZOOM:
-    if IN_DEV:
-        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_DEV")
-        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_DEV")
-        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_DEV")
-        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_DEV")
-    elif IN_STAGING:
-        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_STAGING")
-        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_STAGING")
-        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_STAGING")
-        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_STAGING")
-    elif IN_PROD:
-        ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI_PROD")
-        ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID_PROD")
-        ZOOM_SECRET = _env_get_required("ZOOM_SECRET_PROD")
-        ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN_PROD")
+
+    ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI")
+    ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID")
+    ZOOM_SECRET = _env_get_required("ZOOM_SECRET")
+    ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN")
+
 
 USE_SLACK = os.environ.get("USE_SLACK") == "True"
 if USE_SLACK:
     SLACK_SECRET = _env_get_required("SLACK_SECRET")
     SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
+    SLACK_SIGNING_SECRET = _env_get_required("SLACK_SIGNING_SECRET")
+    SLACK_APP_VERSION = _env_get_required("SLACK_APP_VERSION")
 
 TEST_SLACK = os.environ.get("TEST_SLACK") == "True"
 if USE_SLACK and TEST_SLACK:

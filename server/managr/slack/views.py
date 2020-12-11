@@ -172,6 +172,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     @action(
         methods=["post"],
         permission_classes=[],
+        authentication_classes=(slack_auth.SlackWebhookAuthentication,),
         detail=False,
         url_path="interactive-endpoint",
     )
