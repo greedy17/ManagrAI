@@ -41,7 +41,7 @@ class TimeStampModel(models.Model):
         abstract = True
 
 
-class ZoomWebhookAuthUser(AnonymousUser):
+class WebhookAuthUser(AnonymousUser):
     @property
     def is_authenticated(self):
         # this purposefully always returns True and gives us a user for the webhook auth

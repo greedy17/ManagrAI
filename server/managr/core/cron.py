@@ -2,6 +2,7 @@ import logging
 import kronos
 import requests
 import datetime
+import random
 
 from django.utils import timezone
 from django.db.models import Q
@@ -17,6 +18,8 @@ from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
 from managr.lead.lead_score_generation import generate_lead_scores
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
+
+from managr.zoom.models import ZoomMeeting
 
 from .nylas.emails import send_system_email
 
@@ -608,4 +611,24 @@ def revoke_tokens():
 @kronos.register("59 23 * * *")
 def _generate_lead_scores():
     generate_lead_scores()
+
+
+def generate_meeting_scores():
+    meetings = ZoomMeeting.objects.select_related("meeting_review").filter(
+        meeting_score__isnull=True, is_closed=True
+    )
+    for meeting in meetings:
+        meeting.score = random.randint(0, 95)
+        meeting.score.save()
+        user = meeting.zoom_account.user
+        if user.send_email_to_integrate_slack:
+            _send_slack_int_email(user)
+        if hasattr(user, "slack_integration"):
+            user_slack_channel = user.slack_integration.channel
+            slack_org_access_token = user.organization.slack_integration.access_token
+            slack_requests.send_channel_message(
+                user_slack_channel,
+                slack_org_access_token,
+                block_set=get_block_set("meeting_review_score", {"m": str(meeting.id)}),
+            )
 
