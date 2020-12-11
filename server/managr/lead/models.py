@@ -12,6 +12,9 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
+from managr.report.models import StoryReport
+
+# from managr.core import background as bg_task
 from . import constants as lead_constants
 
 
@@ -212,7 +215,7 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        if self.amount < 0:
+        if float(self.amount) < 0:
             raise ValidationError(
                 {
                     "non_form_errors": {
@@ -220,7 +223,7 @@ class Lead(TimeStampModel):
                     }
                 }
             )
-        if self.closing_amount < 0:
+        if float(self.closing_amount) < 0:
             raise ValidationError(
                 {
                     "non_form_errors": {
@@ -228,6 +231,15 @@ class Lead(TimeStampModel):
                     }
                 }
             )
+        if (
+            self.status
+            and self.status.title == lead_constants.LEAD_STATUS_CLOSED
+            and self.status.type == "PUBLIC"
+        ):
+            # emit generate a story report and notify the slack DM
+            report = StoryReport.objects.create(lead=self, generated_by=self.claimed_by)
+            report.emit_story_event(True)
+
         return super(Lead, self).save(*args, **kwargs)
 
 
@@ -515,13 +527,9 @@ class NotificationQuerySet(models.QuerySet):
 
 
 class Notification(TimeStampModel):
-    """
-    Pari: There are various types of notifications (that are not going to be built until V2)
-    in order to handle all notification in one central location we are creating a quick
-    version here.
-
-    One of those notifications is a reminder, in order to be reminded of a reminder it
-    must have a notification attached to it.
+    """ By default Notifications will only return alerts 
+        We also will allow the code to access all types of notificaitons 
+        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
     """
 
     notify_at = models.DateTimeField(
@@ -546,7 +554,11 @@ class Notification(TimeStampModel):
         null=True,
         help_text="Id of the resource if it is an email it will be the thread id",
     )
-
+    notification_class = models.CharField(
+        max_length=255,
+        help_text="Classification of notification, email, alert, slack",
+        choices=core_consts.NOTIFICATION_TYPES,
+    )
     viewed = models.BooleanField(blank=False, null=False, default=False)
     meta = JSONField(help_text="Details about the notification", default=dict)
     user = models.ForeignKey(

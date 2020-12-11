@@ -6,6 +6,8 @@ import binascii
 
 import pdb
 
+from django.conf import settings
+
 from managr.slack.models import UserSlackIntegration
 
 
@@ -19,7 +21,7 @@ def create_sha256_signature(key, message):
 
 # NOTE: this method does not work yet
 def validate_slack_request(request):
-    slack_app_secret = os.environ.get("SLACK_SECRET")
+    slack_app_secret = settings.SLACK_SECRET
     timestamp = request.headers["X-Slack-Request-Timestamp"]
     slack_signature = request.headers["X-Slack-Signature"]
 

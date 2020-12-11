@@ -11,15 +11,17 @@ from managr.slack.helpers.utils import (
 # TODO: this and other zoom-flow block_sets will likely need "m" for meeting ID
 
 
-@block_set(required_context=["o", "u", "l"])
+@block_set(required_context=["o", "u", "l", "m"])
 def zoom_meeting_initial(context):
     lead = Lead.objects.get(pk=context["l"])
     primary_description = lead.primary_description or "No Primary Description"
     secondary_description = lead.secondary_description or "No Secondary Description"
-
+    meeting = lead.meetings.filter(id=context["m"]).first()
     # make params here
     user_id_param = "u=" + context["u"]
     lead_id_param = "l=" + context["l"]
+    meeting_id_param = "m=" + context["m"]
+
     organization_id_param = "o=" + context["o"]
 
     return [
@@ -35,7 +37,7 @@ def zoom_meeting_initial(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*<fakeLink.toUserProfiles.com|Zoom Meeting Title Here>*\nTuesday, January 21 4:00-4:30pm\nBuilding 2 - Havarti Cheese (3)\n2 guests",
+                "text": f"*<fakeLink.toUserProfiles.com|{meeting.topic}>*\nTuesday, January 21 4:00-4:30pm\nBuilding 2 - Havarti Cheese (3)\n2 guests",
             },
             "accessory": {
                 "type": "image",
@@ -66,31 +68,40 @@ def zoom_meeting_initial(context):
                     "value": slack_const.ZOOM_MEETING__GREAT,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__GREAT,
-                        params=[user_id_param, lead_id_param, organization_id_param],
+                        params=[
+                            user_id_param,
+                            lead_id_param,
+                            organization_id_param,
+                            meeting_id_param,
+                        ],
                     ),
                 },
                 {
                     "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Not well...",
-                    },
+                    "text": {"type": "plain_text", "text": "Not well...",},
                     "value": slack_const.ZOOM_MEETING__NOT_WELL,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__NOT_WELL,
-                        params=[user_id_param, lead_id_param, organization_id_param],
+                        params=[
+                            user_id_param,
+                            lead_id_param,
+                            organization_id_param,
+                            meeting_id_param,
+                        ],
                     ),
                 },
                 {
                     "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Different Opportunity",
-                    },
+                    "text": {"type": "plain_text", "text": "Different Opportunity",},
                     "value": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
                     "action_id": action_with_params(
                         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
-                        params=[user_id_param, lead_id_param, organization_id_param],
+                        params=[
+                            user_id_param,
+                            lead_id_param,
+                            organization_id_param,
+                            meeting_id_param,
+                        ],
                     ),
                 },
             ],

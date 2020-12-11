@@ -1,3 +1,6 @@
+import random
+from django.core.management.base import BaseCommand
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -57,3 +60,25 @@ def get_site_url():
     return "{0}://{1}{2}".format(
         protocol, domain, f":{settings.CURRENT_PORT}" if settings.CURRENT_PORT else ""
     )
+
+
+def query_debugger(func):
+    @functools.wraps(func)
+    def inner_func(*args, **kwargs):
+
+        reset_queries()
+
+        start_queries = len(connection.queries)
+
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+
+        end_queries = len(connection.queries)
+
+        print(f"Function : {func.__name__}")
+        print(f"Number of Queries : {end_queries - start_queries}")
+        print(f"Finished in : {(end - start):.2f}s")
+        return result
+
+    return inner_func

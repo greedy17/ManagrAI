@@ -41,7 +41,7 @@ class TimeStampModel(models.Model):
         abstract = True
 
 
-class ZoomWebhookAuthUser(AnonymousUser):
+class WebhookAuthUser(AnonymousUser):
     @property
     def is_authenticated(self):
         # this purposefully always returns True and gives us a user for the webhook auth
@@ -195,6 +195,16 @@ class User(AbstractUser, TimeStampModel):
     @property
     def unviewed_notifications_count(self):
         return self.notifications.filter(viewed=False).count()
+
+    @property
+    def send_email_to_integrate_slack(self):
+        """ 
+            if a users org has slack integrated but the user does not
+            we send an email to remind them to integrate, to received notifs
+        """
+        return not hasattr(self, "slack_integration") and hasattr(
+            self.organization, "slack_integration"
+        )
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""

@@ -344,10 +344,7 @@ class UserViewSet(
             # will add try catch TODO:-PB 07/28
             try:
                 msg = send_message(
-                    body,
-                    sender,
-                    recipient,
-                    has_auth_account.status_callback,
+                    body, sender, recipient, has_auth_account.status_callback,
                 )
                 message_id = msg.sid
 
@@ -475,9 +472,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
@@ -731,6 +726,7 @@ class TwilioMessageWebhook(APIView):
                         title="Message Received",
                         notification_type="MESSAGE",
                         resource_id=str(lead_message.id),
+                        notification_class="ALERT",
                         user=u,
                         meta={
                             "content": body,
@@ -746,9 +742,7 @@ class TwilioMessageWebhook(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def list_available_twilio_numbers(request):
     region = request.query_params.get("region", None)
@@ -758,9 +752,7 @@ def list_available_twilio_numbers(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def list_twilio_messages(request):
 
@@ -805,9 +797,7 @@ def list_twilio_messages(request):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def message_status(request):
     # get the message sid and status
@@ -836,9 +826,7 @@ def message_status(request):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     """Nylas OAuth callback.

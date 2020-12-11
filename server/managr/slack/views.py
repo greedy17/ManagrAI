@@ -36,9 +36,7 @@ TEMPORARY_CONTEXT = {
 }  # for dev purposes
 
 
-class SlackViewSet(
-    viewsets.GenericViewSet,
-):
+class SlackViewSet(viewsets.GenericViewSet,):
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -174,6 +172,7 @@ class SlackViewSet(
     @action(
         methods=["post"],
         permission_classes=[],
+        authentication_classes=(slack_auth.SlackWebhookAuthentication,),
         detail=False,
         url_path="interactive-endpoint",
     )
@@ -184,11 +183,6 @@ class SlackViewSet(
         The body of that request will contain a JSON payload parameter.
         Will have a TYPE field that is used to handle request accordingly.
         """
-        # TODO: verify is from Slack
-        # https://api.slack.com/authentication/verifying-requests-from-slack
-        # NOTE: current implementation below does not work
-        # if not validate_slack_request(request):
-        #     return Response(status=status.HTTP_401_UNAUTHORIZED)
         payload = json.loads(request.data.get("payload"))
         process_output = slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_200_OK, data=process_output)

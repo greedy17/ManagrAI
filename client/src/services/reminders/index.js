@@ -19,6 +19,8 @@ export default class Reminder {
     datetimeFor = null,
     createdByRef = null,
     updatedByRef = null,
+    linkedContacts = [],
+    linkedContactsRef = [],
   } = {}) {
     Object.assign(this, {
       id,
@@ -34,6 +36,8 @@ export default class Reminder {
       datetimeFor,
       createdByRef,
       updatedByRef,
+      linkedContacts,
+      linkedContactsRef,
     })
   }
 

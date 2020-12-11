@@ -238,5 +238,112 @@
       "resource": "OPPORTUNITY",
       "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_30_DAYS"
     }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "d9c83da9-832b-496a-a27c-1db1e9318875",
+    "fields": {
+      "title": "Reports",
+      "description": "Turn On/Off Slack Notifications for generated Reports",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "REPORTS",
+      "key": "REPORT_GENERATED"
+    }
+  },
+
+  {
+    "model": "core.NotificationOption",
+    "pk": "383c0457-41d2-48d3-a7e8-049c8a69f728",
+    "fields": {
+      "title": "Reminders for opportunities",
+      "description": "Turn On/Off Slack Notifications for Reminders",
+      "default_value": true,
+      "user_groups": ["MANAGER", "REP"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_REMINDER"
+    }
+  },
+
+  {
+    "model": "core.NotificationOption",
+    "pk": "6eff0954-41fc-4c3a-80e2-1ae595ef138b",
+    "fields": {
+      "title": "Opportunity Stalled in Stage",
+      "description": "Turn On/Off Slack Notifications When an opportunity is stalled in a stage for 60days+ ",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_STALLED_IN_STAGE"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "7900d747-0b23-4e23-adfc-161089f569be",
+    "fields": {
+      "title": "Opportunity Inactive",
+      "description": "Turn On/Off Slack Notifications When an opportunity has no recorded activity in a stage for 90days+ ",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_INACTIVE_90_DAYS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "1490266c-f888-4594-a408-f946307560f7",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 1 day",
+      "description": "Turn On/Off Slack Notifications When an opportunity expected close date has lapsed by 1 day",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_1_DAY"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "7622f0be-1f40-42aa-86ff-207f526cbc46",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 14 days",
+      "description": "Turn On/Off Slack Notifications When an opportunity expected close date has lapsed by at least 14 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_14_DAYS"
+    }
+  },
+  {
+    "model": "core.NotificationOption",
+    "pk": "589bd096-7947-4397-a406-db03614f6b24",
+    "fields": {
+      "title": "Opportunity expected close date lapsed by at least 30 days",
+      "description": "Turn On/Off Slack Notifications When an opportunity expected close date has lapsed by at least 30 days",
+      "default_value": true,
+      "user_groups": ["MANAGER"],
+      "notification_type": "SLACK",
+      "datetime_created": "2020-06-09T17:38:38.085Z",
+      "last_edited": "2020-06-09T17:38:38.085Z",
+      "resource": "OPPORTUNITY",
+      "key": "OPPORTUNITY_LAPSED_CLOSE_DATE_30_DAYS"
+    }
   }
 ]

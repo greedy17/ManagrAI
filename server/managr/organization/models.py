@@ -327,6 +327,7 @@ class Stage(TimeStampModel):
                         title="Stages Updated",
                         notification_type="SYSTEM",
                         resource_id=self.id,
+                        notification_class="ALERT",
                         user=user,
                         meta={
                             "content": "Your organization has added new stages, please log out and login to update your list"

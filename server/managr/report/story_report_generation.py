@@ -8,27 +8,27 @@ from django.db.models import Q
 from managr.core.models import EmailAuthAccount
 from managr.core.nylas.emails import send_new_email_legacy
 from managr.lead import constants as lead_constants
-from managr.lead.models import ActionChoice, Action, Lead
+from managr.lead.models import ActionChoice, Action
 from managr.organization import constants as org_constants
 from managr.organization.models import Contact, Stage
 from managr.organization.serializers import ContactSerializer
 from managr.utils.sites import get_site_url
+from managr.slack.helpers.requests import generic_request, send_channel_message
+from managr.slack.helpers.block_sets import get_block_set
 
 from .models import StoryReport
 
 logger = logging.getLogger("managr")
 
 
-def generate_story_report_data(story_report_id):
+def generate_story_report_data(story_report_id, share_to_channel=False):
     """
     Given a StoryReport UUID, generate the report's
     data and update the instance with the generated data.
     Finally, trigger email regarding report availability to
     user that triggered this story_report to be generated.
     """
-    story_report = StoryReport.objects.get(
-        pk=story_report_id
-    )
+    story_report = StoryReport.objects.get(pk=story_report_id)
 
     lead = story_report.lead
     if lead.status.title != lead_constants.LEAD_STATUS_CLOSED:
@@ -48,6 +48,20 @@ def generate_story_report_data(story_report_id):
         story_report.save()
         # send email to user that generated report
         send_email(story_report)
+        ## auto shares to channel if a lead is closed
+        if share_to_channel:
+            org = lead.account.organization
+            if hasattr(org, "slack_integration"):
+                block_set = get_block_set(
+                    "opp_closed_report_generated",
+                    {"l": str(lead.id), "r": str(story_report.id)},
+                )
+                send_channel_message(
+                    org.slack_integration.incoming_webhook["channel"],
+                    org.slack_integration.access_token,
+                    block_set=block_set,
+                )
+
     except Exception as e:
         # TODO (Bruno 09-22-2020):
         # Send an email to user that generated report notifying of failure?
@@ -120,7 +134,8 @@ class LeadDataGenerator(BaseGenerator):
         # take place on lead creation. Hence conditional herein.
         try:
             start_event = self._lead.activity_logs.filter(
-                Q(activity=lead_constants.LEAD_CLAIMED) | Q(activity=lead_constants.LEAD_RESET)
+                Q(activity=lead_constants.LEAD_CLAIMED)
+                | Q(activity=lead_constants.LEAD_RESET)
             ).first()
             if start_event:
                 return start_event.action_timestamp
@@ -144,7 +159,7 @@ class LeadDataGenerator(BaseGenerator):
             # as this would not make sense
             status = Stage.objects.get(
                 title=lead_constants.LEAD_STATUS_READY,
-                type=org_constants.STAGE_TYPE_PUBLIC
+                type=org_constants.STAGE_TYPE_PUBLIC,
             )
 
             # get activity log
@@ -175,7 +190,7 @@ class LeadDataGenerator(BaseGenerator):
             # as this would not make sense
             status = Stage.objects.get(
                 title=lead_constants.LEAD_STATUS_BOOKED,
-                type=org_constants.STAGE_TYPE_PUBLIC
+                type=org_constants.STAGE_TYPE_PUBLIC,
             )
 
             # get activity log
@@ -205,7 +220,7 @@ class LeadDataGenerator(BaseGenerator):
             # as this would not make sense
             status = Stage.objects.get(
                 title=lead_constants.LEAD_STATUS_DEMO,
-                type=org_constants.STAGE_TYPE_PUBLIC
+                type=org_constants.STAGE_TYPE_PUBLIC,
             )
 
             # get activity log
@@ -348,13 +363,15 @@ class LeadDataGenerator(BaseGenerator):
         """
         Generate count of actions for lead, performed by representative that closed the lead.
         """
-        return self.lead_activity_logs.filter(
-            lead=self._lead,
-            action_taken_by=self._representative,
-            datetime_created__gte=self.start_timestamp
-        ).exclude(
-            activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY
-        ).count()
+        return (
+            self.lead_activity_logs.filter(
+                lead=self._lead,
+                action_taken_by=self._representative,
+                datetime_created__gte=self.start_timestamp,
+            )
+            .exclude(activity__in=lead_constants.ACTIVITIES_TO_EXCLUDE_FROM_HISTORY)
+            .count()
+        )
 
     @property
     def days_to_closed(self):
@@ -409,8 +426,8 @@ class LeadDataGenerator(BaseGenerator):
             "call_count": self.call_count,
             "text_count": self.text_count,
             "email_count": self.email_count,
-            "custom_action_counts": self.custom_action_counts, # now 'actions'
-            "action_count": self.action_count, # now 'activities'
+            "custom_action_counts": self.custom_action_counts,  # now 'actions'
+            "action_count": self.action_count,  # now 'activities'
         }
 
 
@@ -419,6 +436,7 @@ class RepresentativeDataGenerator(BaseGenerator):
     Generates representative-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+
     def __init__(self, lead):
         self.__cached__leads = None
         super().__init__(lead)
@@ -426,11 +444,12 @@ class RepresentativeDataGenerator(BaseGenerator):
     @property
     def leads(self):
         if self.__cached__leads is None:
-            closed_leads = Lead.objects.filter(
-                claimed_by=self._representative,
-                status__title=lead_constants.LEAD_STATUS_CLOSED,
+            closed_leads = self._representative.claimed_leads.filter(
+                status__title=lead_constants.LEAD_STATUS_CLOSED, status__type="PUBLIC"
             )
-            self.__cached__leads = [LeadDataGenerator(lead).as_dict for lead in closed_leads]
+            self.__cached__leads = [
+                LeadDataGenerator(lead).as_dict for lead in closed_leads
+            ]
         return self.__cached__leads
 
     def average_for(self, property, rounding_places=0, as_integer=True):
@@ -482,8 +501,10 @@ class RepresentativeDataGenerator(BaseGenerator):
             "average_call_count": self.average_for("call_count"),
             "average_text_count": self.average_for("text_count"),
             "average_email_count": self.average_for("email_count"),
-            "average_custom_action_counts": self.average_custom_action_counts, # now 'actions'
-            "average_action_count": self.average_for("action_count"), # now 'activities'
+            "average_custom_action_counts": self.average_custom_action_counts,  # now 'actions'
+            "average_action_count": self.average_for(
+                "action_count"
+            ),  # now 'activities'
         }
 
 
@@ -492,6 +513,7 @@ class OrganizationDataGenerator(BaseGenerator):
     Generates organization-level metrics for StoryReport.
     Final output is the self.as_dict method.
     """
+
     def __init__(self, lead):
         self.__cached__representatives = None
         super().__init__(lead)
@@ -503,8 +525,8 @@ class OrganizationDataGenerator(BaseGenerator):
         return self.__cached__representatives
 
     def generate_representative_leads(self, representative):
-        closed_leads = Lead.objects.filter(
-            claimed_by=representative, status__title=lead_constants.LEAD_STATUS_CLOSED,
+        closed_leads = representative.claimed_leads.filter(
+            status__title=lead_constants.LEAD_STATUS_CLOSED, status__type="PUBLIC"
         )
         return [LeadDataGenerator(lead).as_dict for lead in closed_leads]
 
