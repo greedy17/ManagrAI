@@ -31,6 +31,7 @@ def process_zoom_meeting_great_submit(payload, context):
     next_step_state = state["next_step"]
 
     organization_id_param = "o=" + context["o"]
+    zoom_meeting_id_param = "m=" + context.get("m")
     a_id = action_with_params(
         slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
     )
@@ -78,9 +79,7 @@ def process_zoom_meeting_great_submit(payload, context):
     # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
     #       if it is one of lead_const.FORECAST_CHOICES then it is a new selection.
 
-    block_set_context = {
-        "l": context["l"],
-    }
+    block_set_context = {"l": context["l"], "m": context["m"]}
 
     access_token = (
         Organization.objects.select_related("slack_integration")
@@ -150,9 +149,7 @@ def process_zoom_meeting_not_well_submit(payload, context):
     # NOTE: stage may be the original stage and therefore unchanged.
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
-    block_set_context = {
-        "l": context["l"],
-    }
+    block_set_context = {"l": context["l"], "m": context["m"]}
 
     access_token = (
         Organization.objects.select_related("slack_integration")

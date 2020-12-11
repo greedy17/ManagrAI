@@ -2,6 +2,7 @@ import pdb
 
 from managr.core.models import User
 from managr.lead.models import Lead, Notification, Reminder
+from managr.zoom.models import ZoomMeeting
 from managr.report.models import StoryReport
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set
@@ -62,6 +63,29 @@ def opp_inactive_block_set(context):
                 "text": {
                     "type": "mrkdwn",
                     "text": f"<@{user.slack_integration.slack_id}>  *{message}*",
+                },
+            },
+        ]
+
+
+@block_set(required_context=["m"])
+def meeting_review_score(context):
+    # Bruno created decorator required context l= lead, u= user m=message
+    # slack mentions format = <@slack_id>
+
+    meeting = (
+        ZoomMeeting.objects.select_related("slack_integration")
+        .filter(id=context.get("m"))
+        .first()
+    )
+    user = meeting.zoom_account.user
+    if meeting:
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"<@{user.slack_integration.slack_id}>  The score for your meeting *{meeting.topic}* for lead *{meeting.lead.title}* is {meeting.meeting_score}",
                 },
             },
         ]

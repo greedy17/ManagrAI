@@ -4,7 +4,7 @@ from datetime import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
-
+from django.contrib.postgres.fields import JSONField
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
@@ -210,6 +210,8 @@ class ZoomMeeting(TimeStampModel):
     )
     participants_count = models.SmallIntegerField(null=True, blank=True)
     total_minutes = models.SmallIntegerField(null=True, blank=True)
+    meeting_score = models.SmallIntegerField(null=True, blank=True)
+    meeting_score_components = JSONField(default=dict, blank=True, null=True,)
 
     @property
     def should_retry(self):
@@ -315,7 +317,9 @@ class MeetingReview(TimeStampModel):
             Action.objects.create(
                 lead=lead,
                 created_by=lead.claimed_by,
-                action_detail=self.description,
+                action_detail=self.description
+                if self.description
+                else "NO DESCRIPTION",
                 action_type=ActionChoice.objects.filter(id=self.meeting_type).first(),
             )
         if self.updated_close_date:

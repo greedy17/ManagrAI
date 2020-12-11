@@ -29,5 +29,6 @@ def get_block_set(set_name, context={}):
         "opp_inactive_block_set": slack_alerts.opp_inactive_block_set,
         "opp_closed_report_generated": slack_alerts.opp_closed_report_generated,
         "reminder_contact_block_set": slack_alerts.reminder_contact_block_set,
+        "meeting_review_score": slack_alerts.meeting_review_score,
     }
     return switcher.get(set_name)(context)
