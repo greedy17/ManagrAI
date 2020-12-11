@@ -74,18 +74,22 @@ class ZoomAuthAccount(TimeStampModel):
     def is_refresh_token_expired(self):
         if self.refresh_token:
             decoded = jwt.decode(self.refresh_token, verify=False)
-            exp = pytz.utc.localize(datetime.fromtimestamp(decoded["exp"]))
+            exp = decoded["exp"]
 
-            return exp <= (timezone.now() - timezone.timedelta(minutes=5))
+            return exp <= datetime.timestamp(
+                timezone.now() - timezone.timedelta(minutes=5)
+            )
         return True
 
     @property
     def is_token_expired(self):
         if self.access_token:
             decoded = jwt.decode(self.access_token, verify=False)
-            exp = datetime.fromtimestamp(decoded["exp"])
-            exp = pytz.utc.localize(datetime.fromtimestamp(decoded["exp"]))
-            return exp <= (timezone.now() - timezone.timedelta(minutes=5))
+            exp = decoded["exp"]
+
+            return exp <= datetime.timestamp(
+                timezone.now() - timezone.timedelta(minutes=5)
+            )
         return True
 
     def regenerate_token(self):
