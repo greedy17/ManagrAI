@@ -277,6 +277,14 @@ class MeetingReview(TimeStampModel):
         blank=True,
         null=True,
     )
+    amount = models.DecimalField(
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
+    )
     prev_forecast = models.CharField(
         choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
@@ -289,16 +297,24 @@ class MeetingReview(TimeStampModel):
     prev_expected_close_date = models.DateTimeField(
         null=True, blank=True, max_length=255
     )
+    prev_amount = models.DecimalField(
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
+    )
 
     def save(self, *args, **kwargs):
         lead = self.meeting.lead
 
         # adjust lead data based on these fields
         if self.forecast_strength:
-            if hasattr(lead, "forecast"):
-                self.prev_forecast = lead.forecast.forecast
-                lead.forecast.forecast = self.forecast_strength
-
+            current_forecast = Forecast.objects.filter(lead=lead).first()
+            if current_forecast:
+                self.prev_forecast = str(current_forecast.id)
+                current_forecast.forecast = self.forecast_strength
             else:
                 Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
             # update lead forcecase
@@ -325,6 +341,10 @@ class MeetingReview(TimeStampModel):
         if self.updated_close_date:
             self.prev_expected_close_date = lead.expected_close_date
             lead.expected_close_date = self.updated_close_date
+
+        if self.amount:
+            self.amount = float(self.amount)
+            self.prev_amount = lead.amount
 
         lead.save()
 

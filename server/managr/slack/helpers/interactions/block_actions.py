@@ -67,6 +67,35 @@ def process_zoom_meeting_not_well(payload, context):
 
 
 @processor(required_context=["o", "u", "l"])
+def process_zoom_meeting_cant_tell(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=context["o"])
+        .slack_integration.access_token
+    )
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__CANT_TELL,
+            "title": {"type": "plain_text", "text": "Log Meeting"},
+            "blocks": get_block_set("zoom_meeting_limited_form", context=context),
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
+@processor(required_context=["o", "u", "l"])
 def process_zoom_meeting_different_opportunity(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]

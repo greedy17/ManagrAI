@@ -29,6 +29,7 @@ def process_zoom_meeting_great_submit(payload, context):
     description_state = state["description"]
     expected_close_date_state = state["expected_close_date"]
     next_step_state = state["next_step"]
+    amount = state["amount"]
 
     organization_id_param = "o=" + context["o"]
     zoom_meeting_id_param = "m=" + context.get("m")
@@ -72,6 +73,7 @@ def process_zoom_meeting_great_submit(payload, context):
         "description": description,
         "expected_close_date": expected_close_date,
         "next_steps": next_step,
+        "amount": amount,
     }
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
@@ -110,6 +112,7 @@ def process_zoom_meeting_not_well_submit(payload, context):
     stage_state = state["stage"]
     description_state = state["description"]
     next_step_state = state["next_step"]
+    amount = state["amount"]
 
     organization_id_param = "o=" + context["o"]
     a_id = action_with_params(
@@ -144,12 +147,85 @@ def process_zoom_meeting_not_well_submit(payload, context):
         "stage": stage,
         "description": description,
         "next_step": next_step,
+        "amount": amount,
     }
 
     # NOTE: stage may be the original stage and therefore unchanged.
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
     block_set_context = {"l": context["l"], "m": context["m"]}
+
+    access_token = (
+        Organization.objects.select_related("slack_integration")
+        .get(pk=context["o"])
+        .slack_integration.access_token
+    )
+
+    slack_requests.update_channel_message(
+        context["original_message_channel"],
+        context["original_message_timestamp"],
+        access_token,
+        block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+    )
+
+
+@processor(
+    required_context=[
+        "o",
+        "l",
+        "m",
+        "original_message_channel",
+        "original_message_timestamp",
+    ]
+)
+def process_zoom_meeting_cant_tell(payload, context):
+    state = payload["view"]["state"]["values"]
+    meeting_type_state = state["meeting_type"]
+    stage_state = state["stage"]
+    description_state = state["description"]
+    next_step_state = state["next_step"]
+    amount = state["amount"]
+
+    organization_id_param = "o=" + context["o"]
+    a_id = action_with_params(
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
+    )
+    meeting_type = meeting_type_state[a_id]["selected_option"]
+    if meeting_type:
+        meeting_type = meeting_type["value"]
+    else:
+        # user did not select an option, show them error
+        data = {
+            "response_action": "errors",
+            "errors": {"meeting_type": "You must select an option."},
+        }
+        return data
+
+    a_id = action_with_params(
+        slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],
+    )
+    stage = stage_state[a_id]["selected_option"]
+    if stage:
+        stage = stage["value"]
+
+    a_id = slack_const.DEFAULT_ACTION_ID
+    description = description_state[a_id]["value"]
+    next_step = next_step_state[a_id]["value"]
+
+    data = {
+        "sentiment": zoom_consts.MEETING_SENTIMENT_NOT_WELL,
+        "meeting_id": context.get("m", None),
+        "meeting_type": meeting_type,
+        "stage": stage,
+        "description": description,
+        "next_step": next_step,
+        "amount": amount,
+    }
+
+    # NOTE: stage may be the original stage and therefore unchanged.
+    emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
+
+    block_set_context = {"l": context["l"], "m": context["m"], "sentiment":}
 
     access_token = (
         Organization.objects.select_related("slack_integration")

@@ -92,6 +92,20 @@ def zoom_meeting_initial(context):
                 },
                 {
                     "type": "button",
+                    "text": {"type": "plain_text", "text": "Can't Tell",},
+                    "value": slack_const.ZOOM_MEETING__CANT_TELL,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__CANT_TELL,
+                        params=[
+                            user_id_param,
+                            lead_id_param,
+                            organization_id_param,
+                            meeting_id_param,
+                        ],
+                    ),
+                },
+                {
+                    "type": "button",
                     "text": {"type": "plain_text", "text": "Different Opportunity",},
                     "value": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
                     "action_id": action_with_params(
