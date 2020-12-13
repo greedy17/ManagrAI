@@ -15,6 +15,7 @@ def zoom_meeting_complete_form(context):
     expected_close_date = (
         str(lead.expected_close_date.date()) if lead.expected_close_date else None
     )
+    amount = lead.amount if lead.amount else None
 
     # make params here
     organization_id_param = "o=" + context.get("o")
@@ -78,5 +79,16 @@ def zoom_meeting_complete_form(context):
                 "placeholder": {"type": "plain_text", "text": "What's the plan?"},
             },
             "block_id": "next_step",
+        },
+        {
+            "type": "input",
+            "optional": True,
+            "label": {"type": "plain_text", "text": "Amount"},
+            "element": {
+                "type": "plain_text_input",
+                "action_id": slack_const.DEFAULT_ACTION_ID,
+                "placeholder": {"type": "plain_text", "text": "Amount?"},
+            },
+            "block_id": "amount",
         },
     ]

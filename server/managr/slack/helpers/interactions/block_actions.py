@@ -10,8 +10,8 @@ from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
 
 
-@processor(required_context=["o", "u", "l"])
-def process_zoom_meeting_great(payload, context):
+@processor(required_context=["o", "u", "l", "sentiment"])
+def process_meeting_sentiment(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     access_token = (
@@ -23,71 +23,15 @@ def process_zoom_meeting_great(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
+
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__GREAT,
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("zoom_meeting_complete_form", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
-@processor(required_context=["o", "u", "l"])
-def process_zoom_meeting_not_well(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    access_token = (
-        Organization.objects.select_related("slack_integration")
-        .get(pk=context["o"])
-        .slack_integration.access_token
-    )
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    private_metadata.update(context)
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__NOT_WELL,
-            "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_limited_form", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
-@processor(required_context=["o", "u", "l"])
-def process_zoom_meeting_cant_tell(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    access_token = (
-        Organization.objects.select_related("slack_integration")
-        .get(pk=context["o"])
-        .slack_integration.access_token
-    )
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-
-    private_metadata.update(context)
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__CANT_TELL,
-            "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_limited_form", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
         },
@@ -166,8 +110,7 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__GREAT: process_zoom_meeting_great,
-        slack_const.ZOOM_MEETING__NOT_WELL: process_zoom_meeting_not_well,
+        slack_const.ZOOM_MEETING__PROCESS_ZOOM_SENTIMENT: process_meeting_sentiment,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
         slack_const.SHOW_REMINDER_CONTACTS: process_get_contacts,
     }

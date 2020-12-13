@@ -59,6 +59,9 @@ BLOCK_ACTIONS = "block_actions"
 BLOCK_SUGGESTION = "block_suggestion"
 VIEW_SUBMISSION = "view_submission"
 
+#
+ZOOM_MEETING__PROCESS_MEETING_SENTIMENT = "ZOOM_MEETING__PROCESS_MEETING_SENTIMENT"
+
 # Action IDs of different interactive UI in the Managr Slack App
 DEFAULT_ACTION_ID = "ACTION_ID"
 ZOOM_MEETING__GREAT = "ZOOM_MEETING__GREAT"

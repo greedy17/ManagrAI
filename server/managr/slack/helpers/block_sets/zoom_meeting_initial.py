@@ -23,6 +23,7 @@ def zoom_meeting_initial(context):
     meeting_id_param = "m=" + context["m"]
 
     organization_id_param = "o=" + context["o"]
+    sentiment_param = lambda x: f"sentiment={x}"
 
     return [
         {
@@ -67,12 +68,15 @@ def zoom_meeting_initial(context):
                     "text": {"type": "plain_text", "text": "Great!"},
                     "value": slack_const.ZOOM_MEETING__GREAT,
                     "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__GREAT,
+                        slack_const.ZOOM_MEETING__SENTIMENT,
                         params=[
                             user_id_param,
                             lead_id_param,
                             organization_id_param,
                             meeting_id_param,
+                            sentiment_param(
+                                slack_const.ZOOM_MEETING_PROCESS_MEETING_SENTIMENT
+                            ),
                         ],
                     ),
                 },
@@ -81,12 +85,13 @@ def zoom_meeting_initial(context):
                     "text": {"type": "plain_text", "text": "Not well...",},
                     "value": slack_const.ZOOM_MEETING__NOT_WELL,
                     "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__NOT_WELL,
+                        slack_const.ZOOM_MEETING_PROCESS_MEETING_SENTIMENT,
                         params=[
                             user_id_param,
                             lead_id_param,
                             organization_id_param,
                             meeting_id_param,
+                            sentiment_param(slack_const.ZOOM_MEETING__NOT_WELL),
                         ],
                     ),
                 },
@@ -95,12 +100,13 @@ def zoom_meeting_initial(context):
                     "text": {"type": "plain_text", "text": "Can't Tell",},
                     "value": slack_const.ZOOM_MEETING__CANT_TELL,
                     "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__CANT_TELL,
+                        slack_const.ZOOM_MEETING_PROCESS_MEETING_SENTIMENT,
                         params=[
                             user_id_param,
                             lead_id_param,
                             organization_id_param,
                             meeting_id_param,
+                            sentiment_param(slack_const.ZOOM_MEETING__CANT_TELL),
                         ],
                     ),
                 },
