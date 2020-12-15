@@ -20,6 +20,7 @@ class ZoomMtg:
         self.topic = kwargs.get("topic", None)
         self.type = kwargs.get("type", None)
         self.start_time = kwargs.get("start_time", None)
+        self.end_time = kwargs.get("end_time", None)
         self.timezone = kwargs.get("timezone", None)
         self.duration = kwargs.get("duration", None)
         self.occurences = kwargs.get("occurences", None)

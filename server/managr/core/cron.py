@@ -614,21 +614,31 @@ def _generate_lead_scores():
 
 
 def generate_meeting_scores():
-    meetings = ZoomMeeting.objects.select_related("meeting_review").filter(
-        meeting_score__isnull=True, is_closed=True
+
+    meetings = ZoomMeeting.objects.filter(
+        Q(scoring_in_progress=False) | Q(meeting_score__isnull=True) & Q(is_closed=True)
     )
     for meeting in meetings:
-        meeting.score = random.randint(0, 95)
-        meeting.score.save()
+        # set scoring in progress in case we run this job multiple times
+        meeting.scoring_in_progress = True
+        meeting.save()
+        meeting.meeting_score = random.randint(0, 95)
+        meeting.scoring_in_progress = False
+        meeting.save()
         user = meeting.zoom_account.user
         if user.send_email_to_integrate_slack:
             _send_slack_int_email(user)
         if hasattr(user, "slack_integration"):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
-            slack_requests.send_channel_message(
-                user_slack_channel,
-                slack_org_access_token,
-                block_set=get_block_set("meeting_review_score", {"m": str(meeting.id)}),
-            )
+            managers = user.organization.users.filter(type="MANAGER")
+            for manager in managers:
+                if hasattr(manager, "slack_integration"):
+                    slack_requests.send_channel_message(
+                        user_slack_channel,
+                        slack_org_access_token,
+                        block_set=get_block_set(
+                            "meeting_review_score", {"m": str(meeting.id)}
+                        ),
+                    )
 

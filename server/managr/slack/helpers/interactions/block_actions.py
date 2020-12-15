@@ -39,7 +39,7 @@ def process_meeting_sentiment(payload, context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_context=["o", "u", "l"])
+@processor(required_context=["o", "u", "l", "m"])
 def process_zoom_meeting_different_opportunity(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -110,7 +110,7 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__PROCESS_ZOOM_SENTIMENT: process_meeting_sentiment,
+        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_meeting_sentiment,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
         slack_const.SHOW_REMINDER_CONTACTS: process_get_contacts,
     }

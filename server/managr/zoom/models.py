@@ -11,6 +11,7 @@ from managr.core.models import TimeStampModel
 from managr.lead.models import Forecast, Action, ActionChoice
 from managr.organization.models import Stage
 from managr.lead import constants as lead_consts
+
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
 
@@ -135,6 +136,7 @@ class ZoomMeeting(TimeStampModel):
     topic = models.CharField(max_length=255, null=True, blank=True)
     type = models.PositiveSmallIntegerField()
     start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
         max_length=255,
@@ -306,6 +308,91 @@ class MeetingReview(TimeStampModel):
         blank=True,
     )
 
+    @property
+    def stage_progress(self):
+        if not self.prev_stage and self.update_stage:
+            # assume positive
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+        elif self.prev_stage and self.update_stage:
+            prev_stage_order = Stage.objects.get(id=self.prev_stage).order
+            current_stage_order = Stage.objects.get(id=self.update_stage).order
+            if prev_stage_order > current_stage_order:
+                return zoom_consts.MEETING_REVIEW_REGRESSED
+            elif prev_stage_order > current_stage_order:
+                return zoom_consts.MEETING_REVIEW_PROGRESSED
+            else:
+                return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
+    def forecast_progress(self):
+        if not self.prev_forecast and self.forecast:
+            # if there wasnt a previous forecast then we can assume it progressed
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+        if self.prev_forecast and self.forecast:
+            for index, forecast in enumerate(lead_consts.FORECAST_CHOICES):
+                if self.prev_forecast == forecast:
+                    prev_forecast_rank = index
+                if self.forecast_strength == forecast:
+                    current_forecast_rank = index
+            if prev_forecast_rank > current_forecast_rank:
+                return zoom_consts.MEETING_REVIEW_REGRESSED
+            elif prev_forecast_rank < current_forecast_rank:
+                return zoom_consts.MEETING_REVIEW_PROGRESSED
+            else:
+                return zoom_consts.MEETING_REVIEW_UNCHANGED
+            # if there wasnt a previous forecast then we can assume it progressed
+
+    @property
+    def expected_close_date_progress(self):
+        if self.prev_expected_close_date > self.expected_close_date:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+        elif self.prev_expected_close_date < self.expected_close_date:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+        else:
+            return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
+    def meeting_type_string(self):
+        if self.zoom_meeting.type == 1:
+            return "instant"
+        return "planned"
+
+    @property
+    def meeting_duration_score_parameter(self):
+        # TODO: PB Ignore this for now as we do not get the accurate duration from the past meeting webhook
+        if self.meeting_type_string == "instant":
+            if int(self.zoom_meeting.duration) >= 60:
+                return "60"
+
+            elif (
+                int(self.zoom_meeting.duration) < 60
+                and int(self.zoom_meeting.duration) >= 30
+            ):
+                return "30"
+
+            elif (
+                int(self.zoom_meeting.duration) >= 20
+                and int(self.zoom_meeting.duration) < 30
+            ):
+                return "20"
+        elif self.meeting_type_string == "planned":
+            if int(self.zoom_meeting.duration) >= 60:
+                return "60"
+
+            elif (
+                int(self.zoom_meeting.duration) < 60
+                and int(self.zoom_meeting.duration) >= 30
+            ):
+                return "30"
+
+            elif (
+                int(self.zoom_meeting.duration) >= 20
+                and int(self.zoom_meeting.duration) < 30
+            ):
+                return "20"
+
+        return
+
     def save(self, *args, **kwargs):
         lead = self.meeting.lead
 
@@ -343,8 +430,8 @@ class MeetingReview(TimeStampModel):
             lead.expected_close_date = self.updated_close_date
 
         if self.amount:
-            self.amount = float(self.amount)
             self.prev_amount = lead.amount
+            lead.amount = float(self.amount)
 
         lead.save()
 

@@ -2,6 +2,8 @@ import json
 import pdb
 
 from managr.organization.models import Organization
+from managr.lead.models import Lead
+from managr.zoom.models import ZoomMeeting
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
@@ -27,7 +29,7 @@ def process_zoom_meeting_data(payload, context):
     stage_state = state["stage"]
     description_state = state["description"]
     next_step_state = state["next_step"]
-    amount = state["amount"]
+    amount_state = state["amount"]
 
     sentiment = context.get("sentiment", None)
     if sentiment != slack_const.ZOOM_MEETING__NOT_WELL:
@@ -66,6 +68,7 @@ def process_zoom_meeting_data(payload, context):
     description = description_state[a_id]["value"]
     expected_close_date = expected_close_date_state[a_id]["selected_date"]
     next_step = next_step_state[a_id]["value"]
+    amount = amount_state[a_id]["value"]
 
     data = {
         "sentiment": sentiment,
@@ -134,7 +137,26 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
         "l": new_opportunity,
         "u": context["u"],
         "o": context["o"],
+        "m": context["m"],
     }
+    meeting = (
+        ZoomMeeting.objects.filter(id=context["m"])
+        .select_related("lead")
+        .prefetch_related("participants")
+        .first()
+    )
+    old_lead = meeting.lead
+    new_lead = Lead.objects.filter(id=new_opportunity).first()
+    meeting_participants = meeting.participants.all().values_list("id", flat=True)
+    # bring all lead new lead contacts
+    new_lead_contacts = new_lead.linked_contacts.all().values_list("id", flat=True)
+    combined_participants = set(list(meeting_participants) + list(new_lead_contacts))
+    old_lead_new_contacts_list = old_lead.linked_contacts.filter(
+        id__in=meeting_participants
+    ).exclude(id__in=new_lead_contacts)
+    old_lead.linked_contacts.remove(*old_lead_new_contacts_list)
+    new_lead.linked_contacts.set(combined_participants)
+    # remove newly added leads that are in the meeting participants but are not common with the new_lead contacts
 
     access_token = (
         Organization.objects.select_related("slack_integration")
@@ -155,7 +177,7 @@ def handle_view_submission(payload):
     This takes place when a modal's Submit button is clicked.
     """
     switcher = {
-        slack_const.ZOOM_MEETING_PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
+        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
     }
     callback_id = payload["view"]["callback_id"]

@@ -73,11 +73,7 @@ def meeting_review_score(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
-    meeting = (
-        ZoomMeeting.objects.select_related("slack_integration")
-        .filter(id=context.get("m"))
-        .first()
-    )
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     user = meeting.zoom_account.user
     if meeting:
         return [
