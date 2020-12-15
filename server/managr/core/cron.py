@@ -466,7 +466,7 @@ def create_lead_notifications():
                             if hasattr(user, "slack_integration"):
                                 ## check if alert already exists
                                 title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
-                                content = f"This opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
+                                content = f"This {lead.title}  opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
 
                                 user_slack_channel = user.slack_integration.channel
                                 slack_org_access_token = (
@@ -595,6 +595,8 @@ def create_lead_notifications():
                                     user,
                                     core_consts.NOTIFICATION_TYPE_SLACK,
                                 )
+
+    return
 
 
 @kronos.register("0 0 * * *")

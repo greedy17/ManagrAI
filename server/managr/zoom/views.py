@@ -5,6 +5,7 @@ from faker import Faker
 from urllib.parse import urlencode
 from datetime import datetime
 
+from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from rest_framework.views import APIView

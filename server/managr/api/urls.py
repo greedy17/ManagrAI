@@ -23,7 +23,10 @@ urlpatterns = [
         "demo/trigger-inactive/", demo_views.clear_activity_log, name="trigger-inactive"
     ),
     path("demo/trigger-stalled/", demo_views.stalled_in_stage, name="trigger-stalled"),
-    path("demo/trigger-late/", demo_views.stalled_in_stage, name="trigger-stage"),
+    path(
+        "demo/trigger-late/", demo_views.past_expected_close_date, name="trigger-stage"
+    ),
+    path("demo/close-lead/", demo_views.close_lead, name="close-lead",),
     path(
         "users/activation_link/<email>/",
         core_views.ActivationLinkView.as_view(),
@@ -104,6 +107,7 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
 ]
+
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")

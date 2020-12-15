@@ -1,5 +1,8 @@
 import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
+import axios from 'axios'
+import CSRF from '@/services/csrf'
+import API_BASE from '@/services/api/base'
 
 export default class ZoomAPI extends ModelAPI {
   static ENDPOINT = 'users/zoom/'
@@ -50,11 +53,28 @@ export default class ZoomAPI extends ModelAPI {
   }
 
   async fakeMeetingEnd() {
-    let fake = process.VUE_FAKE_MEETING_JSON
-    let auth = process.VUE_MEETING_WEBHOOK_SECRET
-    data = {}
-    let client = this.client
-    client.defaults.headers['Authorization'] = auth
-    const res = await this.client.post('zoom/webhooks/meetings', data)
+    const { location } = window
+
+    let zoomHeader = process.env.VUE_APP_MEETING_WEBHOOK_SECRET
+    let cl = axios.create({
+      baseURL: `${location.protocol}//${location.host}` + API_BASE,
+      headers: {
+        ...CSRF.getHeaders(),
+        Authorization: zoomHeader,
+      },
+    })
+
+    let fake = JSON.parse(process.env.VUE_APP_FAKE_MEETING_JSON)
+
+    let data = {
+      ...fake,
+    }
+
+    try {
+      const res = await cl.post('zoom/webhooks/meetings', data)
+      return res.data
+    } catch (e) {
+      console.log(e)
+    }
   }
 }

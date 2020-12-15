@@ -415,14 +415,14 @@ class MeetingReview(TimeStampModel):
     @property
     def participant_count_weighted(self):
 
-        if self.zoom_meeting.participants_count <= 2:
+        if self.meeting.participants_count <= 2:
             return 2
 
-        elif self.zoom_meeting.participants_count >= 5:
+        elif self.meeting.participants_count >= 5:
             return 5
 
         else:
-            return self.zoom_meeting.participants_count
+            return self.meeting.participants_count
 
     def save(self, *args, **kwargs):
         lead = self.meeting.lead

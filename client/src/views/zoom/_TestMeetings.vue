@@ -48,7 +48,9 @@ export default {
     }
   },
   methods: {
-    onKickOff() {
+    async onKickOff() {
+      this.interactionInProgress = true
+      await ZoomAccount.api.fakeMeetingEnd()
       // this helper method sends a fake webhook to our backend acting as a zoom event
       // this is used for demo purposes, the meeting must already exist in zoom
     },

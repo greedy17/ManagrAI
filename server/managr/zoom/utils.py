@@ -68,6 +68,7 @@ def score_meeting(meeting):
         expected_close_date_progress = (
             meeting.meeting_review.expected_close_date_progress
         )
+        participant_weighted = meeting.meeting_review.participant_count_weighted
 
         score_items = []
         score_items.append(
@@ -79,9 +80,7 @@ def score_meeting(meeting):
             scoring_components["expected_close_date"][expected_close_date_progress]
         )
         score_items.append(
-            scoring_components["participants"]["attendees"][
-                meeting.participant_count_weighted
-            ]
+            scoring_components["participants"]["attendees"][participant_weighted]
         )
 
         for item in score_items:
