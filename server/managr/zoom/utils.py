@@ -49,6 +49,17 @@ def score_meeting(meeting):
                 },
             }
         },
+        "participants": {
+            "attendees": {
+                2: {"points": 0, "impact": "positive"},
+                3: {"points": 2, "impact": "positive"},
+                4: {"points": 4, "impact": "positive"},
+                5: {"points": 5, "impact": "positive"},
+            },
+            "participation": lambda total_minutes, duration, attendees: round(
+                ((total_minutes - duration) / (attendees - 1) * 10)
+            ),
+        },
     }
 
     if hasattr(meeting, "meeting_review"):
@@ -57,6 +68,7 @@ def score_meeting(meeting):
         expected_close_date_progress = (
             meeting.meeting_review.expected_close_date_progress
         )
+
         score_items = []
         score_items.append(
             scoring_components["sentiment"][meeting.meeting_review.sentiment]
@@ -66,11 +78,18 @@ def score_meeting(meeting):
         score_items.append(
             scoring_components["expected_close_date"][expected_close_date_progress]
         )
+        score_items.append(
+            scoring_components["participants"]["attendees"][
+                meeting.participant_count_weighted
+            ]
+        )
+
         for item in score_items:
             if item["impact"] == "positive":
                 current_score += item["points"]
             if item["impact"] == "negative":
                 current_score -= item["points"]
+    ### score for participation
 
     return current_score
 
