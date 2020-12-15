@@ -2,20 +2,32 @@
   <div class="test-meeting-subpage">
     <div class="test-meeting-subpage__header">
       <div class="test-meeting-subpage__title">
-        Create A Test Meeting
+        Begin Meeting Interaction
       </div>
     </div>
 
     <div class="test-meeting-subpage__content">
-      <span @click="onCreateMeeting" class="test-meeting-subpage__content-create">
-        Create Meeting
+      <span @click="onKickOff" class="test-meeting-subpage__content-create">
+        Kick Off Slack Interaction with Zoom Meeting
       </span>
       <br />
-      <span v-if="meeting" class="test-meeting-subpage__content-meeting">
+      <span v-if="interactionInProgress" class="test-meeting-subpage__content-meeting">
+        This Zoom Meeting has two participants:
+        <br />
+        pb1646a@gmail.com is a participant that exists as a contact to a selected opportunity
+        <br />
+        bakerpari@yahoo.com is a participant that does not exist in our current contacts list this
+        participant will be added as part of the meeting data
+        <br />
+        If a different opportunity is selected both these contacts will appear as linked contacts
+        for that opporunity
+      </span>
+
+      <!--       <span v-if="meeting" class="test-meeting-subpage__content-meeting">
         <a :href="meeting.start_url" target="_blank">Start Meeting</a>
         <br />
         password: {{ meeting.password }}
-      </span>
+      </span> -->
     </div>
   </div>
 </template>
@@ -32,10 +44,16 @@ export default {
   data() {
     return {
       meeting: null,
+      interactionInProgress: false,
     }
   },
   methods: {
-    async onCreateMeeting() {
+    onKickOff() {
+      // this helper method sends a fake webhook to our backend acting as a zoom event
+      // this is used for demo purposes, the meeting must already exist in zoom
+    },
+
+    /*     async onCreateMeeting() {
       this.meeting = await this.createMeeting()
     },
     async createMeeting() {
@@ -45,7 +63,7 @@ export default {
       } catch {
         console.log('An error occurred')
       }
-    },
+    }, */
   },
 }
 </script>

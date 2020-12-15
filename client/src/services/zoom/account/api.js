@@ -48,4 +48,13 @@ export default class ZoomAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)
     }
   }
+
+  async fakeMeetingEnd() {
+    let fake = process.VUE_FAKE_MEETING_JSON
+    let auth = process.VUE_MEETING_WEBHOOK_SECRET
+    data = {}
+    let client = this.client
+    client.defaults.headers['Authorization'] = auth
+    const res = await this.client.post('zoom/webhooks/meetings', data)
+  }
 }

@@ -7,6 +7,9 @@ const GENERATE_LEAD_ENDPOINT = uid => `/leads/${uid}/`
 const GENERATE_CLAIM_ENDPOINT = uid => `/leads/${uid}/claim/`
 const GENERATE_UNCLAIM_ENDPOINT = uid => `/leads/${uid}/un-claim/`
 const GENERATE_CLOSE_ENDPOINT = uid => `/leads/${uid}/close/`
+const DEMO_INACTIVE = 'demo/trigger-inactive/'
+const DEMO_STALLED = 'demo/trigger-stalled/'
+const DEMO_LATE = 'demo/trigger-late/'
 
 export default class LeadAPI {
   /**
@@ -136,6 +139,68 @@ export default class LeadAPI {
       .get(LEADS_COUNT_ENDPOINT, this.cls.toAPI(options))
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'LeadAPI.count' }))
+    return promise
+  }
+
+  /***
+   *
+   *
+   * FOR DEMO PURPOSES ONLY
+   */
+
+  clearLog(lead) {
+    const data = {
+      lead: lead,
+    }
+    const promise = apiClient()
+      .post(DEMO_INACTIVE, data)
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+        }
+      })
+      .catch(
+        apiErrorHandler({
+          apiName: 'LeadAPI.list error',
+        }),
+      )
+    return promise
+  }
+  stallInStage(lead) {
+    const data = {
+      lead: lead,
+    }
+    const promise = apiClient()
+      .post(DEMO_STALLED, data)
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+        }
+      })
+      .catch(e => console.log(e))
+
+    return promise
+  }
+  delayCloseDate(lead, days) {
+    const data = {
+      lead: lead,
+      days: days,
+    }
+    const promise = apiClient()
+      .post(DEMO_LATE, data)
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+        }
+      })
+      .catch(
+        apiErrorHandler({
+          apiName: 'LeadAPI.list error',
+        }),
+      )
     return promise
   }
 }
