@@ -81,7 +81,16 @@ export default {
       }),
     }
   },
+  computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED).id
+    },
+  },
   async created() {
+    this.leads.filters.byStatus = `-${this.getIsClosedStatus}`
     await this.leads.refresh()
   },
   methods: {

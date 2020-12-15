@@ -354,7 +354,7 @@ def create_lead_notifications():
                         if hasattr(user, "slack_integration"):
                             ## check if alert already exists
                             title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-                            slack_message = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
+                            slack_message = f"The opportunity *{lead.title}* has not shown any activity since *{latest_activity_str}*"
 
                             user_slack_channel = user.slack_integration.channel
                             slack_org_access_token = (
@@ -366,6 +366,7 @@ def create_lead_notifications():
                                     "l": str(lead.id),
                                     "m": slack_message,
                                     "u": str(user.id),
+                                    "t": title,
                                 },
                             )
                             slack_requests.send_channel_message(
@@ -465,8 +466,8 @@ def create_lead_notifications():
                                 _send_slack_int_email(user)
                             if hasattr(user, "slack_integration"):
                                 ## check if alert already exists
-                                title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
-                                content = f"This {lead.title}  opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
+                                title = f"Opportunity {lead.title} expected to close {notification_late_for_days} day(s) ago"
+                                content = f"This *{lead.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{is_lapsed}* day(s) over"
 
                                 user_slack_channel = user.slack_integration.channel
                                 slack_org_access_token = (
@@ -478,6 +479,7 @@ def create_lead_notifications():
                                         "l": str(lead.id),
                                         "m": content,
                                         "u": str(user.id),
+                                        "t": title,
                                     },
                                 )
                                 slack_requests.send_channel_message(
@@ -559,7 +561,7 @@ def create_lead_notifications():
                             str(lead.id),
                         ):
                             title = "Opportunity stalled in stage for over 60 days"
-                            content = f"{lead.title} has been in the same stage since {status_last_updated_str}"
+                            content = f"*{lead.title}* has been in the same stage since *{status_last_updated_str}*"
                             # create notification of that class in notifications
 
                             # when checking slack notification settings, if the user has opted to
@@ -579,6 +581,7 @@ def create_lead_notifications():
                                         "l": str(lead.id),
                                         "m": content,
                                         "u": str(user.id),
+                                        "t": title,
                                     },
                                 )
                                 slack_requests.send_channel_message(

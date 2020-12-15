@@ -13,7 +13,7 @@
             <TrackedMeetings />
           </div>
           <div class="zoom-page__main-content-area__items__item">
-            <TestMeetings v-if="devOrStaging" />
+            <TestMeetings />
           </div>
         </div>
       </template>

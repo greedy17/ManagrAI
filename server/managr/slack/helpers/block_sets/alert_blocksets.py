@@ -48,21 +48,27 @@ def reminder_block_set(context):
         ]
 
 
-@block_set(required_context=["l", "u", "m"])
+@block_set(required_context=["l", "u", "m", "t"])
 def opp_inactive_block_set(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
     lead = Lead.objects.filter(id=context.get("l")).first()
     user = User.objects.filter(id=context.get("u")).first()
+    title = context.get("t")
     message = context.get("m")
     if lead and user:
         return [
             {
                 "type": "section",
+                "text": {"type": "mrkdwn", "text": f" :bangbang:  *{title}*",},
+            },
+            {"type": "divider"},
+            {
+                "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{user.slack_integration.slack_id}>  *{message}*",
+                    "text": f"<@{user.slack_integration.slack_id}> {message}",
                 },
             },
         ]
@@ -116,7 +122,7 @@ def opp_closed_report_generated(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"{user.full_name} Primarily worked with {primary_contact}",
+                    "text": f"{user.full_name} Primarily worked with {primary_contact['first_name']} {primary_contact['last_name']}",
                 },
             },
             {
