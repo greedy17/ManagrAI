@@ -47,6 +47,11 @@ class ZoomAuthSerializer(serializers.ModelSerializer):
 
 
 class ZoomMeetingWebhookSerializer(serializers.ModelSerializer):
+    """ 
+        special serializer for events coming from the webhook that are different in structure
+        to data coming from the django serializer that creates an entry in our db
+    """
+
     class Meta:
         model = ZoomMeeting
         fields = (
@@ -89,11 +94,13 @@ class ZoomMeetingSerializer(serializers.ModelSerializer):
             "password",
             "operator_id",
             "status",
-            "start",
             "start_url",
             "join_url",
             "recurrence",
             "participants",
             "lead",
             "should_track",
+            "end_time",
+            "participants_count",
+            "total_minutes",
         )

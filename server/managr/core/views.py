@@ -1,4 +1,5 @@
 import requests
+
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 import logging
@@ -38,7 +39,10 @@ from managr.lead import constants as lead_consts
 from managr.lead.models import LeadMessage, Notification, Lead
 from managr.lead.background import emit_event as emit_log_event
 
-from managr.organization.models import Organization, Contact
+from managr.organization.models import (
+    Organization,
+    Contact,
+)
 
 from managr.core.twilio.messages import (
     create_new_account,
@@ -81,7 +85,6 @@ from .nylas.emails import (
     send_system_email,
 )
 from .nylas.models import NylasAccountStatus, NylasAccountStatusList
-
 
 logger = logging.getLogger("managr")
 
@@ -473,7 +476,7 @@ class ActivationLinkView(APIView):
 )
 # temporarily allowing any, will only allow self in future
 def get_email_authorization_link(request):
-    """ This endpoint is used to generate a user specific link with a magic token to
+    """This endpoint is used to generate a user specific link with a magic token to
     authorize their accounts on Nylas when the user authenticates we will use
     the magic token to approve the authentication and ensure the user has not
     tried to authenticate an alternate email (from the one they have registered
@@ -600,8 +603,8 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
-        """ this endpoint will have to eventually be handled by a different instance
-        unlike the messages endpoint we cannot grab an id and pass it to the async 
+        """this endpoint will have to eventually be handled by a different instance
+        unlike the messages endpoint we cannot grab an id and pass it to the async
         we can however track the delta and check the api for that delta or we can save it in the cache
 
         """
@@ -640,8 +643,8 @@ class TwilioMessageWebhook(APIView):
 
     def post(self, request):
         """
-            this endpoint is used for the status of messages when they are sent
-            twilio will hit this endpoint defined on status_url
+        this endpoint is used for the status of messages when they are sent
+        twilio will hit this endpoint defined on status_url
         """
         # receive message
 
@@ -723,6 +726,7 @@ class TwilioMessageWebhook(APIView):
                         title="Message Received",
                         notification_type="MESSAGE",
                         resource_id=str(lead_message.id),
+                        notification_class="ALERT",
                         user=u,
                         meta={
                             "content": body,
@@ -912,13 +916,13 @@ def email_auth_token(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_access_token(request):
-    """ endpoint to revoke access for a token
-        currently users can only revoke their own access
-        if an account needs to revoke someone elses they may
-        email the superuser, when we create a list of admins
-        for each org they will have access to delete their user's tokens
-        alternatively they can set a user to is_active=false and this will
-        call the revoke endpoint for the user in an org
+    """endpoint to revoke access for a token
+    currently users can only revoke their own access
+    if an account needs to revoke someone elses they may
+    email the superuser, when we create a list of admins
+    for each org they will have access to delete their user's tokens
+    alternatively they can set a user to is_active=false and this will
+    call the revoke endpoint for the user in an org
     """
     if request.user.email_auth_account.access_token:
         try:
@@ -1007,8 +1011,8 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             try:
                 send_new_email_legacy(token, sender, recipient, message)
             except Exception as e:
-                """ this error is most likely going to be an error on our set
-                up rather than the user_token """
+                """this error is most likely going to be an error on our set
+                up rather than the user_token"""
                 pass
         response_data["activation_link"] = user.activation_link
 

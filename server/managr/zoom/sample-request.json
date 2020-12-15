@@ -1,0 +1,17 @@
+{
+  "event": "meeting.ended",
+  "payload": {
+    "account_id": "pVZTgMbYRgaTPiTluFhURw",
+    "object": {
+      "duration": -1549556829,
+      "start_time": "2020-12-10T17:39:39Z",
+      "timezone": "",
+      "end_time": "2020-12-10T17:41:03Z",
+      "topic": "Pari Baker's Zoom Meeting",
+      "id": "97413353120",
+      "type": 1,
+      "uuid": "qXFLnB7KRq2z03HxPd+Tfw==",
+      "host_id": "JR8y0BuYSxuoz777sfrULQ"
+    }
+  }
+}

@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
 
+from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
@@ -16,7 +17,14 @@ from .models import (
 
 from . import constants as core_consts
 
-TRUE_FALSE_CHOICES = (("True", "ON",), ("False", "OFF"))
+TRUE_FALSE_CHOICES = (
+    ("True", "ON",),
+    ("False", "OFF"),
+)
+
+
+class UserSlackIntegrationInline(admin.StackedInline):
+    model = UserSlackIntegration
 
 
 class ZoomAuthAccountInline(admin.StackedInline):
@@ -71,9 +79,15 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),}),
+        (
+            None,
+            {"classes": ("wide",), "fields": ("email", "password1", "password2",),},
+        ),
     )
-    inlines = (ZoomAuthAccountInline,)
+    inlines = (
+        UserSlackIntegrationInline,
+        ZoomAuthAccountInline,
+    )
     list_display = ("email", "first_name", "last_name")
 
     list_display_links = (
@@ -140,4 +154,3 @@ admin.site.register(EmailTemplate)
 admin.site.register(MessageAuthAccount)
 admin.site.register(NotificationOption, CustomNotificationOption)
 admin.site.register(NotificationSelection, CustomNotificationSelection)
-

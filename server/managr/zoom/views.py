@@ -21,6 +21,7 @@ from rest_framework import (
 from rest_framework.decorators import (
     api_view,
     permission_classes,
+    authentication_classes,
 )
 
 
@@ -34,6 +35,7 @@ from managr.core.permissions import (
     CanEditResourceOrReadOnly,
 )
 
+from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from .models import ZoomAuthAccount, ZoomMeeting
@@ -44,6 +46,7 @@ from .serializers import (
     ZoomMeetingSerializer,
 )
 from . import constants as zoom_consts
+from .background import _get_past_zoom_meeting_details
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -96,6 +99,7 @@ def redirect_from_zoom(request):
 
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
@@ -106,16 +110,12 @@ def zoom_meetings_webhook(request):
         obj = {**obj, **extra_obj}
         host_id = obj.get("host_id", None)
         meeting_uuid = obj.get("uuid", None)
+        ### move all this to a background task, zoom requires response in 60s
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+
         if zoom_account:
-            meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-            participants = meeting.get_past_meeting_participants(
-                zoom_account.access_token
-            )
-
-            # save meeting now if it has the right people
-
-        # retrieve meeting participants from zoom as background task
+            # emit the process
+            _get_past_zoom_meeting_details(str(zoom_account.user.id), meeting_uuid)
 
     return Response()
 

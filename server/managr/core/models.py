@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -39,6 +39,14 @@ class TimeStampModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class WebhookAuthUser(AnonymousUser):
+    @property
+    def is_authenticated(self):
+        # this purposefully always returns True and gives us a user for the webhook auth
+        # the check for the token occurs in the custom authentication class
+        return True
 
 
 class UserQuerySet(models.QuerySet):
@@ -187,6 +195,16 @@ class User(AbstractUser, TimeStampModel):
     @property
     def unviewed_notifications_count(self):
         return self.notifications.filter(viewed=False).count()
+
+    @property
+    def send_email_to_integrate_slack(self):
+        """ 
+            if a users org has slack integrated but the user does not
+            we send an email to remind them to integrate, to received notifs
+        """
+        return not hasattr(self, "slack_integration") and hasattr(
+            self.organization, "slack_integration"
+        )
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
@@ -401,8 +419,8 @@ class NotificationSelection(TimeStampModel):
 
 
 class NotificationOption(TimeStampModel):
-    """ Manage Email and Alert Notifications (Alerts are notfications
-     they receive on the Notifications side nav) options """
+    """Manage Email and Alert Notifications (Alerts are notfications
+    they receive on the Notifications side nav) options"""
 
     # user groups will be used to populate the options for each user type
     title = models.CharField(max_length=128, help_text="Friendly Name")
@@ -455,4 +473,3 @@ class NotificationOption(TimeStampModel):
                 option=self, user=user, value=self.default_value
             )
             return selection
-

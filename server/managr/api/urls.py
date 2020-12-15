@@ -6,7 +6,7 @@ from managr.lead import views as lead_views
 from managr.polling import views as poll_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
-
+from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 
 
@@ -74,7 +74,6 @@ urlpatterns = [
         name="nylas_account_webhook",
     ),
     path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
-    ## this is a dev/staging endpoint only for creating meetings for easier testing
     path(
         "zoom/api/meetings", zoom_views.create_zoom_meeting, name="create_zoom_meeting",
     ),
@@ -135,5 +134,5 @@ router.register(
     "notification-settings",
 )
 router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
+router.register("slack", slack_views.SlackViewSet, "slack")
 urlpatterns += router.urls
-

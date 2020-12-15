@@ -15,12 +15,9 @@ from managr.utils.numbers import format_phone_number
 from django.db.models import Sum, Avg, Q
 from rest_framework.exceptions import ValidationError
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db.models import Sum, Avg
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
 
-from managr.core.models import UserManager, TimeStampModel
 from . import constants as org_consts
 
 
@@ -28,11 +25,9 @@ from managr.core.models import UserManager, TimeStampModel
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.lead.models import Notification
+from managr.slack.helpers import block_builders
 
 from . import constants as org_consts
-
-
-# Create your models here.
 
 
 ACCOUNT_TYPE_RENEWAL = "RENEWAL"
@@ -55,8 +50,8 @@ class OrganizationQuerySet(models.QuerySet):
 
 class Organization(TimeStampModel):
     """
-        Main Organization Model, Users are attached to this model
-        Users can either be limited, or Manager (possibly also have a main admin for the org)
+    Main Organization Model, Users are attached to this model
+    Users can either be limited, or Manager (possibly also have a main admin for the org)
     """
 
     name = models.CharField(max_length=255, null=True)
@@ -116,7 +111,7 @@ class Organization(TimeStampModel):
                     auth_token, token_created = Token.objects.get_or_create(
                         user=integration
                     )
-                    token = json.loads(serializers.serialize("json", [auth_token,]))
+                    token = json.loads(serializers.serialize("json", [auth_token,],))
                     return token[0]["pk"]
 
 
@@ -132,8 +127,8 @@ class AccountQuerySet(models.QuerySet):
 
 class Account(TimeStampModel):
     """
-        Accounts are potential and exisiting clients that 
-        can be made into leads and added to lists
+    Accounts are potential and exisiting clients that
+    can be made into leads and added to lists
 
     """
 
@@ -181,11 +176,11 @@ class ContactQuerySet(models.QuerySet):
 
 class Contact(TimeStampModel):
     """
-        Contacts are the point of contacts that belong to 
-        an account, they must be unique (by email) and can 
-        only belong to one account
-        If we have multiple organizations per account 
-        then that will also be unique and added here
+    Contacts are the point of contacts that belong to
+    an account, they must be unique (by email) and can
+    only belong to one account
+    If we have multiple organizations per account
+    then that will also be unique and added here
     """
 
     title = models.CharField(max_length=255, blank=True)
@@ -239,9 +234,11 @@ class Contact(TimeStampModel):
             if self.phone_number_2
             else ""
         )
-        contact = Contact.objects.exclude(
-            email=self.email, account=self.account
-        ).first()
+        contact = (
+            Contact.objects.filter(email=self.email, account=self.account)
+            .exclude(id=self.id)
+            .first()
+        )
         if contact:
             raise ValidationError(
                 detail={
@@ -263,9 +260,9 @@ class StageQuerySet(models.QuerySet):
 
 
 class Stage(TimeStampModel):
-    """ 
-        Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
-        There are some static stages available to all organizations and private ones that belong only to certain organizations. 
+    """
+    Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
+    There are some static stages available to all organizations and private ones that belong only to certain organizations.
     """
 
     title = models.CharField(max_length=255)
@@ -287,6 +284,10 @@ class Stage(TimeStampModel):
     order = models.IntegerField(blank=False, null=False, default=6)
 
     objects = StageQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
 
     class Meta:
         ordering = ["order"]
@@ -330,6 +331,7 @@ class Stage(TimeStampModel):
                         title="Stages Updated",
                         notification_type="SYSTEM",
                         resource_id=self.id,
+                        notification_class="ALERT",
                         user=user,
                         meta={
                             "content": "Your organization has added new stages, please log out and login to update your list"
@@ -348,4 +350,3 @@ class Stage(TimeStampModel):
             )
 
         return super(Stage, self).save(*args, **kwargs)
-

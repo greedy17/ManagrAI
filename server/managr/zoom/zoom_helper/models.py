@@ -20,26 +20,29 @@ class ZoomMtg:
         self.topic = kwargs.get("topic", None)
         self.type = kwargs.get("type", None)
         self.start_time = kwargs.get("start_time", None)
+        self.end_time = kwargs.get("end_time", None)
         self.timezone = kwargs.get("timezone", None)
         self.duration = kwargs.get("duration", None)
         self.occurences = kwargs.get("occurences", None)
         self.operator_id = kwargs.get("operator_id", None)
         self.operation = kwargs.get("operation", None)
         self.participants = kwargs.get("participants", None)
+        self.review = kwargs.get("review", None)
+        self.participants_count = kwargs.get("participants_count", None)
+        self.total_minutes = kwargs.get("total_minutes", None)
 
     @classmethod
     def from_webhook(cls, payload):
-        data = payload
-        obj = data.pop("object", None)
+        obj = payload.pop("object", None)
         if obj:
-            data = {**data, **obj}
+            payload = {**payload, **obj}
 
-        meeting_uuid = data.pop("uuid", None)
-        meeting_id = data.pop("id", None)
-        data["meeting_uuid"] = meeting_uuid
-        data["meeting_id"] = meeting_id
+        meeting_uuid = payload.pop("uuid", None)
+        meeting_id = payload.pop("id", None)
+        payload["meeting_uuid"] = meeting_uuid
+        payload["meeting_id"] = meeting_id
 
-        return cls(**data)
+        return cls(**payload)
 
     def get_past_meeting_participants(self, access_token):
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{self.meeting_uuid}/participants"
@@ -92,6 +95,7 @@ class ZoomAcct:
         data = ZoomAcct._handle_response(r)
         meeting_uuid = data.pop("uuid", None)
         meeting_id = data.pop("id", None)
+        # Rename uuid and uid so that they fit the django model and are not confused with django id's
         data["meeting_uuid"] = meeting_uuid
         data["meeting_id"] = meeting_id
         data["zoom_account"] = str(self.id)
@@ -101,7 +105,7 @@ class ZoomAcct:
     def as_dict(self):
         return vars(self)
 
-    def refresh_token(self):
+    def refresh_access_token(self):
         query = zoom_model_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
         ## error handling here
