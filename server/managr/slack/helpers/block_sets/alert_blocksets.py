@@ -81,7 +81,7 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{user.slack_integration.slack_id}>  The score for your meeting *{meeting.topic}* for lead *{meeting.lead.title}* is {meeting.meeting_score}",
+                    "text": f"The score for a meeting *{meeting.topic}* for lead *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
                 },
             },
         ]

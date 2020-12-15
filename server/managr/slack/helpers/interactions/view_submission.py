@@ -79,7 +79,7 @@ def process_zoom_meeting_data(payload, context):
         "description": description,
         "expected_close_date": expected_close_date,
         "next_steps": next_step,
-        "amount": amount,
+        "amount": amount if amount else "",
     }
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
@@ -156,6 +156,8 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
     ).exclude(id__in=new_lead_contacts)
     old_lead.linked_contacts.remove(*old_lead_new_contacts_list)
     new_lead.linked_contacts.set(combined_participants)
+    meeting.lead = new_lead
+    meeting.save()
     # remove newly added leads that are in the meeting participants but are not common with the new_lead contacts
 
     access_token = (

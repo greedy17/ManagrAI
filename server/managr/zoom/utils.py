@@ -11,19 +11,25 @@ def score_meeting(meeting):
             slack_consts.ZOOM_MEETING__NOT_WELL: {"points": 0, "impact": "positive"},
         },
         "stage": {
-            "progressed": {"points": 10, "impact": "positive"},
-            "regressed": {"points": 10, "impact": "negative"},
-            "unchanged": {"points": 0, "impact": "positive"},
+            zoom_consts.MEETING_REVIEW_PROGRESSED: {
+                "points": 10,
+                "impact": "positive",
+            },
+            zoom_consts.MEETING_REVIEW_REGRESSED: {"points": 10, "impact": "negative"},
+            zoom_consts.MEETING_REVIEW_UNCHANGED: {"points": 0, "impact": "positive"},
         },
         "forecast": {
-            "progressed": {"points": 10, "impact": "positive"},
-            "regressed": {"points": 10, "impact": "negative"},
-            "unchanged": {"points": 0, "impact": "positive"},
+            zoom_consts.MEETING_REVIEW_PROGRESSED: {
+                "points": 10,
+                "impact": "positive",
+            },
+            zoom_consts.MEETING_REVIEW_REGRESSED: {"points": 10, "impact": "negative"},
+            zoom_consts.MEETING_REVIEW_UNCHANGED: {"points": 0, "impact": "positive"},
         },
         "expected_close_date": {
-            "progressed": {"points": 5, "impact": "positive"},
-            "regressed": {"points": 5, "impact": "negative"},
-            "unchanged": {"points": 0, "impact": "positive"},
+            zoom_consts.MEETING_REVIEW_PROGRESSED: {"points": 5, "impact": "positive"},
+            zoom_consts.MEETING_REVIEW_REGRESSED: {"points": 5, "impact": "negative"},
+            zoom_consts.MEETING_REVIEW_UNCHANGED: {"points": 0, "impact": "positive"},
         },
         "duration": {
             "meeting_type": {
@@ -44,3 +50,27 @@ def score_meeting(meeting):
             }
         },
     }
+
+    if hasattr(meeting, "meeting_review"):
+        stage_progress = meeting.meeting_review.stage_progress
+        forecast_progress = meeting.meeting_review.forecast_progress
+        expected_close_date_progress = (
+            meeting.meeting_review.expected_close_date_progress
+        )
+        score_items = []
+        score_items.append(
+            scoring_components["sentiment"][meeting.meeting_review.sentiment]
+        )
+        score_items.append(scoring_components["stage"][stage_progress])
+        score_items.append(scoring_components["forecast"][forecast_progress])
+        score_items.append(
+            scoring_components["expected_close_date"][expected_close_date_progress]
+        )
+        for item in score_items:
+            if item["impact"] == "positive":
+                current_score += item["points"]
+            if item["impact"] == "negative":
+                current_score -= item["points"]
+
+    return current_score
+

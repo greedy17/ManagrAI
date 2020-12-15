@@ -328,11 +328,11 @@ class MeetingReview(TimeStampModel):
         if not self.prev_forecast and self.forecast:
             # if there wasnt a previous forecast then we can assume it progressed
             return zoom_consts.MEETING_REVIEW_PROGRESSED
-        if self.prev_forecast and self.forecast:
+        if self.prev_forecast and self.forecast_strength:
             for index, forecast in enumerate(lead_consts.FORECAST_CHOICES):
-                if self.prev_forecast == forecast:
+                if self.prev_forecast == forecast[0]:
                     prev_forecast_rank = index
-                if self.forecast_strength == forecast:
+                if self.forecast_strength == forecast[0]:
                     current_forecast_rank = index
             if prev_forecast_rank > current_forecast_rank:
                 return zoom_consts.MEETING_REVIEW_REGRESSED
@@ -344,9 +344,9 @@ class MeetingReview(TimeStampModel):
 
     @property
     def expected_close_date_progress(self):
-        if self.prev_expected_close_date > self.expected_close_date:
+        if self.prev_expected_close_date > self.updated_close_date:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
-        elif self.prev_expected_close_date < self.expected_close_date:
+        elif self.prev_expected_close_date < self.updated_close_date:
             return zoom_consts.MEETING_REVIEW_REGRESSED
         else:
             return zoom_consts.MEETING_REVIEW_UNCHANGED
@@ -400,13 +400,13 @@ class MeetingReview(TimeStampModel):
         if self.forecast_strength:
             current_forecast = Forecast.objects.filter(lead=lead).first()
             if current_forecast:
-                self.prev_forecast = str(current_forecast.id)
+                self.prev_forecast = current_forecast.forecast
                 current_forecast.forecast = self.forecast_strength
             else:
                 Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
             # update lead forcecase
 
-        if self.update_stage:
+        if self.update_stage and lead.status:
             self.prev_stage = lead.status.id
             lead.status = Stage.objects.filter(id=self.update_stage).first()
 

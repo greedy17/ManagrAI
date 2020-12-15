@@ -20,6 +20,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 
 from managr.zoom.models import ZoomMeeting
+from managr.zoom.utils import score_meeting
 
 from .nylas.emails import send_system_email
 
@@ -615,16 +616,15 @@ def _generate_lead_scores():
 
 def generate_meeting_scores():
 
-    meetings = ZoomMeeting.objects.filter(
-        Q(scoring_in_progress=False) | Q(meeting_score__isnull=True) & Q(is_closed=True)
-    )
+    meetings = ZoomMeeting.objects.all()
     for meeting in meetings:
         # set scoring in progress in case we run this job multiple times
         meeting.scoring_in_progress = True
         meeting.save()
-        meeting.meeting_score = random.randint(0, 95)
+        meeting.meeting_score = score_meeting(meeting)
         meeting.scoring_in_progress = False
         meeting.save()
+
         user = meeting.zoom_account.user
         if user.send_email_to_integrate_slack:
             _send_slack_int_email(user)
