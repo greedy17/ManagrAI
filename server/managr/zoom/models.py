@@ -406,18 +406,18 @@ class MeetingReview(TimeStampModel):
         return "planned"
 
     @property
-    def meeting_duration_score_parameter(self):
-        # TODO: PB Ignore this for now as we do not get the accurate duration from the past meeting webhook
+    def duration_score(self):
         if self.meeting_type_string == "instant":
             if int(self.meeting.duration) >= 60:
-                return "60"
+                return "instant_over_60"
 
             elif int(self.meeting.duration) < 60 and int(self.meeting.duration) >= 30:
-                return "30"
+                return "instant_over_30"
 
             elif int(self.meeting.duration) >= 20 and int(self.meeting.duration) < 30:
-                return "20"
-        elif self.meeting_type_string == "planned":
+                return "instant_over_20"
+
+        if self.meeting_type_string == "planned":
             if int(self.meeting.duration) >= 60:
                 return "60"
 
