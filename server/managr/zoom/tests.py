@@ -1,3 +1,4 @@
+import math
 import uuid
 from datetime import datetime
 import pytz
@@ -344,3 +345,80 @@ class MeetingScoreTestCase(TestCase):
         # 20 (can't tell) + 5
         self.assertEqual(score, 25)
 
+    def test_meeting_participation_score_high(self):
+        meeting_duration = 60
+        avg_participation_time = 53
+        participants = 3
+
+        # Update the meeting:
+        #  - Duration is the actual length the meeting lasted
+        #  - Total minutes is the total participation time of ALL
+        #    participants, mocked here.
+        self.zoom_meeting.duration = meeting_duration
+        self.zoom_meeting.participants_count = participants
+        self.zoom_meeting.total_minutes = (
+            meeting_duration + (participants - 1) * avg_participation_time
+        )
+        self.zoom_meeting.save()
+
+        # Create review and compute score
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # Check that participation score is correct by itself
+        self.assertEqual(self.meeting_review.participation_score, 9)
+
+        # Base of 20 points for "Can't Tell"
+        # + Plus three points for participant count
+        # + Plus a score which should be the avg participation time as a
+        #   percentage of meeting duration, rounded up, divided by 10.
+        self.assertEqual(score, 32)
+
+        # Check the resulting message of the 'participation' component
+        participation_component = [
+            sc for sc in score_components if sc.type == "participation"
+        ][0]
+        self.assertEqual(participation_component.points, 9)
+        self.assertEqual(
+            participation_component.message_tpl,
+            "All attendees participated for the entire duration of the meeting.",
+        )
+
+    def test_meeting_participation_score_low(self):
+        meeting_duration = 60
+        avg_participation_time = 23
+        participants = 2
+
+        # Update the meeting:
+        #  - Duration is the actual length the meeting lasted
+        #  - Total minutes is the total participation time of ALL
+        #    participants, mocked here.
+        self.zoom_meeting.duration = meeting_duration
+        self.zoom_meeting.participants_count = participants
+        self.zoom_meeting.total_minutes = (
+            meeting_duration + (participants - 1) * avg_participation_time
+        )
+        self.zoom_meeting.save()
+
+        # Create review and compute score
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # Check that participation score is correct by itself
+        self.assertEqual(self.meeting_review.participation_score, 4)
+
+        # Base of 20 points for "Can't Tell"
+        # + Plus two points for participant count
+        # + Plus a score which should be the avg participation time as a
+        #   percentage of meeting duration, rounded up, divided by 10.
+        self.assertEqual(score, 26)
+
+        # Check the resulting message of the 'participation' component
+        participation_component = [
+            sc for sc in score_components if sc.type == "participation"
+        ][0]
+        self.assertEqual(participation_component.points, 4)
+        self.assertEqual(
+            participation_component.message_tpl,
+            "Most attendees participated for less than half of the meeting.",
+        )
