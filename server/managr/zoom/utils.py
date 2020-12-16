@@ -28,13 +28,13 @@ SCORE_LOOKUP = {
             "type": "stage",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity moved forward to a new stage: {meeting.update_stage}.",
+            "message_tpl": "The opportunity moved forward to a new stage: {meeting.meeting_review.update_stage}.",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "stage",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity moved backward to a previous stage: {meeting.update_stage}.",
+            "message_tpl": "The opportunity moved backward to a previous stage: {meeting.meeting_review.update_stage}.",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "stage",
@@ -48,13 +48,13 @@ SCORE_LOOKUP = {
             "type": "forecast",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast improved. It is now {meeting.forecast_strength}",
+            "message_tpl": "The opportunity's forecast improved. It is now {meeting.meeting_review.forecast_strength}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "forecast",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.forecast_strength}",
+            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.meeting_review.forecast_strength}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "forecast",
@@ -68,13 +68,13 @@ SCORE_LOOKUP = {
             "type": "close_date",
             "points": 5,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast close date improved. It is now: {meeting.updated_close_date}",
+            "message_tpl": "The opportunity's forecast close date improved. It is now: {meeting.meeting_review.updated_close_date}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "close_date",
             "points": 5,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast close date moved back. It is now: {meeting.updated_close_date}",
+            "message_tpl": "The opportunity's forecast close date moved back. It is now: {meeting.meeting_review.updated_close_date}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "close_date",
@@ -150,6 +150,7 @@ class ScoreComponent:
 
     @property
     def rendered_message(self):
+        print(self)
         return self.message_tpl.format(meeting=self.meeting)
 
     @property

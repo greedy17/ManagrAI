@@ -182,8 +182,8 @@ def process_get_meeting_score_components(payload, context):
     org = meeting.zoom_account.user.organization
     access_token = org.slack_integration.access_token
     blocks = [
-        get_block_set("show_meeting_score_description", {"score": score["message"]})
-        for score in meeting.score_components
+        get_block_set("show_meeting_score_description", {"score": comp["message"]})
+        for comp in meeting.meeting_score_components
     ]
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
@@ -220,7 +220,7 @@ def handle_block_actions(payload):
         slack_const.SHOW_REMINDER_CONTACTS: process_get_contacts,
         slack_const.SHOW_LEAD_CONTACTS: process_get_lead_contacts,
         slack_const.SHOW_LEAD_LOGS: process_get_lead_logs,
-        slack_const.SHOW_SCORE_COMPOENTS: process_get_meeting_score_components,
+        slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

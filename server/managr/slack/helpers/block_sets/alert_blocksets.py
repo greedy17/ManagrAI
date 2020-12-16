@@ -108,15 +108,56 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"The score for a meeting *{meeting.topic}* for lead *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
+                    "text": f"The score for a meeting *{meeting.topic}* for opportunity*{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
                 },
+            },
+            {
+                "type": "actions",
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "View Contacts"},
+                        "text": {
+                            "type": "plain_text",
+                            "text": "View Scoring Components",
+                        },
                         "action_id": action_with_params(
                             slack_const.SHOW_MEETING_SCORE_COMPONENTS,
                             params=[meeting_param],
+                        ),
+                    },
+                ],
+            },
+        ]
+
+
+@block_set(required_context=["l"])
+def lead_score_block_set(context):
+    # Bruno created decorator required context l= lead, u= user m=message
+    # slack mentions format = <@slack_id>
+
+    lead = Lead.objects.filter(id=context.get("l")).first()
+    user = lead.claimed_by
+    lead_param = "l=" + context["l"]
+    if lead:
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f":bangbang: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead.score}",
+                },
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "View Scoring Components",
+                        },
+                        "action_id": action_with_params(
+                            slack_const.SHOW_LEAD_SCORE_COMPONENTS, params=[lead_param],
                         ),
                     },
                 ],
@@ -233,6 +274,20 @@ def lead_activity_log_block_set(context):
 
 @block_set(required_context=["score"])
 def meeting_score_description_block_set(context):
+
+    # slack mentions format = <@slack_id>
+
+    score = context.get("score")
+    obj = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"{score}",},
+    }
+
+    return obj
+
+
+@block_set(required_context=["score"])
+def lead_score_description_block_set(context):
 
     # slack mentions format = <@slack_id>
 
