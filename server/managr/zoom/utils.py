@@ -116,6 +116,12 @@ SCORE_LOOKUP = {
         },
     },
     "duration": {
+        "unknown": {
+            "type": "duration",
+            "points": 0,
+            "impact": "positive",
+            "message_tpl": "Could not determine the meeting duration.",
+        },
         "planned_over_15": {
             "type": "duration",
             "points": 10,
@@ -244,7 +250,6 @@ def score_meeting(meeting):
                 SCORE_LOOKUP["stage"][stage_progress],
                 SCORE_LOOKUP["forecast"][forecast_progress],
                 SCORE_LOOKUP["expected_close_date"][expected_close_date_progress],
-                SCORE_LOOKUP["participants"]["attendees"][participant_count_weighted],
                 SCORE_LOOKUP["attendance"][participant_count_weighted],
                 {
                     "type": "participation",
