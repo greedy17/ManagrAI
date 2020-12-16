@@ -87,6 +87,7 @@ class ZoomAcct:
         self.status = kwargs.get("status", None)
         self.token_generated_date = datetime.now()
         self.token_scope = kwargs.get("scope", None)
+        self.original_duration = kwargs.get("duration", None)
 
     def get_past_meeting(self, meeting_id):
         meeting_id_double_encoded = quote_plus(quote_plus(meeting_id))

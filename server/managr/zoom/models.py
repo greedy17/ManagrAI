@@ -1,5 +1,7 @@
 import jwt
 import pytz
+import math
+
 from datetime import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -233,7 +235,11 @@ class ZoomMeeting(TimeStampModel):
     # Meeting scores
     meeting_score = models.SmallIntegerField(null=True, blank=True)
     meeting_score_components = JSONField(default=dict, blank=True, null=True,)
-
+    original_duration = models.SmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Original duration is the duration sent from the meeting.end webhook, it is updated to the real duration when retrieving from the meetin endpoint so we save it for scoring",
+    )
     #
     objects = ZoomMeetingQuerySet.as_manager()
 
@@ -439,6 +445,19 @@ class MeetingReview(TimeStampModel):
 
         # Five or more
         return 5
+
+    @property
+    def participation_score(self):
+        total_minutes = self.meeting.total_minutes
+        duration = self.meeting.duration
+        participants = self.meeting.participants_count
+
+        if total_minutes and duration:
+            avg_participation_time = (total_minutes - duration) / (participants - 1)
+            avg_percent_time = avg_participation_time / duration
+            score = math.ceil(avg_percent_time * 10)
+            return score
+        return 0
 
     def save(self, *args, **kwargs):
         lead = self.meeting.lead

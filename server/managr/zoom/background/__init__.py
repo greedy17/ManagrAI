@@ -52,12 +52,13 @@ def emit_save_meeting_review_data(managr_meeting_id, data):
 
 
 @background(schedule=0)
-def _get_past_zoom_meeting_details(user_id, meeting_uuid):
+def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     if zoom_account:
         # emit the process
         meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
         meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+        meeting.original_duration = original_duration
         participants = meeting.as_dict.get("participants", None)
         if participants:
             user = zoom_account.user
