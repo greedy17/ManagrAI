@@ -410,28 +410,39 @@ class MeetingReview(TimeStampModel):
         return "planned"
 
     @property
-    def meeting_duration_score_parameter(self):
-        # TODO: PB Ignore this for now as we do not get the accurate duration from the past meeting webhook
+    def duration_score(self):
+        if not self.meeting.duration:
+            return "unknown"
+
+        duration = self.meeting.duration
+        original_duration = self.meeting.original_duration
+
         if self.meeting_type_string == "instant":
-            if int(self.meeting.duration) >= 60:
-                return "60"
+            if duration >= 60:
+                return "instant_over_60"
+            elif duration < 60 and duration >= 30:
+                return "instant_over_30"
+            elif duration >= 20 and duration < 30:
+                return "instant_over_20"
 
-            elif int(self.meeting.duration) < 60 and int(self.meeting.duration) >= 30:
-                return "30"
+        if self.meeting_type_string == "planned":
+            diff = duration - original_duration
 
-            elif int(self.meeting.duration) >= 20 and int(self.meeting.duration) < 30:
-                return "20"
-        elif self.meeting_type_string == "planned":
-            if int(self.meeting.duration) >= 60:
-                return "60"
+            if diff >= 15:
+                return "planned_over_15"
+            elif 5 < diff < 15:
+                return "planned_over_5"
+            elif 0 <= diff <= 5:
+                return "planned_over_2"
+            elif diff <= -15:
+                return "planned_under_15"
+            elif -5 > diff > -15:
+                return "planned_under_5"
+            elif 0 >= diff >= -5:
+                return "planned_under_2"
 
-            elif int(self.meeting.duration) < 60 and int(self.meeting.duration) >= 30:
-                return "30"
-
-            elif int(self.meeting.duration) >= 20 and int(self.meeting.duration) < 30:
-                return "20"
-
-        return
+        # The above logic should capture all possiblities
+        return "unknown"
 
     @property
     def participant_count_weighted(self):

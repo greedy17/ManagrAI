@@ -116,22 +116,66 @@ SCORE_LOOKUP = {
         },
     },
     "duration": {
-        "meeting_type": {
-            "planned": {
-                "over": {
-                    "15": {"points": 10, "impact": "positive"},
-                    "5": {"points": 6, "impact": "positive"},
-                    "2": {"points": 3, "impact": "positive"},
-                },
-            },
-            "instant": {
-                "over": {
-                    "60": {"points": 10, "impact": "positive"},
-                    "30": {"points": 6, "impact": "positive"},
-                    "20": {"points": 3, "impact": "positive"},
-                },
-            },
-        }
+        "unknown": {
+            "type": "duration",
+            "points": 0,
+            "impact": "positive",
+            "message_tpl": "Could not determine the meeting duration.",
+        },
+        "planned_over_15": {
+            "type": "duration",
+            "points": 10,
+            "impact": "positive",
+            "message_tpl": "The meeting went over time by more than 15 minutes.",
+        },
+        "planned_under_15": {
+            "type": "duration",
+            "points": 10,
+            "impact": "negative",
+            "message_tpl": "The meeting was cut short by more than 15 minutes.",
+        },
+        "planned_over_5": {
+            "type": "duration",
+            "points": 6,
+            "impact": "positive",
+            "message_tpl": "The meeting went over time by about 5 minutes.",
+        },
+        "planned_under_5": {
+            "type": "duration",
+            "points": 6,
+            "impact": "negative",
+            "message_tpl": "The meeting was cut short by about 5 minutes.",
+        },
+        "planned_over_2": {
+            "type": "duration",
+            "points": 3,
+            "impact": "positive",
+            "message_tpl": "The meeting went over time by about 2 minutes.",
+        },
+        "planned_under_2": {
+            "type": "duration",
+            "points": 3,
+            "impact": "negative",
+            "message_tpl": "The meeting was cut short by about 2 minutes.",
+        },
+        "instant_over_60": {
+            "type": "duration",
+            "points": 10,
+            "impact": "positive",
+            "message_tpl": "This was an instant meeting that lasted over 60 minutes.",
+        },
+        "instant_over_30": {
+            "type": "duration",
+            "points": 6,
+            "impact": "positive",
+            "message_tpl": "This was an instant meeting that lasted around 30 minutes.",
+        },
+        "instant_over_20": {
+            "type": "duration",
+            "points": 3,
+            "impact": "positive",
+            "message_tpl": "This was an instant meeting that lasted around 20 minutes.",
+        },
     },
 }
 
@@ -180,6 +224,7 @@ def score_meeting(meeting):
         forecast_progress = meeting_review.forecast_progress
         expected_close_date_progress = meeting_review.expected_close_date_progress
         participant_count_weighted = meeting_review.participant_count_weighted
+        duration_score = meeting_review.duration_score
 
         # Participation is treated differently, because it is a "raw" score.
         participation_score = meeting_review.participation_score
@@ -212,6 +257,7 @@ def score_meeting(meeting):
                     "impact": "positive",
                     "message_tpl": participation_msg_tpl,
                 },
+                SCORE_LOOKUP["duration"][duration_score],
             ]
         ]
         score = sum(sc.points for sc in score_components)
