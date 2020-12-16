@@ -63,8 +63,16 @@ export default class ZoomAPI extends ModelAPI {
         Authorization: zoomHeader,
       },
     })
-
-    let fake = JSON.parse(process.env.VUE_APP_FAKE_MEETING_JSON)
+    let fake = {
+      event: 'meeting.ended',
+      payload: {
+        account_id: '',
+        object: {
+          uuid: process.env.VUE_APP_FAKE_MEETING_UUID,
+          host_id: process.env.VUE_APP_FAKE_MEETING_HOST_ID,
+        },
+      },
+    }
 
     let data = {
       ...fake,
@@ -79,8 +87,16 @@ export default class ZoomAPI extends ModelAPI {
   }
 
   async clearDemoMeeting() {
-    let fake = JSON.parse(process.env.VUE_APP_FAKE_MEETING_JSON)
-
+    let fake = {
+      event: 'meeting.ended',
+      payload: {
+        account_id: '',
+        object: {
+          uuid: process.env.VUE_APP_FAKE_MEETING_UUID,
+          host_id: process.env.VUE_APP_FAKE_MEETING_HOST_ID,
+        },
+      },
+    }
     let data = {
       ...fake,
     }
