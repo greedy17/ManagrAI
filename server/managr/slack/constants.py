@@ -3,9 +3,9 @@ from django.conf import settings
 SLACK_API_ROOT = "https://slack.com/api/"
 SLACK_OAUTH_AUTHORIZE_ROOT = "https://slack.com/oauth/v2/authorize"
 
-
-SLACK_SIGNING_SECRET = settings.SLACK_SIGNING_SECRET
-SLACK_APP_VERSION = settings.SLACK_APP_VERSION
+if settings.USE_SLACK:
+    SLACK_SIGNING_SECRET = settings.SLACK_SIGNING_SECRET
+    SLACK_APP_VERSION = settings.SLACK_APP_VERSION
 
 # https://api.slack.com/methods/oauth.v2.access
 OAUTH_V2_ACCESS = "oauth.v2.access"

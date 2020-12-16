@@ -284,6 +284,13 @@ LOGGING = {
 # Popular testing framework that allows logging to stdout while running unit tests
 TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 
+# Shows stdout when running tests.
+NOSE_ARGS = [
+    "--nocapture",
+    "--nologcapture",
+]
+
+
 # Rollbar error logging
 if _env_get_required("USE_ROLLBAR") == "True":
     MIDDLEWARE += [

@@ -621,7 +621,11 @@ def generate_meeting_scores():
         # set scoring in progress in case we run this job multiple times
         meeting.scoring_in_progress = True
         meeting.save()
-        meeting.meeting_score = score_meeting(meeting)
+
+        meeting_score, score_components = score_meeting(meeting)
+        meeting.meeting_score = meeting_score
+        meeting.meeting_score_components = score_components
+
         meeting.scoring_in_progress = False
         meeting.save()
 
