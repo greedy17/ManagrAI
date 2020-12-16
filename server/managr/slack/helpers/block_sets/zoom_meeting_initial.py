@@ -29,6 +29,18 @@ def zoom_meeting_initial(context):
     sentiment_param = lambda x: f"sentiment={x}"
 
     get_time_stamp_id = lambda: f"id={math.floor(datetime.timestamp(datetime.now()))}"
+
+    start_time = meeting.start_time
+    end_time = meeting.end_time
+    formatted_start = (
+        datetime.strftime(start_time, "%a, %B, %Y %I:%M %p")
+        if start_time
+        else start_time
+    )
+    formatted_end = (
+        datetime.strftime(end_time, "%a, %B, %Y %I:%M %p") if end_time else end_time
+    )
+
     return [
         {
             "type": "section",
@@ -42,7 +54,7 @@ def zoom_meeting_initial(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*<fakeLink.toUserProfiles.com|{meeting.topic}>*\nTuesday, January 21 4:00-4:30pm\nBuilding 2 - Havarti Cheese (3)\n2 guests",
+                "text": f"*<fakeLink.toUserProfiles.com|{meeting.topic}>*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
             },
             "accessory": {
                 "type": "image",
@@ -56,11 +68,6 @@ def zoom_meeting_initial(context):
             "text": {
                 "type": "mrkdwn",
                 "text": f"*{lead.title}*\n{get_lead_rating_emoji(lead.rating)}\n{primary_description}\n{secondary_description}",
-            },
-            "accessory": {
-                "type": "image",
-                "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg",
-                "alt_text": "alt text for image",
             },
         },
         {"type": "divider"},

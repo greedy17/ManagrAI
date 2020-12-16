@@ -10,6 +10,7 @@ const GENERATE_CLOSE_ENDPOINT = uid => `/leads/${uid}/close/`
 const DEMO_INACTIVE = 'demo/trigger-inactive/'
 const DEMO_STALLED = 'demo/trigger-stalled/'
 const DEMO_LATE = 'demo/trigger-late/'
+const DEMO_CLOSE = 'demo/close-lead'
 
 export default class LeadAPI {
   /**
@@ -149,6 +150,7 @@ export default class LeadAPI {
    */
 
   clearLog(lead) {
+    console.log(lead)
     const data = {
       lead: lead,
     }
@@ -201,6 +203,18 @@ export default class LeadAPI {
           apiName: 'LeadAPI.list error',
         }),
       )
+    return promise
+  }
+  demoClose(id, amount) {
+    let data = {
+      lead: id,
+      closing_amount: amount,
+    }
+    let url = `${DEMO_CLOSE}/`
+    const promise = apiClient()
+      .post(url, data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'LeadAPI.close' }))
     return promise
   }
 }

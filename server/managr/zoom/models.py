@@ -11,6 +11,7 @@ from managr.core.models import TimeStampModel
 from managr.lead.models import Forecast, Action, ActionChoice
 from managr.organization.models import Stage
 from managr.lead import constants as lead_consts
+from managr.lead.background import emit_event
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -119,6 +120,7 @@ class ZoomAuthAccount(TimeStampModel):
         elif self.is_token_expired and not self.is_refresh_token_expired:
             # first refresh and then revoke
             self.regenerate_token()
+
             self.helper_class.revoke()
         else:
             self.helper_class.revoke()
@@ -447,6 +449,7 @@ class MeetingReview(TimeStampModel):
             if current_forecast:
                 self.prev_forecast = current_forecast.forecast
                 current_forecast.forecast = self.forecast_strength
+                current_forecast.save()
             else:
                 Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
             # update lead forcecase
@@ -462,7 +465,7 @@ class MeetingReview(TimeStampModel):
 
         if self.meeting_type:
             # create action from action choice
-            Action.objects.create(
+            action = Action.objects.create(
                 lead=lead,
                 created_by=lead.claimed_by,
                 action_detail=self.description

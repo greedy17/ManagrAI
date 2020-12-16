@@ -24,6 +24,10 @@ from managr.zoom.background import emit_save_meeting_review_data
     ]
 )
 def process_zoom_meeting_data(payload, context):
+    # get context
+    organization_id_param = "o=" + context["o"]
+    zoom_meeting_id_param = "m=" + context.get("m")
+
     state = payload["view"]["state"]["values"]
     meeting_type_state = state["meeting_type"]
     stage_state = state["stage"]
@@ -32,12 +36,6 @@ def process_zoom_meeting_data(payload, context):
     amount_state = state["amount"]
 
     sentiment = context.get("sentiment", None)
-    if sentiment != slack_const.ZOOM_MEETING__NOT_WELL:
-        forecast_state = state["forecast"]
-        expected_close_date_state = state["expected_close_date"]
-
-    organization_id_param = "o=" + context["o"]
-    zoom_meeting_id_param = "m=" + context.get("m")
     a_id = action_with_params(
         slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
     )
@@ -59,14 +57,20 @@ def process_zoom_meeting_data(payload, context):
     if stage:
         stage = stage["value"]
 
-    a_id = slack_const.GET_LEAD_FORECASTS
-    forecast = forecast_state[a_id]["selected_option"]
-    if forecast:
-        forecast = forecast["value"]
-
+    if sentiment != slack_const.ZOOM_MEETING__NOT_WELL:
+        forecast_state = state["forecast"]
+        expected_close_date_state = state["expected_close_date"]
+        a_id = slack_const.GET_LEAD_FORECASTS
+        forecast = forecast_state[a_id]["selected_option"]
+        forecast = forecast["value"] if forecast else None
+        a_id = slack_const.DEFAULT_ACTION_ID
+        expected_close_date = expected_close_date_state[a_id]["selected_date"]
+    else:
+        forecast = None
+        expected_close_date = None
     a_id = slack_const.DEFAULT_ACTION_ID
     description = description_state[a_id]["value"]
-    expected_close_date = expected_close_date_state[a_id]["selected_date"]
+
     next_step = next_step_state[a_id]["value"]
     amount = amount_state[a_id]["value"]
 
@@ -75,9 +79,9 @@ def process_zoom_meeting_data(payload, context):
         "meeting_id": context.get("m", None),
         "meeting_type": meeting_type,
         "stage": stage,
-        "forecast": forecast,
+        "forecast": forecast if forecast else None,
         "description": description,
-        "expected_close_date": expected_close_date,
+        "expected_close_date": expected_close_date if expected_close_date else None,
         "next_steps": next_step,
         "amount": amount if amount else "",
     }

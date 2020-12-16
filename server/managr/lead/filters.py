@@ -135,7 +135,10 @@ class LeadFilterSet(FilterSet):
             v = value.strip("")
             v = v.split(",")
 
-            return qs.filter(status__in=v)
+            if v[0].startswith("-"):
+                return qs.exclude(status__in=v)
+            else:
+                return qs.filter(status__in=v)
         return qs
 
     def leads_by_rating(self, qs, name, value):
@@ -214,9 +217,9 @@ class LeadFilterSet(FilterSet):
             except ValueError:
                 return queryset
             return queryset.filter(
-                            current_score__final_score__gte=score_lower_bound,
-                            current_score__final_score__lte=score_upper_bound,
-                        )
+                current_score__final_score__gte=score_lower_bound,
+                current_score__final_score__lte=score_upper_bound,
+            )
         return queryset
 
 

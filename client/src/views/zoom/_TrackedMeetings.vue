@@ -31,8 +31,8 @@
           <select @change="selectedDays = $event.target.value" v-model="selectedDays">
             <option value="null">Select Days</option>
             <option value="1">1 day</option>
-            <option value="2">2 days</option>
-            <option value="3">3 days</option>
+            <option value="14">14 days</option>
+            <option value="30">30 days</option>
           </select>
           <button @click="delay" :disabled="!selectedLead || !selectedDays">
             Past Expected Close Date
@@ -40,6 +40,10 @@
           <small
             >This will set the lead's expected close date to be past the expected close date</small
           >
+          <div class="button-group">
+            <button @click="closeLead" :disabled="!selectedLead">Close Lead</button>
+            <small>This will close a lead </small>
+          </div>
         </div>
       </div>
     </div>
@@ -77,10 +81,23 @@ export default {
       }),
     }
   },
+  computed: {
+    getStatuses() {
+      return this.$store.state.stages
+    },
+    getIsClosedStatus() {
+      return this.getStatuses.find(s => s.title == Lead.CLOSED).id
+    },
+  },
   async created() {
+    this.leads.filters.byStatus = `-${this.getIsClosedStatus}`
     await this.leads.refresh()
   },
   methods: {
+    async closeLead() {
+      let closing_amount = '20000.00'
+      await Lead.api.demoClose(this.selectedLead, closing_amount)
+    },
     selectLead(event) {
       this.selectedLead = event.target.value
     },
@@ -91,7 +108,7 @@ export default {
       await Lead.api.delayCloseDate(this.selectedLead, this.selectedDays)
     },
     async inactive() {
-      await Lead.api.clearLog(this.selectLead)
+      await Lead.api.clearLog(this.selectedLead)
     },
   },
 }
