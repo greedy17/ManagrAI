@@ -48,21 +48,27 @@ def reminder_block_set(context):
         ]
 
 
-@block_set(required_context=["l", "u", "m"])
+@block_set(required_context=["l", "u", "m", "t"])
 def opp_inactive_block_set(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
     lead = Lead.objects.filter(id=context.get("l")).first()
     user = User.objects.filter(id=context.get("u")).first()
+    title = context.get("t")
     message = context.get("m")
     if lead and user:
         return [
             {
                 "type": "section",
+                "text": {"type": "mrkdwn", "text": f" :bangbang:  *{title}*",},
+            },
+            {"type": "divider"},
+            {
+                "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{user.slack_integration.slack_id}>  *{message}*",
+                    "text": f"<@{user.slack_integration.slack_id}> {message}",
                 },
             },
         ]
@@ -73,11 +79,7 @@ def meeting_review_score(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
-    meeting = (
-        ZoomMeeting.objects.select_related("slack_integration")
-        .filter(id=context.get("m"))
-        .first()
-    )
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     user = meeting.zoom_account.user
     if meeting:
         return [
@@ -85,7 +87,7 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{user.slack_integration.slack_id}>  The score for your meeting *{meeting.topic}* for lead *{meeting.lead.title}* is {meeting.meeting_score}",
+                    "text": f"The score for a meeting *{meeting.topic}* for lead *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
                 },
             },
         ]
@@ -101,6 +103,13 @@ def opp_closed_report_generated(context):
     user_slack = user.slack_integration.slack_id
     report = lead.story_reports.filter(id=context.get("r")).first()
     primary_contact = report.data["lead"].get("primary_contact", None)
+    worked_with_text = f"{user.full_name} did not work with one specific contact"
+    if primary_contact:
+        first_name = primary_contact.get("first_name", None)
+        last_name = primary_contact.get("last_name", None)
+        worked_with_text = (
+            f"{user.full_name} Primarily worked with {first_name} {last_name}"
+        )
 
     if lead and user:
         return [
@@ -116,13 +125,7 @@ def opp_closed_report_generated(context):
                 "type": "section",
                 "text": {"type": "mrkdwn", "text": f"<@{user_slack}>"},
             },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"{user.full_name} Primarily worked with {primary_contact}",
-                },
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": worked_with_text,},},
             {
                 "type": "section",
                 "text": {"type": "mrkdwn", "text": "see the full report below"},

@@ -1,6 +1,6 @@
 import json
 import requests
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 from datetime import datetime
 
@@ -20,6 +20,7 @@ class ZoomMtg:
         self.topic = kwargs.get("topic", None)
         self.type = kwargs.get("type", None)
         self.start_time = kwargs.get("start_time", None)
+        self.end_time = kwargs.get("end_time", None)
         self.timezone = kwargs.get("timezone", None)
         self.duration = kwargs.get("duration", None)
         self.occurences = kwargs.get("occurences", None)
@@ -44,7 +45,8 @@ class ZoomMtg:
         return cls(**payload)
 
     def get_past_meeting_participants(self, access_token):
-        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{self.meeting_uuid}/participants"
+        meeting_id_double_encoded = quote_plus(quote_plus(self.meeting_uuid))
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}/participants"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {access_token}"))
         r = requests.get(url, headers=headers)
@@ -87,7 +89,8 @@ class ZoomAcct:
         self.token_scope = kwargs.get("scope", None)
 
     def get_past_meeting(self, meeting_id):
-        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id}"
+        meeting_id_double_encoded = quote_plus(quote_plus(meeting_id))
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {self.access_token}"))
         r = requests.get(url, headers=headers)

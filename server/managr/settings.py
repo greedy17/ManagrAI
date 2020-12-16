@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "managr.report",
     "managr.slack",
     "managr.zoom",
+    "managr.demo",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -282,6 +283,13 @@ LOGGING = {
 
 # Popular testing framework that allows logging to stdout while running unit tests
 TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
+
+# Shows stdout when running tests.
+NOSE_ARGS = [
+    "--nocapture",
+    "--nologcapture",
+]
+
 
 # Rollbar error logging
 if _env_get_required("USE_ROLLBAR") == "True":

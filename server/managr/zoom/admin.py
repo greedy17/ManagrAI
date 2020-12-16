@@ -35,6 +35,8 @@ class CustomZoomMeetingForm(ModelForm):
             "interaction_status",
             "participants_count",
             "total_minutes",
+            "meeting_score",
+            "meeting_score_components",
         )
 
 

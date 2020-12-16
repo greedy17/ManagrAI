@@ -8,6 +8,7 @@ from managr.organization import views as organization_views
 from managr.report import views as report_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
+from managr.demo import views as demo_views
 
 
 app_name = "api"
@@ -18,6 +19,17 @@ router = routers.SimpleRouter()
 urlpatterns = [
     path("login/", core_views.UserLoginView.as_view()),
     # NRS 5.28.2020 -- I think most of these can be moved to be detail views on the user
+    path(
+        "demo/trigger-inactive/", demo_views.clear_activity_log, name="trigger-inactive"
+    ),
+    path("demo/trigger-stalled/", demo_views.stalled_in_stage, name="trigger-stalled"),
+    path(
+        "demo/trigger-late/", demo_views.past_expected_close_date, name="trigger-stage"
+    ),
+    path("demo/close-lead/", demo_views.close_lead, name="close-lead",),
+    path(
+        "demo/delete-meeting/", demo_views.delete_demo_meeting, name="delete-meeting",
+    ),
     path(
         "users/activation_link/<email>/",
         core_views.ActivationLinkView.as_view(),
@@ -75,9 +87,7 @@ urlpatterns = [
     ),
     path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
     path(
-        "users/zoom/api/meetings",
-        zoom_views.create_zoom_meeting,
-        name="create_zoom_meeting",
+        "zoom/api/meetings", zoom_views.create_zoom_meeting, name="create_zoom_meeting",
     ),
     path(
         "users/zoom/authenticate",
@@ -100,6 +110,7 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
 ]
+
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
@@ -135,5 +146,8 @@ router.register(
     core_views.NotificationSettingsViewSet,
     "notification-settings",
 )
+router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
+
 router.register("slack", slack_views.SlackViewSet, "slack")
 urlpatterns += router.urls
+

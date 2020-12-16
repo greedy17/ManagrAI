@@ -1,4 +1,7 @@
 import pdb
+import uuid
+from datetime import datetime
+import math
 
 from managr.lead.models import Lead
 from managr.slack import constants as slack_const
@@ -23,6 +26,20 @@ def zoom_meeting_initial(context):
     meeting_id_param = "m=" + context["m"]
 
     organization_id_param = "o=" + context["o"]
+    sentiment_param = lambda x: f"sentiment={x}"
+
+    get_time_stamp_id = lambda: f"id={math.floor(datetime.timestamp(datetime.now()))}"
+
+    start_time = meeting.start_time
+    end_time = meeting.end_time
+    formatted_start = (
+        datetime.strftime(start_time, "%a, %B, %Y %I:%M %p")
+        if start_time
+        else start_time
+    )
+    formatted_end = (
+        datetime.strftime(end_time, "%a, %B, %Y %I:%M %p") if end_time else end_time
+    )
 
     return [
         {
@@ -37,7 +54,7 @@ def zoom_meeting_initial(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*<fakeLink.toUserProfiles.com|{meeting.topic}>*\nTuesday, January 21 4:00-4:30pm\nBuilding 2 - Havarti Cheese (3)\n2 guests",
+                "text": f"*<fakeLink.toUserProfiles.com|{meeting.topic}>*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
             },
             "accessory": {
                 "type": "image",
@@ -52,11 +69,6 @@ def zoom_meeting_initial(context):
                 "type": "mrkdwn",
                 "text": f"*{lead.title}*\n{get_lead_rating_emoji(lead.rating)}\n{primary_description}\n{secondary_description}",
             },
-            "accessory": {
-                "type": "image",
-                "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg",
-                "alt_text": "alt text for image",
-            },
         },
         {"type": "divider"},
         {
@@ -67,12 +79,13 @@ def zoom_meeting_initial(context):
                     "text": {"type": "plain_text", "text": "Great!"},
                     "value": slack_const.ZOOM_MEETING__GREAT,
                     "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__GREAT,
+                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
                         params=[
                             user_id_param,
                             lead_id_param,
                             organization_id_param,
                             meeting_id_param,
+                            sentiment_param(slack_const.ZOOM_MEETING__GREAT),
                         ],
                     ),
                 },
@@ -81,12 +94,28 @@ def zoom_meeting_initial(context):
                     "text": {"type": "plain_text", "text": "Not well...",},
                     "value": slack_const.ZOOM_MEETING__NOT_WELL,
                     "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__NOT_WELL,
+                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
                         params=[
                             user_id_param,
                             lead_id_param,
                             organization_id_param,
                             meeting_id_param,
+                            sentiment_param(slack_const.ZOOM_MEETING__NOT_WELL),
+                        ],
+                    ),
+                },
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Can't Tell",},
+                    "value": slack_const.ZOOM_MEETING__CANT_TELL,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+                        params=[
+                            user_id_param,
+                            lead_id_param,
+                            organization_id_param,
+                            meeting_id_param,
+                            sentiment_param(slack_const.ZOOM_MEETING__CANT_TELL),
                         ],
                     ),
                 },

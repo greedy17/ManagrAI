@@ -1,6 +1,6 @@
 from .zoom_meeting_initial import zoom_meeting_initial
 from .zoom_meeting_complete_form import zoom_meeting_complete_form
-from .zoom_meeting_limited_form import zoom_meeting_limited_form
+
 from .selected_different_opportunity import select_different_opportunity
 from .confirm_meeting_logged import confirm_meeting_logged
 from . import alert_blocksets as slack_alerts
@@ -22,7 +22,6 @@ def get_block_set(set_name, context={}):
     switcher = {
         "zoom_meeting_initial": zoom_meeting_initial,
         "zoom_meeting_complete_form": zoom_meeting_complete_form,
-        "zoom_meeting_limited_form": zoom_meeting_limited_form,
         "select_different_opportunity": select_different_opportunity,
         "confirm_meeting_logged": confirm_meeting_logged,
         "reminder_block_set": slack_alerts.reminder_block_set,

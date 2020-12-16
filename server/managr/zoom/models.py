@@ -11,6 +11,8 @@ from managr.core.models import TimeStampModel
 from managr.lead.models import Forecast, Action, ActionChoice
 from managr.organization.models import Stage
 from managr.lead import constants as lead_consts
+from managr.lead.background import emit_event
+
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
 
@@ -58,6 +60,8 @@ class ZoomAuthAccount(TimeStampModel):
     refresh_token = models.TextField()
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
+
+    objects = ZoomAuthAccountQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -116,11 +120,25 @@ class ZoomAuthAccount(TimeStampModel):
         elif self.is_token_expired and not self.is_refresh_token_expired:
             # first refresh and then revoke
             self.regenerate_token()
+
             self.helper_class.revoke()
         else:
             self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
+
+
+class ZoomMeetingQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
+                return self.filter(zoom_account__user__organization=user.organization)
+            elif user.type == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(zoom_account__user=user)
+            else:
+                return self.none()
 
 
 class ZoomMeeting(TimeStampModel):
@@ -135,6 +153,7 @@ class ZoomMeeting(TimeStampModel):
     topic = models.CharField(max_length=255, null=True, blank=True)
     type = models.PositiveSmallIntegerField()
     start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
         max_length=255,
@@ -210,8 +229,16 @@ class ZoomMeeting(TimeStampModel):
     )
     participants_count = models.SmallIntegerField(null=True, blank=True)
     total_minutes = models.SmallIntegerField(null=True, blank=True)
+
+    # Meeting scores
     meeting_score = models.SmallIntegerField(null=True, blank=True)
     meeting_score_components = JSONField(default=dict, blank=True, null=True,)
+
+    #
+    objects = ZoomMeetingQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
 
     @property
     def should_retry(self):
@@ -267,7 +294,6 @@ class MeetingReview(TimeStampModel):
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
     description = models.TextField(blank=True, null=True, max_length=255)
-    updated_close_date = models.DateTimeField(null=True, blank=True, max_length=255)
     next_steps = models.TextField(
         blank=True, null=True, help_text="populates secondary description"
     )
@@ -276,6 +302,14 @@ class MeetingReview(TimeStampModel):
         choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
         blank=True,
         null=True,
+    )
+    amount = models.DecimalField(
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
     )
     prev_forecast = models.CharField(
         choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
@@ -286,24 +320,141 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
-    prev_expected_close_date = models.DateTimeField(
-        null=True, blank=True, max_length=255
+    prev_expected_close_date = models.DateTimeField(null=True, blank=True)
+    updated_close_date = models.DateTimeField(null=True, blank=True)
+    prev_amount = models.DecimalField(
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
     )
+
+    @property
+    def stage_progress(self):
+        # Moving from 'None' to a stage is progress
+        if not self.prev_stage and self.update_stage:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        # Moving from a stage to 'None' is a regression
+        if self.prev_stage and not self.update_stage:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        # Check moving from any stage to another
+        if self.prev_stage and self.update_stage:
+            prev_stage_order = Stage.objects.get(id=self.prev_stage).order
+            current_stage_order = Stage.objects.get(id=self.update_stage).order
+
+            if prev_stage_order < current_stage_order:
+                return zoom_consts.MEETING_REVIEW_PROGRESSED
+            if prev_stage_order > current_stage_order:
+                return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        # Otherwise, assume unchanged
+        return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
+    def forecast_progress(self):
+        # Moving from 'None' to a forecast is progress
+        if not self.prev_forecast and self.forecast_strength:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        # Moving from a forecast to 'None' is a regression
+        if self.prev_forecast and not self.forecast_strength:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        if self.prev_forecast and self.forecast_strength:
+            for index, forecast in enumerate(lead_consts.FORECAST_CHOICES):
+                if self.prev_forecast == forecast[0]:
+                    prev_forecast_rank = index
+                if self.forecast_strength == forecast[0]:
+                    current_forecast_rank = index
+
+            if prev_forecast_rank > current_forecast_rank:
+                return zoom_consts.MEETING_REVIEW_REGRESSED
+            elif prev_forecast_rank < current_forecast_rank:
+                return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
+    def expected_close_date_progress(self):
+        if not self.prev_expected_close_date and not self.updated_close_date:
+            return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+        if not self.prev_expected_close_date and self.updated_close_date:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        if self.prev_expected_close_date and not self.updated_close_date:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        if self.prev_expected_close_date > self.updated_close_date:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        elif self.prev_expected_close_date < self.updated_close_date:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
+    def meeting_type_string(self):
+        if self.meeting.type == 1:
+            return "instant"
+        return "planned"
+
+    @property
+    def meeting_duration_score_parameter(self):
+        # TODO: PB Ignore this for now as we do not get the accurate duration from the past meeting webhook
+        if self.meeting_type_string == "instant":
+            if int(self.meeting.duration) >= 60:
+                return "60"
+
+            elif int(self.meeting.duration) < 60 and int(self.meeting.duration) >= 30:
+                return "30"
+
+            elif int(self.meeting.duration) >= 20 and int(self.meeting.duration) < 30:
+                return "20"
+        elif self.meeting_type_string == "planned":
+            if int(self.meeting.duration) >= 60:
+                return "60"
+
+            elif int(self.meeting.duration) < 60 and int(self.meeting.duration) >= 30:
+                return "30"
+
+            elif int(self.meeting.duration) >= 20 and int(self.meeting.duration) < 30:
+                return "20"
+
+        return
+
+    @property
+    def participant_count_weighted(self):
+        # None, zero, or one participant
+        if not self.meeting.participants_count or self.meeting.participants_count == 1:
+            return 0
+
+        # Two to five
+        if 2 <= self.meeting.participants_count <= 5:
+            return self.meeting.participants_count
+
+        # Five or more
+        return 5
 
     def save(self, *args, **kwargs):
         lead = self.meeting.lead
 
         # adjust lead data based on these fields
         if self.forecast_strength:
-            if hasattr(lead, "forecast"):
-                self.prev_forecast = lead.forecast.forecast
-                lead.forecast.forecast = self.forecast_strength
-
+            current_forecast = Forecast.objects.filter(lead=lead).first()
+            if current_forecast:
+                self.prev_forecast = current_forecast.forecast
+                current_forecast.forecast = self.forecast_strength
+                current_forecast.save()
             else:
                 Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
             # update lead forcecase
 
-        if self.update_stage:
+        if self.update_stage and lead.status:
             self.prev_stage = lead.status.id
             lead.status = Stage.objects.filter(id=self.update_stage).first()
 
@@ -314,7 +465,7 @@ class MeetingReview(TimeStampModel):
 
         if self.meeting_type:
             # create action from action choice
-            Action.objects.create(
+            action = Action.objects.create(
                 lead=lead,
                 created_by=lead.claimed_by,
                 action_detail=self.description
@@ -322,9 +473,18 @@ class MeetingReview(TimeStampModel):
                 else "NO DESCRIPTION",
                 action_type=ActionChoice.objects.filter(id=self.meeting_type).first(),
             )
-        if self.updated_close_date:
+
+        # Override previous close date with whatever is on the Lead
+        if lead.expected_close_date:
             self.prev_expected_close_date = lead.expected_close_date
+
+        # Update the lead with the new data
+        if self.updated_close_date:
             lead.expected_close_date = self.updated_close_date
+
+        if self.amount:
+            self.prev_amount = lead.amount
+            lead.amount = float(self.amount)
 
         lead.save()
 

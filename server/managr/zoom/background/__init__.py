@@ -74,9 +74,19 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid):
 
                     c, created = Contact.objects.for_user(user).get_or_create(
                         email=contact["user_email"].lower(),
-                        defaults={"account": lead.account},
+                        defaults={
+                            "account": lead.account,
+                            "organization": lead.account.organization,
+                        },
                     )
+
                     if created:
+                        if contact["name"]:
+                            name_items = contact["name"].split(" ")
+                            c.first_name = name_items[0]
+                            if len(name_items) > 1:
+                                c.last_name = " ".join(name_items[1:])
+                            c.save()
                         lead.linked_contacts.add(c)
                     meeting_contacts.append(c.id)
 
@@ -133,7 +143,7 @@ def _save_meeting_review_data(managr_meeting_id, data):
         date = data.get("expected_close_date", None)
         if date:
             ## make it aware by adding utc
-            date = datetime.strptime(date, "%Y-%M-%d")
+            date = datetime.strptime(date, "%Y-%m-%d")
             date = pytz.utc.localize(date)
         obj = dict()
         obj["meeting"] = meeting
@@ -144,6 +154,7 @@ def _save_meeting_review_data(managr_meeting_id, data):
         obj["next_steps"] = data.get("next_steps", None)
         obj["updated_close_date"] = date
         obj["sentiment"] = data.get("sentiment", None)
+        obj["amount"] = data.get("amount", None)
 
         MeetingReview.objects.create(**obj)
         # send slack notification when it is ready

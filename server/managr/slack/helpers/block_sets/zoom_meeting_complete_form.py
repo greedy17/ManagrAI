@@ -15,11 +15,12 @@ def zoom_meeting_complete_form(context):
     expected_close_date = (
         str(lead.expected_close_date.date()) if lead.expected_close_date else None
     )
+    amount = lead.amount if lead.amount else None
 
     # make params here
     organization_id_param = "o=" + context.get("o")
 
-    return [
+    blocks = [
         {
             "type": "section",
             "fields": [
@@ -79,4 +80,23 @@ def zoom_meeting_complete_form(context):
             },
             "block_id": "next_step",
         },
+        {
+            "type": "input",
+            "optional": True,
+            "label": {"type": "plain_text", "text": "Amount"},
+            "element": {
+                "type": "plain_text_input",
+                "action_id": slack_const.DEFAULT_ACTION_ID,
+                "placeholder": {"type": "plain_text", "text": "Amount?"},
+                "initial_value": str(amount),
+            },
+            "block_id": "amount",
+        },
     ]
+    ### TODO: this is currently done manually but is not reliable
+    if context["sentiment"] == slack_const.ZOOM_MEETING__NOT_WELL:
+        # no forecast no expected close date
+        del blocks[4]
+        del blocks[5]
+
+    return blocks

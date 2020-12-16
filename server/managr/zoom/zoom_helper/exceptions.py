@@ -27,6 +27,9 @@ class ZoomAPIException:
         if self.code == 429 or self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured with a zoom integration, {self.fn_name}")
             raise Zoom500Error()
+        if self.code == 401 and self.code == 124:
+            # trigger refresh token
+            return
         else:
             raise ValidationError(
                 {

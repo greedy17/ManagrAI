@@ -20,6 +20,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 
 from managr.zoom.models import ZoomMeeting
+from managr.zoom.utils import score_meeting
 
 from .nylas.emails import send_system_email
 
@@ -353,7 +354,7 @@ def create_lead_notifications():
                         if hasattr(user, "slack_integration"):
                             ## check if alert already exists
                             title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-                            slack_message = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
+                            slack_message = f"The opportunity *{lead.title}* has not shown any activity since *{latest_activity_str}*"
 
                             user_slack_channel = user.slack_integration.channel
                             slack_org_access_token = (
@@ -365,6 +366,7 @@ def create_lead_notifications():
                                     "l": str(lead.id),
                                     "m": slack_message,
                                     "u": str(user.id),
+                                    "t": title,
                                 },
                             )
                             slack_requests.send_channel_message(
@@ -464,8 +466,8 @@ def create_lead_notifications():
                                 _send_slack_int_email(user)
                             if hasattr(user, "slack_integration"):
                                 ## check if alert already exists
-                                title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
-                                content = f"This opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
+                                title = f"Opportunity {lead.title} expected to close {notification_late_for_days} day(s) ago"
+                                content = f"This *{lead.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{is_lapsed}* day(s) over"
 
                                 user_slack_channel = user.slack_integration.channel
                                 slack_org_access_token = (
@@ -477,6 +479,7 @@ def create_lead_notifications():
                                         "l": str(lead.id),
                                         "m": content,
                                         "u": str(user.id),
+                                        "t": title,
                                     },
                                 )
                                 slack_requests.send_channel_message(
@@ -558,7 +561,7 @@ def create_lead_notifications():
                             str(lead.id),
                         ):
                             title = "Opportunity stalled in stage for over 60 days"
-                            content = f"{lead.title} has been in the same stage since {status_last_updated_str}"
+                            content = f"*{lead.title}* has been in the same stage since *{status_last_updated_str}*"
                             # create notification of that class in notifications
 
                             # when checking slack notification settings, if the user has opted to
@@ -578,6 +581,7 @@ def create_lead_notifications():
                                         "l": str(lead.id),
                                         "m": content,
                                         "u": str(user.id),
+                                        "t": title,
                                     },
                                 )
                                 slack_requests.send_channel_message(
@@ -594,6 +598,8 @@ def create_lead_notifications():
                                     user,
                                     core_consts.NOTIFICATION_TYPE_SLACK,
                                 )
+
+    return
 
 
 @kronos.register("0 0 * * *")
@@ -614,21 +620,50 @@ def _generate_lead_scores():
 
 
 def generate_meeting_scores():
-    meetings = ZoomMeeting.objects.select_related("meeting_review").filter(
-        meeting_score__isnull=True, is_closed=True
+    """
+
+    We will generate scores in these cases:
+
+    1. The meeting has been 'closed' by the user AND the meeting does not have
+       a score yet AND scoring is not currently in progress.
+    2. OR The meeting ended three or more hours ago AND the user has not 'closed'
+       the meeting AND scoring is not in progress.
+    """
+    three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
+    meetings = ZoomMeeting.objects.filter(
+        Q(meeting_score__isnull=True, is_closed=True, scoring_in_progress=False)
+        | Q(
+            datetime_created__lte=three_hours_ago,
+            is_closed=False,
+            scoring_in_progress=False,
+        )
     )
     for meeting in meetings:
-        meeting.score = random.randint(0, 95)
-        meeting.score.save()
+        # set scoring in progress in case we run this job multiple times
+        meeting.scoring_in_progress = True
+        meeting.save()
+
+        meeting_score, score_components = score_meeting(meeting)
+        meeting.meeting_score = meeting_score
+        meeting.meeting_score_components = [sc.as_dict for sc in score_components]
+
+        meeting.scoring_in_progress = False
+        meeting.save()
+
         user = meeting.zoom_account.user
         if user.send_email_to_integrate_slack:
             _send_slack_int_email(user)
         if hasattr(user, "slack_integration"):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
-            slack_requests.send_channel_message(
-                user_slack_channel,
-                slack_org_access_token,
-                block_set=get_block_set("meeting_review_score", {"m": str(meeting.id)}),
-            )
+            managers = user.organization.users.filter(type="MANAGER")
+            for manager in managers:
+                if hasattr(manager, "slack_integration"):
+                    slack_requests.send_channel_message(
+                        user_slack_channel,
+                        slack_org_access_token,
+                        block_set=get_block_set(
+                            "meeting_review_score", {"m": str(meeting.id)}
+                        ),
+                    )
 
