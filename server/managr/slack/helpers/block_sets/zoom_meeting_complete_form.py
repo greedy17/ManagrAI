@@ -97,6 +97,6 @@ def zoom_meeting_complete_form(context):
     if context["sentiment"] == slack_const.ZOOM_MEETING__NOT_WELL:
         # no forecast no expected close date
         del blocks[4]
-        del blocks[6]
+        del blocks[5]
 
     return blocks

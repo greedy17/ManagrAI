@@ -143,7 +143,7 @@ def _save_meeting_review_data(managr_meeting_id, data):
         date = data.get("expected_close_date", None)
         if date:
             ## make it aware by adding utc
-            date = datetime.strptime(date, "%Y-%M-%d")
+            date = datetime.strptime(date, "%Y-%m-%d")
             date = pytz.utc.localize(date)
         obj = dict()
         obj["meeting"] = meeting

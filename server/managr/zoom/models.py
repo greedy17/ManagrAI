@@ -433,6 +433,7 @@ class MeetingReview(TimeStampModel):
             if current_forecast:
                 self.prev_forecast = current_forecast.forecast
                 current_forecast.forecast = self.forecast_strength
+                current_forecast.save()
             else:
                 Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
             # update lead forcecase

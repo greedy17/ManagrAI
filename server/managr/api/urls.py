@@ -28,6 +28,9 @@ urlpatterns = [
     ),
     path("demo/close-lead/", demo_views.close_lead, name="close-lead",),
     path(
+        "demo/delete-meeting/", demo_views.delete_demo_meeting, name="delete-meeting",
+    ),
+    path(
         "users/activation_link/<email>/",
         core_views.ActivationLinkView.as_view(),
         name="get_activation_link",

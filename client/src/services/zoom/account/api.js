@@ -77,4 +77,19 @@ export default class ZoomAPI extends ModelAPI {
       console.log(e)
     }
   }
+
+  async clearDemoMeeting() {
+    let fake = JSON.parse(process.env.VUE_APP_FAKE_MEETING_JSON)
+
+    let data = {
+      ...fake,
+    }
+
+    try {
+      const res = await this.client.post('demo/delete-meeting/', data)
+      return res.data
+    } catch (e) {
+      console.log(e)
+    }
+  }
 }

@@ -103,6 +103,13 @@ def opp_closed_report_generated(context):
     user_slack = user.slack_integration.slack_id
     report = lead.story_reports.filter(id=context.get("r")).first()
     primary_contact = report.data["lead"].get("primary_contact", None)
+    worked_with_text = f"{user.full_name} did not work with one specific contact"
+    if primary_contact:
+        first_name = primary_contact.get("first_name", None)
+        last_name = primary_contact.get("last_name", None)
+        worked_with_text = (
+            f"{user.full_name} Primarily worked with {first_name} {last_name}"
+        )
 
     if lead and user:
         return [
@@ -118,13 +125,7 @@ def opp_closed_report_generated(context):
                 "type": "section",
                 "text": {"type": "mrkdwn", "text": f"<@{user_slack}>"},
             },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"{user.full_name} Primarily worked with {primary_contact['first_name']} {primary_contact['last_name']}",
-                },
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": worked_with_text,},},
             {
                 "type": "section",
                 "text": {"type": "mrkdwn", "text": "see the full report below"},

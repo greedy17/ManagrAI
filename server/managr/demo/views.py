@@ -38,6 +38,7 @@ from managr.lead import constants as lead_consts
 from managr.organization import constants as org_consts
 from managr.organization.models import Stage
 from managr.lead.background import emit_event
+from managr.zoom.models import ZoomMeeting
 
 # Create your views here.
 
@@ -144,5 +145,16 @@ def close_lead(request):
         )
     lead.save()
     emit_event(lead_consts.LEAD_CLOSED, request.user, lead)
+
+    return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_demo_meeting(request):
+    meeting_uuid = request.data["payload"]["object"]["uuid"]
+    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    if meeting:
+        meeting.delete()
 
     return Response()
