@@ -233,7 +233,11 @@ class ZoomMeeting(TimeStampModel):
     # Meeting scores
     meeting_score = models.SmallIntegerField(null=True, blank=True)
     meeting_score_components = JSONField(default=dict, blank=True, null=True,)
-
+    original_duration = models.SmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Original duration is the duration sent from the meeting.end webhook, it is updated to the real duration when retrieving from the meetin endpoint so we save it for scoring",
+    )
     #
     objects = ZoomMeetingQuerySet.as_manager()
 

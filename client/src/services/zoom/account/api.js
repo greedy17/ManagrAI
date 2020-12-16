@@ -70,6 +70,7 @@ export default class ZoomAPI extends ModelAPI {
         object: {
           uuid: process.env.VUE_APP_FAKE_MEETING_UUID,
           host_id: process.env.VUE_APP_FAKE_MEETING_HOST_ID,
+          duration: 20,
         },
       },
     }
