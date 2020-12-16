@@ -70,6 +70,7 @@ class ZoomMeetingWebhookSerializer(serializers.ModelSerializer):
             "occurences",
             "operator_id",
             "operation",
+            "original_duration",
         )
 
 
@@ -103,4 +104,5 @@ class ZoomMeetingSerializer(serializers.ModelSerializer):
             "end_time",
             "participants_count",
             "total_minutes",
+            "original_duration",
         )

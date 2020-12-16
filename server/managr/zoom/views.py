@@ -111,12 +111,17 @@ def zoom_meetings_webhook(request):
         obj = {**obj, **extra_obj}
         host_id = obj.get("host_id", None)
         meeting_uuid = obj.get("uuid", None)
+        original_duration = obj.get("duration", None)
+        if not original_duration or original_duration < 0:
+            original_duration = 0
         ### move all this to a background task, zoom requires response in 60s
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
 
         if zoom_account:
             # emit the process
-            _get_past_zoom_meeting_details(str(zoom_account.user.id), meeting_uuid)
+            _get_past_zoom_meeting_details(
+                str(zoom_account.user.id), meeting_uuid, original_duration
+            )
 
     return Response()
 
