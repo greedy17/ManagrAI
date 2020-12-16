@@ -370,9 +370,10 @@ class MeetingScoreTestCase(TestCase):
 
         # Base of 20 points for "Can't Tell"
         # + Plus three points for participant count
+        # + Plus ten points for meeting duration (instant over 60)
         # + Plus a score which should be the avg participation time as a
         #   percentage of meeting duration, rounded up, divided by 10.
-        self.assertEqual(score, 32)
+        self.assertEqual(score, 42)
 
         # Check the resulting message of the 'participation' component
         participation_component = [
@@ -409,9 +410,10 @@ class MeetingScoreTestCase(TestCase):
 
         # Base of 20 points for "Can't Tell"
         # + Plus two points for participant count
+        # + Plus ten points for meeting duration (instant over 60)
         # + Plus a score which should be the avg participation time as a
         #   percentage of meeting duration, rounded up, divided by 10.
-        self.assertEqual(score, 26)
+        self.assertEqual(score, 36)
 
         # Check the resulting message of the 'participation' component
         participation_component = [
@@ -422,3 +424,126 @@ class MeetingScoreTestCase(TestCase):
             participation_component.message_tpl,
             "Most attendees participated for less than half of the meeting.",
         )
+
+    def test_meeting_duration_instant_over_60(self):
+        self.zoom_meeting.type = 1
+        self.zoom_meeting.duration = 65
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "instant_over_60")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 10
+        self.assertEqual(score, 30)
+
+    def test_meeting_duration_instant_over_30(self):
+        self.zoom_meeting.type = 1
+        self.zoom_meeting.duration = 40
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "instant_over_30")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 6
+        self.assertEqual(score, 26)
+
+    def test_meeting_duration_instant_over_20(self):
+        self.zoom_meeting.type = 1
+        self.zoom_meeting.duration = 20
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "instant_over_20")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 3
+        self.assertEqual(score, 23)
+
+    def test_meeting_duration_planned_over_15(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 15
+        self.zoom_meeting.duration = 35
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_15")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 10
+        self.assertEqual(score, 30)
+
+    def test_meeting_duration_planned_over_5(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 15
+        self.zoom_meeting.duration = 25
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_5")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 10
+        self.assertEqual(score, 26)
+
+    def test_meeting_duration_planned_over_2(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 15
+        self.zoom_meeting.duration = 17
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_2")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) + 3
+        self.assertEqual(score, 23)
+
+    def test_meeting_duration_planned_under_15(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 45
+        self.zoom_meeting.duration = 15
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_under_15")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) - 10
+        self.assertEqual(score, 10)
+
+    def test_meeting_duration_planned_under_5(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 45
+        self.zoom_meeting.duration = 35
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_under_5")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) - 6
+        self.assertEqual(score, 14)
+
+    def test_meeting_duration_planned_under_2(self):
+        self.zoom_meeting.type = 0
+        self.zoom_meeting.original_duration = 45
+        self.zoom_meeting.duration = 42
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
+        self.assertEqual(self.meeting_review.duration_score, "planned_under_2")
+
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        # 20 (can't tell) - 3
+        self.assertEqual(score, 17)
