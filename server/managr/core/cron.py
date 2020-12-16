@@ -615,8 +615,24 @@ def _generate_lead_scores():
 
 
 def generate_meeting_scores():
+    """
 
-    meetings = ZoomMeeting.objects.all()
+    We will generate scores in these cases:
+
+    1. The meeting has been 'closed' by the user AND the meeting does not have
+       a score yet AND scoring is not currently in progress.
+    2. OR The meeting ended three or more hours ago AND the user has not 'closed'
+       the meeting AND scoring is not in progress.
+    """
+    three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
+    meetings = ZoomMeeting.objects.filter(
+        Q(meeting_score__isnull=True, is_closed=True, scoring_in_progress=False)
+        | Q(
+            datetime_created__lte=three_hours_ago,
+            is_closed=False,
+            scoring_in_progress=False,
+        )
+    )
     for meeting in meetings:
         # set scoring in progress in case we run this job multiple times
         meeting.scoring_in_progress = True
@@ -624,7 +640,7 @@ def generate_meeting_scores():
 
         meeting_score, score_components = score_meeting(meeting)
         meeting.meeting_score = meeting_score
-        meeting.meeting_score_components = score_components
+        meeting.meeting_score_components = [sc.as_dict for sc in score_components]
 
         meeting.scoring_in_progress = False
         meeting.save()
