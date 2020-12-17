@@ -131,6 +131,24 @@ class MeetingScoreTestCase(TestCase):
         # Without a sentiment, the score is 20 (can't tell) + 10 (progress)
         self.assertEqual(score, 30)
 
+    def test_meeting_stage_progressed_render_message(self):
+        self.meeting_review = MeetingReview.objects.create(
+            meeting=self.zoom_meeting,
+            prev_stage=self.ready_stage.id,
+            update_stage=self.booked_stage.id,
+        )
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        stage_component = [sc for sc in score_components if sc.type == "stage"][0]
+
+        self.assertEqual(
+            stage_component.rendered_message,
+            "The opportunity moved forward to a new stage: BOOKED.",
+        )
+
+        # Without a sentiment, the score is 20 (can't tell) + 10 (progress)
+        self.assertEqual(score, 30)
+
     def test_meeting_review_stage_regressed_to_none(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
@@ -239,6 +257,15 @@ class MeetingScoreTestCase(TestCase):
 
         # Without a sentiment, the score is 20 (can't tell) + 5 (progress)
         self.assertEqual(score, 25)
+
+        # Check rendered message
+        close_date_component = [
+            sc for sc in score_components if sc.type == "close_date"
+        ][0]
+        self.assertEqual(
+            close_date_component.rendered_message,
+            "The opportunity's forecast close date improved. It is now: 12/15/2020",
+        )
 
     def test_meeting_close_date_regression_from_prev(self):
         self.meeting_review = MeetingReview.objects.create(
@@ -545,5 +572,3 @@ class MeetingScoreTestCase(TestCase):
 
         score, score_components = score_meeting(self.zoom_meeting)
 
-        # 20 (can't tell) - 3
-        self.assertEqual(score, 17)
