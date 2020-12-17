@@ -108,7 +108,7 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"The score for a meeting *{meeting.topic}* for opportunity*{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
+                    "text": f":heavy_check_mark: The score for a meeting *{meeting.topic}* for opportunity *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
                 },
             },
             {
@@ -147,7 +147,7 @@ def lead_score_block_set(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f":bangbang: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead_score.final_score}",
+                    "text": f":heavy_check_mark: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead_score.final_score}",
                 },
             },
             {
@@ -193,7 +193,7 @@ def opp_closed_report_generated(context):
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"Boom closed {lead.title} for ${lead.closing_amount} :clapping:",
+                    "text": f"Boom closed {lead.title} for ${lead.closing_amount} :heavy_check_mark:",
                 },
             },
             {"type": "divider"},
