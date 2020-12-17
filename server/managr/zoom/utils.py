@@ -2,6 +2,20 @@ from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.organization.models import Stage
 
+#
+# Meeting Scoring Algorithm
+#
+# The scoring algo is made up of six components.
+#
+# 1. Sentiment (0-50 points)
+# 2. Stage Progress (+/-10 points)
+# 3. Forecast Progress (+/-10 points)
+# 4. Close Date Progress (+/-5 points)
+# 5. Attendance (0-5 points)
+# 6. Participation (0-10 points)
+# 7. Duration (-10-10 points)
+#
+
 # Data structure defining how meeting scores are computed.
 SCORE_LOOKUP = {
     "sentiment": {

@@ -574,3 +574,20 @@ class MeetingScoreTestCase(TestCase):
 
         # 20 (can't tell) + 3
         self.assertEqual(score, 23)
+
+    def test_meeting_max_score(self):
+        self.zoom_meeting.duration = 60
+        self.zoom_meeting.participants_count = 5
+        self.zoom_meeting.total_minutes = 76 * 5
+        self.zoom_meeting.save()
+
+        self.meeting_review = MeetingReview.objects.create(
+            meeting=self.zoom_meeting,
+            sentiment=slack_consts.ZOOM_MEETING__GREAT,
+            update_stage=self.ready_stage.id,
+            forecast_strength=lead_consts.FORECAST_FIFTY_FIFTY,
+            updated_close_date=datetime(2020, 12, 15),
+        )
+        score, score_components = score_meeting(self.zoom_meeting)
+
+        self.assertEqual(score, 100)

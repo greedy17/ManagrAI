@@ -460,7 +460,7 @@ class MeetingReview(TimeStampModel):
         if total_minutes and duration:
             avg_participation_time = (total_minutes - duration) / (participants - 1)
             avg_percent_time = avg_participation_time / duration
-            score = math.ceil(avg_percent_time * 10)
+            score = max(0, min(math.ceil(avg_percent_time * 10), 10))
             return score
         return 0
 
