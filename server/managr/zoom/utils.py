@@ -1,5 +1,6 @@
 from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
+from managr.organization.models import Stage
 
 # Data structure defining how meeting scores are computed.
 SCORE_LOOKUP = {
@@ -28,13 +29,13 @@ SCORE_LOOKUP = {
             "type": "stage",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity moved forward to a new stage: {meeting.update_stage}.",
+            "message_tpl": "The opportunity moved forward to a new stage: {new_stage_name}.",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "stage",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity moved backward to a previous stage: {meeting.update_stage}.",
+            "message_tpl": "The opportunity moved backward to a previous stage: {new_stage_name}.",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "stage",
@@ -68,13 +69,13 @@ SCORE_LOOKUP = {
             "type": "close_date",
             "points": 5,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast close date improved. It is now: {meeting.updated_close_date}",
+            "message_tpl": "The opportunity's forecast close date improved. It is now: {new_close_date}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "close_date",
             "points": 5,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast close date moved back. It is now: {meeting.updated_close_date}",
+            "message_tpl": "The opportunity's forecast close date moved back. It is now: {new_close_date}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "close_date",
@@ -194,7 +195,23 @@ class ScoreComponent:
 
     @property
     def rendered_message(self):
-        return self.message_tpl.format(meeting=self.meeting)
+        # HACK: Provide general-purpose context to the formatter
+        new_stage_name = ""
+        new_close_date = ""
+        if self.meeting.meeting_review.update_stage:
+            stage = Stage.objects.get(id=self.meeting.meeting_review.update_stage)
+            new_stage_name = stage.title
+        if self.meeting.meeting_review.updated_close_date:
+            new_close_date = self.meeting.meeting_review.updated_close_date.strftime(
+                "%m/%d/%Y"
+            )
+        # END HACK
+
+        return self.message_tpl.format(
+            meeting=self.meeting,
+            new_stage_name=new_stage_name,
+            new_close_date=new_close_date,
+        )
 
     @property
     def points(self):
