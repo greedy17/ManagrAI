@@ -31,11 +31,7 @@ def external_select(
 
 
 def static_select(
-    label,
-    options,
-    action_id=None,
-    initial_option=None,
-    placeholder="Select",
+    label, options, action_id=None, initial_option=None, placeholder="Select",
 ):
     block = {
         "type": "section",

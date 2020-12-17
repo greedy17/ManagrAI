@@ -49,13 +49,13 @@ SCORE_LOOKUP = {
             "type": "forecast",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast improved. It is now {meeting.meeting_review.forecast_strength}",
+            "message_tpl": "The opportunity's forecast improved. It is now {meeting.meeting_review.forecast_strength}.",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "forecast",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.meeting_review.forecast_strength}",
+            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.meeting_review.forecast_strength}.",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "forecast",
@@ -128,6 +128,12 @@ SCORE_LOOKUP = {
             "points": 10,
             "impact": "positive",
             "message_tpl": "The meeting went over time by more than 15 minutes.",
+        },
+        "planned_under_15": {
+            "type": "duration",
+            "points": 5,
+            "impact": "negative",
+            "message_tpl": "The meeting was cut short by more than 15 minutes.",
         },
         "planned_over_5": {
             "type": "duration",

@@ -10,7 +10,7 @@ from managr.slack.helpers import block_builders
 def zoom_meeting_complete_form(context):
     lead = Lead.objects.get(pk=context.get("l"))
     stage = lead.status.as_slack_option if lead.status else None
-    forecast = lead.forecast.as_slack_option if lead.forecast else None
+    forecast = lead.forecast.as_slack_option if hasattr(lead, "forecast") else None
 
     expected_close_date = (
         str(lead.expected_close_date.date()) if lead.expected_close_date else None

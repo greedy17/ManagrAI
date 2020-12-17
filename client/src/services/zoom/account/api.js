@@ -86,6 +86,15 @@ export default class ZoomAPI extends ModelAPI {
       console.log(e)
     }
   }
+  async demoGenerateScore() {
+    let url = 'demo/generate-meeting-scores/'
+    try {
+      const res = await this.client.post(url)
+      return res.data
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   async clearDemoMeeting() {
     let fake = {

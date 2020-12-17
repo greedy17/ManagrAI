@@ -470,7 +470,7 @@ class Forecast(TimeStampModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.forecast, str(self.id))
+        return block_builders.option(self.forecast, self.forecast)
 
     # 'created by' and 'updated by' are not used here since they can be taken from logs
 
