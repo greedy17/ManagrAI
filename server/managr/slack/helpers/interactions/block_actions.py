@@ -232,17 +232,17 @@ def process_get_lead_score_components(payload, context):
             "insight": lead_score.incoming_messages_insight,
         },
         {
-            "label": "Action Score",
+            "label": "Days In Stage Score",
             "score": lead_score.days_in_stage_score,
             "insight": lead_score.days_in_stage_insight,
         },
         {
-            "label": "Action Score",
+            "label": "Forecast Score",
             "score": lead_score.forecast_table_score,
             "insight": lead_score.forecast_table_insight,
         },
         {
-            "label": "Action Score",
+            "label": "Expected Close Date Score",
             "score": lead_score.expected_close_date_score,
             "insight": lead_score.expected_close_date_insight,
         },
