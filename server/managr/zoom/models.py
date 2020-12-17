@@ -432,8 +432,10 @@ class MeetingReview(TimeStampModel):
                 return "planned_over_15"
             elif 5 < diff < 15:
                 return "planned_over_5"
-            elif diff <= 5:
+            elif -15 < diff <= 5:
                 return "planned_over_2"
+            elif diff < -15:
+                return "planned_under_15"
 
         # The above logic should capture all possiblities
         return "unknown"
