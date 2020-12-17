@@ -6,7 +6,24 @@ from managr.organization import constants as org_const
 from managr.lead.models import Lead, LeadScore, LeadActivityLog
 from managr.organization.models import Stage
 
+from managr.core.nylas.emails import send_system_email
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets import get_block_set
+
 logger = logging.getLogger("managr")
+
+
+def _send_slack_int_email(user):
+    # when checking slack notification settings, if the user has opted to
+    # receive slack notifs but has not integrated slack send them an email (assuming their org has set it up)
+    # reminding them to set up slack
+
+    recipient = [{"name": user.full_name, "email": user.email}]
+    message = {
+        "subject": "Enable Slack",
+        "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
+    }
+    send_system_email(recipient, message)
 
 
 def generate_lead_scores():
@@ -22,42 +39,54 @@ def generate_lead_scores():
 def generate_score(lead, date_range_end, date_range_start):
     try:
         # (1)   put lead through score-generator
-        data = LeadScoreGenerator(
-                        lead,
-                        date_range_end,
-                        date_range_start,
-                    )
+        data = LeadScoreGenerator(lead, date_range_end, date_range_start,)
         # (2)   create the LeadScore
         score = LeadScore.objects.create(
-                    lead=lead,
-                    previous_score=lead.current_score,
-                    date_range_end=date_range_end,
-                    date_range_start=date_range_start,
-                    # scores
-                    final_score=data.final_score,
-                    actions_score=data.actions_score,
-                    recent_action_score=data.recent_action_score,
-                    incoming_messages_score=data.incoming_messages_score,
-                    days_in_stage_score=data.days_in_stage_score,
-                    forecast_table_score=data.forecast_table_score,
-                    expected_close_date_score=data.expected_close_date_score,
-                    # insights
-                    actions_insight=data.actions_insight,
-                    recent_action_insight=data.recent_action_insight,
-                    incoming_messages_insight=data.incoming_messages_insight,
-                    days_in_stage_insight=data.days_in_stage_insight,
-                    forecast_table_insight=data.forecast_table_insight,
-                    expected_close_date_insight=data.expected_close_date_insight,
-                )
+            lead=lead,
+            previous_score=lead.current_score,
+            date_range_end=date_range_end,
+            date_range_start=date_range_start,
+            # scores
+            final_score=data.final_score,
+            actions_score=data.actions_score,
+            recent_action_score=data.recent_action_score,
+            incoming_messages_score=data.incoming_messages_score,
+            days_in_stage_score=data.days_in_stage_score,
+            forecast_table_score=data.forecast_table_score,
+            expected_close_date_score=data.expected_close_date_score,
+            # insights
+            actions_insight=data.actions_insight,
+            recent_action_insight=data.recent_action_insight,
+            incoming_messages_insight=data.incoming_messages_insight,
+            days_in_stage_insight=data.days_in_stage_insight,
+            forecast_table_insight=data.forecast_table_insight,
+            expected_close_date_insight=data.expected_close_date_insight,
+        )
         # (3)   link this new score directly to the lead.
         #       this is done for queryset purposes.
         #       see: Lead.current_score.help_text
         lead.current_score = score
         lead.save()
+        # send slack here if org has slack enabled
+        for user in lead.claimed_by.organization.users.filter(
+            is_active=True, type="MANAGER"
+        ):
+            if user.send_email_to_integrate_slack:
+                _send_slack_int_email(user)
+            if hasattr(user, "slack_integration"):
+                user_slack_channel = user.slack_integration.channel
+                slack_org_access_token = (
+                    user.organization.slack_integration.access_token
+                )
+                block_set = get_block_set(
+                    "lead_score_block_set", {"ls": str(score.id)},
+                )
+                slack_requests.send_channel_message(
+                    user_slack_channel, slack_org_access_token, block_set=block_set,
+                )
+
     except Exception as e:
-        logger.warning(
-            f"Could not generate LeadScore for Lead {lead.id}. ERROR: {e}"
-        )
+        logger.warning(f"Could not generate LeadScore for Lead {lead.id}. ERROR: {e}")
 
 
 class LeadScoreGenerator:
@@ -79,9 +108,9 @@ class LeadScoreGenerator:
         # lead's activity logs, time-bound
         if self.__cached__logs is None:
             logs = self.lead.activity_logs.filter(
-                    action_timestamp__gte=self.lower_bound,
-                    action_timestamp__lte=self.upper_bound,
-                )
+                action_timestamp__gte=self.lower_bound,
+                action_timestamp__lte=self.upper_bound,
+            )
             self.__cached__logs = logs
         return self.__cached__logs
 
@@ -92,9 +121,9 @@ class LeadScoreGenerator:
             maximum = 25
             points_per = 5
             count = self.lead.actions.filter(
-                                datetime_created__gte=self.lower_bound,
-                                datetime_created__lte=self.upper_bound
-                            ).count()
+                datetime_created__gte=self.lower_bound,
+                datetime_created__lte=self.upper_bound,
+            ).count()
             self.__cached__actions_score = min(count * points_per, maximum)
         return self.__cached__actions_score
 
@@ -119,9 +148,9 @@ class LeadScoreGenerator:
         if self.__cached__recent_action_score is None:
             lower_bound = self.upper_bound - timezone.timedelta(days=1)
             recent_action = self.lead.actions.filter(
-                                datetime_created__gte=lower_bound,
-                                datetime_created__lte=self.upper_bound
-                            ).first()
+                datetime_created__gte=lower_bound,
+                datetime_created__lte=self.upper_bound,
+            ).first()
             self.__cached__recent_action_score = 5 if recent_action else 0
         return self.__cached__recent_action_score
 
@@ -138,11 +167,8 @@ class LeadScoreGenerator:
             maximum = 20
             points_per = 5
             count = self._logs.filter(
-                                activity__in=[
-                                    lead_const.EMAIL_RECEIVED,
-                                    lead_const.MESSAGE_RECEIVED,
-                                ],
-                            ).count()
+                activity__in=[lead_const.EMAIL_RECEIVED, lead_const.MESSAGE_RECEIVED,],
+            ).count()
             self.__cached__incoming_messages_score = min(count * points_per, maximum)
         return self.__cached__incoming_messages_score
 
@@ -173,25 +199,19 @@ class LeadScoreGenerator:
         # under 5 days = 20 pts
         # Exclude: Ready, Lost, Reset
         ready = Stage.objects.get(
-                title=lead_const.LEAD_STATUS_READY,
-                type=org_const.STAGE_TYPE_PUBLIC,
-            )
+            title=lead_const.LEAD_STATUS_READY, type=org_const.STAGE_TYPE_PUBLIC,
+        )
         lost = Stage.objects.get(
-                title=lead_const.LEAD_STATUS_LOST,
-                type=org_const.STAGE_TYPE_PUBLIC,
-            )
-        latest_stage_change = self._logs.filter(
-                activity__in=[
-                    lead_const.LEAD_UPDATED,
-                    lead_const.LEAD_RESET,
-                ],
+            title=lead_const.LEAD_STATUS_LOST, type=org_const.STAGE_TYPE_PUBLIC,
+        )
+        latest_stage_change = (
+            self._logs.filter(
+                activity__in=[lead_const.LEAD_UPDATED, lead_const.LEAD_RESET,],
                 meta__extra__status_update=True,
-            ).exclude(
-                meta__extra__new_status__in=[
-                    str(ready.id),
-                    str(lost.id),
-                ],
-            ).first()
+            )
+            .exclude(meta__extra__new_status__in=[str(ready.id), str(lost.id),],)
+            .first()
+        )
         if not latest_stage_change:
             return 0
         five_days_ago = self.upper_bound - timezone.timedelta(days=5)
@@ -226,9 +246,7 @@ class LeadScoreGenerator:
         # Unforecasted OR Future OR 50/50 to Strong - 10 pts
         # Unforecasted OR Future OR 50/50 or Strong to Verbal - 20 pts
         if previous_forecast is None or new_forecast is None:
-            raise ValueError(
-                    'args.previous_forecast & args.new_forecast are required'
-                )
+            raise ValueError("args.previous_forecast & args.new_forecast are required")
         map_dict = {}
         map_dict[lead_const.FORECAST_VERBAL] = 20
         map_dict[lead_const.FORECAST_STRONG] = 10
@@ -236,7 +254,9 @@ class LeadScoreGenerator:
         if previous_forecast not in lead_const.FORECAST_TABLE:
             return map_dict.get(new_forecast, 0)
         # FORECAST_TABLE is in order, most-weight first
-        if lead_const.FORECAST_TABLE.index(previous_forecast) < lead_const.FORECAST_TABLE.index(new_forecast):
+        if lead_const.FORECAST_TABLE.index(
+            previous_forecast
+        ) < lead_const.FORECAST_TABLE.index(new_forecast):
             # the new forecast weighs less than the old forecast
             return 0
         # the new forecast weighs more than the old forecast
@@ -252,19 +272,16 @@ class LeadScoreGenerator:
         # Moved Into into a stronger FC state (up to 20 pts)
         score = 0
         forecast_logs = self._logs.filter(
-                activity__in=[
-                    lead_const.LEAD_UPDATED,
-                    lead_const.LEAD_RESET,
-                ],
-                meta__extra__forecast_update=True,
-            )
+            activity__in=[lead_const.LEAD_UPDATED, lead_const.LEAD_RESET,],
+            meta__extra__forecast_update=True,
+        )
         log_count = forecast_logs.count()
         if not log_count:
             return score
-        newest_log_data = forecast_logs.first().meta.get('extra')
-        newest_forecast = newest_log_data.get('new_forecast')
+        newest_log_data = forecast_logs.first().meta.get("extra")
+        newest_forecast = newest_log_data.get("new_forecast")
         if log_count is 1:
-            oldest_forecast = newest_log_data.get('previous_forecast')
+            oldest_forecast = newest_log_data.get("previous_forecast")
             try:
                 # NOTE: self._get_forecast_score purposefully throws a
                 # ValueError if either of these arguments are None.
@@ -272,16 +289,15 @@ class LeadScoreGenerator:
                 # a valid score.
                 # Hence it is OK to ignore it and yield a score of zero.
                 score = self._get_forecast_score(
-                                previous_forecast=oldest_forecast,
-                                new_forecast=newest_forecast,
-                            )
+                    previous_forecast=oldest_forecast, new_forecast=newest_forecast,
+                )
             except ValueError:
                 pass
             return score
         # if there are multiple logs, compare the total change in forecast
         # (oldest and newest, ignoring any middle-stages)
-        oldest_log_data = forecast_logs.last().meta.get('extra')
-        oldest_forecast = oldest_log_data.get('previous_forecast')
+        oldest_log_data = forecast_logs.last().meta.get("extra")
+        oldest_forecast = oldest_log_data.get("previous_forecast")
         try:
             # NOTE: self._get_forecast_score purposefully throws a
             # ValueError if either of these arguments are None.
@@ -289,9 +305,8 @@ class LeadScoreGenerator:
             # a valid score.
             # Hence it is OK to ignore it and yield a score of zero.
             score = self._get_forecast_score(
-                            previous_forecast=oldest_forecast,
-                            new_forecast=newest_forecast,
-                        )
+                previous_forecast=oldest_forecast, new_forecast=newest_forecast,
+            )
         except ValueError:
             pass
         return score
@@ -309,7 +324,9 @@ class LeadScoreGenerator:
     @property
     def expected_close_date_score(self):
         if self.__cached__expected_close_date_score is None:
-            self.__cached__expected_close_date_score = self._generate_expected_close_date_score()
+            self.__cached__expected_close_date_score = (
+                self._generate_expected_close_date_score()
+            )
         return self.__cached__expected_close_date_score
 
     def _generate_expected_close_date_score(self):
@@ -323,12 +340,9 @@ class LeadScoreGenerator:
         #         (b) OR removed expected close date (-15 pts)
         # (6) --  Expected closed date moved back any days (-5 pt)
         latest_log = self._logs.filter(
-                activity__in=[
-                    lead_const.LEAD_UPDATED,
-                    lead_const.LEAD_RESET,
-                ],
-                meta__extra__expected_close_date_update=True,
-            ).first()
+            activity__in=[lead_const.LEAD_UPDATED, lead_const.LEAD_RESET,],
+            meta__extra__expected_close_date_update=True,
+        ).first()
         if not latest_log:
             return 0
         current_datetime = self.upper_bound
@@ -336,22 +350,16 @@ class LeadScoreGenerator:
         current_quarter = ((current_month - 1) // 3) + 1
         # NOTE: 'previous' regards the previous value of expected_close_date
         # so previous_month regards the month of the previous value of expected_close_date
-        previous_from_meta = latest_log.meta.get(
-                                    'extra'
-                                ).get(
-                                    'previous_expected_close_date'
-                                )
+        previous_from_meta = latest_log.meta.get("extra").get(
+            "previous_expected_close_date"
+        )
         if previous_from_meta:
             previous_datetime = dateparse.parse_datetime(previous_from_meta)
             previous_month = previous_datetime.month
             previous_quarter = ((previous_month - 1) // 3) + 1
         # NOTE: 'new' regards the newest / most-recent value of expected_close_date
         # so new_month regards the month of the current value of expected_close_date
-        new_from_meta = latest_log.meta.get(
-                                    'extra'
-                                ).get(
-                                    'new_expected_close_date'
-                                )
+        new_from_meta = latest_log.meta.get("extra").get("new_expected_close_date")
         if new_from_meta:
             new_datetime = dateparse.parse_datetime(new_from_meta)
             new_month = new_datetime.month
@@ -373,10 +381,14 @@ class LeadScoreGenerator:
             return -15
         # NOTE: from this point forward, can assume both values are truthy
         # scenario (1) -- Exp close date moved up to current month (15 pts)
-        hurried_to_current_month = (previous_month is not current_month) and (new_month is current_month)
+        hurried_to_current_month = (previous_month is not current_month) and (
+            new_month is current_month
+        )
         if hurried_to_current_month:
             return 15
-        hurried_to_current_quarter = (previous_quarter is not current_quarter) and (new_quarter is current_quarter)
+        hurried_to_current_quarter = (previous_quarter is not current_quarter) and (
+            new_quarter is current_quarter
+        )
         if hurried_to_current_quarter:
             # scenario (2) -- Exp close date moved up to current quarter (10 pts)
             return 10
@@ -385,9 +397,17 @@ class LeadScoreGenerator:
             # scenario (3a) -- Expected closed date moved up by any days (5 pt)
             return 5
         delayed_at_all = new_datetime > previous_datetime
-        delayed_30_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
-        delayed_90_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
-        if delayed_at_all and (not delayed_30_or_more_days) and (not delayed_90_or_more_days):
+        delayed_30_or_more_days = new_datetime >= (
+            previous_datetime + timezone.timedelta(days=30)
+        )
+        delayed_90_or_more_days = new_datetime >= (
+            previous_datetime + timezone.timedelta(days=30)
+        )
+        if (
+            delayed_at_all
+            and (not delayed_30_or_more_days)
+            and (not delayed_90_or_more_days)
+        ):
             # scenario (6) -- Expected closed date moved back any days (-5 pt)
             return -5
         if delayed_30_or_more_days and (not delayed_90_or_more_days):
@@ -419,8 +439,11 @@ class LeadScoreGenerator:
     @property
     def final_score(self):
         aggregate = (
-                    self.actions_score + self.recent_action_score +
-                    self.incoming_messages_score + self.days_in_stage_score +
-                    self.forecast_table_score + self.expected_close_date_score
-                    )
+            self.actions_score
+            + self.recent_action_score
+            + self.incoming_messages_score
+            + self.days_in_stage_score
+            + self.forecast_table_score
+            + self.expected_close_date_score
+        )
         return min(aggregate, 100)

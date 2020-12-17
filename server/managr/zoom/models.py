@@ -503,6 +503,7 @@ class MeetingReview(TimeStampModel):
                 else "NO DESCRIPTION",
                 action_type=ActionChoice.objects.filter(id=self.meeting_type).first(),
             )
+            emit_event(lead_consts.ACTION_CREATED, action.lead.claimed_by, action)
 
         # Override previous close date with whatever is on the Lead
         if lead.expected_close_date:
