@@ -638,7 +638,7 @@ def generate_meeting_scores():
             scoring_in_progress=False,
         )
     )
-    meetings = ZoomMeeting.objects.all()
+
     for meeting in meetings:
         # set scoring in progress in case we run this job multiple times
         meeting.scoring_in_progress = True
