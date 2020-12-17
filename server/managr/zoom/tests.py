@@ -540,12 +540,12 @@ class MeetingScoreTestCase(TestCase):
         self.zoom_meeting.save()
 
         self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
-        self.assertEqual(self.meeting_review.duration_score, "planned_under_15")
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_2")
 
         score, score_components = score_meeting(self.zoom_meeting)
 
-        # 20 (can't tell) - 10
-        self.assertEqual(score, 10)
+        # 20 (can't tell) + 3
+        self.assertEqual(score, 23)
 
     def test_meeting_duration_planned_under_5(self):
         self.zoom_meeting.type = 0
@@ -554,12 +554,12 @@ class MeetingScoreTestCase(TestCase):
         self.zoom_meeting.save()
 
         self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
-        self.assertEqual(self.meeting_review.duration_score, "planned_under_5")
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_2")
 
         score, score_components = score_meeting(self.zoom_meeting)
 
-        # 20 (can't tell) - 6
-        self.assertEqual(score, 14)
+        # 20 (can't tell) + 3
+        self.assertEqual(score, 23)
 
     def test_meeting_duration_planned_under_2(self):
         self.zoom_meeting.type = 0
@@ -568,7 +568,9 @@ class MeetingScoreTestCase(TestCase):
         self.zoom_meeting.save()
 
         self.meeting_review = MeetingReview.objects.create(meeting=self.zoom_meeting)
-        self.assertEqual(self.meeting_review.duration_score, "planned_under_2")
+        self.assertEqual(self.meeting_review.duration_score, "planned_over_2")
 
         score, score_components = score_meeting(self.zoom_meeting)
 
+        # 20 (can't tell) + 3
+        self.assertEqual(score, 23)

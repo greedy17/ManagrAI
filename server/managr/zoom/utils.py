@@ -129,35 +129,17 @@ SCORE_LOOKUP = {
             "impact": "positive",
             "message_tpl": "The meeting went over time by more than 15 minutes.",
         },
-        "planned_under_15": {
-            "type": "duration",
-            "points": 10,
-            "impact": "negative",
-            "message_tpl": "The meeting was cut short by more than 15 minutes.",
-        },
         "planned_over_5": {
             "type": "duration",
             "points": 6,
             "impact": "positive",
             "message_tpl": "The meeting went over time by about 5 minutes.",
         },
-        "planned_under_5": {
-            "type": "duration",
-            "points": 6,
-            "impact": "negative",
-            "message_tpl": "The meeting was cut short by about 5 minutes.",
-        },
         "planned_over_2": {
             "type": "duration",
             "points": 3,
             "impact": "positive",
             "message_tpl": "The meeting went over time by about 2 minutes.",
-        },
-        "planned_under_2": {
-            "type": "duration",
-            "points": 3,
-            "impact": "negative",
-            "message_tpl": "The meeting was cut short by about 2 minutes.",
         },
         "instant_over_60": {
             "type": "duration",
