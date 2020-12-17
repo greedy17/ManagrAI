@@ -1,7 +1,7 @@
 import pdb
 
 from managr.core.models import User
-from managr.lead.models import Lead, Notification, Reminder
+from managr.lead.models import Lead, Notification, Reminder, LeadScore
 from managr.zoom.models import ZoomMeeting
 from managr.report.models import StoryReport
 from managr.slack import constants as slack_const
@@ -55,6 +55,7 @@ def opp_inactive_block_set(context):
 
     lead = Lead.objects.filter(id=context.get("l")).first()
     user = User.objects.filter(id=context.get("u")).first()
+    lead_param = "l=" + context["l"]
     title = context.get("t")
     message = context.get("m")
     if lead and user:
@@ -71,6 +72,25 @@ def opp_inactive_block_set(context):
                     "text": f"<@{user.slack_integration.slack_id}> {message}",
                 },
             },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "View Contacts"},
+                        "action_id": action_with_params(
+                            slack_const.SHOW_LEAD_CONTACTS, params=[lead_param],
+                        ),
+                    },
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "View Logs"},
+                        "action_id": action_with_params(
+                            slack_const.SHOW_LEAD_LOGS, params=[lead_param],
+                        ),
+                    },
+                ],
+            },
         ]
 
 
@@ -81,14 +101,70 @@ def meeting_review_score(context):
 
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     user = meeting.zoom_account.user
+    meeting_param = "m=" + context["m"]
     if meeting:
         return [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"The score for a meeting *{meeting.topic}* for lead *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
+                    "text": f":heavy_check_mark: The score for a meeting *{meeting.topic}* for opportunity *{meeting.lead.title}* for *{meeting.zoom_account.user.full_name}* is {meeting.meeting_score}",
                 },
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "View Scoring Components",
+                        },
+                        "action_id": action_with_params(
+                            slack_const.SHOW_MEETING_SCORE_COMPONENTS,
+                            params=[meeting_param],
+                        ),
+                    },
+                ],
+            },
+        ]
+
+
+@block_set(required_context=["ls"])
+def lead_score_block_set(context):
+    # Bruno created decorator required context l= lead, u= user m=message
+    # slack mentions format = <@slack_id>
+
+    lead_score = (
+        LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
+    )
+    lead = lead_score.lead
+    user = lead.claimed_by
+    lead_score_param = "ls=" + context["ls"]
+    if lead:
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f":heavy_check_mark: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead_score.final_score}",
+                },
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "View Scoring Components",
+                        },
+                        "action_id": action_with_params(
+                            slack_const.SHOW_LEAD_SCORE_COMPONENTS,
+                            params=[lead_score_param],
+                        ),
+                    },
+                ],
             },
         ]
 
@@ -117,7 +193,7 @@ def opp_closed_report_generated(context):
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"Boom closed {lead.title} for ${lead.closing_amount} :clapping:",
+                    "text": f"Boom closed {lead.title} for ${lead.closing_amount} :heavy_check_mark:",
                 },
             },
             {"type": "divider"},
@@ -155,6 +231,76 @@ def reminder_contact_block_set(context):
         "text": {
             "type": "mrkdwn",
             "text": f"Name: {contact.full_name}\nemail: {contact.email}\nphone: {contact.phone_number_1}",
+        },
+    }
+
+    return obj
+
+
+@block_set(required_context=["contact"])
+def lead_contacts_block_set(context):
+
+    # slack mentions format = <@slack_id>
+
+    contact = context.get("contact")
+
+    obj = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"Name: {contact.full_name}\nemail: {contact.email}\nphone: {contact.phone_number_1}",
+        },
+    }
+
+    return obj
+
+
+@block_set(required_context=["activity"])
+def lead_activity_log_block_set(context):
+
+    # slack mentions format = <@slack_id>
+
+    activity = context.get("activity")
+    if activity.action_timestamp:
+        formatted_date = activity.action_timestamp.strftime("%m/%d/%Y %I:%M %p")
+    else:
+        formatted_date = "Date Time info unavailable"
+    obj = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*Activity:* {activity.activity}\n *Date and Time:* {formatted_date}",
+        },
+    }
+
+    return obj
+
+
+@block_set(required_context=["score"])
+def meeting_score_description_block_set(context):
+
+    # slack mentions format = <@slack_id>
+
+    score = context.get("score")
+    obj = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"{score}",},
+    }
+
+    return obj
+
+
+@block_set(required_context=["score_components"])
+def lead_score_description_block_set(context):
+
+    # slack mentions format = <@slack_id>
+
+    score_components = context.get("score_components")
+    obj = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*{score_components['label']}* \n *Score:* {score_components['score']}\n *Insight:* {score_components['insight']}",
         },
     }
 

@@ -856,3 +856,4 @@ class LeadScore(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
