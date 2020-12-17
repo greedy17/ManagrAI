@@ -114,7 +114,7 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f":heavy_check_mark: *{meeting.zoom_account.user.full_name}* score with *{meeting.lead.title}* scored *{meeting.meeting_score}* meeting was a {action_choice.title}",
+                    "text": f":heavy_check_mark: *{meeting.zoom_account.user.full_name}* meeting with *{meeting.lead.title}* scored *{meeting.meeting_score}*, meeting was a {action_choice.title} meeting. Score is based on ",
                 },
             },
             {
@@ -124,7 +124,7 @@ def meeting_review_score(context):
                         "type": "button",
                         "text": {
                             "type": "plain_text",
-                            "text": "View Scoring Components",
+                            "text": "View Meeting Score Summary",
                         },
                         "action_id": action_with_params(
                             slack_const.SHOW_MEETING_SCORE_COMPONENTS,

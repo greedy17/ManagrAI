@@ -186,9 +186,41 @@ def process_get_meeting_score_components(payload, context):
         meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
         org = meeting.zoom_account.user.organization
         access_token = org.slack_integration.access_token
-        paragraph = ""
+
+        # order as per mike
+
+        # new line
+        # stage
+        # forecast
+        # close date
+        # new line
+        # attendees
+        # new line
+        # duration
+        sentiment = ""
+        stage = ""
+        forecast = ""
+        close_date = ""
+        attendance = ""
+        duration = ""
+
         for comp in meeting.meeting_score_components:
-            paragraph += comp.get("message", "N/A")
+            if comp["type"] == "sentiment":
+                sentiment = comp.get("message", "N/A")
+            if comp["type"] == "stage":
+                stage = comp.get("message", "N/A")
+            if comp["type"] == "forecast":
+                forecast = comp.get("message", "N/A")
+            if comp["type"] == "close_date":
+                close_date = comp.get("message", "N/A")
+            if comp["type"] == "attendance":
+                attendance = comp.get("message", "N/A")
+            if comp["type"] == "duration":
+                duration = comp.get("message", "N/A")
+
+        paragraph = (
+            f"{sentiment} \n {stage} {forecast} {close_date} \n {attendance} {duration}"
+        )
 
         private_metadata = {
             "original_message_channel": payload["channel"]["id"],
