@@ -1,7 +1,7 @@
 import pdb
 
 from managr.core.models import User
-from managr.lead.models import Lead, Notification, Reminder
+from managr.lead.models import Lead, Notification, Reminder, LeadScore
 from managr.zoom.models import ZoomMeeting
 from managr.report.models import StoryReport
 from managr.slack import constants as slack_const
@@ -130,21 +130,24 @@ def meeting_review_score(context):
         ]
 
 
-@block_set(required_context=["l"])
+@block_set(required_context=["ls"])
 def lead_score_block_set(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
-    lead = Lead.objects.filter(id=context.get("l")).first()
+    lead_score = (
+        LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
+    )
+    lead = lead_score.lead
     user = lead.claimed_by
-    lead_param = "l=" + context["l"]
+    lead_score_param = "ls=" + context["ls"]
     if lead:
         return [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f":bangbang: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead.score}",
+                    "text": f":bangbang: A score for opportunity *{lead.title}* claimed by *{user.full_name}* is {lead_score.final_score}",
                 },
             },
             {
@@ -157,7 +160,8 @@ def lead_score_block_set(context):
                             "text": "View Scoring Components",
                         },
                         "action_id": action_with_params(
-                            slack_const.SHOW_LEAD_SCORE_COMPONENTS, params=[lead_param],
+                            slack_const.SHOW_LEAD_SCORE_COMPONENTS,
+                            params=[lead_score_param],
                         ),
                     },
                 ],
@@ -286,15 +290,18 @@ def meeting_score_description_block_set(context):
     return obj
 
 
-@block_set(required_context=["score"])
+@block_set(required_context=["score_components"])
 def lead_score_description_block_set(context):
 
     # slack mentions format = <@slack_id>
 
-    score = context.get("score")
+    score_components = context.get("score_components")
     obj = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": f"{score}",},
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*{score_components['label']}* \n *Score:* {score_components['score']}\n *Insight:* {score_components['insight']}",
+        },
     }
 
     return obj

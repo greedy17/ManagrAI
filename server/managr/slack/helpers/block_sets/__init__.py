@@ -32,5 +32,7 @@ def get_block_set(set_name, context={}):
         "show_lead_contacts": slack_alerts.lead_contacts_block_set,
         "show_lead_logs": slack_alerts.lead_activity_log_block_set,
         "show_meeting_score_description": slack_alerts.meeting_score_description_block_set,
+        "lead_score_block_set": slack_alerts.lead_score_block_set,
+        "show_lead_score_description": slack_alerts.lead_score_description_block_set,
     }
     return switcher.get(set_name)(context)

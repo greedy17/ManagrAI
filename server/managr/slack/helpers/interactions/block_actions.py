@@ -2,7 +2,7 @@ import json
 import pdb
 
 from managr.organization.models import Organization
-from managr.lead.models import Notification, Reminder, Lead
+from managr.lead.models import Notification, Reminder, Lead, LeadScore
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
@@ -209,6 +209,72 @@ def process_get_meeting_score_components(payload, context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_context=["ls"])
+def process_get_lead_score_components(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    lead_score = (
+        LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
+    )
+    lead = lead_score.lead
+
+    org = lead.claimed_by.organization
+    access_token = org.slack_integration.access_token
+    lead_score_components = [
+        {
+            "label": "Action Score",
+            "score": lead_score.actions_score,
+            "insight": lead_score.actions_insight,
+        },
+        {
+            "label": "Incoming Messages Score",
+            "score": lead_score.incoming_messages_score,
+            "insight": lead_score.incoming_messages_insight,
+        },
+        {
+            "label": "Action Score",
+            "score": lead_score.days_in_stage_score,
+            "insight": lead_score.days_in_stage_insight,
+        },
+        {
+            "label": "Action Score",
+            "score": lead_score.forecast_table_score,
+            "insight": lead_score.forecast_table_insight,
+        },
+        {
+            "label": "Action Score",
+            "score": lead_score.expected_close_date_score,
+            "insight": lead_score.expected_close_date_insight,
+        },
+    ]
+    blocks = [
+        get_block_set("show_lead_score_description", {"score_components": comp})
+        for comp in lead_score_components
+    ]
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    empty_block = [
+        {"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}
+    ]
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.SHOW_LEAD_SCORE_COMPONENTS,
+            "title": {"type": "plain_text", "text": "Score Components"},
+            "blocks": blocks if len(blocks) else empty_block,
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+
+    private_metadata.update(context)
+
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -221,6 +287,7 @@ def handle_block_actions(payload):
         slack_const.SHOW_LEAD_CONTACTS: process_get_lead_contacts,
         slack_const.SHOW_LEAD_LOGS: process_get_lead_logs,
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
+        slack_const.SHOW_LEAD_SCORE_COMPONENTS: process_get_lead_score_components,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

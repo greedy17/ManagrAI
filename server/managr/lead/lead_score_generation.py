@@ -6,7 +6,24 @@ from managr.organization import constants as org_const
 from managr.lead.models import Lead, LeadScore, LeadActivityLog
 from managr.organization.models import Stage
 
+from managr.core.nylas.emails import send_system_email
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets import get_block_set
+
 logger = logging.getLogger("managr")
+
+
+def _send_slack_int_email(user):
+    # when checking slack notification settings, if the user has opted to
+    # receive slack notifs but has not integrated slack send them an email (assuming their org has set it up)
+    # reminding them to set up slack
+
+    recipient = [{"name": user.full_name, "email": user.email}]
+    message = {
+        "subject": "Enable Slack",
+        "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
+    }
+    send_system_email(recipient, message)
 
 
 def generate_lead_scores():
@@ -51,6 +68,22 @@ def generate_score(lead, date_range_end, date_range_start):
         lead.current_score = score
         lead.save()
         # send slack here if org has slack enabled
+        for user in lead.claimed_by.organization.users.filter(
+            is_active=True, type="MANAGER"
+        ):
+            if user.send_email_to_integrate_slack:
+                _send_slack_int_email(user)
+            if hasattr(user, "slack_integration"):
+                user_slack_channel = user.slack_integration.channel
+                slack_org_access_token = (
+                    user.organization.slack_integration.access_token
+                )
+                block_set = get_block_set(
+                    "lead_score_block_set", {"ls": str(score.id)},
+                )
+                slack_requests.send_channel_message(
+                    user_slack_channel, slack_org_access_token, block_set=block_set,
+                )
 
     except Exception as e:
         logger.warning(f"Could not generate LeadScore for Lead {lead.id}. ERROR: {e}")
