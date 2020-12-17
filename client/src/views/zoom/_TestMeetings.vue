@@ -22,6 +22,13 @@
         If a different opportunity is selected both these contacts will appear as linked contacts
         for that opporunity
       </span>
+      <br />
+      <button v-if="interactionInProgress" :disabled="loading" @click="onGenerateScore">
+        Generate Score
+      </button>
+      <button v-if="interactionInProgress" :disabled="loading" @click="reset">
+        Clear Data to Try again
+      </button>
     </div>
   </div>
 </template>
@@ -39,13 +46,30 @@ export default {
     return {
       meeting: null,
       interactionInProgress: false,
+      loading: false,
     }
   },
   methods: {
+    timeblocker() {
+      this.loading = true
+
+      setTimeout(() => {
+        this.loading = false
+      }, 8000)
+    },
+    async onGenerateScore() {
+      await ZoomAccount.api.demoGenerateScore()
+      this.timeblocker()
+    },
     async onKickOff() {
       await ZoomAccount.api.clearDemoMeeting()
       this.interactionInProgress = true
       await ZoomAccount.api.fakeMeetingEnd()
+      this.timeblocker()
+    },
+    async reset() {
+      await ZoomAccount.api.clearDemoMeeting()
+      this.interactionInProgress = false
     },
   },
 }
