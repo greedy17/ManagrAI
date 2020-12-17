@@ -158,3 +158,12 @@ def delete_demo_meeting(request):
         meeting.delete()
 
     return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def demo_generate_meeting_score(request):
+
+    call_command("generatemeetingscores")
+
+    return Response()

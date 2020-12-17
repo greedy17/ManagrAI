@@ -31,6 +31,11 @@ urlpatterns = [
         "demo/delete-meeting/", demo_views.delete_demo_meeting, name="delete-meeting",
     ),
     path(
+        "demo/generate-meeting-scores/",
+        demo_views.demo_generate_meeting_score,
+        name="generate-meeting-scores",
+    ),
+    path(
         "users/activation_link/<email>/",
         core_views.ActivationLinkView.as_view(),
         name="get_activation_link",

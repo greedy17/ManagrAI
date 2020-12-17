@@ -102,6 +102,12 @@ def meeting_review_score(context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     user = meeting.zoom_account.user
     meeting_param = "m=" + context["m"]
+    meeting_type = meeting.meeting_review.meeting_type
+    action_choice = (
+        user.organization.action_choices.filter(id=meeting_type).first()
+        if meeting_type
+        else "N/A"
+    )
     if meeting:
         return [
             {
@@ -118,7 +124,7 @@ def meeting_review_score(context):
                         "type": "button",
                         "text": {
                             "type": "plain_text",
-                            "text": "View Scoring Components",
+                            "text": "View Meeting Score Summary",
                         },
                         "action_id": action_with_params(
                             slack_const.SHOW_MEETING_SCORE_COMPONENTS,
@@ -276,15 +282,15 @@ def lead_activity_log_block_set(context):
     return obj
 
 
-@block_set(required_context=["score"])
+@block_set(required_context=["score_paragraph"])
 def meeting_score_description_block_set(context):
 
     # slack mentions format = <@slack_id>
 
-    score = context.get("score")
+    score_paragraph = context.get("score_paragraph")
     obj = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": f"{score}",},
+        "text": {"type": "mrkdwn", "text": f"{score_paragraph}",},
     }
 
     return obj

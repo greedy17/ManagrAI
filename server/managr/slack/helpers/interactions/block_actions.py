@@ -1,5 +1,6 @@
 import json
 import pdb
+import logging
 
 from managr.organization.models import Organization
 from managr.lead.models import Notification, Reminder, Lead, LeadScore
@@ -8,6 +9,9 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
+
+
+logger = logging.getLogger("managr")
 
 
 @processor(required_context=["o", "u", "l", "sentiment"])
@@ -176,37 +180,81 @@ def process_get_lead_logs(payload, context):
 
 @processor(required_context=["m"])
 def process_get_meeting_score_components(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    org = meeting.zoom_account.user.organization
-    access_token = org.slack_integration.access_token
-    blocks = [
-        get_block_set("show_meeting_score_description", {"score": comp["message"]})
-        for comp in meeting.meeting_score_components
-    ]
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    empty_block = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}
-    ]
+    try:
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        trigger_id = payload["trigger_id"]
+        meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+        org = meeting.zoom_account.user.organization
+        access_token = org.slack_integration.access_token
 
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.SHOW_MEETING_SCORE_COMPONENTS,
-            "title": {"type": "plain_text", "text": "Score Components"},
-            "blocks": blocks if len(blocks) else empty_block,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
+        # order as per mike
 
-    private_metadata.update(context)
+        # new line
+        # stage
+        # forecast
+        # close date
+        # new line
+        # attendees
+        # new line
+        # duration
+        sentiment = ""
+        stage = ""
+        forecast = ""
+        close_date = ""
+        attendance = ""
+        duration = ""
 
-    slack_requests.generic_request(url, data, access_token=access_token)
+        for comp in meeting.meeting_score_components:
+            if comp["type"] == "sentiment":
+                sentiment = comp.get("message", "N/A")
+            if comp["type"] == "stage":
+                stage = comp.get("message", "N/A")
+            if comp["type"] == "forecast":
+                forecast = comp.get("message", "N/A")
+            if comp["type"] == "close_date":
+                close_date = comp.get("message", "N/A")
+            if comp["type"] == "attendance":
+                attendance = comp.get("message", "N/A")
+            if comp["type"] == "duration":
+                duration = comp.get("message", "N/A")
+
+        paragraph = (
+            f"{sentiment} \n {stage} {forecast} {close_date} \n {attendance} {duration}"
+        )
+
+        private_metadata = {
+            "original_message_channel": payload["channel"]["id"],
+            "original_message_timestamp": payload["message"]["ts"],
+        }
+        empty_block = [
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "No Scoring Data to show"},
+            }
+        ]
+        blocks = [
+            get_block_set(
+                "show_meeting_score_description", {"score_paragraph": paragraph}
+            )
+        ]
+
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.SHOW_MEETING_SCORE_COMPONENTS,
+                "title": {"type": "plain_text", "text": "Score Components"},
+                "blocks": blocks if len(blocks) else empty_block,
+                "private_metadata": json.dumps(private_metadata),
+            },
+        }
+
+        private_metadata.update(context)
+
+        slack_requests.generic_request(url, data, access_token=access_token)
+    except Exception as e:
+        logger.warning(e)
+        pass
 
 
 @processor(required_context=["ls"])

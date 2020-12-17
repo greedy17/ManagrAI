@@ -17,14 +17,14 @@
       </div>
       <div class="tracked-meetings-subpage__actions">
         <div class="button-group">
-          <button @click="stall" :disabled="!selectedLead">Stalled In stage</button>
+          <button @click="stall" :disabled="!selectedLead || loading">Stalled In stage</button>
           <small
             >This will set the lead's stage last update to 60 days in the past and trigger a slack
             alert</small
           >
         </div>
         <div class="button-group">
-          <button @click="inactive" :disabled="!selectedLead">Last Activity</button>
+          <button @click="inactive" :disabled="!selectedLead || loading">Last Activity</button>
           <small>This will clear a lead's activity log trigger a slack alert for inactivity</small>
         </div>
         <div class="button-group">
@@ -34,14 +34,14 @@
             <option value="14">14 days</option>
             <option value="30">30 days</option>
           </select>
-          <button @click="delay" :disabled="!selectedLead || !selectedDays">
+          <button @click="delay" :disabled="!selectedLead || !selectedDays || loading">
             Past Expected Close Date
           </button>
           <small
             >This will set the lead's expected close date to be past the expected close date</small
           >
           <div class="button-group">
-            <button @click="closeLead" :disabled="!selectedLead">Close Lead</button>
+            <button @click="closeLead" :disabled="!selectedLead || loading">Close Lead</button>
             <small>This will close a lead </small>
           </div>
         </div>
@@ -67,6 +67,7 @@ export default {
   components: {},
   data() {
     return {
+      loading: false,
       selectedDays: null,
       selectedLead: null,
       meetings: CollectionManager.create({
@@ -94,21 +95,32 @@ export default {
     await this.leads.refresh()
   },
   methods: {
+    timeblocker() {
+      this.loading = true
+
+      setTimeout(() => {
+        this.loading = false
+      }, 8000)
+    },
     async closeLead() {
       let closing_amount = '20000.00'
       await Lead.api.demoClose(this.selectedLead, closing_amount)
+      this.timeblocker()
     },
     selectLead(event) {
       this.selectedLead = event.target.value
     },
     async stall() {
       await Lead.api.stallInStage(this.selectedLead)
+      this.timeblocker()
     },
     async delay() {
       await Lead.api.delayCloseDate(this.selectedLead, this.selectedDays)
+      this.timeblocker()
     },
     async inactive() {
       await Lead.api.clearLog(this.selectedLead)
+      this.timeblocker()
     },
   },
 }
