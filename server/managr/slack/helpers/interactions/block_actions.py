@@ -243,7 +243,7 @@ def process_get_meeting_score_components(payload, context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.SHOW_MEETING_SCORE_COMPONENTS,
-                "title": {"type": "plain_text", "text": "Score Components"},
+                "title": {"type": "plain_text", "text": "Summary"},
                 "blocks": blocks if len(blocks) else empty_block,
                 "private_metadata": json.dumps(private_metadata),
             },
