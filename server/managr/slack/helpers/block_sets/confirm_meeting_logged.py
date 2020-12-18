@@ -16,7 +16,7 @@ def confirm_meeting_logged(context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f":heavy_check_mark: Logged meeting review data for :calendar:  *{meeting.topic}* regarding :dart: {lead.title}",
+                "text": f":heavy_check_mark: Logged meeting for :calendar:  *{meeting.topic}* regarding :dart: {lead.title}",
             },
         },
     ]
