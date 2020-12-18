@@ -503,11 +503,11 @@ class MeetingReview(TimeStampModel):
 
         # Update the lead with the new data
         if self.updated_close_date:
-            lead.expected_close_date = self.updated_close_date
+
             # Override previous close date with whatever is on the Lead
             if lead.expected_close_date:
                 self.prev_expected_close_date = lead.expected_close_date
-
+            lead.expected_close_date = self.updated_close_date
         if self.amount:
             self.prev_amount = lead.amount
             lead.amount = float(self.amount)
