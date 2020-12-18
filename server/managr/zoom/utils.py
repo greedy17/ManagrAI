@@ -23,7 +23,7 @@ SCORE_LOOKUP = {
             "type": "sentiment",
             "points": 50,
             "impact": "positive",
-            "message_tpl": "The rep said the meeting went great.",
+            "message_tpl": "The rep said the meeting went great!",
         },
         slack_consts.ZOOM_MEETING__CANT_TELL: {
             "type": "sentiment",
@@ -109,7 +109,7 @@ SCORE_LOOKUP = {
             "type": "attendance",
             "points": 2,
             "impact": "positive",
-            "message_tpl": "The meeting had a two attendees.",
+            "message_tpl": "The meeting had two attendees.",
         },
         3: {
             "type": "attendance",
