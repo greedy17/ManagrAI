@@ -69,30 +69,30 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 linked_contacts__email__in=participant_emails
             ).first()
             meeting_contacts = []
-            for contact in participants:
-                contact_email = contact.get("user_email", None)
-                if contact_email and contact_email != user.email:
-
-                    c, created = Contact.objects.for_user(user).get_or_create(
-                        email=contact["user_email"].lower(),
-                        defaults={
-                            "account": lead.account,
-                            "organization": lead.account.organization,
-                        },
-                    )
-
-                    if created:
-                        if contact["name"]:
-                            name_items = contact["name"].split(" ")
-                            c.first_name = name_items[0]
-                            if len(name_items) > 1:
-                                c.last_name = " ".join(name_items[1:])
-                            c.save()
-                        lead.linked_contacts.add(c)
-                    meeting_contacts.append(c.id)
-
-            # for v1 will only be able to assign to one lead
             if lead:
+                for contact in participants:
+                    contact_email = contact.get("user_email", None)
+                    if contact_email and contact_email != user.email:
+
+                        c, created = Contact.objects.for_user(user).get_or_create(
+                            email=contact["user_email"].lower(),
+                            defaults={
+                                "account": lead.account,
+                                "organization": lead.account.organization,
+                            },
+                        )
+
+                        if created:
+                            if contact["name"]:
+                                name_items = contact["name"].split(" ")
+                                c.first_name = name_items[0]
+                                if len(name_items) > 1:
+                                    c.last_name = " ".join(name_items[1:])
+                                c.save()
+                            lead.linked_contacts.add(c)
+                        meeting_contacts.append(c.id)
+
+                # for v1 will only be able to assign to one lead
                 meeting.lead = lead.id
                 meeting.participants = set(meeting_contacts)
                 serializer = ZoomMeetingSerializer(data=meeting.as_dict)
