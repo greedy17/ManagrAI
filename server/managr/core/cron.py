@@ -71,7 +71,8 @@ def _send_slack_int_email(user):
         "subject": "Enable Slack",
         "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
     }
-    send_system_email(recipient, message)
+    # disabling since email is currently not working
+    # send_system_email(recipient, message)
 
 
 def _create_notification(
