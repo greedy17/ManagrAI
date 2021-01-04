@@ -195,8 +195,8 @@ class AlertsTestCase(TestCase):
             activity.id,
         )
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 3)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_inactive(self):
@@ -229,8 +229,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_inactive_unclaimed_lead(self):
@@ -273,8 +273,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.status_last_update = stalled_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 3)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_stalled_in_stage(self):
@@ -295,8 +295,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_all_alert_days_1(self):
@@ -308,8 +308,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 3)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
 
     def test_rep_alert_days_1(self):
@@ -331,8 +331,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_1_unclaimed_lead(self):
@@ -365,8 +365,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 3)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
         self.assertEqual(
             Notification.objects.filter(user=self.manager).first().notification_type,
@@ -427,8 +427,8 @@ class AlertsTestCase(TestCase):
         self.lead_1.expected_close_date = expected_close_date
         self.lead_1.save()
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 3)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 1)
         self.assertEqual(
             Notification.objects.filter(user=self.manager).first().notification_type,
@@ -455,8 +455,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_30_unclaimed_lead(self):
@@ -490,7 +490,7 @@ class AlertsTestCase(TestCase):
             type=org_consts.STAGE_TYPE_PRIVATE,
             organization=self.org,
         )
-        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
 
     def test_one_notification_stage_update(self):
         """ should yield a notification created for user """
