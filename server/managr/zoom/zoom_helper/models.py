@@ -1,11 +1,16 @@
 import json
 import requests
+from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
-from datetime import datetime
+
+
+from managr.utils.client import HttpClient
 
 from . import constants as zoom_model_consts
 from .exceptions import ZoomAPIException
+
+client = HttpClient().client
 
 
 class ZoomMtg:
@@ -49,7 +54,7 @@ class ZoomMtg:
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}/participants"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {access_token}"))
-        r = requests.get(url, headers=headers)
+        r = client.get(url, headers=headers)
         data = ZoomAcct._handle_response(r)
         self.participants = data.get("participants", None)
         return self
@@ -94,7 +99,7 @@ class ZoomAcct:
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}"
         # TODO check if access_token is expired and refresh PB 11/20/20
         headers = dict(Authorization=(f"Bearer {self.access_token}"))
-        r = requests.get(url, headers=headers)
+        r = client.get(url, headers=headers)
         data = ZoomAcct._handle_response(r)
         meeting_uuid = data.pop("uuid", None)
         meeting_id = data.pop("id", None)
@@ -113,7 +118,7 @@ class ZoomAcct:
         query = urlencode(query)
         ## error handling here
 
-        r = requests.post(
+        r = client.post(
             f"{zoom_model_consts.AUTHENTICATION_URI}?{query}",
             headers=dict(Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")),
         )
@@ -140,6 +145,7 @@ class ZoomAcct:
                     "error_param": error_param,
                     "error_message": error_message,
                 }
+                # TODO: if the error is 401 with code 124, the token is expired and we need to refresh PB
                 raise HTTPError(kwargs)
             except HTTPError as e:
                 ZoomAPIException(e, fn_name)
@@ -154,7 +160,7 @@ class ZoomAcct:
     def get_auth_token(code: str):
         query = zoom_model_consts.AUTHENTICATION_QUERY_PARAMS(code)
         query = urlencode(query)
-        r = requests.post(
+        r = client.post(
             f"{zoom_model_consts.AUTHENTICATION_URI}?{query}",
             headers=dict(Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")),
         )
@@ -164,7 +170,7 @@ class ZoomAcct:
     @staticmethod
     def _get_user_data(token: str):
 
-        r = requests.get(
+        r = client.get(
             f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/me",
             headers=dict(Authorization=(f"Bearer {token}")),
         )
@@ -183,7 +189,7 @@ class ZoomAcct:
         return cls(**data)
 
     def revoke(self):
-        r = requests.post(
+        r = client.post(
             f"{zoom_model_consts.BASE_AUTH_URI}revoke?token={self.access_token}",
             headers=dict(Authorization=(f"Basic {zoom_model_consts.APP_BASIC_TOKEN}")),
         )
