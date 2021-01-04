@@ -19,6 +19,7 @@ class ZoomAPIException:
         self.param = e.args[0]["error_param"]
         self.message = e.args[0]["error_message"]
         self.fn_name = fn_name
+        self.retry_attempts = 0
         self.raise_error()
 
     def raise_error(self):
@@ -27,9 +28,6 @@ class ZoomAPIException:
         if self.code == 429 or self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured with a zoom integration, {self.fn_name}")
             raise Zoom500Error()
-        if self.code == 401 and self.code == 124:
-            # trigger refresh token
-            return
         else:
             raise ValidationError(
                 {

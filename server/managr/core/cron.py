@@ -570,12 +570,19 @@ def generate_meeting_scores():
         meeting.scoring_in_progress = True
         meeting.save()
 
-        meeting_score, score_components = score_meeting(meeting)
-        meeting.meeting_score = meeting_score
-        meeting.meeting_score_components = [sc.as_dict for sc in score_components]
+        try:
+            meeting_score, score_components = score_meeting(meeting)
+            meeting.meeting_score = meeting_score
+            meeting.meeting_score_components = [sc.as_dict for sc in score_components]
 
-        meeting.scoring_in_progress = False
-        meeting.save()
+            meeting.scoring_in_progress = False
+            meeting.save()
+        except Exception as e:
+            meeting.scoring_in_progress = False
+            meeting.save()
+            logger.exception(
+                f"Unable to score meeting with id {meeting.id} because of the following exception {e.__class__.__name__}"
+            )
 
         user = meeting.zoom_account.user
         if user.send_email_to_integrate_slack:
