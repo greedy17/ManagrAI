@@ -71,7 +71,8 @@ def _send_slack_int_email(user):
         "subject": "Enable Slack",
         "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
     }
-    send_system_email(recipient, message)
+    # disabling since email is currently not working
+    # send_system_email(recipient, message)
 
 
 def _create_notification(
@@ -303,32 +304,6 @@ def create_lead_notifications():
                             user,
                         )
                         # managers do not get emails for this version
-                if user.type == core_consts.ACCOUNT_TYPE_REP:
-                    # check if email alert already sent
-
-                    if not _has_alert(
-                        user,
-                        core_consts.NOTIFICATION_TYPE_EMAIL,
-                        lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                        str(lead.id),
-                    ):
-                        recipient = [{"name": user.full_name, "email": user.email}]
-                        title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-                        message = {
-                            "subject": title,
-                            "body": content,
-                        }
-                        send_system_email(recipient, message)
-                        # create notification of that class in notifications
-
-                        _create_notification(
-                            title,
-                            content,
-                            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                            lead,
-                            user,
-                            core_consts.NOTIFICATION_TYPE_EMAIL,
-                        )
 
                 if user.check_notification_enabled_setting(
                     core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_INACTIVE_90_DAYS,
@@ -424,31 +399,6 @@ def create_lead_notifications():
                             _create_notification(
                                 title, content, notification_type_str, lead, user
                             )
-                    if user.type == core_consts.ACCOUNT_TYPE_REP:
-                        # check if email alert already sent
-
-                        if not _has_alert(
-                            user,
-                            core_consts.NOTIFICATION_TYPE_EMAIL,
-                            notification_type_str,
-                            str(lead.id),
-                        ):
-                            recipient = [{"name": user.full_name, "email": user.email}]
-                            title = f"Opportunity {lead.title} expected close date lapsed over {notification_late_for_days} day(s)"
-                            content = f"This opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
-                            message = {
-                                "subject": title,
-                                "body": content,
-                            }
-                            send_system_email(recipient, message)
-                            _create_notification(
-                                title,
-                                content,
-                                notification_type_str,
-                                lead,
-                                user,
-                                core_consts.NOTIFICATION_TYPE_EMAIL,
-                            )
 
                     if user.check_notification_enabled_setting(
                         _generate_notification_key_lapsed(notification_late_for_days),
@@ -526,29 +476,6 @@ def create_lead_notifications():
                             lead,
                             user,
                         )
-                    if user.type == core_consts.ACCOUNT_TYPE_REP:
-                        if not _has_alert(
-                            user,
-                            core_consts.NOTIFICATION_TYPE_EMAIL,
-                            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                            str(lead.id),
-                        ):
-                            recipient = [{"name": user.full_name, "email": user.email}]
-                            title = "Opportunity stalled in stage for over 60 days"
-                            content = f"{lead.title} has been in the same stage since {status_last_updated_str}"
-                            message = {
-                                "subject": title,
-                                "body": content,
-                            }
-                            send_system_email(recipient, message)
-                            _create_notification(
-                                title,
-                                content,
-                                lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                                lead,
-                                user,
-                                core_consts.NOTIFICATION_TYPE_EMAIL,
-                            )
                     if user.check_notification_enabled_setting(
                         core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_STALLED_IN_STAGE,
                         core_consts.NOTIFICATION_TYPE_SLACK,
@@ -643,12 +570,19 @@ def generate_meeting_scores():
         meeting.scoring_in_progress = True
         meeting.save()
 
-        meeting_score, score_components = score_meeting(meeting)
-        meeting.meeting_score = meeting_score
-        meeting.meeting_score_components = [sc.as_dict for sc in score_components]
+        try:
+            meeting_score, score_components = score_meeting(meeting)
+            meeting.meeting_score = meeting_score
+            meeting.meeting_score_components = [sc.as_dict for sc in score_components]
 
-        meeting.scoring_in_progress = False
-        meeting.save()
+            meeting.scoring_in_progress = False
+            meeting.save()
+        except Exception as e:
+            meeting.scoring_in_progress = False
+            meeting.save()
+            logger.exception(
+                f"Unable to score meeting with id {meeting.id} because of the following exception {e.__class__.__name__}"
+            )
 
         user = meeting.zoom_account.user
         if user.send_email_to_integrate_slack:

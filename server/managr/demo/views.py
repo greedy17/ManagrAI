@@ -39,8 +39,33 @@ from managr.organization import constants as org_consts
 from managr.organization.models import Stage
 from managr.lead.background import emit_event
 from managr.zoom.models import ZoomMeeting
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets import get_block_set
 
 # Create your views here.
+
+
+def _create_notification(
+    title, content, notification_type, lead, user, notification_class="ALERT"
+):
+    Notification.objects.create(
+        notify_at=timezone.now(),
+        title=title,
+        notification_type=notification_type,
+        resource_id=str(lead.id),
+        notification_class=notification_class,
+        user=user,
+        meta={
+            "id": str(lead.id),
+            "title": title,
+            "content": content,
+            "leads": [{"id": str(lead.id), "title": lead.title}],
+        },
+    )
+
+
+def _convert_to_user_friendly_date(date):
+    return date.strftime("%m/%d/%Y")
 
 
 @api_view(["post"])
@@ -72,7 +97,35 @@ def clear_activity_log(request):
             activity=lead_consts.EMAIL_RECEIVED,
             action_taken_by=request.user,
         )
-    call_command("createleadnotifications")
+
+    latest_activity_str = _convert_to_user_friendly_date(time_occured)
+    user = lead.claimed_by
+    if hasattr(user, "slack_integration"):
+        ## check if alert already exists
+        title = (
+            f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
+        )
+        slack_message = f"The opportunity *{lead.title}* has not shown any activity since *{latest_activity_str}*"
+
+        user_slack_channel = user.slack_integration.channel
+        slack_org_access_token = user.organization.slack_integration.access_token
+        block_set = get_block_set(
+            "opp_inactive_block_set",
+            {"l": str(lead.id), "m": slack_message, "u": str(user.id), "t": title,},
+        )
+        slack_requests.send_channel_message(
+            user_slack_channel, slack_org_access_token, block_set=block_set,
+        )
+
+        _create_notification(
+            title,
+            slack_message,
+            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+            lead,
+            user,
+            core_consts.NOTIFICATION_TYPE_SLACK,
+        )
+
     return Response(data={"success": True})
 
 
@@ -91,7 +144,35 @@ def stalled_in_stage(request):
     stalled_date = timezone.now() - timezone.timedelta(days=65)
     lead.status_last_update = stalled_date
     lead.save()
-    call_command("createleadnotifications")
+    status_last_updated_str = _convert_to_user_friendly_date(
+        lead.status_last_update.date()
+    )
+    user = lead.claimed_by
+    title = "Opportunity stalled in stage for over 60 days"
+    content = (
+        f"*{lead.title}* has been in the same stage since *{status_last_updated_str}*"
+    )
+
+    if hasattr(user, "slack_integration"):
+        ## check if alert already exists
+        user_slack_channel = user.slack_integration.channel
+        slack_org_access_token = user.organization.slack_integration.access_token
+        block_set = get_block_set(
+            "opp_inactive_block_set",
+            {"l": str(lead.id), "m": content, "u": str(user.id), "t": title,},
+        )
+        slack_requests.send_channel_message(
+            user_slack_channel, slack_org_access_token, block_set=block_set,
+        )
+
+        _create_notification(
+            title,
+            content,
+            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
+            lead,
+            user,
+            core_consts.NOTIFICATION_TYPE_SLACK,
+        )
 
     return Response(data={"success": True})
 
@@ -116,7 +197,29 @@ def past_expected_close_date(request):
     expected_close_date = timezone.now() - timezone.timedelta(days=days)
     lead.expected_close_date = expected_close_date
     lead.save()
-    call_command("createleadnotifications")
+    user = lead.claimed_by
+    expected_close_date_str = _convert_to_user_friendly_date(lead.expected_close_date)
+    title = f"Opportunity {lead.title} expected to close {days} day(s) ago"
+    content = f"This *{lead.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{days}* day(s) over"
+
+    user_slack_channel = user.slack_integration.channel
+    slack_org_access_token = user.organization.slack_integration.access_token
+    block_set = get_block_set(
+        "opp_inactive_block_set",
+        {"l": str(lead.id), "m": content, "u": str(user.id), "t": title,},
+    )
+    slack_requests.send_channel_message(
+        user_slack_channel, slack_org_access_token, block_set=block_set,
+    )
+
+    _create_notification(
+        title,
+        content,
+        notification_type_str,
+        lead,
+        user,
+        core_consts.NOTIFICATION_TYPE_SLACK,
+    )
 
     return Response(data={"success": True})
 
