@@ -4,12 +4,24 @@
       <div class="box__header">
         <div class="box__title">
           SLACK INTEGRATION
+
+          <div
+            class="test-message"
+            v-if="
+              organizationHasIntegration &&
+                userHasIntegration &&
+                userCanAddIntegrationToOrganization
+            "
+            @click="handleChannelTest"
+          >
+            Send Channel Test
+          </div>
           <div
             class="test-message"
             v-if="organizationHasIntegration && userHasIntegration"
             @click="handleTest"
           >
-            Send Test Message
+            Send Personal Test Message
           </div>
         </div>
       </div>
@@ -74,8 +86,21 @@ export default {
     handleTest() {
       // todo: disable the button in the meantime and $Alert success
       const { testChannel, testDM } = SlackOAuth.api
-      let isChannelTest = this.userCanAddIntegrationToOrganization
-      let apiCall = isChannelTest ? testChannel : testDM
+
+      let apiCall = testDM
+      apiCall().then(() => {
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Test sent.',
+        })
+      })
+    },
+    handleChannelTest() {
+      // todo: disable the button in the meantime and $Alert success
+      const { testChannel, testDM } = SlackOAuth.api
+
+      let apiCall = testChannel
       apiCall().then(() => {
         this.$Alert.alert({
           type: 'success',
