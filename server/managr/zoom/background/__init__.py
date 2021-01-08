@@ -24,6 +24,7 @@ from managr.core.nylas.emails import send_system_email
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact
+from managr.lead.models import Lead
 
 
 def _send_slack_int_email(user):
@@ -65,8 +66,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
             participant_emails = [
                 participant.get("user_email", None) for participant in participants
             ]
-            lead = user.claimed_leads.filter(
-                linked_contacts__email__in=participant_emails
+            lead = Lead.objects.filter(
+                account__organization=user.organization,
+                linked_contacts__email__in=participant_emails,
             ).first()
             meeting_contacts = []
             if lead:
