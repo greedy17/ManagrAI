@@ -1,7 +1,9 @@
 import pdb
 import uuid
-from datetime import datetime
+import pytz
 import math
+from datetime import datetime
+
 
 from managr.lead.models import Lead
 from managr.slack import constants as slack_const
@@ -29,16 +31,22 @@ def zoom_meeting_initial(context):
     sentiment_param = lambda x: f"sentiment={x}"
 
     get_time_stamp_id = lambda: f"id={math.floor(datetime.timestamp(datetime.now()))}"
-
+    user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
     formatted_start = (
-        datetime.strftime(start_time, "%a, %B, %Y %I:%M %p")
+        datetime.strftime(
+            start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
+        )
         if start_time
         else start_time
     )
     formatted_end = (
-        datetime.strftime(end_time, "%a, %B, %Y %I:%M %p") if end_time else end_time
+        datetime.strftime(
+            end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
+        )
+        if end_time
+        else end_time
     )
 
     return [
