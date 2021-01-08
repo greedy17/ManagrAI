@@ -114,10 +114,14 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     "You signed into the wrong Slack workspace, please try again."
                 )
         slack_id = data.get("authed_user").get("id")
-        UserSlackIntegration.objects.create(
-            user=request.user, slack_id=slack_id, organization_slack=integration
-        )
-        # return serialized user because client-side needs updated slackRef(s)
+        org = request.user.organization
+        if hasattr(org, "slack_integration"):
+            UserSlackIntegration.objects.create(
+                user=request.user,
+                slack_id=slack_id,
+                organization_slack=org.slack_integration,
+            )
+            # return serialized user because client-side needs updated slackRef(s)
         return Response(
             data=UserSerializer(request.user).data, status=status.HTTP_200_OK
         )
