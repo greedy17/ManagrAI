@@ -393,8 +393,8 @@ class AlertsTestCase(TestCase):
 
         self.manager.notification_settings.add(selection)
         call_command("createleadnotifications")
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 2)
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.rep).count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.manager).count(), 0)
 
     def test_rep_no_alert_days_14_unclaimed_lead(self):
@@ -490,7 +490,7 @@ class AlertsTestCase(TestCase):
             type=org_consts.STAGE_TYPE_PRIVATE,
             organization=self.org,
         )
-        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
 
     def test_one_notification_stage_update(self):
         """ should yield a notification created for user """
