@@ -56,6 +56,12 @@ class OrganizationSlackIntegration(TimeStampModel):
 
     objects = OrganizationSlackIntegrationQuerySet.as_manager()
 
+    def __str__(self):
+        return f"{self.organization.name} - slack integration"
+
+    class Meta:
+        ordering = ["organization"]
+
 
 class UserSlackIntegrationQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -83,5 +89,16 @@ class UserSlackIntegration(TimeStampModel):
         null=True,
         help_text="Channel ID for the DM conversation between user and Managr bot",
     )
+    organization_slack = models.ForeignKey(
+        OrganizationSlackIntegration,
+        on_delete=models.CASCADE,
+        related_name="user_slack_integrations",
+    )
 
     objects = UserSlackIntegrationQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.user.email} slack integration"
+
+    class Meta:
+        ordering = ["user"]

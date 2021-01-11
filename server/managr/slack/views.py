@@ -97,6 +97,16 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 incoming_webhook=incoming_webhook,
                 enterprise=enterprise,
             )
+
+            url = integration.incoming_webhook.get("url")
+
+            text = {
+                "text": f"<!channel> your organization has enabled slack please integrate your account to receive notifications"
+            }
+            # data = {
+            #     "blocks": get_block_set("zoom_meeting_initial", context=TEMPORARY_CONTEXT)
+            # }
+            slack_requests.generic_request(url, text)
         else:
             team_id = data.get("team").get("id")
             if team_id != request.user.organization.slack_integration.team_id:
@@ -104,8 +114,14 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     "You signed into the wrong Slack workspace, please try again."
                 )
         slack_id = data.get("authed_user").get("id")
-        UserSlackIntegration.objects.create(user=request.user, slack_id=slack_id)
-        # return serialized user because client-side needs updated slackRef(s)
+        org = request.user.organization
+        if hasattr(org, "slack_integration"):
+            UserSlackIntegration.objects.create(
+                user=request.user,
+                slack_id=slack_id,
+                organization_slack=org.slack_integration,
+            )
+            # return serialized user because client-side needs updated slackRef(s)
         return Response(
             data=UserSerializer(request.user).data, status=status.HTTP_200_OK
         )
@@ -124,6 +140,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
+
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
         # data = {
         #     "blocks": get_block_set("zoom_meeting_initial", context=TEMPORARY_CONTEXT)
