@@ -32,7 +32,7 @@ from . import constants as org_consts
 
 class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser or user.is_serviceaccount:
+        if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(pk=user.organization_id)
@@ -87,19 +87,6 @@ class Organization(TimeStampModel):
     def avg_amount_closed_contracts(self):
         return Organization.objects.aggregate(Avg("accounts__leads__amount"))
 
-    @property
-    def org_token(self):
-        if self.is_externalsyncenabled:
-            integration = self.users.filter(
-                type=core_consts.ACCOUNT_TYPE_INTEGRATION
-            ).first()
-            if integration:
-                if integration.is_active and integration.is_invited:
-                    auth_token, token_created = Token.objects.get_or_create(
-                        user=integration
-                    )
-                    token = json.loads(serializers.serialize("json", [auth_token,],))
-                    return token[0]["pk"]
 
 
 class AccountQuerySet(models.QuerySet):
@@ -128,7 +115,7 @@ class Account(TimeStampModel):
     logo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, blank=True
     )
-    parent_id = models.ForeignKey(
+    parent= models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
         related_name="parent_account",
