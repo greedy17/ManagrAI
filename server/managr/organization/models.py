@@ -88,6 +88,7 @@ class Organization(TimeStampModel):
         return Organization.objects.aggregate(Avg("accounts__leads__amount"))
 
 
+
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
@@ -114,16 +115,12 @@ class Account(TimeStampModel):
     logo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, blank=True
     )
-    parent = models.ForeignKey(
+    parent= models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
         related_name="parent_account",
         blank=True,
     )
-    integration_source = models.CharField(
-        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
-    )
-
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):
@@ -165,14 +162,6 @@ class Contact(TimeStampModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    # since we are no longer requiring accounts we support orgs
-    organization = models.ForeignKey(
-        "Organization",
-        related_name="contacts",
-        blank=False,
-        null=True,
-        on_delete=models.CASCADE,
-    )
     objects = ContactQuerySet.as_manager()
 
     class Meta:
@@ -180,7 +169,7 @@ class Contact(TimeStampModel):
         # unique hash so only one contact with the same email can be created per account
         unique_together = (
             "email",
-            "organization",
+            "account",
         )
 
     def __str__(self):
@@ -230,16 +219,14 @@ class StageQuerySet(models.QuerySet):
 
 class Stage(TimeStampModel):
     """
-    Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
-    There are some static stages available to all organizations and private ones that belong only to certain organizations.
+    Each Org Will have its own stages on set up
     """
 
-    title = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
     color = models.CharField(
         max_length=255, default="#9B9B9B", help_text="hex code for color"
     )
-    type = models.CharField(max_length=255, choices=(org_consts.STAGE_TYPES))
 
     organization = models.ForeignKey(
         "Organization",
@@ -251,7 +238,8 @@ class Stage(TimeStampModel):
     )
     # currently setting default to 6 we have 5 public tags that are taking 1-5
     order = models.IntegerField(blank=False,)
-
+    is_closed = models.BooleanField()
+    is_won = models.BooleanField() 
     objects = StageQuerySet.as_manager()
 
     @property

@@ -14,6 +14,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
+from managr.organization import constants as org_consts
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
@@ -22,6 +23,10 @@ class TimeStampModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime_created = models.DateTimeField(auto_now_add=True)
     last_edited = models.DateTimeField(auto_now=True)
+    integration_id = models.CharField(max_length=255, blank=True, help_text="The UUID from the integration source")
+    integration_source = models.CharField(
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+    )
 
     class Meta:
         abstract = True
