@@ -33,11 +33,6 @@ class EmailAuthAccountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class MessageAuthAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MessageAuthAccount
-        fields = "__all__"
-
 
 class UserRefSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,9 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
     email_auth_account_ref = EmailAuthAccountSerializer(
         source="email_auth_account", read_only=True
     )
-    message_auth_account_ref = MessageAuthAccountSerializer(
-        source="message_auth_account", read_only=True
-    )
+
     slack_ref = UserSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
@@ -108,8 +101,8 @@ class UserSerializer(serializers.ModelSerializer):
         "is_invited",
         "full_name",
         "email_auth_account",
-        "is_serviceaccount",
-        "is_staff" "message_auth_account",
+        "is_staff",
+        "is_admin",
     )
 
 

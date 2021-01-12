@@ -82,6 +82,14 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_admin"] = False
         return self._create_user(email, password, **extra_fields)
 
+    def create_admin_user(self, email, password=None, **extra_fields):
+        """ An Admin user is the one who set up the initial account and org """
+        extra_fields["is_staff"] = False
+        extra_fields["is_superuser"] = False
+        extra_fields["is_active"] = False
+        extra_fields["is_admin"] = True
+        return self._create_user(email, password, **extra_fields)
+
     def create_superuser(self, email, password, **extra_fields):
         """Create a superuser with the given email and password."""
         extra_fields["is_staff"] = True
@@ -107,7 +115,7 @@ class User(AbstractUser, TimeStampModel):
         on_delete=models.SET_NULL,
         blank=True,
     )
-    account_level = models.CharField(
+    user_level = models.CharField(
         choices=core_consts.ACCOUNT_TYPES,
         max_length=255,
         default=core_consts.ACCOUNT_TYPE_REP,
@@ -125,10 +133,11 @@ class User(AbstractUser, TimeStampModel):
         ),
         blank=True,
     )
-    # may need to make this a property as it keeps re-running a migration
-    # is_invited = models.BooleanField(max_length=255, default=False)
     magic_token_expiration = models.DateTimeField(
         help_text="The datetime when the magic token is expired.", blank=True
+    )
+    profile_photo = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True
     )
 
     objects = UserManager()
