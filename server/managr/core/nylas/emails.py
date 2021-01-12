@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.template import Context, Template
 
 from managr.utils import sites as site_utils
-from managr.lead.models import LeadEmail
 from managr.lead import constants as lead_constants
 from managr.lead.background import emit_event
 
@@ -276,18 +275,6 @@ def send_new_email(
         data=data,
         headers=headers,
     )
-
-    if response.status_code == 200:
-        # Create a Lead/Thread connection
-        obj = LeadEmail.objects.create(
-            created_by=sender, lead=lead, thread_id=response.json()["thread_id"],
-        )
-        cleaned_contacts = [c["email"] for c in to if c["email"]]
-        linked_contacts = lead.linked_contacts.filter(email__in=cleaned_contacts)
-        obj.linked_contacts.set(linked_contacts)
-
-        # Emit an EMAIL_SENT event and pass in Lead/Thread record.
-        emit_event(lead_constants.EMAIL_SENT, sender, obj)
 
     return _handle_nylas_response(response)
 

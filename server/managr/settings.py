@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     "managr.api",
     "managr.lead",
     "managr.organization",
-    "managr.polling",
     "managr.report",
     "managr.slack",
     "managr.zoom",

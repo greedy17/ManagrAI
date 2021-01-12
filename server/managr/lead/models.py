@@ -7,7 +7,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.core import serializers
 import json
-from managr.core.models import TimeStampModel
+from managr.core.models import TimeStampModel, IntegrationModel
 from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
@@ -68,12 +68,8 @@ class Lead(TimeStampModel):
         default=0.00,
         help_text="This field is editable",
     )
-    closing_amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is set at close and non-editable",
-    )
+    forecast_category=models.CharField()
+
     expected_close_date = models.DateTimeField(null=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
@@ -91,9 +87,9 @@ class Lead(TimeStampModel):
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="leads", blank=True
     )
-    status_last_update = models.DateTimeField(default=timezone.now, blank=True)
+    stage_last_update = models.DateTimeField(default=timezone.now, blank=True)
 
-    status = models.ForeignKey(
+    stage = models.ForeignKey(
         "organization.Stage", related_name="leads", null=True, on_delete=models.SET_NULL
     )
 
@@ -107,42 +103,9 @@ class Lead(TimeStampModel):
     last_updated_by = models.ForeignKey(
         "core.User", related_name="updated_leads", null=True, on_delete=models.SET_NULL
     )
-    company_size = models.CharField(
-        choices=lead_constants.COMPANY_SIZE_CHOICES, max_length=255, null=True,
-    )
-    industry = models.CharField(
-        choices=lead_constants.INDUSTRY_CHOICES, max_length=255, null=True,
-    )
+
     type = models.CharField(
         choices=lead_constants.TYPE_CHOICES, max_length=255, null=True,
-    )
-    custom = models.CharField(
-        max_length=255, null=True, blank=True, help_text="Custom field"
-    )
-    competitor = models.CharField(
-        choices=lead_constants.COMPETITOR_CHOICES, max_length=255, null=True,
-    )
-    competitor_description = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text="Describes the value chosen in the Lead's competitor field",
-    )
-    geography_address = models.CharField(max_length=255, null=True, blank=True,)
-    geography_address_components = JSONField(
-        default=dict,
-        blank=True,
-        help_text="Includes up to all of the following: "
-        "street number, "
-        "route, "
-        "locality, "
-        "administrative_area_level_3, "
-        "administrative_area_level_2, "
-        "administrative_area_level_1, "
-        "postal_code, "
-        "country, "
-        "latitude, "
-        "longitude",
     )
 
     objects = LeadQuerySet.as_manager()
@@ -157,19 +120,6 @@ class Lead(TimeStampModel):
             return True
         return False
 
-    @property
-    def contract_file(self):
-        """ property to define contract file if a lead is not closed it has not contract """
-
-        if self.status and self.status.title == lead_constants.LEAD_STATUS_CLOSED:
-            try:
-                return File.objects.get(
-                    doc_type=lead_constants.FILE_TYPE_CONTRACT, lead=self.id
-                ).id
-
-            except File.DoesNotExist:
-                return None
-        return None
 
     @property
     def list_count(self):
@@ -454,28 +404,6 @@ class ForecastQuerySet(models.QuerySet):
             return None
 
 
-class Forecast(TimeStampModel):
-    """ """
-
-    # Only one forecast per lead is allowed.
-    lead = models.OneToOneField("Lead", null=True, on_delete=models.CASCADE)
-    forecast = models.CharField(
-        max_length=255,
-        choices=lead_constants.FORECAST_CHOICES,
-        default=lead_constants.FORECAST_NA,
-        null=True,
-    )
-
-    objects = ForecastQuerySet.as_manager()
-
-    @property
-    def as_slack_option(self):
-        return block_builders.option(self.forecast, self.forecast)
-
-    # 'created by' and 'updated by' are not used here since they can be taken from logs
-
-    class Meta:
-        ordering = ["-datetime_created"]
 
 
 class LeadActivityLogQuerySet(models.QuerySet):
@@ -726,52 +654,6 @@ class LeadMessage(TimeStampModel):
             ],
         }
 
-
-class LeadEmail(TimeStampModel):
-    """Tie a lead to a Nylas email thread."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    created_by = models.ForeignKey(
-        "core.User",
-        related_name="created_email_threads",
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-
-    lead = models.ForeignKey(
-        "Lead",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=False,
-        related_name="email_threads",
-    )
-    linked_contacts = models.ManyToManyField(
-        "organization.Contact", related_name="email_activity_logs", blank=True
-    )
-
-    thread_id = models.CharField(max_length=128)
-
-    opened_count = models.IntegerField(default=0)
-
-    @property
-    def activity_log_meta(self):
-        """A metadata dict for activity logs"""
-        return {
-            "id": str(self.id),
-            "lead": str(self.lead.id),
-            "thread_id": self.thread_id,
-            "opened_count": self.opened_count,
-            "created_by": str(self.created_by.id),
-            "created_by_ref": {
-                "id": str(self.created_by.id),
-                "full_name": self.created_by.full_name,
-            },
-            "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
-                for c in self.linked_contacts.all()
-            ],
-        }
 
 
 class LeadScoreQuerySet(models.QuerySet):
