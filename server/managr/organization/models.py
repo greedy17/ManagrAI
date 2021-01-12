@@ -21,7 +21,7 @@ from managr.utils.misc import datetime_appended_filepath
 from . import constants as org_consts
 
 
-from managr.core.models import UserManager, TimeStampModel
+from managr.core.models import UserManager, TimeStampModel, IntegrationModel
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.lead.models import Notification
@@ -99,7 +99,7 @@ class AccountQuerySet(models.QuerySet):
             return None
 
 
-class Account(TimeStampModel):
+class Account(TimeStampModel, IntegrationModel):
     """
     Accounts are potential and exisiting clients that
     can be made into leads and added to lists
@@ -140,7 +140,7 @@ class ContactQuerySet(models.QuerySet):
             return self.none()
 
 
-class Contact(TimeStampModel):
+class Contact(TimeStampModel, IntegrationModel):
     """
     Contacts are the point of contacts that belong to
     an account, they must be unique (by email) and can
@@ -217,7 +217,7 @@ class StageQuerySet(models.QuerySet):
             return self.none()
 
 
-class Stage(TimeStampModel):
+class Stage(TimeStampModel, IntegrationModel):
     """
     Each Org Will have its own stages on set up
     """

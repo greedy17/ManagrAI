@@ -20,11 +20,9 @@ from .nylas import emails as nylas_emails
 from .models import (
     User,
     EmailAuthAccount,
-    MessageAuthAccount,
     NotificationOption,
     NotificationSelection,
 )
-from .models import EmailTemplate
 
 
 class EmailAuthAccountSerializer(serializers.ModelSerializer):
@@ -67,27 +65,25 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
+            #personal info
             "email",
+            "full_name",
             "first_name",
             "last_name",
+            # org info
             "organization",
             "organization_ref",
             "accounts_ref",
-            "type",
+            # user info
             "is_active",
             "is_invited",
-            "is_serviceaccount",
             "is_staff",
-            "full_name",
+            "is_admin",
+            "is_superuser",
+            "user_level",
             "email_auth_link",
             "email_auth_account",
             "email_auth_account_ref",
-            "message_auth_account",
-            "message_auth_account_ref",
-            "quota",
-            "upside",
-            "commit",
-            "unviewed_notifications_count",
             "profile_photo",
             "slack_ref",
             "zoom_account",
@@ -103,6 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
         "email_auth_account",
         "is_staff",
         "is_admin",
+        "is_superuser",
     )
 
 
@@ -152,7 +149,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "email",
             "organization",
             "organization_ref",
-            "type",
+            "user_level",
         )
         extra_kwargs = {
             "email": {"required": True},
@@ -160,77 +157,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         }
         read_only_fields = ("organization_ref",)
 
-
-class ContactDictField(serializers.DictField):
-    child = serializers.CharField()
-
-
-class EmailSerializer(serializers.Serializer):
-    """Serializer for verifying Emails to be sent via Nylas."""
-
-    subject = serializers.CharField(allow_blank=False, required=True)
-    body = serializers.CharField(allow_blank=False, required=True)
-
-    lead = serializers.UUIDField(required=True)
-
-    to = serializers.ListField(
-        child=ContactDictField(), required=True, allow_empty=False, allow_null=False,
-    )
-    cc = serializers.ListField(
-        child=ContactDictField(), required=False, allow_null=True
-    )
-    bcc = serializers.ListField(
-        child=ContactDictField(), required=False, allow_null=True
-    )
-
-    reply_to_message_id = serializers.CharField(allow_blank=True, required=False)
-    file_ids = serializers.ListField(
-        child=serializers.CharField(), allow_empty=True, required=False
-    )
-    variables = serializers.DictField(
-        child=serializers.CharField(allow_blank=True), allow_empty=True, required=False
-    )
-
-    def validate_lead(self, value):
-        user = self.context["request"].user
-        try:
-            lead = Lead.objects.for_user(user).get(id=value)
-        except Lead.DoesNotExist:
-            raise ValidationError(
-                "The given lead ID does not exist or you do not have permission to modify it."
-            )
-        return lead
-
-    def send(self):
-        """Send the email via Nylas."""
-        sender = self.context["request"].user
-        response = nylas_emails.send_new_email(sender, **self.validated_data)
-        return response
-
-    def preview(self):
-        """Render the email to be sent and return data to preview the result."""
-        sender = self.context["request"].user
-        return nylas_emails.generate_preview_email_data(sender, **self.validated_data,)
-
-
-class EmailTemplateSerializer(serializers.ModelSerializer):
-    """Serializer for Email Templates."""
-
-    class Meta:
-        model = EmailTemplate
-        fields = (
-            "id",
-            "name",
-            "subject",
-            "body_html",
-        )
-
-    def create(self, validated_data):
-        # Add the requesting user as the template user.
-        user = self.context["request"].user
-        validated_data["user"] = user
-        request = super().create(validated_data)
-        return request
 
 
 class NotificationSelectionSerializer(serializers.ModelSerializer):

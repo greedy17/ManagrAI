@@ -23,13 +23,20 @@ class TimeStampModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime_created = models.DateTimeField(auto_now_add=True)
     last_edited = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        abstract = True
+
+class IntegrationModel(models.Model):
     integration_id = models.CharField(max_length=255, blank=True, help_text="The UUID from the integration source")
     integration_source = models.CharField(
         max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
 
-    class Meta:
-        abstract = True
+    class Meta: 
+        abstract=True
+
 
 
 class WebhookAuthUser(AnonymousUser):
@@ -287,39 +294,6 @@ class MessageAuthAccount(TimeStampModel):
 
     class Meta:
         ordering = ["datetime_created"]
-
-
-class EmailTemplateQuerySet(models.QuerySet):
-    def for_user(self, user):
-
-        if user.is_superuser:
-            return self.all()
-        elif user.is_active:
-            return self.filter(user=user)
-        else:
-            return None
-
-
-class EmailTemplate(TimeStampModel):
-    user = models.ForeignKey(
-        "core.User", on_delete=models.CASCADE, related_name="email_templates"
-    )
-    name = models.CharField(max_length=128)
-    subject = models.TextField(blank=True)
-    body_html = models.TextField(
-        help_text="WARNING: This content is not auto-escaped. Generally take care not to "
-        "render user-provided data to avoid a possible HTML-injection."
-    )
-
-    objects = EmailTemplateQuerySet.as_manager()
-
-    def __str__(self):
-        return f"{self.user} - {self.name}"
-
-    class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "Email Templates"
-        unique_together = ["user", "name"]
 
 
 class NotificationOptionQuerySet(models.QuerySet):

@@ -1,9 +1,7 @@
 from rest_framework import routers
 from django.urls import include, path
 from managr.core import views as core_views
-
 from managr.lead import views as lead_views
-from managr.polling import views as poll_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
 from managr.slack import views as slack_views
@@ -70,29 +68,9 @@ urlpatterns = [
         name="nylas_message_webhook",
     ),
     path(
-        "twilio/callback/messages",
-        core_views.TwilioMessageWebhook.as_view(),
-        name="twilio_messages_webhook",
-    ),
-    path(
-        "twilio/list-available-numbers",
-        core_views.list_available_twilio_numbers,
-        name="list_available_twilio_numbers",
-    ),
-    path("twilio/list-messages", core_views.list_twilio_messages, name="list_messages"),
-    path(
-        "twilio/callback/messages/status",
-        core_views.message_status,
-        name="twilio_callback_message_status",
-    ),
-    path(
         "nylas/callback/accounts",
         core_views.NylasAccountWebhook.as_view(),
         name="nylas_account_webhook",
-    ),
-    path("polling/count", poll_views.list_polling_counts, name="list_polling_counts",),
-    path(
-        "zoom/api/meetings", zoom_views.create_zoom_meeting, name="create_zoom_meeting",
     ),
     path(
         "users/zoom/authenticate",
@@ -119,7 +97,6 @@ urlpatterns = [
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
-router.register("email-templates", core_views.EmailTemplateViewset, "email-templates")
 router.register(
     "organizations", organization_views.OrganizationViewSet, "organizations"
 )
