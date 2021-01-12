@@ -19,9 +19,6 @@ from .nylas import emails as nylas_emails
 
 from .models import (
     User,
-    STATE_ACTIVE,
-    STATE_INACTIVE,
-    STATE_INVITED,
     EmailAuthAccount,
     MessageAuthAccount,
     NotificationOption,
@@ -184,10 +181,7 @@ class EmailSerializer(serializers.Serializer):
     lead = serializers.UUIDField(required=True)
 
     to = serializers.ListField(
-        child=ContactDictField(),
-        required=True,
-        allow_empty=False,
-        allow_null=False,
+        child=ContactDictField(), required=True, allow_empty=False, allow_null=False,
     )
     cc = serializers.ListField(
         child=ContactDictField(), required=False, allow_null=True
@@ -223,10 +217,7 @@ class EmailSerializer(serializers.Serializer):
     def preview(self):
         """Render the email to be sent and return data to preview the result."""
         sender = self.context["request"].user
-        return nylas_emails.generate_preview_email_data(
-            sender,
-            **self.validated_data,
-        )
+        return nylas_emails.generate_preview_email_data(sender, **self.validated_data,)
 
 
 class EmailTemplateSerializer(serializers.ModelSerializer):

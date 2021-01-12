@@ -30,14 +30,6 @@ from managr.slack.helpers import block_builders
 from . import constants as org_consts
 
 
-ACCOUNT_TYPE_RENEWAL = "RENEWAL"
-ACCOUNT_TYPE_NEW = "NEW"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_RENEWAL, "Renewal"), (ACCOUNT_TYPE_NEW, "New"))
-STATE_ACTIVE = "ACTIVE"
-STATE_INACTIVE = "INACTIVE"
-STATE_CHOCIES = ((STATE_ACTIVE, "Active"), (STATE_INACTIVE, "Inactive"))
-
-
 class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser or user.is_serviceaccount:
@@ -54,18 +46,18 @@ class Organization(TimeStampModel):
     Users can either be limited, or Manager (possibly also have a main admin for the org)
     """
 
-    name = models.CharField(max_length=255, null=True)
+    name = models.CharField(max_length=255, blank=True)
     photo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+        upload_to=datetime_appended_filepath, max_length=255, blank=True
     )
     state = models.CharField(
         max_length=255,
-        choices=STATE_CHOCIES,
-        default=STATE_ACTIVE,
+        choices=org_consts.STATE_CHOCIES,
+        default=org_consts.STATE_ACTIVE,
         null=False,
         blank=False,
     )
-    is_externalsyncenabled = models.BooleanField(default=False, null=False, blank=False)
+    is_trial = models.BooleanField(default=False)
     objects = OrganizationQuerySet.as_manager()
 
     @property
@@ -74,7 +66,7 @@ class Organization(TimeStampModel):
         """ helper method to deactivate all users if their org is deactivated """
         users = User.objects.filter(organization=self)
         for u in users:
-            u.state = STATE_INACTIVE
+            u.state = org_consts.STATE_INACTIVE
             u.save()
 
     def __str__(self):
@@ -94,11 +86,6 @@ class Organization(TimeStampModel):
     @property
     def avg_amount_closed_contracts(self):
         return Organization.objects.aggregate(Avg("accounts__leads__amount"))
-
-    @property
-    def message_auth_count(self):
-        """ returns a count of how many message auth phone numbers an org has """
-        return self.users.filter(message_auth_account__isnull=False).count()
 
     @property
     def org_token(self):
@@ -132,27 +119,23 @@ class Account(TimeStampModel):
 
     """
 
-    name = models.CharField(max_length=255, null=True)
-    url = models.CharField(max_length=255, null=True)
-    type = models.CharField(
-        choices=ACCOUNT_TYPES, default=ACCOUNT_TYPE_NEW, max_length=255
-    )
+    name = models.CharField(max_length=255)
+    url = models.CharField(max_length=255, blank=True)
+    type = models.CharField(blank=True, max_length=255)
     organization = models.ForeignKey(
-        "Organization",
-        related_name="accounts",
-        blank=False,
-        null=True,
-        on_delete=models.CASCADE,
-    )
-    state = models.CharField(
-        max_length=255,
-        choices=STATE_CHOCIES,
-        default=STATE_ACTIVE,
-        null=False,
-        blank=False,
+        "Organization", related_name="accounts", on_delete=models.CASCADE,
     )
     logo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+        upload_to=datetime_appended_filepath, max_length=255, blank=True
+    )
+    parent_id = models.ForeignKey(
+        "organization.Account",
+        on_delete=models.SET_NULL,
+        related_name="parent_account",
+        blank=True,
+    )
+    integration_source = models.CharField(
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
 
     objects = AccountQuerySet.as_manager()
@@ -281,7 +264,7 @@ class Stage(TimeStampModel):
         on_delete=models.CASCADE,
     )
     # currently setting default to 6 we have 5 public tags that are taking 1-5
-    order = models.IntegerField(blank=False, null=False, default=6)
+    order = models.IntegerField(blank=False,)
 
     objects = StageQuerySet.as_manager()
 

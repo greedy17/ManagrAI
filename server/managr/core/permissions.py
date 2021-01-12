@@ -6,7 +6,6 @@ from managr.lead.models import Lead, List
 
 from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts
-from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -33,7 +32,7 @@ class IsExternalIntegrationAccount(permissions.BasePermission):
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
-        if request.method in permissions.SAFE_METHODS and user.is_serviceaccount:
+        if request.method in permissions.SAFE_METHODS:
             return True
         return False
 

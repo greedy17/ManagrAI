@@ -18,20 +18,6 @@ from managr.core import constants as core_consts
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 
-ACCOUNT_TYPE_LIMITED = "LIMITED"
-ACCOUNT_TYPE_MANAGER = "MANAGER"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"), (ACCOUNT_TYPE_MANAGER, "MANAGER"))
-
-STATE_ACTIVE = "ACTIVE"
-STATE_INACTIVE = "INACTIVE"
-STATE_INVITED = "INVITED"
-STATE_CHOCIES = (
-    (STATE_ACTIVE, "Active"),
-    (STATE_INACTIVE, "Inactive"),
-    (STATE_INVITED, "Invited"),
-)
-
-
 class TimeStampModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime_created = models.DateTimeField(auto_now_add=True)
@@ -88,7 +74,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = False
-        extra_fields["is_serviceaccount"] = False
+        extra_fields["is_admin"] = False
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -97,16 +83,6 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = True
         extra_fields["is_active"] = True
         extra_fields["is_serviceaccount"] = False
-        return self._create_user(email, password, **extra_fields)
-
-    def create_serviceaccount(self, email, password, service_for, **extra_fields):
-        """ Create service accounts that will be used to send emails/notifications etc """
-        extra_fields["is_staff"] = False
-        extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = True
-        extra_fields["is_serviceaccount"] = True
-        extra_fields["service_for"] = service_for
-        password = self.make_random_password()
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -118,18 +94,15 @@ class User(AbstractUser, TimeStampModel):
     REQUIRED_FIELDS = []
     username = None
     email = models.EmailField(unique=True)
-    is_serviceaccount = models.BooleanField(default=False)
-    service_for = models.CharField(
-        choices=core_consts.SERVICE_TYPES, max_length=255, null=True
-    )
     is_active = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     organization = models.ForeignKey(
         "organization.Organization",
         related_name="users",
         on_delete=models.SET_NULL,
-        null=True,
+        blank=True,
     )
-    type = models.CharField(
+    account_level = models.CharField(
         choices=core_consts.ACCOUNT_TYPES,
         max_length=255,
         default=core_consts.ACCOUNT_TYPE_REP,
@@ -145,21 +118,12 @@ class User(AbstractUser, TimeStampModel):
             "The magic token is a randomly-generated uuid that can be "
             "used to identify the user in a non-password based login flow. "
         ),
+        blank=True,
     )
     # may need to make this a property as it keeps re-running a migration
     # is_invited = models.BooleanField(max_length=255, default=False)
     magic_token_expiration = models.DateTimeField(
-        help_text="The datetime when the magic token is expired.", null=True
-    )
-    quota = models.PositiveIntegerField(
-        help_text="Target sell amount for some defined timespan "
-        "set by their Organization.",
-        default=0,
-    )
-    commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
-    upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
-    profile_photo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+        help_text="The datetime when the magic token is expired.", blank=True
     )
 
     objects = UserManager()
@@ -192,20 +156,6 @@ class User(AbstractUser, TimeStampModel):
 
         return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
-    @property
-    def unviewed_notifications_count(self):
-        return self.notifications.filter(viewed=False).count()
-
-    @property
-    def send_email_to_integrate_slack(self):
-        """ 
-            if a users org has slack integrated but the user does not
-            we send an email to remind them to integrate, to received notifs
-        """
-        return not hasattr(self, "slack_integration") and hasattr(
-            self.organization, "slack_integration"
-        )
-
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
@@ -224,9 +174,6 @@ class User(AbstractUser, TimeStampModel):
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
-
-    def get_contacts_from_leads(self):
-        return self.claimed_leads
 
     def check_notification_enabled_setting(self, key, type):
         setting_value = self.notification_settings.filter(

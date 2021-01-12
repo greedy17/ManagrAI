@@ -31,7 +31,6 @@ from managr.core.permissions import (
     IsSalesPerson,
     CanEditResourceOrReadOnly,
 )
-from managr.core.models import ACCOUNT_TYPE_MANAGER
 from managr.organization.models import Contact, Account, Stage
 from managr.organization import constants as org_consts
 from managr.lead import constants as lead_constants
@@ -381,11 +380,17 @@ class LeadViewSet(
         extra_meta = {}
         if "status" in data:
             extra_meta["status_update"] = True
-            extra_meta["previous_status"] = str(current_lead.status.id) if current_lead.status else None
+            extra_meta["previous_status"] = (
+                str(current_lead.status.id) if current_lead.status else None
+            )
             extra_meta["new_status"] = data["status"]
         if "expected_close_date" in data:
             extra_meta["expected_close_date_update"] = True
-            extra_meta["previous_expected_close_date"] = str(current_lead.expected_close_date) if current_lead.expected_close_date else None
+            extra_meta["previous_expected_close_date"] = (
+                str(current_lead.expected_close_date)
+                if current_lead.expected_close_date
+                else None
+            )
             extra_meta["new_expected_close_date"] = data["expected_close_date"]
 
         self.perform_update(serializer)
@@ -605,7 +610,7 @@ class LeadViewSet(
 
         queryset = lead_models.Lead.objects
         if rep_string:
-            rep_ids = rep_string.split(',')
+            rep_ids = rep_string.split(",")
             queryset = queryset.filter(claimed_by__in=rep_ids)
         if stage:
             queryset = queryset.filter(status=stage)
@@ -616,9 +621,9 @@ class LeadViewSet(
             lower_bound = score_bounds[0]
             upper_bound = score_bounds[1]
             queryset = queryset.filter(
-                            current_score__final_score__gte=lower_bound,
-                            current_score__final_score__lte=upper_bound,
-                        )
+                current_score__final_score__gte=lower_bound,
+                current_score__final_score__lte=upper_bound,
+            )
         count = queryset.count()
         data = {"count": count}
         return Response(data)
