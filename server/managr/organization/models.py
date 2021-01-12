@@ -88,7 +88,6 @@ class Organization(TimeStampModel):
         return Organization.objects.aggregate(Avg("accounts__leads__amount"))
 
 
-
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
@@ -115,7 +114,7 @@ class Account(TimeStampModel):
     logo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, blank=True
     )
-    parent= models.ForeignKey(
+    parent = models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
         related_name="parent_account",

@@ -78,10 +78,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
 
                         c, created = Contact.objects.for_user(user).get_or_create(
                             email=contact["user_email"].lower(),
-                            defaults={
-                                "account": lead.account,
-                                "organization": lead.account.organization,
-                            },
+                            defaults={"account": lead.account,},
                         )
 
                         if created:
