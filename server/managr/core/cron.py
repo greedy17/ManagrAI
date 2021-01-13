@@ -10,12 +10,12 @@ from django.conf import settings
 
 from managr.core.nylas.auth import revoke_all_access_tokens
 from managr.core.models import EmailAuthAccount, User
-from managr.lead.models import Reminder, Notification, Lead, LeadActivityLog
+from managr.opportunity.models import Reminder, Notification, Opportunity, LeadActivityLog
 from managr.core import constants as core_consts
-from managr.lead import constants as lead_consts
+from managr.opportunity import constants as opp_consts
 
 from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
-from managr.lead.lead_score_generation import generate_lead_scores
+from managr.opportunity.opp_score_generation import generate_opp_scores
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 
@@ -76,20 +76,20 @@ def _send_slack_int_email(user):
 
 
 def _create_notification(
-    title, content, notification_type, lead, user, notification_class="ALERT"
+    title, content, notification_type, opportunity, user, notification_class="ALERT"
 ):
     Notification.objects.create(
         notify_at=timezone.now(),
         title=title,
         notification_type=notification_type,
-        resource_id=str(lead.id),
+        resource_id=str(opportunity.id),
         notification_class=notification_class,
         user=user,
         meta={
-            "id": str(lead.id),
+            "id": str(opportunity.id),
             "title": title,
             "content": content,
-            "leads": [{"id": str(lead.id), "title": lead.title}],
+            "opportunities": [{"id": str(opportunity.id), "title": opportunity.title}],
         },
     )
 
@@ -141,20 +141,21 @@ def revoke_extra_access_tokens():
 @kronos.register("* * * * *")
 def create_notifications():
     """ Poll the reminders endpoint and create a notification if the reminder is 5 mins away """
-    now = timezone.now()
-    remind_time = now + timezone.timedelta(minutes=5)
-    ns = Notification.objects.filter(notification_type="REMINDER").values_list(
-        "resource_id", flat=True
-    )
-    query = Q()
-    for n in ns:
-        query |= Q(id=n)
+    
+    """     now = timezone.now()
+        remind_time = now + timezone.timedelta(minutes=5)
+        ns = Notification.objects.filter(notification_type="REMINDER").values_list(
+            "resource_id", flat=True
+        )
+        query = Q()
+        for n in ns:
+            query |= Q(id=n)
 
-    for row in (
-        Reminder.objects.filter(datetime_for__lte=remind_time)
-        .exclude(query)
-        .order_by("-datetime_for")
-    ):
+        for row in (
+            Reminder.objects.filter(datetime_for__lte=remind_time)
+            .exclude(query)
+            .order_by("-datetime_for")
+        ):
         if row.created_for:
             user = row.created_by
             # check notification settings
@@ -178,7 +179,7 @@ def create_notifications():
                             {"id": str(c.id), "full_name": c.full_name,}
                             for c in row.linked_contacts.all()
                         ],
-                        "leads": [
+                        "opportunities": [
                             {
                                 "id": str(row.created_for.id),
                                 "title": row.created_for.title,
@@ -220,7 +221,7 @@ def create_notifications():
                                 {"id": str(c.id), "full_name": c.full_name,}
                                 for c in row.linked_contacts.all()
                             ],
-                            "leads": [
+                            "opportunities": [
                                 {
                                     "id": str(row.created_for.id),
                                     "title": row.created_for.title,
@@ -231,51 +232,44 @@ def create_notifications():
 
         else:
 
-            logger.exception(f"The Reminder with id {row.id} does not reference a lead")
-
+            logger.exception(f"The Reminder with id {row.id} does not reference a opportunity")
+    """
+    return
 
 @kronos.register("0 0 * * *")
 def create_lead_notifications():
-    # alerts for
-    #   activity no activity in last 90 days
-    #   no response from email after 3 days ## LEAVING THIS OUT FOR NOW
-    #   days since expected close date 1 day 14 days 30 days
-    #   stalled in stage 60days
-    #   admins receive only alerts reps recieve alerts and emails admins
-    # can choose to remove receive or not receive
 
-    # 1 get all users who are active will also include super user so mike can also get notifs
     users = User.objects.filter(is_active=True)
     for user in users:
-        # 2 get leads for specific user
-        leads = list()
-        # rep level users only get notifs for leads they are claiming except closed leads
+        # 2 get opportunities for specific user
+        opportunities = list()
+        # rep level users only get notifs for opportunities they are claiming except closed opportunities
         if user.type == core_consts.ACCOUNT_TYPE_REP:
-            leads = user.claimed_leads.all().exclude(
+            opportunities = user.claimed_leads.all().exclude(
                 status__title="CLOSED", status__type="PUBLIC"
             )
         else:
-            leads = Lead.objects.filter(
+            opportunities = Opportunity.objects.filter(
                 account__organization=user.organization_id
             ).exclude(status__title="CLOSED", status__type="PUBLIC")
 
-        # 3 check if lead meets requirements for each type of alert/email
-        for lead in leads:
+        # 3 check if opportunity meets requirements for each type of alert/email
+        for opportunity in opportunities:
             now = timezone.now()
             target_date = now - timezone.timedelta(days=90)
             latest_activity = None
-            if lead.activity_logs.filter(
+            if opportunity.activity_logs.filter(
                 activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
             ).exists():
                 latest_activity = (
-                    lead.activity_logs.filter(
+                    opportunity.activity_logs.filter(
                         activity__in=lead_consts.LEAD_ACTIONS_TRIGGER_ALERT
                     )
                     .latest("action_timestamp")
                     .action_timestamp
                 ).date()
             else:
-                latest_activity = (lead.datetime_created).date()
+                latest_activity = (opportunity.datetime_created).date()
 
             if latest_activity < target_date.date():
                 # 4 check if an alert/email already exists (reps only get alerts not emails)
@@ -288,19 +282,19 @@ def create_lead_notifications():
                         latest_activity
                     )
                     title = "Inactive 90+ Days"
-                    content = f"Your claimed opportunity {lead.title} has had no activity since {latest_activity_str}"
+                    content = f"Your claimed opportunity {opportunity.title} has had no activity since {latest_activity_str}"
                     if not _has_alert(
                         user,
                         core_consts.NOTIFICATION_TYPE_ALERT,
                         lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                        str(lead.id),
+                        str(opportunity.id),
                     ):
                         # create alert
                         _create_notification(
                             title,
                             content,
                             lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                            lead,
+                            opportunity,
                             user,
                         )
                         # managers do not get emails for this version
@@ -313,7 +307,7 @@ def create_lead_notifications():
                         user,
                         core_consts.NOTIFICATION_TYPE_SLACK,
                         lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                        str(lead.id),
+                        str(opportunity.id),
                     ):
                         latest_activity_str = _convert_to_user_friendly_date(
                             latest_activity
@@ -328,8 +322,8 @@ def create_lead_notifications():
                             _send_slack_int_email(user)
                         if hasattr(user, "slack_integration"):
                             ## check if alert already exists
-                            title = f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-                            slack_message = f"The opportunity *{lead.title}* has not shown any activity since *{latest_activity_str}*"
+                            title = f"No New Activity on opportunity {opportunity.title} since {latest_activity_str}"
+                            slack_message = f"The opportunity *{opportunity.title}* has not shown any activity since *{latest_activity_str}*"
 
                             user_slack_channel = user.slack_integration.channel
                             slack_org_access_token = (
@@ -338,7 +332,7 @@ def create_lead_notifications():
                             block_set = get_block_set(
                                 "opp_inactive_block_set",
                                 {
-                                    "l": str(lead.id),
+                                    "l": str(opportunity.id),
                                     "m": slack_message,
                                     "u": str(user.id),
                                     "t": title,
@@ -354,14 +348,14 @@ def create_lead_notifications():
                                 title,
                                 slack_message,
                                 lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-                                lead,
+                                opportunity,
                                 user,
                                 core_consts.NOTIFICATION_TYPE_SLACK,
                             )
 
             expected_close_date = None
-            if lead.expected_close_date:
-                expected_close_date = lead.expected_close_date
+            if opportunity.expected_close_date:
+                expected_close_date = opportunity.expected_close_date
                 is_lapsed = _check_days_lead_expected_close_lapsed(expected_close_date)
                 if is_lapsed >= 1 and is_lapsed < 14:
                     notification_late_for_days = 1
@@ -387,7 +381,7 @@ def create_lead_notifications():
                             user,
                             core_consts.NOTIFICATION_TYPE_ALERT,
                             notification_type_str,
-                            str(lead.id),
+                            str(opportunity.id),
                         ):
 
                             # create alert
@@ -397,7 +391,7 @@ def create_lead_notifications():
                             )
                             content = f"This opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
                             _create_notification(
-                                title, content, notification_type_str, lead, user
+                                title, content, notification_type_str, opportunity, user
                             )
 
                     if user.check_notification_enabled_setting(
@@ -409,15 +403,15 @@ def create_lead_notifications():
                             user,
                             core_consts.NOTIFICATION_TYPE_SLACK,
                             notification_type_str,
-                            str(lead.id),
+                            str(opportunity.id),
                         ):
                             # create notification of that class in notifications
                             if user.send_email_to_integrate_slack:
                                 _send_slack_int_email(user)
                             if hasattr(user, "slack_integration"):
                                 ## check if alert already exists
-                                title = f"Opportunity {lead.title} expected to close {notification_late_for_days} day(s) ago"
-                                content = f"This *{lead.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{is_lapsed}* day(s) over"
+                                title = f"Opportunity {opportunity.title} expected to close {notification_late_for_days} day(s) ago"
+                                content = f"This *{opportunity.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{is_lapsed}* day(s) over"
 
                                 user_slack_channel = user.slack_integration.channel
                                 slack_org_access_token = (
@@ -426,7 +420,7 @@ def create_lead_notifications():
                                 block_set = get_block_set(
                                     "opp_inactive_block_set",
                                     {
-                                        "l": str(lead.id),
+                                        "l": str(opportunity.id),
                                         "m": content,
                                         "u": str(user.id),
                                         "t": title,
@@ -442,38 +436,38 @@ def create_lead_notifications():
                                     title,
                                     content,
                                     notification_type_str,
-                                    lead,
+                                    opportunity,
                                     user,
                                     core_consts.NOTIFICATION_TYPE_SLACK,
                                 )
 
             target_date = (now - timezone.timedelta(days=60)).date()
-            if lead.status_last_update.date() < target_date:
+            if opportunity.status_last_update.date() < target_date:
                 if user.check_notification_enabled_setting(
                     core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_STALLED_IN_STAGE,
                     core_consts.NOTIFICATION_TYPE_ALERT,
                 ):
                     # check notifications for one first
                     status_last_updated_str = _convert_to_user_friendly_date(
-                        lead.status_last_update.date()
+                        opportunity.status_last_update.date()
                     )
                     if not _has_alert(
                         user,
                         core_consts.NOTIFICATION_TYPE_ALERT,
                         lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                        str(lead.id),
+                        str(opportunity.id),
                     ):
                         # create alert
 
                         title = "60+ days in stage"
 
-                        content = f"{lead.title} has been in the same stage since {status_last_updated_str}"
+                        content = f"{opportunity.title} has been in the same stage since {status_last_updated_str}"
 
                         _create_notification(
                             title,
                             content,
                             lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                            lead,
+                            opportunity,
                             user,
                         )
                     if user.check_notification_enabled_setting(
@@ -485,10 +479,10 @@ def create_lead_notifications():
                             user,
                             core_consts.NOTIFICATION_TYPE_SLACK,
                             lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                            str(lead.id),
+                            str(opportunity.id),
                         ):
                             title = "Opportunity stalled in stage for over 60 days"
-                            content = f"*{lead.title}* has been in the same stage since *{status_last_updated_str}*"
+                            content = f"*{opportunity.title}* has been in the same stage since *{status_last_updated_str}*"
                             # create notification of that class in notifications
 
                             # when checking slack notification settings, if the user has opted to
@@ -505,7 +499,7 @@ def create_lead_notifications():
                                 block_set = get_block_set(
                                     "opp_inactive_block_set",
                                     {
-                                        "l": str(lead.id),
+                                        "l": str(opportunity.id),
                                         "m": content,
                                         "u": str(user.id),
                                         "t": title,
@@ -521,7 +515,7 @@ def create_lead_notifications():
                                     title,
                                     content,
                                     lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-                                    lead,
+                                    opportunity,
                                     user,
                                     core_consts.NOTIFICATION_TYPE_SLACK,
                                 )

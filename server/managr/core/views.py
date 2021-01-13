@@ -35,9 +35,9 @@ from rest_framework.response import Response
 
 from managr.utils.numbers import format_phone_number, validate_phone_number
 
-from managr.lead import constants as lead_consts
-from managr.lead.models import LeadMessage, Notification, Lead
-from managr.lead.background import emit_event as emit_log_event
+from managr.Opportunity import constants as opp_consts
+from managr.Opportunity.models import Notification, Opportunities
+from managr.Opportunity.background import emit_event as emit_log_event
 
 from managr.organization.models import (
     Organization,
@@ -235,26 +235,6 @@ class UserViewSet(
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="threads",
-    )
-    def threads(self, request, *args, **kwargs):
-        """Retrieve all of the user's email threads from the connected Nylas account.
-
-        Supported Query Parameters:
-            page (int):        Page of results to retrieve.
-            page_size (int):   Size of each page of results.
-            to_email (str):    Single email.
-            any_email (str):   Comma-separated list of emails.
-        """
-        user = request.user
-        threads = retrieve_threads(user, **request.query_params.dict())
-        # check threads for leademail count and append that
-
-        return Response(threads)
 
     @action(
         methods=["post"],

@@ -13,19 +13,6 @@ from managr.slack.helpers.block_sets import get_block_set
 logger = logging.getLogger("managr")
 
 
-def _send_slack_int_email(user):
-    # when checking slack notification settings, if the user has opted to
-    # receive slack notifs but has not integrated slack send them an email (assuming their org has set it up)
-    # reminding them to set up slack
-
-    recipient = [{"name": user.full_name, "email": user.email}]
-    message = {
-        "subject": "Enable Slack",
-        "body": "You have opted to receive Slack Notifications, please integrate slack so you can receive them",
-    }
-    send_system_email(recipient, message)
-
-
 def generate_lead_scores():
     # the score regards the last 30 days of lead activity
     date_range_end = timezone.now()
@@ -71,8 +58,6 @@ def generate_score(lead, date_range_end, date_range_start):
         for user in lead.claimed_by.organization.users.filter(
             is_active=True, type="MANAGER"
         ):
-            if user.send_email_to_integrate_slack:
-                _send_slack_int_email(user)
             if hasattr(user, "slack_integration"):
                 user_slack_channel = user.slack_integration.channel
                 slack_org_access_token = (

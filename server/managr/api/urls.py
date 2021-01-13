@@ -1,7 +1,7 @@
 from rest_framework import routers
 from django.urls import include, path
 from managr.core import views as core_views
-from managr.lead import views as lead_views
+from managr.opportunity import views as opp_views
 from managr.organization import views as organization_views
 from managr.report import views as report_views
 from managr.slack import views as slack_views
@@ -24,7 +24,7 @@ urlpatterns = [
     path(
         "demo/trigger-late/", demo_views.past_expected_close_date, name="trigger-stage"
     ),
-    path("demo/close-lead/", demo_views.close_lead, name="close-lead",),
+    path("demo/close-opp/", demo_views.close_lead, name="close-opp",),
     path(
         "demo/delete-meeting/", demo_views.delete_demo_meeting, name="delete-meeting",
     ),
@@ -102,27 +102,13 @@ router.register(
 )
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
-router.register("leads/claim", lead_views.LeadViewSet, "leads-claim")
-router.register("leads/un-claim", lead_views.LeadViewSet, "leads-un-claim")
-router.register("leads", lead_views.LeadViewSet, "leads")
-router.register("lists/add-to-list", lead_views.ListViewSet, "lists-add")
-router.register("lists/remove-from-list", lead_views.ListViewSet, "lists-remove")
-router.register("lists", lead_views.ListViewSet, "lists")
-router.register("notes", lead_views.NoteViewSet, "notes")
-router.register("call-notes", lead_views.CallNoteViewSet, "call-notes")
-router.register("forecasts", lead_views.ForecastViewSet, "forecast")
-router.register("reminders", lead_views.ReminderViewSet, "reminders")
-router.register("action-choices", lead_views.ActionChoiceViewSet, "action-choices")
-router.register("actions", lead_views.ActionViewSet, "actions")
-router.register("lead-activity", lead_views.LeadActivityLogViewSet, "lead-activity")
 router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
 router.register(
     "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
 )
-router.register("files", lead_views.FileViewSet, "files")
-router.register("notifications", lead_views.NotificationViewSet, "notifications")
-router.register("stages", organization_views.StageViewSet, "stages")
-router.register("lead-messages", lead_views.LeadMessageViewSet, "lead-messages")
+
+
+
 router.register(
     "notifications/settings",
     core_views.NotificationSettingsViewSet,

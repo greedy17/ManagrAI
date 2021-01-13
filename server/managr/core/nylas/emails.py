@@ -11,8 +11,8 @@ from django.urls import reverse
 from django.template import Context, Template
 
 from managr.utils import sites as site_utils
-from managr.lead import constants as lead_constants
-from managr.lead.background import emit_event
+from managr.opportunity import constants as lead_constants
+from managr.opportunity.background import emit_event
 
 from .exceptions import NylasAPIError
 from .. import constants as core_consts
@@ -60,66 +60,6 @@ def _return_nylas_headers(user):
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
     headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
-
-
-def retrieve_threads(user, to_email=None, any_email=None, page=1, page_size=10):
-    """Use the Nylas API to retrieve threads.
-
-    Args:
-        user (User):             Access the API on this user's behalf.
-        to_email (str):          Retrieve threads addressed to this email.
-        any_email (list[str]):   Retrieve threads involving any of these emails.
-        page (str, int):         Page of results to access (based on page_size).
-        page_size (str, int):    Maximum number of results to retrieve (based on page).
-    """
-    page = int(page)
-    page_size = int(page_size)
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/"
-    headers = _return_nylas_headers(user)
-
-    # Set up the request parameters
-    params = {"offset": (page - 1) * page_size, "limit": page_size}
-
-    if to_email:
-        params["to"] = to_email
-
-    if any_email:
-        params["any_email"] = any_email
-
-    response = requests.get(request_url, params=params, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
-
-
-def retrieve_messages(user, thread_id, page=1, page_size=10):
-    """Use Nylas to retrieve messages from specific threads ids."""
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/"
-    headers = _return_nylas_headers(user)
-    params = {
-        "offset": (page - 1) * page_size,
-        "limit": page_size,
-        "thread_id": thread_id,
-    }
-    response = requests.get(request_url, params=params, headers=headers)
-    json_response = _handle_nylas_response(response)
-
-    return json_response
-
-
-def retrieve_message(user, message_id):
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/{message_id}"
-    headers = _return_nylas_headers(user)
-    response = requests.get(request_url, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
-
-
-def retrieve_thread(user, thread_id):
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/{thread_id}"
-    headers = _return_nylas_headers(user)
-    response = requests.get(request_url, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
 
 
 def return_file_id_from_nylas(user, file_object):

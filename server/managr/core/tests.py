@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from managr.core.factories import UserFactory
-from managr.lead.factories import LeadFactory, LeadActivityLogFactory
+from managr.Opportunity.factories import LeadFactory, LeadActivityLogFactory
 from managr.organization.models import Organization, Stage
 from managr.organization.factories import (
     AccountFactory,
@@ -18,8 +18,8 @@ from managr.organization.factories import (
     OrganizationFactory,
 )
 
-from managr.lead.models import Notification, LeadActivityLog
-from managr.lead import constants as lead_consts
+from managr.Opportunity.models import Notification, LeadActivityLog
+from managr.Opportunity import constants as lead_consts
 from managr.organization import constants as org_consts
 from managr.slack.models import OrganizationSlackIntegration
 
@@ -126,7 +126,7 @@ class AlertsTestCase(TestCase):
         self.assertEqual(late, 30)
 
     def test_no_alerts_for_users(self):
-        """ no alerts should be triggered concerning leads """
+        """ no alerts should be triggered concerning Opportunities """
         call_command("createleadnotifications")
         self.assertEqual(Notification.objects.count(), 0)
 

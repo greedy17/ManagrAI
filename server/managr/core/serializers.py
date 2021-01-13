@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 
-from managr.lead.models import Lead
+
 from managr.organization.serializers import (
     OrganizationRefSerializer,
     AccountRefSerializer,

@@ -18,7 +18,7 @@ from managr.report.models import StoryReport
 from . import constants as lead_constants
 
 
-class LeadQuerySet(models.QuerySet):
+class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
@@ -45,7 +45,7 @@ class LeadQuerySet(models.QuerySet):
         return qs
 
 
-class Lead(TimeStampModel):
+class Opportunity(TimeStampModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.
 
     Currently we are setting on_delete to null and allowing null values. However we may
@@ -108,7 +108,7 @@ class Lead(TimeStampModel):
         choices=lead_constants.TYPE_CHOICES, max_length=255, null=True,
     )
 
-    objects = LeadQuerySet.as_manager()
+    objects = OpportunityQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -149,14 +149,14 @@ class Lead(TimeStampModel):
 
     def save(self, *args, **kwargs):
         # do not allow duplicates of lead titles in a single org
-        leads = (
-            Lead.objects.filter(
+        opps = (
+            Opportunity.objects.filter(
                 title=self.title, account__organization__id=self.account.organization.id
             )
             .exclude(id=self.id)
             .exists()
         )
-        if leads:
+        if opps:
             raise ValidationError(
                 {
                     "non_form_errors": {
@@ -190,7 +190,7 @@ class Lead(TimeStampModel):
             report = StoryReport.objects.create(lead=self, generated_by=self.claimed_by)
             report.emit_story_event(True)
 
-        return super(Lead, self).save(*args, **kwargs)
+        return super(Opportunity, self).save(*args, **kwargs)
 
 
 class ListQuerySet(models.QuerySet):
@@ -209,7 +209,7 @@ class List(TimeStampModel):
     created_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="lists"
     )
-    leads = models.ManyToManyField("Lead", blank=True, related_name="lists")
+    opportunities = models.ManyToManyField("Opportunities", blank=True, related_name="lists")
     objects = ListQuerySet.as_manager()
 
     def __str__(self):
@@ -239,8 +239,8 @@ class File(TimeStampModel):
     uploaded_by = models.ForeignKey(
         "core.User", null=True, on_delete=models.SET_NULL, related_name="files_uploaded"
     )
-    lead = models.ForeignKey(
-        "Lead", null=True, on_delete=models.CASCADE, related_name="files"
+    opportunity = models.ForeignKey(
+        "Opportunity", null=True, on_delete=models.CASCADE, related_name="files"
     )
     file = models.FileField(
         upload_to=datetime_appended_filepath, max_length=255, null=True
@@ -297,11 +297,11 @@ class BaseNote(TimeStampModel):
         on_delete=models.SET_NULL,
     )
     created_for = models.ForeignKey(
-        "Lead",
+        "Opportunity",
         related_name="%(app_label)s_%(class)ss",
         null=True,
         on_delete=models.CASCADE,
-        help_text="The Lead that this note was created for.",
+        help_text="The Opportunity that this note was created for.",
     )
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="%(app_label)s_%(class)s", blank=True
@@ -420,8 +420,8 @@ class LeadActivityLog(TimeStampModel):
     An ActivityLog record is created whenever an activity occurs.
     """
 
-    lead = models.ForeignKey(
-        "Lead", null=True, on_delete=models.PROTECT, related_name="activity_logs",
+    opportunity = models.ForeignKey(
+        "Opportunity", null=True, on_delete=models.PROTECT, related_name="activity_logs",
     )
     action_timestamp = models.DateTimeField(
         help_text=(
@@ -553,8 +553,8 @@ class Action(TimeStampModel):
         related_name="created_actions",
     )
     action_detail = models.TextField(blank=True)
-    lead = models.ForeignKey(
-        "Lead", on_delete=models.CASCADE, null=True, blank=False, related_name="actions"
+    opportunity = models.ForeignKey(
+        "Opportunity", on_delete=models.CASCADE, null=True, blank=False, related_name="actions"
     )
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="actions", blank=True
@@ -600,68 +600,13 @@ class LeadMessageQuerySet(models.QuerySet):
             return self.none()
 
 
-class LeadMessage(TimeStampModel):
-    """ Tie a lead to a Twilio Message """
 
-    created_by = models.ForeignKey(
-        "core.User",
-        related_name="created_messages",
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-
-    lead = models.ForeignKey(
-        "Lead",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=False,
-        related_name="messages",
-    )
-    linked_contacts = models.ManyToManyField(
-        "organization.Contact", related_name="message_activity_logs", blank=True
-    )
-
-    message_id = models.CharField(max_length=128)
-    direction = models.CharField(
-        choices=lead_constants.MESSAGE_DIRECTION_CHOICES, max_length=255, null=True
-    )
-
-    body = models.TextField(blank=True)
-    status = models.CharField(
-        choices=lead_constants.MESSAGE_STATUS_CHOICES, max_length=255, null=True
-    )
-
-    objects = LeadMessageQuerySet.as_manager()
-
-    class Meta:
-        ordering = ["-datetime_created"]
-
-    @property
-    def activity_log_meta(self):
-        """A metadata dict for activity logs"""
-        return {
-            "id": str(self.id),
-            "lead": str(self.lead.id),
-            "message_id": self.message_id,
-            "created_by": str(self.created_by.id),
-            "created_by_ref": {
-                "id": str(self.created_by.id),
-                "full_name": self.created_by.full_name,
-            },
-            "linked_contacts": [
-                {"id": str(c.id), "full_name": c.full_name,}
-                for c in self.linked_contacts.all()
-            ],
-        }
-
-
-
-class LeadScoreQuerySet(models.QuerySet):
+class OpportunityScoreQuerySet(models.QuerySet):
     def for_lead(self, lead):
         return self.filter(lead=lead)
 
 
-class LeadScore(TimeStampModel):
+class OpportunityScore(TimeStampModel):
     """
     A Lead can have many LeadScores.
     A LeadScore represents a cached score
@@ -697,11 +642,11 @@ class LeadScore(TimeStampModel):
     date_range_end = models.DateTimeField()
     date_range_start = models.DateTimeField()
 
-    lead = models.ForeignKey(
-        "Lead", related_name="scores", on_delete=models.CASCADE, null=False,
+    opportunity = models.ForeignKey(
+        "Opportunity", related_name="scores", on_delete=models.CASCADE, null=False,
     )
     previous_score = models.ForeignKey(
-        "LeadScore", on_delete=models.CASCADE, null=True, blank=True,
+        "OpportunityScore", on_delete=models.CASCADE, null=True, blank=True,
     )
 
     objects = LeadScoreQuerySet.as_manager()
