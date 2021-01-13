@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     # Local
     "managr.core",
     "managr.api",
-    "managr.lead",
+    "managr.opportunity",
     "managr.organization",
     "managr.report",
     "managr.slack",

@@ -34,7 +34,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.core import constants as core_consts
 
 from managr.opportunity.models import Opportunity, LeadActivityLog, Notification
-from managr.opportunity import constants as lead_consts
+from managr.opportunity import constants as opp_consts
 from managr.organization import constants as org_consts
 from managr.organization.models import Stage
 from managr.opportunity.background import emit_event
@@ -46,20 +46,20 @@ from managr.slack.helpers.block_sets import get_block_set
 
 
 def _create_notification(
-    title, content, notification_type, lead, user, notification_class="ALERT"
+    title, content, notification_type, opportunity, user, notification_class="ALERT"
 ):
     Notification.objects.create(
         notify_at=timezone.now(),
         title=title,
         notification_type=notification_type,
-        resource_id=str(lead.id),
+        resource_id=str(opportunity.id),
         notification_class=notification_class,
         user=user,
         meta={
-            "id": str(lead.id),
+            "id": str(opportunity.id),
             "title": title,
             "content": content,
-            "leads": [{"id": str(lead.id), "title": lead.title}],
+            "leads": [{"id": str(opportunity.id), "title": opportunity.title}],
         },
     )
 
@@ -74,44 +74,47 @@ def clear_activity_log(request):
     data = request.data
     ## clear all notification for a user to avoid the check that a notif doesnt exist already
     Notification.objects.for_user(request.user).filter(
-        resource_id=data["lead"],
+        resource_id=data["opportunity"],
         notification_class="SLACK",
-        notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+        notification_type=opp_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
     ).delete()
 
-    lead = Lead.objects.get(id=data["lead"])
+    opportunity = Opportunity.objects.get(id=data["opportunity"])
     ## get one log to change if it exists
-    log = lead.activity_logs.first()
+    log = opportunity.activity_logs.first()
     ## delete the rest
-    lead.activity_logs.all().delete()
+    opportunity.activity_logs.all().delete()
     ## make its time within the 100 days
     time_occured = timezone.now() - timezone.timedelta(days=100)
     if log:
-        log.activity = lead_consts.EMAIL_RECEIVED
+        log.activity = opp_consts.EMAIL_RECEIVED
         log.action_timestamp = time_occured
         log.save()
     else:
         LeadActivityLog.objects.create(
-            lead=lead,
+            opportunity=opportunity,
             action_timestamp=time_occured,
-            activity=lead_consts.EMAIL_RECEIVED,
+            activity=opp_consts.EMAIL_RECEIVED,
             action_taken_by=request.user,
         )
 
     latest_activity_str = _convert_to_user_friendly_date(time_occured)
-    user = lead.claimed_by
+    user = opportunity.claimed_by
     if hasattr(user, "slack_integration"):
         ## check if alert already exists
-        title = (
-            f"No New Activity on opportunity {lead.title} since {latest_activity_str}"
-        )
-        slack_message = f"The opportunity *{lead.title}* has not shown any activity since *{latest_activity_str}*"
+        title = f"No New Activity on opportunity {opportunity.title} since {latest_activity_str}"
+        slack_message = f"The opportunity *{opportunity.title}* has not shown any activity since *{latest_activity_str}*"
 
         user_slack_channel = user.slack_integration.channel
         slack_org_access_token = user.organization.slack_integration.access_token
         block_set = get_block_set(
             "opp_inactive_block_set",
-            {"l": str(lead.id), "m": slack_message, "u": str(user.id), "t": title,},
+            {
+                "l": str(opportunity.id),
+                "m": slack_message,
+                "u": str(user.id),
+                "t": title,
+            },
         )
         slack_requests.send_channel_message(
             user_slack_channel, slack_org_access_token, block_set=block_set,
@@ -120,8 +123,8 @@ def clear_activity_log(request):
         _create_notification(
             title,
             slack_message,
-            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
-            lead,
+            opp_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
+            opportunity,
             user,
             core_consts.NOTIFICATION_TYPE_SLACK,
         )
@@ -135,23 +138,21 @@ def stalled_in_stage(request):
     data = request.data
     ## clear all notification for a user to avoid the check that a notif doesnt exist already
     Notification.objects.for_user(request.user).filter(
-        resource_id=data["lead"],
+        resource_id=data["opportunity"],
         notification_class="SLACK",
-        notification_type=lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
+        notification_type=opp_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
     ).delete()
 
-    lead = Lead.objects.get(id=data["lead"])
+    opportunity = Opportunity.objects.get(id=data["opportunity"])
     stalled_date = timezone.now() - timezone.timedelta(days=65)
-    lead.status_last_update = stalled_date
-    lead.save()
+    opportunity.status_last_update = stalled_date
+    opportunity.save()
     status_last_updated_str = _convert_to_user_friendly_date(
-        lead.status_last_update.date()
+        opportunity.status_last_update.date()
     )
-    user = lead.claimed_by
+    user = opportunity.claimed_by
     title = "Opportunity stalled in stage for over 60 days"
-    content = (
-        f"*{lead.title}* has been in the same stage since *{status_last_updated_str}*"
-    )
+    content = f"*{opportunity.title}* has been in the same stage since *{status_last_updated_str}*"
 
     if hasattr(user, "slack_integration"):
         ## check if alert already exists
@@ -159,7 +160,7 @@ def stalled_in_stage(request):
         slack_org_access_token = user.organization.slack_integration.access_token
         block_set = get_block_set(
             "opp_inactive_block_set",
-            {"l": str(lead.id), "m": content, "u": str(user.id), "t": title,},
+            {"l": str(opportunity.id), "m": content, "u": str(user.id), "t": title,},
         )
         slack_requests.send_channel_message(
             user_slack_channel, slack_org_access_token, block_set=block_set,
@@ -168,8 +169,8 @@ def stalled_in_stage(request):
         _create_notification(
             title,
             content,
-            lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
-            lead,
+            opp_consts.NOTIFICATION_TYPE_OPPORTUNITY_STALLED_IN_STAGE,
+            opportunity,
             user,
             core_consts.NOTIFICATION_TYPE_SLACK,
         )
@@ -187,26 +188,28 @@ def past_expected_close_date(request):
     )
     ## clear all notification for a user to avoid the check that a notif doesnt exist already
     Notification.objects.for_user(request.user).filter(
-        resource_id=data["lead"],
+        resource_id=data["opportunity"],
         notification_class="SLACK",
         notification_type=notification_type_str,
     ).delete()
 
-    lead = Lead.objects.get(id=data["lead"])
+    opportunity = Opportunity.objects.get(id=data["opportunity"])
 
     expected_close_date = timezone.now() - timezone.timedelta(days=days)
-    lead.expected_close_date = expected_close_date
-    lead.save()
-    user = lead.claimed_by
-    expected_close_date_str = _convert_to_user_friendly_date(lead.expected_close_date)
-    title = f"Opportunity {lead.title} expected to close {days} day(s) ago"
-    content = f"This *{lead.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{days}* day(s) over"
+    opportunity.expected_close_date = expected_close_date
+    opportunity.save()
+    user = opportunity.claimed_by
+    expected_close_date_str = _convert_to_user_friendly_date(
+        opportunity.expected_close_date
+    )
+    title = f"Opportunity {opportunity.title} expected to close {days} day(s) ago"
+    content = f"This *{opportunity.title}* opportunity was expected to close on *{expected_close_date_str}*, you are now *{days}* day(s) over"
 
     user_slack_channel = user.slack_integration.channel
     slack_org_access_token = user.organization.slack_integration.access_token
     block_set = get_block_set(
         "opp_inactive_block_set",
-        {"l": str(lead.id), "m": content, "u": str(user.id), "t": title,},
+        {"l": str(opportunity.id), "m": content, "u": str(user.id), "t": title,},
     )
     slack_requests.send_channel_message(
         user_slack_channel, slack_org_access_token, block_set=block_set,
@@ -216,7 +219,7 @@ def past_expected_close_date(request):
         title,
         content,
         notification_type_str,
-        lead,
+        opportunity,
         user,
         core_consts.NOTIFICATION_TYPE_SLACK,
     )
@@ -228,26 +231,26 @@ def past_expected_close_date(request):
 @permission_classes([permissions.IsAuthenticated])
 def close_lead(request):
     # TODO - add CanEditResourceOrReadOnly to ensure person closing is person claiming 05/02/20
-    """ special endpoint to close a lead, requires a contract and a closing amount
+    """ special endpoint to close a opportunity, requires a contract and a closing amount
             file must already exist and is expected to be identified by an ID
         """
     data = request.data
-    lead = Lead.objects.get(id=data["lead"])
-    lead.status = Stage.objects.get(
-        title=lead_consts.LEAD_STATUS_CLOSED, type=org_consts.STAGE_TYPE_PUBLIC
+    opportunity = Opportunity.objects.get(id=data["opportunity"])
+    opportunity.status = Stage.objects.get(
+        title=opp_consts.LEAD_STATUS_CLOSED, type=org_consts.STAGE_TYPE_PUBLIC
     )
     closing_amount = data["closing_amount"]
-    lead.closing_amount = closing_amount
-    lead.expected_close_date = timezone.now()
-    if lead.forecast:
-        lead.forecast.forecast = lead_consts.FORECAST_CLOSED
-        lead.forecast.save()
+    opportunity.closing_amount = closing_amount
+    opportunity.expected_close_date = timezone.now()
+    if opportunity.forecast:
+        opportunity.forecast.forecast = opp_consts.FORECAST_CLOSED
+        opportunity.forecast.save()
     else:
         Forecast.objects.create(
-            lead=lead, forecast=lead_consts.FORECAST_CLOSED,
+            opportunity=opportunity, forecast=opp_consts.FORECAST_CLOSED,
         )
-    lead.save()
-    emit_event(lead_consts.LEAD_CLOSED, request.user, lead)
+    opportunity.save()
+    emit_event(opp_consts.LEAD_CLOSED, request.user, opportunity)
 
     return Response()
 
