@@ -102,6 +102,30 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
 
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+        )
+        extra_kwargs = {
+            "first_name": {"required": True},
+            "last_name": {"required": True},
+        }
+
+    def validate(self, data):
+        password = data.get("password")
+        validate_password(password)
+
+        return data
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
+
+
 class UserLoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(allow_blank=False, required=True)
     password = serializers.CharField(allow_blank=False, required=True)

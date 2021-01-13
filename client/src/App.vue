@@ -71,16 +71,23 @@ export default {
 </script>
 
 <style lang="scss">
+// Include global variables and styles here
 @import '@/styles/variables';
+@import '@/styles/buttons';
+@import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   overflow-y: scroll;
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
-  background-color: $off-white;
+  background-color: $soft-gray;
 }
 
 #app {
@@ -88,7 +95,7 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: $off-white;
+  background-color: $soft-gray;
 }
 
 .page-content {
@@ -102,6 +109,7 @@ body {
 ::-webkit-scrollbar {
   width: 0px;
 }
+
 .muted {
   color: rgba(47, 48, 53, 0.4);
   font-family: inherit;

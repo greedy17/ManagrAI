@@ -31,6 +31,11 @@
         placeholder="password"
       />
       <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
+      <div style="margin-top: 1rem">
+        <router-link :to="{ name: 'Register' }">
+          No account? Sign Up
+        </router-link>
+      </div>
     </form>
   </div>
 </template>
