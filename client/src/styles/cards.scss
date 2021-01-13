@@ -1,0 +1,7 @@
+@import "./mixins/utils";
+
+.card {
+    @include standard-border;
+    background-color: white;
+    padding: 1rem;
+}
