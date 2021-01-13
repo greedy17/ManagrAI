@@ -3,11 +3,11 @@ import factory
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from .models import Lead, CallNote, LeadActivityLog
+from .models import Opportunity
 
 
 class LeadFactory(DjangoModelFactory):
-    """Generate a Lead with random attributes"""
+    """Generate a Opportunity with random attributes"""
 
     title = factory.Faker("sentence")
     amount = factory.LazyAttribute(lambda a: random.randint(1, 30) * 1000)
@@ -15,20 +15,6 @@ class LeadFactory(DjangoModelFactory):
     secondary_description = factory.Faker("text", max_nb_chars=150)
 
     class Meta:
-        model = Lead
+        model = Opportunity
 
 
-class CallNoteFactory(DjangoModelFactory):
-    title = factory.Faker("sentence")
-    content = factory.Faker("sentence")
-
-    class Meta:
-        model = CallNote
-
-
-class LeadActivityLogFactory(DjangoModelFactory):
-    action_timestamp = timezone.now()
-    activity = "Lead.UPDATED"
-
-    class Meta:
-        model = LeadActivityLog

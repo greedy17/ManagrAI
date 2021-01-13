@@ -33,7 +33,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.core import constants as core_consts
 
-from managr.opportunity.models import Opportunity, LeadActivityLog, Notification, Forecast
+from managr.opportunity.models import Opportunity, LeadActivityLog, Notification
 from managr.opportunity import constants as lead_consts
 from managr.organization import constants as org_consts
 from managr.organization.models import Stage

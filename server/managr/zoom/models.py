@@ -4,16 +4,17 @@ import math
 
 from datetime import datetime
 from django.db import models
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
+
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.fields import JSONField
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-from managr.lead.models import Forecast, Action, ActionChoice
+from managr.opportunity.models import Forecast, Action, ActionChoice
 from managr.organization.models import Stage
-from managr.lead import constants as lead_consts
-from managr.lead.background import emit_event
+from managr.opportunity import constants as opp_consts
+from managr.opportunity.background import emit_event
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -194,8 +195,8 @@ class ZoomMeeting(TimeStampModel):
     participants = models.ManyToManyField(
         "organization.Contact", related_name="meetings"
     )
-    lead = models.ForeignKey(
-        "lead.Lead",
+    opportunity = models.ForeignKey(
+        "opportunity.Opportunity",
         on_delete=models.SET_NULL,
         related_name="meetings",
         null=True,
@@ -291,7 +292,7 @@ class MeetingReview(TimeStampModel):
         help_text="The value must corespond to the values in the ActionChoice Model",
     )
     forecast_strength = models.CharField(
-        choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
+        choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
     update_stage = models.CharField(
         blank=True,
@@ -318,7 +319,7 @@ class MeetingReview(TimeStampModel):
         blank=True,
     )
     prev_forecast = models.CharField(
-        choices=lead_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
+        choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
     prev_stage = models.CharField(
         blank=True,
@@ -371,7 +372,7 @@ class MeetingReview(TimeStampModel):
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
         if self.prev_forecast and self.forecast_strength:
-            for index, forecast in enumerate(lead_consts.FORECAST_CHOICES):
+            for index, forecast in enumerate(opp_consts.FORECAST_CHOICES):
                 if self.prev_forecast == forecast[0]:
                     prev_forecast_rank = index
                 if self.forecast_strength == forecast[0]:
@@ -467,52 +468,43 @@ class MeetingReview(TimeStampModel):
         return 0
 
     def save(self, *args, **kwargs):
-        lead = self.meeting.lead
+        opportunity = self.meeting.opportunity
 
-        # adjust lead data based on these fields
+        # adjust opportunity data based on these fields
         if self.forecast_strength:
-            current_forecast = Forecast.objects.filter(lead=lead).first()
+            current_forecast = opportunity.current_forecast
             if current_forecast:
-                self.prev_forecast = current_forecast.forecast
-                current_forecast.forecast = self.forecast_strength
-                current_forecast.save()
-            else:
-                Forecast.objects.create(lead=lead, forecast=self.forecast_strength)
-            # update lead forcecase
+                self.prev_forecast = current_forecast
+                opportuntiy.current_forecast = self.forecast_strength
+                
+            opportunity.current_forecast=self.forecast_strength
+            # update opportunity forcecase
 
-        if self.update_stage and lead.status:
-            self.prev_stage = lead.status.id
-            lead.status = Stage.objects.filter(id=self.update_stage).first()
+        if self.update_stage and opportunity.status:
+            self.prev_stage = opportunity.status.id
+            opportunity.status = Stage.objects.filter(id=self.update_stage).first()
 
             # update stage
         if self.next_steps:
-            lead.secondary_description = self.next_steps
+            opportunity.secondary_description = self.next_steps
             # update secondary desc
 
         if self.meeting_type:
             # create action from action choice
-            action = Action.objects.create(
-                lead=lead,
-                created_by=lead.claimed_by,
-                action_detail=self.description
-                if self.description
-                else "NO DESCRIPTION",
-                action_type=ActionChoice.objects.filter(id=self.meeting_type).first(),
-            )
-            emit_event(lead_consts.ACTION_CREATED, action.lead.claimed_by, action)
+            print('will update action')
 
-        # Update the lead with the new data
+        # Update the opportunity with the new data
         if self.updated_close_date:
 
-            # Override previous close date with whatever is on the Lead
-            if lead.expected_close_date:
-                self.prev_expected_close_date = lead.expected_close_date
-            lead.expected_close_date = self.updated_close_date
+            # Override previous close date with whatever is on the Opportunity
+            if opportunity.expected_close_date:
+                self.prev_expected_close_date = opportunity.expected_close_date
+            opportunity.expected_close_date = self.updated_close_date
         if self.amount:
-            self.prev_amount = lead.amount
-            lead.amount = float(self.amount)
+            self.prev_amount = opportunity.amount
+            opportunity.amount = float(self.amount)
 
-        lead.save()
+        opportunity.save()
 
         return super(MeetingReview, self).save(*args, **kwargs)
 

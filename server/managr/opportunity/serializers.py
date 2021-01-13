@@ -1,18 +1,11 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import (
-    Lead,
-    Note,
+    Opportunity,
     LeadActivityLog,
     List,
-    File,
-    Forecast,
-    Reminder,
-    ActionChoice,
     Action,
-    CallNote,
     Notification,
-    LeadMessage,
     LeadScore,
 )
 from managr.organization.models import Stage

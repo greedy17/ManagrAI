@@ -7,8 +7,8 @@ from django.test import TestCase
 from django.utils import timezone
 
 from managr.core.models import User
-from managr.lead import constants as lead_consts
-from managr.lead.models import Lead
+from managr.opportunity import constants as opp_consts
+from managr.opportunity.models import Opportunity
 from managr.organization.models import Organization, Stage
 from managr.organization.factories import AccountFactory, ContactFactory
 from managr.slack import constants as slack_consts
@@ -27,10 +27,10 @@ class MeetingScoreTestCase(TestCase):
         self.org = Organization.objects.first()
 
         self.account = AccountFactory(organization=self.org)
-        self.lead = Lead.objects.create(account=self.account, claimed_by=self.user)
+        self.opportunity = Opportunity.objects.create(account=self.account, claimed_by=self.user)
 
-        self.ready_stage = Stage.objects.get(title="READY")
-        self.booked_stage = Stage.objects.get(title="BOOKED")
+        self.ready_stage = Stage.objects.get(order=1)
+        self.booked_stage = Stage.objects.get(order=2)
 
         self.zoom_account = ZoomAuthAccount.objects.create(
             user=self.user,
@@ -53,7 +53,7 @@ class MeetingScoreTestCase(TestCase):
             meeting_id="12345",
             meeting_uuid=uuid.uuid4(),
             type=1,
-            lead=self.lead,
+            opportunity=self.opportunity,
             #
             # Other fields available on this model...
             #
@@ -75,7 +75,7 @@ class MeetingScoreTestCase(TestCase):
         #     # Text that must match a Stage in the DB
         #     # update_stage="READY",
         #     sentiment=slack_consts.ZOOM_MEETING__GREAT,
-        #     # forecast_strength=lead_consts.FORECAST_STRONG,
+        #     # forecast_strength=opp_consts.FORECAST_STRONG,
         #     # updated_close_date=datetime(2020, 12, 15)
         #     #
         #     # Other fields available on this model...
@@ -185,7 +185,7 @@ class MeetingScoreTestCase(TestCase):
     def test_meeting_forecast_progress_from_none(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
-            forecast_strength=lead_consts.FORECAST_FIFTY_FIFTY,
+            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -195,8 +195,8 @@ class MeetingScoreTestCase(TestCase):
     def test_meeting_forecast_progress_from_prev(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
-            prev_forecast=lead_consts.FORECAST_FIFTY_FIFTY,
-            forecast_strength=lead_consts.FORECAST_STRONG,
+            prev_forecast=opp_consts.FORECAST_FIFTY_FIFTY,
+            forecast_strength=opp_consts.FORECAST_STRONG,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -206,7 +206,7 @@ class MeetingScoreTestCase(TestCase):
     def test_meeting_forecast_regression_to_none(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
-            prev_forecast=lead_consts.FORECAST_FIFTY_FIFTY,
+            prev_forecast=opp_consts.FORECAST_FIFTY_FIFTY,
             forecast_strength=None,
         )
         score, score_components = score_meeting(self.zoom_meeting)
@@ -217,8 +217,8 @@ class MeetingScoreTestCase(TestCase):
     def test_meeting_forecast_regression_to_prev(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
-            prev_forecast=lead_consts.FORECAST_STRONG,
-            forecast_strength=lead_consts.FORECAST_FIFTY_FIFTY,
+            prev_forecast=opp_consts.FORECAST_STRONG,
+            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -228,8 +228,8 @@ class MeetingScoreTestCase(TestCase):
     def test_meeting_forecast_unchanged(self):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
-            prev_forecast=lead_consts.FORECAST_STRONG,
-            forecast_strength=lead_consts.FORECAST_STRONG,
+            prev_forecast=opp_consts.FORECAST_STRONG,
+            forecast_strength=opp_consts.FORECAST_STRONG,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -585,7 +585,7 @@ class MeetingScoreTestCase(TestCase):
             meeting=self.zoom_meeting,
             sentiment=slack_consts.ZOOM_MEETING__GREAT,
             update_stage=self.ready_stage.id,
-            forecast_strength=lead_consts.FORECAST_FIFTY_FIFTY,
+            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
             updated_close_date=datetime(2020, 12, 15),
         )
         score, score_components = score_meeting(self.zoom_meeting)

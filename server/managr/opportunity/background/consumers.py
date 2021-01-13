@@ -8,8 +8,8 @@ from django.utils import timezone
 from dateutil.parser import parse
 from managr.core.models import User
 
-from .. import models as lead_models
-from .. import constants as lead_constants
+from .. import models as opportunity_models
+from .. import constants as opportunity_constants
 from ..serializers import ActionSerializer
 
 from .exceptions import ConsumerConfigError
@@ -18,7 +18,7 @@ logger = logging.getLogger("managr")
 
 
 class BaseActionConsumer:
-    """Consumes lead actions and creates the proper LeadActivityLog entry."""
+    """Consumes opportunity actions and creates the proper LeadActivityLog entry."""
 
     model_class = None
 
@@ -102,8 +102,8 @@ class BaseActionConsumer:
         if self._extra_meta is not None:
             meta['extra'] = self._extra_meta
 
-        return lead_models.LeadActivityLog.objects.create(
-            lead=self.get_lead(),
+        return opportunity_models.LeadActivityLog.objects.create(
+            opportunity=self.get_lead(),
             activity=self.activity_name,
             action_taken_by=self.get_user(),
             action_timestamp=self.get_timestamp(),
@@ -112,7 +112,7 @@ class BaseActionConsumer:
 
 
 class LeadActionConsumer(BaseActionConsumer):
-    model_class = lead_models.Lead
+    model_class = opportunity_models.Lead
 
     def get_lead(self):
         obj = self.get_object()
@@ -120,7 +120,7 @@ class LeadActionConsumer(BaseActionConsumer):
 
 
 class NoteActionConsumer(BaseActionConsumer):
-    model_class = lead_models.Note
+    model_class = opportunity_models.Note
 
     def get_lead(self):
         obj = self.get_object()
@@ -128,12 +128,12 @@ class NoteActionConsumer(BaseActionConsumer):
 
 
 class CallNoteActionConsumer(BaseActionConsumer):
-    model_class = lead_models.CallNote
+    model_class = opportunity_models.CallNote
 
     def get_timestamp(self):
         obj = self.get_object()
         return (
-            obj.call_date if self.action == lead_constants.CREATED else timezone.now()
+            obj.call_date if self.action == opportunity_constants.CREATED else timezone.now()
         )
 
     def get_lead(self):
@@ -142,7 +142,7 @@ class CallNoteActionConsumer(BaseActionConsumer):
 
 
 class FileActionConsumer(BaseActionConsumer):
-    model_class = lead_models.File
+    model_class = opportunity_models.File
 
     def get_lead(self):
         obj = self.get_object()
@@ -150,7 +150,7 @@ class FileActionConsumer(BaseActionConsumer):
 
 
 class ReminderActionConsumer(BaseActionConsumer):
-    model_class = lead_models.Reminder
+    model_class = opportunity_models.Reminder
 
     def get_meta(self):
         obj = self.get_object()
@@ -174,24 +174,24 @@ class ReminderActionConsumer(BaseActionConsumer):
 
 
 class ActionActionConsumer(BaseActionConsumer):
-    model_class = lead_models.Action
+    model_class = opportunity_models.Action
 
     def get_lead(self):
         obj = self.get_object()
-        return obj.lead
+        return obj.opportunity
 
 
 class LeadEmailActionConsumer(BaseActionConsumer):
-    model_class = lead_models.LeadEmail
+    model_class = opportunity_models.LeadEmail
 
     def get_lead(self):
         obj = self.get_object()
-        return obj.lead
+        return obj.opportunity
 
 
 class LeadMessageActionConsumer(BaseActionConsumer):
-    model_class = lead_models.LeadMessage
+    model_class = opportunity_models.LeadMessage
 
     def get_lead(self):
         obj = self.get_object()
-        return obj.lead
+        return obj.opportunity

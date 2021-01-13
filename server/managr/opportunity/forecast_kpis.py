@@ -6,8 +6,8 @@ from calendar import monthrange
 
 from managr.core.models import User
 from managr.organization import constants as org_consts
-from .models import Lead
-from . import constants as lead_constants
+from .models import Opportunity
+from . import constants as opportunity_constants
 
 
 class ForecastKPIs:
@@ -43,8 +43,8 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-        qs_1 = Lead.objects.filter(
-            status__title=lead_constants.LEAD_STATUS_CLOSED,
+        qs_1 = Opportunity.objects.filter(
+            status__title=opportunity_constants.LEAD_STATUS_CLOSED,
             status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
         # filter for leads that are claimed by given representatives
@@ -59,8 +59,8 @@ class ForecastKPIs:
         Formerly known as Total Closed Value.
         """
         # filter for leads whose status is CLOSED
-        qs_1 = Lead.objects.filter(
-            status__title=lead_constants.LEAD_STATUS_CLOSED,
+        qs_1 = Opportunity.objects.filter(
+            status__title=opportunity_constants.LEAD_STATUS_CLOSED,
             status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
         # filter for leads that are claimed by given representatives
@@ -80,8 +80,8 @@ class ForecastKPIs:
         Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 90% 'Verbal' values.
         """
         # filter for leads whose forecast is 50/50
-        temp_1 = Lead.objects.filter(
-            forecast__forecast=lead_constants.FORECAST_FIFTY_FIFTY
+        temp_1 = Opportunity.objects.filter(
+            forecast__forecast=opportunity_constants.FORECAST_FIFTY_FIFTY
         )
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
@@ -89,14 +89,14 @@ class ForecastKPIs:
         fifty_fifty_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
         # filter for leads whose forecast is STRONG
-        temp_1 = Lead.objects.filter(forecast__forecast=lead_constants.FORECAST_STRONG)
+        temp_1 = Opportunity.objects.filter(forecast__forecast=opportunity_constants.FORECAST_STRONG)
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
         strong_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
         # filter for leads whose forecast is VERBAL
-        temp_1 = Lead.objects.filter(forecast__forecast=lead_constants.FORECAST_VERBAL)
+        temp_1 = Opportunity.objects.filter(forecast__forecast=opportunity_constants.FORECAST_VERBAL)
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range

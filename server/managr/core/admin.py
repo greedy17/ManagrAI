@@ -9,8 +9,6 @@ from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
     EmailAuthAccount,
-    EmailTemplate,
-    MessageAuthAccount,
     NotificationOption,
     NotificationSelection,
 )
@@ -64,11 +62,10 @@ class CustomUserAdmin(UserAdmin):
                     "profile_photo",
                     "is_active",
                     "is_invited",
-                    "quota",
-                    "commit",
-                    "upside",
                     "magic_token_expiration",
-                    "is_serviceaccount",
+                    "is_invited",
+                    "is_active",
+                    "is_admin",
                     "is_superuser",
                     "is_staff",
                     "organization",
@@ -150,7 +147,5 @@ class CustomNotificationOption(admin.ModelAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
-admin.site.register(EmailTemplate)
-admin.site.register(MessageAuthAccount)
 admin.site.register(NotificationOption, CustomNotificationOption)
 admin.site.register(NotificationSelection, CustomNotificationSelection)
