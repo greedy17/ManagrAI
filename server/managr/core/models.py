@@ -121,6 +121,7 @@ class User(AbstractUser, TimeStampModel):
         related_name="users",
         on_delete=models.CASCADE,
         blank=True,
+        null=True,
     )
     user_level = models.CharField(
         choices=core_consts.ACCOUNT_TYPES,
@@ -249,6 +250,7 @@ class EmailAuthAccount(TimeStampModel):
             )
 
 
+""" 
 class NotificationOptionQuerySet(models.QuerySet):
 
     ### NOTE We are using __contains here as the field type is text[] in sql __in will search equality
@@ -282,7 +284,6 @@ class NotificationSelectionQuerySet(models.QuerySet):
 
 
 class NotificationSelection(TimeStampModel):
-    """ a model for the selection made by the user for the option """
 
     option = models.ForeignKey(
         "core.NotificationOption", on_delete=models.CASCADE, related_name="selections"
@@ -307,8 +308,6 @@ class NotificationSelection(TimeStampModel):
 
 
 class NotificationOption(TimeStampModel):
-    """Manage Email and Alert Notifications (Alerts are notfications
-    they receive on the Notifications side nav) options"""
 
     # user groups will be used to populate the options for each user type
     title = models.CharField(max_length=128, help_text="Friendly Name")
@@ -361,6 +360,7 @@ class NotificationOption(TimeStampModel):
                 option=self, user=user, value=self.default_value
             )
             return selection
+ """
 
 
 class NotificationQuerySet(models.QuerySet):

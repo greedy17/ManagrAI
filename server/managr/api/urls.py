@@ -108,14 +108,14 @@ router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register(
     "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
 )
-"""
-
-
 router.register(
     "notifications/settings",
     core_views.NotificationSettingsViewSet,
     "notification-settings",
 )
+"""
+
+
 router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
 
 router.register("slack", slack_views.SlackViewSet, "slack")

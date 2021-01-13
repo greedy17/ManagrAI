@@ -161,10 +161,14 @@ class Contact(TimeStampModel, IntegrationModel):
     account = models.ForeignKey(
         "Account",
         related_name="contacts",
-        blank=False,
-        null=True,
-        on_delete=models.CASCADE,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        default="",
     )
+    organization = models.ForeignKey(
+        "Organization", related_name="contacts", on_delete=models.CASCADE,
+    )
+
     objects = ContactQuerySet.as_manager()
 
     class Meta:
@@ -232,16 +236,12 @@ class Stage(TimeStampModel, IntegrationModel):
     )
 
     organization = models.ForeignKey(
-        "Organization",
-        related_name="stages",
-        blank=True,
-        default="",
-        on_delete=models.CASCADE,
+        "Organization", related_name="stages", on_delete=models.CASCADE,
     )
     # currently setting default to 6 we have 5 public tags that are taking 1-5
-    order = models.IntegerField(blank=False,)
-    is_closed = models.BooleanField()
-    is_won = models.BooleanField()
+    order = models.IntegerField(blank=True, null=True)
+    is_closed = models.BooleanField(default=False)
+    is_won = models.BooleanField(default=False)
     objects = StageQuerySet.as_manager()
 
     @property
@@ -252,60 +252,8 @@ class Stage(TimeStampModel, IntegrationModel):
         ordering = ["order"]
 
     def __str__(self):
-        if self.organization:
-            return f"Stage ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
-        else:
-            return f"Stage ({self.id}) -- Title: {self.title}, Organization: None (is Public)"
+        return f"Stage ({self.id}) -- label: {self.label}"
 
     def save(self, *args, **kwargs):
-        if self.type == org_consts.STAGE_TYPE_PRIVATE:
-            users = self.organization.users.filter(is_active=True)
-            allowed_notifications = []
-            for user in users:
-                ## get user selection for this notification
-                if user.check_notification_enabled_setting(
-                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
-                    core_consts.NOTIFICATION_TYPE_EMAIL,
-                ):
-                    allowed_notifications.append(user)
-
-            recipients = [
-                {"email": user.email, "name": user.full_name}
-                for user in allowed_notifications
-            ]
-
-            message = {
-                "subject": f"Stages Updated",
-                "body": f"Your organization has added new stages, please log out and login to update your list",
-            }
-            email_client.emails.send_system_email(recipients, message)
-            for user in users:
-                if user.check_notification_enabled_setting(
-                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
-                    core_consts.NOTIFICATION_TYPE_ALERT,
-                ):
-
-                    Notification.objects.create(
-                        notify_at=timezone.now(),
-                        title="Stages Updated",
-                        notification_type="SYSTEM",
-                        resource_id=self.id,
-                        notification_class="ALERT",
-                        user=user,
-                        meta={
-                            "content": "Your organization has added new stages, please log out and login to update your list"
-                        },
-                    )
-
-        # save all as upper case
-        self.title = self.title.upper()
-        if (
-            Stage.objects.filter(title=self.title, organization=self.organization)
-            .exclude(id=self.id)
-            .exists()
-        ):
-            raise ValidationError(
-                detail={"key_error": "A stage with this title already exists"}
-            )
-
         return super(Stage, self).save(*args, **kwargs)
+

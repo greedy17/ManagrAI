@@ -9,8 +9,8 @@ from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
     EmailAuthAccount,
-    NotificationOption,
-    NotificationSelection,
+    #    NotificationOption,
+    #    NotificationSelection,
 )
 
 from . import constants as core_consts
@@ -104,6 +104,7 @@ class CustomEmailAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
+""" 
 class CustomNotificationOptionForm(forms.ModelForm):
     default_value = forms.ChoiceField(
         widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES
@@ -141,9 +142,9 @@ class CustomNotificationSelection(admin.ModelAdmin):
 
 class CustomNotificationOption(admin.ModelAdmin):
     form = CustomNotificationOptionForm
-
+ """
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
-admin.site.register(NotificationOption, CustomNotificationOption)
-admin.site.register(NotificationSelection, CustomNotificationSelection)
+# admin.site.register(NotificationOption, CustomNotificationOption)
+# admin.site.register(NotificationSelection, CustomNotificationSelection)

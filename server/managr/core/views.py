@@ -51,15 +51,15 @@ from managr.core import constants as core_consts
 from .models import (
     User,
     EmailAuthAccount,
-    NotificationOption,
-    NotificationSelection,
+    # NotificationOption,
+    # NotificationSelection,
 )
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
-    NotificationOptionSerializer,
-    NotificationSelectionSerializer,
+    # NotificationOptionSerializer,
+    # NotificationSelectionSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -298,7 +298,7 @@ class GetFileView(View):
         return response
 
 
-class NotificationSettingsViewSet(
+""" class NotificationSettingsViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
 ):
     permission_classes = (permissions.IsAuthenticated,)
@@ -341,6 +341,7 @@ class NotificationSettingsViewSet(
             selection.value = sel["value"]
             selection.save()
         return Response()
+ """
 
 
 class NylasMessageWebhook(APIView):

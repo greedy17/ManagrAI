@@ -20,8 +20,8 @@ from .nylas import emails as nylas_emails
 from .models import (
     User,
     EmailAuthAccount,
-    NotificationOption,
-    NotificationSelection,
+    # NotificationOption,
+    # NotificationSelection,
 )
 
 
@@ -157,6 +157,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ("organization_ref",)
 
 
+""" 
 class NotificationSelectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSelection
@@ -184,3 +185,4 @@ class NotificationOptionSerializer(serializers.ModelSerializer):
         serializer = NotificationSelectionSerializer(selection)
 
         return serializer.data
+ """
