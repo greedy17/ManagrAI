@@ -27,13 +27,7 @@ from .models import OrganizationSlackIntegration, UserSlackIntegration
 import pdb
 
 
-from managr.lead.models import Lead  # for dev purposes
-
-TEMPORARY_CONTEXT = {
-    "l": str(Lead.objects.first().id),
-    "u": str(Lead.objects.first().claimed_by.id),
-    "o": str(Lead.objects.first().claimed_by.organization.id),
-}  # for dev purposes
+from managr.opportunity.models import Opportunity  # for dev purposes
 
 
 class SlackViewSet(viewsets.GenericViewSet,):

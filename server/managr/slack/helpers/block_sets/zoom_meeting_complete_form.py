@@ -1,6 +1,6 @@
 import pdb
 
-from managr.lead.models import Lead
+from managr.opportunity.models import Opportunity
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders

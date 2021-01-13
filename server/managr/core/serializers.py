@@ -7,8 +7,8 @@ from rest_framework.authtoken.models import Token
 
 
 from managr.organization.serializers import (
-    OrganizationRefSerializer,
-    AccountRefSerializer,
+    OrganizationSerializer,
+    AccountSerializer,
 )
 from managr.zoom.serializers import ZoomAuthSerializer
 from managr.organization.models import Account
@@ -31,7 +31,6 @@ class EmailAuthAccountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class UserRefSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -47,10 +46,10 @@ class UserSerializer(serializers.ModelSerializer):
     """UserSerializer to update user fields, only managers with admin access and
     superusers can update email"""
 
-    organization_ref = OrganizationRefSerializer(
+    organization_ref = OrganizationSerializer(
         many=False, source="organization", read_only=True
     )
-    accounts_ref = AccountRefSerializer(
+    accounts_ref = AccountSerializer(
         many=True, source="organization.accounts", read_only=True
     )
     email_auth_account_ref = EmailAuthAccountSerializer(
@@ -65,7 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
-            #personal info
+            # personal info
             "email",
             "full_name",
             "first_name",
@@ -137,7 +136,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
     Only Managers can invite users, and only to their organization
     """
 
-    organization_ref = OrganizationRefSerializer(
+    organization_ref = OrganizationSerializer(
         many=False, source="organization", read_only=True
     )
 
@@ -156,7 +155,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization": {"required": True},
         }
         read_only_fields = ("organization_ref",)
-
 
 
 class NotificationSelectionSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ import pdb
 import logging
 
 from managr.organization.models import Organization
-from managr.lead.models import Notification, Reminder, Lead, LeadScore
+from managr.opportunity.models import Opportunity, OpportunityScore
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests

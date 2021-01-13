@@ -1,9 +1,9 @@
 import pdb
 
-from managr.core.models import User
-from managr.lead.models import Lead, Notification, Reminder, LeadScore
+from managr.core.models import User, Notification
+from managr.opportunity.models import Opportunity, OpportunityScore
 from managr.zoom.models import ZoomMeeting
-from managr.report.models import StoryReport
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders

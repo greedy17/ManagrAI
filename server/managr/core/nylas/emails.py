@@ -12,7 +12,7 @@ from django.template import Context, Template
 
 from managr.utils import sites as site_utils
 from managr.opportunity import constants as lead_constants
-from managr.opportunity.background import emit_event
+
 
 from .exceptions import NylasAPIError
 from .. import constants as core_consts

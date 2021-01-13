@@ -11,10 +11,10 @@ from django.contrib.postgres.fields import JSONField
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-from managr.opportunity.models import Forecast, Action, ActionChoice
+from managr.opportunity.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
-from managr.opportunity.background import emit_event
+
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -476,8 +476,8 @@ class MeetingReview(TimeStampModel):
             if current_forecast:
                 self.prev_forecast = current_forecast
                 opportuntiy.current_forecast = self.forecast_strength
-                
-            opportunity.current_forecast=self.forecast_strength
+
+            opportunity.current_forecast = self.forecast_strength
             # update opportunity forcecase
 
         if self.update_stage and opportunity.status:
@@ -491,7 +491,7 @@ class MeetingReview(TimeStampModel):
 
         if self.meeting_type:
             # create action from action choice
-            print('will update action')
+            print("will update action")
 
         # Update the opportunity with the new data
         if self.updated_close_date:

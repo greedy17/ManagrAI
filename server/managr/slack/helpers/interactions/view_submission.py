@@ -2,7 +2,7 @@ import json
 import pdb
 
 from managr.organization.models import Organization
-from managr.lead.models import Lead
+from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 
 from managr.slack import constants as slack_const

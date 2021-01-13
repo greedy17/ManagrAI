@@ -24,19 +24,20 @@ class TimeStampModel(models.Model):
     datetime_created = models.DateTimeField(auto_now_add=True)
     last_edited = models.DateTimeField(auto_now=True)
 
-
     class Meta:
         abstract = True
 
+
 class IntegrationModel(models.Model):
-    integration_id = models.CharField(max_length=255, blank=True, help_text="The UUID from the integration source")
+    integration_id = models.CharField(
+        max_length=255, blank=True, help_text="The UUID from the integration source"
+    )
     integration_source = models.CharField(
         max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
 
-    class Meta: 
-        abstract=True
-
+    class Meta:
+        abstract = True
 
 
 class WebhookAuthUser(AnonymousUser):
@@ -119,7 +120,7 @@ class User(AbstractUser, TimeStampModel):
     organization = models.ForeignKey(
         "organization.Organization",
         related_name="users",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         blank=True,
     )
     user_level = models.CharField(
@@ -373,7 +374,7 @@ class NotificationOption(TimeStampModel):
         help_text="An Array of user types that have access to this setting",
     )
     notification_type = models.CharField(
-        choices=core_consts.NOTIFICATION_TYPES,
+        choices=core_consts.NOTIFICATION_TYPE_CHOICES,
         max_length=255,
         help_text="Email or Alert",
     )
@@ -408,3 +409,57 @@ class NotificationOption(TimeStampModel):
                 option=self, user=user, value=self.default_value
             )
             return selection
+
+
+class NotificationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+
+
+class Notification(TimeStampModel):
+    """ By default Notifications will only return alerts 
+        We also will allow the code to access all types of notificaitons 
+        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
+    """
+
+    notify_at = models.DateTimeField(
+        null=True,
+        help_text="Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time\
+                                        if it is an email it can be the time the email is received ",
+    )
+    notified_at = models.DateTimeField(
+        null=True, help_text="date time when the notification was executed"
+    )
+    title = models.CharField(
+        max_length=255, null=True, help_text="a title for the notification"
+    )
+    notification_type = models.CharField(
+        max_length=255,
+        choices=core_consts.NOTIFICATION_TYPE_CHOICES,
+        null=True,
+        help_text="type of Notification being created",
+    )
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="Id of the resource if it is an email it will be the thread id",
+    )
+    notification_class = models.CharField(
+        max_length=255,
+        help_text="Classification of notification, email, alert, slack",
+        choices=core_consts.NOTIFICATION_CLASS_CHOICES,
+    )
+    viewed = models.BooleanField(blank=False, null=False, default=False)
+    meta = JSONField(help_text="Details about the notification", default=dict)
+    user = models.ForeignKey(
+        "core.User", on_delete=models.SET_NULL, related_name="notifications", null=True
+    )
+
+    objects = NotificationQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-notify_at"]
+

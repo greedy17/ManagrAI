@@ -32,12 +32,13 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.core import constants as core_consts
-
-from managr.opportunity.models import Opportunity, LeadActivityLog, Notification
 from managr.opportunity import constants as opp_consts
 from managr.organization import constants as org_consts
-from managr.organization.models import Stage
-from managr.opportunity.background import emit_event
+
+
+from managr.opportunity.models import Opportunity
+from managr.organization.models import Stage, Notification
+
 from managr.zoom.models import ZoomMeeting
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set

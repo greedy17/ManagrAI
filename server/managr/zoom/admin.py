@@ -27,7 +27,7 @@ class CustomZoomMeetingForm(ModelForm):
             "start_url",
             "join_url",
             "participants",
-            "lead",
+            "opportunity",
             "notification_attempts",
             "scoring_in_progress",
             "current_interaction",

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from managr.lead.lead_score_generation import generate_lead_scores
+from managr.organization.lead_score_generation import generate_lead_scores
 
 
 class Command(BaseCommand):

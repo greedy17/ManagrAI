@@ -12,10 +12,7 @@ class OrganizationSlackIntegrationInline(admin.StackedInline):
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
     inlines = (OrganizationSlackIntegrationInline,)
-    list_display = (
-        "name",
-        "message_auth_count",
-    )
+    list_display = ("name",)
 
 
 class CustomAccount(admin.ModelAdmin):

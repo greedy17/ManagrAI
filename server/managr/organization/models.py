@@ -21,10 +21,15 @@ from managr.utils.misc import datetime_appended_filepath
 from . import constants as org_consts
 
 
-from managr.core.models import UserManager, TimeStampModel, IntegrationModel
+from managr.core.models import (
+    UserManager,
+    TimeStampModel,
+    IntegrationModel,
+    Notification,
+)
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
-from managr.lead.models import Notification
+from managr.organization.models import Notification
 from managr.slack.helpers import block_builders
 
 from . import constants as org_consts
@@ -54,8 +59,6 @@ class Organization(TimeStampModel):
         max_length=255,
         choices=org_consts.STATE_CHOCIES,
         default=org_consts.STATE_ACTIVE,
-        null=False,
-        blank=False,
     )
     is_trial = models.BooleanField(default=False)
     objects = OrganizationQuerySet.as_manager()
@@ -119,6 +122,7 @@ class Account(TimeStampModel, IntegrationModel):
         on_delete=models.SET_NULL,
         related_name="parent_account",
         blank=True,
+        null=True,
     )
     objects = AccountQuerySet.as_manager()
 
@@ -230,7 +234,6 @@ class Stage(TimeStampModel, IntegrationModel):
     organization = models.ForeignKey(
         "Organization",
         related_name="stages",
-        null=True,
         blank=True,
         default="",
         on_delete=models.CASCADE,

@@ -3,7 +3,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from managr.core.models import User
-from managr.lead.factories import LeadFactory
+from managr.organization.factories import LeadFactory
 from managr.utils.numbers import generate_random_numbers
 
 from .models import Account, Contact, Organization

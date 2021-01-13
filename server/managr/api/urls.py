@@ -3,7 +3,8 @@ from django.urls import include, path
 from managr.core import views as core_views
 from managr.opportunity import views as opp_views
 from managr.organization import views as organization_views
-from managr.report import views as report_views
+
+# from managr.report import views as report_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 from managr.demo import views as demo_views
@@ -102,11 +103,12 @@ router.register(
 )
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
-router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
+
+""" router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
 router.register(
     "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
 )
-
+"""
 
 
 router.register(

@@ -29,7 +29,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
 
-from managr.lead.models import Lead
+from managr.opportunity.models import Opportunity
 
 from managr.core import constants as core_consts
 from managr.core.permissions import (
@@ -46,13 +46,10 @@ from .models import Organization, Account, Contact, Stage
 from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,
-    OrganizationVerboseSerializer,
     AccountSerializer,
     ContactSerializer,
     StageSerializer,
-    OrganizationRefSerializer,
 )
-from .filters import AccountFilterSet, ContactFilterSet
 
 
 class OrganizationViewSet(
@@ -106,7 +103,7 @@ class AccountViewSet(
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
-    filter_class = AccountFilterSet
+    # filter_class = AccountFilterSet
     permission_classes = (IsSalesPerson,)
     filter_backends = (
         filters.OrderingFilter,
@@ -205,7 +202,7 @@ class ContactViewSet(
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ContactSerializer
     permissions_class = (IsSalesPerson,)
-    filter_class = ContactFilterSet
+    # filter_class = ContactFilterSet
 
     def get_queryset(self):
         return Contact.objects.for_user(self.request.user)

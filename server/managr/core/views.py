@@ -35,9 +35,9 @@ from rest_framework.response import Response
 
 from managr.utils.numbers import format_phone_number, validate_phone_number
 
-from managr.Opportunity import constants as opp_consts
-from managr.Opportunity.models import Notification, Opportunities
-from managr.Opportunity.background import emit_event as emit_log_event
+from managr.opportunity import constants as opp_consts
+from managr.opportunity.models import Opportunity
+
 
 from managr.organization.models import (
     Organization,
@@ -46,7 +46,7 @@ from managr.organization.models import (
 
 from managr.core.nylas.auth import get_access_token, get_account_details
 from managr.core import constants as core_consts
-from managr.core.background import emit_event, emit_email_sync_event
+
 
 from .models import (
     User,
@@ -58,7 +58,6 @@ from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
-    EmailSerializer,
     NotificationOptionSerializer,
     NotificationSelectionSerializer,
 )
@@ -66,8 +65,6 @@ from .permissions import IsOrganizationManager, IsSuperUser
 
 from .nylas.emails import (
     send_new_email_legacy,
-    retrieve_threads,
-    retrieve_messages,
     return_file_id_from_nylas,
     download_file_from_nylas,
     send_system_email,
@@ -235,7 +232,6 @@ class UserViewSet(
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -252,7 +248,6 @@ class UserViewSet(
         response = return_file_id_from_nylas(user=user, file_object=file_object)
 
         return Response(response, status=status.HTTP_200_OK)
-
 
 
 class ActivationLinkView(APIView):
@@ -438,10 +433,6 @@ class NylasAccountWebhook(APIView):
         EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
 
         return Response()
-
-
-
-
 
 
 @api_view(["POST"])

@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     "managr.api",
     "managr.opportunity",
     "managr.organization",
-    "managr.report",
+    # "managr.report",
     "managr.slack",
     "managr.zoom",
     "managr.demo",

@@ -2,7 +2,7 @@ from rest_framework import permissions, exceptions
 from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from managr.Opportunity.models import Opportunity, List
+from managr.opportunity.models import Opportunity
 
 from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts

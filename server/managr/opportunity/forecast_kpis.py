@@ -77,8 +77,8 @@ class ForecastKPIs:
     @property
     def forecast(self):
         """
-        Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 90% 'Verbal' values.
-        """
+        # Weighted forecast: 50% of '50/50' values, 75% 'Strong' values, 90% 'Verbal' values.
+
         # filter for leads whose forecast is 50/50
         temp_1 = Opportunity.objects.filter(
             forecast__forecast=opportunity_constants.FORECAST_FIFTY_FIFTY
@@ -89,14 +89,18 @@ class ForecastKPIs:
         fifty_fifty_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
         # filter for leads whose forecast is STRONG
-        temp_1 = Opportunity.objects.filter(forecast__forecast=opportunity_constants.FORECAST_STRONG)
+        temp_1 = Opportunity.objects.filter(
+            forecast__forecast=opportunity_constants.FORECAST_STRONG
+        )
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
         strong_queryset = self._add_date_range_filter_to_lead_queryset(temp_2)
 
         # filter for leads whose forecast is VERBAL
-        temp_1 = Opportunity.objects.filter(forecast__forecast=opportunity_constants.FORECAST_VERBAL)
+        temp_1 = Opportunity.objects.filter(
+            forecast__forecast=opportunity_constants.FORECAST_VERBAL
+        )
         # filter for leads that are claimed by given representatives
         temp_2 = self._add_representatives_filter_to_lead_queryset(temp_1)
         # filter for leads closed within the given date range
@@ -105,35 +109,39 @@ class ForecastKPIs:
         fifty_fifty_sum = fifty_fifty_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
         strong_sum = strong_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
         verbal_sum = verbal_queryset.aggregate(sum=Sum("amount"))["sum"] or 0
-
         return (float(fifty_fifty_sum) * 0.5) + (float(strong_sum) * 0.75) + (float(verbal_sum) * 0.9)
+        """
+        return float("0.5")
 
     @property
     def quota(self):
         """
         Sum Quotas of all selected representatives.
         """
-        temp = User.objects.all()
-        user_queryset = self._add_representatives_filter_to_user_queryset(temp)
-        return user_queryset.aggregate(sum=Sum("quota"))["sum"] or 0
+        # temp = User.objects.all()
+        # user_queryset = self._add_representatives_filter_to_user_queryset(temp)
+        # return user_queryset.aggregate(sum=Sum("quota"))["sum"] or 0
+        return 0
 
     @property
     def commit(self):
         """
         Sum Commits of all selected representatives.
         """
-        temp = User.objects.all()
-        user_queryset = self._add_representatives_filter_to_user_queryset(temp)
-        return user_queryset.aggregate(sum=Sum("commit"))["sum"] or 0
+        # temp = User.objects.all()
+        # user_queryset = self._add_representatives_filter_to_user_queryset(temp)
+        # return user_queryset.aggregate(sum=Sum("commit"))["sum"] or 0
+        return 0
 
     @property
     def upside(self):
         """
         Sum Upsides of all selected representatives.
         """
-        temp = User.objects.all()
-        user_queryset = self._add_representatives_filter_to_user_queryset(temp)
-        return user_queryset.aggregate(sum=Sum("upside"))["sum"] or 0
+        # temp = User.objects.all()
+        # user_queryset = self._add_representatives_filter_to_user_queryset(temp)
+        # return user_queryset.aggregate(sum=Sum("upside"))["sum"] or 0
+        return 0
 
     @property
     def as_dict(self):

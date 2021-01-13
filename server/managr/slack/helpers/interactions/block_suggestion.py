@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from managr.core.models import User
 from managr.organization.models import Organization, Stage
-from managr.lead import constants as lead_const
+from managr.opportunity import constants as opp_consts
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
