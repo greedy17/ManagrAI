@@ -103,7 +103,6 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_staff"] = True
         extra_fields["is_superuser"] = True
         extra_fields["is_active"] = True
-        extra_fields["is_serviceaccount"] = False
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -128,9 +127,9 @@ class User(AbstractUser, TimeStampModel):
         max_length=255,
         default=core_consts.ACCOUNT_TYPE_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True, null=False)
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
-    phone_number = models.CharField(max_length=255, blank=True, null=False, default="")
+    phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
@@ -141,11 +140,8 @@ class User(AbstractUser, TimeStampModel):
         ),
         blank=True,
     )
-    magic_token_expiration = models.DateTimeField(
-        help_text="The datetime when the magic token is expired.", blank=True
-    )
     profile_photo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+        upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
 
     objects = UserManager()
@@ -161,27 +157,16 @@ class User(AbstractUser, TimeStampModel):
         return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
 
     @property
-    def magic_token_expired(self):
-        if not self.magic_token_expiration:
-            self.magic_token_expiration = timezone.now() + timedelta(days=30)
-
-        now = timezone.now()
-        return now > self.magic_token_expiration
-
-    @property
     def email_auth_link(self):
         """
         This property sets the user specific url for authorizing the users email to give Nylas access
         """
-        if self.magic_token_expired:
-            self.regen_magic_token()
 
         return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
-        self.magic_token_expiration = timezone.now() + timedelta(days=30)
         self.save()
         return self.magic_token
 
@@ -262,39 +247,6 @@ class EmailAuthAccount(TimeStampModel):
                     }
                 }
             )
-
-
-class MessageAuthAccount(TimeStampModel):
-    account_sid = models.CharField(max_length=128)
-    capabilities = JSONField(max_length=128, default=dict)
-    date_created = models.DateTimeField(max_length=128)
-    date_updated = models.DateTimeField(max_length=128)
-    friendly_name = models.CharField(max_length=128)
-    identity_sid = models.CharField(max_length=128, null=True)
-    origin = models.CharField(max_length=128)
-    sid = models.CharField(max_length=128, null=True)
-    phone_number = models.CharField(max_length=128, blank=True)
-    sms_method = models.CharField(max_length=128)
-    sms_url = models.CharField(
-        max_length=128, help_text="the webhook url for incoming messages"
-    )
-    status_callback = models.CharField(
-        max_length=128, help_text="the webhook url for message status"
-    )
-    status_callback_method = models.CharField(max_length=128)
-    uri = models.CharField(max_length=128)
-    voice_method = models.CharField(max_length=128)
-    voice_url = models.CharField(max_length=128, null=True)
-    status = models.CharField(max_length=128)
-    user = models.OneToOneField(
-        "User", on_delete=models.CASCADE, related_name="message_auth_account"
-    )
-
-    def __str__(self):
-        return f"{self.user.full_name}, {self.friendly_name}"
-
-    class Meta:
-        ordering = ["datetime_created"]
 
 
 class NotificationOptionQuerySet(models.QuerySet):
