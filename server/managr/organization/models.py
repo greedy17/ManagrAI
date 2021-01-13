@@ -88,7 +88,6 @@ class Organization(TimeStampModel):
         return Organization.objects.aggregate(Avg("accounts__leads__amount"))
 
 
-
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
@@ -115,7 +114,7 @@ class Account(TimeStampModel, IntegrationModel):
     logo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, blank=True
     )
-    parent= models.ForeignKey(
+    parent = models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
         related_name="parent_account",
@@ -239,7 +238,7 @@ class Stage(TimeStampModel, IntegrationModel):
     # currently setting default to 6 we have 5 public tags that are taking 1-5
     order = models.IntegerField(blank=False,)
     is_closed = models.BooleanField()
-    is_won = models.BooleanField() 
+    is_won = models.BooleanField()
     objects = StageQuerySet.as_manager()
 
     @property
