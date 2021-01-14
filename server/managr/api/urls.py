@@ -77,9 +77,17 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
     path(
-        "salesforce/register-app",
-        sf_views.salesforce_app_registration,
-        name="salesforce-app-registration",
+        "salesforce/generate-auth-link",
+        sf_views.salesforce_auth_link,
+        name="salesforce-auth-link",
+    ),
+    path(
+        "salesforce/get-auth-link", sf_views.auth_link_test, name="salesforce-get-link",
+    ),
+    path(
+        "salesforce/authenticate",
+        sf_views.authenticate,
+        name="salesforce-authentication",
     ),
 ]
 

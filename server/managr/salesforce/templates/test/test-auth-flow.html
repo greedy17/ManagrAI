@@ -5,11 +5,38 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
     <title>Managr</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+      function get_auth_link() {
+        let url = ''
+        $.get('http://localhost:8000/api/salesforce/generate-auth-link', (data) => {
+          url = data.url
+          let el = document.querySelector('#test')
+          let link = document.createElement('a')
+          link.setAttribute('href', url)
+          link.setAttribute('target', '_blank')
+          link.appendChild(document.createTextNode('Click Here'))
+          el.appendChild(link)
+          let input = document.createElement('input')
+          input.setAttribute('type', 'text')
+          input.setAttribute('placeholder', 'Enter Code Here')
+          el.appendChild(input)
+          let authButton = document.querySelector('#auth-button').classList.toggle('hide')
+        })
+      }
+      function authenticate() {}
+    </script>
+    <style>
+      .hide {
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
     <div id="test">
-      <button>Get Link</button>
+      <button onclick="get_auth_link()">Get Link</button>
+      <button id="auth-button" class="hide" onclick="authenticate()">Authenticate</button>
     </div>
   </body>
 </html>

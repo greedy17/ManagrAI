@@ -30,9 +30,24 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from .adapter.models import SalesforceAuthAccountAdapter
+
 
 @api_view(["get"])
 @permission_classes([permissions.AllowAny])
-def salesforce_app_registration(request):
+def auth_link_test(request):
     return render(request, "test/test-auth-flow.html")
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+def authenticate(request):
+    code = request.data.get("code", None)
+
+
+@api_view(["get"])
+@permission_classes([permissions.AllowAny])
+def salesforce_auth_link(request):
+    link = SalesforceAuthAccountAdapter.generate_auth_link()
+    return Response({"url": link})
 
