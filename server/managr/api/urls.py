@@ -7,6 +7,7 @@ from managr.organization import views as organization_views
 # from managr.report import views as report_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
+from managr.salesforce import views as sf_views
 
 
 app_name = "api"
@@ -74,6 +75,11 @@ urlpatterns = [
         "zoom/webhooks/meetings",
         zoom_views.zoom_meetings_webhook,
         name="get_zoom_auth_link",
+    ),
+    path(
+        "salesforce/register-app",
+        sf_views.salesforce_app_registration,
+        name="salesforce-app-registration",
     ),
 ]
 
