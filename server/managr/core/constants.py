@@ -30,12 +30,9 @@ TWILIO_MESSAGE_RECEIVED_CALLBACK_URL = (
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_READ_ONLY = "email.read_only"
-SCOPE_EMAIL_SEND = "email.send"
-ALL_SCOPES = [
-    SCOPE_EMAIL_READ_ONLY,
-    SCOPE_EMAIL_SEND,
-]
+SCOPE_EMAIL_CALENDAR_READ_ONLY = "calendar.read_only"
+
+ALL_SCOPES = [SCOPE_EMAIL_CALENDAR_READ_ONLY]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 NYLAS_WEBHOOK_TYPE_MSG_CREATED = "message.created"

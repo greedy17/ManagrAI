@@ -88,7 +88,7 @@ def redirect_from_zoom(request):
     ## this is only for dev, since the redirect url to localhost will not work
     if settings.IN_DEV:
         code = request.GET.get("code", None)
-        q = urlencode({"code": code})
+        q = urlencode({"code": code, "state": "ZOOM"})
         if not code:
             err = {"error": "there was an error"}
             err = urlencode(err)

@@ -66,13 +66,6 @@ export default new Router({
       component: Activation,
     },
 
-    // TODO 2020-01-13 William: Add route guard after fixing registration and
-    //      login flows.
-    {
-      path: '/integrations',
-      name: 'Integrations',
-      component: Integrations,
-    },
     // END TODO
 
     // {
@@ -136,58 +129,19 @@ export default new Router({
        */
       // name: 'Settings',
       component: Settings,
-      beforeEnter: Auth.requireAuth,
+      //beforeEnter: Auth.requireAuth,
       children: [
         {
-          path: 'slack-integration/callback',
-          name: 'SlackCallback',
-          components: {
-            'user-settings': SlackCallback,
-          },
-        },
-        {
-          path: 'slack-integration',
-          name: 'SlackIntegration',
-          components: {
-            'user-settings': SlackIntegration,
-          },
-        },
-        {
-          path: 'zoom-integration',
-          name: 'ZoomIntegration',
+          path: 'integrations',
+          name: 'Integrations',
           components: {
             'user-settings': () =>
-              import(
-                /* webpackChunkName: "settings" */ '../views/settings/_pages/_ZoomIntegration'
-              ),
+              import(/* webpackChunkName: "settings" */ '../views/Integrations'),
           },
         },
+
         {
-          path: 'text-integration',
-          name: 'TextIntegration',
-          components: {
-            'user-settings': () =>
-              import(
-                /* webpackChunkName: "settings" */ '../views/settings/_pages/_TextIntegration'
-              ),
-          },
-        },
-        {
-          path: 'email-integration',
-          name: 'EmailIntegration',
-          components: {
-            'user-settings': EmailIntegration,
-          },
-        },
-        {
-          path: 'email-templates',
-          name: 'EmailTemplates',
-          components: {
-            'user-settings': EmailTemplates,
-          },
-        },
-        {
-          path: 'profile',
+          path: '',
           name: 'Profile',
           components: {
             'user-settings': Profile,

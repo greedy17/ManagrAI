@@ -42,7 +42,6 @@ class EmailAuthAccForm(forms.ModelForm):
             "sync_state",
             "name",
             "user",
-            "linked_at",
         )
 
 
@@ -61,13 +60,12 @@ class CustomUserAdmin(UserAdmin):
                     "email",
                     "profile_photo",
                     "is_active",
-                    "magic_token_expiration",
                     "is_invited",
                     "is_admin",
                     "is_superuser",
                     "is_staff",
                     "organization",
-                    "type",
+                    "user_level",
                 )
             },
         ),

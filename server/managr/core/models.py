@@ -54,12 +54,9 @@ class UserQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.is_active:
-            if (
-                user.type == core_consts.ACCOUNT_TYPE_MANAGER
-                or user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
-            ):
+            if user.user_level == core_consts.ACCOUNT_TYPE_MANAGER:
                 return self.filter(organization=user.organization)
-            if user.type == core_consts.ACCOUNT_TYPE_REP:
+            if user.user_level == core_consts.ACCOUNT_TYPE_REP:
                 return self.filter(id=user.id)
         else:
             return self.none()
@@ -163,7 +160,7 @@ class User(AbstractUser, TimeStampModel):
         This property sets the user specific url for authorizing the users email to give Nylas access
         """
 
-        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
+        return gen_auth_url(email=self.email)
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
@@ -218,7 +215,6 @@ class EmailAuthAccount(TimeStampModel):
         help_text="sync state is managed by web_hook after it is set for the first time",
     )
     name = models.CharField(max_length=255, null=True)
-    linked_at = models.DateTimeField(null=True)
     user = models.OneToOneField(
         "User", on_delete=models.CASCADE, related_name="email_auth_account"
     )
@@ -235,8 +231,6 @@ class EmailAuthAccount(TimeStampModel):
         ordering = ["email_address"]
 
     def save(self, *args, **kwargs):
-        utc_time = datetime.utcfromtimestamp(self.linked_at)
-        self.linked_at = utc_time.replace(tzinfo=pytz.utc)
         try:
             return super(EmailAuthAccount, self).save(*args, **kwargs)
         except IntegrityError:

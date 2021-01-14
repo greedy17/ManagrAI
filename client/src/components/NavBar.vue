@@ -80,20 +80,9 @@ export default {
       },
     }
   },
-  async created() {
-    if (this.userIsLoggedIn) {
-      const { count } = await Notification.api.getUnviewedCount({})
-      this.$emit('update-unviewed-notif-count', count)
-      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
-      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
-
-      await this.refresh(POLLING_INTERVAL)
-    }
-  },
+  async created() {},
   mounted() {},
-  destroyed() {
-    clearTimeout(this.pollingTimeout)
-  },
+  destroyed() {},
 
   methods: {
     routeToSelected(selected) {
@@ -103,25 +92,6 @@ export default {
       }
       if (selected == 'logout') {
         this.logOut()
-      }
-    },
-    async refresh(repeat) {
-      clearTimeout(this.pollingTimeout)
-      try {
-        await this.$store.dispatch('updatePollingData')
-
-        if (repeat) {
-          this.polllingTimeout = setTimeout(async () => {
-            await this.refresh(POLLING_INTERVAL)
-          }, repeat)
-        }
-      } catch (e) {
-        this.apiFailing = true
-        if (repeat) {
-          this.pollingTimeout = setTimeout(async () => {
-            await this.refresh(repeat * 2)
-          }, repeat * 2)
-        }
       }
     },
 

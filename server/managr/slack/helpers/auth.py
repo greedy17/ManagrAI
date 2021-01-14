@@ -89,7 +89,7 @@ class OAuthLinkBuilder:
 
     @property
     def state_param(self):
-        return "state=" + str(self.user.id)
+        return "state=SLACK"
 
     @property
     def team_id_param(self):

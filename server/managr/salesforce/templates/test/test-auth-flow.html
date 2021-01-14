@@ -24,7 +24,14 @@
           let authButton = document.querySelector('#auth-button').classList.toggle('hide')
         })
       }
-      function authenticate() {}
+      function authenticate() {
+        let code = document.querySelector('input').value
+        console.log(code)
+
+        $.post('http://localhost:8000/api/salesforce/authenticate', { code: code }, (data) => {
+          return data
+        })
+      }
     </script>
     <style>
       .hide {

@@ -23,17 +23,17 @@ urlpatterns = [
         name="get_activation_link",
     ),
     path(
-        "users/email-auth-link/",
+        "users/nylas/authorization/",
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
     path(
-        "users/email-auth-token/",
+        "users/nylas/authenticate/",
         core_views.email_auth_token,
         name="get_email_auth_token",
     ),
     path(
-        "users/revoke-email-auth/",
+        "users/nylas/revoke-email-auth/",
         core_views.revoke_access_token,
         name="revoke_email_auth",
     ),
@@ -45,11 +45,6 @@ urlpatterns = [
         "get-file/<str:file_id>/",
         core_views.GetFileView.as_view(),
         name="get_file_from_nylas",
-    ),
-    path(
-        "nylas/callback/messages",
-        core_views.NylasMessageWebhook.as_view(),
-        name="nylas_message_webhook",
     ),
     path(
         "nylas/callback/accounts",
@@ -77,12 +72,9 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
     path(
-        "salesforce/generate-auth-link",
+        "salesforce/authorization",
         sf_views.salesforce_auth_link,
-        name="salesforce-auth-link",
-    ),
-    path(
-        "salesforce/get-auth-link", sf_views.auth_link_test, name="salesforce-get-link",
+        name="salesforce-authorization",
     ),
     path(
         "salesforce/authenticate",

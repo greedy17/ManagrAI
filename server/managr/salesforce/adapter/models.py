@@ -6,6 +6,8 @@ from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 
 from managr.utils.client import HttpClient
+
+from .exceptions import CustomAPIException
 from .. import constants as sf_consts
 
 client = HttpClient().client
@@ -13,22 +15,48 @@ client = HttpClient().client
 
 class SalesforceAuthAccountAdapter:
     def __init__(self, **kwargs):
-        self.id = self.kwargs.get("id", None)
-        self.access_token = self.kwargs.get("access_token", None)
-        self.refresh_token = self.kwargs.get("refresh_token", None)
-        self.signature = self.kwargs.get("signature", None)
-        self.scope = self.kwargs.get("scope", None)
-        self.id_token = self.kwargs.get("id_token", None)
-        self.instance_url = self.kwargs.get("instance_url", None)
-        self.salesforce_id = self.kwargs.get("salesforce_id", None)
-        self.user = self.kwargs.get("user", None)
+        self.id = kwargs.get("id", None)
+        self.access_token = kwargs.get("access_token", None)
+        self.refresh_token = kwargs.get("refresh_token", None)
+        self.signature = kwargs.get("signature", None)
+        self.scope = kwargs.get("scope", None)
+        self.id_token = kwargs.get("id_token", None)
+        self.instance_url = kwargs.get("instance_url", None)
+        self.salesforce_id = kwargs.get("salesforce_id", None)
+        self.user = kwargs.get("user", None)
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200:
+            try:
+                data = response.json()
+            except Exception as e:
+                CustomAPIException(e, fn_name)
+        else:
+            try:
+                error_code = response.status_code
+                error_data = response.json()
+                error_param = error_data.get("error", None)
+                error_message = error_data.get("reason", None)
+                kwargs = {
+                    "error_code": error_code,
+                    "error_param": error_param,
+                    "error_message": error_message,
+                }
+                raise HTTPError(kwargs)
+            except HTTPError as e:
+                CustomAPIException(e, fn_name)
+        return data
 
     @classmethod
     def create_account(cls, code, user_id):
         res = cls.authenticate(code)
         data = cls.from_api(res, user_id)
 
-        return cls(**data)
+        return data
 
     @staticmethod
     def from_api(data, user_id=None):
@@ -45,10 +73,13 @@ class SalesforceAuthAccountAdapter:
     def authenticate(code):
         data = sf_consts.AUTHENTICATION_BODY(code)
         res = client.post(
-            f"{sf_consts.AUTHENITCATION_URI}",
+            f"{sf_consts.AUTHENTICATION_URI}",
             data,
             headers=sf_consts.AUTHENTICATION_HEADERS,
         )
 
-        return res
+        return SalesforceAuthAccountAdapter._handle_response(res)
 
+    @property
+    def as_dict(self):
+        return vars(self)

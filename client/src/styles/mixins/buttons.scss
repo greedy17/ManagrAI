@@ -25,6 +25,9 @@
   &:focus {
     outline: none;
   }
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @mixin primary-button() {

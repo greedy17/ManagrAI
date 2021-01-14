@@ -7,5 +7,5 @@ export default class SlackOAuth {
     USER: 'USER',
   }
   static redirectURI =
-    window.location.protocol + '//' + window.location.host + '/settings/slack-integration/callback'
+    window.location.protocol + '//' + window.location.host + '/settings/integrations'
 }

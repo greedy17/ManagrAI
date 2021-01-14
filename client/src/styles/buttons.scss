@@ -1,5 +1,8 @@
 @import 'mixins/buttons';
 
 .primary-button {
-    @include primary-button;
+  @include primary-button;
+}
+.secondary-button {
+  @include secondary-button;
 }

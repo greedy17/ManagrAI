@@ -6,13 +6,13 @@ from urllib.parse import urlencode
 from .. import constants as core_consts
 
 
-def gen_auth_url(email, magic_token, scopes=core_consts.ALL_SCOPES_STR):
+def gen_auth_url(email, scopes=core_consts.ALL_SCOPES_STR):
     """Generate the redirect URL that should kick off the Nylas OAuth flow."""
     query = dict(
         redirect_uri=core_consts.NYLAS_OAUTH_CALLBACK_URL,
         response_type="code",
         login_hint=email,
-        state=magic_token,
+        state="NYLAS",
         scopes=scopes,
         client_id=core_consts.NYLAS_CLIENT_ID,
     )

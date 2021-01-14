@@ -24,7 +24,7 @@ export default class ZoomAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
     }
   }
-  async getAuthData(code) {
+  async authenticate(code) {
     try {
       const res = await this.client.post(ZoomAPI.ENDPOINT + 'authenticate', { code: code })
       return res

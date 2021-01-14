@@ -2,7 +2,7 @@ import logging
 import requests
 import json
 from faker import Faker
-from urllib.parse import urlencode
+from urllib.parse import urlencode, unquote
 from datetime import datetime
 
 from django.http import HttpResponse
@@ -30,6 +30,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from .serializers import SalesforceAuthSerializer
 from .adapter.models import SalesforceAuthAccountAdapter
 
 
@@ -40,14 +41,22 @@ def auth_link_test(request):
 
 
 @api_view(["post"])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def authenticate(request):
     code = request.data.get("code", None)
+    if code:
+        data = SalesforceAuthAccountAdapter.create_account(
+            unquote(code), str(request.user.id)
+        )
+        serializer = SalesforceAuthSerializer(data=data.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data={"success": True})
 
 
 @api_view(["get"])
 @permission_classes([permissions.AllowAny])
 def salesforce_auth_link(request):
     link = SalesforceAuthAccountAdapter.generate_auth_link()
-    return Response({"url": link})
+    return Response({"link": link})
 

@@ -27,6 +27,7 @@ if settings.USE_SALESFORCE:
             "redirect_uri": REDIRECT_URL,
             "response_type": "code",
             "scope": SCOPES,
+            "state": "SALESFORCE",
         }
     )
 
