@@ -34,5 +34,5 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 @api_view(["get"])
 @permission_classes([permissions.AllowAny])
 def salesforce_app_registration(request):
-    return HttpResponse("done")
+    return render(request, "test/test-auth-flow.html")
 

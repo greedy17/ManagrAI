@@ -96,7 +96,10 @@ ROOT_URLCONF = "managr.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"),],
+        "DIRS": [
+            os.path.join(BASE_DIR, "../client/dist/"),
+            os.path.join(BASE_DIR, "managr", "salesforce", "templates", ""),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
