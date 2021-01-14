@@ -32,7 +32,7 @@ django-background-tasks = "==1.2.*"
 twilio = "==6.44.*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"
 
 [dev-packages]
 pylint = "*"
