@@ -8,7 +8,8 @@ if settings.USE_SALESFORCE:
     AUTHENTICATION_URI=f'{BASE_URL}/services/oauth2/token'
     CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY
     CLIENT_SECRET = settings.SALESFORCE_SECRET
-    SCOPES = SALESFORCE_SCOPES
+    SCOPES = settings.SALESFORCE_SCOPES
+    REDIRECT_URL=settings.SALESFORCE_REDIRECT_URL
 
     AUTHENTICATION_BODY=lambda code: {
         'grant_type':'authorization_code',
@@ -16,7 +17,7 @@ if settings.USE_SALESFORCE:
         'code':code, 
         'client_id':CLIENT_ID,
         'client_secret':CLIENT_SECRET,
-        'redirect_uri':REDIRECT_URI,
+        'redirect_uri':REDIRECT_URL,
     }
     AUTHENTICATION_HEADERS={
         "Content-Type":"application/x-www-form-urlencoded"
@@ -24,7 +25,7 @@ if settings.USE_SALESFORCE:
     AUTHORIZATION_QUERY=urleoncode{
         "client_id":CLIENT_ID,
         "client_secret":CLIENT_SECRET,
-        "redirect_uri":REDIRECT_URI,
+        "redirect_uri":REDIRECT_URL,
         "response_type":"code",
         "scope":SCOPES
     }

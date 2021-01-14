@@ -1,5 +1,6 @@
 import os
 import dj_database_url
+from managr.utils import sites as site_utils
 
 
 def _env_get_required(setting_name):
@@ -386,9 +387,15 @@ if USE_SLACK and TEST_SLACK:
     )
 
 
-USE_SALESFORCE = os.environ.get("USE_SALESFORCE")=="True"
+USE_SALESFORCE = os.environ.get("USE_SALESFORCE") == "True"
 if USE_SALESFORCE:
-    SALESFORCE_SECRET=_env_get_required("SALESFORCE_SECRET")
-    SALESFORCE_CONSUMER_KEY=_env_get_required("SALESFORCE_CONSUMER_KEY")
-    SALESFORCE_BASE_URL=_env_get_required("SALESFORCE_BASE_URL")
-    SALESFORCE_SCOPES=_env_get_required("SALESFORCE_SCOPES")
+    SALESFORCE_SECRET = _env_get_required("SALESFORCE_SECRET")
+    SALESFORCE_CONSUMER_KEY = _env_get_required("SALESFORCE_CONSUMER_KEY")
+    SALESFORCE_BASE_URL = _env_get_required("SALESFORCE_BASE_URL")
+    SALESFORCE_SCOPES = _env_get_required("SALESFORCE_SCOPES")
+    SALESFORCE_REDIRECT_URL = (
+        f'http://localhost:8080/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+        if IN_DEV
+        else site_utils.get_site_url()
+    )
+
