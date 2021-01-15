@@ -39,7 +39,7 @@ class OrganizationSlackIntegration(TimeStampModel):
         max_length=255, null=False, help_text="ID of the Managr Bot"
     )
     access_token = models.CharField(
-        max_length=255, null=False, help_text="Slack API access token"
+        max_length=255, null=True, blank=True, help_text="Slack API access token"
     )
     incoming_webhook = JSONField(
         default=dict,
@@ -53,6 +53,7 @@ class OrganizationSlackIntegration(TimeStampModel):
         blank=True,
         help_text="data on the Organization's Enterprise Slack Team, if any",
     )
+    is_revoked = models.BooleanField(default=True)
 
     objects = OrganizationSlackIntegrationQuerySet.as_manager()
 
@@ -94,6 +95,7 @@ class UserSlackIntegration(TimeStampModel):
         on_delete=models.CASCADE,
         related_name="user_slack_integrations",
     )
+    is_revoked = models.BooleanField(default=True)
 
     objects = UserSlackIntegrationQuerySet.as_manager()
 
