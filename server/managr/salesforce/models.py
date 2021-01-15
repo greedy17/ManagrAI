@@ -38,3 +38,8 @@ class SalesforceAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         return SalesforceAuthAccountAdapter(**data)
+
+    def revoke(self):
+        adapter = self.adpater_class
+        adapter.revoke()
+        self.delete()

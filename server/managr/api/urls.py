@@ -33,9 +33,7 @@ urlpatterns = [
         name="get_email_auth_token",
     ),
     path(
-        "users/nylas/revoke-email-auth/",
-        core_views.revoke_access_token,
-        name="revoke_email_auth",
+        "users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",
     ),
     path(
         "users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"
@@ -72,15 +70,16 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
     path(
-        "salesforce/authorization",
+        "users/salesforce/authorization",
         sf_views.salesforce_auth_link,
         name="salesforce-authorization",
     ),
     path(
-        "salesforce/authenticate",
+        "users/salesforce/authenticate",
         sf_views.authenticate,
         name="salesforce-authentication",
     ),
+    path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
 ]
 
 

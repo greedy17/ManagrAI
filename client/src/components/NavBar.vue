@@ -41,11 +41,7 @@ export default {
     NavLink,
     DropDownMenu,
   },
-  props: {
-    unViewedCount: {
-      required: true,
-    },
-  },
+  props: {},
   data() {
     return {
       showMenus: {

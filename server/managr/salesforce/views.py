@@ -34,12 +34,6 @@ from .serializers import SalesforceAuthSerializer
 from .adapter.models import SalesforceAuthAccountAdapter
 
 
-@api_view(["get"])
-@permission_classes([permissions.AllowAny])
-def auth_link_test(request):
-    return render(request, "test/test-auth-flow.html")
-
-
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def authenticate(request):
@@ -55,8 +49,23 @@ def authenticate(request):
 
 
 @api_view(["get"])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def salesforce_auth_link(request):
     link = SalesforceAuthAccountAdapter.generate_auth_link()
     return Response({"link": link})
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke(request):
+    user = request.user
+    if hasattr(user, "salesforce_account"):
+        # revoke the token
+        # TODO: see bellow pb 01/15/2021
+        # set the account to is_revoked
+        # delete the token and the refresh token
+        ##### temporarily deleting whole object
+        sf_acc = user.salesforce_account
+        sf_acc.revoke()
+    return Response()
 

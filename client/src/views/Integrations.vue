@@ -14,7 +14,7 @@
         >
           Connect
         </button>
-        <button v-else class="secondary-button">
+        <button @click="onRevoke('SALESFORCE')" v-else class="secondary-button">
           Revoke
         </button>
       </div>
@@ -77,7 +77,7 @@
         <button v-if="!hasNylasIntegration" @click="onGetAuthLink('NYLAS')" class="primary-button">
           Connect
         </button>
-        <button v-else class="secondary-button">Revoke</button>
+        <button v-else @click="onRevoke('NYLAS')" class="secondary-button">Revoke</button>
       </div>
     </div>
   </div>
@@ -104,13 +104,26 @@ export default {
   },
   methods: {
     async onGetAuthLink(integration) {
+      this.generatingToken = true
       this.selectedIntegration = integration
       const modelClass = this.selectedIntegrationSwitcher
-
-      const res = await modelClass.api.getAuthLink()
-      console.log(res)
-      if (res.link) {
-        window.location.href = res.link
+      try {
+        const res = await modelClass.api.getAuthLink()
+        if (res.link) {
+          window.location.href = res.link
+        }
+      } finally {
+        this.generatingToken = false
+      }
+    },
+    async onRevoke(integration) {
+      this.generatingToken = true
+      this.selectedIntegration = integration
+      try {
+        await this.selectedIntegrationSwitcher.api.revoke()
+      } finally {
+        this.generatingToken = false
+        this.$store.dispatch('refreshCurrentUser')
       }
     },
     async onIntegrateSlack() {
@@ -122,8 +135,6 @@ export default {
             if (res.link) {
               window.location.href = res.link
             }
-          } catch (e) {
-            console.log(e)
           } finally {
             this.generatingToken = false
           }
@@ -132,9 +143,9 @@ export default {
         if (!this.hasSlackIntegration) {
           try {
             let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.USER)
-            console.log(res)
-          } catch (e) {
-            console.log(e)
+            if (res.link) {
+              window.location.href = res.link
+            }
           } finally {
             this.generatingToken = false
           }
