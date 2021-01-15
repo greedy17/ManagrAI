@@ -11,11 +11,6 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-
-    <SideNavBar
-      v-if="userIsLoggedIn"
-      @viewed-notif="countViewed => updateUnviewedNotifCount(unviewedNotifCount - countViewed)"
-    />
   </div>
 </template>
 
@@ -24,7 +19,6 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
-import SideNavBar from '@/components/navigation/SideNavBar'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
@@ -32,7 +26,6 @@ export default {
   name: 'app',
   components: {
     NavBar,
-    SideNavBar,
   },
   data() {
     return {
@@ -53,16 +46,9 @@ export default {
 
   methods: {
     ...mapActions(['refreshCurrentUser']),
-    toggleNotifications() {
-      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
-    },
-    updateUnviewedNotifCount(count) {
-      this.unviewedNotifCount = count
-    },
   },
   computed: {
     ...mapGetters(['userIsLoggedIn']),
-    ...mapGetters(['showSideNav']),
     hideNavBar() {
       return routesWithoutNavBar.includes(this.$route.name)
     },

@@ -1,28 +1,6 @@
 <template>
   <div class="page">
-    <div class="page__left-nav-bar">
-      <SideNavToolbar>
-        <template v-slot:trigger>
-          <span
-            class="toggle-icon"
-            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-          >
-            <div class="filter__button" v-show="!$store.state.showToolbarNav">
-              <div class="filter__image">+</div>
-              <div class="filter__text">Add Filter</div>
-            </div>
-          </span>
-        </template>
-        <template v-slot:toolbar>
-          <ToolBar
-            class="toolbar"
-            @update-filter="updateFilters"
-            :currentFilters="currentFilters"
-            @delete-filters="deleteFilters"
-          />
-        </template>
-      </SideNavToolbar>
-    </div>
+    <div class="page__left-nav-bar"></div>
     <div class="page__main-content-area-with-panel">
       <div class="view-toggle-container">
         <span class="left" :class="{ bold: !isCurrentRoute }">Forecast</span>
@@ -52,12 +30,8 @@
 </template>
 
 <script>
-import Button from '@thinknimble/button'
-
-import ToolBar from '@/components/leads-index/ToolBar'
 import ListsContainer from '@/components/leads-index/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
-import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
 import Lead from '@/services/leads'
 import List from '@/services/lists'
@@ -67,11 +41,8 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'LeadsIndex',
   components: {
-    ToolBar,
     ToggleCheckBox,
     ListsContainer,
-    SideNavToolbar,
-    Button,
   },
   data() {
     return {
