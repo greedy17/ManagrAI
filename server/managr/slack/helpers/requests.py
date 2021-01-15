@@ -1,11 +1,13 @@
 import requests
 import json
 import os
+import pdb
+from urllib.parse import urlencode
+
 from django.conf import settings
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers.block_sets import get_block_set
-import pdb
 
 
 def request_access_token(code, redirect_uri):
@@ -21,6 +23,17 @@ def request_access_token(code, redirect_uri):
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
     return requests.post(url, data=data, headers=headers,)
+
+
+def revoke_access_token(token):
+    query = urlencode({"token": token})
+    url = slack_const.SLACK_API_ROOT + "auth.revoke?" + query
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+    }
+
+    return requests.post(url, headers=headers,)
 
 
 def request_user_dm_channel(slack_id, access_token):

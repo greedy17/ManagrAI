@@ -33,7 +33,7 @@ export default class ZoomAPI extends ModelAPI {
     }
   }
 
-  async revokeAccess() {
+  async revoke() {
     try {
       await this.client.delete(ZoomAPI.ENDPOINT + 'revoke')
     } catch (e) {

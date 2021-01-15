@@ -34,7 +34,7 @@
         >
           Connect
         </button>
-        <button v-else class="secondary-button">
+        <button v-else @click="onRevoke('ZOOM')" class="secondary-button">
           Revoke
         </button>
       </div>
@@ -57,7 +57,11 @@
         >
           Connect
         </button>
-        <button v-else-if="hasSlackIntegration && orgHasSlackIntegration" class="secondary-button">
+        <button
+          v-else-if="hasSlackIntegration && orgHasSlackIntegration"
+          @click="onRevoke('SLACK')"
+          class="secondary-button"
+        >
           Revoke
         </button>
       </div>

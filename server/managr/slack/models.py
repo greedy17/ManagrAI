@@ -63,6 +63,9 @@ class OrganizationSlackIntegration(TimeStampModel):
     class Meta:
         ordering = ["organization"]
 
+    def delete(self, *args, **kwargs):
+        return super(OrganizationSlackIntegration, self).delete(*args, **kwargs)
+
 
 class UserSlackIntegrationQuerySet(models.QuerySet):
     def for_user(self, user):
