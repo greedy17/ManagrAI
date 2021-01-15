@@ -104,11 +104,6 @@ const actions = {
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
   },
-  async updatePollingData({ state, commit }) {
-    const res = await Polling.listPollingCount(state.pollingItems, state.pollingData.lastChecked)
-
-    commit('UPDATE_POLLING_DATA', res)
-  },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)
   },
@@ -144,21 +139,6 @@ const plugins = [
 const getters = {
   userIsLoggedIn: state => {
     return !!(state.token && state.user)
-  },
-  showSideNav: state => {
-    return state.showSideNav
-  },
-  showToolbarNav: state => {
-    return state.showToolbarNav
-  },
-  listenToSideNav: state => {
-    return state.listenToSideNav
-  },
-  updatePollingData: state => {
-    return state.shouldUpdatePollingData
-  },
-  pollingDataToUpdate: state => {
-    return state.itemsFromPollToUpdate
   },
 }
 
