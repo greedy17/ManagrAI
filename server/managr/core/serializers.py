@@ -80,10 +80,11 @@ class UserSerializer(serializers.ModelSerializer):
             "is_admin",
             "is_superuser",
             "user_level",
-            "email_auth_link",
+            "profile_photo",
+            # integrations
             "email_auth_account",
             "email_auth_account_ref",
-            "profile_photo",
+            "salesforce_account",
             "slack_ref",
             "zoom_account",
         )

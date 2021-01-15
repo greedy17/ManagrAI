@@ -7,6 +7,7 @@ from managr.organization import views as organization_views
 # from managr.report import views as report_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
+from managr.salesforce import views as sf_views
 
 
 app_name = "api"
@@ -22,17 +23,17 @@ urlpatterns = [
         name="get_activation_link",
     ),
     path(
-        "users/email-auth-link/",
+        "users/nylas/authorization/",
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
     path(
-        "users/email-auth-token/",
+        "users/nylas/authenticate/",
         core_views.email_auth_token,
         name="get_email_auth_token",
     ),
     path(
-        "users/revoke-email-auth/",
+        "users/nylas/revoke-email-auth/",
         core_views.revoke_access_token,
         name="revoke_email_auth",
     ),
@@ -44,11 +45,6 @@ urlpatterns = [
         "get-file/<str:file_id>/",
         core_views.GetFileView.as_view(),
         name="get_file_from_nylas",
-    ),
-    path(
-        "nylas/callback/messages",
-        core_views.NylasMessageWebhook.as_view(),
-        name="nylas_message_webhook",
     ),
     path(
         "nylas/callback/accounts",
@@ -74,6 +70,16 @@ urlpatterns = [
         "zoom/webhooks/meetings",
         zoom_views.zoom_meetings_webhook,
         name="get_zoom_auth_link",
+    ),
+    path(
+        "salesforce/authorization",
+        sf_views.salesforce_auth_link,
+        name="salesforce-authorization",
+    ),
+    path(
+        "salesforce/authenticate",
+        sf_views.authenticate,
+        name="salesforce-authentication",
     ),
 ]
 

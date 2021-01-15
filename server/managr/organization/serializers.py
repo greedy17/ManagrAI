@@ -13,7 +13,13 @@ from .models import Organization, Account, Contact, Stage
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ("__all__",)
+        fields = (
+            "name",
+            "photo",
+            "state",
+            "is_trial",
+            "slack_integration",
+        )
 
 
 class ActionChoiceRefSerializer(serializers.ModelSerializer):

@@ -1,16 +1,11 @@
 <template>
   <div>
     <nav id="nav">
-      <div class="logo" @click="goToHome">
+      <div class="logo">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
       <div v-if="userIsLoggedIn" class="links">
         <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
-        <NavLink icon="forecast2" :to="'Forecast'">Forecast + Deals</NavLink>
-        <NavLink icon="prospect" :to="'Prospect'">Accounts</NavLink>
-        <NavLink icon="reports" :to="'Reports'">Reports</NavLink>
-        <NavLink icon="zoom" to="Meetings">Meetings</NavLink>
-        <!-- <NavLink icon="image" to="Styles">Styles</NavLink> -->
       </div>
 
       <div class="right" ref="user-menu-icon">
@@ -30,26 +25,6 @@
             </template>
           </DropDownMenu>
         </div>
-
-        <span
-          v-if="userIsLoggedIn"
-          ref="notification-trigger"
-          class="right__items"
-          @click.prevent="toggleNotifications"
-        >
-          {{ unViewedCount > 0 ? unViewedCount : '' }}
-          <svg
-            v-if="userIsLoggedIn"
-            class="icon"
-            :class="{ green: unViewedCount > 0 }"
-            viewBox="0 0 16 19"
-          >
-            <use
-              ref="notification-trigger"
-              xlink:href="@/assets/images/notification.svg#notification"
-            />
-          </svg>
-        </span>
       </div>
     </nav>
   </div>
@@ -57,10 +32,8 @@
 
 <script>
 import NavLink from '@/components/NavLink'
-import Notification from '@/services/notifications/'
-import DropDownMenu from '@/components/forms/DropDownMenu'
 
-const POLLING_INTERVAL = 10000
+import DropDownMenu from '@/components/forms/DropDownMenu'
 
 export default {
   name: 'NavBar',
@@ -80,24 +53,12 @@ export default {
       },
     }
   },
-  async created() {
-    if (this.userIsLoggedIn) {
-      const { count } = await Notification.api.getUnviewedCount({})
-      this.$emit('update-unviewed-notif-count', count)
-      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
-      this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
-
-      await this.refresh(POLLING_INTERVAL)
-    }
-  },
+  async created() {},
   mounted() {},
-  destroyed() {
-    clearTimeout(this.pollingTimeout)
-  },
+  destroyed() {},
 
   methods: {
     routeToSelected(selected) {
-      // TODO: PB Change this to be static with an enum type list (django style) 07/20
       if (selected == 'settings') {
         this.routeToSettings()
       }
@@ -105,35 +66,7 @@ export default {
         this.logOut()
       }
     },
-    async refresh(repeat) {
-      clearTimeout(this.pollingTimeout)
-      try {
-        await this.$store.dispatch('updatePollingData')
 
-        if (repeat) {
-          this.polllingTimeout = setTimeout(async () => {
-            await this.refresh(POLLING_INTERVAL)
-          }, repeat)
-        }
-      } catch (e) {
-        this.apiFailing = true
-        if (repeat) {
-          this.pollingTimeout = setTimeout(async () => {
-            await this.refresh(repeat * 2)
-          }, repeat * 2)
-        }
-      }
-    },
-
-    toggleUserMenu() {
-      this.showMenus.user = !this.showMenus.user
-      if (this.showMenus.user) {
-        this.$store.commit('TOGGLE_SIDE_NAV', false)
-      }
-    },
-    toggleNotifications() {
-      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
-    },
     routeToSettings() {
       this.$router.push({ name: 'EmailIntegration' })
       this.toggleUserMenu()
@@ -144,34 +77,11 @@ export default {
       this.$store.commit('CLEAR_POLLING_DATA')
       this.toggleUserMenu()
     },
-    goToHome() {
-      if (this.$route.name !== 'LeadsIndex') {
-        this.$router.push({ name: 'LeadsIndex' })
-      }
-    },
   },
-  watch: {
-    shouldRefreshPolling(val) {
-      if (val) {
-        if (this.$store.getters.pollingDataToUpdate.includes('notificationCount')) {
-          let count = this.$store.state.pollingData.items.notificationCount.count
-          this.$emit('update-unviewed-notif-count', count)
-        }
-      }
-    },
-  },
+  watch: {},
   computed: {
-    shouldRefreshPolling() {
-      return this.$store.getters.updatePollingData
-    },
-    itemsToRefresh() {
-      return this.$store.getters.pollingDataToUpdate
-    },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
-    },
-    showSideNav() {
-      return this.$store.getters.showSideNav
     },
   },
 }

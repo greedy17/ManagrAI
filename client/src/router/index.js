@@ -66,13 +66,6 @@ export default new Router({
       component: Activation,
     },
 
-    // TODO 2020-01-13 William: Add route guard after fixing registration and
-    //      login flows.
-    {
-      path: '/integrations',
-      name: 'Integrations',
-      component: Integrations,
-    },
     // END TODO
 
     // {
@@ -126,68 +119,20 @@ export default new Router({
     },
     {
       path: '/settings',
-      /*
-        NOTE:
-        The route name is removed due to the following warning:
-        [vue-router] Named Route 'Settings' has a default child route.
-        When navigating to this named route (:to="{name: 'Settings'"),
-        the default child route will not be rendered. Remove the name from
-        this route and use the name of the default child route for named links instead.
-       */
-      // name: 'Settings',
       component: Settings,
-      beforeEnter: Auth.requireAuth,
+      //beforeEnter: Auth.requireAuth,
       children: [
         {
-          path: 'slack-integration/callback',
-          name: 'SlackCallback',
-          components: {
-            'user-settings': SlackCallback,
-          },
-        },
-        {
-          path: 'slack-integration',
-          name: 'SlackIntegration',
-          components: {
-            'user-settings': SlackIntegration,
-          },
-        },
-        {
-          path: 'zoom-integration',
-          name: 'ZoomIntegration',
+          path: 'integrations',
+          name: 'Integrations',
           components: {
             'user-settings': () =>
-              import(
-                /* webpackChunkName: "settings" */ '../views/settings/_pages/_ZoomIntegration'
-              ),
+              import(/* webpackChunkName: "settings" */ '../views/Integrations'),
           },
         },
+
         {
-          path: 'text-integration',
-          name: 'TextIntegration',
-          components: {
-            'user-settings': () =>
-              import(
-                /* webpackChunkName: "settings" */ '../views/settings/_pages/_TextIntegration'
-              ),
-          },
-        },
-        {
-          path: 'email-integration',
-          name: 'EmailIntegration',
-          components: {
-            'user-settings': EmailIntegration,
-          },
-        },
-        {
-          path: 'email-templates',
-          name: 'EmailTemplates',
-          components: {
-            'user-settings': EmailTemplates,
-          },
-        },
-        {
-          path: 'profile',
+          path: '',
           name: 'Profile',
           components: {
             'user-settings': Profile,

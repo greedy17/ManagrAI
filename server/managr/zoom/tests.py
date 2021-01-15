@@ -27,7 +27,9 @@ class MeetingScoreTestCase(TestCase):
         self.org = Organization.objects.first()
 
         self.account = AccountFactory(organization=self.org)
-        self.opportunity = Opportunity.objects.create(account=self.account, claimed_by=self.user)
+        self.opportunity = Opportunity.objects.create(
+            account=self.account, claimed_by=self.user
+        )
 
         self.ready_stage = Stage.objects.get(order=1)
         self.booked_stage = Stage.objects.get(order=2)

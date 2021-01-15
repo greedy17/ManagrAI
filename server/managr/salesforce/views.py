@@ -1,0 +1,62 @@
+import logging
+import requests
+import json
+from faker import Faker
+from urllib.parse import urlencode, unquote
+from datetime import datetime
+
+from django.http import HttpResponse
+from django.core.management import call_command
+from django.shortcuts import render, redirect
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework import (
+    authentication,
+    filters,
+    permissions,
+    generics,
+    mixins,
+    status,
+    views,
+    viewsets,
+)
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
+
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError, PermissionDenied
+
+from .serializers import SalesforceAuthSerializer
+from .adapter.models import SalesforceAuthAccountAdapter
+
+
+@api_view(["get"])
+@permission_classes([permissions.AllowAny])
+def auth_link_test(request):
+    return render(request, "test/test-auth-flow.html")
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def authenticate(request):
+    code = request.data.get("code", None)
+    if code:
+        data = SalesforceAuthAccountAdapter.create_account(
+            unquote(code), str(request.user.id)
+        )
+        serializer = SalesforceAuthSerializer(data=data.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data={"success": True})
+
+
+@api_view(["get"])
+@permission_classes([permissions.AllowAny])
+def salesforce_auth_link(request):
+    link = SalesforceAuthAccountAdapter.generate_auth_link()
+    return Response({"link": link})
+
