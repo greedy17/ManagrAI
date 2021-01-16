@@ -12,9 +12,7 @@ def zoom_meeting_complete_form(context):
     stage = lead.status.as_slack_option if lead.status else None
     forecast = lead.forecast.as_slack_option if hasattr(lead, "forecast") else None
 
-    expected_close_date = (
-        str(lead.expected_close_date.date()) if lead.expected_close_date else None
-    )
+    expected_close_date = str(lead.expected_close_date.date()) if lead.expected_close_date else None
     amount = lead.amount if lead.amount else None
 
     # make params here
@@ -32,8 +30,7 @@ def zoom_meeting_complete_form(context):
         block_builders.external_select(
             "*Meeting Type*",
             action_with_params(
-                slack_const.GET_ORGANIZATION_ACTION_CHOICES,
-                params=[organization_id_param],
+                slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param],
             ),
             block_id="meeting_type",
         ),

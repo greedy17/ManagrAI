@@ -42,9 +42,7 @@ def zoom_meeting_initial(context):
         else start_time
     )
     formatted_end = (
-        datetime.strftime(
-            end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-        )
+        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p")
         if end_time
         else end_time
     )

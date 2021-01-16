@@ -35,9 +35,8 @@ twilio = "==6.44.*"
 python_version = "3.9"
 
 [dev-packages]
-pylint = "*"
-pylint-django = "*"
-pycodestyle = "*"
-"autopep8" = "*"
 black = "==19.10b0"
 flake8 = "*"
+
+[pipenv]
+allow_prereleases = true

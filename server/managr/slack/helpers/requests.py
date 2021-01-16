@@ -43,9 +43,7 @@ def request_user_dm_channel(slack_id, access_token):
     """
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
     data = {"users": slack_id}
-    return requests.post(
-        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
-    )
+    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
 
 
 def send_channel_message(channel, access_token, text=None, block_set=None):
@@ -60,14 +58,10 @@ def send_channel_message(channel, access_token, text=None, block_set=None):
         data["text"] = text
     if block_set:
         data["blocks"] = block_set
-    return requests.post(
-        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
-    )
+    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
 
 
-def update_channel_message(
-    channel, message_timestamp, access_token, text=None, block_set=None
-):
+def update_channel_message(channel, message_timestamp, access_token, text=None, block_set=None):
     """
     Updates a message.
     """
@@ -79,9 +73,7 @@ def update_channel_message(
         data["text"] = text
     if block_set:
         data["blocks"] = block_set
-    return requests.post(
-        url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),
-    )
+    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
 
 
 def generic_request(url, data, access_token=None):

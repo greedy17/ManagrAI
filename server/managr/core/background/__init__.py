@@ -9,4 +9,3 @@ from django.utils import timezone
 
 
 logger = logging.getLogger("managr")
-

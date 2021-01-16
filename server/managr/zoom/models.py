@@ -34,9 +34,7 @@ class ZoomAuthAccountQuerySet(models.QuerySet):
 
 
 class ZoomAuthAccount(TimeStampModel):
-    user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="zoom_account"
-    )
+    user = models.OneToOneField("core.User", on_delete=models.CASCADE, related_name="zoom_account")
     zoom_id = models.CharField(max_length=255, unique=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
@@ -48,9 +46,7 @@ class ZoomAuthAccount(TimeStampModel):
     verified = models.PositiveSmallIntegerField()
     dept = models.CharField(max_length=255, blank=True, null=True)
     pic_url = models.CharField(max_length=255, blank=True, null=True)
-    pmi = models.CharField(
-        max_length=255, blank=True, null=True, help_text="personal meeting id"
-    )
+    pmi = models.CharField(max_length=255, blank=True, null=True, help_text="personal meeting id")
     use_pmi = models.BooleanField(default=False)
     host_key = models.CharField(max_length=255)
     jid = models.CharField(max_length=255)
@@ -87,9 +83,7 @@ class ZoomAuthAccount(TimeStampModel):
             decoded = jwt.decode(self.refresh_token, verify=False)
             exp = decoded["exp"]
 
-            return exp <= datetime.timestamp(
-                timezone.now() - timezone.timedelta(minutes=5)
-            )
+            return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
         return True
 
     @property
@@ -98,9 +92,7 @@ class ZoomAuthAccount(TimeStampModel):
             decoded = jwt.decode(self.access_token, verify=False)
             exp = decoded["exp"]
 
-            return exp <= datetime.timestamp(
-                timezone.now() - timezone.timedelta(minutes=5)
-            )
+            return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
         return True
 
     def regenerate_token(self):
@@ -160,10 +152,7 @@ class ZoomMeeting(TimeStampModel):
     end_time = models.DateTimeField(null=True, blank=True)
     duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text="Operation on all or single occurences",
+        max_length=255, blank=True, null=True, help_text="Operation on all or single occurences",
     )
     timezone = models.CharField(max_length=255, null=True, blank=True)
     occurences = ArrayField(
@@ -193,9 +182,7 @@ class ZoomMeeting(TimeStampModel):
         help_text="if recurring meeting",
     )
 
-    participants = models.ManyToManyField(
-        "organization.Contact", related_name="meetings"
-    )
+    participants = models.ManyToManyField("organization.Contact", related_name="meetings")
     opportunity = models.ForeignKey(
         "opportunity.Opportunity",
         on_delete=models.SET_NULL,
@@ -215,8 +202,7 @@ class ZoomMeeting(TimeStampModel):
         help_text="We make an attempt immedietly and after 2 hours", default=0
     )
     scoring_in_progress = models.BooleanField(
-        default=False,
-        help_text="if an event is emitted to generate a score dont do it again",
+        default=False, help_text="if an event is emitted to generate a score dont do it again",
     )
     current_interaction = models.PositiveSmallIntegerField(
         default=1, help_text="current slack form"
@@ -255,9 +241,7 @@ class ZoomMeeting(TimeStampModel):
         # notification_attempts <=1
         # latest_attempt > 2hrs
         # if the latest attempt is 2 hours after the first attempt try again
-        two_hour_timeline = (timezone.now() - self.latest_attempt).seconds >= (
-            60 * 3600
-        )
+        two_hour_timeline = (timezone.now() - self.latest_attempt).seconds >= (60 * 3600)
         return (
             self.interaction_status != zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
             or not self.is_closed
@@ -306,10 +290,7 @@ class MeetingReview(TimeStampModel):
         blank=True, null=True, help_text="populates secondary description"
     )
     sentiment = models.CharField(
-        max_length=255,
-        choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
-        blank=True,
-        null=True,
+        max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
     amount = models.DecimalField(
         max_digits=13,
@@ -508,4 +489,3 @@ class MeetingReview(TimeStampModel):
         opportunity.save()
 
         return super(MeetingReview, self).save(*args, **kwargs)
-

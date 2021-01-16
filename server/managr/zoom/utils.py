@@ -186,9 +186,7 @@ SCORE_LOOKUP = {
 class ScoreComponent:
     """Helper class for handling the components of the meeting score."""
 
-    def __init__(
-        self, meeting, type="unkown", points=0, impact="positive", message_tpl=""
-    ):
+    def __init__(self, meeting, type="unkown", points=0, impact="positive", message_tpl=""):
         self.meeting = meeting
         self.type = type
         self._points = points
@@ -204,15 +202,11 @@ class ScoreComponent:
             stage = Stage.objects.get(id=self.meeting.meeting_review.update_stage)
             new_stage_name = stage.title
         if self.meeting.meeting_review.updated_close_date:
-            new_close_date = self.meeting.meeting_review.updated_close_date.strftime(
-                "%m/%d/%Y"
-            )
+            new_close_date = self.meeting.meeting_review.updated_close_date.strftime("%m/%d/%Y")
         # END HACK
 
         return self.message_tpl.format(
-            meeting=self.meeting,
-            new_stage_name=new_stage_name,
-            new_close_date=new_close_date,
+            meeting=self.meeting, new_stage_name=new_stage_name, new_close_date=new_close_date,
         )
 
     @property
@@ -249,13 +243,9 @@ def score_meeting(meeting):
         participation_score = meeting_review.participation_score
         participation_msg_tpl = ""
         if 0 < participation_score <= 5:
-            participation_msg_tpl = (
-                "Most attendees participated for less than half of the meeting."
-            )
+            participation_msg_tpl = "Most attendees participated for less than half of the meeting."
         elif 5 < participation_score <= 8:
-            participation_msg_tpl = (
-                "Most attendees participated for the majority of the meeting."
-            )
+            participation_msg_tpl = "Most attendees participated for the majority of the meeting."
         elif 8 < participation_score:
             participation_msg_tpl = (
                 "All attendees participated for the entire duration of the meeting."
@@ -284,4 +274,3 @@ def score_meeting(meeting):
     ### score for participation
 
     return (score, score_components)
-

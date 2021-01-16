@@ -47,9 +47,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         if link_type not in slack_const.OAUTH_LINK_TYPES:
             raise ValidationError("Invalid link type")
         data = {
-            "link": slack_auth.OAuthLinkBuilder(
-                request.user, redirect_uri
-            ).link_for_type(link_type)
+            "link": slack_auth.OAuthLinkBuilder(request.user, redirect_uri).link_for_type(link_type)
         }
         return Response(data=data, status=status.HTTP_200_OK)
 
@@ -111,14 +109,10 @@ class SlackViewSet(viewsets.GenericViewSet,):
         org = request.user.organization
         if hasattr(org, "slack_integration"):
             UserSlackIntegration.objects.create(
-                user=request.user,
-                slack_id=slack_id,
-                organization_slack=org.slack_integration,
+                user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
             )
             # return serialized user because client-side needs updated slackRef(s)
-        return Response(
-            data=UserSerializer(request.user).data, status=status.HTTP_200_OK
-        )
+        return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
     @action(
         methods=["get"],
@@ -159,9 +153,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
         if not user_slack.channel:
             # request the Slack Channel ID to DM this user
-            response = slack_requests.request_user_dm_channel(
-                user_slack.slack_id, access_token
-            )
+            response = slack_requests.request_user_dm_channel(user_slack.slack_id, access_token)
             # save Slack Channel ID
             channel = response.json().get("channel").get("id")
             user_slack.channel = channel
@@ -170,9 +162,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         # DM user
         test_text = "Testing, testing... 1, 2. Hello, Friend!"
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
-        slack_requests.send_channel_message(
-            user_slack.channel, access_token, text=test_text
-        )
+        slack_requests.send_channel_message(user_slack.channel, access_token, text=test_text)
         # slack_requests.send_channel_message(
         #     user_slack.channel,
         #     access_token,

@@ -6,10 +6,9 @@ from managr.utils import sites as site_utils
 def _env_get_required(setting_name):
     """Get the value of an environment variable and assert that it is set."""
     setting = os.environ.get(setting_name)
-    assert setting not in {
-        None,
-        "",
-    }, "{0} must be defined as an environment variable.".format(setting_name)
+    assert setting not in {None, "",}, "{0} must be defined as an environment variable.".format(
+        setting_name
+    )
     return setting
 
 
@@ -169,9 +168,7 @@ USE_TZ = True
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": ("managr.core.pagination.PageNumberPagination"),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.TokenAuthentication",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
@@ -275,11 +272,7 @@ LOGGING = {
     "loggers": {
         "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
         # The logger name matters -- it MUST match the name of the app
-        "managr": {
-            "handlers": ["console", "mail_admins",],
-            "level": "DEBUG",
-            "propagate": True,
-        },
+        "managr": {"handlers": ["console", "mail_admins",], "level": "DEBUG", "propagate": True,},
         "managr.request": {"handlers": [], "level": "INFO", "propagate": True},
         "managr.tasks": {"handlers": [], "level": "INFO", "propagate": True},
     },
@@ -377,12 +370,8 @@ if USE_SLACK and TEST_SLACK:
     SLACK_TEST_TEAM_ID = _env_get_required("SLACK_TEST_TEAM_ID")
     SLACK_TEST_BOT_USER_ID = _env_get_required("SLACK_TEST_BOT_USER_ID")
     SLACK_TEST_ACCESS_TOKEN = _env_get_required("SLACK_TEST_ACCESS_TOKEN")
-    SLACK_TEST_INCOMING_WEBHOOK_URL = _env_get_required(
-        "SLACK_TEST_INCOMING_WEBHOOK_URL"
-    )
-    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL = _env_get_required(
-        "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL"
-    )
+    SLACK_TEST_INCOMING_WEBHOOK_URL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_URL")
+    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_CHANNEL")
     SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID = _env_get_required(
         "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID"
     )
@@ -402,4 +391,3 @@ if USE_SALESFORCE:
         if IN_DEV
         else site_utils.get_site_url()
     )
-

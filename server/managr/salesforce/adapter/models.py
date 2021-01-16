@@ -73,9 +73,7 @@ class SalesforceAuthAccountAdapter:
     def authenticate(code):
         data = sf_consts.AUTHENTICATION_BODY(code)
         res = client.post(
-            f"{sf_consts.AUTHENTICATION_URI}",
-            data,
-            headers=sf_consts.AUTHENTICATION_HEADERS,
+            f"{sf_consts.AUTHENTICATION_URI}", data, headers=sf_consts.AUTHENTICATION_HEADERS,
         )
 
         return SalesforceAuthAccountAdapter._handle_response(res)

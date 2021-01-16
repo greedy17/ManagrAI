@@ -103,12 +103,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set(
                 "zoom_meeting_initial",
-                {
-                    "o": str(org),
-                    "u": str(user.id),
-                    "l": str(opportunity),
-                    "m": managr_meeting_id,
-                },
+                {"o": str(org), "u": str(user.id), "l": str(opportunity), "m": managr_meeting_id,},
             )
             slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
@@ -145,4 +140,3 @@ def _save_meeting_review_data(managr_meeting_id, data):
 
         MeetingReview.objects.create(**obj)
         # send slack notification when it is ready
-

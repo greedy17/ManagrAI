@@ -27,23 +27,11 @@ urlpatterns = [
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
-    path(
-        "users/nylas/authenticate/",
-        core_views.email_auth_token,
-        name="get_email_auth_token",
-    ),
-    path(
-        "users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",
-    ),
-    path(
-        "users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"
-    ),
+    path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
+    path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
+    path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
-    path(
-        "get-file/<str:file_id>/",
-        core_views.GetFileView.as_view(),
-        name="get_file_from_nylas",
-    ),
+    path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",
         core_views.NylasAccountWebhook.as_view(),
@@ -54,40 +42,24 @@ urlpatterns = [
         zoom_views.get_zoom_authentication,
         name="get_zoom_authentication",
     ),
+    path("users/zoom/authorization", zoom_views.get_zoom_auth_link, name="get_zoom_auth_link",),
     path(
-        "users/zoom/authorization",
-        zoom_views.get_zoom_auth_link,
-        name="get_zoom_auth_link",
+        "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
-    path(
-        "users/zoom/revoke",
-        zoom_views.revoke_zoom_access_token,
-        name="revoke_zoom_access_token",
-    ),
-    path(
-        "zoom/webhooks/meetings",
-        zoom_views.zoom_meetings_webhook,
-        name="get_zoom_auth_link",
-    ),
+    path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(
         "users/salesforce/authorization",
         sf_views.salesforce_auth_link,
         name="salesforce-authorization",
     ),
-    path(
-        "users/salesforce/authenticate",
-        sf_views.authenticate,
-        name="salesforce-authentication",
-    ),
+    path("users/salesforce/authenticate", sf_views.authenticate, name="salesforce-authentication",),
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
 ]
 
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
-router.register(
-    "organizations", organization_views.OrganizationViewSet, "organizations"
-)
+router.register("organizations", organization_views.OrganizationViewSet, "organizations")
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 

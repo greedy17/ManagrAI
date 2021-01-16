@@ -27,9 +27,7 @@ class MeetingScoreTestCase(TestCase):
         self.org = Organization.objects.first()
 
         self.account = AccountFactory(organization=self.org)
-        self.opportunity = Opportunity.objects.create(
-            account=self.account, claimed_by=self.user
-        )
+        self.opportunity = Opportunity.objects.create(account=self.account, claimed_by=self.user)
 
         self.ready_stage = Stage.objects.get(order=1)
         self.booked_stage = Stage.objects.get(order=2)
@@ -153,9 +151,7 @@ class MeetingScoreTestCase(TestCase):
 
     def test_meeting_review_stage_regressed_to_none(self):
         self.meeting_review = MeetingReview.objects.create(
-            meeting=self.zoom_meeting,
-            prev_stage=self.ready_stage.id,
-            update_stage=None,
+            meeting=self.zoom_meeting, prev_stage=self.ready_stage.id, update_stage=None,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -186,8 +182,7 @@ class MeetingScoreTestCase(TestCase):
 
     def test_meeting_forecast_progress_from_none(self):
         self.meeting_review = MeetingReview.objects.create(
-            meeting=self.zoom_meeting,
-            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
+            meeting=self.zoom_meeting, forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -261,9 +256,7 @@ class MeetingScoreTestCase(TestCase):
         self.assertEqual(score, 25)
 
         # Check rendered message
-        close_date_component = [
-            sc for sc in score_components if sc.type == "close_date"
-        ][0]
+        close_date_component = [sc for sc in score_components if sc.type == "close_date"][0]
         self.assertEqual(
             close_date_component.rendered_message,
             "The opportunity's forecast close date improved. It is now: 12/15/2020",
@@ -405,9 +398,7 @@ class MeetingScoreTestCase(TestCase):
         self.assertEqual(score, 42)
 
         # Check the resulting message of the 'participation' component
-        participation_component = [
-            sc for sc in score_components if sc.type == "participation"
-        ][0]
+        participation_component = [sc for sc in score_components if sc.type == "participation"][0]
         self.assertEqual(participation_component.points, 9)
         self.assertEqual(
             participation_component.message_tpl,
@@ -445,9 +436,7 @@ class MeetingScoreTestCase(TestCase):
         self.assertEqual(score, 36)
 
         # Check the resulting message of the 'participation' component
-        participation_component = [
-            sc for sc in score_components if sc.type == "participation"
-        ][0]
+        participation_component = [sc for sc in score_components if sc.type == "participation"][0]
         self.assertEqual(participation_component.points, 4)
         self.assertEqual(
             participation_component.message_tpl,

@@ -32,16 +32,12 @@ class SlackWebhookAuthentication(authentication.BaseAuthentication):
         if not slack_signature:
             raise exceptions.AuthenticationFailed("Invalid or Missing Token")
         data = request.body.decode("utf-8")
-        sig_basedstring = (
-            f"{slack_const.SLACK_APP_VERSION}:{time_stamp}:{data}"
-        ).encode("utf-8")
+        sig_basedstring = (f"{slack_const.SLACK_APP_VERSION}:{time_stamp}:{data}").encode("utf-8")
         my_sig = (
             slack_const.SLACK_APP_VERSION
             + "="
             + hmac.new(
-                slack_const.SLACK_SIGNING_SECRET.encode("utf-8"),
-                sig_basedstring,
-                hashlib.sha256,
+                slack_const.SLACK_SIGNING_SECRET.encode("utf-8"), sig_basedstring, hashlib.sha256,
             ).hexdigest()
         )
         if hmac.compare_digest(my_sig, slack_signature):

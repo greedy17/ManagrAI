@@ -16,9 +16,7 @@ def select_different_opportunity(context):
     return [
         block_builders.external_select(
             f"*Opportunity:* :dart: _{lead.title}_",
-            action_with_params(
-                slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],
-            ),
+            action_with_params(slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],),
             placeholder="Select Other",
             block_id="new_opportunity",
             min_query_length=1,

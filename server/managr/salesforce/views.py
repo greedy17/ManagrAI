@@ -39,9 +39,7 @@ from .adapter.models import SalesforceAuthAccountAdapter
 def authenticate(request):
     code = request.data.get("code", None)
     if code:
-        data = SalesforceAuthAccountAdapter.create_account(
-            unquote(code), str(request.user.id)
-        )
+        data = SalesforceAuthAccountAdapter.create_account(unquote(code), str(request.user.id))
         serializer = SalesforceAuthSerializer(data=data.as_dict)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -68,4 +66,3 @@ def revoke(request):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
     return Response()
-

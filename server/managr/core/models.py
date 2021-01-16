@@ -1,6 +1,4 @@
 import uuid
-from datetime import datetime, timedelta
-import pytz
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -8,8 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
-from django.utils import timezone
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
@@ -49,7 +46,8 @@ class WebhookAuthUser(AnonymousUser):
 
 
 class UserQuerySet(models.QuerySet):
-    # TODO: Ideally I am trying to attach user roles so that INTEGRATION can assume roles for manager pb 10/15/20
+    # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
+    #       INTEGRATION can assume roles for managr
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
@@ -114,20 +112,19 @@ class User(AbstractUser, TimeStampModel):
     email = models.EmailField(unique=True)
 
     # User role options
-    LEADERSHIP = 'LEADERSHIP'
-    FRONTLINE_MANAGER = 'FRONTLINE_MANAGER'
-    ACCOUNT_EXEC = 'ACCOUNT_EXEC'
-    ACCOUNT_MANAGER = 'ACCOUNT MANAGER' 
-    OPERATIONS = 'OPERATIONS'
-    ENABLEMENT = 'ENABLEMENT'
+    LEADERSHIP = "LEADERSHIP"
+    FRONTLINE_MANAGER = "FRONTLINE_MANAGER"
+    ACCOUNT_EXEC = "ACCOUNT_EXEC"
+    ACCOUNT_MANAGER = "ACCOUNT MANAGER"
+    OPERATIONS = "OPERATIONS"
+    ENABLEMENT = "ENABLEMENT"
     ROLE_CHOICES = [
-        (LEADERSHIP, 'Leadership', ),
-        (FRONTLINE_MANAGER, 
-        'Frontline Manager', ),
-        (ACCOUNT_EXEC, 'Account Executive', ),
-        (ACCOUNT_MANAGER, 'Account Manager', ),
-        (OPERATIONS, 'OPERATIONS', ),
-        (ENABLEMENT, 'Enablement', ),
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
     ]
 
     is_active = models.BooleanField(default=False)
@@ -140,9 +137,7 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.ACCOUNT_TYPES,
-        max_length=255,
-        default=core_consts.ACCOUNT_TYPE_REP,
+        choices=core_consts.ACCOUNT_TYPES, max_length=255, default=core_consts.ACCOUNT_TYPE_REP,
     )
     first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
@@ -176,7 +171,8 @@ class User(AbstractUser, TimeStampModel):
     @property
     def email_auth_link(self):
         """
-        This property sets the user specific url for authorizing the users email to give Nylas access
+        This property sets the user specific url for authorizing
+        the users email to give Nylas access.
         """
 
         return gen_auth_url(email=self.email)
@@ -188,26 +184,25 @@ class User(AbstractUser, TimeStampModel):
         return self.magic_token
 
     def login(self, request, serializer_type):
-        """
-        Log-in user and append authentication token to serialized response.
-        """
+        """Log in user and append authentication token to serialized response."""
         login(request, self, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, token_created = Token.objects.get_or_create(user=self)
+        auth_token, _ = Token.objects.get_or_create(user=self)
 
         serializer = serializer_type(self, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
 
-    def check_notification_enabled_setting(self, key, type):
-        setting_value = self.notification_settings.filter(
-            option__key=key, option__notification_type=type, user=self
-        ).first()
-        if setting_value:
-            return setting_value.value
-        else:
-            # if a user does not have a value then assume True which is the default
-            return True
+    # TODO 2021-01-16 William: Remove if no longer necessary.
+    # def check_notification_enabled_setting(self, key, type):
+    #     setting_value = self.notification_settings.filter(
+    #         option__key=key, option__notification_type=type, user=self
+    #     ).first()
+    #     if setting_value:
+    #         return setting_value.value
+    #     else:
+    #         # if a user does not have a value then assume True which is the default
+    #         return True
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
@@ -234,9 +229,7 @@ class EmailAuthAccount(TimeStampModel):
         help_text="sync state is managed by web_hook after it is set for the first time",
     )
     name = models.CharField(max_length=255, null=True)
-    user = models.OneToOneField(
-        "User", on_delete=models.CASCADE, related_name="email_auth_account"
-    )
+    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="email_auth_account")
 
     def __str__(self):
         return f"{self.email_address}"
@@ -263,10 +256,11 @@ class EmailAuthAccount(TimeStampModel):
             )
 
 
-""" 
+"""
 class NotificationOptionQuerySet(models.QuerySet):
 
-    ### NOTE We are using __contains here as the field type is text[] in sql __in will search equality
+    ### NOTE We are using __contains here as the field type is
+    #        text[] in sql __in will search equality
     ### this will throw a mismatch type error
     def for_user(self, user):
         if user.is_superuser:
@@ -385,22 +379,24 @@ class NotificationQuerySet(models.QuerySet):
 
 
 class Notification(TimeStampModel):
-    """ By default Notifications will only return alerts 
-        We also will allow the code to access all types of notificaitons 
+    """ By default Notifications will only return alerts
+        We also will allow the code to access all types of notifications
         SLACK, EMAIL, ALERT when checking whether or not it should create an alert
     """
 
     notify_at = models.DateTimeField(
         null=True,
-        help_text="Set a time for the notification to be executed, if this is a reminder it can be something like 5 minutes before time\
-                                        if it is an email it can be the time the email is received ",
+        help_text=(
+            "Set a time for the notification to be executed, "
+            "if this is a reminder it can be something like 5 "
+            "minutes before time if it is an email it can be "
+            "the time the email is received "
+        ),
     )
     notified_at = models.DateTimeField(
         null=True, help_text="date time when the notification was executed"
     )
-    title = models.CharField(
-        max_length=255, null=True, help_text="a title for the notification"
-    )
+    title = models.CharField(max_length=255, null=True, help_text="a title for the notification")
     notification_type = models.CharField(
         max_length=255,
         choices=core_consts.NOTIFICATION_TYPE_CHOICES,
@@ -427,4 +423,3 @@ class Notification(TimeStampModel):
 
     class Meta:
         ordering = ["-notify_at"]
-

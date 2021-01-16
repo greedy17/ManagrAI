@@ -59,18 +59,16 @@ def generate_score(opportunity, date_range_end, date_range_start):
         ):
             if hasattr(user, "slack_integration"):
                 user_slack_channel = user.slack_integration.channel
-                slack_org_access_token = (
-                    user.organization.slack_integration.access_token
-                )
-                block_set = get_block_set(
-                    "lead_score_block_set", {"ls": str(score.id)},
-                )
+                slack_org_access_token = user.organization.slack_integration.access_token
+                block_set = get_block_set("lead_score_block_set", {"ls": str(score.id)},)
                 slack_requests.send_channel_message(
                     user_slack_channel, slack_org_access_token, block_set=block_set,
                 )
 
     except Exception as e:
-        logger.warning(f"Could not generate OpportunityScore for Opportunity {opportunity.id}. ERROR: {e}")
+        logger.warning(
+            f"Could not generate OpportunityScore for Opportunity {opportunity.id}. ERROR: {e}"
+        )
 
 
 class LeadScoreGenerator:
@@ -92,8 +90,7 @@ class LeadScoreGenerator:
         # opportunity's activity logs, time-bound
         if self.__cached__logs is None:
             logs = self.opportunity.activity_logs.filter(
-                action_timestamp__gte=self.lower_bound,
-                action_timestamp__lte=self.upper_bound,
+                action_timestamp__gte=self.lower_bound, action_timestamp__lte=self.upper_bound,
             )
             self.__cached__logs = logs
         return self.__cached__logs
@@ -105,8 +102,7 @@ class LeadScoreGenerator:
             maximum = 25
             points_per = 5
             count = self.opportunity.actions.filter(
-                datetime_created__gte=self.lower_bound,
-                datetime_created__lte=self.upper_bound,
+                datetime_created__gte=self.lower_bound, datetime_created__lte=self.upper_bound,
             ).count()
             self.__cached__actions_score = min(count * points_per, maximum)
         return self.__cached__actions_score
@@ -132,8 +128,7 @@ class LeadScoreGenerator:
         if self.__cached__recent_action_score is None:
             lower_bound = self.upper_bound - timezone.timedelta(days=1)
             recent_action = self.opportunity.actions.filter(
-                datetime_created__gte=lower_bound,
-                datetime_created__lte=self.upper_bound,
+                datetime_created__gte=lower_bound, datetime_created__lte=self.upper_bound,
             ).first()
             self.__cached__recent_action_score = 5 if recent_action else 0
         return self.__cached__recent_action_score
@@ -238,9 +233,9 @@ class LeadScoreGenerator:
         if previous_forecast not in opp_consts.FORECAST_TABLE:
             return map_dict.get(new_forecast, 0)
         # FORECAST_TABLE is in order, most-weight first
-        if opp_consts.FORECAST_TABLE.index(
-            previous_forecast
-        ) < opp_consts.FORECAST_TABLE.index(new_forecast):
+        if opp_consts.FORECAST_TABLE.index(previous_forecast) < opp_consts.FORECAST_TABLE.index(
+            new_forecast
+        ):
             # the new forecast weighs less than the old forecast
             return 0
         # the new forecast weighs more than the old forecast
@@ -308,9 +303,7 @@ class LeadScoreGenerator:
     @property
     def expected_close_date_score(self):
         if self.__cached__expected_close_date_score is None:
-            self.__cached__expected_close_date_score = (
-                self._generate_expected_close_date_score()
-            )
+            self.__cached__expected_close_date_score = self._generate_expected_close_date_score()
         return self.__cached__expected_close_date_score
 
     def _generate_expected_close_date_score(self):
@@ -334,9 +327,7 @@ class LeadScoreGenerator:
         current_quarter = ((current_month - 1) // 3) + 1
         # NOTE: 'previous' regards the previous value of expected_close_date
         # so previous_month regards the month of the previous value of expected_close_date
-        previous_from_meta = latest_log.meta.get("extra").get(
-            "previous_expected_close_date"
-        )
+        previous_from_meta = latest_log.meta.get("extra").get("previous_expected_close_date")
         if previous_from_meta:
             previous_datetime = dateparse.parse_datetime(previous_from_meta)
             previous_month = previous_datetime.month
@@ -381,17 +372,9 @@ class LeadScoreGenerator:
             # scenario (3a) -- Expected closed date moved up by any days (5 pt)
             return 5
         delayed_at_all = new_datetime > previous_datetime
-        delayed_30_or_more_days = new_datetime >= (
-            previous_datetime + timezone.timedelta(days=30)
-        )
-        delayed_90_or_more_days = new_datetime >= (
-            previous_datetime + timezone.timedelta(days=30)
-        )
-        if (
-            delayed_at_all
-            and (not delayed_30_or_more_days)
-            and (not delayed_90_or_more_days)
-        ):
+        delayed_30_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        delayed_90_or_more_days = new_datetime >= (previous_datetime + timezone.timedelta(days=30))
+        if delayed_at_all and (not delayed_30_or_more_days) and (not delayed_90_or_more_days):
             # scenario (6) -- Expected closed date moved back any days (-5 pt)
             return -5
         if delayed_30_or_more_days and (not delayed_90_or_more_days):

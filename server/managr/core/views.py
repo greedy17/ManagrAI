@@ -3,7 +3,6 @@ import requests
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
@@ -24,8 +23,6 @@ from rest_framework.decorators import (
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
-from managr.organization.models import Organization
 
 from managr.core.nylas.auth import get_access_token, get_account_details
 
@@ -82,10 +79,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             raise ValidationError(
                 {
                     "non_field_errors": [
-                        (
-                            "Incorrect email and password combination. "
-                            "Please try again"
-                        )
+                        ("Incorrect email and password combination. " "Please try again")
                     ],
                 }
             )
@@ -103,6 +97,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
     """Allow admins to create new user accounts and an organization"""
+
     authentication_classes = ()
     serializer_class = UserRegistrationSerializer
     permission_classes = (permissions.AllowAny,)
@@ -116,10 +111,6 @@ class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
-
-        # TODO 2021-01-16 William: Users from the same organization should be able
-        #      to register "trials" separately, but be tied to the same org in the back
-        #      end. We will do this by looking at the domain name of the email.
 
         # Log in the user server-side and make sure the response includes their
         # token so that they don't have to log in after plugging in their email
@@ -143,7 +134,6 @@ class UserViewSet(
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
-        request_user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
@@ -177,11 +167,7 @@ class UserViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def _is_kpi_update(self, request):
-        if (
-            request.data.get("quota")
-            or request.data.get("commit")
-            or request.data.get("upside")
-        ):
+        if request.data.get("quota") or request.data.get("commit") or request.data.get("upside"):
             return True
         return False
 
@@ -197,9 +183,7 @@ class UserViewSet(
         password = request.data.get("password", None)
         pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
-            raise ValidationError(
-                {"detail": [("A magic token, id, and password are required")]}
-            )
+            raise ValidationError({"detail": [("A magic token, id, and password are required")]})
         try:
             user = User.objects.get(pk=pk)
             if (
@@ -263,8 +247,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -350,16 +333,18 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
-        """this endpoint will have to eventually be handled by a different instance
-        unlike the messages endpoint we cannot grab an id and pass it to the async
-        we can however track the delta and check the api for that delta or we can save it in the cache
-
+        """
+        This endpoint will have to eventually be handled by a different instance.
+        Unlike the messages endpoint we cannot grab an id and pass it to the async
+        we can however track the delta and check the api for that delta or we
+        can save it in the cache.
         """
         data = request.data
         deltas = data.get("deltas", [])
         # a list class wrapper around custom NylasAccountStatus class
         nylas_data = NylasAccountStatusList(deltas)
-        # calling .values on the NylasAccStatList returns a list of lists using the object keys passed
+        # calling .values on the NylasAccStatList returns a list of lists using
+        # the object keys passed
         values = [
             # details is position 0 in the first entry and 1 is resource_status
             (item[0]["account_id"], item[1])
@@ -372,9 +357,11 @@ class NylasAccountWebhook(APIView):
                 if email_account.sync_state != v[1]:
                     email_account.sync_state = v[1]
                     email_accounts.append(email_account)
-                    emit_email_sync_event(str(email_account.user.id), v[1])
+                    # 2021-01-16 William: The following function is not defined.
+                    # emit_email_sync_event(str(email_account.user.id), v[1])
                 # if the account is having problems send an email and a notification
-                # we will be removing accounts from our db and from nylas if it has been inactive for 5 days
+                # we will be removing accounts from our db and from nylas if it has
+                # been inactive for 5 days
 
         EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
 
@@ -428,11 +415,7 @@ def email_auth_token(request):
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
                 raise ValidationError(
-                    {
-                        "non_field_errors": {
-                            "code": "Code invalid or expired please try again"
-                        }
-                    }
+                    {"non_field_errors": {"code": "Code invalid or expired please try again"}}
                 )
 
     else:
@@ -468,9 +451,7 @@ def revoke_access_token(request):
                 pass
             return Response(status=status.HTTP_204_NO_CONTENT)
     else:
-        raise ValidationError(
-            {"non_form_errors": {"no_token": "user has not authorized nylas"}}
-        )
+        raise ValidationError({"non_form_errors": {"no_token": "user has not authorized nylas"}})
 
 
 @api_view(["POST"])
@@ -511,9 +492,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
@@ -524,9 +503,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if ea:
             token = ea.access_token
             sender = {"email": ea.email_address, "name": "Managr"}
-            recipient = [
-                {"email": response_data["email"], "name": response_data["first_name"]}
-            ]
+            recipient = [{"email": response_data["email"], "name": response_data["first_name"]}]
             message = {
                 "subject": "Invitation To Join",
                 "body": "Your Organization {} has invited you to join Managr, \
@@ -537,11 +514,12 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             }
             try:
                 send_new_email_legacy(token, sender, recipient, message)
-            except Exception as e:
+            except Exception:
                 """this error is most likely going to be an error on our set
                 up rather than the user_token"""
+                # TODO 2021-01-16 William: We should avoid catch-all Exception handlers and
+                #      at least log a warning here.
                 pass
         response_data["activation_link"] = user.activation_link
 
         return Response(response_data)
-

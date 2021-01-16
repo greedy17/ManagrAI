@@ -43,13 +43,11 @@ def _handle_nylas_response(response):
         return response.json()
     elif response.status_code == 401:
         raise APIException(
-            detail="401 Unauthorized Response from Nylas server",
-            code=response.status_code,
+            detail="401 Unauthorized Response from Nylas server", code=response.status_code,
         )
     elif response.status_code == 400:
         raise APIException(
-            detail="400 Bad Request response from Nylas server",
-            code=response.status_code,
+            detail="400 Bad Request response from Nylas server", code=response.status_code,
         )
     else:
         raise APIException(detail="Error from Nylas server", code=response.status_code)
@@ -261,13 +259,7 @@ def send_new_email_legacy(auth, sender, receipient, message):
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {
-            "from": sender,
-            "to": to,
-            "subject": subject,
-            "body": body,
-            "tracking": {"opens": True},
-        }
+        {"from": sender, "to": to, "subject": subject, "body": body, "tracking": {"opens": True},}
     )
 
     response = requests.post(

@@ -31,4 +31,3 @@ if settings.USE_SALESFORCE:
             "state": "SALESFORCE",
         }
     )
-

@@ -213,4 +213,3 @@ FORECAST_CHOICES = (
     (FORECAST_COMMIT, "Commit"),
     (FORECAST_CLOSED, "Closed"),
 )
-

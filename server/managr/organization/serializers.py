@@ -53,9 +53,7 @@ class AccountSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         """ Backend Setting organization by default """
         internal_data = super().to_internal_value(data)
-        internal_data.update(
-            {"organization": self.context["request"].user.organization}
-        )
+        internal_data.update({"organization": self.context["request"].user.organization})
 
         return internal_data
 

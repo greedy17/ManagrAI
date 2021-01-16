@@ -13,4 +13,3 @@ class Command(BaseCommand):
         generate_meeting_scores()
 
         self.stdout.write(self.style.SUCCESS("Successfully sent notifications"))
-

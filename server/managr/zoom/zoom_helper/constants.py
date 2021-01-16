@@ -51,7 +51,6 @@ if settings.USE_ZOOM:
     ZOOM_CLIENT_ID = settings.ZOOM_CLIENT_ID
     ZOOM_SECRET = settings.ZOOM_SECRET
 
-    APP_BASIC_TOKEN = base64.b64encode(
-        f"{ZOOM_CLIENT_ID}:{ZOOM_SECRET}".encode("ascii")
-    ).decode("utf-8")
-
+    APP_BASIC_TOKEN = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_SECRET}".encode("ascii")).decode(
+        "utf-8"
+    )

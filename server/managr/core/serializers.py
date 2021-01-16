@@ -38,19 +38,11 @@ class UserSerializer(serializers.ModelSerializer):
     """UserSerializer to update user fields, only managers with admin access and
     superusers can update email"""
 
-    organization_ref = OrganizationSerializer(
-        many=False, source="organization", read_only=True
-    )
-    accounts_ref = AccountSerializer(
-        many=True, source="organization.accounts", read_only=True
-    )
-    email_auth_account_ref = EmailAuthAccountSerializer(
-        source="email_auth_account", read_only=True
-    )
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
+    accounts_ref = AccountSerializer(many=True, source="organization.accounts", read_only=True)
+    email_auth_account_ref = EmailAuthAccountSerializer(source="email_auth_account", read_only=True)
 
-    slack_ref = UserSlackIntegrationSerializer(
-        source="slack_integration", read_only=True
-    )
+    slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
 
     class Meta:
         model = User
@@ -119,7 +111,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Pop off organization name and create an organization
-        org_name = validated_data.get('organization_name')
+        # TODO 2021-01-16 William: Users from the same organization should be able
+        #      to register "trials" separately, but be tied to the same org in the back
+        #      end. We will do this by looking at the domain name of the email.
+        org_name = validated_data.get("organization_name")
         Organization.objects.create(name=org_name)
 
         return User.objects.create_user(**validated_data)
@@ -159,9 +154,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
     Only Managers can invite users, and only to their organization
     """
 
-    organization_ref = OrganizationSerializer(
-        many=False, source="organization", read_only=True
-    )
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
 
     class Meta:
         model = User
@@ -180,7 +173,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ("organization_ref",)
 
 
-""" 
+"""
 class NotificationSelectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSelection

@@ -73,4 +73,3 @@ class LeadScoreSerializer(serializers.ModelSerializer):
 
     def get_current(self, instance):
         return instance.final_score
-

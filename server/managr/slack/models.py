@@ -35,9 +35,7 @@ class OrganizationSlackIntegration(TimeStampModel):
     team_id = models.CharField(
         max_length=255, null=False, help_text="ID of the Organization's Slack Team"
     )
-    bot_user_id = models.CharField(
-        max_length=255, null=False, help_text="ID of the Managr Bot"
-    )
+    bot_user_id = models.CharField(max_length=255, null=False, help_text="ID of the Managr Bot")
     access_token = models.CharField(
         max_length=255, null=True, blank=True, help_text="Slack API access token"
     )
