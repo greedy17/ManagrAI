@@ -42,7 +42,10 @@
 </template>
 
 <script>
+import User from '@/services/users'
+
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
+
 export default {
   name: 'Settings',
   created() {
@@ -90,7 +93,7 @@ export default {
       return this.$store.state.user.isStaff
     },
     isManager() {
-      return this.$store.state.user.type === 'MANAGER'
+      return this.$store.state.user.type === User.types.MANAGER
     },
     organization() {
       return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name

@@ -81,7 +81,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         """Create and save a regular User with the given email and password."""
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = False
+        extra_fields["is_active"] = True
         extra_fields["is_admin"] = False
         return self._create_user(email, password, **extra_fields)
 
@@ -89,7 +89,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         """ An Admin user is the one who set up the initial account and org """
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = False
+        extra_fields["is_active"] = True
         extra_fields["is_admin"] = True
         return self._create_user(email, password, **extra_fields)
 

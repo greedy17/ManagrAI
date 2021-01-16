@@ -26,6 +26,7 @@ export default class User extends Model {
   static isAdmin = new fields.BooleanField()
   static slackRef = new fields.Field()
   static zoomAccount = new fields.Field()
+  static token = new fields.Field()
 
   get emailConnected() {
     return this.emailAuthAccount && this.emailAuthAccountRef.accessToken
