@@ -6,6 +6,7 @@ if settings.USE_SALESFORCE:
 
     AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
     AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
+    REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
     CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY
     CLIENT_SECRET = settings.SALESFORCE_SECRET
     SCOPES = settings.SALESFORCE_SCOPES

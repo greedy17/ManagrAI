@@ -6,6 +6,7 @@ const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
 const TEST_DM_ENDPOINT = '/slack/test-dm/'
 const GET_OAUTH_LINK_ENDPOINT = '/slack/get-oauth-link/'
 const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
+const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -48,5 +49,12 @@ export default class SlackAPI {
       .get(TEST_DM_ENDPOINT)
       .catch(apiErrorHandler({ apiName: 'SlackAPI.testDM' }))
     return promise
+  }
+  async revoke() {
+    try {
+      await this.client.post(SLACK_REVOKE_ENDPOINT)
+    } catch {
+      apiErrorHandler({ apiName: 'SlackAPI.testDM' })
+    }
   }
 }

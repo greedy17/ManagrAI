@@ -80,6 +80,11 @@ class SalesforceAuthAccountAdapter:
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
+    def revoke(self):
+        # if a token is already expired a 400 error occurs we can ignore that
+        client.post(sf_consts.REVOKE_URI, {"token": self.access_token})
+        client.post(sf_consts.REVOKE_URI, {"token": self.refresh_token})
+
     @property
     def as_dict(self):
         return vars(self)

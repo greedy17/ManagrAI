@@ -197,3 +197,28 @@ class SlackViewSet(viewsets.GenericViewSet,):
         payload = json.loads(request.data.get("payload"))
         process_output = slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_200_OK, data=process_output)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="revoke",
+    )
+    def revoke(self, request):
+        """
+        Open webhook for the SlackAPI to send data when users
+        interact with our Slack App's interface.
+        The body of that request will contain a JSON payload parameter.
+        Will have a TYPE field that is used to handle request accordingly.
+        """
+        user = request.user
+        organization = request.user.organization
+        if user.is_admin and hasattr(organization, "slack_integration"):
+            slack_int = organization.slack_integration
+            r = slack_requests.revoke_access_token(slack_int.access_token)
+            slack_int.delete()
+        else:
+            if hasattr(user, "slack_integration"):
+                user.slack_integration.delete()
+
+        return Response(status=status.HTTP_200_OK)

@@ -59,10 +59,11 @@ class ZoomAuthAccount(TimeStampModel):
     phone_country = models.CharField(max_length=150, null=True, blank=True)
     phone_number = models.CharField(max_length=150, null=True, blank=True)
     status = models.CharField(max_length=150)
-    access_token = models.TextField()
-    refresh_token = models.TextField()
+    access_token = models.TextField(blank=True)
+    refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
+    is_revoked = models.BooleanField(default=True)
 
     objects = ZoomAuthAccountQuerySet.as_manager()
 

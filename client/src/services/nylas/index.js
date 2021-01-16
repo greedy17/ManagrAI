@@ -1,7 +1,7 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
 import { objectToCamelCase } from '@thinknimble/tn-utils'
 
-const REVOKE_TOKEN_ENDPOINT = '/users/revoke-email-auth/'
+const REVOKE_TOKEN_ENDPOINT = '/users/nylas/revoke/'
 const RETRIEVE_TOKEN_ENDPOINT = '/users/nylas/authenticate/'
 const ATTACH_FILE_ENDPOINT = '/users/attach-file/'
 const DOWNLOAD_FILE_ENDPOINT = id => `/get-file/${id}/`
@@ -43,7 +43,7 @@ export default {
         .then(res => objectToCamelCase(res.data))
         .catch(apiErrorHandler({ apiName: 'NylasAPI.retrieveToken' }))
     },
-    revokeUserToken() {
+    revoke() {
       const promise = apiClient()
         .post(REVOKE_TOKEN_ENDPOINT)
         .catch(apiErrorHandler({ apiName: 'NylasAPI.revokeToken' }))
