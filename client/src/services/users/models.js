@@ -1,12 +1,12 @@
 import Model, { fields } from '@thinknimble/tn-models'
 
 import UserAPI from './api'
+import { roles, types } from './constants'
 
 export default class User extends Model {
   static api = UserAPI.create(User)
-  static USER_TYPE_MANAGER = 'MANAGER'
-  static USER_TYPE_REP = 'REP'
-  static USER_TYPE_INTEGRATION = 'INTEGRATION'
+  static roles = roles
+  static types = types
 
   static id = new fields.CharField()
   static firstName = new fields.CharField()
@@ -36,6 +36,6 @@ export default class User extends Model {
   }
 
   get isManager() {
-    return this.type && this.type == User.USER_TYPE_MANAGER
+    return this.type && this.type == User.types.MANAGER
   }
 }

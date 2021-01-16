@@ -9,12 +9,7 @@
 
       <div class="divider"></div>
 
-      <!-- Show form-level errors -->
-      <!-- TODO: Live-validate OR validate the form on submission -->
-      <div class="errors"></div>
-      <!-- END TODO -->
-      <!-- End form-level errors -->
-
+      <input v-model="registrationForm.field.fullName.value" type="text" placeholder="Your Name" />
       <input v-model="registrationForm.field.email.value" type="text" placeholder="Your Email" />
       <input
         v-model="registrationForm.field.password.value"
@@ -26,6 +21,14 @@
         type="text"
         placeholder="Company"
       />
+
+      <div style="margin-top: 0.5rem;">
+        <TNDropdown
+          :options="User.roles.ROLE_CHOICES"
+          placeholder="Your Role"
+          @selected="onSelectRole"
+        />
+      </div>
 
       <!-- TODO: Use LoadingSpinnerButton and indicate when working -->
       <button type="submit">Submit</button>
@@ -44,47 +47,55 @@
 import User, { UserRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
+import TNDropdown from '@/components/TNDropdown'
 
 export default {
   name: 'Register',
   components: {
     GoogleButton,
+    TNDropdown,
   },
   data() {
     return {
+      User,
       submitting: false,
       registrationForm: new UserRegistrationForm(),
     }
   },
-  created() {
-    console.log('User Registration Form:', this.registrationForm)
-  },
   methods: {
+    onSelectRole(role) {
+      this.registrationForm.field.role.value = role.key
+    },
     async onSubmit() {
+      //
       this.registrationForm.validate()
-
-      console.log('Reg Form for API:', this.registrationForm.toAPI())
 
       // Do not continue if the form has errors
       if (this.registrationForm.errors.length > 0) {
+        this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
         return
       }
 
       // Continue with user registration...
       this.submitting = true
-      let result
+      let user
       try {
-        result = await User.api.register(this.registrationForm)
+        user = await User.api.register(this.registrationForm)
       } catch (error) {
         this.$Alert.alert({
           type: 'error',
           message: 'There was a problem creating your user account.',
         })
+        throw error
       } finally {
         this.submitting = false
       }
 
-      console.log('Create user result:', result)
+      // Update the user in the store to "log in" and navigate to integrations
+      this.$store.commit('UPDATE_USER', user)
+      this.$store.commit('UPDATE_USERTOKEN', user.token)
+
+      this.$router.push({ name: 'Integrations' })
     },
   },
 }
@@ -111,6 +122,14 @@ export default {
   background-color: #aaa;
   width: 100%;
   margin: 1rem;
+}
+
+.errors {
+  width: 100%;
+  padding: 1rem;
+  background-color: rgb(155, 21, 21);
+  color: white;
+  font-weight: 500;
 }
 
 h2 {

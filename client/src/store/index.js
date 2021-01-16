@@ -6,7 +6,7 @@ import Status from '@/services/statuses'
 
 Vue.use(Vuex)
 
-const STORAGE_HASH = '{storage_hash}'
+const STORAGE_HASH = '128adjfn2n'
 export const STORAGE_KEY = `managr-${STORAGE_HASH}`
 
 const state = {

@@ -46,43 +46,43 @@ import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 export default {
   name: 'Settings',
   created() {
-    let us = {
-      id: '7cfd2353-942d-4ff7-a0ff-47be5ebde745',
-      email: 'pari@thinknimble.com',
-      full_name: ' ',
-      first_name: '',
-      last_name: '',
-      organization: '45bb82fa-54bf-43cf-bc2a-153956348689',
-      organization_ref: {
-        id: '45bb82fa-54bf-43cf-bc2a-153956348689',
-        datetime_created: '2021-01-14T18:43:00.987776Z',
-        last_edited: '2021-01-14T18:43:00.987820Z',
-        name: 'ThinkNimble',
-        photo: null,
-        state: 'ACTIVE',
-        is_trial: false,
-      },
-      accounts_ref: [],
-      is_active: true,
-      is_invited: true,
-      is_staff: false,
-      is_admin: true,
-      is_superuser: false,
-      user_level: 'MANAGER',
-      email_auth_link:
-        'https://api.nylas.com/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fnylas%2Fcallback%2F&response_type=code&login_hint=pari%40thinknimble.com&state=2d81f8cf-6c8b-4fb4-a435-f39649833f4b&scopes=email.read_only%2C+email.send&client_id=2th0vp5dkvmc1lkcvf41quqkf',
-      email_auth_account: null,
-      email_auth_account_ref: null,
-      profile_photo: null,
-      slack_ref: null,
-      zoom_account: null,
-      token: '2ae721bdcbcc995b26e637694ce5f289b6008e22',
-    }
-    let tok = '2ae721bdcbcc995b26e637694ce5f289b6008e22'
-
-    this.$store.commit('UPDATE_USER', objectToCamelCase(us))
-    this.$store.commit('UPDATE_USERTOKEN', tok)
-    this.$store.dispatch('refreshCurrentUser')
+    // 2021-01-16 William: Disabled this because it was overrding the user who just registered.
+    // let us = {
+    //   id: '7cfd2353-942d-4ff7-a0ff-47be5ebde745',
+    //   email: 'pari@thinknimble.com',
+    //   full_name: ' ',
+    //   first_name: '',
+    //   last_name: '',
+    //   organization: '45bb82fa-54bf-43cf-bc2a-153956348689',
+    //   organization_ref: {
+    //     id: '45bb82fa-54bf-43cf-bc2a-153956348689',
+    //     datetime_created: '2021-01-14T18:43:00.987776Z',
+    //     last_edited: '2021-01-14T18:43:00.987820Z',
+    //     name: 'ThinkNimble',
+    //     photo: null,
+    //     state: 'ACTIVE',
+    //     is_trial: false,
+    //   },
+    //   accounts_ref: [],
+    //   is_active: true,
+    //   is_invited: true,
+    //   is_staff: false,
+    //   is_admin: true,
+    //   is_superuser: false,
+    //   user_level: 'MANAGER',
+    //   email_auth_link:
+    //     'https://api.nylas.com/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fnylas%2Fcallback%2F&response_type=code&login_hint=pari%40thinknimble.com&state=2d81f8cf-6c8b-4fb4-a435-f39649833f4b&scopes=email.read_only%2C+email.send&client_id=2th0vp5dkvmc1lkcvf41quqkf',
+    //   email_auth_account: null,
+    //   email_auth_account_ref: null,
+    //   profile_photo: null,
+    //   slack_ref: null,
+    //   zoom_account: null,
+    //   token: '2ae721bdcbcc995b26e637694ce5f289b6008e22',
+    // }
+    // let tok = '2ae721bdcbcc995b26e637694ce5f289b6008e22'
+    // this.$store.commit('UPDATE_USER', objectToCamelCase(us))
+    // this.$store.commit('UPDATE_USERTOKEN', tok)
+    // this.$store.dispatch('refreshCurrentUser')
   },
   computed: {
     isStaff() {

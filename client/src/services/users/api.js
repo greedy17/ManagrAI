@@ -82,13 +82,17 @@ export default class UserAPI {
    */
   register(registerForm) {
     const data = registerForm.toAPI()
-    return this.client.post(REGISTRATION_ENDPOINT, data).catch(
-      apiErrorHandler({
-        apiName: 'Register User',
-        enable400Alert: true,
-        enable500Alert: true,
-      }),
-    )
+    return this.client
+      .post(REGISTRATION_ENDPOINT, data)
+      .then(response => response.data)
+      .then(data => this.cls.fromAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'Register User',
+          enable400Alert: true,
+          enable500Alert: true,
+        }),
+      )
   }
 
   invite(email, type, organization) {

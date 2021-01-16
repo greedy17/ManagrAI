@@ -88,7 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    # TODO: Add organization_name
+    organization_name = serializers.CharField(required=True)
 
     class Meta:
         model = User
@@ -97,6 +97,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "password",
+            "organization_name",
         )
         extra_kwargs = {
             "first_name": {"required": True},
@@ -114,10 +115,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # TODO 2021-01-16 William: Users from the same organization should be able
         #      to register "trials" separately, but be tied to the same org in the back
         #      end. We will do this by looking at the domain name of the email.
-        org_name = validated_data.get("organization_name")
-        Organization.objects.create(name=org_name)
+        org_name = validated_data.pop("organization_name")
+        org = Organization.objects.create(name=org_name)
 
-        return User.objects.create_user(**validated_data)
+        return User.objects.create_user(organization=org, **validated_data)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):

@@ -1,19 +1,27 @@
 import Form, { FormField } from '@thinknimble/tn-forms'
+import { RequiredValidator } from '@thinknimble/tn-validators'
 
 export class UserRegistrationForm extends Form {
-  static firstName = new FormField()
-  static lastName = new FormField()
-  static email = new FormField()
-  static password = new FormField()
-  static organizationName = new FormField()
+  static fullName = new FormField({ validators: [new RequiredValidator()] })
+  static email = new FormField({ validators: [new RequiredValidator()] })
+  static password = new FormField({ validators: [new RequiredValidator()] })
+  static organizationName = new FormField({ validators: [new RequiredValidator()] })
+  static role = new FormField({ validators: [new RequiredValidator()] })
 
   toAPI() {
+    const fullName = this.field.fullName.value
+    const firstName = fullName.split(' ')[0]
+    const lastName = fullName
+      .split(' ')
+      .slice(1)
+      .join(' ')
     return {
-      first_name: this.field.firstName.value,
-      last_name: this.field.lastName.value,
+      first_name: firstName,
+      last_name: lastName,
       email: this.field.email.value,
       password: this.field.password.value,
       organization_name: this.field.organizationName.value,
+      role: this.field.role.value,
     }
   }
 }
