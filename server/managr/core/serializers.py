@@ -121,7 +121,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         org_name = validated_data.pop("organization_name")
         org = Organization.objects.create(name=org_name)
 
-        return User.objects.create_user(organization=org, **validated_data)
+        return User.objects.create_admin_user(organization=org, **validated_data)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
