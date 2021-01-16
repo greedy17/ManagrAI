@@ -2,26 +2,18 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
-
 
 from managr.organization.serializers import (
     OrganizationSerializer,
     AccountSerializer,
 )
-from managr.zoom.serializers import ZoomAuthSerializer
-from managr.organization.models import Account
+from managr.organization.models import Organization
 from managr.slack.serializers import UserSlackIntegrationSerializer
-
-from .nylas import emails as nylas_emails
-
 
 from .models import (
     User,
     EmailAuthAccount,
-    # NotificationOption,
-    # NotificationSelection,
 )
 
 
@@ -104,6 +96,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    # TODO: Add organization_name
+
     class Meta:
         model = User
         fields = (
@@ -124,6 +118,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        # Pop off organization name and create an organization
+        org_name = validated_data.get('organization_name')
+        Organization.objects.create(name=org_name)
+
         return User.objects.create_user(**validated_data)
 
 
@@ -148,7 +146,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         Log-in user and append authentication token to serialized response.
         """
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, token_created = Token.objects.get_or_create(user=user)
+        auth_token, _ = Token.objects.get_or_create(user=user)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key

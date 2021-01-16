@@ -1,28 +1,20 @@
+import logging
 import requests
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-import logging
-from django.core import serializers
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
-from django.utils import timezone
 from django.contrib.auth import authenticate, login
-from django.core.paginator import Paginator
-
-from django.db.models import F, Q, Count
 
 from rest_framework import (
-    authentication,
-    filters,
     permissions,
     generics,
     mixins,
     status,
-    views,
     viewsets,
 )
 from rest_framework.decorators import (
@@ -30,36 +22,22 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, APIException
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from managr.utils.numbers import format_phone_number, validate_phone_number
-
-from managr.opportunity import constants as opp_consts
-from managr.opportunity.models import Opportunity
-
-
-from managr.organization.models import (
-    Organization,
-    Contact,
-)
+from managr.organization.models import Organization
 
 from managr.core.nylas.auth import get_access_token, get_account_details
-from managr.core import constants as core_consts
-
 
 from .models import (
     User,
     EmailAuthAccount,
-    # NotificationOption,
-    # NotificationSelection,
 )
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
-    # NotificationOptionSerializer,
-    # NotificationSelectionSerializer,
+    UserRegistrationSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -67,9 +45,8 @@ from .nylas.emails import (
     send_new_email_legacy,
     return_file_id_from_nylas,
     download_file_from_nylas,
-    send_system_email,
 )
-from .nylas.models import NylasAccountStatus, NylasAccountStatusList
+from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
 
@@ -122,6 +99,33 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         response_data = serializer.data
         response_data["token"] = user.auth_token.key
         return Response(response_data)
+
+
+class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
+    """Allow admins to create new user accounts and an organization"""
+    authentication_classes = ()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """Validate user credentials.
+
+        Return serialized user and auth token.
+        """
+        serializer = UserRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        user = serializer.instance
+
+        # TODO 2021-01-16 William: Users from the same organization should be able
+        #      to register "trials" separately, but be tied to the same org in the back
+        #      end. We will do this by looking at the domain name of the email.
+
+        # Log in the user server-side and make sure the response includes their
+        # token so that they don't have to log in after plugging in their email
+        # and password in this step.
+        response_data = UserLoginSerializer.login(user, request)
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class UserViewSet(
@@ -181,68 +185,51 @@ class UserViewSet(
             return True
         return False
 
-    # 2020-01-13 William: I believe the activation workflow is no longer required and the
-    #                     following method can be deleted. Instead, users can register them-
-    #                     selves and their organization and invite others.
-    # @action(
-    #     methods=["post"],
-    #     permission_classes=[permissions.AllowAny],
-    #     detail=True,
-    #     url_path="activate",
-    # )
-    # def activate(self, request, *args, **kwargs):
-    #     # users should only be able to activate if they are in an invited state
-    #     magic_token = request.data.get("token", None)
-    #     password = request.data.get("password", None)
-    #     pk = kwargs.get("pk", None)
-    #     if not password or not magic_token or not pk:
-    #         raise ValidationError(
-    #             {"detail": [("A magic token, id, and password are required")]}
-    #         )
-    #     try:
-    #         user = User.objects.get(pk=pk)
-    #         if (
-    #             str(user.magic_token) == str(magic_token)
-    #             and not user.magic_token_expired
-    #             and user.is_invited
-    #         ):
-    #             user.set_password(password)
-    #             user.is_active = True
-    #             # expire old magic token and create a new one for other uses
-    #             user.regen_magic_token()
-    #             user.save()
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        detail=True,
+        url_path="activate",
+    )
+    def activate(self, request, *args, **kwargs):
+        # users should only be able to activate if they are in an invited state
+        magic_token = request.data.get("token", None)
+        password = request.data.get("password", None)
+        pk = kwargs.get("pk", None)
+        if not password or not magic_token or not pk:
+            raise ValidationError(
+                {"detail": [("A magic token, id, and password are required")]}
+            )
+        try:
+            user = User.objects.get(pk=pk)
+            if (
+                str(user.magic_token) == str(magic_token)
+                and not user.magic_token_expired
+                and user.is_invited
+            ):
+                user.set_password(password)
+                user.is_active = True
+                # expire old magic token and create a new one for other uses
+                user.regen_magic_token()
+                user.save()
 
-    #             login(request, user)
-    #             # create token if one does not exist
-    #             Token.objects.get_or_create(user=user)
+                login(request, user)
+                # create token if one does not exist
+                Token.objects.get_or_create(user=user)
 
-    #             # Build and send the response
-    #             serializer = UserSerializer(user, context={"request": request})
-    #             response_data = serializer.data
-    #             response_data["token"] = user.auth_token.key
-    #             return Response(response_data)
+                # Build and send the response
+                serializer = UserSerializer(user, context={"request": request})
+                response_data = serializer.data
+                response_data["token"] = user.auth_token.key
+                return Response(response_data)
 
-    #         else:
-    #             return Response(
-    #                 {"non_field_errors": ("Invalid Link or Token")},
-    #                 status=status.HTTP_400_BAD_REQUEST,
-    #             )
-    #     except User.DoesNotExist:
-    #         return Response(status=status.HTTP_404_NOT_FOUND)
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        """
-        Endpoint to create/register a new user.
-        """
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)  # This calls .create() on serializer
-        user = serializer.instance
-
-        # Log-in user and re-serialize response
-        response_data = UserLoginSerializer.login(user, request)
-        return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(
+                    {"non_field_errors": ("Invalid Link or Token")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(
         methods=["post"],
@@ -301,7 +288,10 @@ class GetFileView(View):
         return response
 
 
-""" class NotificationSettingsViewSet(
+"""
+TODO 2021-01-15 William: Need to determine whether we still need this viewset.
+
+class NotificationSettingsViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
 ):
     permission_classes = (permissions.IsAuthenticated,)

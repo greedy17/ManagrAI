@@ -1,6 +1,6 @@
 <template>
   <div class="register">
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="onSubmit">
       <h2>Create Account</h2>
 
       <div>
@@ -15,9 +15,17 @@
       <!-- END TODO -->
       <!-- End form-level errors -->
 
-      <input v-model="email" type="text" placeholder="Your Email" />
-      <input v-model="password" type="password" placeholder="Set a Password" />
-      <input v-model="organizationName" type="text" placeholder="Company" />
+      <input v-model="registrationForm.field.email.value" type="text" placeholder="Your Email" />
+      <input
+        v-model="registrationForm.field.password.value"
+        type="password"
+        placeholder="Set a Password"
+      />
+      <input
+        v-model="registrationForm.field.organizationName.value"
+        type="text"
+        placeholder="Company"
+      />
 
       <!-- TODO: Use LoadingSpinnerButton and indicate when working -->
       <button type="submit">Submit</button>
@@ -33,7 +41,7 @@
 </template>
 
 <script>
-import User from '@/services/users'
+import User, { UserRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
 
@@ -44,13 +52,40 @@ export default {
   },
   data() {
     return {
-      email: '',
-      password: '',
-      organizationName: '',
+      submitting: false,
+      registrationForm: new UserRegistrationForm(),
     }
   },
+  created() {
+    console.log('User Registration Form:', this.registrationForm)
+  },
   methods: {
-    onSubmit() {},
+    async onSubmit() {
+      this.registrationForm.validate()
+
+      console.log('Reg Form for API:', this.registrationForm.toAPI())
+
+      // Do not continue if the form has errors
+      if (this.registrationForm.errors.length > 0) {
+        return
+      }
+
+      // Continue with user registration...
+      this.submitting = true
+      let result
+      try {
+        result = await User.api.register(this.registrationForm)
+      } catch (error) {
+        this.$Alert.alert({
+          type: 'error',
+          message: 'There was a problem creating your user account.',
+        })
+      } finally {
+        this.submitting = false
+      }
+
+      console.log('Create user result:', result)
+    },
   },
 }
 </script>

@@ -1,7 +1,6 @@
 from rest_framework import routers
-from django.urls import include, path
+from django.urls import path
 from managr.core import views as core_views
-from managr.opportunity import views as opp_views
 from managr.organization import views as organization_views
 
 # from managr.report import views as report_views
@@ -17,6 +16,7 @@ router = routers.SimpleRouter()
 
 urlpatterns = [
     path("login/", core_views.UserLoginView.as_view()),
+    path("register/", core_views.UserRegistrationView.as_view()),
     path(
         "users/activation_link/<email>/",
         core_views.ActivationLinkView.as_view(),
@@ -108,4 +108,3 @@ router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 urlpatterns += router.urls
-

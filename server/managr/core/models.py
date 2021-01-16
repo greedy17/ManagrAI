@@ -107,10 +107,29 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
 
 
 class User(AbstractUser, TimeStampModel):
+    # Override the Django-provided username field and replace with email
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     username = None
     email = models.EmailField(unique=True)
+
+    # User role options
+    LEADERSHIP = 'LEADERSHIP'
+    FRONTLINE_MANAGER = 'FRONTLINE_MANAGER'
+    ACCOUNT_EXEC = 'ACCOUNT_EXEC'
+    ACCOUNT_MANAGER = 'ACCOUNT MANAGER' 
+    OPERATIONS = 'OPERATIONS'
+    ENABLEMENT = 'ENABLEMENT'
+    ROLE_CHOICES = [
+        (LEADERSHIP, 'Leadership', ),
+        (FRONTLINE_MANAGER, 
+        'Frontline Manager', ),
+        (ACCOUNT_EXEC, 'Account Executive', ),
+        (ACCOUNT_MANAGER, 'Account Manager', ),
+        (OPERATIONS, 'OPERATIONS', ),
+        (ENABLEMENT, 'Enablement', ),
+    ]
+
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     organization = models.ForeignKey(
