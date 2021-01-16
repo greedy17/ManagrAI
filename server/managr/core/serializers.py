@@ -65,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "user_level",
             "profile_photo",
+            "role",
             # integrations
             "email_auth_account",
             "email_auth_account_ref",
@@ -89,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     organization_name = serializers.CharField(required=True)
+    role = serializers.CharField(required=True)
 
     class Meta:
         model = User
@@ -98,6 +100,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "organization_name",
+            "role",
         )
         extra_kwargs = {
             "first_name": {"required": True},

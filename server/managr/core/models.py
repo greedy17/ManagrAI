@@ -126,6 +126,7 @@ class User(AbstractUser, TimeStampModel):
         (OPERATIONS, "OPERATIONS",),
         (ENABLEMENT, "Enablement",),
     ]
+    role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
