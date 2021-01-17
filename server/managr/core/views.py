@@ -1,28 +1,19 @@
+import logging
 import requests
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-import logging
-from django.core import serializers
-from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
-from django.utils import timezone
 from django.contrib.auth import authenticate, login
-from django.core.paginator import Paginator
-
-from django.db.models import F, Q, Count
 
 from rest_framework import (
-    authentication,
-    filters,
     permissions,
     generics,
     mixins,
     status,
-    views,
     viewsets,
 )
 from rest_framework.decorators import (
@@ -30,36 +21,20 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, APIException
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from managr.utils.numbers import format_phone_number, validate_phone_number
-
-from managr.opportunity import constants as opp_consts
-from managr.opportunity.models import Opportunity
-
-
-from managr.organization.models import (
-    Organization,
-    Contact,
-)
-
 from managr.core.nylas.auth import get_access_token, get_account_details
-from managr.core import constants as core_consts
-
 
 from .models import (
     User,
     EmailAuthAccount,
-    # NotificationOption,
-    # NotificationSelection,
 )
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
-    # NotificationOptionSerializer,
-    # NotificationSelectionSerializer,
+    UserRegistrationSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser
 
@@ -67,9 +42,8 @@ from .nylas.emails import (
     send_new_email_legacy,
     return_file_id_from_nylas,
     download_file_from_nylas,
-    send_system_email,
 )
-from .nylas.models import NylasAccountStatus, NylasAccountStatusList
+from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
 
@@ -105,10 +79,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             raise ValidationError(
                 {
                     "non_field_errors": [
-                        (
-                            "Incorrect email and password combination. "
-                            "Please try again"
-                        )
+                        ("Incorrect email and password combination. " "Please try again")
                     ],
                 }
             )
@@ -122,6 +93,30 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         response_data = serializer.data
         response_data["token"] = user.auth_token.key
         return Response(response_data)
+
+
+class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
+    """Allow admins to create new user accounts and an organization"""
+
+    authentication_classes = ()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """Validate user credentials.
+
+        Return serialized user and auth token.
+        """
+        serializer = UserRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        user = serializer.instance
+
+        # Log in the user server-side and make sure the response includes their
+        # token so that they don't have to log in after plugging in their email
+        # and password in this step.
+        response_data = UserLoginSerializer.login(user, request)
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class UserViewSet(
@@ -139,7 +134,6 @@ class UserViewSet(
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
-        request_user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
@@ -173,76 +167,53 @@ class UserViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def _is_kpi_update(self, request):
-        if (
-            request.data.get("quota")
-            or request.data.get("commit")
-            or request.data.get("upside")
-        ):
+        if request.data.get("quota") or request.data.get("commit") or request.data.get("upside"):
             return True
         return False
 
-    # 2020-01-13 William: I believe the activation workflow is no longer required and the
-    #                     following method can be deleted. Instead, users can register them-
-    #                     selves and their organization and invite others.
-    # @action(
-    #     methods=["post"],
-    #     permission_classes=[permissions.AllowAny],
-    #     detail=True,
-    #     url_path="activate",
-    # )
-    # def activate(self, request, *args, **kwargs):
-    #     # users should only be able to activate if they are in an invited state
-    #     magic_token = request.data.get("token", None)
-    #     password = request.data.get("password", None)
-    #     pk = kwargs.get("pk", None)
-    #     if not password or not magic_token or not pk:
-    #         raise ValidationError(
-    #             {"detail": [("A magic token, id, and password are required")]}
-    #         )
-    #     try:
-    #         user = User.objects.get(pk=pk)
-    #         if (
-    #             str(user.magic_token) == str(magic_token)
-    #             and not user.magic_token_expired
-    #             and user.is_invited
-    #         ):
-    #             user.set_password(password)
-    #             user.is_active = True
-    #             # expire old magic token and create a new one for other uses
-    #             user.regen_magic_token()
-    #             user.save()
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        detail=True,
+        url_path="activate",
+    )
+    def activate(self, request, *args, **kwargs):
+        # users should only be able to activate if they are in an invited state
+        magic_token = request.data.get("token", None)
+        password = request.data.get("password", None)
+        pk = kwargs.get("pk", None)
+        if not password or not magic_token or not pk:
+            raise ValidationError({"detail": [("A magic token, id, and password are required")]})
+        try:
+            user = User.objects.get(pk=pk)
+            if (
+                str(user.magic_token) == str(magic_token)
+                and not user.magic_token_expired
+                and user.is_invited
+            ):
+                user.set_password(password)
+                user.is_active = True
+                # expire old magic token and create a new one for other uses
+                user.regen_magic_token()
+                user.save()
 
-    #             login(request, user)
-    #             # create token if one does not exist
-    #             Token.objects.get_or_create(user=user)
+                login(request, user)
+                # create token if one does not exist
+                Token.objects.get_or_create(user=user)
 
-    #             # Build and send the response
-    #             serializer = UserSerializer(user, context={"request": request})
-    #             response_data = serializer.data
-    #             response_data["token"] = user.auth_token.key
-    #             return Response(response_data)
+                # Build and send the response
+                serializer = UserSerializer(user, context={"request": request})
+                response_data = serializer.data
+                response_data["token"] = user.auth_token.key
+                return Response(response_data)
 
-    #         else:
-    #             return Response(
-    #                 {"non_field_errors": ("Invalid Link or Token")},
-    #                 status=status.HTTP_400_BAD_REQUEST,
-    #             )
-    #     except User.DoesNotExist:
-    #         return Response(status=status.HTTP_404_NOT_FOUND)
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        """
-        Endpoint to create/register a new user.
-        """
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)  # This calls .create() on serializer
-        user = serializer.instance
-
-        # Log-in user and re-serialize response
-        response_data = UserLoginSerializer.login(user, request)
-        return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(
+                    {"non_field_errors": ("Invalid Link or Token")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(
         methods=["post"],
@@ -276,8 +247,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -301,7 +271,10 @@ class GetFileView(View):
         return response
 
 
-""" class NotificationSettingsViewSet(
+"""
+TODO 2021-01-15 William: Need to determine whether we still need this viewset.
+
+class NotificationSettingsViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
 ):
     permission_classes = (permissions.IsAuthenticated,)
@@ -360,16 +333,18 @@ class NylasAccountWebhook(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
-        """this endpoint will have to eventually be handled by a different instance
-        unlike the messages endpoint we cannot grab an id and pass it to the async
-        we can however track the delta and check the api for that delta or we can save it in the cache
-
+        """
+        This endpoint will have to eventually be handled by a different instance.
+        Unlike the messages endpoint we cannot grab an id and pass it to the async
+        we can however track the delta and check the api for that delta or we
+        can save it in the cache.
         """
         data = request.data
         deltas = data.get("deltas", [])
         # a list class wrapper around custom NylasAccountStatus class
         nylas_data = NylasAccountStatusList(deltas)
-        # calling .values on the NylasAccStatList returns a list of lists using the object keys passed
+        # calling .values on the NylasAccStatList returns a list of lists using
+        # the object keys passed
         values = [
             # details is position 0 in the first entry and 1 is resource_status
             (item[0]["account_id"], item[1])
@@ -382,9 +357,11 @@ class NylasAccountWebhook(APIView):
                 if email_account.sync_state != v[1]:
                     email_account.sync_state = v[1]
                     email_accounts.append(email_account)
-                    emit_email_sync_event(str(email_account.user.id), v[1])
+                    # 2021-01-16 William: The following function is not defined.
+                    # emit_email_sync_event(str(email_account.user.id), v[1])
                 # if the account is having problems send an email and a notification
-                # we will be removing accounts from our db and from nylas if it has been inactive for 5 days
+                # we will be removing accounts from our db and from nylas if it has
+                # been inactive for 5 days
 
         EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
 
@@ -438,11 +415,7 @@ def email_auth_token(request):
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
                 raise ValidationError(
-                    {
-                        "non_field_errors": {
-                            "code": "Code invalid or expired please try again"
-                        }
-                    }
+                    {"non_field_errors": {"code": "Code invalid or expired please try again"}}
                 )
 
     else:
@@ -478,9 +451,7 @@ def revoke_access_token(request):
                 pass
             return Response(status=status.HTTP_204_NO_CONTENT)
     else:
-        raise ValidationError(
-            {"non_form_errors": {"no_token": "user has not authorized nylas"}}
-        )
+        raise ValidationError({"non_form_errors": {"no_token": "user has not authorized nylas"}})
 
 
 @api_view(["POST"])
@@ -521,9 +492,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
@@ -534,9 +503,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if ea:
             token = ea.access_token
             sender = {"email": ea.email_address, "name": "Managr"}
-            recipient = [
-                {"email": response_data["email"], "name": response_data["first_name"]}
-            ]
+            recipient = [{"email": response_data["email"], "name": response_data["first_name"]}]
             message = {
                 "subject": "Invitation To Join",
                 "body": "Your Organization {} has invited you to join Managr, \
@@ -547,11 +514,12 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             }
             try:
                 send_new_email_legacy(token, sender, recipient, message)
-            except Exception as e:
+            except Exception:
                 """this error is most likely going to be an error on our set
                 up rather than the user_token"""
+                # TODO 2021-01-16 William: We should avoid catch-all Exception handlers and
+                #      at least log a warning here.
                 pass
         response_data["activation_link"] = user.activation_link
 
         return Response(response_data)
-

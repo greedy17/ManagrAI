@@ -29,10 +29,7 @@ class OpportunityQuerySet(models.QuerySet):
 
     def open_leads(self):
         return self.exclude(
-            status__title__in=[
-                opp_consts.LEAD_STATUS_CLOSED,
-                opp_consts.LEAD_STATUS_LOST,
-            ],
+            status__title__in=[opp_consts.LEAD_STATUS_CLOSED, opp_consts.LEAD_STATUS_LOST,],
             status__type=org_consts.STAGE_TYPE_PUBLIC,
         )
 
@@ -63,31 +60,19 @@ class Opportunity(TimeStampModel):
         "even though Lead has-many LeadScores (see OpportunityScore.lead).",
     )
     amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is editable",
+        max_digits=13, decimal_places=2, default=0.00, help_text="This field is editable",
     )
-    forecast_category = models.CharField(
-        max_length=255, choices=opp_consts.FORECAST_CHOICES
-    )
+    forecast_category = models.CharField(max_length=255, choices=opp_consts.FORECAST_CHOICES)
 
     expected_close_date = models.DateTimeField(blank=True)
     primary_description = models.TextField(blank=True)
     secondary_description = models.TextField(blank=True)
     rating = models.IntegerField(choices=opp_consts.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
-        "organization.Account",
-        related_name="leads",
-        on_delete=models.CASCADE,
-        blank=True,
+        "organization.Account", related_name="leads", on_delete=models.CASCADE, blank=True,
     )
     created_by = models.ForeignKey(
-        "core.User",
-        related_name="created_leads",
-        blank=True,
-        on_delete=models.SET_NULL,
-        null=True,
+        "core.User", related_name="created_leads", blank=True, on_delete=models.SET_NULL, null=True,
     )
     linked_contacts = models.ManyToManyField(
         "organization.Contact", related_name="leads", blank=True
@@ -111,11 +96,7 @@ class Opportunity(TimeStampModel):
         null=True,
     )
     last_updated_by = models.ForeignKey(
-        "core.User",
-        related_name="updated_leads",
-        blank=True,
-        on_delete=models.SET_NULL,
-        null=True,
+        "core.User", related_name="updated_leads", blank=True, on_delete=models.SET_NULL, null=True,
     )
 
     type = models.CharField(
@@ -175,11 +156,7 @@ class Opportunity(TimeStampModel):
             )
         if float(self.amount) < 0:
             raise ValidationError(
-                {
-                    "non_form_errors": {
-                        "lead_amount": "Amount must be a positive integer or float"
-                    }
-                }
+                {"non_form_errors": {"lead_amount": "Amount must be a positive integer or float"}}
             )
 
         return super(Opportunity, self).save(*args, **kwargs)
@@ -207,9 +184,7 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        "organization.Organization",
-        on_delete=models.CASCADE,
-        related_name="action_choices",
+        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
     )
 
     objects = ActionChoiceQuerySet.as_manager()
@@ -264,12 +239,8 @@ class OpportunityScore(TimeStampModel):
     date_range_end = models.DateTimeField()
     date_range_start = models.DateTimeField()
 
-    opportunity = models.ForeignKey(
-        "Opportunity", related_name="scores", on_delete=models.CASCADE,
-    )
-    previous_score = models.ForeignKey(
-        "OpportunityScore", on_delete=models.CASCADE, blank=True
-    )
+    opportunity = models.ForeignKey("Opportunity", related_name="scores", on_delete=models.CASCADE,)
+    previous_score = models.ForeignKey("OpportunityScore", on_delete=models.CASCADE, blank=True)
 
     objects = OpportunityScoreQuerySet.as_manager()
 
@@ -285,22 +256,16 @@ class OpportunityScore(TimeStampModel):
             raise ValidationError("OpportunityScore.recent_action_score should be 0-5")
         # validate incoming_messages_score, 0-20
         if self.incoming_messages_score < 0 or self.incoming_messages_score > 20:
-            raise ValidationError(
-                "OpportunityScore.incoming_messages_score should be 0-20"
-            )
+            raise ValidationError("OpportunityScore.incoming_messages_score should be 0-20")
         # validate days_in_stage_score, 0-20
         if self.days_in_stage_score < 0 or self.days_in_stage_score > 20:
             raise ValidationError("OpportunityScore.days_in_stage_score should be 0-20")
         # validate forecast_table_score, 0-20
         if self.forecast_table_score < 0 or self.forecast_table_score > 20:
-            raise ValidationError(
-                "OpportunityScore.forecast_table_score should be 0-20"
-            )
+            raise ValidationError("OpportunityScore.forecast_table_score should be 0-20")
         # validate expected_close_date_score, -15-15
         if self.expected_close_date_score < -15 or self.expected_close_date_score > 15:
-            raise ValidationError(
-                "OpportunityScore.expected_close_date_score should be -15-15"
-            )
+            raise ValidationError("OpportunityScore.expected_close_date_score should be -15-15")
         super().clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -309,4 +274,3 @@ class OpportunityScore(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
-

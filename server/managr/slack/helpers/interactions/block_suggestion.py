@@ -16,9 +16,7 @@ def process_get_organization_stages(payload, context):
     return {
         "options": [
             s.as_slack_option
-            for s in Stage.objects.filter(
-                Q(type="PUBLIC") | Q(organization=organization)
-            )
+            for s in Stage.objects.filter(Q(type="PUBLIC") | Q(organization=organization))
         ],
     }
 
@@ -34,9 +32,7 @@ def process_get_organization_action_choices(payload, context):
 @processor()
 def process_get_lead_forecasts(payload, context):
     return {
-        "options": [
-            block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES
-        ],
+        "options": [block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES],
     }
 
 
@@ -45,9 +41,7 @@ def process_get_user_leads(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     return {
-        "options": [
-            l.as_slack_option for l in user.claimed_leads.filter(title__icontains=value)
-        ],
+        "options": [l.as_slack_option for l in user.claimed_leads.filter(title__icontains=value)],
     }
 
 

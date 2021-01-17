@@ -7,9 +7,7 @@
 # sync_error: An account has a sync error and is no longer syncing
 class NylasAccountStatus:
     def __init__(self, object):
-        self.date_received = object[
-            "date"
-        ]  # date received the webhook it comes as epoch
+        self.date_received = object["date"]  # date received the webhook it comes as epoch
         self.resource, self.resource_status = object["type"].split(".")
         self.details = object[
             "object_data"
@@ -17,7 +15,9 @@ class NylasAccountStatus:
 
     def __str__(self):
 
-        return f"{self.resource} with {self.details['account_id']} is currently {self.resource_status}"
+        return (
+            f"{self.resource} with {self.details['account_id']} is currently {self.resource_status}"
+        )
 
     def __dict__(self):
         return {
@@ -58,4 +58,3 @@ class NylasAccountStatusList:
                     current.append(val)
                 collected.append(current)
         return collected
-

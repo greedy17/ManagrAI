@@ -16,5 +16,3 @@ class LeadFactory(DjangoModelFactory):
 
     class Meta:
         model = Opportunity
-
-

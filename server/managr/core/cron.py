@@ -29,12 +29,8 @@ NOTIFICATION_TITLE_INACTIVE = "Opportunity Inactive"
 
 
 NOTIFICATION_TITLE_LAPSED_1 = "Opportunity expected close date lapsed by at least 1 day"
-NOTIFICATION_TITLE_LAPSED_14 = (
-    "Opportunity expected close date lapsed by at least 14 days"
-)
-NOTIFICATION_TITLE_LAPSED_30 = (
-    "Opportunity expected close date lapsed by at least 30 days"
-)
+NOTIFICATION_TITLE_LAPSED_14 = "Opportunity expected close date lapsed by at least 14 days"
+NOTIFICATION_TITLE_LAPSED_30 = "Opportunity expected close date lapsed by at least 30 days"
 
 
 logger = logging.getLogger("managr")
@@ -96,17 +92,11 @@ def _create_notification(
 
 def _generate_notification_key_lapsed(num):
     if num == 1:
-        return (
-            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
-        )
+        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
     if num == 14:
-        return (
-            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_14_DAYS
-        )
+        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_14_DAYS
     if num == 30:
-        return (
-            core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_30_DAYS
-        )
+        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_30_DAYS
 
     # its not ideal that we are checking against a string, but since these are loaded from the fixture
     # we can assume they will be the same
@@ -141,7 +131,7 @@ def revoke_extra_access_tokens():
 @kronos.register("* * * * *")
 def create_notifications():
     """ Poll the reminders endpoint and create a notification if the reminder is 5 mins away """
-    
+
     """     now = timezone.now()
         remind_time = now + timezone.timedelta(minutes=5)
         ns = Notification.objects.filter(notification_type="REMINDER").values_list(
@@ -236,6 +226,7 @@ def create_notifications():
     """
     return
 
+
 @kronos.register("0 0 * * *")
 def create_lead_notifications():
 
@@ -278,9 +269,7 @@ def create_lead_notifications():
                     core_consts.NOTIFICATION_TYPE_ALERT,
                 ):
                     # check notifications for one first
-                    latest_activity_str = _convert_to_user_friendly_date(
-                        latest_activity
-                    )
+                    latest_activity_str = _convert_to_user_friendly_date(latest_activity)
                     title = "Inactive 90+ Days"
                     content = f"Your claimed opportunity {opportunity.title} has had no activity since {latest_activity_str}"
                     if not _has_alert(
@@ -309,9 +298,7 @@ def create_lead_notifications():
                         lead_consts.NOTIFICATION_TYPE_OPPORTUNITY_INACTIVE,
                         str(opportunity.id),
                     ):
-                        latest_activity_str = _convert_to_user_friendly_date(
-                            latest_activity
-                        )
+                        latest_activity_str = _convert_to_user_friendly_date(latest_activity)
                         # create notification of that class in notifications
 
                         # when checking slack notification settings, if the user has opted to
@@ -339,9 +326,7 @@ def create_lead_notifications():
                                 },
                             )
                             slack_requests.send_channel_message(
-                                user_slack_channel,
-                                slack_org_access_token,
-                                block_set=block_set,
+                                user_slack_channel, slack_org_access_token, block_set=block_set,
                             )
 
                             _create_notification(
@@ -368,9 +353,7 @@ def create_lead_notifications():
                         notification_late_for_days
                     )
 
-                    expected_close_date_str = _convert_to_user_friendly_date(
-                        expected_close_date
-                    )
+                    expected_close_date_str = _convert_to_user_friendly_date(expected_close_date)
                     if user.check_notification_enabled_setting(
                         _generate_notification_key_lapsed(notification_late_for_days),
                         core_consts.NOTIFICATION_TYPE_ALERT,
@@ -386,9 +369,7 @@ def create_lead_notifications():
 
                             # create alert
 
-                            title = (
-                                f"Lapsed Close Date {notification_late_for_days} day(s)"
-                            )
+                            title = f"Lapsed Close Date {notification_late_for_days} day(s)"
                             content = f"This opportunity was expected to close on {expected_close_date_str}, you are now {is_lapsed} day(s) over"
                             _create_notification(
                                 title, content, notification_type_str, opportunity, user
@@ -427,9 +408,7 @@ def create_lead_notifications():
                                     },
                                 )
                                 slack_requests.send_channel_message(
-                                    user_slack_channel,
-                                    slack_org_access_token,
-                                    block_set=block_set,
+                                    user_slack_channel, slack_org_access_token, block_set=block_set,
                                 )
 
                                 _create_notification(
@@ -506,9 +485,7 @@ def create_lead_notifications():
                                     },
                                 )
                                 slack_requests.send_channel_message(
-                                    user_slack_channel,
-                                    slack_org_access_token,
-                                    block_set=block_set,
+                                    user_slack_channel, slack_org_access_token, block_set=block_set,
                                 )
 
                                 _create_notification(
@@ -553,11 +530,7 @@ def generate_meeting_scores():
     three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
     meetings = ZoomMeeting.objects.filter(
         Q(meeting_score__isnull=True, is_closed=True, scoring_in_progress=False)
-        | Q(
-            datetime_created__lte=three_hours_ago,
-            is_closed=False,
-            scoring_in_progress=False,
-        )
+        | Q(datetime_created__lte=three_hours_ago, is_closed=False, scoring_in_progress=False,)
     )
     for meeting in meetings:
         # set scoring in progress in case we run this job multiple times
@@ -590,8 +563,5 @@ def generate_meeting_scores():
                     slack_requests.send_channel_message(
                         user_slack_channel,
                         slack_org_access_token,
-                        block_set=get_block_set(
-                            "meeting_review_score", {"m": str(meeting.id)}
-                        ),
+                        block_set=get_block_set("meeting_review_score", {"m": str(meeting.id)}),
                     )
-

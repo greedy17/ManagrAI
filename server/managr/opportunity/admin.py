@@ -8,4 +8,3 @@ from .models import Opportunity
 
 
 admin.site.register(Opportunity)
-

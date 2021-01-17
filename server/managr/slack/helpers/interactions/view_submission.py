@@ -15,13 +15,7 @@ from managr.zoom.background import emit_save_meeting_review_data
 
 
 @processor(
-    required_context=[
-        "o",
-        "l",
-        "m",
-        "original_message_channel",
-        "original_message_timestamp",
-    ]
+    required_context=["o", "l", "m", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_data(payload, context):
     # get context
@@ -50,9 +44,7 @@ def process_zoom_meeting_data(payload, context):
         }
         return data
 
-    a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],
-    )
+    a_id = action_with_params(slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],)
     stage = stage_state[a_id]["selected_option"]
     if stage:
         stage = stage["value"]
@@ -108,22 +100,14 @@ def process_zoom_meeting_data(payload, context):
 
 
 @processor(
-    required_context=[
-        "u",
-        "l",
-        "o",
-        "original_message_channel",
-        "original_message_timestamp",
-    ]
+    required_context=["u", "l", "o", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_different_opportunity_submit(payload, context):
     state = payload["view"]["state"]["values"]
     new_opportunity_state = state["new_opportunity"]
 
     user_id_param = "u=" + context["u"]
-    a_id = action_with_params(
-        slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],
-    )
+    a_id = action_with_params(slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],)
 
     new_opportunity = new_opportunity_state[a_id]["selected_option"]
 

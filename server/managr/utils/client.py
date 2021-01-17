@@ -48,12 +48,8 @@ class HttpClient:
         # retries default set to 10 but disabled because default backoff is set to 0
         self.retry_total = kwargs.get("retry_total", 3)
         self.backoff_factor = kwargs.get("backoff_factor", 1)
-        self.status_forcelist = kwargs.get(
-            "status_forcelist", [429, 500, 502, 503, 504]
-        )
-        self.method_whitelist = kwargs.get(
-            "method_whitelist", ["HEAD", "GET", "OPTIONS"]
-        )
+        self.status_forcelist = kwargs.get("status_forcelist", [429, 500, 502, 503, 504])
+        self.method_whitelist = kwargs.get("method_whitelist", ["HEAD", "GET", "OPTIONS"])
         self.timeout = kwargs.get("timeout", None)
 
     @property

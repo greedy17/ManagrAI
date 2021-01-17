@@ -52,13 +52,9 @@ class Organization(TimeStampModel):
     """
 
     name = models.CharField(max_length=255, blank=True)
-    photo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, blank=True
-    )
+    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     state = models.CharField(
-        max_length=255,
-        choices=org_consts.STATE_CHOCIES,
-        default=org_consts.STATE_ACTIVE,
+        max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
     objects = OrganizationQuerySet.as_manager()
@@ -114,9 +110,7 @@ class Account(TimeStampModel, IntegrationModel):
     organization = models.ForeignKey(
         "Organization", related_name="accounts", on_delete=models.CASCADE,
     )
-    logo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, blank=True
-    )
+    logo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     parent = models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
@@ -159,11 +153,7 @@ class Contact(TimeStampModel, IntegrationModel):
     phone_number_1 = models.CharField(max_length=255)
     phone_number_2 = models.CharField(max_length=255, blank=True)
     account = models.ForeignKey(
-        "Account",
-        related_name="contacts",
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        default="",
+        "Account", related_name="contacts", blank=True, on_delete=models.SET_DEFAULT, default="",
     )
     organization = models.ForeignKey(
         "Organization", related_name="contacts", on_delete=models.CASCADE,
@@ -206,9 +196,7 @@ class Contact(TimeStampModel, IntegrationModel):
         )
         if contact:
             raise ValidationError(
-                detail={
-                    "contact_exists": "A contact in the same org and account already exist"
-                }
+                detail={"contact_exists": "A contact in the same org and account already exist"}
             )
 
         return super(Contact, self).save(*args, **kwargs)
@@ -231,9 +219,7 @@ class Stage(TimeStampModel, IntegrationModel):
 
     label = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
-    color = models.CharField(
-        max_length=255, default="#9B9B9B", help_text="hex code for color"
-    )
+    color = models.CharField(max_length=255, default="#9B9B9B", help_text="hex code for color")
 
     organization = models.ForeignKey(
         "Organization", related_name="stages", on_delete=models.CASCADE,
@@ -256,4 +242,3 @@ class Stage(TimeStampModel, IntegrationModel):
 
     def save(self, *args, **kwargs):
         return super(Stage, self).save(*args, **kwargs)
-

@@ -64,14 +64,11 @@ export default {
     },
 
     routeToSettings() {
-      this.$router.push({ name: 'EmailIntegration' })
-      this.toggleUserMenu()
+      this.$router.push({ name: 'Integrations' })
     },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
-      this.$store.commit('CLEAR_POLLING_DATA')
-      this.toggleUserMenu()
     },
   },
   watch: {},

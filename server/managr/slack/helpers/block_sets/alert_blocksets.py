@@ -21,10 +21,7 @@ def reminder_block_set(context):
     if reminder:
         notify_at = reminder.datetime_for.strftime("%m/%d/%Y %I:%M %p")
         return [
-            {
-                "type": "header",
-                "text": {"type": "plain_text", "text": ":calendar:  Reminder"},
-            },
+            {"type": "header", "text": {"type": "plain_text", "text": ":calendar:  Reminder"},},
             {"type": "divider"},
             {
                 "type": "section",
@@ -60,10 +57,7 @@ def opp_inactive_block_set(context):
     message = context.get("m")
     if lead and user:
         return [
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f" :bangbang:  *{title}*",},
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": f" :bangbang:  *{title}*",},},
             {"type": "divider"},
             {
                 "type": "section",
@@ -104,9 +98,7 @@ def meeting_review_score(context):
     meeting_param = "m=" + context["m"]
     meeting_type = meeting.meeting_review.meeting_type
     action_choice = (
-        user.organization.action_choices.filter(id=meeting_type).first()
-        if meeting_type
-        else "N/A"
+        user.organization.action_choices.filter(id=meeting_type).first() if meeting_type else "N/A"
     )
     if meeting:
         return [
@@ -122,13 +114,9 @@ def meeting_review_score(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "View Meeting Score Summary",
-                        },
+                        "text": {"type": "plain_text", "text": "View Meeting Score Summary",},
                         "action_id": action_with_params(
-                            slack_const.SHOW_MEETING_SCORE_COMPONENTS,
-                            params=[meeting_param],
+                            slack_const.SHOW_MEETING_SCORE_COMPONENTS, params=[meeting_param],
                         ),
                     },
                 ],
@@ -141,9 +129,7 @@ def lead_score_block_set(context):
     # Bruno created decorator required context l= lead, u= user m=message
     # slack mentions format = <@slack_id>
 
-    lead_score = (
-        LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
-    )
+    lead_score = LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
     lead = lead_score.lead
     user = lead.claimed_by
     lead_score_param = "ls=" + context["ls"]
@@ -161,13 +147,9 @@ def lead_score_block_set(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "View Scoring Components",
-                        },
+                        "text": {"type": "plain_text", "text": "View Scoring Components",},
                         "action_id": action_with_params(
-                            slack_const.SHOW_LEAD_SCORE_COMPONENTS,
-                            params=[lead_score_param],
+                            slack_const.SHOW_LEAD_SCORE_COMPONENTS, params=[lead_score_param],
                         ),
                     },
                 ],
@@ -189,9 +171,7 @@ def opp_closed_report_generated(context):
     if primary_contact:
         first_name = primary_contact.get("first_name", None)
         last_name = primary_contact.get("last_name", None)
-        worked_with_text = (
-            f"{user.full_name} Primarily worked with {first_name} {last_name}"
-        )
+        worked_with_text = f"{user.full_name} Primarily worked with {first_name} {last_name}"
 
     if lead and user:
         return [
@@ -203,15 +183,9 @@ def opp_closed_report_generated(context):
                 },
             },
             {"type": "divider"},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"<@{user_slack}>"},
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": f"<@{user_slack}>"},},
             {"type": "section", "text": {"type": "mrkdwn", "text": worked_with_text,},},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": "see the full report below"},
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": "see the full report below"},},
             {
                 "type": "actions",
                 "elements": [
@@ -311,4 +285,3 @@ def lead_score_description_block_set(context):
     }
 
     return obj
-

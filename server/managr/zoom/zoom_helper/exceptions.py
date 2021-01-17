@@ -30,12 +30,5 @@ class ZoomAPIException:
             raise Zoom500Error()
         else:
             raise ValidationError(
-                {
-                    "detail": {
-                        "key": self.code,
-                        "message": self.message,
-                        "field": self.param,
-                    }
-                }
+                {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
             )
-

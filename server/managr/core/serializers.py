@@ -2,26 +2,18 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
-
 
 from managr.organization.serializers import (
     OrganizationSerializer,
     AccountSerializer,
 )
-from managr.zoom.serializers import ZoomAuthSerializer
-from managr.organization.models import Account
+from managr.organization.models import Organization
 from managr.slack.serializers import UserSlackIntegrationSerializer
-
-from .nylas import emails as nylas_emails
-
 
 from .models import (
     User,
     EmailAuthAccount,
-    # NotificationOption,
-    # NotificationSelection,
 )
 
 
@@ -46,19 +38,11 @@ class UserSerializer(serializers.ModelSerializer):
     """UserSerializer to update user fields, only managers with admin access and
     superusers can update email"""
 
-    organization_ref = OrganizationSerializer(
-        many=False, source="organization", read_only=True
-    )
-    accounts_ref = AccountSerializer(
-        many=True, source="organization.accounts", read_only=True
-    )
-    email_auth_account_ref = EmailAuthAccountSerializer(
-        source="email_auth_account", read_only=True
-    )
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
+    accounts_ref = AccountSerializer(many=True, source="organization.accounts", read_only=True)
+    email_auth_account_ref = EmailAuthAccountSerializer(source="email_auth_account", read_only=True)
 
-    slack_ref = UserSlackIntegrationSerializer(
-        source="slack_integration", read_only=True
-    )
+    slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
 
     class Meta:
         model = User
@@ -81,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "user_level",
             "profile_photo",
+            "role",
             # integrations
             "email_auth_account",
             "email_auth_account_ref",
@@ -104,6 +89,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(required=True)
+    role = serializers.CharField(required=True)
+
     class Meta:
         model = User
         fields = (
@@ -111,6 +99,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "password",
+            "organization_name",
+            "role",
         )
         extra_kwargs = {
             "first_name": {"required": True},
@@ -124,7 +114,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        # Pop off organization name and create an organization
+        # TODO 2021-01-16 William: Users from the same organization should be able
+        #      to register "trials" separately, but be tied to the same org in the back
+        #      end. We will do this by looking at the domain name of the email.
+        org_name = validated_data.pop("organization_name")
+        org = Organization.objects.create(name=org_name)
+
+        return User.objects.create_admin_user(organization=org, **validated_data)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -148,7 +145,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         Log-in user and append authentication token to serialized response.
         """
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, token_created = Token.objects.get_or_create(user=user)
+        auth_token, _ = Token.objects.get_or_create(user=user)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key
@@ -161,9 +158,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
     Only Managers can invite users, and only to their organization
     """
 
-    organization_ref = OrganizationSerializer(
-        many=False, source="organization", read_only=True
-    )
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
 
     class Meta:
         model = User
@@ -182,7 +177,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ("organization_ref",)
 
 
-""" 
+"""
 class NotificationSelectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSelection

@@ -1,6 +1,6 @@
 <template>
   <div class="register">
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="onSubmit">
       <h2>Create Account</h2>
 
       <div>
@@ -9,15 +9,26 @@
 
       <div class="divider"></div>
 
-      <!-- Show form-level errors -->
-      <!-- TODO: Live-validate OR validate the form on submission -->
-      <div class="errors"></div>
-      <!-- END TODO -->
-      <!-- End form-level errors -->
+      <input v-model="registrationForm.field.fullName.value" type="text" placeholder="Your Name" />
+      <input v-model="registrationForm.field.email.value" type="text" placeholder="Your Email" />
+      <input
+        v-model="registrationForm.field.password.value"
+        type="password"
+        placeholder="Set a Password"
+      />
+      <input
+        v-model="registrationForm.field.organizationName.value"
+        type="text"
+        placeholder="Company"
+      />
 
-      <input v-model="email" type="text" placeholder="Your Email" />
-      <input v-model="password" type="password" placeholder="Set a Password" />
-      <input v-model="organizationName" type="text" placeholder="Company" />
+      <div style="margin-top: 0.5rem;">
+        <TNDropdown
+          :options="User.roles.ROLE_CHOICES"
+          placeholder="Your Role"
+          @selected="onSelectRole"
+        />
+      </div>
 
       <!-- TODO: Use LoadingSpinnerButton and indicate when working -->
       <button type="submit">Submit</button>
@@ -33,24 +44,59 @@
 </template>
 
 <script>
-import User from '@/services/users'
+import User, { UserRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
+import TNDropdown from '@/components/TNDropdown'
 
 export default {
   name: 'Register',
   components: {
     GoogleButton,
+    TNDropdown,
   },
   data() {
     return {
-      email: '',
-      password: '',
-      organizationName: '',
+      User,
+      submitting: false,
+      registrationForm: new UserRegistrationForm(),
     }
   },
   methods: {
-    onSubmit() {},
+    onSelectRole(role) {
+      this.registrationForm.field.role.value = role.key
+    },
+    async onSubmit() {
+      //
+      this.registrationForm.validate()
+
+      // Do not continue if the form has errors
+      if (this.registrationForm.errors.length > 0) {
+        this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
+        return
+      }
+
+      // Continue with user registration...
+      this.submitting = true
+      let user
+      try {
+        user = await User.api.register(this.registrationForm)
+      } catch (error) {
+        this.$Alert.alert({
+          type: 'error',
+          message: 'There was a problem creating your user account.',
+        })
+        throw error
+      } finally {
+        this.submitting = false
+      }
+
+      // Update the user in the store to "log in" and navigate to integrations
+      this.$store.commit('UPDATE_USER', user)
+      this.$store.commit('UPDATE_USERTOKEN', user.token)
+
+      this.$router.push({ name: 'Integrations' })
+    },
   },
 }
 </script>
@@ -76,6 +122,14 @@ export default {
   background-color: #aaa;
   width: 100%;
   margin: 1rem;
+}
+
+.errors {
+  width: 100%;
+  padding: 1rem;
+  background-color: rgb(155, 21, 21);
+  color: white;
+  font-weight: 500;
 }
 
 h2 {

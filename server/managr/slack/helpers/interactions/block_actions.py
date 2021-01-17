@@ -88,9 +88,7 @@ def process_get_contacts(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    empty_block = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}
-    ]
+    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}]
 
     data = {
         "trigger_id": trigger_id,
@@ -123,9 +121,7 @@ def process_get_lead_contacts(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    empty_block = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}
-    ]
+    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}]
 
     data = {
         "trigger_id": trigger_id,
@@ -158,9 +154,7 @@ def process_get_lead_logs(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    empty_block = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}
-    ]
+    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}]
 
     data = {
         "trigger_id": trigger_id,
@@ -218,25 +212,16 @@ def process_get_meeting_score_components(payload, context):
             if comp["type"] == "duration":
                 duration = comp.get("message", "N/A")
 
-        paragraph = (
-            f"{sentiment} \n {stage} {forecast} {close_date} \n {attendance} {duration}"
-        )
+        paragraph = f"{sentiment} \n {stage} {forecast} {close_date} \n {attendance} {duration}"
 
         private_metadata = {
             "original_message_channel": payload["channel"]["id"],
             "original_message_timestamp": payload["message"]["ts"],
         }
         empty_block = [
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": "No Scoring Data to show"},
-            }
+            {"type": "section", "text": {"type": "mrkdwn", "text": "No Scoring Data to show"},}
         ]
-        blocks = [
-            get_block_set(
-                "show_meeting_score_description", {"score_paragraph": paragraph}
-            )
-        ]
+        blocks = [get_block_set("show_meeting_score_description", {"score_paragraph": paragraph})]
 
         data = {
             "trigger_id": trigger_id,
@@ -261,9 +246,7 @@ def process_get_meeting_score_components(payload, context):
 def process_get_lead_score_components(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    lead_score = (
-        LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
-    )
+    lead_score = LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
     lead = lead_score.lead
 
     org = lead.claimed_by.organization
@@ -303,9 +286,7 @@ def process_get_lead_score_components(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    empty_block = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}
-    ]
+    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}]
 
     data = {
         "trigger_id": trigger_id,

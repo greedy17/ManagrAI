@@ -1,12 +1,7 @@
 # NOTE: This is an example payload received @ /slack/api/interactive-endpoint
 block_actions_type = {
     "type": "block_actions",
-    "user": {
-        "id": "UUTLULA84",
-        "username": "bruno",
-        "name": "bruno",
-        "team_id": "T03EVK2FC",
-    },
+    "user": {"id": "UUTLULA84", "username": "bruno", "name": "bruno", "team_id": "T03EVK2FC",},
     "api_app_id": "A01ERE1QAE9",
     "token": "CVwUTl7hjscZVSzOtPDw76JK",
     "container": {
@@ -73,21 +68,13 @@ block_actions_type = {
                     {
                         "type": "button",
                         "action_id": "TEST_ID_1",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Great!",
-                            "emoji": True,
-                        },
+                        "text": {"type": "plain_text", "text": "Great!", "emoji": True,},
                         "value": "GREAT",
                     },
                     {
                         "type": "button",
                         "action_id": "TEST_ID_2",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Not well...",
-                            "emoji": True,
-                        },
+                        "text": {"type": "plain_text", "text": "Not well...", "emoji": True,},
                         "value": "NOT_WELL",
                     },
                 ],
@@ -109,12 +96,7 @@ block_actions_type = {
 
 block_suggestions_type = {
     "type": "block_suggestion",
-    "user": {
-        "id": "UUTLULA84",
-        "username": "bruno",
-        "name": "bruno",
-        "team_id": "T03EVK2FC",
-    },
+    "user": {"id": "UUTLULA84", "username": "bruno", "name": "bruno", "team_id": "T03EVK2FC",},
     "container": {"type": "view", "view_id": "V01FXMRB6KX"},
     "api_app_id": "A01ERE1QAE9",
     "token": "CVwUTl7hjscZVSzOtPDw76JK",
@@ -133,11 +115,7 @@ block_suggestions_type = {
                 "block_id": "DigJh",
                 "fields": [
                     {"type": "mrkdwn", "text": "*Opportunity:*", "verbatim": False},
-                    {
-                        "type": "plain_text",
-                        "text": ":dart: Dunder Mifflin",
-                        "emoji": True,
-                    },
+                    {"type": "plain_text", "text": ":dart: Dunder Mifflin", "emoji": True,},
                 ],
             },
             {"type": "divider", "block_id": "Rxsc"},
@@ -147,34 +125,18 @@ block_suggestions_type = {
                 "text": {"type": "mrkdwn", "text": "*Meeting Type*", "verbatim": False},
                 "accessory": {
                     "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "Select", "emoji": True,},
                     "options": [
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Manage it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Manage it", "emoji": True,},
                             "value": "value-0",
                         },
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Read it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Read it", "emoji": True,},
                             "value": "value-1",
                         },
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Save it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Save it", "emoji": True,},
                             "value": "value-2",
                         },
                     ],
@@ -188,51 +150,27 @@ block_suggestions_type = {
                 "accessory": {
                     "type": "external_select",
                     "action_id": "ZOOM_MEETING__GREAT",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "Select", "emoji": True,},
                 },
             },
             {
                 "type": "section",
                 "block_id": "G0cY",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Forecast Strength*",
-                    "verbatim": False,
-                },
+                "text": {"type": "mrkdwn", "text": "*Forecast Strength*", "verbatim": False,},
                 "accessory": {
                     "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "Select", "emoji": True,},
                     "options": [
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Manage it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Manage it", "emoji": True,},
                             "value": "value-0",
                         },
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Read it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Read it", "emoji": True,},
                             "value": "value-1",
                         },
                         {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Save it",
-                                "emoji": True,
-                            },
+                            "text": {"type": "plain_text", "text": "Save it", "emoji": True,},
                             "value": "value-2",
                         },
                     ],
@@ -247,34 +185,20 @@ block_suggestions_type = {
                 "dispatch_action": False,
                 "element": {
                     "type": "plain_text_input",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "How'd it go?",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "How'd it go?", "emoji": True,},
                     "multiline": True,
-                    "dispatch_action_config": {
-                        "trigger_actions_on": ["on_enter_pressed"]
-                    },
+                    "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
                     "action_id": "v+tz",
                 },
             },
             {
                 "type": "section",
                 "block_id": "6Bwx",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Expected Close Date*",
-                    "verbatim": False,
-                },
+                "text": {"type": "mrkdwn", "text": "*Expected Close Date*", "verbatim": False,},
                 "accessory": {
                     "type": "datepicker",
                     "initial_date": "1990-04-28",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select a date",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "Select a date", "emoji": True,},
                     "action_id": "OQ2I",
                 },
             },
@@ -291,9 +215,7 @@ block_suggestions_type = {
                         "text": "What's the plan?",
                         "emoji": True,
                     },
-                    "dispatch_action_config": {
-                        "trigger_actions_on": ["on_enter_pressed"]
-                    },
+                    "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
                     "action_id": "itmgj",
                 },
             },
@@ -301,9 +223,7 @@ block_suggestions_type = {
         "private_metadata": "",
         "callback_id": "modal-identifier",
         "state": {
-            "values": {
-                "6Bwx": {"OQ2I": {"type": "datepicker", "selected_date": "1990-04-28"}}
-            }
+            "values": {"6Bwx": {"OQ2I": {"type": "datepicker", "selected_date": "1990-04-28"}}}
         },
         "hash": "1606939382.Qd2U07Th",
         "title": {"type": "plain_text", "text": "Log Meeting", "emoji": True},
@@ -323,12 +243,7 @@ block_suggestions_type = {
 view_submission_type = {
     "type": "view_submission",
     "team": {"id": "T03EVK2FC", "domain": "thinknimble"},
-    "user": {
-        "id": "UUTLULA84",
-        "username": "bruno",
-        "name": "bruno",
-        "team_id": "T03EVK2FC",
-    },
+    "user": {"id": "UUTLULA84", "username": "bruno", "name": "bruno", "team_id": "T03EVK2FC",},
     "api_app_id": "A01ERE1QAE9",
     "token": "CVwUTl7hjscZVSzOtPDw76JK",
     "trigger_id": "1561704066449.3505648522.f19fee2542ffdecfb185344e2e835c40",
@@ -348,11 +263,7 @@ view_submission_type = {
                 "accessory": {
                     "type": "external_select",
                     "action_id": "GET_USER_OPPORTUNITIES?user_id=3dddd261-93b1-46fe-a83e-bc064551362a&lead_id=2e248459-62b1-479d-871f-c468caaebf95&organization_id=700287d3-4ce6-4803-a236-b18e160729a7",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select Other",
-                        "emoji": True,
-                    },
+                    "placeholder": {"type": "plain_text", "text": "Select Other", "emoji": True,},
                     "min_query_length": 0,
                 },
             }

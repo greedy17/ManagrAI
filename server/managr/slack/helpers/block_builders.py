@@ -6,12 +6,7 @@ def option(text, value):
 
 
 def external_select(
-    label,
-    action_id,
-    initial_option=None,
-    block_id=None,
-    min_query_length=0,
-    placeholder="Select",
+    label, action_id, initial_option=None, block_id=None, min_query_length=0, placeholder="Select",
 ):
     block = {
         "type": "section",
@@ -50,11 +45,7 @@ def static_select(
 
 
 def datepicker(
-    date=None,
-    action_id=None,
-    block_id=None,
-    label="Select Date",
-    placeholder="Select a date",
+    date=None, action_id=None, block_id=None, label="Select Date", placeholder="Select a date",
 ):
     block = {
         "type": "section",

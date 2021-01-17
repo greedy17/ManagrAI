@@ -6,7 +6,9 @@
       <div class="card">
         <img class="card-img" src="@/assets/images/salesforce.svg" />
         <h3>Salesforce</h3>
-        <p class="card-text">Connect Salesforce to sync your Salesforce data with Managr.</p>
+        <p class="card-text">
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
+        </p>
         <button
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
@@ -23,8 +25,7 @@
         <img class="card-img" src="@/assets/images/zoom_logo.svg" />
         <h3>Zoom</h3>
         <p class="card-text">
-          Connect Zoom so Managr can help you track how your meetings went and send that info
-          straight to Salesforce.
+          Connect Zoom to sync meeting data with managr.
         </p>
         <button
           v-if="!hasZoomIntegration"
@@ -43,8 +44,7 @@
         <img class="card-img" src="@/assets/images/slack.svg" />
         <h3>Slack</h3>
         <p class="card-text">
-          Connect Slack to easily make updates to your Salesforce opportunities from within the
-          Slack interface.
+          Connect Slack to enable messaging between apps.
         </p>
         <button
           v-if="
@@ -75,8 +75,7 @@
         <img class="card-img" src="@/assets/images/outlook-icon.svg" />
         <h3>Calendar</h3>
         <p class="card-text">
-          Connect you calendar and Managr will make sure that you capture all the contacts who
-          attended your meetings.
+          Connect Calendar to access upcoming meetings & attendees.
         </p>
         <button v-if="!hasNylasIntegration" @click="onGetAuthLink('NYLAS')" class="primary-button">
           Connect
@@ -240,8 +239,8 @@ export default {
   flex: 1;
   min-width: 28rem;
   max-width: 28rem;
-  margin-right: 1rem;
-  margin-bottom: 1rem;
+  margin-right: 2rem;
+  margin-bottom: 2rem;
 }
 
 .card-img {
@@ -251,6 +250,6 @@ export default {
 .card-text {
   font-size: 1.1rem;
   color: $light-gray-blue;
-  min-height: 6rem;
+  min-height: 4rem;
 }
 </style>

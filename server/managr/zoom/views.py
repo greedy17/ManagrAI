@@ -150,9 +150,7 @@ def create_zoom_meeting(request):
         return Response(r.json())
 
 
-class ZoomMeetingViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
-):
+class ZoomMeetingViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (
         IsSalesPerson,
@@ -162,4 +160,3 @@ class ZoomMeetingViewSet(
 
     def get_queryset(self):
         return ZoomMeeting.objects.for_user(self.request.user)
-
