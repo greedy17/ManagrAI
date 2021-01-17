@@ -25,10 +25,10 @@ if settings.USE_SALESFORCE:
         {
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
-            # "redirect_uri": REDIRECT_URL,
+            "redirect_uri": REDIRECT_URL,
             "response_type": "code",
             "scope": SCOPES,
             "state": "SALESFORCE",
         }
     )
-    AUTHORIZATION_QUERY += f"&redirect_uri={REDIRECT_URL}"
+
