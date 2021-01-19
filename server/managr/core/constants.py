@@ -15,7 +15,7 @@ SEND_EMAIL_URI = "send"
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR_READ_ONLY = "calendar.read_only"
+SCOPE_EMAIL_CALENDAR_READ_ONLY = "calendar.readonly"
 
 ALL_SCOPES = [SCOPE_EMAIL_CALENDAR_READ_ONLY]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
