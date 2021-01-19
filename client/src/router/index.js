@@ -120,7 +120,7 @@ export default new Router({
     {
       path: '/settings',
       component: Settings,
-      //beforeEnter: Auth.requireAuth,
+      beforeEnter: Auth.requireAuth,
       children: [
         {
           path: 'integrations',
