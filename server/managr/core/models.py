@@ -194,6 +194,17 @@ class User(AbstractUser, TimeStampModel):
         response_data["token"] = auth_token.key
         return response_data
 
+    @property
+    def has_zoom_integration(self):
+        # when a user integrates we set the info once
+        # when the user then removes the integration we keep the account
+        # but we only remove the token and refresh tokens
+        if hasattr(self, "zoom_integration"):
+            zoom_acct = self.zoom_integration
+            return not zoom_acct.is_revoked
+        else:
+            return False
+
     # TODO 2021-01-16 William: Remove if no longer necessary.
     # def check_notification_enabled_setting(self, key, type):
     #     setting_value = self.notification_settings.filter(

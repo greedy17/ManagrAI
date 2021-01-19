@@ -42,7 +42,7 @@ class OpportunityQuerySet(models.QuerySet):
         return qs
 
 
-class Opportunity(TimeStampModel):
+class Opportunity(TimeStampModel, IntegrationModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.
 
     Currently we are setting on_delete to null and allowing null values. However we may
@@ -66,7 +66,7 @@ class Opportunity(TimeStampModel):
 
     expected_close_date = models.DateTimeField(blank=True)
     primary_description = models.TextField(blank=True)
-    secondary_description = models.TextField(blank=True)
+    next_step = models.TextField(blank=True)
     rating = models.IntegerField(choices=opp_consts.LEAD_RATING_CHOICES, default=1)
     account = models.ForeignKey(
         "organization.Account", related_name="leads", on_delete=models.CASCADE, blank=True,
@@ -102,6 +102,7 @@ class Opportunity(TimeStampModel):
     type = models.CharField(
         choices=opp_consts.OPPORTUNITY_TYPE_CHOICES, max_length=255, blank=True,
     )
+    lead_source = models.CharField(max_length=255, blank=True)
 
     objects = OpportunityQuerySet.as_manager()
 

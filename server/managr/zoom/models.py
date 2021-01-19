@@ -59,7 +59,7 @@ class ZoomAuthAccount(TimeStampModel):
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
-    is_revoked = models.BooleanField(default=True)
+    is_revoked = models.BooleanField(default=False)
 
     objects = ZoomAuthAccountQuerySet.as_manager()
 
@@ -69,7 +69,8 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def helper_class(self):
         if self.is_token_expired and self.is_refresh_token_expired:
-            self.delete()
+            self.is_revoked = True
+            self.save()
 
         elif self.is_token_expired and not self.is_refresh_token_expired:
             self.regenerate_token()
@@ -104,6 +105,7 @@ class ZoomAuthAccount(TimeStampModel):
         self.token_generated_date = timezone.now()
         self.access_token = res.get("access_token", None)
         self.refresh_token = res.get("refresh_token", None)
+        self.is_revoked = False
         self.save()
 
     def delete(self, *args, **kwargs):
@@ -116,7 +118,6 @@ class ZoomAuthAccount(TimeStampModel):
         elif self.is_token_expired and not self.is_refresh_token_expired:
             # first refresh and then revoke
             self.regenerate_token()
-
             self.helper_class.revoke()
         else:
             self.helper_class.revoke()

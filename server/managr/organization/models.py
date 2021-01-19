@@ -118,6 +118,11 @@ class Account(TimeStampModel, IntegrationModel):
         blank=True,
         null=True,
     )
+    parent_integration_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="UUID from integration for parent account, saved in case of errors",
+    )
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):

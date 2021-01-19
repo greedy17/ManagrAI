@@ -32,3 +32,13 @@ if settings.USE_SALESFORCE:
         }
     )
 
+# temporary mapping for fields (in future each org will have their own mappings)
+MAPPING_FROM_API = (
+    ("ID", "id"),
+    ("TITLE", "id"),
+    ("AMOUNT", "id"),
+    ("FORECAST_CATEGORY", "id"),
+    ("EXPECTED_CLOSE_DATE", "id"),
+    ("PRIMARY_DESCRIPTION", "id"),
+    ("NEXT_STEP", "id"),
+)

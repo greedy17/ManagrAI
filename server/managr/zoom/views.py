@@ -63,12 +63,18 @@ def get_zoom_auth_link(request):
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def get_zoom_authentication(request):
-    if hasattr(request.user, "zoom_account"):
-        return redirect(f"{zoom_model_consts.ZOOM_FRONTEND_REDIRECT}")
     code = request.data.get("code", None)
     if not code:
         raise ValidationError()
     res = ZoomAcct.create_account(code, request.user.id)
+    if hasattr(request.user, "zoom_account"):
+        zoom = request.user.zoom_account
+        zoom.access_token = res.as_dict.access_token
+        zoom.refresh_token = res.as_dict.refresh_token
+        zoom.is_revoked = False
+        zoom.save()
+        return Response(data={"success": True})
+
     serializer = ZoomAuthSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -79,9 +85,11 @@ def get_zoom_authentication(request):
 @permission_classes([permissions.IsAuthenticated])
 def revoke_zoom_access_token(request):
     if hasattr(request.user, "zoom_account"):
+        zoom = request.user.zoom_account
+        zoom.is_revoked = True
+        zoom.save()
 
-        request.user.zoom_account.delete()
-        return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
+    return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
 
 
 def redirect_from_zoom(request):
@@ -125,38 +133,3 @@ def zoom_meetings_webhook(request):
 
     return Response()
 
-
-###### DEV ONLY CREATE MEETINGS ON THE FLY FOR TESTING WEBHOOK ENDPOINTS
-
-
-@api_view(["post"])
-@permission_classes([permissions.IsAuthenticated])
-def create_zoom_meeting(request):
-    if settings.IN_DEV or settings.IN_STAGING:
-        faker = Faker()
-        topic = faker.name()
-        type = 1
-        # stripe endpoing /users/userid/meetings
-        user_zoom_token = request.user.zoom_account.access_token
-        d = json.dumps({"topic": topic, "type": type})
-        r = requests.post(
-            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/me/meetings",
-            data=d,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {user_zoom_token}",
-            },
-        )
-        return Response(r.json())
-
-
-class ZoomMeetingViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (
-        IsSalesPerson,
-        CanEditResourceOrReadOnly,
-    )
-    serializer_class = ZoomMeetingSerializer
-
-    def get_queryset(self):
-        return ZoomMeeting.objects.for_user(self.request.user)

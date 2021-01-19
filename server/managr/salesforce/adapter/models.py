@@ -78,10 +78,54 @@ class SalesforceAuthAccountAdapter:
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
+    def list_accounts(self):
+        # brings back account info and emits events to create them in db
+
+        return
+
     def revoke(self):
         # if a token is already expired a 400 error occurs we can ignore that
         client.post(sf_consts.REVOKE_URI, {"token": self.access_token})
         client.post(sf_consts.REVOKE_URI, {"token": self.refresh_token})
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class AccountAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.name = kwargs.get("name", None)
+        self.url = kwargs.get("url", None)
+        self.type = kwargs.get("type", None)
+        self.organization = kwargs.get("organization", None)
+        self.logo = kwargs.get("logo", None)
+        self.parent = kwargs.get("parent", None)
+        self.parent_integration_id = kwargs.get("parent_integration_id", None)
+
+    @staticmethod
+    def from_api(data, integration_source, mapping, organization_id):
+        return
+
+    def list_opportunities(self):
+        return
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class OpportunityAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+
+    @staticmethod
+    def from_api(data, mapping=None, user_id=None):
+        ## for version 1 mapping is always the same in future Org's will have custom mappings
+        return
 
     @property
     def as_dict(self):
