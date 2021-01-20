@@ -80,7 +80,5 @@ router.register(
 """
 
 
-router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
-
 router.register("slack", slack_views.SlackViewSet, "slack")
 urlpatterns += router.urls

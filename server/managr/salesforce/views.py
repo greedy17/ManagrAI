@@ -30,8 +30,11 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from .models import SFSyncOperation
 from .serializers import SalesforceAuthSerializer
 from .adapter.models import SalesforceAuthAccountAdapter
+from .background import emit_sf_sync
+from . import constants as sf_consts
 
 
 @api_view(["post"])
@@ -43,6 +46,20 @@ def authenticate(request):
         serializer = SalesforceAuthSerializer(data=data.as_dict)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        # create sf sync object
+        operations = dict()
+        # order maters
+        operations[sf_consts.RESOURCE_SYNC_ACCOUNT] = [sf_consts.RESOURCE_SYNC_ACCOUNT]
+        operations[sf_consts.RESOURCE_SYNC_STAGE] = [sf_consts.RESOURCE_SYNC_STAGE]
+        # operations[sf_consts.RESOURCE_SYNC_OPPORTUNITY] = []
+
+        if request.user.organization.has_stages_integrated:
+            del operations[sf_consts.RESOURCE_SYNC_STAGE]
+
+        sync = SFSyncOperation.objects.create(user=request.user, operations=operations)
+        sync.begin_tasks()
+
+        # initiate process
         return Response(data={"success": True})
 
 

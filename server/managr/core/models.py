@@ -199,8 +199,8 @@ class User(AbstractUser, TimeStampModel):
         # when a user integrates we set the info once
         # when the user then removes the integration we keep the account
         # but we only remove the token and refresh tokens
-        if hasattr(self, "zoom_integration"):
-            zoom_acct = self.zoom_integration
+        if hasattr(self, "zoom_account"):
+            zoom_acct = self.zoom_account
             return not zoom_acct.is_revoked
         else:
             return False

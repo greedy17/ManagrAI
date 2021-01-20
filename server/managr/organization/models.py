@@ -75,6 +75,12 @@ class Organization(TimeStampModel):
         ordering = ["-datetime_created"]
 
     @property
+    def has_stages_integrated(self):
+        """ if an org already has stages assume we already synced and dont try again """
+
+        return self.stages.count() > 0
+
+    @property
     def total_amount_closed_contracts(self):
         total = Organization.objects.aggregate(Sum("accounts__leads__closing_amount"))
         if total:
@@ -157,11 +163,8 @@ class Contact(TimeStampModel, IntegrationModel):
     email = models.CharField(max_length=255)
     phone_number_1 = models.CharField(max_length=255)
     phone_number_2 = models.CharField(max_length=255, blank=True)
-    account = models.ForeignKey(
-        "Account", related_name="contacts", blank=True, on_delete=models.SET_DEFAULT, default="",
-    )
-    organization = models.ForeignKey(
-        "Organization", related_name="contacts", on_delete=models.CASCADE,
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="contacts", blank=True, null=True
     )
 
     objects = ContactQuerySet.as_manager()
@@ -171,7 +174,7 @@ class Contact(TimeStampModel, IntegrationModel):
         # unique hash so only one contact with the same email can be created per account
         unique_together = (
             "email",
-            "account",
+            "user",
         )
 
     def __str__(self):
@@ -212,7 +215,7 @@ class StageQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(Q(type="PUBLIC") | Q(organization=user.organization))
+            return self.filter(Q(organization=user.organization))
         else:
             return self.none()
 
@@ -237,7 +240,7 @@ class Stage(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.title, str(self.id))
+        return block_builders.option(self.label, str(self.id))
 
     class Meta:
         ordering = ["order"]

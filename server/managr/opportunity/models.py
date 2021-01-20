@@ -27,20 +27,6 @@ class OpportunityQuerySet(models.QuerySet):
         else:
             return None
 
-    def open_leads(self):
-        return self.exclude(
-            status__title__in=[opp_consts.LEAD_STATUS_CLOSED, opp_consts.LEAD_STATUS_LOST,],
-            status__type=org_consts.STAGE_TYPE_PUBLIC,
-        )
-
-    def closed_leads(self, date_range_from=None, date_range_to=None):
-        qs = self.filter(status__title__in=[opp_consts.LEAD_STATUS_CLOSED])
-        if date_range_from:
-            qs = qs.filter(expected_close_date__gte=date_range_from)
-        if date_range_to:
-            qs = qs.filter(expected_close_date__lte=date_range_to)
-        return qs
-
 
 class Opportunity(TimeStampModel, IntegrationModel):
     """Leads are collections of Accounts with forecasting, status and Notes attached.
@@ -50,15 +36,6 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    current_score = models.ForeignKey(
-        "OpportunityScore",
-        related_name="leads",
-        on_delete=models.PROTECT,
-        blank=True,
-        help_text="The has-many to this field should never be greater than 1. "
-        "This FK is added for queryset purposes (see LeadFilterSet.by_score), "
-        "even though Lead has-many LeadScores (see OpportunityScore.lead).",
-    )
     amount = models.DecimalField(
         max_digits=13, decimal_places=2, default=0.00, help_text="This field is editable",
     )
@@ -68,24 +45,11 @@ class Opportunity(TimeStampModel, IntegrationModel):
     primary_description = models.TextField(blank=True)
     next_step = models.TextField(blank=True)
     rating = models.IntegerField(choices=opp_consts.LEAD_RATING_CHOICES, default=1)
-    account = models.ForeignKey(
-        "organization.Account", related_name="leads", on_delete=models.CASCADE, blank=True,
-    )
-    created_by = models.ForeignKey(
-        "core.User", related_name="created_leads", blank=True, on_delete=models.SET_NULL, null=True,
-    )
+    account = models.CharField(max_length=255, blank=True, help_text="Retrieved from Integration")
     linked_contacts = models.ManyToManyField(
-        "organization.Contact", related_name="leads", blank=True
+        "organization.Contact", related_name="opportunities", blank=True
     )
-    stage_last_update = models.DateTimeField(default=timezone.now, blank=True)
-
-    stage = models.ForeignKey(
-        "organization.Stage",
-        related_name="leads",
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
+    stage = models.CharField(max_length=255, blank=True, help_text="value from the integration")
 
     claimed_by = models.ForeignKey(
         "core.User",
@@ -94,9 +58,6 @@ class Opportunity(TimeStampModel, IntegrationModel):
         help_text="Leads can only be closed by their claimed_by rep",
         blank=True,
         null=True,
-    )
-    last_updated_by = models.ForeignKey(
-        "core.User", related_name="updated_leads", blank=True, on_delete=models.SET_NULL, null=True,
     )
 
     type = models.CharField(

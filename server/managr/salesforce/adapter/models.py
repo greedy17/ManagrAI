@@ -6,6 +6,7 @@ from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 
 from managr.utils.client import HttpClient
+from managr.organization import constants as org_consts
 
 from .exceptions import CustomAPIException
 from .. import constants as sf_consts
@@ -80,8 +81,24 @@ class SalesforceAuthAccountAdapter:
 
     def list_accounts(self):
         # brings back account info and emits events to create them in db
+        # generate large opperation task
+        # large operation task takes tasks to be generated in order as list of functions to be called
+        # emits task to call large operation tasks
 
-        return
+        res = client.get(
+            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI}",
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
+
+        return self._handle_response(res)
+
+    def list_stages(self):
+        res = client.get(
+            f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}",
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
+
+        return self._handle_response(res)
 
     def revoke(self):
         # if a token is already expired a 400 error occurs we can ignore that
@@ -107,11 +124,19 @@ class AccountAdapter:
         self.parent_integration_id = kwargs.get("parent_integration_id", None)
 
     @staticmethod
-    def from_api(data, integration_source, mapping, organization_id):
-        return
+    def from_api(data, organization_id, mapping):
+        formatted_data = dict()
+        formatted_data["integration_id"] = data.get("Id", "")
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["name"] = data.get("Name", "")
+        formatted_data["url"] = data.get("website", "")
+        formatted_data["type"] = data.get("Name", "")
+        formatted_data["organization"] = data.get("Name", "")
+        formatted_data["logo"] = data.get("PhotoUrl", "")
+        formatted_data["parent_integration_id"] = data.get("ParentId", "")
+        formatted_data["organization"] = str(organization_id)
 
-    def list_opportunities(self):
-        return
+        return AccountAdapter(**formatted_data)
 
     @property
     def as_dict(self):
