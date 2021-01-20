@@ -19,57 +19,33 @@ from . import constants as sf_consts
 
 class SFSyncOperation(TimeStampModel):
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="sf_sync")
-    operations = JSONField(
-        default=dict, blank=True, help_text="A dict of operations by type {'accounts':[]}",
-    )
-
-    failed_operations = JSONField(
-        default=dict,
+    operations_list = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
         blank=True,
-        help_text="A dict of failed operations (limit 5 tries) {'accounts':[]}",
+        help_text="An Array of operations to perform on",
     )
-    successful_operations = JSONField(
-        default=dict,
+    operations = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
         blank=True,
-        help_text="A dict of successful operations by type {'accounts':[]}",
+        help_text="An Array of task ids",
     )
-
-    completed_operations = JSONField(
-        default=dict,
+    completed_operations = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
         blank=True,
-        help_text="A dict of all completed operations by type {'accounts':[]}",
+        help_text="An Array of completed/faild task id's",
     )
-
-    @property
-    def successful_count(self):
-        """ Number of total successful operations"""
-        if len(self.successful_operations):
-            return reduce(lambda x, y: int(x) + int(len(y)), self.successful_operations.values(), 0)
-
-        return len(self.successful_operations)
-
-    @property
-    def failed_count(self):
-        """ Number of total failed operations"""
-        if len(self.failed_operations):
-            return reduce(lambda x, y: int(x) + int(len(y)), self.failed_operations.values(), 0)
-
-        return len(self.failed_operations)
 
     @property
     def completed_count(self):
         """ Number of all operations success/failed completed"""
-        if len(self.completed_operations):
-            return reduce(lambda x, y: int(x) + int(len(y)), self.completed_operations.values(), 0)
-
         return len(self.completed_operations)
 
     @property
     def total_count(self):
         """ Number of all operations success/failed """
-        if len(self.operations):
-            return reduce(lambda x, y: int(x) + int(len(y)), self.operations.values(), 0)
-
         return len(self.operations)
 
     @property
@@ -83,12 +59,7 @@ class SFSyncOperation(TimeStampModel):
     @property
     def in_progress(self):
         """ disable actions while in progress """
-
         return self.progress != 100
-
-    @property
-    def completed(self):
-        self.progress == 100
 
     def __str__(self):
         return f"{self.user.email} tasks {self.progress}"
@@ -96,9 +67,24 @@ class SFSyncOperation(TimeStampModel):
     def begin_tasks(self):
         from managr.salesforce.background import emit_sf_sync
 
-        for opp in self.operations.values():
-            for task in opp:
-                emit_sf_sync(str(self.user.id), task, str(self.id))
+        for key in self.operations_list:
+            if key == sf_consts.RESOURCE_SYNC_ACCOUNT:
+                count = self.user.salesforce_account.adapter_class.get_account_count()["totalSize"]
+            elif key == sf_consts.RESOURCE_SYNC_STAGE:
+                count = self.user.salesforce_account.adapter_class.get_account_count()["totalSize"]
+            elif key == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
+                count = self.user.salesforce_account.adapter_class.get_opportunity_count()[
+                    "totalSize"
+                ]
+                # get counts to set offsets
+            for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
+                offset = (sf_consts.SALESFORCE_QUERY_LIMIT * i) + 1 if i > 0 else None
+                t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
+                if self.operations:
+                    self.operations.append(str(t.id))
+                else:
+                    self.operations = [str(t.id)]
+                self.save()
 
 
 class SalesforceAuthAccount(TimeStampModel):
@@ -130,6 +116,12 @@ class SalesforceAuthAccount(TimeStampModel):
         adapter = self.adapter_class
         adapter.revoke()
         self.delete()
+
+    def list_accounts(self, offset):
+        return self.adapter_class.list_accounts(offset)
+
+    def list_stages(self, offset):
+        return self.adapter_class.list_stages(offset)
 
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)

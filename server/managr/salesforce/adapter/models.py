@@ -79,22 +79,33 @@ class SalesforceAuthAccountAdapter:
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
-    def list_accounts(self):
-        # brings back account info and emits events to create them in db
-        # generate large opperation task
-        # large operation task takes tasks to be generated in order as list of functions to be called
-        # emits task to call large operation tasks
+    def list_accounts(self, offset):
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI}"
+        if offset:
+            url = f"{url} offset {offset}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
 
+        return self._handle_response(res)
+
+    def list_stages(self, offset):
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
+        if offset:
+            url = f"{url} offset {offset}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+
+        return self._handle_response(res)
+
+    def get_stage_count(self):
         res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI}",
+            f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI_COUNT}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
         return self._handle_response(res)
 
-    def list_stages(self):
+    def get_account_count(self):
         res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}",
+            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI_COUNT}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
@@ -126,17 +137,48 @@ class AccountAdapter:
     @staticmethod
     def from_api(data, organization_id, mapping):
         formatted_data = dict()
-        formatted_data["integration_id"] = data.get("Id", "")
+        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["name"] = data.get("Name", "")
-        formatted_data["url"] = data.get("website", "")
-        formatted_data["type"] = data.get("Name", "")
-        formatted_data["organization"] = data.get("Name", "")
-        formatted_data["logo"] = data.get("PhotoUrl", "")
-        formatted_data["parent_integration_id"] = data.get("ParentId", "")
+        formatted_data["name"] = data.get("Name", "") if data.get("Name", "") else ""
+        formatted_data["url"] = data.get("Website", "") if data.get("Website", "") else ""
+        formatted_data["type"] = data.get("Type", "") if data.get("Type", "") else ""
+        formatted_data["logo"] = data.get("PhotoUrl", "") if data.get("PhotoUrl", "") else ""
+        formatted_data["parent_integration_id"] = (
+            data.get("ParentId", "") if data.get("ParentId", "") else ""
+        )
         formatted_data["organization"] = str(organization_id)
 
         return AccountAdapter(**formatted_data)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class StageAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.label = kwargs.get("integration_id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.label = kwargs.get("label", None)
+        self.value = kwargs.get("value", None)
+        self.is_closed = kwargs.get("is_closed", None)
+        self.is_won = kwargs.get("is_won", None)
+        self.description = kwargs.get("description", None)
+        self.organization = kwargs.get("organization", None)
+
+    @staticmethod
+    def from_api(data, organization_id, mapping):
+        formatted_data = dict()
+        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["label"] = data.get("MasterLabel", "") if data.get("MasterLabel", "") else ""
+        formatted_data["value"] = data.get("ApiName", "") if data.get("ApiName", "") else ""
+        formatted_data["is_closed"] = data.get("IsClosed", "") if data.get("IsClosed", "") else ""
+        formatted_data["is_won"] = data.get("IsWon", "") if data.get("IsWon", "") else ""
+        formatted_data["description"] = data.get("Description") if data.get("Description") else ""
+        formatted_data["organization"] = str(organization_id)
+        return StageAdapter(**formatted_data)
 
     @property
     def as_dict(self):

@@ -48,15 +48,6 @@ class AccountSerializer(serializers.ModelSerializer):
     Other users can list
     """
 
-    lead_count = serializers.SerializerMethodField()
-
-    def to_internal_value(self, data):
-        """ Backend Setting organization by default """
-        internal_data = super().to_internal_value(data)
-        internal_data.update({"organization": self.context["request"].user.organization})
-
-        return internal_data
-
     class Meta:
         model = Account
         fields = (
@@ -65,12 +56,10 @@ class AccountSerializer(serializers.ModelSerializer):
             "url",
             "type",
             "organization",
-            "state",
+            "logo",
+            "parent_integration_id",
         )
-        read_only_fields = (
-            "state",
-            "organization",
-        )
+        read_only_fields = ()
 
 
 class ContactSerializer(serializers.ModelSerializer):

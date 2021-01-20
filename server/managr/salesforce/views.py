@@ -47,16 +47,13 @@ def authenticate(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # create sf sync object
-        operations = dict()
-        # order maters
-        operations[sf_consts.RESOURCE_SYNC_ACCOUNT] = [sf_consts.RESOURCE_SYNC_ACCOUNT]
-        operations[sf_consts.RESOURCE_SYNC_STAGE] = [sf_consts.RESOURCE_SYNC_STAGE]
+        operations = [sf_consts.RESOURCE_SYNC_ACCOUNT, sf_consts.RESOURCE_SYNC_STAGE]
         # operations[sf_consts.RESOURCE_SYNC_OPPORTUNITY] = []
 
         if request.user.organization.has_stages_integrated:
-            del operations[sf_consts.RESOURCE_SYNC_STAGE]
+            operations.remove(sf_consts.RESOURCE_SYNC_STAGE)
 
-        sync = SFSyncOperation.objects.create(user=request.user, operations=operations)
+        sync = SFSyncOperation.objects.create(user=request.user, operations_list=operations)
         sync.begin_tasks()
 
         # initiate process

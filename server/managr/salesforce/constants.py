@@ -49,7 +49,16 @@ RESOURCE_SYNC_ACCOUNT = "ACCOUNT"
 RESOURCE_SYNC_OPPORTUNITY = "OPPORTUNITY"
 RESOURCE_SYNC_STAGE = "STAGE"
 
+
+SALESFORCE_QUERY_LIMIT = 1
+
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
-SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account"
-SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage"
+SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_ACCOUNT_QUERY_URI_COUNT = (
+    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Account"
+)
+SALSFORCE_STAGE_QUERY_URI_COUNT = (
+    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from OpportunityStage"
+)
 

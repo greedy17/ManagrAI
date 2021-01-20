@@ -116,7 +116,7 @@ class Account(TimeStampModel, IntegrationModel):
     organization = models.ForeignKey(
         "Organization", related_name="accounts", on_delete=models.CASCADE,
     )
-    logo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
+    logo = models.CharField(max_length=500, blank=True)
     parent = models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
@@ -228,7 +228,9 @@ class Stage(TimeStampModel, IntegrationModel):
     label = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, default="#9B9B9B", help_text="hex code for color")
-
+    value = models.CharField(
+        max_length=255, blank=True, help_text="This may be use as a unique value, if it exists"
+    )
     organization = models.ForeignKey(
         "Organization", related_name="stages", on_delete=models.CASCADE,
     )
