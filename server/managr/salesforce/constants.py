@@ -8,6 +8,7 @@ SF_API_VERSION = settings.SALESFORCE_API_VERSION
 AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
 AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
 REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
+REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY
 CLIENT_SECRET = settings.SALESFORCE_SECRET
 SCOPES = settings.SALESFORCE_SCOPES
@@ -20,6 +21,13 @@ AUTHENTICATION_BODY = lambda code: {
     "client_id": CLIENT_ID,
     "client_secret": CLIENT_SECRET,
     "redirect_uri": REDIRECT_URL,
+}
+REAUTHENTICATION_BODY = lambda refresh_token: {
+    "grant_type": "authorization_code",
+    "Content-type": "application/x-www-form-urlencoded",
+    "refresh_token": refresh_token,
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET,
 }
 AUTHENTICATION_HEADERS = {"Content-Type": "application/x-www-form-urlencoded"}
 AUTHORIZATION_QUERY = urlencode(

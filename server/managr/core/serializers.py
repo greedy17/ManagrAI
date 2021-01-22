@@ -72,6 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
             "salesforce_account",
             "slack_ref",
             "zoom_account",
+            "has_zoom_integration",
         )
 
     read_only_fields = (

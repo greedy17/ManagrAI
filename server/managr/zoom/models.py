@@ -60,6 +60,11 @@ class ZoomAuthAccount(TimeStampModel):
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
     is_revoked = models.BooleanField(default=False)
+    refresh_token_task = models.CharField(
+        max_length=55,
+        blank=True,
+        help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
+    )
 
     objects = ZoomAuthAccountQuerySet.as_manager()
 

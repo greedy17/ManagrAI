@@ -27,6 +27,7 @@ export default class User extends Model {
   static slackRef = new fields.Field()
   static zoomAccount = new fields.Field()
   static token = new fields.Field()
+  static hasZoomIntegration = new fields.Field({ readOnly: true })
 
   get emailConnected() {
     return this.emailAuthAccount && this.emailAuthAccountRef.accessToken

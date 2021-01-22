@@ -101,6 +101,11 @@ class SalesforceAuthAccount(TimeStampModel):
     salesforce_id = models.CharField(max_length=255, blank=True)
     salesforce_account = models.CharField(max_length=255, blank=True)
     login_link = models.CharField(max_length=255, blank=True)
+    refresh_token_task = models.CharField(
+        max_length=55,
+        blank=True,
+        help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
+    )
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -113,6 +118,18 @@ class SalesforceAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         return SalesforceAuthAccountAdapter(**data)
+
+    def regenerate_token(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+
+        helper = SalesforceAuthAccountAdapter(**data)
+        res = helper.refresh()
+        self.token_generated_date = timezone.now()
+        self.access_token = res.get("access_token", None)
+        self.refresh_token = res.get("refresh_token", None)
+        self.is_revoked = False
+        self.save()
 
     def revoke(self):
         adapter = self.adapter_class

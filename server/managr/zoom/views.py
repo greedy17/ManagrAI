@@ -69,8 +69,8 @@ def get_zoom_authentication(request):
     res = ZoomAcct.create_account(code, request.user.id)
     if hasattr(request.user, "zoom_account"):
         zoom = request.user.zoom_account
-        zoom.access_token = res.as_dict.access_token
-        zoom.refresh_token = res.as_dict.refresh_token
+        zoom.access_token = res.access_token
+        zoom.refresh_token = res.refresh_token
         zoom.is_revoked = False
         zoom.save()
         return Response(data={"success": True})
@@ -87,6 +87,8 @@ def revoke_zoom_access_token(request):
     if hasattr(request.user, "zoom_account"):
         zoom = request.user.zoom_account
         zoom.is_revoked = True
+        zoom.access_token = ""
+        zoom.refresh_token = ""
         zoom.save()
 
     return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)

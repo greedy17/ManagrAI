@@ -189,7 +189,7 @@ export default {
       return !!this.$store.state.user.salesforceAccount
     },
     hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount
+      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration

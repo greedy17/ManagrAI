@@ -91,6 +91,14 @@ class SalesforceAuthAccountAdapter:
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
+    def refresh(self):
+        data = sf_consts.REAUTHENTICATION_BODY(self.refresh_token)
+        res = client.post(
+            f"{sf_consts.REFRESH_URI}", data, headers=sf_consts.AUTHENTICATION_HEADERS,
+        )
+
+        return SalesforceAuthAccountAdapter._handle_response(res)
+
     def list_accounts(self, offset):
         url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI}"
         if offset:
