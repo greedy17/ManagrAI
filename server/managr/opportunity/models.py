@@ -41,55 +41,56 @@ class Opportunity(TimeStampModel, IntegrationModel):
     )
     forecast_category = models.CharField(max_length=255, choices=opp_consts.FORECAST_CHOICES)
 
-    expected_close_date = models.DateTimeField(blank=True)
-    primary_description = models.TextField(blank=True)
+    close_date = models.DateField(null=True)
+    description = models.TextField(blank=True)
     next_step = models.TextField(blank=True)
-    rating = models.IntegerField(choices=opp_consts.LEAD_RATING_CHOICES, default=1)
     account = models.CharField(max_length=255, blank=True, help_text="Retrieved from Integration")
-    linked_contacts = models.ManyToManyField(
+    contacts = models.ManyToManyField(
         "organization.Contact", related_name="opportunities", blank=True
     )
-    stage = models.CharField(max_length=255, blank=True, help_text="value from the integration")
+    external_account = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    external_stage = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    external_owner = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
 
-    claimed_by = models.ForeignKey(
+    owner = models.ForeignKey(
+        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+    )
+    imported_by = models.ForeignKey(
         "core.User",
-        related_name="claimed_leads",
+        related_name="imported_opportunities",
         on_delete=models.SET_NULL,
-        help_text="Leads can only be closed by their claimed_by rep",
+        blank=True,
+        null=True,
+    )
+    stage = models.ForeignKey(
+        "organization.Stage",
+        related_name="opportunities",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    account = models.ForeignKey(
+        "organization.Account",
+        related_name="opportunities",
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
 
-    type = models.CharField(
-        choices=opp_consts.OPPORTUNITY_TYPE_CHOICES, max_length=255, blank=True,
-    )
+    type = models.CharField(max_length=255, blank=True,)
     lead_source = models.CharField(max_length=255, blank=True)
-
+    last_activity_date = models.DateTimeField(null=True)
+    last_stage_update = models.DateTimeField(null=True)
     objects = OpportunityQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
-
-    @property
-    def is_claimed(self):
-        """ property to define if lead is claimed or not """
-        if self.claimed_by:
-            return True
-        return False
-
-    @property
-    def activity_log_meta(self):
-        linked_contacts = serializers.serialize("json", self.linked_contacts.all())
-        linked_contacts = json.loads(linked_contacts)
-        linked_contacts = [c["fields"] for c in linked_contacts]
-        activity = serializers.serialize("json", [self,],)
-        activity = json.loads(activity)
-
-        activity = activity[0]
-
-        activity["fields"]["linked_contacts_ref"] = linked_contacts
-
-        return activity["fields"]
 
     @property
     def as_slack_option(self):

@@ -17,5 +17,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "id_token",
             "instance_url",
             "salesforce_id",
+            "salesforce_account",
+            "login_link",
             "user",
         )

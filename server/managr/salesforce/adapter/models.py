@@ -2,7 +2,8 @@ import json
 import pytz
 import requests
 from datetime import datetime
-from urllib.parse import urlencode, quote_plus
+import os.path
+from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 
 from managr.utils.client import HttpClient
@@ -24,6 +25,8 @@ class SalesforceAuthAccountAdapter:
         self.id_token = kwargs.get("id_token", None)
         self.instance_url = kwargs.get("instance_url", None)
         self.salesforce_id = kwargs.get("salesforce_id", None)
+        self.salesforce_account = kwargs.get("salesforce_account", None)
+        self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
 
     @staticmethod
@@ -61,8 +64,17 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def from_api(data, user_id=None):
-        salesforce_id = data.pop("id", None)
-        data["salesforce_id"] = salesforce_id
+        salesforce_link = data.pop("id", None)
+        data["login_link"] = salesforce_link
+        if data["login_link"]:
+            new_link, value = os.path.split(data["login_link"])
+            data["salesforce_id"] = value
+            new_link, value = os.path.split(new_link)
+            data["salesforce_account"] = value
+        else:
+            data["salesforce_id"] = None
+            data["salesforce_account"] = None
+
         data["user"] = user_id
         return SalesforceAuthAccountAdapter(**data)
 
@@ -95,9 +107,24 @@ class SalesforceAuthAccountAdapter:
 
         return self._handle_response(res)
 
+    def list_opportunities(self, offset):
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI}"
+        if offset:
+            url = f"{url} offset {offset}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        return self._handle_response(res)
+
     def get_stage_count(self):
         res = client.get(
             f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI_COUNT}",
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
+
+        return self._handle_response(res)
+
+    def get_opportunity_count(self):
+        res = client.get(
+            f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI_COUNT}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
@@ -158,8 +185,9 @@ class AccountAdapter:
 class StageAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
-        self.label = kwargs.get("integration_id", None)
+        self.label = kwargs.get("label", None)
         self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
         self.label = kwargs.get("label", None)
         self.value = kwargs.get("value", None)
         self.is_closed = kwargs.get("is_closed", None)
@@ -174,8 +202,10 @@ class StageAdapter:
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
         formatted_data["label"] = data.get("MasterLabel", "") if data.get("MasterLabel", "") else ""
         formatted_data["value"] = data.get("ApiName", "") if data.get("ApiName", "") else ""
-        formatted_data["is_closed"] = data.get("IsClosed", "") if data.get("IsClosed", "") else ""
-        formatted_data["is_won"] = data.get("IsWon", "") if data.get("IsWon", "") else ""
+        formatted_data["is_closed"] = (
+            data.get("IsClosed", "") if data.get("IsClosed", "") else False
+        )
+        formatted_data["is_won"] = data.get("IsWon", "") if data.get("IsWon", "") else False
         formatted_data["description"] = data.get("Description") if data.get("Description") else ""
         formatted_data["organization"] = str(organization_id)
         return StageAdapter(**formatted_data)
@@ -188,11 +218,85 @@ class StageAdapter:
 class OpportunityAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("id", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.account = kwargs.get("account", None)
+        self.title = kwargs.get("title", None)
+        self.description = kwargs.get("description", None)
+        self.stage = kwargs.get("stage", None)
+        self.amount = kwargs.get("amount", None)
+        self.close_date = kwargs.get("expected_close_date", None)
+        self.type = kwargs.get("type", None)
+        self.next_step = kwargs.get("next_step", None)
+        self.lead_source = kwargs.get("lead_source", None)
+        self.forecast_category = kwargs.get("forecast_category", None)
+        self.owner = kwargs.get("owner", None)
+        self.last_stage_update = kwargs.get("last_stage_update", None)
+        self.last_activity_date = kwargs.get("last_activity_date", None)
+        self.external_stage = kwargs.get("external_stage", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.external_account = kwargs.get("external_account", None)
+        self.imported_by = kwargs.get("imported_by", None)
 
     @staticmethod
-    def from_api(data, mapping=None, user_id=None):
-        ## for version 1 mapping is always the same in future Org's will have custom mappings
-        return
+    def _format_date_time_from_api(d):
+        if d:
+            return datetime.strptime(d, "%Y-%m-%dT%H:%M:%S.%f%z")
+        return None
+
+    @staticmethod
+    def _format_stage_update(obj):
+        if obj and obj.get("totalSize", 0) > 0:
+            return OpportunityAdapter._format_date_time_from_api(obj["records"][0]["CreatedDate"])
+        return None
+
+    @staticmethod
+    def from_api(data, user_id, mapping):
+        formatted_data = dict()
+        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["external_account"] = (
+            data.get("AccountId", "") if data.get("AccountId", "") else ""
+        )
+        formatted_data["title"] = data.get("Name", "") if data.get("Name", "") else ""
+        formatted_data["description"] = (
+            data.get("Description", "") if data.get("Description", "") else ""
+        )
+        formatted_data["external_stage"] = (
+            data.get("StageName", "") if data.get("StageName", "") else ""
+        )
+        formatted_data["amount"] = (
+            float(data.get("Amount", "")) if data.get("Amount", "") else "0.00"
+        )
+        formatted_data["close_date"] = (
+            data.get("CloseDate", "") if data.get("CloseDate", "") else ""
+        )
+        formatted_data["type"] = data.get("Type", "") if data.get("Type", "") else ""
+        formatted_data["next_step"] = data.get("NextStep", "") if data.get("NextStep", "") else ""
+        formatted_data["lead_source"] = (
+            data.get("LeadSource", "") if data.get("LeadSource", "") else ""
+        )
+        formatted_data["forecast_category"] = (
+            data.get("ForecastCategory", "") if data.get("ForecastCategory", "") else ""
+        )
+        formatted_data["external_owner"] = (
+            data.get("OwnerId", "") if data.get("OwnerId", "") else ""
+        )
+        formatted_data["last_activity_date"] = (
+            OpportunityAdapter._format_date_time_from_api(data.get("LastActivityDate", None))
+            if data.get("LastActivityDate", "")
+            else None
+        )
+        formatted_data["last_stage_update"] = OpportunityAdapter._format_stage_update(
+            data.get("OpportunityHistories", None)
+        )
+        formatted_data["imported_by"] = str(user_id)
+        ## Placeholder contacts
+        formatted_data["account"] = formatted_data["external_account"]
+        formatted_data["stage"] = formatted_data["external_stage"]
+        formatted_data["owner"] = formatted_data["external_owner"]
+
+        return OpportunityAdapter(**formatted_data)
 
     @property
     def as_dict(self):

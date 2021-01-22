@@ -4,12 +4,13 @@ from .models import (
     Opportunity,
     OpportunityScore,
 )
-from managr.organization.models import Stage
+from managr.organization.models import Stage, Account
 from managr.organization.serializers import (
     AccountSerializer,
     ContactSerializer,
     StageSerializer,
 )
+from managr.salesforce.models import SalesforceAuthAccount
 from managr.organization import constants as org_consts
 from managr.core.models import User, Notification
 from managr.organization import constants as opp_consts
@@ -39,37 +40,28 @@ class UserRefSerializer(serializers.ModelSerializer):
         return f"{instance.first_name} {instance.last_name}"
 
 
-class PrevLeadScoreSerializer(serializers.ModelSerializer):
-    score = serializers.SerializerMethodField()
-
+class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = OpportunityScore
+        model = Opportunity
         fields = (
             "id",
-            "score",
+            "integration_id",
+            "title",
+            "description",
+            "amount",
+            "close_date",
+            "type",
+            "next_step",
+            "lead_source",
+            "forecast_category",
+            "account",
+            "stage",
+            "owner",
+            "last_stage_update",
+            "last_activity_date",
+            "external_account",
+            "external_owner",
+            "external_stage",
+            "imported_by",
         )
 
-    def get_score(self, instance):
-        return instance.final_score
-
-
-class LeadScoreSerializer(serializers.ModelSerializer):
-    previous_ref = PrevLeadScoreSerializer(source="previous_score", read_only=True)
-    current = serializers.SerializerMethodField()
-
-    class Meta:
-        model = OpportunityScore
-        fields = (
-            "id",
-            "current",
-            "previous_ref",
-            "actions_insight",
-            "recent_action_insight",
-            "incoming_messages_insight",
-            "days_in_stage_insight",
-            "forecast_table_insight",
-            "expected_close_date_insight",
-        )
-
-    def get_current(self, instance):
-        return instance.final_score

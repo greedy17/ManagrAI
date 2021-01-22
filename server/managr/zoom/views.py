@@ -132,4 +132,3 @@ def zoom_meetings_webhook(request):
             )
 
     return Response()
-

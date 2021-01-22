@@ -55,10 +55,15 @@ SALESFORCE_QUERY_LIMIT = 1
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account limit {SALESFORCE_QUERY_LIMIT}"
 SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_OPP_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Id, Contact.Name, Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity limit {SALESFORCE_QUERY_LIMIT}"
+
+
 SALSFORCE_ACCOUNT_QUERY_URI_COUNT = (
     f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Account"
 )
 SALSFORCE_STAGE_QUERY_URI_COUNT = (
     f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from OpportunityStage"
 )
-
+SALSFORCE_OPP_QUERY_URI_COUNT = (
+    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Opportunity"
+)

@@ -47,7 +47,11 @@ def authenticate(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # create sf sync object
-        operations = [sf_consts.RESOURCE_SYNC_ACCOUNT, sf_consts.RESOURCE_SYNC_STAGE]
+        operations = [
+            sf_consts.RESOURCE_SYNC_ACCOUNT,
+            sf_consts.RESOURCE_SYNC_STAGE,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY,
+        ]
         # operations[sf_consts.RESOURCE_SYNC_OPPORTUNITY] = []
 
         if request.user.organization.has_stages_integrated:
@@ -72,11 +76,6 @@ def salesforce_auth_link(request):
 def revoke(request):
     user = request.user
     if hasattr(user, "salesforce_account"):
-        # revoke the token
-        # TODO: see bellow pb 01/15/2021
-        # set the account to is_revoked
-        # delete the token and the refresh token
-        ##### temporarily deleting whole object
         sf_acc = user.salesforce_account
         sf_acc.revoke()
     return Response()

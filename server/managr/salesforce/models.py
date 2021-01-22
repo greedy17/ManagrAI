@@ -99,6 +99,8 @@ class SalesforceAuthAccount(TimeStampModel):
     instance_url = models.CharField(max_length=255, blank=True)
     # TODO: need to split the value here as it returns a link
     salesforce_id = models.CharField(max_length=255, blank=True)
+    salesforce_account = models.CharField(max_length=255, blank=True)
+    login_link = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -122,6 +124,9 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def list_stages(self, offset):
         return self.adapter_class.list_stages(offset)
+
+    def list_opportunities(self, offset):
+        return self.adapter_class.list_opportunities(offset)
 
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
