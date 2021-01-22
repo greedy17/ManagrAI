@@ -137,6 +137,20 @@ class Account(TimeStampModel, IntegrationModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def save(self, *args, **kwargs):
+        """ In case of duplicates update not save"""
+        obj = (
+            Account.objects.filter(
+                integration_id=self.integration_id, organization=self.organization
+            )
+            .exclude(id=self.id)
+            .first()
+        )
+        if obj:
+            return
+
+        return super(Account, self).save(*args, **kwargs)
+
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -251,4 +265,11 @@ class Stage(TimeStampModel, IntegrationModel):
         return f"Stage ({self.id}) -- label: {self.label}"
 
     def save(self, *args, **kwargs):
+        obj = (
+            Stage.objects.filter(integration_id=self.integration_id, organization=self.organization)
+            .exclude(id=self.id)
+            .first()
+        )
+        if obj:
+            return
         return super(Stage, self).save(*args, **kwargs)

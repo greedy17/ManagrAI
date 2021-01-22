@@ -218,14 +218,14 @@ class StageAdapter:
 class OpportunityAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
-        self.integration_source = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
         self.account = kwargs.get("account", None)
         self.title = kwargs.get("title", None)
         self.description = kwargs.get("description", None)
         self.stage = kwargs.get("stage", None)
         self.amount = kwargs.get("amount", None)
-        self.close_date = kwargs.get("expected_close_date", None)
+        self.close_date = kwargs.get("close_date", None)
         self.type = kwargs.get("type", None)
         self.next_step = kwargs.get("next_step", None)
         self.lead_source = kwargs.get("lead_source", None)

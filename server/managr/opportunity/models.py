@@ -100,28 +100,15 @@ class Opportunity(TimeStampModel, IntegrationModel):
         return f"Lead '{self.title}' ({self.id})"
 
     def save(self, *args, **kwargs):
-        # do not allow duplicates of lead titles in a single org
-        opps = (
+        obj = (
             Opportunity.objects.filter(
-                title=self.title, account__organization__id=self.account.organization.id
+                integration_id=self.integration_id, imported_by=self.imported_by
             )
             .exclude(id=self.id)
-            .exists()
+            .first()
         )
-        if opps:
-            raise ValidationError(
-                {
-                    "non_form_errors": {
-                        "lead_title": "A lead with this title already exists\
-            in your organization"
-                    }
-                }
-            )
-        if float(self.amount) < 0:
-            raise ValidationError(
-                {"non_form_errors": {"lead_amount": "Amount must be a positive integer or float"}}
-            )
-
+        if obj:
+            return
         return super(Opportunity, self).save(*args, **kwargs)
 
 

@@ -38,7 +38,19 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 class StageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stage
-        fields = "__all__"
+        fields = (
+            "id",
+            "integration_id",
+            "integration_source",
+            "label",
+            "description",
+            "color",
+            "value",
+            "organization",
+            "order",
+            "is_closed",
+            "is_won",
+        )
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -58,6 +70,8 @@ class AccountSerializer(serializers.ModelSerializer):
             "organization",
             "logo",
             "parent_integration_id",
+            "integration_id",
+            "integration_source",
         )
         read_only_fields = ()
 

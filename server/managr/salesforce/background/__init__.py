@@ -17,9 +17,9 @@ def emit_sf_sync(user_id, sync_id, resource, offset):
     user_id = str(user_id)
     sync_id = str(sync_id)
     if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
-        return _process_account_sync(user_id, sync_id, offset)
+        return _process_account_sync(user_id, sync_id, offset, priority=3)
     elif resource == sf_consts.RESOURCE_SYNC_STAGE:
-        return _process_stage_sync(user_id, sync_id, offset)
+        return _process_stage_sync(user_id, sync_id, offset, priority=3)
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
         return _process_opportunity_sync(user_id, sync_id, offset)
 
@@ -41,11 +41,6 @@ def _process_account_sync(user_id, sync_id, offset):
 
     # remember to update failed or not
     return
-
-
-# from managr.salesforce.background import _process_account_sync
-# user = User.objects.get(email="pari@thinknimble.com")
-# _process_account_sync(str(user.id),'test')
 
 
 @background(schedule=0)
@@ -73,8 +68,8 @@ def _process_opportunity_sync(user_id, sync_id, offset):
     sf = user.salesforce_account
     res = sf.list_opportunities(offset)
     opps = map(lambda data: OpportunityAdapter.from_api(data, user.id, []).as_dict, res["records"],)
-    for opp in list(opps):
-        serializer = OpportunitySerializer(data=opp)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+    serializer = OpportunitySerializer(data=list(opps), many=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
     return
