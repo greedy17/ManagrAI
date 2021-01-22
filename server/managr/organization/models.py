@@ -172,19 +172,27 @@ class Contact(TimeStampModel, IntegrationModel):
     """
 
     title = models.CharField(max_length=255, blank=True)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255)
-    phone_number_1 = models.CharField(max_length=255)
-    phone_number_2 = models.CharField(max_length=255, blank=True)
+    phone_number = models.CharField(max_length=255, blank=True)
+    mobile_phone = models.CharField(max_length=255, blank=True)
     user = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="contacts", blank=True, null=True
     )
+    account = models.ForeignKey(
+        "organization.Account",
+        on_delete=models.SET_NULL,
+        related_name="contacts",
+        null=True,
+        blank=True,
+    )
+    external_owner = models.CharField(max_length=255, blank=True)
+    external_account = models.CharField(max_length=255, blank=True)
 
     objects = ContactQuerySet.as_manager()
 
     class Meta:
-        ordering = ["first_name"]
+        ordering = ["name"]
         # unique hash so only one contact with the same email can be created per account
         unique_together = (
             "email",
@@ -194,33 +202,7 @@ class Contact(TimeStampModel, IntegrationModel):
     def __str__(self):
         return f"{self.full_name} {self.organization}"
 
-    @property
-    def full_name(self):
-        """ Property for a user's full name """
-        return f"{self.first_name} {self.last_name}"
-
     def save(self, *args, **kwargs):
-        self.email = BaseUserManager.normalize_email(self.email).lower()
-        self.phone_number_1 = (
-            format_phone_number(self.phone_number_1, format="+1%d%d%d%d%d%d%d%d%d%d")
-            if self.phone_number_1
-            else ""
-        )
-        self.phone_number_2 = (
-            format_phone_number(self.phone_number_2, format="+1%d%d%d%d%d%d%d%d%d%d")
-            if self.phone_number_2
-            else ""
-        )
-        contact = (
-            Contact.objects.filter(email=self.email, account=self.account)
-            .exclude(id=self.id)
-            .first()
-        )
-        if contact:
-            raise ValidationError(
-                detail={"contact_exists": "A contact in the same org and account already exist"}
-            )
-
         return super(Contact, self).save(*args, **kwargs)
 
 

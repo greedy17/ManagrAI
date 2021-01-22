@@ -223,6 +223,52 @@ class StageAdapter:
         return vars(self)
 
 
+class ContactAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.title = kwargs.get("title", None)
+        self.email = kwargs.get("email", None)
+        self.phone_number = kwargs.get("phone_number", None)
+        self.mobile_phone = kwargs.get("mobile_phone", None)
+        self.user = kwargs.get("user", None)
+        self.account = kwargs.get("account", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.external_account = kwargs.get("external_account", None)
+
+    @staticmethod
+    def from_api(data, user_id, mapping):
+        formatted_data = dict()
+        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["name"] = data.get("Name", "") if data.get("Name", "") else ""
+        formatted_data["title"] = data.get("Title", "") if data.get("Title", "") else ""
+        formatted_data["email"] = data.get("Email", "") if data.get("Email", "") else ""
+        formatted_data["mobile_phone"] = (
+            data.get("MobilePhone", "") if data.get("MobilePhone", "") else ""
+        )
+        formatted_data["phone_number"] = data.get("Phone", "") if data.get("Phone", "") else ""
+        formatted_data["user"] = user_id
+        formatted_data["external_account"] = (
+            data.get("AccountId", "") if data.get("AccountId", "") else ""
+        )
+        formatted_data["external_owner"] = (
+            data.get("OwnerId", "") if data.get("OwnerId", "") else ""
+        )
+        formatted_data["account"] = (
+            None
+            if not len(formatted_data["external_account"])
+            else formatted_data["external_account"]
+        )
+
+        return ContactAdapter(**formatted_data)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
 class OpportunityAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)

@@ -23,7 +23,7 @@ AUTHENTICATION_BODY = lambda code: {
     "redirect_uri": REDIRECT_URL,
 }
 REAUTHENTICATION_BODY = lambda refresh_token: {
-    "grant_type": "authorization_code",
+    "grant_type": "refresh_token",
     "Content-type": "application/x-www-form-urlencoded",
     "refresh_token": refresh_token,
     "client_id": CLIENT_ID,
