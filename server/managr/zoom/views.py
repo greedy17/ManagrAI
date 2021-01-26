@@ -127,7 +127,7 @@ def zoom_meetings_webhook(request):
         ### move all this to a background task, zoom requires response in 60s
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
 
-        if zoom_account:
+        if zoom_account and not zoom_account.is_revoked:
             # emit the process
             _get_past_zoom_meeting_details(
                 str(zoom_account.user.id), meeting_uuid, original_duration

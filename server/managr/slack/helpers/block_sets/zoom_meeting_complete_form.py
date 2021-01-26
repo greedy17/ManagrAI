@@ -8,12 +8,12 @@ from managr.slack.helpers import block_builders
 
 @block_set(required_context=["o", "l", "m"])
 def zoom_meeting_complete_form(context):
-    lead = Lead.objects.get(pk=context.get("l"))
-    stage = lead.status.as_slack_option if lead.status else None
-    forecast = lead.forecast.as_slack_option if hasattr(lead, "forecast") else None
+    opportunity = Opportunity.objects.get(pk=context.get("l"))
+    stage = opportunity.status.as_slack_option if opportunity.status else None
+    forecast = opportunity.forecast.as_slack_option if hasattr(opportunity, "forecast") else None
 
-    expected_close_date = str(lead.expected_close_date.date()) if lead.expected_close_date else None
-    amount = lead.amount if lead.amount else None
+    close_date = str(opportunity.close_date.date()) if opportunity.close_date else None
+    amount = opportunity.amount if opportunity.amount else None
 
     # make params here
     organization_id_param = "o=" + context.get("o")
@@ -23,7 +23,7 @@ def zoom_meeting_complete_form(context):
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": "*Opportunity:*"},
-                {"type": "plain_text", "text": f":dart: {lead.title}", "emoji": True},
+                {"type": "plain_text", "text": f":dart: {opportunity.title}", "emoji": True},
             ],
         },
         {"type": "divider"},
@@ -44,7 +44,7 @@ def zoom_meeting_complete_form(context):
         ),
         block_builders.external_select(
             "*Forecast Strength*",
-            slack_const.GET_LEAD_FORECASTS,
+            slack_const.GET_OPPORTUNITY_FORECASTS,
             initial_option=forecast,
             block_id="forecast",
         ),
@@ -61,10 +61,10 @@ def zoom_meeting_complete_form(context):
             "block_id": "description",
         },
         block_builders.datepicker(
-            date=expected_close_date,
-            label="*Expected Close Date*",
+            date=close_date,
+            label="*Close Date*",
             action_id=slack_const.DEFAULT_ACTION_ID,
-            block_id="expected_close_date",
+            block_id="close_date",
         ),
         {
             "type": "input",

@@ -13,7 +13,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 
-from .adapter.models import SalesforceAuthAccountAdapter
+from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from . import constants as sf_consts
 
 
@@ -144,6 +144,9 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def list_opportunities(self, offset):
         return self.adapter_class.list_opportunities(offset)
+
+    def update_opportunity(self, data):
+        return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
 
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)

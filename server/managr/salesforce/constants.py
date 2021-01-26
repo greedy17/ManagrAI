@@ -63,7 +63,7 @@ SALESFORCE_QUERY_LIMIT = 100
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-SALSFORCE_OPP_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Id, Contact.Name, Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_OPP_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Contact.Id, Contact.Name, Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 
 
 SALSFORCE_ACCOUNT_QUERY_URI_COUNT = (
@@ -75,3 +75,15 @@ SALSFORCE_STAGE_QUERY_URI_COUNT = (
 SALSFORCE_OPP_QUERY_URI_COUNT = (
     f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Opportunity"
 )
+
+SALESFORCE_JSON_HEADER = {"Content-Type": "application/json"}
+SALESFORCE_BEARER_AUTH_HEADER = lambda x: {"Authorization", f"Bearer {x}"}
+"""
+u = custom uri
+r = resource 
+
+"""
+SALESFORCE_WRITE_URI = lambda u, r: f"{u}/services/data/v{{version}}/sobjects/{r}"
+
+SALESFORCE_RESOURCE_OPPORTUNITY = "Opportunity"
+

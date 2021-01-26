@@ -237,7 +237,7 @@ class Stage(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.label, str(self.id))
+        return block_builders.option(self.label, self.label)
 
     class Meta:
         ordering = ["order"]
