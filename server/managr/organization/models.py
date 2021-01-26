@@ -9,28 +9,23 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
 
 from rest_framework.authtoken.models import Token
-
-from managr.utils.numbers import format_phone_number
-
-from django.db.models import Sum, Avg, Q
 from rest_framework.exceptions import ValidationError
+
 
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
-
-from . import constants as org_consts
-
-
 from managr.core.models import (
     UserManager,
     TimeStampModel,
     IntegrationModel,
     Notification,
 )
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.organization.models import Notification
 from managr.slack.helpers import block_builders
+
 
 from . import constants as org_consts
 
@@ -173,7 +168,7 @@ class Contact(TimeStampModel, IntegrationModel):
 
     title = models.CharField(max_length=255, blank=True)
     name = models.CharField(max_length=255, blank=True)
-    email = models.CharField(max_length=255)
+    email = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=255, blank=True)
     mobile_phone = models.CharField(max_length=255, blank=True)
     user = models.ForeignKey(
@@ -193,16 +188,20 @@ class Contact(TimeStampModel, IntegrationModel):
 
     class Meta:
         ordering = ["name"]
-        # unique hash so only one contact with the same email can be created per account
-        unique_together = (
-            "email",
-            "user",
-        )
 
     def __str__(self):
-        return f"{self.full_name} {self.organization}"
+        return f"{self.user.full_name}, contact integration: {self.integration_source}: {self.integration_id}"
 
     def save(self, *args, **kwargs):
+        # if there is an integration id make sure it is unique
+        if self.integration_id:
+            existing = (
+                Contact.objects.filter(integration_id=self.integration_id, user=self.user)
+                .exclude(id=self.id)
+                .first()
+            )
+            if existing:
+                raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
 
 

@@ -77,36 +77,20 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    def validate_phone_number_1(self, value):
-        if value:
-            try:
-                validate_phone_number(value)
-            except ValueError:
-                raise ValidationError()
-        return value
-
-    def validate_phone_number_2(self, value):
-        if value:
-            try:
-                validate_phone_number(value)
-            except ValueError:
-                raise ValidationError()
-        return value
-
     class Meta:
         model = Contact
         fields = (
             "id",
             "title",
-            "full_name",
-            "first_name",
-            "last_name",
+            "name",
             "email",
-            "phone_number_1",
-            "phone_number_2",
+            "phone_number",
+            "mobile_phone",
             "account",
+            "external_owner",
+            "external_account",
+            "user",
+            "integration_source",
+            "integration_id",
         )
-        extra_kwargs = {
-            "email": {"required": True},
-            "account": {"required": True},
-        }
+        extra_kwargs = {}

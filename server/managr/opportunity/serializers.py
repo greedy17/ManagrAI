@@ -11,13 +11,14 @@ from rest_framework import status, filters, permissions
 
 from rest_framework.response import Response
 
-from managr.organization.models import Stage, Account
+from managr.organization.models import Stage, Account, Contact
 from managr.organization.serializers import (
     AccountSerializer,
     ContactSerializer,
     StageSerializer,
 )
 from managr.salesforce.models import SalesforceAuthAccount
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.organization import constants as org_consts
 from managr.core.models import User, Notification
 from managr.organization import constants as opp_consts
@@ -72,6 +73,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "external_owner",
             "external_stage",
             "imported_by",
+            "contacts",
         )
 
     def to_internal_value(self, data):
@@ -81,12 +83,12 @@ class OpportunitySerializer(serializers.ModelSerializer):
         stage = data.get("stage", None)
         forecast_category = data.get("forecast_category", None)
         if owner:
-            user = (
+            sf_account = (
                 SalesforceAuthAccount.objects.filter(salesforce_id=owner)
                 .select_related("user")
                 .first()
             )
-            user = user.id if user else user
+            user = sf_account.user.id if sf_account else sf_account
             data.update({"owner": user})
         if account:
             acct = Account.objects.filter(
@@ -105,6 +107,31 @@ class OpportunitySerializer(serializers.ModelSerializer):
                     formatted_category = category[0]
             if formatted_category:
                 data.update({"forecast_category": formatted_category})
+        # remove contacts from validation
+        contacts = data.pop("contacts", [])
+        internal_data = super().to_internal_value(data)
+        internal_data.update({"contacts": contacts})
+        return internal_data
 
-        return super().to_internal_value(data)
+    def create(self, validated_data):
+        try:
+
+            contacts_to_add = list()
+            for contact in validated_data.pop("contacts", []):
+                existing_contact = Contact.objects.filter(
+                    integration_id=contact.get("integration_id"), user__id=contact.get("user"),
+                ).first()
+                if existing_contact:
+                    serializer = ContactSerializer(
+                        instance=existing_contact, data=contact, partial=True
+                    )
+                else:
+                    serializer = ContactSerializer(data=contact)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                contacts_to_add.append(serializer.data["id"])
+            validated_data.update({"contacts": contacts_to_add})
+            return super().create(validated_data)
+        except ResourceAlreadyImported:
+            pass
 

@@ -8,6 +8,7 @@ from requests.exceptions import HTTPError
 
 from managr.utils.client import HttpClient
 from managr.organization import constants as org_consts
+from managr.api.decorators import log_all_exceptions
 
 from .exceptions import CustomAPIException
 from .. import constants as sf_consts
@@ -30,6 +31,7 @@ class SalesforceAuthAccountAdapter:
         self.user = kwargs.get("user", None)
 
     @staticmethod
+    @log_all_exceptions
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
@@ -42,9 +44,9 @@ class SalesforceAuthAccountAdapter:
         else:
             try:
                 error_code = response.status_code
-                error_data = response.json()
-                error_param = error_data.get("error", None)
-                error_message = error_data.get("reason", None)
+                error_data = response.json()[0]
+                error_param = error_data.get("errorCode", None)
+                error_message = error_data.get("message", None)
                 kwargs = {
                     "error_code": error_code,
                     "error_param": error_param,
@@ -291,6 +293,7 @@ class OpportunityAdapter:
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
+        self.contacts = kwargs.get("contacts", None)
 
     @staticmethod
     def _format_date_time_from_api(d):
@@ -303,6 +306,13 @@ class OpportunityAdapter:
         if obj and obj.get("totalSize", 0) > 0:
             return OpportunityAdapter._format_date_time_from_api(obj["records"][0]["CreatedDate"])
         return None
+
+    @staticmethod
+    def _format_contacts_list(contacts, user_id, mapping):
+        formatted_contacts = list()
+        for contact in contacts:
+            formatted_contacts.append(ContactAdapter.from_api(contact, user_id, mapping).as_dict)
+        return formatted_contacts
 
     @staticmethod
     def from_api(data, user_id, mapping):
@@ -343,6 +353,13 @@ class OpportunityAdapter:
         )
         formatted_data["last_stage_update"] = OpportunityAdapter._format_stage_update(
             data.get("OpportunityHistories", None)
+        )
+        formatted_data["contacts"] = (
+            OpportunityAdapter._format_contacts_list(
+                data.get("OpportunityContactRoles").get("records"), user_id, []
+            )
+            if data.get("OpportunityContactRoles", None)
+            else []
         )
         formatted_data["imported_by"] = str(user_id)
         ## Placeholder contacts

@@ -1,4 +1,5 @@
 import uuid
+import json
 
 from django.db import models
 from django.db.models import F, Q, Count
@@ -6,7 +7,8 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.core import serializers
-import json
+
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
@@ -108,7 +110,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
             .first()
         )
         if obj:
-            return
+            raise ResourceAlreadyImported()
         return super(Opportunity, self).save(*args, **kwargs)
 
 
