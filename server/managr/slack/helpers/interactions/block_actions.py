@@ -14,7 +14,7 @@ from managr.slack.helpers.block_sets import get_block_set
 logger = logging.getLogger("managr")
 
 
-@processor(required_context=["o", "u", "l", "sentiment"])
+@processor(required_context=["o", "u", "opp", "sentiment"])
 def process_meeting_sentiment(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -40,7 +40,8 @@ def process_meeting_sentiment(payload, context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    slack_requests.generic_request(url, data, access_token=access_token)
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["o", "u", "l", "m"])
@@ -170,6 +171,42 @@ def process_get_lead_logs(payload, context):
     private_metadata.update(context)
 
     slack_requests.generic_request(url, data, access_token=access_token)
+
+
+@processor(required_context=["m"])
+def process_show_meeting_contacts(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    org = meeting.zoom_account.user.organization
+
+    access_token = org.slack_integration.access_token
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    salesforce_account = meeting.zoom_account.user.salesforce_account
+
+    blocks = get_block_set(
+        "show_meeting_contacts", {"salesforce": salesforce_account, "meeting": meeting},
+    )
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+            "title": {"type": "plain_text", "text": "Contacts"},
+            # "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+
+    private_metadata.update(context)
+
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -304,6 +341,35 @@ def process_get_lead_score_components(payload, context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_context=["m", "contact_index"])
+def process_edit_meeting_contact(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    contact = meeting.participants[int(context.get("contact_index"))]
+
+    org = meeting.zoom_account.user.organization
+
+    access_token = org.slack_integration.access_token
+
+    salesforce_account = meeting.zoom_account.user.salesforce_account
+
+    blocks = get_block_set("edit_meeting_contacts", {"meeting": meeting, "contact": contact},)
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+            "title": {"type": "plain_text", "text": "Edit Contact"},
+            "blocks": blocks,
+        },
+    }
+
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -317,6 +383,8 @@ def handle_block_actions(payload):
         slack_const.SHOW_LEAD_LOGS: process_get_lead_logs,
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
         slack_const.SHOW_LEAD_SCORE_COMPONENTS: process_get_lead_score_components,
+        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
+        slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT: process_edit_meeting_contact,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

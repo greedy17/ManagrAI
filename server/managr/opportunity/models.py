@@ -14,7 +14,7 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
-
+from managr.salesforce.adapter.models import OpportunityAdapter
 
 # from managr.core import background as bg_task
 from . import constants as opp_consts
@@ -89,6 +89,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     lead_source = models.CharField(max_length=255, blank=True)
     last_activity_date = models.DateTimeField(null=True)
     last_stage_update = models.DateTimeField(null=True)
+    is_stale = models.BooleanField(default=False)
     objects = OpportunityQuerySet.as_manager()
 
     class Meta:
@@ -97,6 +98,14 @@ class Opportunity(TimeStampModel, IntegrationModel):
     @property
     def as_slack_option(self):
         return block_builders.option(self.title, str(self.id))
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            OpportunityAdapter.update_opportunity(data, token, base_url, self.integration_id)
+            self.is_stale = True
+            self.save()
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"
@@ -120,36 +129,6 @@ class LeadActivityLogQuerySet(models.QuerySet):
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(lead__account__organization=user.organization_id)
-
-
-class ActionChoiceQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
-        else:
-            return None
-
-
-class ActionChoice(TimeStampModel):
-    title = models.CharField(max_length=255, blank=True, null=False)
-    description = models.CharField(max_length=255, blank=True, null=False)
-    organization = models.ForeignKey(
-        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
-    )
-
-    objects = ActionChoiceQuerySet.as_manager()
-
-    @property
-    def as_slack_option(self):
-        return block_builders.option(self.title, str(self.id))
-
-    class Meta:
-        ordering = ["title"]
-
-    def __str__(self):
-        return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
 
 
 class OpportunityScoreQuerySet(models.QuerySet):

@@ -16,15 +16,26 @@ from managr.slack.helpers.utils import (
 # TODO: this and other zoom-flow block_sets will likely need "m" for meeting ID
 
 
-@block_set(required_context=["o", "u", "l", "m"])
+def generate_sentiment_button(text, value, params):
+    return {
+        "type": "button",
+        "text": {"type": "plain_text", "text": text},
+        "value": value,
+        "action_id": action_with_params(
+            slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT, params=params,
+        ),
+    }
+
+
+@block_set(required_context=["o", "u", "opp", "m"])
 def zoom_meeting_initial(context):
-    lead = Lead.objects.get(pk=context["l"])
-    primary_description = lead.primary_description or "No Primary Description"
-    secondary_description = lead.secondary_description or "No Secondary Description"
-    meeting = lead.meetings.filter(id=context["m"]).first()
+    opportunity = Opportunity.objects.get(pk=context["opp"])
+    description = opportunity.description or "No Description"
+    next_step = opportunity.next_step or "No Next Step"
+    meeting = opportunity.meetings.filter(id=context["m"]).first()
     # make params here
     user_id_param = "u=" + context["u"]
-    lead_id_param = "l=" + context["l"]
+    opportunity_id_param = "opp=" + context["opp"]
     meeting_id_param = "m=" + context["m"]
 
     organization_id_param = "o=" + context["o"]
@@ -46,13 +57,20 @@ def zoom_meeting_initial(context):
         if end_time
         else end_time
     )
+    params = lambda sentiment: [
+        user_id_param,
+        opportunity_id_param,
+        organization_id_param,
+        meeting_id_param,
+        sentiment_param(sentiment),
+    ]
 
     return [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"Your meeting regarding :dart: *{lead.title}* just ended, how'd it go?",
+                "text": f"Your meeting regarding :dart: *{opportunity.title}* just ended, how'd it go?",
             },
         },
         {"type": "divider"},
@@ -68,63 +86,48 @@ def zoom_meeting_initial(context):
                 "alt_text": "calendar thumbnail",
             },
         },
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": "Review the people who joined your meeting and save them to Salesforce",
+            },
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                "action_id": action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                ),
+            },
+        },
         {"type": "divider"},
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*{lead.title}*\n{get_lead_rating_emoji(lead.rating)}\n{primary_description}\n{secondary_description}",
+                "text": f"*{opportunity.title}*\n{description}\n{next_step}",
             },
         },
         {"type": "divider"},
         {
             "type": "actions",
             "elements": [
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Great!"},
-                    "value": slack_const.ZOOM_MEETING__GREAT,
-                    "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
-                        params=[
-                            user_id_param,
-                            lead_id_param,
-                            organization_id_param,
-                            meeting_id_param,
-                            sentiment_param(slack_const.ZOOM_MEETING__GREAT),
-                        ],
-                    ),
-                },
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Not well...",},
-                    "value": slack_const.ZOOM_MEETING__NOT_WELL,
-                    "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
-                        params=[
-                            user_id_param,
-                            lead_id_param,
-                            organization_id_param,
-                            meeting_id_param,
-                            sentiment_param(slack_const.ZOOM_MEETING__NOT_WELL),
-                        ],
-                    ),
-                },
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Can't Tell",},
-                    "value": slack_const.ZOOM_MEETING__CANT_TELL,
-                    "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
-                        params=[
-                            user_id_param,
-                            lead_id_param,
-                            organization_id_param,
-                            meeting_id_param,
-                            sentiment_param(slack_const.ZOOM_MEETING__CANT_TELL),
-                        ],
-                    ),
-                },
+                generate_sentiment_button(
+                    "Great!",
+                    slack_const.ZOOM_MEETING__GREAT,
+                    params(slack_const.ZOOM_MEETING__GREAT),
+                ),
+                generate_sentiment_button(
+                    "Not Well",
+                    slack_const.ZOOM_MEETING__NOT_WELL,
+                    params(slack_const.ZOOM_MEETING__NOT_WELL),
+                ),
+                generate_sentiment_button(
+                    "Can't Tell",
+                    slack_const.ZOOM_MEETING__CANT_TELL,
+                    params(slack_const.ZOOM_MEETING__CANT_TELL),
+                ),
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Different Opportunity",},
@@ -133,7 +136,7 @@ def zoom_meeting_initial(context):
                         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
                         params=[
                             user_id_param,
-                            lead_id_param,
+                            opportunity_id_param,
                             organization_id_param,
                             meeting_id_param,
                         ],

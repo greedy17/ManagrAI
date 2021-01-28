@@ -20,4 +20,5 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "salesforce_account",
             "login_link",
             "user",
+            "is_busy",
         )

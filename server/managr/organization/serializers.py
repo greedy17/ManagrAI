@@ -3,7 +3,7 @@ from rest_framework import serializers, status, filters, permissions
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 
-from managr.opportunity.models import ActionChoice
+from managr.organization.models import ActionChoice
 from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
 
@@ -36,6 +36,9 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 
 
 class StageSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, data):
+        return super().to_internal_value(data)
+
     class Meta:
         model = Stage
         fields = (
@@ -50,6 +53,7 @@ class StageSerializer(serializers.ModelSerializer):
             "order",
             "is_closed",
             "is_won",
+            "is_active",
         )
 
 
@@ -82,7 +86,8 @@ class ContactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
-            "name",
+            "first_name",
+            "last_name",
             "email",
             "phone_number",
             "mobile_phone",

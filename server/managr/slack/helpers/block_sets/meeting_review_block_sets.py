@@ -1,0 +1,123 @@
+import pdb
+
+from managr.core.models import User, Notification
+from managr.opportunity.models import Opportunity, OpportunityScore
+from managr.zoom.models import ZoomMeeting
+from managr.salesforce import constants as sf_consts
+from managr.slack import constants as slack_const
+from managr.slack.helpers.utils import action_with_params, block_set
+from managr.slack.helpers import block_builders
+
+
+def generate_edit_contact_form():
+    return block_builders.simple_section("test")
+
+
+def generate_contact_group(index, contact, instance_url):
+    integration_id = contact.get("integration_id")
+    title = (
+        contact.get("title")
+        if contact.get("title", "") and len(contact.get("title", ""))
+        else "N/A"
+    )
+    first_name = (
+        contact.get("first_name")
+        if contact.get("first_name", "") and len(contact.get("first_name", ""))
+        else "N/A"
+    )
+    last_name = (
+        contact.get("last_name")
+        if contact.get("last_name", "") and len(contact.get("last_name", ""))
+        else "N/A"
+    )
+
+    email = (
+        contact.get("email")
+        if contact.get("email", "") and len(contact.get("email", ""))
+        else "N/A"
+    )
+    mobile_number = (
+        contact.get("mobile_number")
+        if contact.get("mobile_number") and len(contact.get("mobile_number"))
+        else "N/A"
+    )
+    phone_number = (
+        contact.get("phone_number")
+        if contact.get("phone_number") and len(contact.get("phone_number"))
+        else "N/A"
+    )
+
+    blocks = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*Title:* {title}\n*First Name:* {first_name}\n*Last Name:* {last_name}\n*Email:* {email}\n*Mobile Phone:* {mobile_number}\n*Phone:* {phone_number}",
+        },
+    }
+    if integration_id:
+        blocks["accessory"] = {
+            "type": "button",
+            "text": {"type": "plain_text", "text": "View In Salesforce"},
+            "value": "View In Salesforce",
+            "url": sf_consts.SALESFORCE_CONTACT_VIEW_URI(instance_url, integration_id),
+            "action_id": f"button-action-{integration_id}",
+        }
+
+    return blocks
+
+
+@block_set(required_context=["salesforce", "meeting"])
+def meeting_contacts_block_set(context):
+    meeting = context.get("meeting")
+    contacts = meeting.participants
+    sf_account = context.get("salesforce")
+
+    block_sets = [
+        {"type": "header", "text": {"type": "plain_text", "text": f"Review",},},
+        {"type": "divider"},
+    ]
+
+    for i, contact in enumerate(contacts):
+        meeting_id_param = f"m={str(meeting.id)}"
+        contact_index_param = f"contact_index={i}"
+        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        # pass meeting id and contact index
+        block_sets.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Edit Details"},
+                        "value": "click_me_123",
+                        "action_id": action_with_params(
+                            slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+                            params=[meeting_id_param, contact_index_param],
+                        ),
+                    }
+                ],
+            }
+        )
+        if not contact.get("integration_id", None):
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                            "value": "click_me_123",
+                            "action_id": f"edit-contact-{i}",
+                        }
+                    ],
+                }
+            )
+
+        block_sets.append({"type": "divider"})
+
+    return block_sets
+
+
+@block_set(required_context=["meeting", "contact"])
+def edit_meeting_contacts_block_set(context):
+    return [generate_edit_contact_form()]

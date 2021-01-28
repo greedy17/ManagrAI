@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from managr.slack.models import OrganizationSlackIntegration
 
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, Account, Contact, Stage, ActionChoice
 
 
 class OrganizationSlackIntegrationInline(admin.StackedInline):
@@ -49,4 +49,5 @@ admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 
 admin.site.register(Contact)
+admin.site.register(ActionChoice)
 admin.site.register(Stage)

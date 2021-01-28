@@ -16,7 +16,7 @@ def process_get_organization_stages(payload, context):
     return {
         "options": [
             s.as_slack_option
-            for s in Stage.objects.filter(Q(type="PUBLIC") | Q(organization=organization))
+            for s in Stage.objects.filter(Q(organization=organization) & Q(is_active=True))
         ],
     }
 
@@ -30,18 +30,18 @@ def process_get_organization_action_choices(payload, context):
 
 
 @processor()
-def process_get_lead_forecasts(payload, context):
+def process_get_opportunity_forecasts(payload, context):
     return {
-        "options": [block_builders.option(f[1], f[0]) for f in lead_const.FORECAST_CHOICES],
+        "options": [block_builders.option(f[1], f[0]) for f in opp_consts.FORECAST_CHOICES],
     }
 
 
 @processor(required_context=["u"])
-def process_get_user_leads(payload, context):
+def process_get_user_opportunities(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.claimed_leads.filter(title__icontains=value)],
+        "options": [l.as_slack_option for l in user.owned_leads.filter(title__icontains=value)],
     }
 
 
@@ -53,8 +53,8 @@ def handle_block_suggestion(payload):
     switcher = {
         slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
-        slack_const.GET_LEAD_FORECASTS: process_get_lead_forecasts,
-        slack_const.GET_USER_OPPORTUNITIES: process_get_user_leads,
+        slack_const.GET_OPPORTUNITY_FORECASTS: process_get_opportunity_forecasts,
+        slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

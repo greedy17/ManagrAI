@@ -1,3 +1,15 @@
+def simple_section(value, section_type="plain_text"):
+    return {
+        "type": "section",
+        "text": {"type": section_type, "text": value},
+    }
+
+
+def simple_section_multiple_options(value, sections):
+    """ sections can have multiple fields they are a collection of simple_selections """
+    return {"type": "section", "fields": sections}
+
+
 def option(text, value):
     return {
         "text": {"type": "plain_text", "text": text},

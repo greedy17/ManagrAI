@@ -24,6 +24,12 @@ def emit_sf_sync(user_id, sync_id, resource, offset):
         return _process_opportunity_sync(user_id, sync_id, offset)
 
 
+def emit_sf_update_opportunity(user_id, meeting_review_id):
+    user_id = str(user_id)
+    meeting_review_id = str(meeting_review_id)
+    _process_update_opportunity(user_id, meeting_review_id)
+
+
 @background(schedule=0)
 def _process_account_sync(user_id, sync_id, offset):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
@@ -73,3 +79,23 @@ def _process_opportunity_sync(user_id, sync_id, offset):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return
+
+
+@background(schedule=0)
+def _process_update_opportunity(user_id, meeting_review_id):
+    user = (
+        User.objects.filter(id=user_id)
+        .select_related("zoom_account")
+        .select_related("salesforce_account")
+        .first()
+    )
+    if user and user.has_zoom_integration and user.has_slack_integration:
+        meeting = user.zoom_account.meetings.filter(meeting_review__id=meeting_review_id).first()
+        meeting_review = meeting.meeting_review
+        if meeting_review:
+            formatted_data = meeting_review.as_sf_update
+            meeting.opportunity.update_in_salesforce(formatted_data)
+
+            # push to sf
+    return
+

@@ -106,6 +106,7 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
+    is_busy = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-datetime_created"]

@@ -114,7 +114,6 @@ def redirect_from_zoom(request):
 def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
-
     # for v1 only tracking meeting.ended
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
@@ -122,6 +121,7 @@ def zoom_meetings_webhook(request):
         host_id = obj.get("host_id", None)
         meeting_uuid = obj.get("uuid", None)
         original_duration = obj.get("duration", None)
+        print(meeting_uuid)
         if not original_duration or original_duration < 0:
             original_duration = 0
         ### move all this to a background task, zoom requires response in 60s

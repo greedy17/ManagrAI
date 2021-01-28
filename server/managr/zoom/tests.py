@@ -182,7 +182,7 @@ class MeetingScoreTestCase(TestCase):
 
     def test_meeting_forecast_progress_from_none(self):
         self.meeting_review = MeetingReview.objects.create(
-            meeting=self.zoom_meeting, forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
+            meeting=self.zoom_meeting, forecast_category=opp_consts.FORECAST_FIFTY_FIFTY,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -193,7 +193,7 @@ class MeetingScoreTestCase(TestCase):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
             prev_forecast=opp_consts.FORECAST_FIFTY_FIFTY,
-            forecast_strength=opp_consts.FORECAST_STRONG,
+            forecast_category=opp_consts.FORECAST_STRONG,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -204,7 +204,7 @@ class MeetingScoreTestCase(TestCase):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
             prev_forecast=opp_consts.FORECAST_FIFTY_FIFTY,
-            forecast_strength=None,
+            forecast_category=None,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -215,7 +215,7 @@ class MeetingScoreTestCase(TestCase):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
             prev_forecast=opp_consts.FORECAST_STRONG,
-            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
+            forecast_category=opp_consts.FORECAST_FIFTY_FIFTY,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -226,7 +226,7 @@ class MeetingScoreTestCase(TestCase):
         self.meeting_review = MeetingReview.objects.create(
             meeting=self.zoom_meeting,
             prev_forecast=opp_consts.FORECAST_STRONG,
-            forecast_strength=opp_consts.FORECAST_STRONG,
+            forecast_category=opp_consts.FORECAST_STRONG,
         )
         score, score_components = score_meeting(self.zoom_meeting)
 
@@ -576,7 +576,7 @@ class MeetingScoreTestCase(TestCase):
             meeting=self.zoom_meeting,
             sentiment=slack_consts.ZOOM_MEETING__GREAT,
             update_stage=self.ready_stage.id,
-            forecast_strength=opp_consts.FORECAST_FIFTY_FIFTY,
+            forecast_category=opp_consts.FORECAST_FIFTY_FIFTY,
             updated_close_date=datetime(2020, 12, 15),
         )
         score, score_components = score_meeting(self.zoom_meeting)

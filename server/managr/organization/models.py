@@ -25,6 +25,7 @@ from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.organization.models import Notification
 from managr.slack.helpers import block_builders
+from managr.salesforce.adapter.models import ContactAdapter
 
 
 from . import constants as org_consts
@@ -74,18 +75,6 @@ class Organization(TimeStampModel):
         """ if an org already has stages assume we already synced and dont try again """
 
         return self.stages.count() > 0
-
-    @property
-    def total_amount_closed_contracts(self):
-        total = Organization.objects.aggregate(Sum("accounts__leads__closing_amount"))
-        if total:
-            return total
-        else:
-            return 0
-
-    @property
-    def avg_amount_closed_contracts(self):
-        return Organization.objects.aggregate(Avg("accounts__leads__amount"))
 
 
 class AccountQuerySet(models.QuerySet):
@@ -167,7 +156,8 @@ class Contact(TimeStampModel, IntegrationModel):
     """
 
     title = models.CharField(max_length=255, blank=True)
-    name = models.CharField(max_length=255, blank=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=255, blank=True)
     mobile_phone = models.CharField(max_length=255, blank=True)
@@ -187,7 +177,13 @@ class Contact(TimeStampModel, IntegrationModel):
     objects = ContactQuerySet.as_manager()
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        return ContactAdapter(**data)
 
     def __str__(self):
         return f"{self.user.full_name}, contact integration: {self.integration_source}: {self.integration_id}"
@@ -229,15 +225,15 @@ class Stage(TimeStampModel, IntegrationModel):
     organization = models.ForeignKey(
         "Organization", related_name="stages", on_delete=models.CASCADE,
     )
-    # currently setting default to 6 we have 5 public tags that are taking 1-5
     order = models.IntegerField(blank=True, null=True)
     is_closed = models.BooleanField(default=False)
     is_won = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
     objects = StageQuerySet.as_manager()
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.label, self.label)
+        return block_builders.option(self.label, self.id)
 
     class Meta:
         ordering = ["order"]
@@ -254,3 +250,33 @@ class Stage(TimeStampModel, IntegrationModel):
         if obj:
             return
         return super(Stage, self).save(*args, **kwargs)
+
+
+class ActionChoiceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization_id)
+        else:
+            return None
+
+
+class ActionChoice(TimeStampModel):
+    title = models.CharField(max_length=255, blank=True, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+    organization = models.ForeignKey(
+        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
+    )
+
+    objects = ActionChoiceQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, str(self.id))
+
+    class Meta:
+        ordering = ["title"]
+
+    def __str__(self):
+        return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"

@@ -12,6 +12,8 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact
 from managr.opportunity.models import Opportunity
+from managr.salesforce.adapter.models import ContactAdapter
+from managr.salesforce.background import emit_sf_update_opportunity
 
 from .. import constants as zoom_consts
 from ..zoom_helper import auth as zoom_auth
@@ -24,6 +26,21 @@ from ..serializers import (
     ZoomMeetingWebhookSerializer,
     ZoomMeetingSerializer,
 )
+
+
+def _split_first_name(name):
+    if name and len(name):
+        name_parts = name.split(" ")
+        if len(name_parts):
+            return name_parts[0]
+
+
+def _split_last_name(name):
+    if name and len(name):
+        name_parts = name.split(" ")
+        if len(name_parts) > 1:
+
+            return "".join(name_parts[1:])
 
 
 def emit_process_past_zoom_meeting(user_id, meeting_uuid):
@@ -41,45 +58,66 @@ def emit_save_meeting_review_data(managr_meeting_id, data):
 @background(schedule=0)
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
-    if zoom_account:
+    if zoom_account and not zoom_account.is_revoked:
         # emit the process
         meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
         meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
         meeting.original_duration = original_duration
-        participants = meeting.as_dict.get("participants", None)
+        zoom_participants = meeting.as_dict.get("participants", None)
+        # remove duplicates
+        participants = []
+        for participant in zoom_participants:
+            if participant not in participants:
+                participants.append(participant)
+
         if participants:
             user = zoom_account.user
-            participant_emails = [
-                participant.get("user_email", None) for participant in participants
-            ]
+            participant_emails = set(
+                [participant.get("user_email", None) for participant in participants]
+            )
+
             opportunity = Opportunity.objects.filter(
-                account__organization=user.organization,
-                linked_contacts__email__in=participant_emails,
+                contacts__email__in=participant_emails,
             ).first()
             meeting_contacts = []
             if opportunity:
-                for contact in participants:
-                    contact_email = contact.get("user_email", None)
-                    if contact_email and contact_email != user.email:
+                existing_contacts = Contact.objects.filter(
+                    email__in=participant_emails, user__organization__id=user.organization.id
+                ).exclude(email=user.email)
+                # convert all contacts to model representation and remove from array
+                for contact in existing_contacts:
+                    meeting_contacts.append(contact.adapter_class.as_dict)
+                    for index, participant in enumerate(participants):
+                        if (
+                            participant["user_email"] == contact.email
+                            or participant["user_email"] == user.email
+                        ):
+                            del participants[index]
 
-                        c, created = Contact.objects.for_user(user).get_or_create(
-                            email=contact["user_email"].lower(),
-                            defaults={"account": opportunity.account,},
-                        )
+                meeting_contacts = [
+                    *meeting_contacts,
+                    *list(
+                        map(
+                            lambda contact: ContactAdapter(**contact).as_dict,
+                            list(
+                                map(
+                                    lambda participant: dict(
+                                        email=participant["user_email"],
+                                        first_name=_split_first_name(participant["name"]),
+                                        last_name=_split_last_name(participant["name"]),
+                                    ),
+                                    participants,
+                                ),
+                            ),
+                        ),
+                    ),
+                ]
 
-                        if created:
-                            if contact["name"]:
-                                name_items = contact["name"].split(" ")
-                                c.first_name = name_items[0]
-                                if len(name_items) > 1:
-                                    c.last_name = " ".join(name_items[1:])
-                                c.save()
-                            opportunity.linked_contacts.add(c)
-                        meeting_contacts.append(c.id)
+                # push to sf
 
                 # for v1 will only be able to assign to one opportunity
                 meeting.opportunity = opportunity.id
-                meeting.participants = set(meeting_contacts)
+                meeting.participants = meeting_contacts
                 serializer = ZoomMeetingSerializer(data=meeting.as_dict)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -103,9 +141,14 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set(
                 "zoom_meeting_initial",
-                {"o": str(org), "u": str(user.id), "l": str(opportunity), "m": managr_meeting_id,},
+                {
+                    "o": str(org),
+                    "u": str(user.id),
+                    "opp": str(opportunity),
+                    "m": managr_meeting_id,
+                },
             )
-            slack_requests.send_channel_message(
+            res = slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
             )
             meeting.current_interaction = 1
@@ -118,11 +161,12 @@ def _save_meeting_review_data(managr_meeting_id, data):
     data = json.loads(data)
 
     meeting = ZoomMeeting.objects.filter(id=managr_meeting_id).first()
+    user = meeting.zoom_account.user
     meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
     meeting.is_closed = True
     meeting.save()
     if not hasattr(meeting, "meeting_review"):
-        date = data.get("expected_close_date", None)
+        date = data.get("close_date", None)
         if date:
             ## make it aware by adding utc
             date = datetime.strptime(date, "%Y-%m-%d")
@@ -130,13 +174,16 @@ def _save_meeting_review_data(managr_meeting_id, data):
         obj = dict()
         obj["meeting"] = meeting
         obj["meeting_type"] = data.get("meeting_type", None)
-        obj["forecast_strength"] = data.get("forecast", None)
-        obj["update_stage"] = data.get("stage", None)
+        obj["forecast_category"] = data.get("forecast_category", None)
+        obj["stage"] = data.get("stage", None)
         obj["description"] = data.get("description", None)
-        obj["next_steps"] = data.get("next_steps", None)
-        obj["updated_close_date"] = date
+        obj["next_step"] = data.get("next_step", None)
+        obj["close_date"] = date
         obj["sentiment"] = data.get("sentiment", None)
         obj["amount"] = data.get("amount", None)
 
-        MeetingReview.objects.create(**obj)
-        # send slack notification when it is ready
+        meeting_review = MeetingReview.objects.create(**obj)
+        # emit scoring review
+        # send out to salesforce to update opportunity
+        emit_sf_update_opportunity(str(user.id), str(meeting_review.id))
+        # set opportunity to stale

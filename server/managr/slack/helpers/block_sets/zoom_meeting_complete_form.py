@@ -1,18 +1,39 @@
 import pdb
 
 from managr.opportunity.models import Opportunity
+from managr.opportunity import constants as opp_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
-@block_set(required_context=["o", "l", "m"])
+@block_set(required_context=["o", "opp", "m"])
 def zoom_meeting_complete_form(context):
-    opportunity = Opportunity.objects.get(pk=context.get("l"))
-    stage = opportunity.status.as_slack_option if opportunity.status else None
-    forecast = opportunity.forecast.as_slack_option if hasattr(opportunity, "forecast") else None
+    opportunity = Opportunity.objects.get(pk=context.get("opp"))
+    stage = (
+        block_builders.option(opportunity.stage.label, str(opportunity.stage.id))
+        if opportunity.stage
+        else None
+    )
+    forecast_category = (
+        block_builders.option(
+            *list(
+                map(
+                    lambda x: (x[1], x[0]),
+                    list(
+                        filter(
+                            lambda category: category[0] == opportunity.forecast_category,
+                            opp_consts.FORECAST_CHOICES,
+                        )
+                    ),
+                )
+            )[0]
+        )
+        if opportunity.forecast_category
+        else None
+    )
 
-    close_date = str(opportunity.close_date.date()) if opportunity.close_date else None
+    close_date = str(opportunity.close_date) if opportunity.close_date else None
     amount = opportunity.amount if opportunity.amount else None
 
     # make params here
@@ -45,8 +66,8 @@ def zoom_meeting_complete_form(context):
         block_builders.external_select(
             "*Forecast Strength*",
             slack_const.GET_OPPORTUNITY_FORECASTS,
-            initial_option=forecast,
-            block_id="forecast",
+            initial_option=forecast_category,
+            block_id="forecast_category",
         ),
         {
             "type": "input",

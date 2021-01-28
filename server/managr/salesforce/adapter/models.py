@@ -41,6 +41,8 @@ class SalesforceAuthAccountAdapter:
                 data = response.json()
             except Exception as e:
                 CustomAPIException(e, fn_name)
+        elif response.status_code == 204:
+            return {}
         else:
             try:
                 error_code = response.status_code
@@ -204,6 +206,8 @@ class StageAdapter:
         self.is_won = kwargs.get("is_won", None)
         self.description = kwargs.get("description", None)
         self.organization = kwargs.get("organization", None)
+        self.order = kwargs.get("order", None)
+        self.is_active = kwargs.get("is_active", None)
 
     @staticmethod
     def from_api(data, organization_id, mapping):
@@ -216,7 +220,11 @@ class StageAdapter:
             data.get("IsClosed", "") if data.get("IsClosed", "") else False
         )
         formatted_data["is_won"] = data.get("IsWon", "") if data.get("IsWon", "") else False
+        formatted_data["is_active"] = (
+            data.get("IsActive", "") if data.get("IsActive", "") else False
+        )
         formatted_data["description"] = data.get("Description") if data.get("Description") else ""
+        formatted_data["order"] = data.get("SortOrder") if data.get("SortOrder", None) else None
         formatted_data["organization"] = str(organization_id)
         return StageAdapter(**formatted_data)
 
@@ -232,12 +240,26 @@ class ContactAdapter:
         self.integration_id = kwargs.get("integration_id", None)
         self.title = kwargs.get("title", None)
         self.email = kwargs.get("email", None)
+        self.first_name = kwargs.get("first_name", None)
+        self.last_name = kwargs.get("last_name", None)
         self.phone_number = kwargs.get("phone_number", None)
         self.mobile_phone = kwargs.get("mobile_phone", None)
         self.user = kwargs.get("user", None)
         self.account = kwargs.get("account", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
+
+    from_mapping = dict(
+        id="Id",
+        first_name="FirstName",
+        last_name="Lastname",
+        title="Title",
+        email="Email",
+        mobile_phone="MobilePhone",
+        phone_number="PhoneNumber",
+        account="AccountId",
+        owner="OwnerId",
+    )
 
     @staticmethod
     def from_api(data, user_id, mapping):
@@ -247,8 +269,11 @@ class ContactAdapter:
             contact_data.get("Id", "") if contact_data.get("Id", "") else ""
         )
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["name"] = (
-            contact_data.get("Name", "") if contact_data.get("Name", "") else ""
+        formatted_data["first_name"] = (
+            contact_data.get("FirstName", "") if contact_data.get("FirstName", "") else ""
+        )
+        formatted_data["last_name"] = (
+            contact_data.get("LastName", "") if contact_data.get("LastName", "") else ""
         )
         formatted_data["title"] = (
             contact_data.get("Title", "") if contact_data.get("Title", "") else ""
@@ -276,6 +301,28 @@ class ContactAdapter:
         )
 
         return ContactAdapter(**formatted_data)
+
+    @staticmethod
+    def to_api(data, mapping):
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+
+        return formatted_data
+
+    @staticmethod
+    def create_new_contact(data, access_token, custom_base, salesforce_id):
+        json_data = json.dumps(ContactAdapter.to_api(data, ContactAdapter.from_mapping))
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, salesforce_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
 
     @property
     def as_dict(self):
@@ -305,23 +352,22 @@ class OpportunityAdapter:
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
         self.contacts = kwargs.get("contacts", None)
+        self.is_stale = kwargs.get("is_stale", None)
 
-    @staticmethod
-    def from_mapping():
-        return dict(
-            id="Id",
-            account="AccountId",
-            title="Name",
-            description="Description",
-            stage="StageName",
-            amount="Ammount",
-            close_date="CloseDate",
-            type="Type",
-            next_step="NextStep",
-            lead_source="LeadSource",
-            forecast_category="ForecastCategory",
-            owner="OwnerId",
-        )
+    from_mapping = dict(
+        id="Id",
+        account="AccountId",
+        title="Name",
+        description="Description",
+        stage="StageName",
+        amount="Amount",
+        close_date="CloseDate",
+        type="Type",
+        next_step="NextStep",
+        lead_source="LeadSource",
+        forecast_category="ForecastCategoryName",
+        owner="OwnerId",
+    )
 
     @staticmethod
     def _format_date_time_from_api(d):
@@ -392,31 +438,35 @@ class OpportunityAdapter:
             else []
         )
         formatted_data["imported_by"] = str(user_id)
-        ## Placeholder contacts
+
         formatted_data["account"] = formatted_data["external_account"]
         formatted_data["stage"] = formatted_data["external_stage"]
         formatted_data["owner"] = formatted_data["external_owner"]
+        # opps are stale if a meeting occured and lead is updated
+        # after each refresh the opp is not stale anymore
+        formatted_data["is_stale"] = True
 
         return OpportunityAdapter(**formatted_data)
 
     @staticmethod
-    def to_api(data, user_id, mapping):
+    def to_api(data, mapping):
         formatted_data = dict()
         for k, v in data.items():
-            key = data.get(k, None)
+            key = mapping.get(k, None)
             if key:
                 formatted_data[key] = v
 
         return formatted_data
 
     @staticmethod
-    def update_opportunity(data, access_token, custom_base):
-        json_data = json.dumps(OpportunityAdapter.to_api(data))
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY)
+    def update_opportunity(data, access_token, custom_base, salesforce_id):
+        json_data = json.dumps(OpportunityAdapter.to_api(data, OpportunityAdapter.from_mapping))
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY, salesforce_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
-            url,
-            json_data,
-            headers={**sf_consts.SALESFORCE_JSON_HEADER, **sf_consts.SALESFORCE_BEARER_AUTH_HEADER},
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 

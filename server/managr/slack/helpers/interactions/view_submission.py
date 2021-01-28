@@ -15,7 +15,7 @@ from managr.zoom.background import emit_save_meeting_review_data
 
 
 @processor(
-    required_context=["o", "l", "m", "original_message_channel", "original_message_timestamp",]
+    required_context=["o", "opp", "m", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_data(payload, context):
     # get context
@@ -50,16 +50,16 @@ def process_zoom_meeting_data(payload, context):
         stage = stage["value"]
 
     if sentiment != slack_const.ZOOM_MEETING__NOT_WELL:
-        forecast_state = state["forecast"]
-        expected_close_date_state = state["expected_close_date"]
-        a_id = slack_const.GET_LEAD_FORECASTS
-        forecast = forecast_state[a_id]["selected_option"]
-        forecast = forecast["value"] if forecast else None
+        forecast_state = state["forecast_category"]
+        close_date_state = state["close_date"]
+        a_id = slack_const.GET_OPPORTUNITY_FORECASTS
+        forecast_category = forecast_state[a_id]["selected_option"]
+        forecast_category = forecast_category["value"] if forecast_category else None
         a_id = slack_const.DEFAULT_ACTION_ID
-        expected_close_date = expected_close_date_state[a_id]["selected_date"]
+        close_date = close_date_state[a_id]["selected_date"]
     else:
-        forecast = None
-        expected_close_date = None
+        forecast_category = None
+        close_date = None
     a_id = slack_const.DEFAULT_ACTION_ID
     description = description_state[a_id]["value"]
 
@@ -71,10 +71,10 @@ def process_zoom_meeting_data(payload, context):
         "meeting_id": context.get("m", None),
         "meeting_type": meeting_type,
         "stage": stage,
-        "forecast": forecast if forecast else None,
+        "forecast_category": forecast_category if forecast_category else None,
         "description": description,
-        "expected_close_date": expected_close_date if expected_close_date else None,
-        "next_steps": next_step,
+        "close_date": close_date if close_date else None,
+        "next_step": next_step,
         "amount": amount if amount else "",
     }
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
@@ -83,7 +83,7 @@ def process_zoom_meeting_data(payload, context):
     # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
     #       if it is one of lead_const.FORECAST_CHOICES then it is a new selection.
 
-    block_set_context = {"l": context["l"], "m": context["m"]}
+    block_set_context = {"opp": context["opp"], "m": context["m"]}
 
     access_token = (
         Organization.objects.select_related("slack_integration")

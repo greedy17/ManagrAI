@@ -9,16 +9,23 @@
         <p class="card-text">
           Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
         </p>
-        <button
+        <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
           class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
         >
           Connect
-        </button>
-        <button @click="onRevoke('SALESFORCE')" v-else class="secondary-button">
-          Revoke
-        </button>
+        </PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
+          @click="onRevoke('SALESFORCE')"
+          v-else
+          class="secondary-button"
+        >
+        </PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
@@ -27,17 +34,23 @@
         <p class="card-text">
           Connect Zoom to sync meeting data with managr.
         </p>
-        <button
+        <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
           @click="onGetAuthLink('ZOOM')"
           class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
         >
-          Connect
-        </button>
-        <button v-else @click="onRevoke('ZOOM')" class="secondary-button">
-          Revoke
-        </button>
+        </PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+          v-else
+          @click="onRevoke('ZOOM')"
+          class="secondary-button"
+        >
+        </PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
@@ -46,7 +59,7 @@
         <p class="card-text">
           Connect Slack to enable messaging between apps.
         </p>
-        <button
+        <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
               (orgHasSlackIntegration && !hasSlackIntegration)
@@ -54,16 +67,18 @@
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
           class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'SLACK'"
         >
-          Connect
-        </button>
-        <button
+        </PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
           v-else-if="hasSlackIntegration && orgHasSlackIntegration"
           @click="onRevoke('SLACK')"
           class="secondary-button"
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'SLACK'"
         >
-          Revoke
-        </button>
+        </PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
@@ -77,10 +92,21 @@
         <p class="card-text">
           Connect Calendar to access upcoming meetings & attendees.
         </p>
-        <button v-if="!hasNylasIntegration" @click="onGetAuthLink('NYLAS')" class="primary-button">
-          Connect
-        </button>
-        <button v-else @click="onRevoke('NYLAS')" class="secondary-button">Revoke</button>
+        <PulseLoadingSpinnerButton
+          v-if="!hasNylasIntegration"
+          @click="onGetAuthLink('NYLAS')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'NYLAS'"
+        >
+        </PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'NYLAS'"
+          v-else
+          @click="onRevoke('NYLAS')"
+          class="secondary-button"
+        ></PulseLoadingSpinnerButton>
       </div>
     </div>
   </div>
@@ -95,9 +121,11 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
   name: 'Integrations',
+  components: { PulseLoadingSpinnerButton },
   data() {
     return {
       generatingToken: false,

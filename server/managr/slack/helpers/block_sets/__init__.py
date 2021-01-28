@@ -4,6 +4,7 @@ from .zoom_meeting_complete_form import zoom_meeting_complete_form
 from .selected_different_opportunity import select_different_opportunity
 from .confirm_meeting_logged import confirm_meeting_logged
 from . import alert_blocksets as slack_alerts
+from . import meeting_review_block_sets
 
 # Mockups, page 3: https://docs.google.com/document/d/1KIvznxOqPb7WuFOXsFcKMawxq8-8T2gpb2sYNdIqLL4/edit#heading=h.xa1nnwnl2is5
 # Slack Block-Builder: https://app.slack.com/block-kit-builder/
@@ -34,5 +35,7 @@ def get_block_set(set_name, context={}):
         "show_meeting_score_description": slack_alerts.meeting_score_description_block_set,
         "lead_score_block_set": slack_alerts.lead_score_block_set,
         "show_lead_score_description": slack_alerts.lead_score_description_block_set,
+        "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
+        "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
     }
     return switcher.get(set_name)(context)

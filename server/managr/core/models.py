@@ -205,16 +205,9 @@ class User(AbstractUser, TimeStampModel):
         else:
             return False
 
-    # TODO 2021-01-16 William: Remove if no longer necessary.
-    # def check_notification_enabled_setting(self, key, type):
-    #     setting_value = self.notification_settings.filter(
-    #         option__key=key, option__notification_type=type, user=self
-    #     ).first()
-    #     if setting_value:
-    #         return setting_value.value
-    #     else:
-    #         # if a user does not have a value then assume True which is the default
-    #         return True
+    @property
+    def has_slack_integration(self):
+        return hasattr(self, "slack_integration")
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"

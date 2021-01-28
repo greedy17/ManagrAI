@@ -74,6 +74,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "external_stage",
             "imported_by",
             "contacts",
+            "is_stale",
         )
 
     def to_internal_value(self, data):

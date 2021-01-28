@@ -11,7 +11,7 @@ from django.contrib.postgres.fields import JSONField
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-from managr.opportunity.models import ActionChoice
+from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
 
@@ -86,7 +86,9 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def is_refresh_token_expired(self):
         if self.refresh_token:
-            decoded = jwt.decode(self.refresh_token, verify=False)
+            decoded = jwt.decode(
+                self.refresh_token, algorithms="HS512", options={"verify_signature": False}
+            )
             exp = decoded["exp"]
 
             return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
@@ -95,7 +97,9 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def is_token_expired(self):
         if self.access_token:
-            decoded = jwt.decode(self.access_token, verify=False)
+            decoded = jwt.decode(
+                self.refresh_token, algorithms="HS512", options={"verify_signature": False}
+            )
             exp = decoded["exp"]
 
             return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
@@ -187,8 +191,13 @@ class ZoomMeeting(TimeStampModel):
         null=True,
         help_text="if recurring meeting",
     )
-
-    participants = models.ManyToManyField("organization.Contact", related_name="meetings")
+    participants = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Json object of participants",
+    )
     opportunity = models.ForeignKey(
         "opportunity.Opportunity",
         on_delete=models.SET_NULL,
@@ -282,19 +291,17 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The value must corespond to the values in the ActionChoice Model",
     )
-    forecast_strength = models.CharField(
+    forecast_category = models.CharField(
         choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
-    update_stage = models.CharField(
+    stage = models.CharField(
         blank=True,
         null=True,
         max_length=255,
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
     description = models.TextField(blank=True, null=True, max_length=255)
-    next_steps = models.TextField(
-        blank=True, null=True, help_text="populates secondary description"
-    )
+    next_step = models.TextField(blank=True, null=True, help_text="populates secondary description")
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
@@ -306,6 +313,7 @@ class MeetingReview(TimeStampModel):
         null=True,
         blank=True,
     )
+    close_date = models.DateTimeField(null=True, blank=True)
     prev_forecast = models.CharField(
         choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
@@ -315,8 +323,8 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
-    prev_expected_close_date = models.DateTimeField(null=True, blank=True)
-    updated_close_date = models.DateTimeField(null=True, blank=True)
+    prev_close_date = models.DateTimeField(null=True, blank=True)
+
     prev_amount = models.DecimalField(
         max_digits=13,
         decimal_places=2,
@@ -329,17 +337,23 @@ class MeetingReview(TimeStampModel):
     @property
     def stage_progress(self):
         # Moving from 'None' to a stage is progress
-        if not self.prev_stage and self.update_stage:
+        if not self.prev_stage and self.stage:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
         # Moving from a stage to 'None' is a regression
-        if self.prev_stage and not self.update_stage:
+        if self.prev_stage and not self.stage:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
         # Check moving from any stage to another
-        if self.prev_stage and self.update_stage:
-            prev_stage_order = Stage.objects.get(id=self.prev_stage).order
-            current_stage_order = Stage.objects.get(id=self.update_stage).order
+        if self.prev_stage and self.stage:
+            prev_stage_order = Stage.objects.filter(id=self.prev_stage,).first().order
+            current_stage_order = (
+                Stage.objects.filter(
+                    id=self.stage, organization__id=self.meeting.zoom_account.organization.id
+                )
+                .first()
+                .order
+            )
 
             if prev_stage_order < current_stage_order:
                 return zoom_consts.MEETING_REVIEW_PROGRESSED
@@ -352,18 +366,18 @@ class MeetingReview(TimeStampModel):
     @property
     def forecast_progress(self):
         # Moving from 'None' to a forecast is progress
-        if not self.prev_forecast and self.forecast_strength:
+        if not self.prev_forecast and self.forecast_category:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
         # Moving from a forecast to 'None' is a regression
-        if self.prev_forecast and not self.forecast_strength:
+        if self.prev_forecast and not self.forecast_category:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
-        if self.prev_forecast and self.forecast_strength:
+        if self.prev_forecast and self.forecast_category:
             for index, forecast in enumerate(opp_consts.FORECAST_CHOICES):
                 if self.prev_forecast == forecast[0]:
                     prev_forecast_rank = index
-                if self.forecast_strength == forecast[0]:
+                if self.forecast_category == forecast[0]:
                     current_forecast_rank = index
 
             if prev_forecast_rank > current_forecast_rank:
@@ -375,19 +389,19 @@ class MeetingReview(TimeStampModel):
 
     @property
     def expected_close_date_progress(self):
-        if not self.prev_expected_close_date and not self.updated_close_date:
+        if not self.prev_close_date and not self.close_date:
             return zoom_consts.MEETING_REVIEW_UNCHANGED
 
-        if not self.prev_expected_close_date and self.updated_close_date:
+        if not self.prev_close_date and self.close_date:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
-        if self.prev_expected_close_date and not self.updated_close_date:
+        if self.prev_close_date and not self.close_date:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
-        if self.prev_expected_close_date > self.updated_close_date:
+        if self.prev_close_date > self.close_date:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
-        elif self.prev_expected_close_date < self.updated_close_date:
+        elif self.prev_close_date < self.close_date:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
         return zoom_consts.MEETING_REVIEW_UNCHANGED
@@ -455,43 +469,53 @@ class MeetingReview(TimeStampModel):
             return score
         return 0
 
+    @property
+    def as_sf_update(self):
+        data = dict()
+        if self.stage:
+            data["stage"] = Stage.objects.filter(id=self.stage).values("label").first()["label"]
+            # hack our db saves capital constants sf expects the label not the value for the update
+        if self.forecast_category:
+            data["forecast_category"] = list(
+                map(
+                    lambda x: x[1],
+                    list(
+                        filter(
+                            lambda category: category[0] == self.forecast_category,
+                            opp_consts.FORECAST_CHOICES,
+                        )
+                    ),
+                )
+            )[0]
+        if self.amount:
+            data["amount"] = str(self.amount)
+        if self.close_date:
+            data["close_date"] = self.close_date.strftime("%Y-%m-%d")
+        if self.next_step:
+            data["next_step"] = self.next_step
+        return data
+
     def save(self, *args, **kwargs):
         opportunity = self.meeting.opportunity
 
-        # adjust opportunity data based on these fields
-        if self.forecast_strength:
-            current_forecast = opportunity.current_forecast
+        # fill previous values if the
+        if self.forecast_category:
+            current_forecast = opportunity.forecast_category
             if current_forecast:
                 self.prev_forecast = current_forecast
-                opportuntiy.current_forecast = self.forecast_strength
 
-            opportunity.current_forecast = self.forecast_strength
-            # update opportunity forcecase
-
-        if self.update_stage and opportunity.status:
-            self.prev_stage = opportunity.status.id
-            opportunity.status = Stage.objects.filter(id=self.update_stage).first()
-
+        if self.stage and opportunity.stage:
+            self.prev_stage = opportunity.stage.id
+            """             opportunity.stage = Stage.objects.filter(
+                value=self.stage, organization__id=self.meeting.zoom_account.organization.id,
+            ).first()
+            """
             # update stage
-        if self.next_steps:
-            opportunity.secondary_description = self.next_steps
-            # update secondary desc
-
-        if self.meeting_type:
-            # create action from action choice
-            print("will update action")
-
         # Update the opportunity with the new data
-        if self.updated_close_date:
-
+        if self.close_date:
             # Override previous close date with whatever is on the Opportunity
-            if opportunity.expected_close_date:
-                self.prev_expected_close_date = opportunity.expected_close_date
-            opportunity.expected_close_date = self.updated_close_date
+            if opportunity.close_date:
+                self.prev_close_date = opportunity.close_date
         if self.amount:
             self.prev_amount = opportunity.amount
-            opportunity.amount = float(self.amount)
-
-        opportunity.save()
-
         return super(MeetingReview, self).save(*args, **kwargs)
