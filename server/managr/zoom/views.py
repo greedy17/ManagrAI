@@ -29,6 +29,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from background_task.models import Task
 from managr.core.permissions import (
     IsOrganizationManager,
     IsSuperUser,
@@ -89,6 +90,10 @@ def revoke_zoom_access_token(request):
         zoom.is_revoked = True
         zoom.access_token = ""
         zoom.refresh_token = ""
+        if zoom.refresh_token_task:
+            task = Task.objects.filter(id=zoom.refresh_token_task).first()
+            if task:
+                task.delete()
         zoom.save()
 
     return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)

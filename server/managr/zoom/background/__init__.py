@@ -4,6 +4,7 @@ import json
 import pytz
 from datetime import datetime
 from background_task import background
+from background_task.models import Task
 
 from django.db.models import F, Q, Count
 from django.utils import timezone
@@ -16,6 +17,7 @@ from managr.salesforce.adapter.models import ContactAdapter
 
 
 from .. import constants as zoom_consts
+from ..zoom_helper.exceptions import TokenExpired
 from ..zoom_helper import auth as zoom_auth
 from ..zoom_helper import constants as zoom_model_consts
 from ..zoom_helper.models import ZoomAcct, ZoomMtg
@@ -43,6 +45,13 @@ def _split_last_name(name):
             return "".join(name_parts[1:])
 
 
+def emit_refresh_zoom_token(zoom_account_id, schedule):
+    # scedule can be seconds int or datetime string
+    zoom_account_id = str(zoom_account_id)
+    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
+    return _refresh_zoom_token(zoom_account_id, schedule=schedule)
+
+
 def emit_process_past_zoom_meeting(user_id, meeting_uuid):
     return _get_past_zoom_meeting_details(user_id, meeting_uuid)
 
@@ -55,13 +64,26 @@ def emit_save_meeting_review_data(managr_meeting_id, data):
     return _save_meeting_review_data(managr_meeting_id, data)
 
 
+@background()
+def _refresh_zoom_token(zoom_account_id):
+    zoom_account = ZoomAuthAccount.objects.filter(id=zoom_account_id).first()
+    if zoom_account:
+        return zoom_account.regenerate_token()
+    return
+
+
 @background(schedule=0)
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     if zoom_account and not zoom_account.is_revoked:
         # emit the process
-        meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-        meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+        try:
+            meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
+            meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+        except TokenExpired:
+            zoom_account.regenerate_token()
+            return _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration)
+
         meeting.original_duration = original_duration
         zoom_participants = meeting.as_dict.get("participants", None)
         # remove duplicates

@@ -7,7 +7,8 @@ from django.db import models
 from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.fields import JSONField
+
+from background_task.models import Task
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
@@ -15,6 +16,7 @@ from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.adapter.models import ActivityAdapter
+
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -106,16 +108,17 @@ class ZoomAuthAccount(TimeStampModel):
         return True
 
     def regenerate_token(self):
-        data = self.__dict__
-        data["id"] = str(data.get("id"))
+        if not self.is_revoked:
+            data = self.__dict__
+            data["id"] = str(data.get("id"))
 
-        helper = ZoomAcct(**data)
-        res = helper.refresh_access_token()
-        self.token_generated_date = timezone.now()
-        self.access_token = res.get("access_token", None)
-        self.refresh_token = res.get("refresh_token", None)
-        self.is_revoked = False
-        self.save()
+            helper = ZoomAcct(**data)
+            res = helper.refresh_access_token()
+            self.token_generated_date = timezone.now()
+            self.access_token = res.get("access_token", None)
+            self.refresh_token = res.get("refresh_token", None)
+            self.is_revoked = False
+            self.save()
 
     def delete(self, *args, **kwargs):
         ## revoking a token is the same as deleting
@@ -132,6 +135,34 @@ class ZoomAuthAccount(TimeStampModel):
             self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        if not self.is_revoked:
+            # check token if its not expired
+            # emit an event to refresh a token at a certain time
+            if self.access_token:
+                decoded = jwt.decode(
+                    self.access_token, algorithms="HS512", options={"verify_signature": False}
+                )
+                exp = decoded["exp"]
+                expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+                # send a refresh 10 mins before expiration only if there is a refresh token and it is not expired
+                if self.refresh_token and not self.is_refresh_token_expired:
+                    # check for current task if it exists
+                    from .background import emit_refresh_zoom_token
+
+                    t = emit_refresh_zoom_token(
+                        str(self.id), expiration.strftime("%Y-%m-%dT%H:%M%z")
+                    )
+                    self.refresh_token_task = str(t.id)
+
+        if self.is_revoked:
+            # find the refresh task and delete it
+            if self.refresh_token_task:
+                t = Task.objects.filter(id=self.refresh_token_task)
+                t.save()
+
+        return super(ZoomAuthAccount, self).save(*args, **kwargs)
 
 
 class ZoomMeetingQuerySet(models.QuerySet):

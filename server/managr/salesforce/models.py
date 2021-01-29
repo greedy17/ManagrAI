@@ -37,6 +37,17 @@ class SFSyncOperation(TimeStampModel):
         blank=True,
         help_text="An Array of completed/faild task id's",
     )
+    failed_operations = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="List of failed tasks as json since they are deleted",
+    )
+
+    @property
+    def failed_count(self):
+        return len(self.failed_operations)
 
     @property
     def completed_count(self):
@@ -52,7 +63,7 @@ class SFSyncOperation(TimeStampModel):
     def progress(self):
         """ percentage of all operations """
         if len(self.operations):
-            return int((self.completed_count / self.total_count) * 100)
+            return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
 
         return 100
 
