@@ -95,7 +95,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                             del participants[index]
 
                 meeting_contacts = [
-                    *meeting_contacts,
                     *list(
                         map(
                             lambda contact: ContactAdapter(**contact).as_dict,
@@ -111,6 +110,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                             ),
                         ),
                     ),
+                    *meeting_contacts,
                 ]
 
                 # push to sf

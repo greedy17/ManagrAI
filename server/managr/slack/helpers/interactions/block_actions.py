@@ -43,7 +43,6 @@ def process_meeting_sentiment(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["o", "u", "l", "m"])
@@ -179,19 +178,11 @@ def process_get_lead_logs(payload, context):
 def process_show_meeting_contacts(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
+    # view_id = payload["view"]["id"]
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     org = meeting.zoom_account.user.organization
 
     access_token = org.slack_integration.access_token
-    private_metadata = {
-        "original_message_channel": json.loads(payload["view"]["private_metadata"])[
-            "original_message_channel"
-        ],
-        "original_message_timestamp": json.loads(payload["view"]["private_metadata"])[
-            "original_message_timestamp"
-        ],
-    }
     salesforce_account = meeting.zoom_account.user.salesforce_account
 
     blocks = get_block_set(
@@ -207,14 +198,13 @@ def process_show_meeting_contacts(payload, context):
             "title": {"type": "plain_text", "text": "Contacts"},
             # "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
+            # "private_metadata": json.dumps(private_metadata),
         },
     }
 
-    private_metadata.update(context)
+    # private_metadata.update(context)
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -375,7 +365,6 @@ def process_edit_meeting_contact(payload, context):
     }
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["o"])

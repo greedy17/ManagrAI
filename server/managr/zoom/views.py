@@ -134,3 +134,26 @@ def zoom_meetings_webhook(request):
             )
 
     return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+def init_fake_meeting(request):
+    meeting_uuid = request.data.get("meeting_uuid", None)
+    host_id = request.data.get("host_id", None)
+    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    if meeting:
+        meeting.delete()
+    original_duration = None
+
+    if not original_duration or original_duration < 0:
+        original_duration = 0
+    ### move all this to a background task, zoom requires response in 60s
+    zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+
+    if zoom_account and not zoom_account.is_revoked:
+        # emit the process
+        _get_past_zoom_meeting_details(str(zoom_account.user.id), meeting_uuid, original_duration)
+
+    return Response()
+

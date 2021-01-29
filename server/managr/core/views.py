@@ -523,3 +523,4 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         response_data["activation_link"] = user.activation_link
 
         return Response(response_data)
+
