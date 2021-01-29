@@ -57,12 +57,13 @@ RESOURCE_SYNC_ACCOUNT = "ACCOUNT"
 RESOURCE_SYNC_OPPORTUNITY = "OPPORTUNITY"
 RESOURCE_SYNC_STAGE = "STAGE"
 
+SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESROUCE_SYNC"
 
 SALESFORCE_QUERY_LIMIT = 100
 
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ForecastCategory, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 SALSFORCE_OPP_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Contact.Id, Contact.FirstName, Contact.LastName,  Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 
 
@@ -87,7 +88,8 @@ k = resource id
 SALESFORCE_WRITE_URI = lambda u, r, k: f"{u}/services/data/{SF_API_VERSION}/sobjects/{r}/{k}"
 
 SALESFORCE_RESOURCE_OPPORTUNITY = "Opportunity"
-SALESFORCE_RESOURCE_Contact = "Contact"
+SALESFORCE_RESOURCE_CONTACT = "Contact"
+SALESFORCE_RESOURCE_TASK = "Task"
 
 SALESFORCE_CONTACT_VIEW_URI = lambda u, k: f"{u}/lightning/r/Contact/{k}/view"
 

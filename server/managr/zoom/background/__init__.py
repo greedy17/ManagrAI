@@ -13,7 +13,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact
 from managr.opportunity.models import Opportunity
 from managr.salesforce.adapter.models import ContactAdapter
-from managr.salesforce.background import emit_sf_update_opportunity
+
 
 from .. import constants as zoom_consts
 from ..zoom_helper import auth as zoom_auth
@@ -161,7 +161,6 @@ def _save_meeting_review_data(managr_meeting_id, data):
     data = json.loads(data)
 
     meeting = ZoomMeeting.objects.filter(id=managr_meeting_id).first()
-    user = meeting.zoom_account.user
     meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
     meeting.is_closed = True
     meeting.save()
@@ -183,7 +182,4 @@ def _save_meeting_review_data(managr_meeting_id, data):
         obj["amount"] = data.get("amount", None)
 
         meeting_review = MeetingReview.objects.create(**obj)
-        # emit scoring review
-        # send out to salesforce to update opportunity
-        emit_sf_update_opportunity(str(user.id), str(meeting_review.id))
-        # set opportunity to stale
+

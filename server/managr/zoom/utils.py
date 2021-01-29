@@ -58,7 +58,7 @@ SCORE_LOOKUP = {
             "message_tpl": "The opportunity's stage did not change.",
         },
     },
-    "forecast": {
+    "forecast_category": {
         zoom_consts.MEETING_REVIEW_PROGRESSED: {
             "type": "forecast",
             "points": 10,
@@ -78,7 +78,7 @@ SCORE_LOOKUP = {
             "message_tpl": "The opportunity's forecast did not change.",
         },
     },
-    "expected_close_date": {
+    "close_date": {
         zoom_consts.MEETING_REVIEW_PROGRESSED: {
             "type": "close_date",
             "points": 5,
@@ -198,11 +198,11 @@ class ScoreComponent:
         # HACK: Provide general-purpose context to the formatter
         new_stage_name = ""
         new_close_date = ""
-        if self.meeting.meeting_review.update_stage:
-            stage = Stage.objects.get(id=self.meeting.meeting_review.update_stage)
-            new_stage_name = stage.title
-        if self.meeting.meeting_review.updated_close_date:
-            new_close_date = self.meeting.meeting_review.updated_close_date.strftime("%m/%d/%Y")
+        if self.meeting.meeting_review.stage:
+            stage = Stage.objects.get(id=self.meeting.meeting_review.stage)
+            new_stage_name = stage.label
+        if self.meeting.meeting_review.close_date:
+            new_close_date = self.meeting.meeting_review.close_date.strftime("%m/%d/%Y")
         # END HACK
 
         return self.message_tpl.format(
@@ -235,7 +235,7 @@ def score_meeting(meeting):
         sentiment = meeting_review.sentiment or slack_consts.ZOOM_MEETING__CANT_TELL
         stage_progress = meeting_review.stage_progress
         forecast_progress = meeting_review.forecast_progress
-        expected_close_date_progress = meeting_review.expected_close_date_progress
+        close_date_progress = meeting_review.close_date_progress
         participant_count_weighted = meeting_review.participant_count_weighted
         duration_score = meeting_review.duration_score
 
@@ -257,8 +257,8 @@ def score_meeting(meeting):
             for i in [
                 SCORE_LOOKUP["sentiment"][sentiment],
                 SCORE_LOOKUP["stage"][stage_progress],
-                SCORE_LOOKUP["forecast"][forecast_progress],
-                SCORE_LOOKUP["expected_close_date"][expected_close_date_progress],
+                SCORE_LOOKUP["forecast_category"][forecast_progress],
+                SCORE_LOOKUP["close_date"][close_date_progress],
                 SCORE_LOOKUP["attendance"][participant_count_weighted],
                 {
                     "type": "participation",

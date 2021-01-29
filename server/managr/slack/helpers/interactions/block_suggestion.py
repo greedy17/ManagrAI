@@ -13,12 +13,36 @@ from managr.slack.helpers import block_builders
 @processor(required_context=["o"])
 def process_get_organization_stages(payload, context):
     organization = Organization.objects.get(pk=context["o"])
+
     return {
         "options": [
             s.as_slack_option
             for s in Stage.objects.filter(Q(organization=organization) & Q(is_active=True))
         ],
     }
+
+
+@processor(required_context=["stage", "original_forecast_value"])
+def process_get_forecast_from_stage(payload, context):
+    """ get connected forecast if exists or return original option """
+    stage = Stage.objects.get(pk=context["stage"])
+    fc_to_return = context["original_forecast_value"]
+
+    if stage.forecast_category:
+        fc_to_return = stage.forecast_category
+
+    return block_builders.option(
+        *list(
+            map(
+                lambda x: (x[1], x[0]),
+                list(
+                    filter(
+                        lambda category: category[0] == fc_to_return, opp_consts.FORECAST_CHOICES,
+                    )
+                ),
+            )
+        )[0]
+    )
 
 
 @processor(required_context=["o"])

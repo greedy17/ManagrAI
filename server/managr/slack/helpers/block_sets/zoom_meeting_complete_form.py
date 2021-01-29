@@ -10,6 +10,7 @@ from managr.slack.helpers import block_builders
 @block_set(required_context=["o", "opp", "m"])
 def zoom_meeting_complete_form(context):
     opportunity = Opportunity.objects.get(pk=context.get("opp"))
+    meeting_id_param = "m=" + context["m"]
     stage = (
         block_builders.option(opportunity.stage.label, str(opportunity.stage.id))
         if opportunity.stage
@@ -64,7 +65,7 @@ def zoom_meeting_complete_form(context):
             block_id="stage",
         ),
         block_builders.external_select(
-            "*Forecast Strength*",
+            "*Forecast Category*",
             slack_const.GET_OPPORTUNITY_FORECASTS,
             initial_option=forecast_category,
             block_id="forecast_category",

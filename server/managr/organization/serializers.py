@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from managr.organization.models import ActionChoice
 from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
+from managr.opportunity import constants as opp_consts
 
 from .models import Organization, Account, Contact, Stage
 
@@ -37,6 +38,14 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
 
 class StageSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
+        forecast_category = data.get("forecast_category", None)
+        if forecast_category:
+            formatted_category = None
+            for category in opp_consts.FORECAST_CHOICES:
+                if category[1] == forecast_category:
+                    formatted_category = category[0]
+            if formatted_category:
+                data.update({"forecast_category": formatted_category})
         return super().to_internal_value(data)
 
     class Meta:
@@ -54,6 +63,7 @@ class StageSerializer(serializers.ModelSerializer):
             "is_closed",
             "is_won",
             "is_active",
+            "forecast_category",
         )
 
 

@@ -2,13 +2,15 @@ import json
 import pdb
 import logging
 
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Stage
 from managr.opportunity.models import Opportunity, OpportunityScore
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
+from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers import block_builders
 
 
 logger = logging.getLogger("managr")
@@ -177,13 +179,18 @@ def process_get_lead_logs(payload, context):
 def process_show_meeting_contacts(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     org = meeting.zoom_account.user.organization
 
     access_token = org.slack_integration.access_token
     private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
+        "original_message_channel": json.loads(payload["view"]["private_metadata"])[
+            "original_message_channel"
+        ],
+        "original_message_timestamp": json.loads(payload["view"]["private_metadata"])[
+            "original_message_timestamp"
+        ],
     }
     salesforce_account = meeting.zoom_account.user.salesforce_account
 
@@ -193,6 +200,7 @@ def process_show_meeting_contacts(payload, context):
 
     data = {
         "trigger_id": trigger_id,
+        # "view_id": view_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
@@ -370,6 +378,69 @@ def process_edit_meeting_contact(payload, context):
     print(res.json())
 
 
+@processor(required_context=["o"])
+def process_update_forecast_category_option(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    org = Organization.objects.get(id=context["o"])
+    access_token = org.slack_integration.access_token
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    # check actions for specific select action
+    select_action = list(filter(lambda x: x["block_id"] == "stage", payload["actions"]))
+    if select_action:
+        blocks = payload["view"]["blocks"]
+        selected_value = select_action[0]["selected_option"]["value"]
+        forecast_block = list(
+            filter(
+                lambda x: x[1]["block_id"] == "forecast_category",
+                enumerate(payload["view"]["blocks"]),
+            )
+        )[0]
+        stage = Stage.objects.get(pk=selected_value)
+        fc_to_return = forecast_block[1]["accessory"]["initial_option"]["value"]
+        if stage.forecast_category:
+            fc_to_return = stage.forecast_category
+
+        new_fc_option = block_builders.option(
+            *list(
+                map(
+                    lambda x: (x[1], x[0]),
+                    list(
+                        filter(
+                            lambda category: category[0] == fc_to_return,
+                            opp_consts.FORECAST_CHOICES,
+                        )
+                    ),
+                )
+            )[0]
+        )
+        """
+        blocks.append(
+            block_builders.external_select(
+                "*Forecast Category1*",
+                slack_const.GET_OPPORTUNITY_FORECASTS,
+                initial_option=new_fc_option,
+                block_id="forecast_category1",
+            )
+        )
+        """
+
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Log Meeting"},
+            "blocks": blocks,
+            "private_metadata": payload["view"]["private_metadata"],
+        },
+    }
+
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -385,6 +456,7 @@ def handle_block_actions(payload):
         slack_const.SHOW_LEAD_SCORE_COMPONENTS: process_get_lead_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT: process_edit_meeting_contact,
+        slack_const.GET_ORGANIZATION_STAGES: process_update_forecast_category_option,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

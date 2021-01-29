@@ -14,20 +14,13 @@ from rest_framework.exceptions import ValidationError
 
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
-from managr.core.models import (
-    UserManager,
-    TimeStampModel,
-    IntegrationModel,
-    Notification,
-)
+from managr.core.models import UserManager, TimeStampModel, IntegrationModel, User
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
-from managr.organization.models import Notification
 from managr.slack.helpers import block_builders
 from managr.salesforce.adapter.models import ContactAdapter
-
-
+from managr.opportunity import constants as opp_consts
 from . import constants as org_consts
 
 
@@ -229,6 +222,10 @@ class Stage(TimeStampModel, IntegrationModel):
     is_closed = models.BooleanField(default=False)
     is_won = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
+    forecast_category = models.CharField(
+        max_length=255, choices=opp_consts.FORECAST_CHOICES, blank=True
+    )
+
     objects = StageQuerySet.as_manager()
 
     @property

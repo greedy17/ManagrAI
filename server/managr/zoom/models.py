@@ -14,7 +14,7 @@ from managr.core.models import TimeStampModel
 from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
-
+from managr.salesforce.adapter.models import ActivityAdapter
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
@@ -271,13 +271,33 @@ class ZoomMeeting(TimeStampModel):
             str(self.zoom_account.user.id), str(self.id), self.current_interaction
         )
 
+    @property
+    def readable_score_message(self):
+        if self.meeting_score_components:
+            sentiment = ""
+            stage = ""
+            forecast = ""
+            close_date = ""
+            attendance = ""
+            duration = ""
+            for comp in self.meeting_score_components:
+                if comp["type"] == "sentiment":
+                    sentiment = comp.get("message", "N/A")
+                if comp["type"] == "stage":
+                    stage = comp.get("message", "N/A")
+                if comp["type"] == "forecast_category":
+                    forecast = comp.get("message", "N/A")
+                if comp["type"] == "close_date":
+                    close_date = comp.get("message", "N/A")
+                if comp["type"] == "attendance":
+                    attendance = comp.get("message", "N/A")
+                if comp["type"] == "duration":
+                    duration = comp.get("message", "N/A")
+            return f"{sentiment} {stage} {forecast} {close_date} {attendance} {duration}"
+        return "This Meeting has not been scored yet"
+
 
 class MeetingReview(TimeStampModel):
-
-    # work required to get limit choices to by orgs not currently available
-    # could use thread locals or check on save method
-    # https://stackoverflow.com/questions/232435/how-do-i-restrict-foreign-keys-choices-to-related-objects-only-in-django
-
     meeting = models.OneToOneField(
         "ZoomMeeting",
         on_delete=models.CASCADE,
@@ -334,6 +354,40 @@ class MeetingReview(TimeStampModel):
         blank=True,
     )
 
+    def save_event_to_salesforce(self):
+        user_timezone = self.meeting.zoom_account.timezone
+        start_time = self.meeting.start_time
+        end_time = self.meeting.end_time
+        formatted_start = (
+            datetime.strftime(
+                start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
+            )
+            if start_time
+            else start_time
+        )
+        formatted_end = (
+            datetime.strftime(
+                end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
+            )
+            if end_time
+            else end_time
+        )
+        meeting_type_string = ActionChoice.objects.filter(id=self.meeting_type).first().title
+
+        data = dict(
+            Subject=f"Meeting - {meeting_type_string}",
+            Description=f"{self.description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+            WhatId=self.meeting.opportunity.integration_id,
+            ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
+            Status="Completed",
+            TaskSubType="Call",
+        )
+        sf = self.meeting.zoom_account.user.salesforce_account
+        res = ActivityAdapter.save_zoom_meeting_to_salesforce(
+            data, sf.access_token, sf.instance_url
+        )
+        return res
+
     @property
     def stage_progress(self):
         # Moving from 'None' to a stage is progress
@@ -347,13 +401,7 @@ class MeetingReview(TimeStampModel):
         # Check moving from any stage to another
         if self.prev_stage and self.stage:
             prev_stage_order = Stage.objects.filter(id=self.prev_stage,).first().order
-            current_stage_order = (
-                Stage.objects.filter(
-                    id=self.stage, organization__id=self.meeting.zoom_account.organization.id
-                )
-                .first()
-                .order
-            )
+            current_stage_order = Stage.objects.filter(id=self.stage).first().order
 
             if prev_stage_order < current_stage_order:
                 return zoom_consts.MEETING_REVIEW_PROGRESSED
@@ -388,7 +436,7 @@ class MeetingReview(TimeStampModel):
         return zoom_consts.MEETING_REVIEW_UNCHANGED
 
     @property
-    def expected_close_date_progress(self):
+    def close_date_progress(self):
         if not self.prev_close_date and not self.close_date:
             return zoom_consts.MEETING_REVIEW_UNCHANGED
 

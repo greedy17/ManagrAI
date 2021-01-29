@@ -21,7 +21,7 @@ from managr.salesforce.models import SalesforceAuthAccount
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.organization import constants as org_consts
 from managr.core.models import User, Notification
-from managr.organization import constants as opp_consts
+from . import constants as opp_consts
 
 
 from .models import (
@@ -135,4 +135,22 @@ class OpportunitySerializer(serializers.ModelSerializer):
             return super().create(validated_data)
         except ResourceAlreadyImported:
             pass
+
+    def update(self, instance, validated_data):
+        contacts_to_add = list()
+        for contact in validated_data.pop("contacts", []):
+            existing_contact = Contact.objects.filter(
+                integration_id=contact.get("integration_id"), user__id=contact.get("user"),
+            ).first()
+            if existing_contact:
+                serializer = ContactSerializer(
+                    instance=existing_contact, data=contact, partial=True
+                )
+            else:
+                serializer = ContactSerializer(data=contact)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            contacts_to_add.append(serializer.data["id"])
+        validated_data.update({"contacts": contacts_to_add})
+        return super().update(instance, validated_data)
 

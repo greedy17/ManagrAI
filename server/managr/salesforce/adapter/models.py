@@ -36,13 +36,13 @@ class SalesforceAuthAccountAdapter:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code == 200:
+        elif response.status_code >= 200 < 300:
+            if response.status_code == 204:
+                return {}
             try:
                 data = response.json()
             except Exception as e:
                 CustomAPIException(e, fn_name)
-        elif response.status_code == 204:
-            return {}
         else:
             try:
                 error_code = response.status_code
@@ -208,6 +208,7 @@ class StageAdapter:
         self.organization = kwargs.get("organization", None)
         self.order = kwargs.get("order", None)
         self.is_active = kwargs.get("is_active", None)
+        self.forecast_category = kwargs.get("forecast_category", None)
 
     @staticmethod
     def from_api(data, organization_id, mapping):
@@ -225,6 +226,9 @@ class StageAdapter:
         )
         formatted_data["description"] = data.get("Description") if data.get("Description") else ""
         formatted_data["order"] = data.get("SortOrder") if data.get("SortOrder", None) else None
+        formatted_data["forecast_category"] = (
+            data.get("ForecastCategory") if data.get("ForecastCategory", None) else None
+        )
         formatted_data["organization"] = str(organization_id)
         return StageAdapter(**formatted_data)
 
@@ -474,3 +478,24 @@ class OpportunityAdapter:
     def as_dict(self):
         return vars(self)
 
+
+class ActivityAdapter:
+    """ Two types of activities Task (includes calls, emails) and Events"""
+
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.type = kwargs.get("type", None)
+        self.category = kwargs.get("category", None)
+        self.subject = kwargs.get("subject", None)
+        self.description = kwargs.get("description", None)
+        self.created_date = kwargs.get("created_date", None)
+
+    @staticmethod
+    def save_zoom_meeting_to_salesforce(data, access_token, custom_base):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)

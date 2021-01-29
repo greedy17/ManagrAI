@@ -86,6 +86,7 @@ def zoom_meeting_initial(context):
                 "alt_text": "calendar thumbnail",
             },
         },
+        {"type": "divider"},
         {
             "type": "section",
             "text": {

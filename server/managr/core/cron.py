@@ -10,19 +10,18 @@ from django.conf import settings
 
 from managr.core.nylas.auth import revoke_all_access_tokens
 from managr.core.models import EmailAuthAccount, User
-from managr.opportunity.models import Reminder, Notification, Opportunity, LeadActivityLog
+from managr.opportunity.models import Opportunity
 from managr.core import constants as core_consts
 from managr.opportunity import constants as opp_consts
 
 from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
-from managr.opportunity.opp_score_generation import generate_opp_scores
+
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
 
-from .nylas.emails import send_system_email
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
 NOTIFICATION_TITLE_INACTIVE = "Opportunity Inactive"
@@ -100,32 +99,6 @@ def _generate_notification_key_lapsed(num):
 
     # its not ideal that we are checking against a string, but since these are loaded from the fixture
     # we can assume they will be the same
-
-
-# Daily, at hour 0, minute 0 (12am)
-@kronos.register("0 0 * * *")
-def revoke_extra_access_tokens():
-    """ this will remove excess access tokens managr will be charged for excess tokens as accounts
-    it will only keep access tokens we have stored in the EmailAuthAccount regardless of sync status
-    """
-    for row in EmailAuthAccount.objects.all():
-        try:
-            revoke_all_access_tokens(row.account_id, keep_token=row.access_token)
-            row.delete()
-
-        except requests.exceptions.HTTPError as error:
-            if 404 in error.args:
-                # delete the record so we can create a new link
-                row.email_auth_account.delete()
-                # we have out of sync data, pass
-                # we have a cron job running every 24 hours to remove all old tokens which are not
-                # in sync
-            else:
-                """
-                Most likely an error with our account or their server will
-                just log this when the logger is set up
-                """
-                continue
 
 
 @kronos.register("* * * * *")
@@ -544,6 +517,9 @@ def generate_meeting_scores():
 
             meeting.scoring_in_progress = False
             meeting.save()
+
+            # push to salesforce
+            user = meeting.zoom_account.user
         except Exception as e:
             meeting.scoring_in_progress = False
             meeting.save()
@@ -551,17 +527,3 @@ def generate_meeting_scores():
                 f"Unable to score meeting with id {meeting.id} because of the following exception {e.__class__.__name__}"
             )
 
-        user = meeting.zoom_account.user
-        if user.send_email_to_integrate_slack:
-            _send_slack_int_email(user)
-        if hasattr(user, "slack_integration"):
-            user_slack_channel = user.slack_integration.channel
-            slack_org_access_token = user.organization.slack_integration.access_token
-            managers = user.organization.users.filter(type="MANAGER")
-            for manager in managers:
-                if hasattr(manager, "slack_integration"):
-                    slack_requests.send_channel_message(
-                        user_slack_channel,
-                        slack_org_access_token,
-                        block_set=get_block_set("meeting_review_score", {"m": str(meeting.id)}),
-                    )
