@@ -448,7 +448,7 @@ class OpportunityAdapter:
         formatted_data["owner"] = formatted_data["external_owner"]
         # opps are stale if a meeting occured and lead is updated
         # after each refresh the opp is not stale anymore
-        formatted_data["is_stale"] = True
+        formatted_data["is_stale"] = False
 
         return OpportunityAdapter(**formatted_data)
 

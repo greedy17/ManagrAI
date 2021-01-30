@@ -9,6 +9,8 @@ from background_task.models import Task
 from django.db.models import F, Q, Count
 from django.utils import timezone
 
+from rest_framework.exceptions import ValidationError
+
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact
@@ -28,6 +30,8 @@ from ..serializers import (
     ZoomMeetingWebhookSerializer,
     ZoomMeetingSerializer,
 )
+
+logger = logging.getLogger("managr")
 
 
 def _split_first_name(name):
@@ -141,8 +145,15 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 meeting.opportunity = opportunity.id
                 meeting.participants = meeting_contacts
                 serializer = ZoomMeetingSerializer(data=meeting.as_dict)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
+
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                except ValidationError as e:
+                    logger.exception(
+                        f"Unable to save and initiate slack for meeting with uuid {meeting_uuid} becuase of error {json.dumps(e.detail)}"
+                    )
+                    return e
 
                 # emit the event to start slack interaction
                 emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))

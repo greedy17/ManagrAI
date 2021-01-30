@@ -151,9 +151,7 @@ class ZoomAuthAccount(TimeStampModel):
                     # check for current task if it exists
                     from .background import emit_refresh_zoom_token
 
-                    t = emit_refresh_zoom_token(
-                        str(self.id), expiration.strftime("%Y-%m-%dT%H:%M%z")
-                    )
+                    t = emit_refresh_zoom_token(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
                     self.refresh_token_task = str(t.id)
 
         if self.is_revoked:

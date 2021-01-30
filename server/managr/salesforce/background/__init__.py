@@ -14,6 +14,8 @@ from ..adapter.models import AccountAdapter, StageAdapter, OpportunityAdapter
 
 from .. import constants as sf_consts
 
+logging.getLogger("managr")
+
 
 def emit_sf_sync(user_id, sync_id, resource, offset):
     user_id = str(user_id)
@@ -98,11 +100,13 @@ def _process_opportunity_sync(user_id, sync_id, offset):
             serializer = OpportunitySerializer(data=opp)
         # check if already exists and update
 
-        serializer.is_valid(raise_exception=True)
         try:
+            serializer.is_valid(raise_exception=True)
             serializer.save()
         except Exception as e:
-            print(e)
+            logger.exception(
+                f"failed to import {opp['title']} with integration id of {opp['integration_id']} from {opp['integration_source']} for user {str(user.id)} {e}"
+            )
             pass
     return
 
