@@ -27,20 +27,6 @@ import Invite from '@/views/settings/_pages/_Invite'
 // import Styles from '@/views/settings/Styles'
 // END TODO
 
-// TODO 2020-01-13 William: The following components should no longer be necessary.
-//      Once we confirm this, remove them
-// import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
-// import Password from '@/views/settings/_pages/_Password'
-// import LeadsIndex from '@/views/leads/LeadsIndex'
-// import LeadsDetail from '@/views/leads/LeadsDetail'
-// import LeadsNew from '@/views/leads/LeadsNew'
-// import Prospect from '@/views/leads/Prospect'
-// import Forecast from '@/views/leads/Forecast'
-// import Reports from '@/views/reports/Reports'
-// import StoryReportDetail from '@/views/reports/StoryReportDetail'
-// import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
-// END TODO
-
 Vue.use(Router)
 
 export default new Router({
@@ -49,6 +35,7 @@ export default new Router({
     {
       path: '/',
       beforeEnter: Auth.homepageRedirect,
+      component: Settings,
     },
     {
       path: '/login',
@@ -66,57 +53,6 @@ export default new Router({
       component: Activation,
     },
 
-    // END TODO
-
-    // {
-    //   path: '/leads',
-    //   name: 'LeadsIndex',
-    //   component: LeadsIndex,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    {
-      path: '/meetings',
-      name: 'Meetings',
-      component: ZoomPage,
-      beforeEnter: Auth.requireAuth,
-    },
-    // {
-    //   path: '/leads/new',
-    //   name: 'LeadsNew',
-    //   component: LeadsNew,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
-    //   path: '/leads/:id',
-    //   name: 'LeadsDetail',
-    //   component: LeadsDetail,
-    //   props: true,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
-    //   path: '/prospect',
-    //   name: 'Prospect',
-    //   component: Prospect,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
-    //   path: '/forecast',
-    //   name: 'Forecast',
-    //   component: Forecast,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    {
-      path: '/nylas',
-      name: 'Nylas',
-      component: Nylas,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/nylas/callback',
-      name: 'NylasCallback',
-      component: NylasCallback,
-      beforeEnter: Auth.requireAuth,
-    },
     {
       path: '/settings',
       component: Settings,
@@ -160,26 +96,7 @@ export default new Router({
         { path: '', redirect: '/settings/email-integration' },
       ],
     },
-    // {
-    //   path: '/reports',
-    //   name: 'Reports',
-    //   component: Reports,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
-    //   path: '/story-reports/:id',
-    //   name: 'StoryReportDetail',
-    //   props: true,
-    //   component: StoryReportDetail,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
-    //   path: '/performance-reports/:id',
-    //   name: 'PerformanceReportDetail',
-    //   props: true,
-    //   component: PerformanceReportDetail,
-    //   beforeEnter: Auth.requireAuth,
-    // },
+    //
     // {
     //   path: '/styles',
     //   name: 'Styles',

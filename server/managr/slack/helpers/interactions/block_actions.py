@@ -385,11 +385,45 @@ def process_update_forecast_category_option(payload, context):
                 enumerate(payload["view"]["blocks"]),
             )
         )[0]
+        # grab the suggested block message if it exists and remove it
+        suggestion_block = list(
+            filter(
+                lambda x: x[1]["block_id"] == "forecast_suggestion",
+                enumerate(payload["view"]["blocks"]),
+            )
+        )
+        if len(suggestion_block):
+            del blocks[suggestion_block[0][0]]
+
         stage = Stage.objects.get(pk=selected_value)
-        fc_to_return = forecast_block[1]["accessory"]["initial_option"]["value"]
+        fc_to_return = None  # forecast_block[1]["accessory"]["initial_option"]["value"]
         if stage.forecast_category:
             fc_to_return = stage.forecast_category
+        if fc_to_return:
+            # get label to show as recommended value
+            # create new text block
+            # show recommendation
+            # slice and add in position
+            label = (
+                list(
+                    filter(
+                        lambda category: category[0] == fc_to_return, opp_consts.FORECAST_CHOICES,
+                    )
+                ),
+            )
+            if len(label):
 
+                text = f"The recommended forecast for this stage is *{label[0][0][1]}*, I'll update the forcecast to what you have selected"
+                suggestion_block = block_builders.simple_section(
+                    text, "mrkdwn", "forecast_suggestion"
+                )
+                blocks = [
+                    *blocks[: forecast_block[0] + 1],
+                    suggestion_block,
+                    *blocks[forecast_block[0] + 1 :],
+                ]
+
+        """
         new_fc_option = block_builders.option(
             *list(
                 map(
@@ -403,7 +437,7 @@ def process_update_forecast_category_option(payload, context):
                 )
             )[0]
         )
-        """
+      
         blocks.append(
             block_builders.external_select(
                 "*Forecast Category1*",

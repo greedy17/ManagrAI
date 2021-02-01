@@ -66,7 +66,7 @@ function homepageRedirect(to, from, next) {
     })
   } else {
     next({
-      name: 'LeadsIndex',
+      name: 'Integrations',
     })
   }
 }

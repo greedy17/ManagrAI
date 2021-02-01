@@ -4,9 +4,6 @@
       <div class="logo">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
-      <div v-if="userIsLoggedIn" class="links">
-        <NavLink icon="leads" :to="'LeadsIndex'">Opportunities</NavLink>
-      </div>
 
       <div class="right" ref="user-menu-icon">
         <div v-if="userIsLoggedIn" class="right__items">

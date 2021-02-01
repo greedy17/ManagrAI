@@ -1,7 +1,11 @@
-def simple_section(value, section_type="plain_text"):
+import uuid
+
+
+def simple_section(value, section_type="plain_text", block_id=str(uuid.uuid4())):
     return {
         "type": "section",
         "text": {"type": section_type, "text": value},
+        "block_id": block_id,
     }
 
 

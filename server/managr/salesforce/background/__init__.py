@@ -145,7 +145,6 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
     for opp in list(opps):
         existing = Opportunity.objects.filter(integration_id=opp["integration_id"]).first()
         if existing:
-            print(existing.title)
             serializer = OpportunitySerializer(data=opp, instance=existing)
         else:
             serializer = OpportunitySerializer(data=opp)
