@@ -13,3 +13,9 @@ class ZoomWebhookAuthentication(authentication.BaseAuthentication):
 
         user = WebhookAuthUser()
         return user, None
+
+
+class CsrfExemptSessionAuthentication(authentication.BaseAuthentication):
+    def enforce_csrf(self, request):
+        print(request.data)
+        return super().enforce_csrf(request)

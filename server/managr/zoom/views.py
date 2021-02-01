@@ -8,6 +8,8 @@ from datetime import datetime
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -38,6 +40,7 @@ from managr.core.permissions import (
 )
 
 from managr.zoom.zoom_helper import auth as zoom_auth
+from managr.slack.helpers import auth as slack_auth
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from .models import ZoomAuthAccount, ZoomMeeting
@@ -142,23 +145,38 @@ def zoom_meetings_webhook(request):
 
 
 @api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
-    meeting_uuid = request.data.get("meeting_uuid", None)
-    host_id = request.data.get("host_id", None)
-    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
-    if meeting:
-        meeting.delete()
-    original_duration = None
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = []
+    if len(command_params):
+        meeting_uuid = command_params[0]
+        host_id = command_params[1]
+        meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+        if meeting:
+            meeting.delete()
+        original_duration = None
 
-    if not original_duration or original_duration < 0:
-        original_duration = 0
-    ### move all this to a background task, zoom requires response in 60s
-    zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+        if not original_duration or original_duration < 0:
+            original_duration = 0
+        ### move all this to a background task, zoom requires response in 60s
+        zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
 
-    if zoom_account and not zoom_account.is_revoked:
-        # emit the process
-        _get_past_zoom_meeting_details(str(zoom_account.user.id), meeting_uuid, original_duration)
+        if zoom_account and not zoom_account.is_revoked:
+            # emit the process
+            _get_past_zoom_meeting_details(
+                str(zoom_account.user.id), meeting_uuid, original_duration
+            )
 
-    return Response()
+        return Response(data="Cool I'll Initiate the demo")
+    return Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Sorry I need the meeting uuid and the host id",
+        }
+    )
 
