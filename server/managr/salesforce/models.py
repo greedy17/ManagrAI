@@ -78,14 +78,14 @@ class SFSyncOperation(TimeStampModel):
         return self.progress != 100
 
     def __str__(self):
-        return f"{self.user.email} tasks {self.progress}"
+        return f"{self.user.email} tasks {self.progress}% complete"
 
-    def begin_tasks(self, attempts=1, scheduled_time=timezone.now()):
-        from managr.salesforce.background import emit_sf_sync
+    def begin_tasks(self, attempts=1):
+        from managr.salesforce.background import emit_sf_sync, emit_gen_next_sync
 
         sf_account = self.user.salesforce_account
-        adapter = self.user.salesforce_account.adapter
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M")
+        adapter = self.user.salesforce_account.adapter_class
+
         for key in self.operations_list:
             if key == sf_consts.RESOURCE_SYNC_ACCOUNT:
                 try:
@@ -126,19 +126,16 @@ class SFSyncOperation(TimeStampModel):
                 # get counts to set offsets
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
-                t = emit_sf_sync(
-                    str(self.user.id), str(self.id), key, offset, scheduled_time=formatted_time
-                )
+                t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
                 if self.operations:
                     self.operations.append(str(t.id))
                 else:
                     self.operations = [str(t.id)]
                 self.save()
-                return SFSyncOperation.objects.create(
-                    user=self.user,
-                    operations_list=self.operations_list,
-                    scheduled_time=(timezone.now() - timezone.timedelta(minutes=5)),
-                )
+
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=5)
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
 
 
 class SalesforceAuthAccount(TimeStampModel):
