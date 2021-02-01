@@ -17,15 +17,16 @@ from .. import constants as sf_consts
 logging.getLogger("managr")
 
 
-def emit_sf_sync(user_id, sync_id, resource, offset):
+def emit_sf_sync(user_id, sync_id, resource, offset, schedule):
     user_id = str(user_id)
     sync_id = str(sync_id)
+    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
     if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
-        return _process_account_sync(user_id, sync_id, offset, priority=3)
+        return _process_account_sync(user_id, sync_id, offset, priority=3, schedule=schedule)
     elif resource == sf_consts.RESOURCE_SYNC_STAGE:
-        return _process_stage_sync(user_id, sync_id, offset, priority=3)
+        return _process_stage_sync(user_id, sync_id, offset, priority=3, schedule=schedule)
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
-        return _process_opportunity_sync(user_id, sync_id, offset)
+        return _process_opportunity_sync(user_id, sync_id, offset, schedule=schedule)
 
 
 def emit_sf_update_opportunity(user_id, meeting_review_id):

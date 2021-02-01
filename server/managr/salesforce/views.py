@@ -52,11 +52,6 @@ def authenticate(request):
             sf_consts.RESOURCE_SYNC_STAGE,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY,
         ]
-        # operations[sf_consts.RESOURCE_SYNC_OPPORTUNITY] = []
-
-        if request.user.organization.has_stages_integrated:
-            operations.remove(sf_consts.RESOURCE_SYNC_STAGE)
-
         sync = SFSyncOperation.objects.create(user=request.user, operations_list=operations)
         sync.begin_tasks()
 

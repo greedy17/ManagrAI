@@ -273,6 +273,11 @@ class ZoomMeeting(TimeStampModel):
         help_text="Original duration is the duration sent from the meeting.end webhook, it is updated to the real duration when retrieving from the meetin endpoint so we save it for scoring",
     )
     #
+    slack_form = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="Id of slack form, we will use this id to delete/update the form when the meeting is deleted",
+    )
     objects = ZoomMeetingQuerySet.as_manager()
 
     class Meta:
