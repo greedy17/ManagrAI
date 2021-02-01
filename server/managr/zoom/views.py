@@ -43,6 +43,7 @@ from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.slack.helpers import auth as slack_auth
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
+from managr.slack.models import UserSlackIntegration
 from .models import ZoomAuthAccount, ZoomMeeting
 from .serializers import (
     ZoomAuthRefSerializer,
@@ -148,6 +149,24 @@ def zoom_meetings_webhook(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    if not user.has_zoom_integration:
+        return Response(
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+        )
+    host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
@@ -155,7 +174,7 @@ def init_fake_meeting(request):
         command_params = []
     if len(command_params):
         meeting_uuid = command_params[0]
-        host_id = command_params[1]
+        host_id = host_id
         meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
         if meeting:
             meeting.delete()
@@ -164,7 +183,7 @@ def init_fake_meeting(request):
         if not original_duration or original_duration < 0:
             original_duration = 0
         ### move all this to a background task, zoom requires response in 60s
-        zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+        zoom_account = user.zoom_account
 
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
