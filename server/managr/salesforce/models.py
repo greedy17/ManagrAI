@@ -1,6 +1,8 @@
 import jwt
 import pytz
 import math
+import logging
+
 from functools import reduce
 
 from datetime import datetime
@@ -14,7 +16,10 @@ from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
+from .adapter.exceptions import TokenExpired
 from . import constants as sf_consts
+
+logger = logging.getLogger("managr")
 
 
 class SFSyncOperation(TimeStampModel):
@@ -75,18 +80,48 @@ class SFSyncOperation(TimeStampModel):
     def __str__(self):
         return f"{self.user.email} tasks {self.progress}"
 
-    def begin_tasks(self):
+    def begin_tasks(self, attempts=1):
         from managr.salesforce.background import emit_sf_sync
 
+        sf_account = self.user.salesforce_account
+        adapter = self.user.salesforce_account.adapter
         for key in self.operations_list:
             if key == sf_consts.RESOURCE_SYNC_ACCOUNT:
-                count = self.user.salesforce_account.adapter_class.get_account_count()["totalSize"]
+                try:
+                    count = adapter.get_account_count()["totalSize"]
+                except TokenExpired():
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                        )
+                    else:
+                        sf_account.refresh()
+                        attempts += 1
+                        return self.begin_tasks(attempts)
             elif key == sf_consts.RESOURCE_SYNC_STAGE:
-                count = self.user.salesforce_account.adapter_class.get_account_count()["totalSize"]
+                try:
+                    count = adapter.get_stage_count()["totalSize"]
+                except TokenExpired():
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                        )
+                    else:
+                        sf_account.refresh()
+                        attempts += 1
+                        return self.begin_tasks(attempts)
             elif key == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
-                count = self.user.salesforce_account.adapter_class.get_opportunity_count()[
-                    "totalSize"
-                ]
+                try:
+                    count = adapter.get_opportunity_count()["totalSize"]
+                except TokenExpired():
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                        )
+                    else:
+                        sf_account.refresh()
+                        attempts += 1
+                        return self.begin_tasks(attempts)
                 # get counts to set offsets
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
@@ -139,8 +174,8 @@ class SalesforceAuthAccount(TimeStampModel):
         res = helper.refresh()
         self.token_generated_date = timezone.now()
         self.access_token = res.get("access_token", None)
-        self.refresh_token = res.get("refresh_token", None)
-        self.is_revoked = False
+        self.signature = res.get("signature", None)
+        self.scope = res.get("scope", None)
         self.save()
 
     def revoke(self):

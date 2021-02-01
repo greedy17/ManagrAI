@@ -36,7 +36,7 @@ class SalesforceAuthAccountAdapter:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code >= 200 < 300:
+        elif response.status_code >= 200 and response.status_code < 300:
             if response.status_code == 204:
                 return {}
             try:
