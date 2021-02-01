@@ -157,8 +157,10 @@ class ZoomAuthAccount(TimeStampModel):
         if self.is_revoked:
             # find the refresh task and delete it
             if self.refresh_token_task:
-                t = Task.objects.filter(id=self.refresh_token_task)
-                t.save()
+                t = Task.objects.filter(id=self.refresh_token_task).first()
+                if t:
+
+                    t.save()
 
         return super(ZoomAuthAccount, self).save(*args, **kwargs)
 
