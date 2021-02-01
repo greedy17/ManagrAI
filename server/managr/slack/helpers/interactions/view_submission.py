@@ -100,7 +100,7 @@ def process_zoom_meeting_data(payload, context):
 
 
 @processor(
-    required_context=["u", "l", "o", "original_message_channel", "original_message_timestamp",]
+    required_context=["u", "opp", "o", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_different_opportunity_submit(payload, context):
     state = payload["view"]["state"]["values"]
@@ -122,29 +122,26 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
         return data
 
     block_set_context = {
-        "l": new_opportunity,
+        "opp": new_opportunity,
         "u": context["u"],
         "o": context["o"],
         "m": context["m"],
     }
-    meeting = (
-        ZoomMeeting.objects.filter(id=context["m"])
-        .select_related("lead")
-        .prefetch_related("participants")
-        .first()
-    )
-    old_lead = meeting.lead
-    new_lead = Lead.objects.filter(id=new_opportunity).first()
-    meeting_participants = meeting.participants.all().values_list("id", flat=True)
+
+    meeting = ZoomMeeting.objects.filter(id=context["m"]).select_related("opportunity").first()
+
+    old_lead = meeting.opportunity
+    new_lead = Opportunity.objects.filter(id=new_opportunity).first()
+    meeting_participants = meeting.participants
     # bring all lead new lead contacts
-    new_lead_contacts = new_lead.linked_contacts.all().values_list("id", flat=True)
-    combined_participants = set(list(meeting_participants) + list(new_lead_contacts))
-    old_lead_new_contacts_list = old_lead.linked_contacts.filter(
-        id__in=meeting_participants
-    ).exclude(id__in=new_lead_contacts)
-    old_lead.linked_contacts.remove(*old_lead_new_contacts_list)
-    new_lead.linked_contacts.set(combined_participants)
-    meeting.lead = new_lead
+    # new_lead_contacts = new_lead.linked_contacts.all().values_list("id", flat=True)
+    # combined_participants = set(list(meeting_participants) + list(new_lead_contacts))
+    # old_lead_new_contacts_list = old_lead.linked_contacts.filter(
+    #    id__in=meeting_participants
+    # ).exclude(id__in=new_lead_contacts)
+    # old_lead.linked_contacts.remove(*old_lead_new_contacts_list)
+    # new_lead.linked_contacts.set(combined_participants)
+    meeting.opportunity = new_lead
     meeting.save()
     # remove newly added leads that are in the meeting participants but are not common with the new_lead contacts
 

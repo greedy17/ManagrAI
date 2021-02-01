@@ -28,14 +28,11 @@
 </template>
 
 <script>
-import NavLink from '@/components/NavLink'
-
 import DropDownMenu from '@/components/forms/DropDownMenu'
 
 export default {
   name: 'NavBar',
   components: {
-    NavLink,
     DropDownMenu,
   },
   props: {},

@@ -6,16 +6,16 @@ from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
-@block_set(required_context=["u", "l"])
+@block_set(required_context=["u", "opp"])
 def select_different_opportunity(context):
-    lead = Lead.objects.get(pk=context.get("l"))
+    opp = Opportunity.objects.get(pk=context.get("opp"))
 
     # make params here
     user_id_param = "u=" + context.get("u")
 
     return [
         block_builders.external_select(
-            f"*Opportunity:* :dart: _{lead.title}_",
+            f"*Opportunity:* :dart: _{opp.title}_",
             action_with_params(slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],),
             placeholder="Select Other",
             block_id="new_opportunity",

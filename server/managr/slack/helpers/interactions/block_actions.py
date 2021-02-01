@@ -45,7 +45,7 @@ def process_meeting_sentiment(payload, context):
     res = slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_context=["o", "u", "l", "m"])
+@processor(required_context=["o", "u", "opp", "m"])
 def process_zoom_meeting_different_opportunity(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -413,7 +413,7 @@ def process_update_forecast_category_option(payload, context):
             )
             if len(label):
 
-                text = f"The recommended forecast for this stage is *{label[0][0][1]}*, I'll update the forcecast to what you have selected"
+                text = f"The recommended forecast for this stage is *{label[0][0][1]}*, Would you like to override the Forecast Category ?"
                 suggestion_block = block_builders.simple_section(
                     text, "mrkdwn", "forecast_suggestion"
                 )
