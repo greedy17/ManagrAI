@@ -63,13 +63,6 @@ class Opportunity(TimeStampModel, IntegrationModel):
     owner = models.ForeignKey(
         "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
     )
-    imported_by = models.ForeignKey(
-        "core.User",
-        related_name="imported_opportunities",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     stage = models.ForeignKey(
         "organization.Stage",
         related_name="opportunities",
@@ -106,6 +99,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
             OpportunityAdapter.update_opportunity(data, token, base_url, self.integration_id)
             self.is_stale = True
             self.save()
+
+    def add_contact_role(self, contact_integration_id):
+        return
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"

@@ -30,6 +30,8 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+
+from managr.api.decorators import log_all_exceptions
 from .models import SFSyncOperation
 from .serializers import SalesforceAuthSerializer
 from .adapter.models import SalesforceAuthAccountAdapter
@@ -39,6 +41,7 @@ from . import constants as sf_consts
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
+@log_all_exceptions
 def authenticate(request):
     code = request.data.get("code", None)
     if code:

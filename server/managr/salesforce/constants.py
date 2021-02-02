@@ -88,6 +88,7 @@ k = resource id
 SALESFORCE_WRITE_URI = lambda u, r, k: f"{u}/services/data/{SF_API_VERSION}/sobjects/{r}/{k}"
 
 SALESFORCE_RESOURCE_OPPORTUNITY = "Opportunity"
+SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE = "OpportunityContactRole"
 SALESFORCE_RESOURCE_CONTACT = "Contact"
 SALESFORCE_RESOURCE_TASK = "Task"
 

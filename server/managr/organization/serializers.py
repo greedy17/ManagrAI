@@ -64,6 +64,7 @@ class StageSerializer(serializers.ModelSerializer):
             "is_won",
             "is_active",
             "forecast_category",
+            "imported_by",
         )
 
 
@@ -86,6 +87,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "parent_integration_id",
             "integration_id",
             "integration_source",
+            "imported_by",
         )
         read_only_fields = ()
 
@@ -107,5 +109,6 @@ class ContactSerializer(serializers.ModelSerializer):
             "user",
             "integration_source",
             "integration_id",
+            "imported_by",
         )
         extra_kwargs = {}

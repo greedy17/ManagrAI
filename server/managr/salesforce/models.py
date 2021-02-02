@@ -22,6 +22,10 @@ from . import constants as sf_consts
 logger = logging.getLogger("managr")
 
 
+class ArrayLength(models.Func):
+    function = "CARDINALITY"
+
+
 class SFSyncOperation(TimeStampModel):
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="sf_sync")
     operations_list = ArrayField(
@@ -40,7 +44,7 @@ class SFSyncOperation(TimeStampModel):
         models.CharField(max_length=255, blank=True),
         default=list,
         blank=True,
-        help_text="An Array of completed/faild task id's",
+        help_text="An Array of completed task id's",
     )
     failed_operations = ArrayField(
         JSONField(max_length=128, default=dict),
@@ -90,37 +94,37 @@ class SFSyncOperation(TimeStampModel):
             if key == sf_consts.RESOURCE_SYNC_ACCOUNT:
                 try:
                     count = adapter.get_account_count()["totalSize"]
-                except TokenExpired():
+                except TokenExpired:
                     if attempts >= 5:
                         return logger.exception(
                             f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
                         )
                     else:
-                        sf_account.refresh()
+                        sf_account.regenerate_token()
                         attempts += 1
                         return self.begin_tasks(attempts)
             elif key == sf_consts.RESOURCE_SYNC_STAGE:
                 try:
                     count = adapter.get_stage_count()["totalSize"]
-                except TokenExpired():
+                except TokenExpired:
                     if attempts >= 5:
                         return logger.exception(
                             f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
                         )
                     else:
-                        sf_account.refresh()
+                        sf_account.regenerate_token()
                         attempts += 1
                         return self.begin_tasks(attempts)
             elif key == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
                 try:
                     count = adapter.get_opportunity_count()["totalSize"]
-                except TokenExpired():
+                except TokenExpired:
                     if attempts >= 5:
                         return logger.exception(
                             f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
                         )
                     else:
-                        sf_account.refresh()
+                        sf_account.regenerate_token()
                         attempts += 1
                         return self.begin_tasks(attempts)
                 # get counts to set offsets
@@ -136,6 +140,9 @@ class SFSyncOperation(TimeStampModel):
         scheduled_time = timezone.now() + timezone.timedelta(minutes=5)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
+
+        def delete(*args, **kwargs):
+            return super().delete(*args, **kwargs)
 
 
 class SalesforceAuthAccount(TimeStampModel):
@@ -202,3 +209,6 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        return super().delete(*args, **kwargs)

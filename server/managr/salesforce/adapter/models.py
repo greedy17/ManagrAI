@@ -46,9 +46,15 @@ class SalesforceAuthAccountAdapter:
         else:
             try:
                 error_code = response.status_code
-                error_data = response.json()[0]
-                error_param = error_data.get("errorCode", None)
-                error_message = error_data.get("message", None)
+                error_data = (
+                    response.json()[0] if isinstance(response.json(), list) else response.json()
+                )
+                if error_code == 400:
+                    error_param = error_data.get("error", None)
+                    error_message = error_data.get("error_description", None)
+                else:
+                    error_param = error_data.get("errorCode", None)
+                    error_message = error_data.get("message", None)
                 kwargs = {
                     "error_code": error_code,
                     "error_param": error_param,
@@ -172,9 +178,10 @@ class AccountAdapter:
         self.logo = kwargs.get("logo", None)
         self.parent = kwargs.get("parent", None)
         self.parent_integration_id = kwargs.get("parent_integration_id", None)
+        self.imported_by = kwargs.get("imported_by", None)
 
     @staticmethod
-    def from_api(data, organization_id, mapping):
+    def from_api(data, organization_id, user_id, mapping):
         formatted_data = dict()
         formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
@@ -186,6 +193,7 @@ class AccountAdapter:
             data.get("ParentId", "") if data.get("ParentId", "") else ""
         )
         formatted_data["organization"] = str(organization_id)
+        formatted_data["imported_by"] = str(user_id)
 
         return AccountAdapter(**formatted_data)
 
@@ -209,9 +217,10 @@ class StageAdapter:
         self.order = kwargs.get("order", None)
         self.is_active = kwargs.get("is_active", None)
         self.forecast_category = kwargs.get("forecast_category", None)
+        self.imported_by = kwargs.get("imported_by", None)
 
     @staticmethod
-    def from_api(data, organization_id, mapping):
+    def from_api(data, organization_id, user_id, mapping):
         formatted_data = dict()
         formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
@@ -230,6 +239,7 @@ class StageAdapter:
             data.get("ForecastCategory") if data.get("ForecastCategory", None) else None
         )
         formatted_data["organization"] = str(organization_id)
+        formatted_data["imported_by"] = str(user_id)
         return StageAdapter(**formatted_data)
 
     @property
@@ -252,6 +262,7 @@ class ContactAdapter:
         self.account = kwargs.get("account", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
+        self.imported_by = kwargs.get("imported_by", None)
 
     from_mapping = dict(
         id="Id",
@@ -303,6 +314,7 @@ class ContactAdapter:
             if not len(formatted_data["external_account"])
             else formatted_data["external_account"]
         )
+        formatted_data["imported_by"] = str(user_id)
 
         return ContactAdapter(**formatted_data)
 
@@ -467,6 +479,19 @@ class OpportunityAdapter:
         json_data = json.dumps(OpportunityAdapter.to_api(data, OpportunityAdapter.from_mapping))
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY, salesforce_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def add_contact_role(data, access_token, custom_base, contact_id, opp_id):
+        data = {"ContactId": contact_id, "OpportunityId": opp_id}
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE, ""
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(

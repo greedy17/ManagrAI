@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 logger = logging.getLogger("managr")
 
 
-class TokenExpired(BaseException):
+class TokenExpired(Exception):
     def __init(self, message="Token Expired"):
         self.message = message
         super().__init__(self.message)

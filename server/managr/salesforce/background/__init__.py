@@ -5,6 +5,8 @@ from background_task import background
 
 from django.utils import timezone
 
+from managr.api.decorators import log_all_exceptions
+
 from managr.core.models import User
 from managr.organization.models import Account, Stage
 from managr.organization.serializers import AccountSerializer, StageSerializer
@@ -44,6 +46,7 @@ def emit_sf_update_opportunity(user_id, meeting_review_id):
 
 
 @background(schedule=0)
+@log_all_exceptions
 def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
@@ -60,17 +63,17 @@ def _process_account_sync(user_id, sync_id, offset, attempts=1):
     sf = user.salesforce_account
     try:
         res = sf.list_accounts(offset)
-    except TokenExpired():
+    except TokenExpired:
         if attempts >= 5:
             return logger.exception(
                 f"Failed to sync ACCOUNT data for user {user_id} after {attempts} tries"
             )
         else:
-            sf.refresh()
+            sf.regenerate_token()
             attempts += 1
             return _process_account_sync(user_id, sync_id, offset, attempts)
     accts = map(
-        lambda data: AccountAdapter.from_api(data, user.organization.id, []).as_dict,
+        lambda data: AccountAdapter.from_api(data, user.organization.id, user.id, []).as_dict,
         res["records"],
     )
 
@@ -95,18 +98,19 @@ def _process_stage_sync(user_id, sync_id, offset, attempts=1):
     sf = user.salesforce_account
     try:
         res = sf.list_stages(offset)
-    except TokenExpired():
+    except TokenExpired:
         if attempts >= 5:
             return logger.exception(
                 f"Failed to sync STAGE data for user {user_id} after {attempts} tries"
             )
         else:
-            sf.refresh()
+            sf.regenerate_token()
             attempts += 1
             return _process_stage_sync(user_id, sync_id, offset, attempts)
 
     stages = map(
-        lambda data: StageAdapter.from_api(data, user.organization.id, []).as_dict, res["records"],
+        lambda data: StageAdapter.from_api(data, user.organization.id, user.id, []).as_dict,
+        res["records"],
     )
     for stage in list(stages):
         existing = Stage.objects.filter(integration_id=stage["integration_id"]).first()
@@ -130,13 +134,13 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
     sf = user.salesforce_account
     try:
         res = sf.list_opportunities(offset)
-    except TokenExpired():
+    except TokenExpired:
         if attempts >= 5:
             return logger.exception(
                 f"Failed to sync OPPORTUNITY data for user {user_id} after {attempts} tries"
             )
         else:
-            sf.refresh()
+            sf.regenerate_token()
             attempts += 1
             return _process_opportunity_sync(user_id, sync_id, offset, attempts)
 

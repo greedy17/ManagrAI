@@ -112,7 +112,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 ).exclude(email=user.email)
                 # convert all contacts to model representation and remove from array
                 for contact in existing_contacts:
-                    meeting_contacts.append(contact.adapter_class.as_dict)
+                    formatted_contact = contact.adapter_class.as_dict
+                    formatted_contact["from_integration"] = True
+                    meeting_contacts.append(formatted_contact)
                     for index, participant in enumerate(participants):
                         if (
                             participant["user_email"] == contact.email
@@ -123,7 +125,10 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 meeting_contacts = [
                     *list(
                         map(
-                            lambda contact: ContactAdapter(**contact).as_dict,
+                            lambda contact: {
+                                **ContactAdapter(**contact).as_dict,
+                                "from_integration": False,
+                            },
                             list(
                                 map(
                                     lambda participant: dict(

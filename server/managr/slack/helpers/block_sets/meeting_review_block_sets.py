@@ -76,6 +76,8 @@ def meeting_contacts_block_set(context):
         {"type": "header", "text": {"type": "plain_text", "text": f"Review",},},
         {"type": "divider"},
     ]
+    contacts_in_sf = list(filter(lambda contact: contact["from_integration"], contacts))
+    contacts_not_in_sf = list(filter(lambda contact: not contact["from_integration"], contacts))
 
     for i, contact in enumerate(contacts):
         meeting_id_param = f"m={str(meeting.id)}"

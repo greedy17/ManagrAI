@@ -32,6 +32,9 @@ class IntegrationModel(models.Model):
     integration_source = models.CharField(
         max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
+    imported_by = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
+    )
 
     class Meta:
         abstract = True
