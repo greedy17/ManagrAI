@@ -103,7 +103,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
             )
 
             opportunity = Opportunity.objects.filter(
-                contacts__email__in=participant_emails, user__organization__id=user.organization.id
+                contacts__email__in=participant_emails, owner__organization__id=user.organization.id
             ).first()
             meeting_contacts = []
             if opportunity:
