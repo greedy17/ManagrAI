@@ -38,6 +38,7 @@ class CustomZoomMeetingForm(ModelForm):
             "meeting_score",
             "meeting_score_components",
             "original_duration",
+            "slack_form",
         )
 
 

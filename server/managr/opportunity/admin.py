@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 
 # Register your models here.
 
@@ -7,4 +8,37 @@ from .models import Opportunity
 # Register your models here.
 
 
-admin.site.register(Opportunity)
+class OpportunityForm(forms.ModelForm):
+    class Meta:
+        model = Opportunity
+        fields = (
+            "integration_id",
+            "integration_source",
+            "title",
+            "description",
+            "amount",
+            "close_date",
+            "type",
+            "next_step",
+            "lead_source",
+            "forecast_category",
+            "account",
+            "stage",
+            "owner",
+            "last_stage_update",
+            "last_activity_date",
+            "external_account",
+            "external_owner",
+            "external_stage",
+            "imported_by",
+            "contacts",
+            "is_stale",
+        )
+
+
+class CustomOpportunityAdmin(admin.ModelAdmin):
+    form = OpportunityForm
+    list_filter = ("owner",)
+
+
+admin.site.register(Opportunity, CustomOpportunityAdmin)

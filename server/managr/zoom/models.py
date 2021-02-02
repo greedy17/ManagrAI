@@ -332,6 +332,22 @@ class ZoomMeeting(TimeStampModel):
             return f"{sentiment} {stage} {forecast} {close_date} {attendance} {duration}"
         return "This Meeting has not been scored yet"
 
+    def delete(self, *args, **kwargs):
+        # if we still have access to slack and there is a form that is not completed
+        # update the meeting form to indicate it is no longer interactable
+        """
+        if self.slack_form:
+            if self.zoom_account.user.has_slack_integration:
+                # from managr.slack.helpers.requests import update_channel_message
+
+                ts, channel = self.slack_form.split("|")
+                res = update_channel_message(
+                    channel, ts, self.zoom_account.user.slack_integration.access_token
+                )
+                print(res.json())
+        """
+        return super(ZoomMeeting, self).delete(*args, **kwargs)
+
 
 class MeetingReview(TimeStampModel):
     meeting = models.OneToOneField(

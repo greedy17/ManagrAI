@@ -179,7 +179,7 @@ class Contact(TimeStampModel, IntegrationModel):
         return ContactAdapter(**data)
 
     def __str__(self):
-        return f"{self.user.full_name}, contact integration: {self.integration_source}: {self.integration_id}"
+        return f"user {self.user.full_name}, contact name: {self.first_name} {self.last_name} integration: {self.integration_source}: {self.integration_id}"
 
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique
