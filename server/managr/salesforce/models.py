@@ -137,7 +137,7 @@ class SFSyncOperation(TimeStampModel):
                     self.operations = [str(t.id)]
                 self.save()
 
-        scheduled_time = timezone.now() + timezone.timedelta(minutes=5)
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=1)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
 

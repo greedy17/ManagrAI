@@ -49,20 +49,30 @@ def emit_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
 
 
 @background(schedule=0)
-def _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
+@log_all_exceptions
+def _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id, attempts=1):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(
-            f"User not found add contact role not initiated {user_id}, {sf_opp_id}, {sf_contact_id}"
+            f"User not found add contact role not initiated {user_id}, {str(opp_id)}, {sf_contact_id}"
         )
     opp = user.owned_opportunities.filter(id=opp_id).first()
     if not opp:
         return logger.exception(
-            f"Opportunity not found add contact role not initiated {user_id}, {sf_opp_id}, {sf_contact_id}"
+            f"Opportunity not found add contact role not initiated {user_id}, {str(opp_id)}, {sf_contact_id}"
         )
     sf = user.salesforce_account
-    res = opp.add_contact_role(sf.access_token, sf.instance_url, sf_contact_id)
-    return res
+    try:
+        opp.add_contact_role(sf.access_token, sf.instance_url, sf_contact_id)
+    except TokenExpired:
+        if attempts >= 5:
+            return logger.exception(
+                f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+            )
+        else:
+            sf.regenerate_token()
+            attempts += 1
+            return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id, attempts=1)
 
 
 @background(schedule=0)

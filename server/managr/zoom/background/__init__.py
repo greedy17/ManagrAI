@@ -99,12 +99,27 @@ def _push_meeting_contacts(meeting_id):
             for index, contact in enumerate(contacts_not_in_sf):
                 if not contact["last_name"] or not len(contact["last_name"]):
                     contact["last_name"] = "N/A"
-                res = ContactAdapter.create_new_contact(contact, sf.access_token, sf.instance_url)
-                contact["integration_id"] = res["id"]
-                contact["integration_source"] = "SALESFORCE"
-                # contact from integration source is still False
-                # we use this to show a message that we created the contact
-                created_contacts.append(contact)
+                while True:
+                    attempts = 0
+                    try:
+                        res = ContactAdapter.create_new_contact(
+                            contact, sf.access_token, sf.instance_url
+                        )
+                        contact["integration_id"] = res["id"]
+                        contact["integration_source"] = "SALESFORCE"
+                        # contact from integration source is still False
+                        # we use this to show a message that we created the contact
+                        created_contacts.append(contact)
+                        break
+                    except TokenExpired:
+                        if attempts >= 5:
+                            logger.exception(
+                                f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+                            )
+                            break
+                        else:
+                            sf.regenerate_token()
+                            attempts += 1
 
             # remove the old contacts from the list of current participants
             # and then save them again the newly created contacts are contacts
@@ -288,5 +303,5 @@ def _save_meeting_review_data(managr_meeting_id, data):
         obj["sentiment"] = data.get("sentiment", None)
         obj["amount"] = data.get("amount", None)
 
-        meeting_review = MeetingReview.objects.create(**obj)
+        MeetingReview.objects.create(**obj)
 

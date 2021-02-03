@@ -183,11 +183,7 @@ def process_show_meeting_contacts(payload, context):
     org = meeting.zoom_account.user.organization
 
     access_token = org.slack_integration.access_token
-    salesforce_account = meeting.zoom_account.user.salesforce_account
-
-    blocks = get_block_set(
-        "show_meeting_contacts", {"salesforce": salesforce_account, "meeting": meeting},
-    )
+    blocks = get_block_set("show_meeting_contacts", context,)
 
     data = {
         "trigger_id": trigger_id,

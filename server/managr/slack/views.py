@@ -185,13 +185,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
         process_output = slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_200_OK, data=process_output)
 
-    # len(list(filter(lambda x: x['block_id']=='test', payload['actions'])))
-    # get selected value
-    # find forecast in blocks payload['view']['blocks']
-    # list(filter(lambda x: x[1]['block_id']=="forecast_category", enumerate(payload['view']['blocks'])))
-    # update init value
-    # forecast_block['accessory']['initial_option']=block_suggestions.process_get_forecast_from_stage(payload, context)
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
