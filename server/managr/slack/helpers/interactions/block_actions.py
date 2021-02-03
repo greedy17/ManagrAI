@@ -234,7 +234,7 @@ def process_get_meeting_score_components(payload, context):
                 sentiment = comp.get("message", "N/A")
             if comp["type"] == "stage":
                 stage = comp.get("message", "N/A")
-            if comp["type"] == "forecast_category":
+            if comp["type"] == "forecast":
                 forecast = comp.get("message", "N/A")
             if comp["type"] == "close_date":
                 close_date = comp.get("message", "N/A")
