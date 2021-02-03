@@ -199,3 +199,24 @@ def init_fake_meeting(request):
         }
     )
 
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def score_meetings(request):
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    call_command("generatemeetingscores")
+
+    return Response(data="Scoring Meeting...")
+
