@@ -40,9 +40,29 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
 
 
 def emit_sf_update_opportunity(user_id, meeting_review_id):
-    user_id = str(user_id)
-    meeting_review_id = str(meeting_review_id)
-    _process_update_opportunity(user_id, meeting_review_id)
+
+    return _process_update_opportunity(user_id, meeting_review_id)
+
+
+def emit_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
+    return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id)
+
+
+@background(schedule=0)
+def _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return logger.exception(
+            f"User not found add contact role not initiated {user_id}, {sf_opp_id}, {sf_contact_id}"
+        )
+    opp = user.owned_opportunities.filter(id=opp_id).first()
+    if not opp:
+        return logger.exception(
+            f"Opportunity not found add contact role not initiated {user_id}, {sf_opp_id}, {sf_contact_id}"
+        )
+    sf = user.salesforce_account
+    res = opp.add_contact_role(sf.access_token, sf.instance_url, sf_contact_id)
+    return res
 
 
 @background(schedule=0)

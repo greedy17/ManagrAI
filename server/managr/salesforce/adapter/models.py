@@ -271,7 +271,7 @@ class ContactAdapter:
         title="Title",
         email="Email",
         mobile_phone="MobilePhone",
-        phone_number="PhoneNumber",
+        phone_number="Phone",
         account="AccountId",
         owner="OwnerId",
     )
@@ -329,13 +329,11 @@ class ContactAdapter:
         return formatted_data
 
     @staticmethod
-    def create_new_contact(data, access_token, custom_base, salesforce_id):
+    def create_new_contact(data, access_token, custom_base):
         json_data = json.dumps(ContactAdapter.to_api(data, ContactAdapter.from_mapping))
-        url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, salesforce_id
-        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.patch(
+        r = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
@@ -487,14 +485,14 @@ class OpportunityAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def add_contact_role(data, access_token, custom_base, contact_id, opp_id):
+    def add_contact_role(access_token, custom_base, contact_id, opp_id):
         data = {"ContactId": contact_id, "OpportunityId": opp_id}
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE, ""
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.patch(
+        r = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)

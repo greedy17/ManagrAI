@@ -65,7 +65,9 @@ def process_get_user_opportunities(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.owned_leads.filter(title__icontains=value)],
+        "options": [
+            l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+        ],
     }
 
 

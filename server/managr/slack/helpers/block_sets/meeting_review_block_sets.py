@@ -66,14 +66,15 @@ def generate_contact_group(index, contact, instance_url):
     return blocks
 
 
-@block_set(required_context=["salesforce", "meeting"])
+@block_set(required_context=["m"])
 def meeting_contacts_block_set(context):
-    meeting = context.get("meeting")
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+
     contacts = meeting.participants
-    sf_account = context.get("salesforce")
+    sf_account = meeting.zoom_account.user.salesforce_account
 
     block_sets = [
-        {"type": "header", "text": {"type": "plain_text", "text": f"Review",},},
+        {"type": "header", "text": {"type": "plain_text", "text": "Review",},},
         {"type": "divider"},
     ]
     contacts_in_sf = list(filter(lambda contact: contact["from_integration"], contacts))

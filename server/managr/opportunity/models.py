@@ -61,7 +61,11 @@ class Opportunity(TimeStampModel, IntegrationModel):
     )
 
     owner = models.ForeignKey(
-        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+        "core.User",
+        related_name="owned_opportunities",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     stage = models.ForeignKey(
         "organization.Stage",
@@ -92,6 +96,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
     def as_slack_option(self):
         return block_builders.option(self.title, str(self.id))
 
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return OpportunityAdapter(**data)
+
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
@@ -100,8 +110,11 @@ class Opportunity(TimeStampModel, IntegrationModel):
             self.is_stale = True
             self.save()
 
-    def add_contact_role(self, contact_integration_id):
-        return
+    def add_contact_role(self, access_token, base_url, contact_integration_id):
+
+        return OpportunityAdapter.add_contact_role(
+            access_token, base_url, contact_integration_id, self.integration_id
+        )
 
     def __str__(self):
         return f"Lead '{self.title}' ({self.id})"

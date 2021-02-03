@@ -49,6 +49,11 @@ def _split_last_name(name):
             return "".join(name_parts[1:])
 
 
+def emit_push_meeting_contacts(meeting_id):
+    meeting_id = str(meeting_id)
+    return _push_meeting_contacts(meeting_id)
+
+
 def emit_refresh_zoom_token(zoom_account_id, schedule):
     # scedule can be seconds int or datetime string
     zoom_account_id = str(zoom_account_id)
@@ -74,6 +79,66 @@ def _refresh_zoom_token(zoom_account_id):
     if zoom_account:
         return zoom_account.regenerate_token()
     return
+
+
+@background(schedule=0)
+def _push_meeting_contacts(meeting_id):
+    from managr.salesforce.background import emit_add_c_role_to_opp
+
+    meeting = ZoomMeeting.objects.filter(id=meeting_id).first()
+    if meeting:
+        # find contacts and push them to sf
+        contacts_not_in_sf = list(
+            filter(lambda contact: not contact["from_integration"], meeting.participants)
+        )
+        user = meeting.zoom_account.user
+        if hasattr(user, "salesforce_account"):
+            sf = user.salesforce_account
+            # add the contacts with the details to sf place the id int source and user
+            created_contacts = []
+            for index, contact in enumerate(contacts_not_in_sf):
+                if not contact["last_name"] or not len(contact["last_name"]):
+                    contact["last_name"] = "N/A"
+                res = ContactAdapter.create_new_contact(contact, sf.access_token, sf.instance_url)
+                contact["integration_id"] = res["id"]
+                contact["integration_source"] = "SALESFORCE"
+                # contact from integration source is still False
+                # we use this to show a message that we created the contact
+                created_contacts.append(contact)
+
+            # remove the old contacts from the list of current participants
+            # and then save them again the newly created contacts are contacts
+            # that appear at the top as they were sorted
+            if len(created_contacts):
+                meeting.participants = [
+                    *meeting.participants[len(created_contacts) :],
+                    *created_contacts,
+                ]
+                meeting.save()
+
+            for contact in created_contacts:
+                emit_add_c_role_to_opp(
+                    str(user.id), str(meeting.opportunity.id), contact["integration_id"]
+                )
+
+        block_set_context = {
+            "opp": str(meeting.opportunity.id),
+            "m": str(meeting.id),
+            "show_contacts": True,
+        }
+        ts, channel = meeting.slack_form.split("|")
+        slack_requests.update_channel_message(
+            channel,
+            ts,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+        )
+
+    # emit event to create contact role
+    # save to the meeting
+    # update the slack message
+
+    return  # emit create the contact role
 
 
 @background(schedule=0)
@@ -124,22 +189,24 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
 
                 meeting_contacts = [
                     *list(
-                        map(
-                            lambda contact: {
-                                **ContactAdapter(**contact).as_dict,
-                                "from_integration": False,
-                            },
+                        filter(
+                            lambda x: x["first_name"] or x["last_name"] or x["email"],
                             list(
                                 map(
-                                    lambda participant: dict(
-                                        email=participant["user_email"],
-                                        first_name=_split_first_name(participant["name"]),
-                                        last_name=_split_last_name(participant["name"]),
-                                    ),
+                                    lambda participant: {
+                                        **ContactAdapter(
+                                            **dict(
+                                                email=participant["user_email"],
+                                                first_name=_split_first_name(participant["name"]),
+                                                last_name=_split_last_name(participant["name"]),
+                                            )
+                                        ).as_dict,
+                                        "from_integration": False,
+                                    },
                                     participants,
                                 ),
                             ),
-                        ),
+                        )
                     ),
                     *meeting_contacts,
                 ]
