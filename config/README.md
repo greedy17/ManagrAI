@@ -70,7 +70,14 @@ Then install python deps. This should create a virtualenv and install all python
     sudo ln -s /home/ubuntu/managr /opt/managr
     sudo ln -s /home/ubuntu/.local/share/virtualenvs/managr-{hash} /opt/venv
 
-9. Set up nginx
+9. Create logs directories
+
+Make sure these directories match the directors in the supervisor and nginx configs
+
+    mkdir /opt/managr/logs
+    mkdir /opt/managr/logs/nginx
+
+10. Set up nginx
 
 Install nginx
 
@@ -84,11 +91,14 @@ Make a symlink or copy over the prod.conf
     sudo ln -s ../sites-available/prod.conf .
     sudo unlink default
 
-10. Create logs directories
+Test the nginx config and make sure there are no errors
 
-Make sure these directories match the directors in the supervisor and nginx configs
+    sudo nginx -t
 
-    mkdir /opt/managr/logs
+Restart nginx for changes to take effect:
+
+    sudo service nginx restart
+
 
 11. Create /run/daphne directory
 
@@ -152,8 +162,14 @@ Copy the supervisor task from the repo into supervisor's config directory:
 
 Reread:
 
-    supervisorctl reread
+    sudo supervisorctl reread
+    sudo supervisorctl update
 
+Check status of running tasks:
+
+    sudo supervisorctl status all
+
+The 'uptime' timer should keep going up when you rerun this command. If the timer resets to zero, then there is a Python error happening, and you should check /opt/managr/logs/asgi.log
 
 
 ## Setting up other Infrastructure
