@@ -124,7 +124,19 @@ Build the front end app
     npm install
     npm run build
 
-14. Set up supervisor
+Collect static
+
+    cd /opt/managr/server
+    ./manage.py collectstatic --noinput
+
+(These commands are also in the build and restart script in the netops directory)
+
+14. Apply DB migrations
+
+    cd /opt/managr/server
+    ./manage.py migrate
+
+15. Set up supervisor
 
 Install
 

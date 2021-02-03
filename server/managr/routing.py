@@ -5,8 +5,8 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 
 
 application = ProtocolTypeRouter(
-    # {
-    #     # (http->django views is added by default)
-    #     # "websocket": TokenAuthMiddleware(URLRouter(chat_routing.websocket_urlpatterns)),
-    # }
+    {
+        # (http->django views is added by default)
+        # "websocket": TokenAuthMiddleware(URLRouter(chat_routing.websocket_urlpatterns)),
+    }
 )
