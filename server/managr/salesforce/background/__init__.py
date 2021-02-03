@@ -14,7 +14,7 @@ from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
 
 from ..models import SFSyncOperation
-from ..adapter.models import AccountAdapter, StageAdapter, OpportunityAdapter
+from ..adapter.models import AccountAdapter, StageAdapter, OpportunityAdapter, ActivityAdapter
 from ..adapter.exceptions import TokenExpired
 
 from .. import constants as sf_consts
@@ -39,6 +39,10 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
+def emit_sf_add_call_to_sf(user_id, data):
+    return _process_add_call_to_sf(user_id, data)
+
+
 def emit_sf_update_opportunity(user_id, meeting_review_id):
 
     return _process_update_opportunity(user_id, meeting_review_id)
@@ -46,6 +50,31 @@ def emit_sf_update_opportunity(user_id, meeting_review_id):
 
 def emit_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
     return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id)
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_add_call_to_sf(user_id, data, attempts=1):
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return logger.exception(f"User not found unable to log call {user_id}")
+    if not hasattr(user, "salesforce_account"):
+        return logger.exception("User does not have a salesforce account cannot push to sf")
+
+    sf = user.salesforce_account
+    try:
+        return ActivityAdapter.save_zoom_meeting_to_salesforce(
+            data, sf.access_token, sf.instance_url
+        )
+    except TokenExpired:
+        if attempts >= 5:
+            return logger.exception(
+                f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+            )
+        else:
+            sf.regenerate_token()
+            attempts += 1
+            return _process_add_call_to_sf(user_id, data, attempts=attempts)
 
 
 @background(schedule=0)
@@ -72,7 +101,7 @@ def _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id, attempts=1):
         else:
             sf.regenerate_token()
             attempts += 1
-            return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id, attempts=1)
+            return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id, attempts=attempts)
 
 
 @background(schedule=0)
@@ -197,7 +226,7 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-def _process_update_opportunity(user_id, meeting_review_id):
+def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
     user = (
         User.objects.filter(id=user_id)
         .select_related("zoom_account")
@@ -209,7 +238,18 @@ def _process_update_opportunity(user_id, meeting_review_id):
         meeting_review = meeting.meeting_review
         if meeting_review:
             formatted_data = meeting_review.as_sf_update
-            meeting.opportunity.update_in_salesforce(formatted_data)
+            sf = user.salesforce_account
+            try:
+                meeting.opportunity.update_in_salesforce(formatted_data)
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to sync STAGE data for user {user_id} after {attempts} tries"
+                    )
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+                    return _process_update_opportunity(user_id, meeting_review_id, attempts)
 
             # push to sf
     return

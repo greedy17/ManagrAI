@@ -406,7 +406,7 @@ class MeetingReview(TimeStampModel):
         blank=True,
     )
 
-    def save_event_to_salesforce(self):
+    def get_event_data_salesforce(self):
         user_timezone = self.meeting.zoom_account.timezone
         start_time = self.meeting.start_time
         end_time = self.meeting.end_time
@@ -434,11 +434,7 @@ class MeetingReview(TimeStampModel):
             Status="Completed",
             TaskSubType="Call",
         )
-        sf = self.meeting.zoom_account.user.salesforce_account
-        res = ActivityAdapter.save_zoom_meeting_to_salesforce(
-            data, sf.access_token, sf.instance_url
-        )
-        return res
+        return data
 
     @property
     def stage_progress(self):

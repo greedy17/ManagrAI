@@ -3,7 +3,7 @@ import logging
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
-from managr.salesforce.background import emit_sf_update_opportunity
+from managr.salesforce.background import emit_sf_update_opportunity, emit_sf_add_call_to_sf
 from managr.zoom.background import emit_push_meeting_contacts
 
 from .models import MeetingReview
@@ -21,7 +21,8 @@ def save_to_salesforce(sender, instance=None, created=False, **kwargs):
         user = meeting.zoom_account.user
         if user.salesforce_account:
             emit_sf_update_opportunity(str(user.id), str(instance.id))
-            instance.save_event_to_salesforce()
+            data = instance.get_event_data_salesforce()
+            emit_sf_add_call_to_sf(str(user.id), data)
             emit_push_meeting_contacts(str(meeting.id))
 
         else:
