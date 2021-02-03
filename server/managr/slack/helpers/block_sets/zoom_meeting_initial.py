@@ -90,22 +90,6 @@ def zoom_meeting_initial(context):
         {
             "type": "section",
             "text": {
-                "type": "plain_text",
-                "text": "Review the people who joined your meeting and save them to Salesforce",
-            },
-            "accessory": {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
-                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                "action_id": action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
-                ),
-            },
-        },
-        {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
                 "type": "mrkdwn",
                 "text": f"*{opportunity.title}*\n{description}\n{next_step}",
             },
