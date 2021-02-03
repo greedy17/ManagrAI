@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "background_task",
+    "kronos",
 ]
 
 MIDDLEWARE = [
