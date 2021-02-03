@@ -97,7 +97,34 @@ Django Channels uses Daphne and creates socket files in the /run/daphne director
     cd /run
     sudo mkdir daphne
 
-12. Set up supervisor
+12. Set up .env file
+
+    cd /opt/managr/server
+    cp .env.example .env
+
+Edit the file to configure the proper settings.
+
+13. Build the client side and collect static
+
+Install nvm
+
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
+
+Add NPM private token to the .bashrc:
+
+    export NPM_PRIVATE_TOKEN={token}
+
+Install proper node version
+
+    nvm install 14
+
+Build the front end app
+
+    cd /opt/managr/client
+    npm install
+    npm run build
+
+14. Set up supervisor
 
 Install
 
