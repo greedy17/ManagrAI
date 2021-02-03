@@ -54,6 +54,14 @@ This will take a while...
 
 7. Create the virtualenv using pipenv
 
+First install system deps (NOTE - installs Redis, too):
+
+    sudo apt-get install libjpeg-dev zlib1g-dev gcc redis-server \
+        postgresql postgresql-server-dev-10 libpq-dev \
+        postgresql-12 postgresql-client-12 libpq-dev -y
+
+Then install python deps. This should create a virtualenv and install all python deps
+
     cd ~/managr
     python3 -m pipenv install
 
@@ -70,9 +78,49 @@ Install nginx
 
 Make a symlink or copy over the prod.conf
 
-10. Set up supervisor
+    cd /etc/nginx/sites-available
+    sudo ln -s /opt/managr/config/nginx/prod.conf .
+    cd ../sites-enabled
+    sudo ln -s ../sites-available/prod.conf .
+    sudo unlink default
+
+10. Create logs directories
+
+Make sure these directories match the directors in the supervisor and nginx configs
+
+    mkdir /opt/managr/logs
+
+11. Create /run/daphne directory
+
+Django Channels uses Daphne and creates socket files in the /run/daphne directory. Because of permissions issues, this directory can't always be created and must be created manually so that the process can create the socket files it needs
+
+    cd /run
+    sudo mkdir daphne
+
+12. Set up supervisor
+
+Install
+
+    sudo apt-get install supervisor
+
+Start the service:
+
+    service supervisor restart
+
+Copy the supervisor task from the repo into supervisor's config directory:
+
+    sudo cp /opt/managr/config/supervisor/managr.conf /etc/supervisor/conf.d
+
+Reread:
+
+    supervisorctl reread
 
 
 
+## Setting up other Infrastructure
+
+Set Up Application Load Balancer
+ - Request an Automated Certificate through ACM
+ - Requires DNS verification, so log into Godaddy to set the CNAME record
 
 Set Up RDS
