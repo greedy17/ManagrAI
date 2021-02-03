@@ -201,6 +201,7 @@ def process_show_meeting_contacts(payload, context):
     # private_metadata.update(context)
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -337,7 +338,7 @@ def process_get_lead_score_components(payload, context):
 
 @processor(required_context=["m", "contact_index"])
 def process_edit_meeting_contact(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     contact = meeting.participants[int(context.get("contact_index"))]
@@ -350,9 +351,13 @@ def process_edit_meeting_contact(payload, context):
 
     blocks = get_block_set("edit_meeting_contacts", {"meeting": meeting, "contact": contact},)
 
+    view_id = payload["view"]["id"]
+
     data = {
         "trigger_id": trigger_id,
+        "view_id": view_id,
         "view": {
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
             "title": {"type": "plain_text", "text": "Edit Contact"},
@@ -361,6 +366,7 @@ def process_edit_meeting_contact(payload, context):
     }
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["o"])
