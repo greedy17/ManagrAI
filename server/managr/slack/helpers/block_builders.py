@@ -1,17 +1,67 @@
 import uuid
 
 
-def simple_section(value, section_type="plain_text", block_id=str(uuid.uuid4())):
+def text_block(value, text_type="plain_text"):
+    return {"type": text_type, "text": value}
+
+
+def input_block(
+    label,
+    initial_value=False,
+    placeholder=False,
+    multiline=False,
+    placeholder_type="plain_text",
+    action_id="plain_input",
+    block_id=None,
+    label_type="plain_text",
+    min_length=False,
+    max_length=False,
+):
+    """ 
+    If a placeholder, min_length, max_length is 
+    passed in it will be used otherwise False 
+    will not add a placeholder 
+    """
+
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    obj = {
+        "type": "input",
+        "block_id": block_id,
+        "label": {"type": label_type, "text": label},
+        "element": {"type": "plain_text_input", "action_id": action_id, "multiline": multiline,},
+    }
+    if placeholder:
+        # placeholder is a text_block
+        obj["element"]["placeholder"] = text_block(placeholder, placeholder_type)
+
+    if max_length:
+        obj["element"]["max_length"] = max_length
+
+    if min_length:
+        obj["element"]["min_length"] = min_length
+
+    if initial_value:
+        obj["element"]["initial_value"] = initial_value
+
+    return obj
+
+
+def simple_section(value, text_type="plain_text", block_id=None):
+    if not block_id:
+        block_id = str(uuid.uuid4())
     return {
         "type": "section",
-        "text": {"type": section_type, "text": value},
+        "text": {"type": text_type, "text": value},
         "block_id": block_id,
     }
 
 
-def simple_section_multiple_options(value, sections):
+def simple_section_multiple(text_blocks, block_id=None):
     """ sections can have multiple fields they are a collection of simple_selections """
-    return {"type": "section", "fields": sections}
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    return {"type": "section", "fields": text_blocks, "block_id": block_id}
 
 
 def option(text, value):

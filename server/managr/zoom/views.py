@@ -121,6 +121,7 @@ def redirect_from_zoom(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
+    logger.debug("retrieved here")
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # for v1 only tracking meeting.ended

@@ -9,8 +9,9 @@ from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 
-def generate_edit_contact_form():
-    return block_builders.simple_section("test")
+def generate_edit_contact_form(field, value):
+
+    return block_builders.input_block(field, initial_value=value)
 
 
 def generate_contact_group(index, contact, instance_url):
@@ -74,13 +75,27 @@ def meeting_contacts_block_set(context):
     sf_account = meeting.zoom_account.user.salesforce_account
 
     block_sets = [
-        {"type": "header", "text": {"type": "plain_text", "text": "Review",},},
+        {"type": "header", "text": {"type": "plain_text", "text": "Review Meeting Participants",},},
         {"type": "divider"},
     ]
     contacts_in_sf = list(filter(lambda contact: contact["from_integration"], contacts))
     contacts_not_in_sf = list(filter(lambda contact: not contact["from_integration"], contacts))
 
-    for i, contact in enumerate(contacts):
+    if len(contacts_not_in_sf):
+        block_sets.append(
+            block_builders.simple_section(
+                ":white_check_mark: *Managr added these participants from the meeting to Salesforce*",
+                "mrkdwn",
+            )
+        )
+    else:
+        block_sets.append(
+            block_builders.simple_section(
+                "_All of the participants from your meeting where already in Salesforce_", "mrkdwn"
+            )
+        )
+
+    for i, contact in enumerate(contacts_not_in_sf):
         meeting_id_param = f"m={str(meeting.id)}"
         contact_index_param = f"contact_index={i}"
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
@@ -101,6 +116,7 @@ def meeting_contacts_block_set(context):
                 ],
             }
         )
+        """
         if not contact.get("integration_id", None):
             block_sets.append(
                 {
@@ -115,12 +131,56 @@ def meeting_contacts_block_set(context):
                     ],
                 }
             )
-
+        """
         block_sets.append({"type": "divider"})
 
+    if len(contacts_in_sf):
+        block_sets.append(
+            block_builders.simple_section(
+                ":dart: *Managr found these contacts from your meeting participants in Salesforce*",
+                "mrkdwn",
+            )
+        )
+    else:
+        block_sets.append(
+            block_builders.simple_section(
+                "_All of the participants from your meeting where added by Managr to Salesforce_",
+                "mrkdwn",
+            )
+        )
+
+    for i, contact in enumerate(contacts_in_sf):
+        meeting_id_param = f"m={str(meeting.id)}"
+        contact_index_param = f"contact_index={i}"
+        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        # pass meeting id and contact index
+        block_sets.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Edit Details"},
+                        "value": "click_me_123",
+                        "action_id": action_with_params(
+                            slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+                            params=[meeting_id_param, contact_index_param],
+                        ),
+                    }
+                ],
+            }
+        )
+
+        block_sets.append({"type": "divider"})
     return block_sets
 
 
 @block_set(required_context=["meeting", "contact"])
 def edit_meeting_contacts_block_set(context):
-    return [generate_edit_contact_form()]
+    fields = ["first_name", "last_name", "email", "title", "mobile_phone", "phone_number"]
+    blocks = []
+    for k, v in context["contact"].items():
+        if k in fields:
+            blocks.append(generate_edit_contact_form(k, v))
+
+    return blocks
