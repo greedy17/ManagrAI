@@ -174,9 +174,9 @@ def process_get_lead_logs(payload, context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_context=["m"])
-def process_show_meeting_contacts(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+@processor(required_context=["m"], action=slack_const.VIEWS_OPEN)
+def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
+    url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
@@ -197,6 +197,8 @@ def process_show_meeting_contacts(payload, context):
             # "private_metadata": json.dumps(private_metadata),
         },
     }
+    if action == slack_const.VIEWS_UPDATE:
+        data["view_id"] = payload["view"]["id"]
 
     # private_metadata.update(context)
 
@@ -429,31 +431,6 @@ def process_update_forecast_category_option(payload, context):
                     *blocks[forecast_block[0] + 1 :],
                 ]
 
-        """
-        new_fc_option = block_builders.option(
-            *list(
-                map(
-                    lambda x: (x[1], x[0]),
-                    list(
-                        filter(
-                            lambda category: category[0] == fc_to_return,
-                            opp_consts.FORECAST_CHOICES,
-                        )
-                    ),
-                )
-            )[0]
-        )
-      
-        blocks.append(
-            block_builders.external_select(
-                "*Forecast Category1*",
-                slack_const.GET_OPPORTUNITY_FORECASTS,
-                initial_option=new_fc_option,
-                block_id="forecast_category1",
-            )
-        )
-        """
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -468,6 +445,16 @@ def process_update_forecast_category_option(payload, context):
     }
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
+
+
+@processor(required_context=["m", "contact_index"])
+def process_remove_contact_from_meeting(payload, context):
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    index = int(context.get("contact_index"))
+    del meeting.participants[index]
+    meeting.save()
+
+    return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
 
 def handle_block_actions(payload):
@@ -486,6 +473,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.GET_ORGANIZATION_STAGES: process_update_forecast_category_option,
+        slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

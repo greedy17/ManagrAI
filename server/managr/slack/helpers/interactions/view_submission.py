@@ -162,8 +162,15 @@ def process_update_meeting_contact(payload, context):
     integration_id = participant.get("integration_id")
     instance_url = meeting.zoom_account.user.salesforce_account.instance_url
     access_token = meeting.zoom_account.user.salesforce_account.access_token
-
-    ContactAdapter.update_contact(data, access_token, instance_url, integration_id)
+    if participant.get("integration_id", None):
+        ContactAdapter.update_contact(data, access_token, instance_url, integration_id)
+    else:
+        res = ContactAdapter.create_new_contact(participant, access_token, instance_url)
+        participant["integration_id"] = res["id"]
+        participant["integration_source"] = "SALESFORCE"
+        meeting.opportunity.add_contact_role(
+            access_token, instance_url, participant["integration_id"]
+        )
     meeting.participants[index] = {**meeting.participants[index], **data}
     meeting.save()
     return

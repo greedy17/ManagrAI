@@ -105,14 +105,14 @@ class processor:
     Decorator. Checks for required context for a processor.
     """
 
-    def __init__(self, required_context=[]):
+    def __init__(self, required_context=[], **kwargs):
         self.required_context = required_context
 
     def __call__(self, f):
-        def wrapped_f(payload, context):
+        def wrapped_f(payload, context, **kwargs):
             for prop in self.required_context:
                 if context.get(prop) is None:
                     raise ValueError(f"context missing: {prop}, in {f.__name__}")
-            return f(payload, context)
+            return f(payload, context, **kwargs)
 
         return wrapped_f

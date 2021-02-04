@@ -105,7 +105,11 @@ def _push_meeting_contacts(meeting_id):
             sf = user.salesforce_account
             # add the contacts with the details to sf place the id int source and user
             created_contacts = []
+            not_created_contacts = []
             for index, contact in enumerate(contacts_not_in_sf):
+                if not contact["email"] or not len(contact["email"]):
+                    not_created_contacts.append(contact)
+                    continue
                 if not contact["last_name"] or not len(contact["last_name"]):
                     contact["last_name"] = "N/A"
                 while True:
@@ -119,6 +123,7 @@ def _push_meeting_contacts(meeting_id):
                         # contact from integration source is still False
                         # we use this to show a message that we created the contact
                         created_contacts.append(contact)
+                        meeting.participants
                         break
                     except TokenExpired:
                         if attempts >= 5:
@@ -130,13 +135,12 @@ def _push_meeting_contacts(meeting_id):
                             sf.regenerate_token()
                             attempts += 1
 
-            # remove the old contacts from the list of current participants
-            # and then save them again the newly created contacts are contacts
-            # that appear at the top as they were sorted
-            if len(created_contacts):
+            if len(contacts_not_in_sf):
                 meeting.participants = [
-                    *meeting.participants[len(created_contacts) :],
+                    ### NOTE THE ORDER HERE IS IMPORTANT FOR REMOVING FROM MEETING
+                    *not_created_contacts,
                     *created_contacts,
+                    *meeting.participants[len(contacts_not_in_sf) :],
                 ]
                 meeting.save()
 

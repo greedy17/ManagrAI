@@ -49,13 +49,11 @@ def generate_contact_group(index, contact, instance_url):
         else "N/A"
     )
 
-    blocks = {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": f"*Title:* {title}\n*First Name:* {first_name}\n*Last Name:* {last_name}\n*Email:* {email}\n*Mobile Phone:* {mobile_number}\n*Phone:* {phone_number}",
-        },
-    }
+    blocks = block_builders.simple_section(
+        f"*Title:* {title}\n*First Name:* {first_name}\n*Last Name:* {last_name}\n*Email:* {email}\n*Mobile Phone:* {mobile_number}\n*Phone:* {phone_number}",
+        "mrkdwn",
+    )
+
     if integration_id:
         blocks["accessory"] = {
             "type": "button",
@@ -80,9 +78,68 @@ def meeting_contacts_block_set(context):
         {"type": "divider"},
     ]
     contacts_in_sf = list(filter(lambda contact: contact["from_integration"], contacts))
-    contacts_not_in_sf = list(filter(lambda contact: not contact["from_integration"], contacts))
+    contacts_added_to_sf = list(
+        filter(
+            lambda contact: not contact["from_integration"] and contact["integration_id"], contacts
+        )
+    )
+    contacts_not_added = list(
+        filter(
+            lambda contact: not contact["from_integration"]
+            and (not contact["integration_id"] or not len(contact["integration_id"])),
+            contacts,
+        )
+    )
 
-    if len(contacts_not_in_sf):
+    if len(contacts_not_added):
+        block_sets.append(
+            block_builders.simple_section(
+                ":exclamation: *Managr did not add these participants from the meeting to Salesforce*",
+                "mrkdwn",
+            )
+        )
+
+    #### order matters ####
+    for i, contact in enumerate(contacts_not_added):
+        meeting_id_param = f"m={str(meeting.id)}"
+        contact_index_param = f"contact_index={i}"
+        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        # pass meeting id and contact index
+        block_sets.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Edit Details"},
+                        "value": "click_me_123",
+                        "action_id": action_with_params(
+                            slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            params=[meeting_id_param, contact_index_param],
+                        ),
+                    }
+                ],
+            }
+        )
+        if not contact.get("integration_id", None):
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Don't Save"},
+                            "value": "click_me_123",
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__REMOVE_CONTACT,
+                                params=[meeting_id_param, contact_index_param],
+                            ),
+                        }
+                    ],
+                }
+            )
+
+    if len(contacts_added_to_sf):
         block_sets.append(
             block_builders.simple_section(
                 ":white_check_mark: *Managr added these participants from the meeting to Salesforce*",
@@ -96,9 +153,9 @@ def meeting_contacts_block_set(context):
             )
         )
 
-    for i, contact in enumerate(contacts_not_in_sf):
+    for i, contact in enumerate(contacts_added_to_sf):
         meeting_id_param = f"m={str(meeting.id)}"
-        contact_index_param = f"contact_index={i}"
+        contact_index_param = f"contact_index={i+len(contacts_not_added)}"
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -152,7 +209,7 @@ def meeting_contacts_block_set(context):
 
     for i, contact in enumerate(contacts_in_sf):
         meeting_id_param = f"m={str(meeting.id)}"
-        contact_index_param = f"contact_index={i}"
+        contact_index_param = f"contact_index={i+len(contacts_not_added)+len(contacts_added_to_sf)}"
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
