@@ -8,10 +8,7 @@
             You're viewing settings for {{ organization }}
           </h5>
         </div>
-        <router-link
-          v-if="$store.state.user.isManager || $store.state.user.isStaff"
-          :to="{ name: 'Invite' }"
-        >
+        <router-link v-if="$store.state.user.userLevel == 'MANAGER'" :to="{ name: 'Invite' }">
           <div class="toolbar__row">
             Invite User
           </div>
@@ -27,12 +24,6 @@
             Integrations
           </div>
         </router-link>
-        <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
-        <!-- <router-link :to="{ name: 'Profile' }">
-          <div class="toolbar__row">
-            Profile
-          </div>
-        </router-link> -->
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">

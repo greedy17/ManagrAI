@@ -32,7 +32,7 @@ if IN_DEV:
 elif IN_STAGING:
     SERVER_EMAIL = "Managr Staging <noreply-staging@managr.com>"
 else:
-    SERVER_EMAIL = "Managr <noreply@managr.com>"
+    SERVER_EMAIL = "Managr <support@managr.com>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
@@ -102,6 +102,7 @@ TEMPLATES = [
         "DIRS": [
             os.path.join(BASE_DIR, "../client/dist/"),
             os.path.join(BASE_DIR, "managr", "salesforce", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "core", "templates", ""),
         ],
         "APP_DIRS": True,
         "OPTIONS": {

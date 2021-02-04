@@ -128,6 +128,7 @@ class SFSyncOperation(TimeStampModel):
                         attempts += 1
                         return self.begin_tasks(attempts)
                 # get counts to set offsets
+            count = min(count, 1000)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)

@@ -28,6 +28,7 @@ export default class User extends Model {
   static zoomAccount = new fields.Field()
   static token = new fields.Field()
   static hasZoomIntegration = new fields.Field({ readOnly: true })
+  static userLevel = new fields.Field({})
 
   get emailConnected() {
     return this.emailAuthAccount && this.emailAuthAccountRef.accessToken

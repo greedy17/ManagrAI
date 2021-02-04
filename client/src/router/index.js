@@ -8,18 +8,9 @@ import Activation from '@/views/auth/Activation'
 import Login from '@/views/auth/Login'
 import Register from '@/views/auth/Register'
 
-// Pages tied to integration flows
-import Integrations from '@/views/Integrations'
-import Nylas from '@/views/nylas-integration/Nylas'
-import NylasCallback from '@/views/nylas-integration/NylasCallback'
-import ZoomPage from '@/views/zoom/ZoomPage'
-import SlackIntegration from '@/views/settings/_pages/_SlackIntegration'
-import SlackCallback from '@/views/settings/_pages/_SlackCallback'
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
 import Settings from '@/views/settings/Settings'
-import EmailIntegration from '@/views/settings/_pages/_EmailIntegration'
-import EmailTemplates from '@/views/settings/_pages/_EmailTemplates'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
 
@@ -86,14 +77,13 @@ export default new Router({
           path: 'invite',
           name: 'Invite',
           components: { 'user-settings': Invite },
-          beforeEnter: Auth.requireUserTypeManagerOrStaff,
+          //beforeEnter: Auth.requireUserTypeManagerOrStaff,
         },
         // {
         //   path: 'notification-settings',
         //   name: 'NotificationSettings',
         //   components: { 'user-settings': NotificationSettings },
         // },
-        { path: '', redirect: '/settings/email-integration' },
       ],
     },
     //

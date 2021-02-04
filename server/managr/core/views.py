@@ -1,14 +1,17 @@
 import logging
 import requests
 
-from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
+from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
+from django.conf import settings
 
+
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
 from rest_framework import (
     permissions,
     generics,
@@ -24,8 +27,9 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from managr.core.nylas.auth import get_access_token, get_account_details
+from managr.api.emails import send_html_email
 
+from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
     EmailAuthAccount,
@@ -481,13 +485,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         # use server/manage.py createserviceaccount and supply an email
         # for now we will only need one email (ex no-reply@) but in the future we will have more
         # therefore selecting the first email that is of type service_account
-
-        try:
-            ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
-        except EmailAuthAccount.DoesNotExist:
-            # currently passing if there is an error, when we are ready we will require this
-            pass
-
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
@@ -500,26 +497,18 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
-        if ea:
-            token = ea.access_token
-            sender = {"email": ea.email_address, "name": "Managr"}
-            recipient = [{"email": response_data["email"], "name": response_data["first_name"]}]
-            message = {
-                "subject": "Invitation To Join",
-                "body": "Your Organization {} has invited you to join Managr, \
-                   Please click the following link to accept and activate your account \
-                       {}".format(
-                    user.organization.name, user.activation_link
-                ),
-            }
-            try:
-                send_new_email_legacy(token, sender, recipient, message)
-            except Exception:
-                """this error is most likely going to be an error on our set
-                up rather than the user_token"""
-                # TODO 2021-01-16 William: We should avoid catch-all Exception handlers and
-                #      at least log a warning here.
-                pass
+
+        subject = render_to_string("registration/invitation-subject.txt")
+        recipient = [response_data["email"]]
+        context = dict(organization=user.organization.name, activation_link=user.activation_link)
+        send_html_email(
+            subject,
+            "registration/invitation-body.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context=context,
+        )
+
         response_data["activation_link"] = user.activation_link
 
         return Response(response_data)

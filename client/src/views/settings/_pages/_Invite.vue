@@ -87,7 +87,11 @@ export default {
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
-      selectedUserType: User.USER_TYPE_REP,
+      selectedUserType: User.types.REP,
+      userTypes: [
+        { key: 'Manager', value: User.types.MANAGER },
+        { key: 'Representative', value: User.types.REP },
+      ],
     }
   },
   watch: {},
@@ -168,24 +172,7 @@ export default {
       // on the backend only superusers can do this
       return this.$store.state.user.isStaff
     },
-    isIntegrationEnabled() {
-      // if the user isStaff and the org is integration enabled
-      if (this.isStaff && this.organization) {
-        let org = this.organizationRef
-        return org.isExternalsyncenabled
-      }
-      return false
-    },
-    userTypes() {
-      let userTypes = [
-        { key: 'Manager', value: User.USER_TYPE_MANAGER },
-        { key: 'Representative', value: User.USER_TYPE_REP },
-      ]
-      if (this.isIntegrationEnabled) {
-        userTypes.push({ key: 'Integration', value: User.USER_TYPE_INTEGRATION })
-      }
-      return userTypes
-    },
+
     emailIsBlank() {
       return !this.email.length
     },
@@ -279,19 +266,5 @@ button {
   display: flex;
   align-items: center;
   @include input-field();
-}
-::v-deep .dropdown {
-  // manually setting the style for the dropdown here
-  // width is set on the parent class
-
-  .dropdown-input-container {
-    width: 100%;
-    align-items: center;
-    border: none;
-
-    &.disabled {
-      border: 1px solid gray;
-    }
-  }
 }
 </style>
