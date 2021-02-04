@@ -1,5 +1,6 @@
 import pdb
 
+
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, OpportunityScore
 from managr.zoom.models import ZoomMeeting
@@ -7,10 +8,10 @@ from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
+from managr.utils.misc import snake_to_space
 
 
 def generate_edit_contact_form(field, value):
-
     return block_builders.input_block(field, initial_value=value)
 
 
@@ -177,10 +178,13 @@ def meeting_contacts_block_set(context):
 
 @block_set(required_context=["meeting", "contact"])
 def edit_meeting_contacts_block_set(context):
-    fields = ["first_name", "last_name", "email", "title", "mobile_phone", "phone_number"]
-    blocks = []
-    for k, v in context["contact"].items():
-        if k in fields:
-            blocks.append(generate_edit_contact_form(k, v))
-
+    contact = context["contact"]
+    blocks = [
+        generate_edit_contact_form("Title", contact["title"]),
+        generate_edit_contact_form("First Name", contact["first_name"]),
+        generate_edit_contact_form("Last Name", contact["last_name"]),
+        generate_edit_contact_form("Email", contact["email"]),
+        generate_edit_contact_form("Mobile Phone", contact["mobile_phone"]),
+        generate_edit_contact_form("Phone", contact["phone_number"]),
+    ]
     return blocks

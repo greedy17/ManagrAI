@@ -1,4 +1,5 @@
 import random
+import re
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
@@ -6,6 +7,29 @@ from django.utils import timezone
 
 from rest_framework.response import Response
 from rest_framework import filters
+
+
+def snake_to_space(word):
+    _matches = []
+    if type(word) != str:
+        return word
+    if not len(word):
+        return word
+    while True:
+        matches = re.search(r"_", word)
+        if matches:
+            _matches.append(matches.end())
+            word = re.sub("_", " ", word, 1)
+            print(word)
+        else:
+            break
+
+    for match in _matches:
+        word = word[0].upper() + word[1:match] + word[match].upper() + word[match + 1 :]
+
+    if not len(_matches):
+        word = word[0].upper() + word[1:]
+    return word
 
 
 def datetime_appended_filepath(instance, filename):
