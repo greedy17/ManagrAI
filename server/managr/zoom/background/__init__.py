@@ -76,8 +76,17 @@ def emit_save_meeting_review_data(managr_meeting_id, data):
 @background()
 def _refresh_zoom_token(zoom_account_id):
     zoom_account = ZoomAuthAccount.objects.filter(id=zoom_account_id).first()
-    if zoom_account:
-        return zoom_account.regenerate_token()
+    if zoom_account and not zoom_account.is_revoked:
+        try:
+            zoom_account.regenerate_token()
+        except TokenExpired:
+            logger.exception(
+                f"Failed to refresh zoom token for user {zoom_account.user.id},{zoom_account.user.email}"
+            )
+    elif zoom_account and zoom_account.is_revoked:
+        logger.info(
+            f"Did not attempt refresh for user because token was revoked, {zoom_account.user.id}, {zoom_account.user.email}"
+        )
     return
 
 

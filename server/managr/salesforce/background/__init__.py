@@ -186,6 +186,7 @@ def _process_stage_sync(user_id, sync_id, offset, attempts=1):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
 def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):

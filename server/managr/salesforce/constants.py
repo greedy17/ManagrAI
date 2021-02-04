@@ -62,19 +62,23 @@ SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESOURCE_SYNC"
 SALESFORCE_QUERY_LIMIT = 100
 
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
-SALSFORCE_ACCOUNT_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_ACCOUNT_QUERY_URI = (
+    lambda owner_id: f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, Name, Type, ParentId, Website, PhotoUrl from Account WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+)
 SALSFORCE_STAGE_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT id, MasterLabel, ForecastCategory, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-SALSFORCE_OPP_QUERY_URI = f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Contact.Id, Contact.FirstName, Contact.LastName,  Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+SALSFORCE_OPP_QUERY_URI = (
+    lambda owner_id: f"/services/data/{SF_API_VERSION}/query/?q=SELECT Id, AccountId, Name, Description, StageName, Amount, CloseDate, Type, NextStep, LeadSource, ForecastCategory, OwnerId, LastActivityDate, (SELECT Contact.Id, Contact.FirstName, Contact.LastName,  Contact.Email, Contact.MobilePhone, Contact.Phone, Contact.Title FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+)
 
 
-SALSFORCE_ACCOUNT_QUERY_URI_COUNT = (
-    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Account"
+SALSFORCE_ACCOUNT_QUERY_URI_COUNT = lambda owner_id: (
+    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Account WHERE OwnerId = '{owner_id}'"
 )
 SALSFORCE_STAGE_QUERY_URI_COUNT = (
     f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from OpportunityStage"
 )
-SALSFORCE_OPP_QUERY_URI_COUNT = (
-    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Opportunity"
+SALSFORCE_OPP_QUERY_URI_COUNT = lambda owner_id: (
+    f"/services/data/{SF_API_VERSION}/query/?q=SELECT COUNT () from Opportunity WHERE OwnerId = '{owner_id}'"
 )
 
 SALESFORCE_JSON_HEADER = {"Content-Type": "application/json"}

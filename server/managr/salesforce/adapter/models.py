@@ -50,8 +50,10 @@ class SalesforceAuthAccountAdapter:
                     response.json()[0] if isinstance(response.json(), list) else response.json()
                 )
                 if error_code == 400:
-                    error_param = error_data.get("error", None)
-                    error_message = error_data.get("error_description", None)
+                    error_param = error_data.get("error", error_data.get("errorCode", None))
+                    error_message = error_data.get(
+                        "error_description", error_data.get("message", None)
+                    )
                 else:
                     error_param = error_data.get("errorCode", None)
                     error_message = error_data.get("message", None)
@@ -110,7 +112,7 @@ class SalesforceAuthAccountAdapter:
         return SalesforceAuthAccountAdapter._handle_response(res)
 
     def list_accounts(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI}"
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI(self.salesforce_id)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -126,7 +128,7 @@ class SalesforceAuthAccountAdapter:
         return self._handle_response(res)
 
     def list_opportunities(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI}"
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -142,7 +144,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_opportunity_count(self):
         res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI_COUNT}",
+            f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI_COUNT(self.salesforce_id)}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
@@ -150,7 +152,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_account_count(self):
         res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI_COUNT}",
+            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI_COUNT(self.salesforce_id)}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
