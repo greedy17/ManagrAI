@@ -16,6 +16,7 @@ def input_block(
     label_type="plain_text",
     min_length=False,
     max_length=False,
+    optional=True,
 ):
     """ 
     If a placeholder, min_length, max_length is 
@@ -29,6 +30,7 @@ def input_block(
         "type": "input",
         "block_id": block_id,
         "label": {"type": label_type, "text": label},
+        "optional": optional,
         "element": {"type": "plain_text_input", "action_id": action_id, "multiline": multiline,},
     }
     if placeholder:

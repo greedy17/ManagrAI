@@ -11,8 +11,8 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 
 
-def generate_edit_contact_form(field, value):
-    return block_builders.input_block(field, initial_value=value)
+def generate_edit_contact_form(field, id, value):
+    return block_builders.input_block(field, block_id=id, initial_value=value,)
 
 
 def generate_contact_group(index, contact, instance_url):
@@ -110,7 +110,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Edit Details"},
                         "value": "click_me_123",
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+                            slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[meeting_id_param, contact_index_param],
                         ),
                     }
@@ -164,7 +164,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Edit Details"},
                         "value": "click_me_123",
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+                            slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[meeting_id_param, contact_index_param],
                         ),
                     }
@@ -180,11 +180,11 @@ def meeting_contacts_block_set(context):
 def edit_meeting_contacts_block_set(context):
     contact = context["contact"]
     blocks = [
-        generate_edit_contact_form("Title", contact["title"]),
-        generate_edit_contact_form("First Name", contact["first_name"]),
-        generate_edit_contact_form("Last Name", contact["last_name"]),
-        generate_edit_contact_form("Email", contact["email"]),
-        generate_edit_contact_form("Mobile Phone", contact["mobile_phone"]),
-        generate_edit_contact_form("Phone", contact["phone_number"]),
+        generate_edit_contact_form("Title", "title", contact["title"]),
+        generate_edit_contact_form("First Name", "first_name", contact["first_name"]),
+        generate_edit_contact_form("Last Name", "last_name", contact["last_name"]),
+        generate_edit_contact_form("Email", "email", contact["email"]),
+        generate_edit_contact_form("Mobile Phone", "mobile_phone", contact["mobile_phone"]),
+        generate_edit_contact_form("Phone", "phone_number", contact["phone_number"]),
     ]
     return blocks

@@ -4,6 +4,7 @@ from managr.slack import constants as slack_const
 from .block_actions import handle_block_actions
 from .block_suggestion import handle_block_suggestion
 from .view_submission import handle_view_submission
+from .view_closed import handle_view_closed
 
 # NOTE:
 # - The method handle_interaction is the entry point into this architecture.
@@ -24,6 +25,7 @@ def handle_interaction(payload):
         slack_const.BLOCK_ACTIONS: handle_block_actions,
         slack_const.BLOCK_SUGGESTION: handle_block_suggestion,
         slack_const.VIEW_SUBMISSION: handle_view_submission,
+        slack_const.VIEW_CLOSED: handle_view_closed,
     }
     typ = payload["type"]
     print(f"TYPE: {typ}")

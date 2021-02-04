@@ -358,10 +358,14 @@ def process_edit_meeting_contact(payload, context):
         "view_id": view_id,
         "view": {
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "close": {"type": "plain_text", "text": "Back", "emoji": True},
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT,
+            "callback_id": slack_const.ZOOM_MEETING__EDIT_CONTACT,
             "title": {"type": "plain_text", "text": "Edit Contact"},
             "blocks": blocks,
+            "private_metadata": json.dumps(
+                {"m": context.get("m"), "contact_index": context.get("contact_index")}
+            ),
         },
     }
 
@@ -480,7 +484,7 @@ def handle_block_actions(payload):
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
         slack_const.SHOW_LEAD_SCORE_COMPONENTS: process_get_lead_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
-        slack_const.ZOOM_MEETING__EDIT_MEETING_CONTACT: process_edit_meeting_contact,
+        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.GET_ORGANIZATION_STAGES: process_update_forecast_category_option,
     }
     action_query_string = payload["actions"][0]["action_id"]

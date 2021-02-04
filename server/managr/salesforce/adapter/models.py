@@ -338,6 +338,18 @@ class ContactAdapter:
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
+    @staticmethod
+    def update_contact(data, access_token, custom_base, integration_id):
+        json_data = json.dumps(ContactAdapter.to_api(data, ContactAdapter.from_mapping))
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
     @property
     def as_dict(self):
         return vars(self)

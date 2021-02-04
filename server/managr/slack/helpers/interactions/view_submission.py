@@ -9,7 +9,7 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import action_with_params, NO_OP, processor
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.salesforce.adapter.models import ContactAdapter
 from managr.zoom import constants as zoom_consts
 from managr.zoom.background import emit_save_meeting_review_data
 
@@ -130,17 +130,8 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
 
     meeting = ZoomMeeting.objects.filter(id=context["m"]).select_related("opportunity").first()
 
-    old_lead = meeting.opportunity
     new_lead = Opportunity.objects.filter(id=new_opportunity).first()
-    meeting_participants = meeting.participants
-    # bring all lead new lead contacts
-    # new_lead_contacts = new_lead.linked_contacts.all().values_list("id", flat=True)
-    # combined_participants = set(list(meeting_participants) + list(new_lead_contacts))
-    # old_lead_new_contacts_list = old_lead.linked_contacts.filter(
-    #    id__in=meeting_participants
-    # ).exclude(id__in=new_lead_contacts)
-    # old_lead.linked_contacts.remove(*old_lead_new_contacts_list)
-    # new_lead.linked_contacts.set(combined_participants)
+
     meeting.opportunity = new_lead
     meeting.save()
     # remove newly added leads that are in the meeting participants but are not common with the new_lead contacts
@@ -159,6 +150,25 @@ def process_zoom_meeting_different_opportunity_submit(payload, context):
     )
 
 
+@processor()
+def process_update_meeting_contact(payload, context):
+    state = payload["view"]["state"]["values"]
+    data = {}
+    for k, v in state.items():
+        data[k] = v["plain_input"]["value"]
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    index = int(context.get("contact_index"))
+    participant = meeting.participants[index]
+    integration_id = participant.get("integration_id")
+    instance_url = meeting.zoom_account.user.salesforce_account.instance_url
+    access_token = meeting.zoom_account.user.salesforce_account.access_token
+
+    ContactAdapter.update_contact(data, access_token, instance_url, integration_id)
+    meeting.participants[index] = {**meeting.participants[index], **data}
+    meeting.save()
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -166,6 +176,7 @@ def handle_view_submission(payload):
     switcher = {
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
+        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_update_meeting_contact,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
