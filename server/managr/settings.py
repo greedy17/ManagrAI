@@ -53,6 +53,8 @@ if CURRENT_DOMAIN not in ALLOWED_HOSTS:
 # Application definition
 
 INSTALLED_APPS = [
+    # Django Channels
+    "channels",
     # Local
     "managr.core",
     "managr.api",
@@ -78,6 +80,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "background_task",
+    "kronos",
 ]
 
 MIDDLEWARE = [
@@ -114,6 +117,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "managr.wsgi.application"
 
+# Channels
+ASGI_APPLICATION = "managr.routing.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            # 'hosts': [('127.0.0.1', 6379)],
+            "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379")],
+            "capacity": 500,
+        },
+    },
+}
 
 # Database
 """There are two ways to specifiy the database connection
