@@ -358,7 +358,7 @@ def process_edit_meeting_contact(payload, context):
         "view_id": view_id,
         "view": {
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "close": {"type": "plain_text", "text": "Back", "emoji": True},
+            "close": {"type": "plain_text", "text": "Close", "emoji": True},
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__EDIT_CONTACT,
             "title": {"type": "plain_text", "text": "Edit Contact"},
