@@ -94,6 +94,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_admin"] = True
+        extra_fields["user_level"] = core_consts.USER_LEVEL_MANAGER
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -141,7 +142,7 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.ACCOUNT_TYPES, max_length=255, default=core_consts.ACCOUNT_TYPE_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
     first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
