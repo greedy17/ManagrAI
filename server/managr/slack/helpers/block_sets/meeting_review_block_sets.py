@@ -195,8 +195,7 @@ def meeting_contacts_block_set(context):
     if len(contacts_in_sf):
         block_sets.append(
             block_builders.simple_section(
-                ":dart: *Managr found these contacts from your meeting participants in Salesforce*",
-                "mrkdwn",
+                ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
             )
         )
     else:
