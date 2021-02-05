@@ -75,7 +75,7 @@ def process_zoom_meeting_data(payload, context):
         "description": description,
         "close_date": close_date if close_date else None,
         "next_step": next_step,
-        "amount": amount if amount else "",
+        "amount": amount if amount else None,
     }
     emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
 
