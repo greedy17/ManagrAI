@@ -82,6 +82,7 @@ export default class UserAPI {
    */
   register(registerForm) {
     const data = registerForm.toAPI()
+
     return this.client
       .post(REGISTRATION_ENDPOINT, data)
       .then(response => response.data)

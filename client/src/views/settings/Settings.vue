@@ -8,7 +8,10 @@
             You're viewing settings for {{ organization }}
           </h5>
         </div>
-        <router-link v-if="$store.state.user.userLevel == 'MANAGER'" :to="{ name: 'Invite' }">
+        <router-link
+          v-if="$store.state.user.userLevel == 'MANAGER' || $store.state.user.isAdmin"
+          :to="{ name: 'Invite' }"
+        >
           <div class="toolbar__row">
             Invite User
           </div>
