@@ -57,12 +57,8 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "integration_id",
             "integration_source",
             "title",
-            "description",
             "amount",
             "close_date",
-            "type",
-            "next_step",
-            "lead_source",
             "forecast_category",
             "account",
             "stage",
@@ -75,6 +71,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "imported_by",
             "contacts",
             "is_stale",
+            "secondary_data",
         )
 
     def to_internal_value(self, data):

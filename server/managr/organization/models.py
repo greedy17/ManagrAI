@@ -7,6 +7,7 @@ from django.db.models import Sum, Avg, Q
 from django.db.models.functions import Concat
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField, ArrayField
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -46,6 +47,7 @@ class Organization(TimeStampModel):
         max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
+
     objects = OrganizationQuerySet.as_manager()
 
     @property

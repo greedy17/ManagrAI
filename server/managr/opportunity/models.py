@@ -44,8 +44,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     forecast_category = models.CharField(max_length=255, choices=opp_consts.FORECAST_CHOICES)
 
     close_date = models.DateField(null=True)
-    description = models.TextField(blank=True)
-    next_step = models.TextField(blank=True)
+
     account = models.CharField(max_length=255, blank=True, help_text="Retrieved from Integration")
     contacts = models.ManyToManyField(
         "organization.Contact", related_name="opportunities", blank=True
@@ -82,11 +81,15 @@ class Opportunity(TimeStampModel, IntegrationModel):
         null=True,
     )
 
-    type = models.CharField(max_length=255, blank=True,)
-    lead_source = models.CharField(max_length=255, blank=True)
     last_activity_date = models.DateTimeField(null=True)
     last_stage_update = models.DateTimeField(null=True)
     is_stale = models.BooleanField(default=False)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
     objects = OpportunityQuerySet.as_manager()
 
     class Meta:

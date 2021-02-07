@@ -12,7 +12,7 @@ from managr.utils.misc import snake_to_space
 
 
 def generate_edit_contact_form(field, id, value):
-    return block_builders.input_block(field, block_id=id, initial_value=value,)
+    return block_builders.input_block(field, block_id=id, initial_value=value, optional=True)
 
 
 def generate_contact_group(index, contact, instance_url):
@@ -238,7 +238,7 @@ def edit_meeting_contacts_block_set(context):
     blocks = [
         generate_edit_contact_form("Title", "title", contact["title"]),
         generate_edit_contact_form("First Name", "first_name", contact["first_name"]),
-        generate_edit_contact_form("Last Name", "last_name", contact["last_name"]),
+        generate_edit_contact_form("Last Name", "last_name", contact["last_name"], optional=False),
         generate_edit_contact_form("Email", "email", contact["email"]),
         generate_edit_contact_form("Mobile Phone", "mobile_phone", contact["mobile_phone"]),
         generate_edit_contact_form("Phone", "phone_number", contact["phone_number"]),

@@ -204,7 +204,10 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
             attempts += 1
             return _process_opportunity_sync(user_id, sync_id, offset, attempts)
 
-    opps = map(lambda data: OpportunityAdapter.from_api(data, user.id, []).as_dict, res["records"],)
+    opps = map(
+        lambda data: OpportunityAdapter.from_api(data, user.id, sf.object_fields).as_dict,
+        res["records"],
+    )
 
     for opp in list(opps):
         existing = Opportunity.objects.filter(integration_id=opp["integration_id"]).first()

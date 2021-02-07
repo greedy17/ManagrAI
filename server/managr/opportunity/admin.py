@@ -15,12 +15,8 @@ class OpportunityForm(forms.ModelForm):
             "integration_id",
             "integration_source",
             "title",
-            "description",
             "amount",
             "close_date",
-            "type",
-            "next_step",
-            "lead_source",
             "forecast_category",
             "account",
             "stage",
@@ -32,6 +28,7 @@ class OpportunityForm(forms.ModelForm):
             "external_stage",
             "imported_by",
             "contacts",
+            "secondary_data",
             "is_stale",
         )
 

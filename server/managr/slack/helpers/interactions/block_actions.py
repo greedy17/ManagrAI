@@ -8,7 +8,7 @@ from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.utils import process_action_id, NO_OP, processor
+from managr.slack.helpers.utils import process_action_id, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 
@@ -387,21 +387,12 @@ def process_update_forecast_category_option(payload, context):
     if select_action:
         blocks = payload["view"]["blocks"]
         selected_value = select_action[0]["selected_option"]["value"]
-        forecast_block = list(
-            filter(
-                lambda x: x[1]["block_id"] == "forecast_category",
-                enumerate(payload["view"]["blocks"]),
-            )
-        )[0]
+        forecast_block = block_finder("forecast_category", payload["view"]["blocks"])
+
         # grab the suggested block message if it exists and remove it
-        suggestion_block = list(
-            filter(
-                lambda x: x[1]["block_id"] == "forecast_suggestion",
-                enumerate(payload["view"]["blocks"]),
-            )
-        )
+        suggestion_block = block_finder("forecast_suggestion", payload["view"]["blocks"])
         if len(suggestion_block):
-            del blocks[suggestion_block[0][0]]
+            del blocks[suggestion_block[0]]
 
         stage = Stage.objects.get(pk=selected_value)
         fc_to_return = None  # forecast_block[1]["accessory"]["initial_option"]["value"]

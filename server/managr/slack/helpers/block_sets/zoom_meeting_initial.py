@@ -30,8 +30,6 @@ def generate_sentiment_button(text, value, params):
 @block_set(required_context=["o", "u", "opp", "m"])
 def zoom_meeting_initial(context):
     opportunity = Opportunity.objects.get(pk=context["opp"])
-    description = opportunity.description or "No Description"
-    next_step = opportunity.next_step or "No Next Step"
     meeting = opportunity.meetings.filter(id=context["m"]).first()
     # make params here
     user_id_param = "u=" + context["u"]
@@ -87,13 +85,7 @@ def zoom_meeting_initial(context):
             },
         },
         {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"*{opportunity.title}*\n{description}\n{next_step}",
-            },
-        },
+        {"type": "section", "text": {"type": "mrkdwn", "text": f"*{opportunity.title}*",},},
         {"type": "divider"},
         {
             "type": "actions",

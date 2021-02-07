@@ -5,6 +5,7 @@ from datetime import datetime
 import os.path
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
+from django.contrib.postgres.fields import JSONField
 
 from managr.utils.client import HttpClient
 from managr.organization import constants as org_consts
@@ -29,6 +30,7 @@ class SalesforceAuthAccountAdapter:
         self.salesforce_account = kwargs.get("salesforce_account", None)
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
+        self.object_fields = kwargs.get("object_fields", None)
 
     @staticmethod
     # @log_all_exceptions
@@ -70,7 +72,18 @@ class SalesforceAuthAccountAdapter:
     @classmethod
     def create_account(cls, code, user_id):
         res = cls.authenticate(code)
+        # get fields for resources
         data = cls.from_api(res, user_id)
+
+        return data
+
+    def format_field_options(self, res_data=[]):
+        fields = res_data["fields"]
+        data = {}
+        for field in fields:
+            data[field.get("name")] = dict(
+                label=field.get("label", None), options=field.get("picklistValues", None),
+            )
 
         return data
 
@@ -119,6 +132,12 @@ class SalesforceAuthAccountAdapter:
 
         return self._handle_response(res)
 
+    def list_fields(self, resource):
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_FIELDS_URI(resource)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+
+        return self._handle_response(res)
+
     def list_stages(self, offset):
         url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
         if offset:
@@ -128,7 +147,14 @@ class SalesforceAuthAccountAdapter:
         return self._handle_response(res)
 
     def list_opportunities(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id)}"
+        # add extra fields to query string
+        extra_fields = list(
+            filter(
+                lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
+                self.object_fields,
+            )
+        )
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id, extra_fields)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -364,13 +390,13 @@ class OpportunityAdapter:
         self.integration_id = kwargs.get("integration_id", None)
         self.account = kwargs.get("account", None)
         self.title = kwargs.get("title", None)
-        self.description = kwargs.get("description", None)
+        # self.description = kwargs.get("description", None)
         self.stage = kwargs.get("stage", None)
         self.amount = kwargs.get("amount", None)
         self.close_date = kwargs.get("close_date", None)
-        self.type = kwargs.get("type", None)
-        self.next_step = kwargs.get("next_step", None)
-        self.lead_source = kwargs.get("lead_source", None)
+        # self.type = kwargs.get("type", None)
+        # self.next_step = kwargs.get("next_step", None)
+        # self.lead_source = kwargs.get("lead_source", None)
         self.forecast_category = kwargs.get("forecast_category", None)
         self.owner = kwargs.get("owner", None)
         self.last_stage_update = kwargs.get("last_stage_update", None)
@@ -381,18 +407,19 @@ class OpportunityAdapter:
         self.imported_by = kwargs.get("imported_by", None)
         self.contacts = kwargs.get("contacts", None)
         self.is_stale = kwargs.get("is_stale", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
 
     from_mapping = dict(
         id="Id",
         account="AccountId",
         title="Name",
-        description="Description",
+        # description="Description",
         stage="StageName",
         amount="Amount",
         close_date="CloseDate",
-        type="Type",
-        next_step="NextStep",
-        lead_source="LeadSource",
+        # type="Type",
+        # next_step="NextStep",
+        # lead_source="LeadSource",
         forecast_category="ForecastCategoryName",
         owner="OwnerId",
     )
@@ -473,6 +500,15 @@ class OpportunityAdapter:
         # opps are stale if a meeting occured and lead is updated
         # after each refresh the opp is not stale anymore
         formatted_data["is_stale"] = False
+        extra_fields = list(
+            filter(lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS, mapping,)
+        )
+        formatted_data["secondary_data"] = {}
+        for field_name in extra_fields:
+            formatted_data["secondary_data"] = {
+                **formatted_data["secondary_data"],
+                field_name: data.get(field_name, None),
+            }
 
         return OpportunityAdapter(**formatted_data)
 

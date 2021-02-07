@@ -118,6 +118,7 @@ class SFSyncOperation(TimeStampModel):
             elif key == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
                 try:
                     count = adapter.get_opportunity_count()["totalSize"]
+                    sf_account.get_fields(sf_consts.RESOURCE_SYNC_OPPORTUNITY)
                 except TokenExpired:
                     if attempts >= 5:
                         return logger.exception(
@@ -165,6 +166,12 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
+    object_fields = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
     is_busy = models.BooleanField(default=False)
 
     class Meta:
@@ -195,6 +202,11 @@ class SalesforceAuthAccount(TimeStampModel):
         adapter = self.adapter_class
         adapter.revoke()
         self.delete()
+
+    def get_fields(self, resource):
+        res = self.adapter_class.list_fields(resource)
+        self.object_fields = self.adapter_class.format_field_options(res)
+        self.save()
 
     def list_accounts(self, offset):
         return self.adapter_class.list_accounts(offset)
