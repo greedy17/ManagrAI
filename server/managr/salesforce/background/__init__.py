@@ -229,7 +229,7 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0)
 def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
     user = (
         User.objects.filter(id=user_id)
@@ -244,7 +244,7 @@ def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
             formatted_data = meeting_review.as_sf_update
             sf = user.salesforce_account
             try:
-                meeting.opportunity.update_in_salesforce(formatted_data)
+                return meeting.opportunity.update_in_salesforce(formatted_data)
             except TokenExpired:
                 if attempts >= 5:
                     return logger.exception(

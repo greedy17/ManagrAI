@@ -519,6 +519,8 @@ class OpportunityAdapter:
             key = mapping.get(k, None)
             if key:
                 formatted_data[key] = v
+            else:
+                formatted_data[k] = v
 
         return formatted_data
 

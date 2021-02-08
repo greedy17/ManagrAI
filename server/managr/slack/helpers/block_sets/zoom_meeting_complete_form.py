@@ -94,13 +94,13 @@ def zoom_meeting_complete_form(context):
             initial_value=str(amount),
         ),
     ]
-    if "next_step" in extra_fields:
+    if "NextStep" in extra_fields:
         blocks.append(
             block_builders.input_block(
                 "Next Step",
                 placeholder="What's the plan?",
                 action_id=slack_const.DEFAULT_ACTION_ID,
-                block_id="next_step",
+                block_id="NextStep",
                 optional=True,
             ),
         )

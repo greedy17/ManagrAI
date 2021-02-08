@@ -373,7 +373,7 @@ class MeetingReview(TimeStampModel):
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
     description = models.TextField(blank=True, null=True, max_length=255)
-    next_step = models.TextField(blank=True, null=True, help_text="populates secondary description")
+    # next_step = models.TextField(blank=True, null=True, help_text="populates secondary description")
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
@@ -404,6 +404,12 @@ class MeetingReview(TimeStampModel):
         help_text="This field is editable",
         null=True,
         blank=True,
+    )
+    custom_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary data that is added to a form is saved as a json object for update",
+        max_length=500,
     )
 
     def get_event_data_salesforce(self):
@@ -587,8 +593,8 @@ class MeetingReview(TimeStampModel):
             data["amount"] = str(self.amount)
         if self.close_date:
             data["close_date"] = self.close_date.strftime("%Y-%m-%d")
-        if self.next_step:
-            data["next_step"] = self.next_step
+        if self.custom_data:
+            data = {**data, **self.custom_data}
         return data
 
     def save(self, *args, **kwargs):

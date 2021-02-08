@@ -128,10 +128,10 @@ def generate_meeting_scores():
     2. OR The meeting ended three or more hours ago AND the user has not 'closed'
        the meeting AND scoring is not in progress.
     """
-    three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
+    # three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
     meetings = ZoomMeeting.objects.filter(
         Q(meeting_score__isnull=True, is_closed=True, scoring_in_progress=False)
-        | Q(datetime_created__lte=three_hours_ago, is_closed=False, scoring_in_progress=False,)
+        # | Q(datetime_created__lte=three_hours_ago, is_closed=False, scoring_in_progress=False,)
     )
     for meeting in meetings:
         # set scoring in progress in case we run this job multiple times

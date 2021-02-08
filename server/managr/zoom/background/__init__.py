@@ -1,8 +1,8 @@
 import logging
 import json
-
 import pytz
 from datetime import datetime
+
 from background_task import background
 from background_task.models import Task
 
@@ -316,5 +316,7 @@ def _save_meeting_review_data(managr_meeting_id, data):
         obj["sentiment"] = data.get("sentiment", None)
         obj["amount"] = data.get("amount", None)
 
-        MeetingReview.objects.create(**obj)
+        return MeetingReview.objects.create(**obj)
 
+
+# same method as _save_meeting_review_data but not as a task

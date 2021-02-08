@@ -1,17 +1,22 @@
 import json
 import pdb
+import pytz
+from datetime import datetime
+
 
 from managr.organization.models import Organization
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting
-
+from managr.zoom.models import ZoomMeeting, MeetingReview
+from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
+from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.utils import action_with_params, NO_OP, processor
+from managr.slack.helpers.utils import action_with_params, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.adapter.models import ContactAdapter
+from managr.salesforce.background import _process_update_opportunity
 from managr.zoom import constants as zoom_consts
-from managr.zoom.background import emit_save_meeting_review_data
+from managr.zoom.background import _save_meeting_review_data
 
 
 @processor(
@@ -20,81 +25,62 @@ from managr.zoom.background import emit_save_meeting_review_data
 def process_zoom_meeting_data(payload, context):
     # get context
     organization_id_param = "o=" + context["o"]
-    zoom_meeting_id_param = "m=" + context.get("m")
-
-    state = payload["view"]["state"]["values"]
-    meeting_type_state = state["meeting_type"]
-    stage_state = state["stage"]
-    description_state = state["description"]
-    next_step_state = state["next_step"]
-    amount_state = state["amount"]
-
-    sentiment = context.get("sentiment", None)
-    a_id = action_with_params(
-        slack_const.GET_ORGANIZATION_ACTION_CHOICES, params=[organization_id_param,],
-    )
-    meeting_type = meeting_type_state[a_id]["selected_option"]
-    if meeting_type:
-        meeting_type = meeting_type["value"]
-    else:
-        # user did not select an option, show them error
-        data = {
-            "response_action": "errors",
-            "errors": {"meeting_type": "You must select an option."},
-        }
-        return data
-
-    a_id = action_with_params(slack_const.GET_ORGANIZATION_STAGES, params=[organization_id_param,],)
-    stage = stage_state[a_id]["selected_option"]
-    if stage:
-        stage = stage["value"]
-
-    if sentiment != slack_const.ZOOM_MEETING__NOT_WELL:
-        forecast_state = state["forecast_category"]
-        close_date_state = state["close_date"]
-        a_id = slack_const.GET_OPPORTUNITY_FORECASTS
-        forecast_category = forecast_state[a_id]["selected_option"]
-        forecast_category = forecast_category["value"] if forecast_category else None
-        a_id = slack_const.DEFAULT_ACTION_ID
-        close_date = close_date_state[a_id]["selected_date"]
-    else:
-        forecast_category = None
-        close_date = None
-    a_id = slack_const.DEFAULT_ACTION_ID
-    description = description_state[a_id]["value"]
-
-    next_step = next_step_state[a_id]["value"]
-    amount = amount_state[a_id]["value"]
-
-    data = {
-        "sentiment": sentiment,
-        "meeting_id": context.get("m", None),
-        "meeting_type": meeting_type,
-        "stage": stage,
-        "forecast_category": forecast_category if forecast_category else None,
-        "description": description,
-        "close_date": close_date if close_date else None,
-        "next_step": next_step,
-        "amount": amount if amount else None,
-    }
-    emit_save_meeting_review_data(context.get("m"), data=json.dumps(data))
-
-    # NOTE: stage/forecast may be the original stage and therefore unchanged.
-    # NOTE: if forecast is an ID, it corresponds to pre-existing lead forecast.
-    #       if it is one of lead_const.FORECAST_CHOICES then it is a new selection.
-
-    block_set_context = {"opp": context["opp"], "m": context["m"]}
-
-    access_token = (
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    user = meeting.zoom_account.user
+    slack_access_token = (
         Organization.objects.select_related("slack_integration")
         .get(pk=context["o"])
         .slack_integration.access_token
     )
 
+    standard_values = {}
+    custom_values = {}
+    values = {}
+    # get state - state contains the values based on the block_id
+    state = payload["view"]["state"]["values"]
+    # values are stored with block_id as key, block data as value
+    # block data is also a dict with action_id as key -
+    # loop is best non static method to retreive it
+    for field, data in state.items():
+        for value in data.values():
+            current_value = None
+            if value["type"] == "external_select":
+                current_value = value["selected_option"]["value"]
+            elif value["type"] == "plain_text_input":
+                current_value = value["value"]
+            elif value["type"] == "datepicker":
+                # convert date to correct format and make aware
+                date = value.get("selected_date", None)
+                if date and len(date):
+                    ## make it aware by adding utc
+                    date = datetime.strptime(date, "%Y-%m-%d")
+                    date = pytz.utc.localize(date)
+                current_value = date
+            if field in zoom_consts.STANDARD_MEETING_FIELDS:
+                standard_values[field] = current_value
+            else:
+                custom_values[field] = current_value
+
+        # get field name for dict
+        # get field type to retrieve the correct value
+
+    m_r = MeetingReview.objects.create(
+        **{**standard_values, "meeting": meeting, "custom_data": custom_values}
+    )
+
+    meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
+    meeting.is_closed = True
+    meeting.save()
+    formatted_data = m_r.as_sf_update
+    res = meeting.opportunity.update_in_salesforce(formatted_data)
+    # use this for errors
+    block_set_context = {"opp": context["opp"], "m": context["m"]}
+    ts, channel = meeting.slack_form.split("|")
+
     slack_requests.update_channel_message(
         context["original_message_channel"],
         context["original_message_timestamp"],
-        access_token,
+        slack_access_token,
         block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
     )
 

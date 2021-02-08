@@ -109,9 +109,10 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            OpportunityAdapter.update_opportunity(data, token, base_url, self.integration_id)
+            res = OpportunityAdapter.update_opportunity(data, token, base_url, self.integration_id)
             self.is_stale = True
             self.save()
+            return res
 
     def add_contact_role(self, access_token, base_url, contact_integration_id):
 
