@@ -18,18 +18,6 @@ class OpportunityForm(forms.ModelForm):
             "amount",
             "close_date",
             "forecast_category",
-            "account",
-            "stage",
-            "owner",
-            "last_stage_update",
-            "last_activity_date",
-            "external_account",
-            "external_owner",
-            "external_stage",
-            "imported_by",
-            "contacts",
-            "secondary_data",
-            "is_stale",
         )
 
 
