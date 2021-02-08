@@ -174,22 +174,6 @@ def meeting_contacts_block_set(context):
                 ],
             }
         )
-        """
-        if not contact.get("integration_id", None):
-            block_sets.append(
-                {
-                    "type": "actions",
-                    "elements": [
-                        {
-                            "type": "button",
-                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                            "value": "click_me_123",
-                            "action_id": f"edit-contact-{i}",
-                        }
-                    ],
-                }
-            )
-        """
         block_sets.append({"type": "divider"})
 
     if len(contacts_in_sf):

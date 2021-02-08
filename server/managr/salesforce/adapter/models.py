@@ -148,12 +148,15 @@ class SalesforceAuthAccountAdapter:
 
     def list_opportunities(self, offset):
         # add extra fields to query string
-        extra_fields = list(
-            filter(
-                lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
-                self.object_fields,
+        extra_items = self.object_fields.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY)
+        extra_fields = []
+        if extra_items:
+            extra_fields = list(
+                filter(
+                    lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
+                    extra_items.get("fields", []),
+                )
             )
-        )
         url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id, extra_fields)}"
         if offset:
             url = f"{url} offset {offset}"
@@ -466,11 +469,7 @@ class OpportunityAdapter:
         formatted_data["close_date"] = (
             data.get("CloseDate", "") if data.get("CloseDate", "") else ""
         )
-        formatted_data["type"] = data.get("Type", "") if data.get("Type", "") else ""
-        formatted_data["next_step"] = data.get("NextStep", "") if data.get("NextStep", "") else ""
-        formatted_data["lead_source"] = (
-            data.get("LeadSource", "") if data.get("LeadSource", "") else ""
-        )
+
         formatted_data["forecast_category"] = (
             data.get("ForecastCategory", "") if data.get("ForecastCategory", "") else ""
         )
@@ -500,9 +499,15 @@ class OpportunityAdapter:
         # opps are stale if a meeting occured and lead is updated
         # after each refresh the opp is not stale anymore
         formatted_data["is_stale"] = False
-        extra_fields = list(
-            filter(lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS, mapping,)
-        )
+        extra_items = mapping.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY, None)
+        extra_fields = []
+        if extra_items:
+            extra_fields = list(
+                filter(
+                    lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
+                    extra_items.get("fields", []),
+                )
+            )
         formatted_data["secondary_data"] = {}
         for field_name in extra_fields:
             formatted_data["secondary_data"] = {

@@ -205,7 +205,13 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_fields(self, resource):
         res = self.adapter_class.list_fields(resource)
-        self.object_fields = self.adapter_class.format_field_options(res)
+        # currently only getting one resource
+        self.object_fields = {
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY: {
+                "fields": self.adapter_class.format_field_options(res),
+                "validations": [],
+            }
+        }
         self.save()
 
     def list_accounts(self, offset):

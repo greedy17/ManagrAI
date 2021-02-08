@@ -24,9 +24,7 @@ from managr.zoom.background import _save_meeting_review_data
 )
 def process_zoom_meeting_data(payload, context):
     # get context
-    organization_id_param = "o=" + context["o"]
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    user = meeting.zoom_account.user
     slack_access_token = (
         Organization.objects.select_related("slack_integration")
         .get(pk=context["o"])
@@ -35,7 +33,6 @@ def process_zoom_meeting_data(payload, context):
 
     standard_values = {}
     custom_values = {}
-    values = {}
     # get state - state contains the values based on the block_id
     state = payload["view"]["state"]["values"]
     # values are stored with block_id as key, block data as value

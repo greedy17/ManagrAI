@@ -2,6 +2,7 @@ import pdb
 
 from managr.opportunity.models import Opportunity
 from managr.opportunity import constants as opp_consts
+from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set, block_finder
 from managr.slack.helpers import block_builders
@@ -11,7 +12,12 @@ from managr.slack.helpers import block_builders
 def zoom_meeting_complete_form(context):
     opportunity = Opportunity.objects.get(pk=context.get("opp"))
     sf_account = opportunity.imported_by.salesforce_account
-    extra_fields = list(map(lambda field_name: field_name, sf_account.object_fields))
+    extra_fields = list(
+        map(
+            lambda field_name: field_name,
+            sf_account.object_fields.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY),
+        )
+    )
 
     stage = (
         block_builders.option(opportunity.stage.label, str(opportunity.stage.id))
