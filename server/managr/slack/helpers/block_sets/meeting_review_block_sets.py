@@ -11,8 +11,8 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 
 
-def generate_edit_contact_form(field, id, value):
-    return block_builders.input_block(field, block_id=id, initial_value=value, optional=True)
+def generate_edit_contact_form(field, id, value, optional=True):
+    return block_builders.input_block(field, block_id=id, initial_value=value, optional=optional)
 
 
 def generate_contact_group(index, contact, instance_url):
