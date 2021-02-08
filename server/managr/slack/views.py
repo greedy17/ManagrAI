@@ -20,7 +20,7 @@ from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.helpers.utils import validate_slack_request
+
 
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration

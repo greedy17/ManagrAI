@@ -19,23 +19,6 @@ def create_sha256_signature(key, message):
     return hmac.new(byte_key, message, hashlib.sha256).hexdigest()
 
 
-# NOTE: this method does not work yet
-def validate_slack_request(request):
-    slack_app_secret = settings.SLACK_SECRET
-    timestamp = request.headers["X-Slack-Request-Timestamp"]
-    slack_signature = request.headers["X-Slack-Signature"]
-
-    if abs(time.time() - int(timestamp)) > 60 * 5:
-        # The request timestamp is more than five minutes from local time.
-        # It could be a replay attack, so let's ignore it.
-        return
-
-    base_str = "v0:" + timestamp + ":" + request.body.decode("utf-8")
-    managr_signature = "v0=" + create_sha256_signature(slack_app_secret, base_str)
-
-    return managr_signature == slack_signature
-
-
 def NO_OP(*args):
     """
     No operation.
