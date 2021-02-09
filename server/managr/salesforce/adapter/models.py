@@ -30,7 +30,7 @@ class SalesforceAuthAccountAdapter:
         self.salesforce_account = kwargs.get("salesforce_account", None)
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
-        self.object_fields = kwargs.get("object_fields", None)
+        self.object_fields = kwargs.get("object_fields", {})
 
     @staticmethod
     # @log_all_exceptions
@@ -77,15 +77,47 @@ class SalesforceAuthAccountAdapter:
 
         return data
 
+    def _format_resource_response(self, response_data, class_name, **kwargs):
+        res = response_data.get("results", [])
+        formatted_data = []
+        for result in res:
+            data = result["result"]
+            resource_name = data.get("apiName", None)
+            from .routes import routes
+
+            resource_class = routes.get(resource_name, None)
+            if resource_class:
+                print(resource_class)
+                formatted_data.append(resource_class.from_api(data).as_dict)
+        return formatted_data
+
+    @staticmethod
+    def format_resource_response(response_data, class_name, **kwargs):
+        return
+
+    @staticmethod
+    def format_child_response(data, class_name):
+        return
+
     def format_field_options(self, res_data=[]):
         fields = res_data["fields"]
         data = {}
-        for field in fields:
-            data[field.get("name")] = dict(
-                label=field.get("label", None), options=field.get("picklistValues", None),
+        for key, val in fields.items():
+            data[key] = dict(
+                label=val.get("label", None),
+                key=val.get("apiName", None),
+                type=val.get("dataType", None),
+                options=[],
             )
 
         return data
+
+    def format_picklist_values(self, res_data=[]):
+        fields = res_data["picklistFieldValues"]
+        for field, value in fields.items():
+            field_ref = self.object_fields.get(field, None)
+            if field_ref:
+                self.object_fields.update({field: {**field_ref, "options": value["values"]}})
 
     @staticmethod
     def from_api(data, user_id=None):
@@ -124,22 +156,28 @@ class SalesforceAuthAccountAdapter:
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
-    def list_accounts(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI(self.salesforce_id)}"
+    def list_fields(self, resource):
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+        return {
+            "fields": self.format_field_options(res),
+            "record_type_id": res["defaultRecordTypeId"],
+        }
+
+    def list_resource_validators(self, resource):
+        return
+
+    def list_stages(self, offset):
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
 
         return self._handle_response(res)
 
-    def list_fields(self, resource):
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_FIELDS_URI(resource)}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
-
-        return self._handle_response(res)
-
-    def list_stages(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
+    def list_accounts(self, offset):
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI(self.salesforce_id)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -393,13 +431,9 @@ class OpportunityAdapter:
         self.integration_id = kwargs.get("integration_id", None)
         self.account = kwargs.get("account", None)
         self.title = kwargs.get("title", None)
-        # self.description = kwargs.get("description", None)
         self.stage = kwargs.get("stage", None)
         self.amount = kwargs.get("amount", None)
         self.close_date = kwargs.get("close_date", None)
-        # self.type = kwargs.get("type", None)
-        # self.next_step = kwargs.get("next_step", None)
-        # self.lead_source = kwargs.get("lead_source", None)
         self.forecast_category = kwargs.get("forecast_category", None)
         self.owner = kwargs.get("owner", None)
         self.last_stage_update = kwargs.get("last_stage_update", None)
@@ -416,13 +450,9 @@ class OpportunityAdapter:
         id="Id",
         account="AccountId",
         title="Name",
-        # description="Description",
         stage="StageName",
         amount="Amount",
         close_date="CloseDate",
-        # type="Type",
-        # next_step="NextStep",
-        # lead_source="LeadSource",
         forecast_category="ForecastCategoryName",
         owner="OwnerId",
     )
@@ -457,12 +487,7 @@ class OpportunityAdapter:
             data.get("AccountId", "") if data.get("AccountId", "") else ""
         )
         formatted_data["title"] = data.get("Name", "") if data.get("Name", "") else ""
-        formatted_data["description"] = (
-            data.get("Description", "") if data.get("Description", "") else ""
-        )
-        formatted_data["external_stage"] = (
-            data.get("StageName", "") if data.get("StageName", "") else ""
-        )
+        formatted_data["stage"] = data.get("StageName", "") if data.get("StageName", "") else ""
         formatted_data["amount"] = (
             float(data.get("Amount", "")) if data.get("Amount", "") else "0.00"
         )
@@ -471,7 +496,7 @@ class OpportunityAdapter:
         )
 
         formatted_data["forecast_category"] = (
-            data.get("ForecastCategory", "") if data.get("ForecastCategory", "") else ""
+            data.get("ForecastCategoryName", "") if data.get("ForecastCategoryName", "") else ""
         )
         formatted_data["external_owner"] = (
             data.get("OwnerId", "") if data.get("OwnerId", "") else ""
@@ -494,10 +519,7 @@ class OpportunityAdapter:
         formatted_data["imported_by"] = str(user_id)
 
         formatted_data["account"] = formatted_data["external_account"]
-        formatted_data["stage"] = formatted_data["external_stage"]
         formatted_data["owner"] = formatted_data["external_owner"]
-        # opps are stale if a meeting occured and lead is updated
-        # after each refresh the opp is not stale anymore
         formatted_data["is_stale"] = False
         extra_items = mapping.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY, None)
         extra_fields = []

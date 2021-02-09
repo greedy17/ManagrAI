@@ -17,10 +17,7 @@ class CustomOrganization(admin.ModelAdmin):
 
 class CustomAccount(admin.ModelAdmin):
     model = Account
-    list_display = (
-        "name",
-        "url",
-    )
+    list_display = ("name",)
 
 
 class CustomContact(admin.ModelAdmin):

@@ -90,12 +90,9 @@ class Account(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255)
-    url = models.CharField(max_length=255, blank=True)
-    type = models.CharField(blank=True, max_length=255)
     organization = models.ForeignKey(
         "Organization", related_name="accounts", on_delete=models.CASCADE,
     )
-    logo = models.CharField(max_length=500, blank=True)
     parent = models.ForeignKey(
         "organization.Account",
         on_delete=models.SET_NULL,
@@ -107,6 +104,12 @@ class Account(TimeStampModel, IntegrationModel):
         max_length=255,
         blank=True,
         help_text="UUID from integration for parent account, saved in case of errors",
+    )
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
     )
     objects = AccountQuerySet.as_manager()
 
@@ -156,7 +159,7 @@ class Contact(TimeStampModel, IntegrationModel):
     email = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=255, blank=True)
     mobile_phone = models.CharField(max_length=255, blank=True)
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="contacts", blank=True, null=True
     )
     account = models.ForeignKey(

@@ -1,7 +1,7 @@
 import pdb
 
 from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity, OpportunityScore
+from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 
 from managr.slack import constants as slack_const

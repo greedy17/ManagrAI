@@ -24,10 +24,7 @@ from managr.core.models import User, Notification
 from . import constants as opp_consts
 
 
-from .models import (
-    Opportunity,
-    OpportunityScore,
-)
+from .models import Opportunity
 from . import constants as opp_consts
 
 
@@ -67,7 +64,6 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "last_activity_date",
             "external_account",
             "external_owner",
-            "external_stage",
             "imported_by",
             "contacts",
             "is_stale",

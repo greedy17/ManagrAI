@@ -3,7 +3,7 @@ import pdb
 import logging
 
 from managr.organization.models import Organization, Stage
-from managr.opportunity.models import Opportunity, OpportunityScore
+from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts

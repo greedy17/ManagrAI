@@ -80,10 +80,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "url",
-            "type",
             "organization",
-            "logo",
             "parent_integration_id",
             "integration_id",
             "integration_source",

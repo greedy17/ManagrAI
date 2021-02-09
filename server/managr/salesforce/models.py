@@ -132,6 +132,8 @@ class SFSyncOperation(TimeStampModel):
             count = min(count, 1000)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
+                # get record id's
+                # emit sync event for multiple id's at a time
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
                 if self.operations:
                     self.operations.append(str(t.id))
@@ -204,12 +206,13 @@ class SalesforceAuthAccount(TimeStampModel):
         self.delete()
 
     def get_fields(self, resource):
-        res = self.adapter_class.list_fields(resource)
+        fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
         # currently only getting one resource
         self.object_fields = {
             sf_consts.RESOURCE_SYNC_OPPORTUNITY: {
-                "fields": self.adapter_class.format_field_options(res),
+                "fields": fields,
                 "validations": [],
+                "record_type_id": record_type_id,
             }
         }
         self.save()

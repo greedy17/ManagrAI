@@ -51,8 +51,7 @@ def authenticate(request):
         serializer.save()
         # create sf sync object
         operations = [
-            sf_consts.RESOURCE_SYNC_ACCOUNT,
-            sf_consts.RESOURCE_SYNC_STAGE,
+            # sf_consts.RESOURCE_SYNC_ACCOUNT,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY,
         ]
         sync = SFSyncOperation.objects.create(user=request.user, operations_list=operations)

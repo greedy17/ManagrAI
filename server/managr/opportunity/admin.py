@@ -25,7 +25,6 @@ class OpportunityForm(forms.ModelForm):
             "last_activity_date",
             "external_account",
             "external_owner",
-            "external_stage",
             "imported_by",
             "contacts",
             "secondary_data",
