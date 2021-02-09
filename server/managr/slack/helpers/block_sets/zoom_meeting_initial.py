@@ -1,19 +1,13 @@
-import pdb
-import uuid
 import pytz
 import math
 from datetime import datetime
-
 
 from managr.opportunity.models import Opportunity
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import (
     action_with_params,
-    get_lead_rating_emoji,
     block_set,
 )
-
-# TODO: this and other zoom-flow block_sets will likely need "m" for meeting ID
 
 
 def generate_sentiment_button(text, value, params):
@@ -27,19 +21,26 @@ def generate_sentiment_button(text, value, params):
     }
 
 
+# TODO: this and other zoom-flow block_sets will likely need "m" for meeting ID
 @block_set(required_context=["o", "u", "opp", "m"])
 def zoom_meeting_initial(context):
+    """Generates the block set for the first Slack message sent after a Zoom meeting has ended.
+
+    This Slack message contains buttons for the sales rep to quickly review
+    how the meeting went (ex: "Great", "Not Well", and "Can't Tell"). After the rep clicks
+    a button, the `zoom_meeting_complete_form` is sent so they can edit
+    contacts and opportunity details directly from Slack.
+    """
     opportunity = Opportunity.objects.get(pk=context["opp"])
     meeting = opportunity.meetings.filter(id=context["m"]).first()
+
     # make params here
     user_id_param = "u=" + context["u"]
     opportunity_id_param = "opp=" + context["opp"]
     meeting_id_param = "m=" + context["m"]
 
     organization_id_param = "o=" + context["o"]
-    sentiment_param = lambda x: f"sentiment={x}"
 
-    get_time_stamp_id = lambda: f"id={math.floor(datetime.timestamp(datetime.now()))}"
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -55,13 +56,15 @@ def zoom_meeting_initial(context):
         if end_time
         else end_time
     )
-    params = lambda sentiment: [
-        user_id_param,
-        opportunity_id_param,
-        organization_id_param,
-        meeting_id_param,
-        sentiment_param(sentiment),
-    ]
+
+    def params(sentiment):
+        return [
+            user_id_param,
+            opportunity_id_param,
+            organization_id_param,
+            meeting_id_param,
+            f"sentiment={sentiment}",
+        ]
 
     return [
         {

@@ -74,8 +74,14 @@ def block_finder(block_id, blocks=[]):
 
 
 class block_set:
-    """
-    Decorator. Checks for required context for a block_set.
+    """A decorator that validates that required context keys are present.
+
+    Use this decorator to wrap a function that renders a block set for Slack.
+    This will check that the context provided to the renderer contains all the
+    required context variables.
+
+    Args:
+        required_context (list): List of keys to look up in context.
     """
 
     def __init__(self, required_context=[]):

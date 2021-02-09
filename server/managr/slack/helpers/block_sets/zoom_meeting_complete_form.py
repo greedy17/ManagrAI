@@ -1,10 +1,8 @@
-import pdb
-
 from managr.opportunity.models import Opportunity
 from managr.opportunity import constants as opp_consts
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, block_finder
+from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 
 

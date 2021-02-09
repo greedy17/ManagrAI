@@ -21,6 +21,7 @@ from .view_closed import handle_view_closed
 
 
 def handle_interaction(payload):
+    """Route Slack interactions received via the Managr REST API."""
     switcher = {
         slack_const.BLOCK_ACTIONS: handle_block_actions,
         slack_const.BLOCK_SUGGESTION: handle_block_suggestion,
