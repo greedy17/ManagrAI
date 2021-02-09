@@ -103,7 +103,8 @@ class SalesforceAuthAccountAdapter:
                 label=val.get("label", None),
                 key=val.get("apiName", None),
                 type=val.get("dataType", None),
-                required=val.get("required", False),
+                required=val.get("required", False),  # is required to pass val on create
+                updateable=val.get("updateable", False),  # cannot be patched
                 options=[],
             )
 
@@ -112,20 +113,22 @@ class SalesforceAuthAccountAdapter:
     def format_validation_rules(self, res_data=[]):
         records = res_data["records"]
         return list(
-            lambda rule: dict(
-                id=rule.get("id", None),
-                description=rule.get("description", None),
-                message=rule.get("message", None),
-            ),
-            records,
+            map(
+                lambda rule: dict(
+                    id=rule.get("Id", None),
+                    description=rule.get("Description", None),
+                    message=rule.get("ErrorMessage", None),
+                ),
+                records,
+            )
         )
 
     def format_picklist_values(self, res_data=[]):
         fields = res_data["picklistFieldValues"]
+        data = {}
         for field, value in fields.items():
-            field_ref = self.object_fields.get(field, None)
-            if field_ref:
-                self.object_fields.update({field: {**field_ref, "options": value["values"]}})
+            data[field] = value["values"]
+        return data
 
     @staticmethod
     def from_api(data, user_id=None):
@@ -165,19 +168,34 @@ class SalesforceAuthAccountAdapter:
         return SalesforceAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
+        """ Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to """
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
         return {
             "fields": self.format_field_options(res),
-            "record_type_id": res["defaultRecordTypeId"],
+            "record_type_id": res["defaultRecordTypeId"],  # required for the picklist options
         }
 
-    def list_resource_validators(self, resource):
+    def list_picklist_values(self, resource):
+        """ Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to """
+        extra_fields_object = self.object_fields.get(resource, None)
+        if extra_fields_object:
+            record_type_id = extra_fields_object.get("record_type_id")
+            url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            return self.format_picklist_values(res)
+
+    def list_validations(self, resource):
+        """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
+
         url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
-        return self.format_validation_rules
+        return self.format_validation_rules(res)
 
     def list_stages(self, offset):
         url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"

@@ -89,22 +89,24 @@ class SFSyncOperation(TimeStampModel):
 
         sf_account = self.user.salesforce_account
         adapter = self.user.salesforce_account.adapter_class
-
         for key in self.operations_list:
-
-            try:
-                count = adapter.get_opportunity_count()["totalSize"]
-                sf_account.get_fields(key)
-                sf_account.get_validators(key)
-            except TokenExpired:
-                if attempts >= 5:
-                    return logger.exception(
-                        f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
-                    )
-                else:
-                    sf_account.regenerate_token()
-                    attempts += 1
-                    return self.begin_tasks(attempts)
+            while True:
+                try:
+                    count = adapter.get_opportunity_count()["totalSize"]
+                    # populate the sf account resource fields (unique to each user)
+                    sf_account.get_fields(key)
+                    # populate the sf account resource validators (may be unique to each user)
+                    sf_account.get_validations(key)
+                    # populate the sf account picklist values (may be unique to each user)
+                    sf_account.get_picklist_values(key)
+                except TokenExpired:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                        )
+                    else:
+                        sf_account.regenerate_token()
+                        attempts += 1
                 # get counts to set offsets
             count = min(count, 1000)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
@@ -187,9 +189,21 @@ class SalesforceAuthAccount(TimeStampModel):
         self.save()
 
     def get_validations(self, resource):
-        rules = [*self.adapter_class.list_validations(resource)]
+        rules = self.adapter_class.list_validations(resource)
         if self.object_fields and self.object_fields.get(resource, None):
-            self.object_fields[resource]["validators"] = rules
+            self.object_fields[resource]["validations"] = rules
+        self.save()
+
+    def get_picklist_values(self, resource):
+        values = self.adapter_class.list_picklist_values(resource)
+
+        if self.object_fields and self.object_fields.get(resource, None):
+            fields = self.object_fields.get(resource).get("fields", [])
+            for k, v in values.items():
+                if k in fields:
+                    fields[k]["options"] = v["values"]
+                    continue
+
         self.save()
 
     def list_accounts(self, offset):

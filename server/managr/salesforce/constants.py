@@ -15,10 +15,7 @@ REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
-SALESFORCE_FIELDS_URI = (
-    lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
-)  # defaultRecordTypeId
-
+SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
@@ -30,7 +27,7 @@ SALSFORCE_OPP_QUERY_URI_COUNT = lambda owner_id: (
     f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Opportunity WHERE OwnerId = '{owner_id}'"
 )
 SALESFORCE_VALIDATION_QUERY = (
-    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND is_active = 'true'"
+    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
 )
 
 # SF HEADERS
@@ -66,9 +63,9 @@ AUTHORIZATION_QUERY = urlencode(
     }
 )
 
-RESOURCE_SYNC_ACCOUNT = "ACCOUNT"
-RESOURCE_SYNC_OPPORTUNITY = "OPPORTUNITY"
-RESOURCE_SYNC_STAGE = "STAGE"
+RESOURCE_SYNC_ACCOUNT = "Account"
+RESOURCE_SYNC_OPPORTUNITY = "Opportunity"
+RESOURCE_SYNC_STAGE = "Stage"
 SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESOURCE_SYNC"
 
 
