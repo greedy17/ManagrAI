@@ -91,49 +91,25 @@ class SFSyncOperation(TimeStampModel):
         adapter = self.user.salesforce_account.adapter_class
 
         for key in self.operations_list:
-            if key == sf_consts.RESOURCE_SYNC_ACCOUNT:
-                try:
-                    count = adapter.get_account_count()["totalSize"]
-                except TokenExpired:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
-                        )
-                    else:
-                        sf_account.regenerate_token()
-                        attempts += 1
-                        return self.begin_tasks(attempts)
-            elif key == sf_consts.RESOURCE_SYNC_STAGE:
-                try:
-                    count = adapter.get_stage_count()["totalSize"]
-                except TokenExpired:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
-                        )
-                    else:
-                        sf_account.regenerate_token()
-                        attempts += 1
-                        return self.begin_tasks(attempts)
-            elif key == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
-                try:
-                    count = adapter.get_opportunity_count()["totalSize"]
-                    sf_account.get_fields(sf_consts.RESOURCE_SYNC_OPPORTUNITY)
-                except TokenExpired:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
-                        )
-                    else:
-                        sf_account.regenerate_token()
-                        attempts += 1
-                        return self.begin_tasks(attempts)
+
+            try:
+                count = adapter.get_opportunity_count()["totalSize"]
+                sf_account.get_fields(key)
+                sf_account.get_validators(key)
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                    )
+                else:
+                    sf_account.regenerate_token()
+                    attempts += 1
+                    return self.begin_tasks(attempts)
                 # get counts to set offsets
             count = min(count, 1000)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
-                # get record id's
-                # emit sync event for multiple id's at a time
+
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
                 if self.operations:
                     self.operations.append(str(t.id))
@@ -207,14 +183,13 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_fields(self, resource):
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
-        # currently only getting one resource
-        self.object_fields = {
-            sf_consts.RESOURCE_SYNC_OPPORTUNITY: {
-                "fields": fields,
-                "validations": [],
-                "record_type_id": record_type_id,
-            }
-        }
+        self.object_fields = {resource: {"fields": fields, "record_type_id": record_type_id,}}
+        self.save()
+
+    def get_validations(self, resource):
+        rules = [*self.adapter_class.list_validations(resource)]
+        if self.object_fields and self.object_fields.get(resource, None):
+            self.object_fields[resource]["validators"] = rules
         self.save()
 
     def list_accounts(self, offset):

@@ -92,10 +92,6 @@ class SalesforceAuthAccountAdapter:
         return formatted_data
 
     @staticmethod
-    def format_resource_response(response_data, class_name, **kwargs):
-        return
-
-    @staticmethod
     def format_child_response(data, class_name):
         return
 
@@ -107,10 +103,22 @@ class SalesforceAuthAccountAdapter:
                 label=val.get("label", None),
                 key=val.get("apiName", None),
                 type=val.get("dataType", None),
+                required=val.get("required", False),
                 options=[],
             )
 
         return data
+
+    def format_validation_rules(self, res_data=[]):
+        records = res_data["records"]
+        return list(
+            lambda rule: dict(
+                id=rule.get("id", None),
+                description=rule.get("description", None),
+                message=rule.get("message", None),
+            ),
+            records,
+        )
 
     def format_picklist_values(self, res_data=[]):
         fields = res_data["picklistFieldValues"]
@@ -166,7 +174,10 @@ class SalesforceAuthAccountAdapter:
         }
 
     def list_resource_validators(self, resource):
-        return
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+        return self.format_validation_rules
 
     def list_stages(self, offset):
         url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
@@ -190,10 +201,7 @@ class SalesforceAuthAccountAdapter:
         extra_fields = []
         if extra_items:
             extra_fields = list(
-                filter(
-                    lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
-                    extra_items.get("fields", []),
-                )
+                filter(lambda field_name: field_name, extra_items.get("fields", []),)
             )
         url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id, extra_fields)}"
         if offset:

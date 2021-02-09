@@ -24,21 +24,13 @@ SALESFORCE_PICKLIST_URI = (
 )
 
 
-def get_salesforce_resource_data_uri(record_ids, fields, child_relationships=None):
-    uri = f"{CUSTOM_BASE_URI}/ui-api/records/batch/{''.join(record_ids)}"
-    query = dict(fields=fields)
-    if child_relationships:
-        query["childRelationships"] = "".join(child_relationships)
-    return f"{uri}?{urlencode(query)}"
-
-
 # SF CUSTOM URI QUERIES
-SALSFORCE_OPP_IDS_URI = (
-    lambda resource, owner_id: f"{CUSTOM_BASE_URI}/query/?q=SELECT Id FROM {resource} WHERE OwnerId = '{owner_id}'"
-)
 
 SALSFORCE_OPP_QUERY_URI_COUNT = lambda owner_id: (
     f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Opportunity WHERE OwnerId = '{owner_id}'"
+)
+SALESFORCE_VALIDATION_QUERY = (
+    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND is_active = 'true'"
 )
 
 # SF HEADERS
@@ -115,9 +107,8 @@ SALSFORCE_ACCOUNT_QUERY_URI = (
 )
 SALSFORCE_STAGE_QUERY_URI = f"{CUSTOM_BASE_URI}/query/?q=SELECT id, MasterLabel, ForecastCategory, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 SALSFORCE_OPP_QUERY_URI = (
-    lambda owner_id, extra_fields=STANDARD_OPP_FIELDS,: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join([*STANDARD_OPP_FIELDS, *extra_fields])}, (SELECT {', '.join(STANDARD_OPP_CONTACT_FIELDS)} FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+    lambda owner_id, fields=[],: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join([fields])}, (SELECT {', '.join(STANDARD_OPP_CONTACT_FIELDS)} FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 )
-SALESFORCE_RESOURCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/sobjects/{resource}/describe"
 
 SALSFORCE_ACCOUNT_QUERY_URI_COUNT = lambda owner_id: (
     f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Account WHERE OwnerId = '{owner_id}'"
