@@ -95,7 +95,7 @@ class SFSyncOperation(TimeStampModel):
             try:
                 count = adapter.get_opportunity_count()["totalSize"]
                 sf_account.get_fields(key)
-                sf_account.get_validators(key)
+                # sf_account.get_validators(key)
             except TokenExpired:
                 if attempts >= 5:
                     return logger.exception(

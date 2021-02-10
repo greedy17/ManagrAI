@@ -103,3 +103,15 @@ class UserSlackIntegration(TimeStampModel):
 
     class Meta:
         ordering = ["user"]
+
+
+class OrgCustomSlackForm(TimeStampModel):
+    """Model to store the organizations JSON-based custom Slack form config."""
+
+    organization = models.OneToOneField(
+        "organization.Organization", related_name="custom_slack_form", on_delete=models.CASCADE,
+    )
+    config = JSONField(
+        default=dict,
+        help_text="The configuration object for this organization's custom Slack form.",
+    )
