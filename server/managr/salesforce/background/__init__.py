@@ -13,8 +13,9 @@ from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
 
+from ..routes import routes
 from ..models import SFSyncOperation
-from ..adapter.models import AccountAdapter, StageAdapter, OpportunityAdapter, ActivityAdapter
+from ..adapter.models import AccountAdapter, OpportunityAdapter, ActivityAdapter
 from ..adapter.exceptions import TokenExpired
 
 from .. import constants as sf_consts
@@ -25,13 +26,7 @@ logger = logging.getLogger("managr")
 def emit_sf_sync(user_id, sync_id, resource, offset):
     user_id = str(user_id)
     sync_id = str(sync_id)
-
-    if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
-        return _process_account_sync(user_id, sync_id, offset, priority=3)
-    elif resource == sf_consts.RESOURCE_SYNC_STAGE:
-        return _process_stage_sync(user_id, sync_id, offset, priority=3)
-    elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
-        return _process_opportunity_sync(user_id, sync_id, offset)
+    return _process_resource_sync(user_id, sync_id, resource, offset)
 
 
 def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
@@ -44,7 +39,6 @@ def emit_sf_add_call_to_sf(user_id, data):
 
 
 def emit_sf_update_opportunity(user_id, meeting_review_id):
-
     return _process_update_opportunity(user_id, meeting_review_id)
 
 
@@ -115,106 +109,37 @@ def _process_gen_next_sync(user_id, operations_list):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-def _process_account_sync(user_id, sync_id, offset, attempts=1):
-    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
-    if not hasattr(user, "salesforce_account"):
-        return
-    sf = user.salesforce_account
-    try:
-        res = sf.list_accounts(offset)
-    except TokenExpired:
-        if attempts >= 5:
-            return logger.exception(
-                f"Failed to sync ACCOUNT data for user {user_id} after {attempts} tries"
-            )
-        else:
-            sf.regenerate_token()
-            attempts += 1
-            return _process_account_sync(user_id, sync_id, offset, attempts)
-    accts = map(
-        lambda data: AccountAdapter.from_api(data, user.organization.id, user.id, []).as_dict,
-        res["records"],
-    )
-
-    for acct in list(accts):
-        existing = Account.objects.filter(integration_id=acct["integration_id"]).first()
-        if existing:
-            serializer = AccountSerializer(data=acct, instance=existing)
-        else:
-            serializer = AccountSerializer(data=acct)
-        # check if already exists and update
-
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    return
-
-
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-def _process_stage_sync(user_id, sync_id, offset, attempts=1):
-    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
-    if not hasattr(user, "salesforce_account"):
-        return
-    sf = user.salesforce_account
-    try:
-        res = sf.list_stages(offset)
-    except TokenExpired:
-        if attempts >= 5:
-            return logger.exception(
-                f"Failed to sync STAGE data for user {user_id} after {attempts} tries"
-            )
-        else:
-            sf.regenerate_token()
-            attempts += 1
-            return _process_stage_sync(user_id, sync_id, offset, attempts)
-
-    stages = map(
-        lambda data: StageAdapter.from_api(data, user.organization.id, user.id, []).as_dict,
-        res["records"],
-    )
-    for stage in list(stages):
-        existing = Stage.objects.filter(integration_id=stage["integration_id"]).first()
-        if existing:
-            serializer = StageSerializer(data=stage, instance=existing)
-        else:
-            serializer = StageSerializer(data=stage)
-        # check if already exists and update
-
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-    return
-
-
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
 @log_all_exceptions
-def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
+def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
     sf = user.salesforce_account
-    try:
-        res = sf.list_opportunities(offset)
-    except TokenExpired:
-        if attempts >= 5:
-            return logger.exception(
-                f"Failed to sync OPPORTUNITY data for user {user_id} after {attempts} tries"
-            )
-        else:
-            sf.regenerate_token()
-            attempts += 1
-            return _process_opportunity_sync(user_id, sync_id, offset, attempts)
 
-    opps = map(
-        lambda data: OpportunityAdapter.from_api(data, user.id, sf.object_fields).as_dict,
-        res["records"],
-    )
+    # if route doesnt exist catch all will catch the value error here
+    route = routes[resource]
+    model_class = route["model"]
+    serializer_class = route["serializer"]
 
-    for opp in list(opps):
-        existing = Opportunity.objects.filter(integration_id=opp["integration_id"]).first()
+    while True:
+        try:
+            res = sf.list_resource_data(resource, offset)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync OPPORTUNITY data for user {user_id} after {attempts} tries"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+
+    for item in res:
+        existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
-            serializer = OpportunitySerializer(data=opp, instance=existing)
+            serializer = serializer_class(data=item.as_dict, instance=existing)
         else:
-            serializer = OpportunitySerializer(data=opp)
+            serializer = serializer_class(data=item.as_dict)
         # check if already exists and update
 
         try:
@@ -223,7 +148,7 @@ def _process_opportunity_sync(user_id, sync_id, offset, attempts=1):
         except Exception as e:
             print(e)
             logger.exception(
-                f"failed to import {opp['title']} with integration id of {opp['integration_id']} from {opp['integration_source']} for user {str(user.id)} {e}"
+                f"failed to import {resource} with integration id of {item.integration_id} from {item.integration_source} for user {str(user.id)} {e}"
             )
             pass
     return

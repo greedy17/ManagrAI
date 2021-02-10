@@ -27,15 +27,13 @@ class CustomContact(admin.ModelAdmin):
             None,
             {
                 "fields": (
-                    "name",
-                    "title",
                     "email",
-                    "phone_number",
-                    "mobile_phone",
                     "account",
                     "external_owner",
                     "external_account",
-                    "user",
+                    "owner",
+                    "imported_by",
+                    "secondary_data",
                 ),
             },
         ),

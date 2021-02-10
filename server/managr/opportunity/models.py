@@ -73,7 +73,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
         null=True,
     )
 
-    last_activity_date = models.DateTimeField(null=True)
+    last_activity_date = models.DateTimeField(
+        null=True
+    )  # sf has this as a datetime field but returns a date field only
     last_stage_update = models.DateTimeField(null=True)
     is_stale = models.BooleanField(default=False)
     secondary_data = JSONField(

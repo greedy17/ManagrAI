@@ -92,7 +92,7 @@ class SFSyncOperation(TimeStampModel):
         for key in self.operations_list:
             while True:
                 try:
-                    count = adapter.get_opportunity_count()["totalSize"]
+                    count = adapter.get_resource_count(key)["totalSize"]
                     # populate the sf account resource fields (unique to each user)
                     sf_account.get_fields(key)
                     # populate the sf account resource validators (may be unique to each user)
@@ -165,6 +165,7 @@ class SalesforceAuthAccount(TimeStampModel):
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
+        data["user"] = str(self.user.id)
         return SalesforceAuthAccountAdapter(**data)
 
     def regenerate_token(self):
@@ -186,7 +187,13 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_fields(self, resource):
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
-        self.object_fields = {resource: {"fields": fields, "record_type_id": record_type_id,}}
+        if self.object_fields:
+            self.object_fields.update(
+                {resource: {"fields": fields, "record_type_id": record_type_id,}}
+            )
+        else:
+            self.object_fields = {resource: {"fields": fields, "record_type_id": record_type_id,}}
+
         self.save()
 
     def get_validations(self, resource):
@@ -207,14 +214,8 @@ class SalesforceAuthAccount(TimeStampModel):
 
         self.save()
 
-    def list_accounts(self, offset):
-        return self.adapter_class.list_accounts(offset)
-
-    def list_stages(self, offset):
-        return self.adapter_class.list_stages(offset)
-
-    def list_opportunities(self, offset):
-        return self.adapter_class.list_opportunities(offset)
+    def list_resource_data(self, resource, offset, *args, **kwargs):
+        return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
 
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)

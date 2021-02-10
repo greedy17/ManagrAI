@@ -77,18 +77,16 @@ class SalesforceAuthAccountAdapter:
 
         return data
 
-    def _format_resource_response(self, response_data, class_name, **kwargs):
-        res = response_data.get("results", [])
+    def _format_resource_response(self, response_data, class_name, *args, **kwargs):
+        res = response_data.get("records", [])
         formatted_data = []
         for result in res:
-            data = result["result"]
-            resource_name = data.get("apiName", None)
+            result.pop("attributes")  # unnecessary metadata field
             from .routes import routes
 
-            resource_class = routes.get(resource_name, None)
+            resource_class = routes.get(class_name, None)
             if resource_class:
-                print(resource_class)
-                formatted_data.append(resource_class.from_api(data).as_dict)
+                formatted_data.append(resource_class.from_api(result, self.user, *args))
         return formatted_data
 
     @staticmethod
@@ -99,6 +97,10 @@ class SalesforceAuthAccountAdapter:
         fields = res_data["fields"]
         data = {}
         for key, val in fields.items():
+            if (
+                key == "CloneSourceId"
+            ):  # according to Teja CloneSourceId is returned as a field but is not queryable
+                continue
             data[key] = dict(
                 label=val.get("label", None),
                 key=val.get("apiName", None),
@@ -198,60 +200,27 @@ class SalesforceAuthAccountAdapter:
         res = self._handle_response(res)
         return self.format_validation_rules(res)
 
-    def list_stages(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI}"
-        if offset:
-            url = f"{url} offset {offset}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
-
-        return self._handle_response(res)
-
-    def list_accounts(self, offset):
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI(self.salesforce_id)}"
-        if offset:
-            url = f"{url} offset {offset}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
-
-        return self._handle_response(res)
-
-    def list_opportunities(self, offset):
+    def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
-        extra_items = self.object_fields.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY)
+        extra_items = self.object_fields.get(resource)
         extra_fields = []
         if extra_items:
-            extra_fields = list(
-                filter(
-                    lambda field: extra_items.get("fields")[field].get("creatable", False)
-                    or extra_items.get("fields")[field].get("updateable", False),
-                    extra_items.get("fields", []),
-                )
-            )
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id, extra_fields)}"
+            extra_fields = extra_items.get("fields", [])
+        from .routes import routes
+
+        resource_class = routes.get(resource)
+        relationships = resource_class.get_opportunity_rels()
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_fields, relationships)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
-        res = self._format_resource_response(res, "Opportunity")
+        res = self._format_resource_response(res, resource)
+        return res
 
-    def get_stage_count(self):
+    def get_resource_count(self, resource):
         res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_STAGE_QUERY_URI_COUNT}",
-            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-        )
-
-        return self._handle_response(res)
-
-    def get_opportunity_count(self):
-        res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI_COUNT(self.salesforce_id)}",
-            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-        )
-
-        return self._handle_response(res)
-
-    def get_account_count(self):
-        res = client.get(
-            f"{self.instance_url}{sf_consts.SALSFORCE_ACCOUNT_QUERY_URI_COUNT(self.salesforce_id)}",
+            f"{self.instance_url}{sf_consts.SF_COUNT_URI(resource, self.salesforce_id)}",
             headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
         )
 
@@ -273,75 +242,51 @@ class AccountAdapter:
         self.integration_id = kwargs.get("integration_id", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.name = kwargs.get("name", None)
-        self.url = kwargs.get("url", None)
-        self.type = kwargs.get("type", None)
         self.organization = kwargs.get("organization", None)
-        self.logo = kwargs.get("logo", None)
         self.parent = kwargs.get("parent", None)
         self.parent_integration_id = kwargs.get("parent_integration_id", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
         self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        owner="OwnerId",  # overwritten (ignored in reverse)
+        external_owner="OwnerId",
+        parent_integration_id="ParentId",
+    )
 
     @staticmethod
-    def from_api(data, organization_id, user_id, mapping):
+    def reverse_integration_mapping():
+        """ mapping of 'standard' data when sending from the SF API """
+        reverse = {}
+        for k, v in AccountAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def get_opportunity_rels():
+        return {}
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
         formatted_data = dict()
-        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
+
+        mapping = AccountAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            else:
+                formatted_data["secondary_data"][k] = v
+
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["name"] = data.get("Name", "") if data.get("Name", "") else ""
-        formatted_data["url"] = data.get("Website", "") if data.get("Website", "") else ""
-        formatted_data["type"] = data.get("Type", "") if data.get("Type", "") else ""
-        formatted_data["logo"] = data.get("PhotoUrl", "") if data.get("PhotoUrl", "") else ""
-        formatted_data["parent_integration_id"] = (
-            data.get("ParentId", "") if data.get("ParentId", "") else ""
-        )
-        formatted_data["organization"] = str(organization_id)
         formatted_data["imported_by"] = str(user_id)
 
         return AccountAdapter(**formatted_data)
-
-    @property
-    def as_dict(self):
-        return vars(self)
-
-
-class StageAdapter:
-    def __init__(self, **kwargs):
-        self.id = kwargs.get("id", None)
-        self.label = kwargs.get("label", None)
-        self.integration_source = kwargs.get("integration_source", None)
-        self.integration_id = kwargs.get("integration_id", None)
-        self.label = kwargs.get("label", None)
-        self.value = kwargs.get("value", None)
-        self.is_closed = kwargs.get("is_closed", None)
-        self.is_won = kwargs.get("is_won", None)
-        self.description = kwargs.get("description", None)
-        self.organization = kwargs.get("organization", None)
-        self.order = kwargs.get("order", None)
-        self.is_active = kwargs.get("is_active", None)
-        self.forecast_category = kwargs.get("forecast_category", None)
-        self.imported_by = kwargs.get("imported_by", None)
-
-    @staticmethod
-    def from_api(data, organization_id, user_id, mapping):
-        formatted_data = dict()
-        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
-        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["label"] = data.get("MasterLabel", "") if data.get("MasterLabel", "") else ""
-        formatted_data["value"] = data.get("ApiName", "") if data.get("ApiName", "") else ""
-        formatted_data["is_closed"] = (
-            data.get("IsClosed", "") if data.get("IsClosed", "") else False
-        )
-        formatted_data["is_won"] = data.get("IsWon", "") if data.get("IsWon", "") else False
-        formatted_data["is_active"] = (
-            data.get("IsActive", "") if data.get("IsActive", "") else False
-        )
-        formatted_data["description"] = data.get("Description") if data.get("Description") else ""
-        formatted_data["order"] = data.get("SortOrder") if data.get("SortOrder", None) else None
-        formatted_data["forecast_category"] = (
-            data.get("ForecastCategory") if data.get("ForecastCategory", None) else None
-        )
-        formatted_data["organization"] = str(organization_id)
-        formatted_data["imported_by"] = str(user_id)
-        return StageAdapter(**formatted_data)
 
     @property
     def as_dict(self):
@@ -353,68 +298,47 @@ class ContactAdapter:
         self.id = kwargs.get("id", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
-        self.title = kwargs.get("title", None)
         self.email = kwargs.get("email", None)
-        self.first_name = kwargs.get("first_name", None)
-        self.last_name = kwargs.get("last_name", None)
-        self.phone_number = kwargs.get("phone_number", None)
-        self.mobile_phone = kwargs.get("mobile_phone", None)
-        self.user = kwargs.get("user", None)
+        self.owner = kwargs.get("owner", None)
         self.account = kwargs.get("account", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
 
-    from_mapping = dict(
-        id="Id",
-        first_name="FirstName",
-        last_name="Lastname",
-        title="Title",
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
         email="Email",
-        mobile_phone="MobilePhone",
-        phone_number="Phone",
+        owner="OwnerId",  # overwritten (ignored in reverse)
         account="AccountId",
-        owner="OwnerId",
+        external_account="AccountId",
+        external_owner="OwnerId",
     )
 
     @staticmethod
-    def from_api(data, user_id, mapping):
+    def get_opportunity_rels():
+        return {}
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """ mapping of 'standard' data when sending from the SF API """
+        reverse = {}
+        for k, v in ContactAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
         formatted_data = dict()
-        contact_data = data.get("Contact")
-        formatted_data["integration_id"] = (
-            contact_data.get("Id", "") if contact_data.get("Id", "") else ""
-        )
+        mapping = ContactAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            else:
+                formatted_data["secondary_data"][k] = v
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["first_name"] = (
-            contact_data.get("FirstName", "") if contact_data.get("FirstName", "") else ""
-        )
-        formatted_data["last_name"] = (
-            contact_data.get("LastName", "") if contact_data.get("LastName", "") else ""
-        )
-        formatted_data["title"] = (
-            contact_data.get("Title", "") if contact_data.get("Title", "") else ""
-        )
-        formatted_data["email"] = (
-            contact_data.get("Email", "") if contact_data.get("Email", "") else ""
-        )
-        formatted_data["mobile_phone"] = (
-            contact_data.get("MobilePhone", "") if contact_data.get("MobilePhone", "") else ""
-        )
-        formatted_data["phone_number"] = (
-            contact_data.get("Phone", "") if contact_data.get("Phone", "") else ""
-        )
-        formatted_data["user"] = user_id
-        formatted_data["external_account"] = (
-            contact_data.get("AccountId", "") if contact_data.get("AccountId", "") else ""
-        )
-        formatted_data["external_owner"] = (
-            contact_data.get("OwnerId", "") if contact_data.get("OwnerId", "") else ""
-        )
-        formatted_data["account"] = (
-            None
-            if not len(formatted_data["external_account"])
-            else formatted_data["external_account"]
-        )
         formatted_data["imported_by"] = str(user_id)
 
         return ContactAdapter(**formatted_data)
@@ -470,7 +394,6 @@ class OpportunityAdapter:
         self.owner = kwargs.get("owner", None)
         self.last_stage_update = kwargs.get("last_stage_update", None)
         self.last_activity_date = kwargs.get("last_activity_date", None)
-        self.external_stage = kwargs.get("external_stage", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
@@ -478,16 +401,41 @@ class OpportunityAdapter:
         self.is_stale = kwargs.get("is_stale", None)
         self.secondary_data = kwargs.get("secondary_data", None)
 
-    from_mapping = dict(
-        id="Id",
-        account="AccountId",
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        account="AccountId",  # overwritten (ignored in reverse)
         title="Name",
         stage="StageName",
         amount="Amount",
         close_date="CloseDate",
         forecast_category="ForecastCategoryName",
-        owner="OwnerId",
+        owner="OwnerId",  # overwritten (ignored in reverse)
+        external_account="AccountId",
+        external_owner="OwnerId",
+        last_activity_date="LastActivityDate",
     )
+
+    @staticmethod
+    def get_opportunity_rels():
+        return {
+            sf_consts.OPPORTUNITY_CONTACT_ROLES: {
+                "fields": sf_consts.OPPORTUNITY_CONTACT_ROLE_FIELDS,
+                "attrs": [],
+            },
+            sf_consts.OPPORTUNITY_HISTORIES: {
+                "fields": sf_consts.OPPORTUNITY_HISTORY_FIELDS,
+                "attrs": [sf_consts.OPPORTUNITY_HISTORY_ATTRS],
+            },
+        }
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """ mapping of 'standard' data when sending from the SF API """
+        reverse = {}
+        for k, v in OpportunityAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
 
     @staticmethod
     def _format_date_time_from_api(d):
@@ -511,33 +459,15 @@ class OpportunityAdapter:
         return formatted_contacts
 
     @staticmethod
-    def from_api(data, user_id, mapping):
-        formatted_data = dict()
-        formatted_data["integration_id"] = data.get("Id", "") if data.get("Id", "") else ""
+    def from_api(data, user_id, *args, **kwargs):
+        mapping = OpportunityAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            else:
+                formatted_data["secondary_data"][k] = v
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
-        formatted_data["external_account"] = (
-            data.get("AccountId", "") if data.get("AccountId", "") else ""
-        )
-        formatted_data["title"] = data.get("Name", "") if data.get("Name", "") else ""
-        formatted_data["stage"] = data.get("StageName", "") if data.get("StageName", "") else ""
-        formatted_data["amount"] = (
-            float(data.get("Amount", "")) if data.get("Amount", "") else "0.00"
-        )
-        formatted_data["close_date"] = (
-            data.get("CloseDate", "") if data.get("CloseDate", "") else ""
-        )
-
-        formatted_data["forecast_category"] = (
-            data.get("ForecastCategoryName", "") if data.get("ForecastCategoryName", "") else ""
-        )
-        formatted_data["external_owner"] = (
-            data.get("OwnerId", "") if data.get("OwnerId", "") else ""
-        )
-        formatted_data["last_activity_date"] = (
-            OpportunityAdapter._format_date_time_from_api(data.get("LastActivityDate", None))
-            if data.get("LastActivityDate", "")
-            else None
-        )
         formatted_data["last_stage_update"] = OpportunityAdapter._format_stage_update(
             data.get("OpportunityHistories", None)
         )
@@ -549,25 +479,7 @@ class OpportunityAdapter:
             else []
         )
         formatted_data["imported_by"] = str(user_id)
-
-        formatted_data["account"] = formatted_data["external_account"]
-        formatted_data["owner"] = formatted_data["external_owner"]
         formatted_data["is_stale"] = False
-        extra_items = mapping.get(sf_consts.RESOURCE_SYNC_OPPORTUNITY, None)
-        extra_fields = []
-        if extra_items:
-            extra_fields = list(
-                filter(
-                    lambda field_name: field_name not in sf_consts.STANDARD_OPP_FIELDS,
-                    extra_items.get("fields", []),
-                )
-            )
-        formatted_data["secondary_data"] = {}
-        for field_name in extra_fields:
-            formatted_data["secondary_data"] = {
-                **formatted_data["secondary_data"],
-                field_name: data.get(field_name, None),
-            }
 
         return OpportunityAdapter(**formatted_data)
 

@@ -6,9 +6,11 @@ from urllib.parse import urlencode, unquote
 from datetime import datetime
 
 from django.http import HttpResponse
+from django.utils import timezone
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
+
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -25,12 +27,10 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
-
-
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-
+from managr.salesforce.background import emit_sf_sync, emit_gen_next_sync
 from managr.api.decorators import log_all_exceptions
 from .models import SFSyncOperation
 from .serializers import SalesforceAuthSerializer
@@ -51,12 +51,13 @@ def authenticate(request):
         serializer.save()
         # create sf sync object
         operations = [
-            # sf_consts.RESOURCE_SYNC_ACCOUNT,
+            sf_consts.RESOURCE_SYNC_CONTACT,
+            sf_consts.RESOURCE_SYNC_ACCOUNT,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY,
         ]
-        sync = SFSyncOperation.objects.create(user=request.user, operations_list=operations)
-        sync.begin_tasks()
-
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_sync(str(request.user.id), operations, formatted_time)
         # initiate process
         return Response(data={"success": True})
 

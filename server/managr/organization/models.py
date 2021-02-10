@@ -105,6 +105,10 @@ class Account(TimeStampModel, IntegrationModel):
         blank=True,
         help_text="UUID from integration for parent account, saved in case of errors",
     )
+    owner = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="accounts", blank=True, null=True
+    )
+    external_owner = models.CharField(max_length=255, blank=True)
     secondary_data = JSONField(
         default=dict,
         null=True,
@@ -153,12 +157,7 @@ class Contact(TimeStampModel, IntegrationModel):
     then that will also be unique and added here
     """
 
-    title = models.CharField(max_length=255, blank=True)
-    first_name = models.CharField(max_length=255, blank=True)
-    last_name = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
-    phone_number = models.CharField(max_length=255, blank=True)
-    mobile_phone = models.CharField(max_length=255, blank=True)
     owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="contacts", blank=True, null=True
     )
@@ -171,7 +170,12 @@ class Contact(TimeStampModel, IntegrationModel):
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_account = models.CharField(max_length=255, blank=True)
-
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
     objects = ContactQuerySet.as_manager()
 
     class Meta:
@@ -181,16 +185,19 @@ class Contact(TimeStampModel, IntegrationModel):
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
+        data["owner"] = str(self.owner.id)
         return ContactAdapter(**data)
 
     def __str__(self):
-        return f"user {self.user.full_name}, contact name: {self.first_name} {self.last_name} integration: {self.integration_source}: {self.integration_id}"
+        return f"contact integration: {self.integration_source}: {self.integration_id}"
 
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique
         if self.integration_id:
             existing = (
-                Contact.objects.filter(integration_id=self.integration_id, user=self.user)
+                Contact.objects.filter(
+                    integration_id=self.integration_id, imported_by=self.imported_by
+                )
                 .exclude(id=self.id)
                 .first()
             )
