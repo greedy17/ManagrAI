@@ -105,6 +105,7 @@ class SalesforceAuthAccountAdapter:
                 type=val.get("dataType", None),
                 required=val.get("required", False),  # is required to pass val on create
                 updateable=val.get("updateable", False),  # cannot be patched
+                createable=val.get("createable", False),
                 options=[],
             )
 
@@ -219,13 +220,18 @@ class SalesforceAuthAccountAdapter:
         extra_fields = []
         if extra_items:
             extra_fields = list(
-                filter(lambda field_name: field_name, extra_items.get("fields", []),)
+                filter(
+                    lambda field: extra_items.get("fields")[field].get("creatable", False)
+                    or extra_items.get("fields")[field].get("updateable", False),
+                    extra_items.get("fields", []),
+                )
             )
         url = f"{self.instance_url}{sf_consts.SALSFORCE_OPP_QUERY_URI(self.salesforce_id, extra_fields)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
-        return self._handle_response(res)
+        res = self._handle_response(res)
+        res = self._format_resource_response(res, "Opportunity")
 
     def get_stage_count(self):
         res = client.get(

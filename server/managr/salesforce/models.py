@@ -99,6 +99,7 @@ class SFSyncOperation(TimeStampModel):
                     sf_account.get_validations(key)
                     # populate the sf account picklist values (may be unique to each user)
                     sf_account.get_picklist_values(key)
+                    break
                 except TokenExpired:
                     if attempts >= 5:
                         return logger.exception(
@@ -201,7 +202,7 @@ class SalesforceAuthAccount(TimeStampModel):
             fields = self.object_fields.get(resource).get("fields", [])
             for k, v in values.items():
                 if k in fields:
-                    fields[k]["options"] = v["values"]
+                    fields[k]["options"] = v
                     continue
 
         self.save()

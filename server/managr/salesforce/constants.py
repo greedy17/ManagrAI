@@ -73,8 +73,21 @@ SALESFORCE_QUERY_LIMIT = 500
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 
 
+CONTACT_ROLE_DEFAULT_FIELDS = [
+    # if a user has access to the contactrole we can assume they have access
+    # to the id field (and most likely the role field)
+    "Id",
+    "Role",
+]
+OPP_CHILD_ATTRIBUTES = [
+    # Users have access to different fields
+    # we are looking for these to add as a subquery
+    # if they exist we can use them
+    "OpportunityContactRoles",
+    "OpportunityHistories",  # last stage update comes from this object
+]
 STANDARD_CONTACT_FIELDS = [
-    # CURRENTLY WE RETRIEVE CONTACTS FROM OPPS DOWN THE LINE WILL SYNC CONTACTS AS WELL
+    # standard fields that we save as part of our db's rather than metadata
     "Id",
     "FirstName",
     "LastName",
@@ -84,6 +97,7 @@ STANDARD_CONTACT_FIELDS = [
     "Phone",
 ]
 STANDARD_OPP_FIELDS = [
+    # standard fields that we save as part of our db's rather than metadata
     "Id",
     "Name",
     "Amount",
@@ -96,16 +110,22 @@ STANDARD_OPP_FIELDS = [
 ]
 
 
-STANDARD_OPP_CONTACT_FIELDS = list(map(lambda field: f"Contact.{field}", STANDARD_CONTACT_FIELDS))
 STANDARD_ACCOUNT_FIELDS = ["Id", "Name", "Type", "ParentId", "Website", "PhotoUrl"]
 
 SALSFORCE_ACCOUNT_QUERY_URI = (
     lambda owner_id: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join(STANDARD_ACCOUNT_FIELDS)} from Account WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 )
 SALSFORCE_STAGE_QUERY_URI = f"{CUSTOM_BASE_URI}/query/?q=SELECT id, MasterLabel, ForecastCategory, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-SALSFORCE_OPP_QUERY_URI = (
-    lambda owner_id, fields=[],: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join([fields])}, (SELECT {', '.join(STANDARD_OPP_CONTACT_FIELDS)} FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-)
+
+
+def SALSFORCE_OPP_QUERY_URI(owner_id, fields, childRelationshipFields=[]):
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+    if len(childRelationshipFields):
+        for rel, v in childRelationshipFields.items():
+            url += f" (SELECT {','.join(rel.fields)} FROM {rel})"
+
+    return f"{url} FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+
 
 SALSFORCE_ACCOUNT_QUERY_URI_COUNT = lambda owner_id: (
     f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Account WHERE OwnerId = '{owner_id}'"
