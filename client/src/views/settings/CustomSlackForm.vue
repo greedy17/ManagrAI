@@ -272,6 +272,11 @@ export default {
     &--disabled {
       color: $dark-gray-blue;
       cursor: initial;
+
+      &:hover {
+        font-weight: initial;
+        color: initial;
+      }
     }
   }
 }
