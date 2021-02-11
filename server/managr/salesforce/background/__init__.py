@@ -128,7 +128,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync OPPORTUNITY data for user {user_id} after {attempts} tries"
+                    f"Failed to sync {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
                 sf.regenerate_token()

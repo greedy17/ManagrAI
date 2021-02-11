@@ -26,7 +26,7 @@ def SALSFORCE_RESOURCE_QUERY_URI(owner_id, resource, fields, childRelationshipFi
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
-            url += f" (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
 
     return f"{url} FROM {resource} WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 

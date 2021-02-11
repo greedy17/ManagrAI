@@ -103,47 +103,17 @@ class OpportunitySerializer(serializers.ModelSerializer):
         # remove contacts from validation
 
         contacts = data.pop("contacts", [])
+        contacts = Contact.objects.filter(integration_id__in=contacts).values_list("id", flat=True)
+        data.update({"contacts": contacts})
         internal_data = super().to_internal_value(data)
-        internal_data.update({"contacts": contacts})
         return internal_data
 
     def create(self, validated_data):
         try:
-
-            contacts_to_add = list()
-            for contact in validated_data.pop("contacts", []):
-                existing_contact = Contact.objects.filter(
-                    integration_id=contact.get("integration_id"), user__id=contact.get("user"),
-                ).first()
-                if existing_contact:
-                    serializer = ContactSerializer(
-                        instance=existing_contact, data=contact, partial=True
-                    )
-                else:
-                    serializer = ContactSerializer(data=contact)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                contacts_to_add.append(serializer.data["id"])
-            validated_data.update({"contacts": contacts_to_add})
             return super().create(validated_data)
         except ResourceAlreadyImported:
             pass
 
     def update(self, instance, validated_data):
-        contacts_to_add = list()
-        for contact in validated_data.pop("contacts", []):
-            existing_contact = Contact.objects.filter(
-                integration_id=contact.get("integration_id"), user__id=contact.get("user"),
-            ).first()
-            if existing_contact:
-                serializer = ContactSerializer(
-                    instance=existing_contact, data=contact, partial=True
-                )
-            else:
-                serializer = ContactSerializer(data=contact)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            contacts_to_add.append(serializer.data["id"])
-        validated_data.update({"contacts": contacts_to_add})
         return super().update(instance, validated_data)
 

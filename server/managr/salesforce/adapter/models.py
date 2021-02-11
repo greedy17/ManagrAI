@@ -425,7 +425,7 @@ class OpportunityAdapter:
             },
             sf_consts.OPPORTUNITY_HISTORIES: {
                 "fields": sf_consts.OPPORTUNITY_HISTORY_FIELDS,
-                "attrs": [sf_consts.OPPORTUNITY_HISTORY_ATTRS],
+                "attrs": sf_consts.OPPORTUNITY_HISTORY_ATTRS,
             },
         }
 
@@ -452,11 +452,8 @@ class OpportunityAdapter:
         return None
 
     @staticmethod
-    def _format_contacts_list(contacts, user_id, mapping):
-        formatted_contacts = list()
-        for contact in contacts:
-            formatted_contacts.append(ContactAdapter.from_api(contact, user_id, mapping).as_dict)
-        return formatted_contacts
+    def _format_contacts_list(contacts):
+        return list(map(lambda contact: contact["ContactId"], contacts))
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
@@ -473,7 +470,7 @@ class OpportunityAdapter:
         )
         formatted_data["contacts"] = (
             OpportunityAdapter._format_contacts_list(
-                data.get("OpportunityContactRoles").get("records"), user_id, []
+                data.get("OpportunityContactRoles").get("records")
             )
             if data.get("OpportunityContactRoles", None)
             else []

@@ -1,7 +1,7 @@
 import functools
 import logging
 
-LOGGER = logging.getLogger("lighten")
+LOGGER = logging.getLogger("managr")
 
 
 def log_all_exceptions(func):
