@@ -1,26 +1,27 @@
-Set ngrok to the current request_url at: https://api.slack.com/apps/A01ERE1QAE9/interactive-messages
+# Set Up and Use the Managr Slack Integration
 
-(feel free to change it!)
+Set ngrok to the current request_url at:
 
-```
-ngrok http -subdomain=managr-request-endpoint 8000
-```
+    https://api.slack.com/apps/A01ERE1QAE9/interactive-messages
 
-ENV variables:
+Feel free to change it as necessary.
 
-```
-SLACK_CLIENT_ID=3505648522.1501477826485
-SLACK_SECRET= __
+    ngrok http -subdomain=managr-request-endpoint 8000
 
-```
+Set the following variables in the .env file:
 
-Important Notes:
+    SLACK_CLIENT_ID=3505648522.1501477826485
+    SLACK_SECRET= __
 
-- rotating/expiring Slack access tokens has not been implemented.
+## Important Notes
+
+Rotating/expiring Slack access tokens has not been implemented.
   - https://api.slack.com/legacy/workspace-apps/rotating-and-refreshing-credentials
-- validating an incoming webhook is from Slack is not currently working.
-  - managr.slack.helpers.utils
-- endpoint for getting the Slack URL for a message is not implemented.
+
+Validating an incoming webhook is from Slack is not currently working.
+  - See: `managr.slack.helpers.utils`
+
+Endpoint for getting the Slack URL for a message is not implemented.
   - managr.slack.constants.CHAT_GET_PERMALINK
   - can leverage managr.slack.helpers.requests
 
@@ -28,7 +29,7 @@ Important Notes:
 
 The reason the `l` , `o` , and `u` params are single-character params instead of more descriptively named is due to: `managr.slack.utils.action_with_params` .
 
-There are three “types” of payload that we are currently leveraging from Slack. These are:
+There are three “types” of payloads supported by Slack that we are currently using. These are:
 
 - `block_actions` - sent when user interacts with the UI (e.g. button) in a Slack Message.
 

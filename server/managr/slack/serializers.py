@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import OrganizationSlackIntegration, UserSlackIntegration
+from .models import OrganizationSlackIntegration, OrgCustomSlackForm, UserSlackIntegration
 
 
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
@@ -20,3 +20,10 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
             "slack_id",
             "datetime_created",
         )
+
+
+class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrgCustomSlackForm
+        fields = ("id", "organization", "config")
+        read_only_fields = ("organization",)
