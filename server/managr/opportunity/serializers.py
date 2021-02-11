@@ -1,3 +1,4 @@
+from datetime import datetime
 from collections import OrderedDict
 
 
@@ -6,9 +7,7 @@ from django.core.paginator import Paginator
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-
 from rest_framework import status, filters, permissions
-
 from rest_framework.response import Response
 
 from managr.organization.models import Stage, Account, Contact
@@ -70,12 +69,21 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "secondary_data",
         )
 
+    def _format_date_time_from_api(self, d):
+        if d and len(d) > 10:
+            return datetime.strptime(d, "%Y-%m-%dT%H:%M:%S.%f%z")
+        elif d and len(d) <= 10:
+            return datetime.strptime(d, "%Y-%m-%d")
+        return None
+
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
-        owner = data.get("owner", None)
-        account = data.get("account", None)
-        stage = data.get("stage", None)
-        forecast_category = data.get("forecast_category", None)
+        owner = data.get("external_owner", None)
+        account = data.get("external_account", None)
+        if not data.get("external_account", None):
+            data.update({"external_account": ""})
+        if not data.get("external_owner", None):
+            data.update({"external_owner": ""})
         if owner:
             sf_account = (
                 SalesforceAuthAccount.objects.filter(salesforce_id=owner)
@@ -90,60 +98,22 @@ class OpportunitySerializer(serializers.ModelSerializer):
             ).first()
             acct = acct.id if acct else acct
             data.update({"account": acct})
-        if stage:
-            stge = Stage.objects.filter(label=stage, organization__users__id=imported_by).first()
-            stge = stge.id if stge else stge
-            data.update({"stage": stge})
-        if forecast_category:
-            formatted_category = None
-            for category in opp_consts.FORECAST_CHOICES:
-                if category[1] == forecast_category:
-                    formatted_category = category[0]
-            if formatted_category:
-                data.update({"forecast_category": formatted_category})
+        if data.get("last_activity_date"):
+            data["last_activity_date"] = self._format_date_time_from_api(data["last_activity_date"])
         # remove contacts from validation
+
         contacts = data.pop("contacts", [])
+        contacts = Contact.objects.filter(integration_id__in=contacts).values_list("id", flat=True)
+        data.update({"contacts": contacts})
         internal_data = super().to_internal_value(data)
-        internal_data.update({"contacts": contacts})
         return internal_data
 
     def create(self, validated_data):
         try:
-
-            contacts_to_add = list()
-            for contact in validated_data.pop("contacts", []):
-                existing_contact = Contact.objects.filter(
-                    integration_id=contact.get("integration_id"), user__id=contact.get("user"),
-                ).first()
-                if existing_contact:
-                    serializer = ContactSerializer(
-                        instance=existing_contact, data=contact, partial=True
-                    )
-                else:
-                    serializer = ContactSerializer(data=contact)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                contacts_to_add.append(serializer.data["id"])
-            validated_data.update({"contacts": contacts_to_add})
             return super().create(validated_data)
         except ResourceAlreadyImported:
             pass
 
     def update(self, instance, validated_data):
-        contacts_to_add = list()
-        for contact in validated_data.pop("contacts", []):
-            existing_contact = Contact.objects.filter(
-                integration_id=contact.get("integration_id"), user__id=contact.get("user"),
-            ).first()
-            if existing_contact:
-                serializer = ContactSerializer(
-                    instance=existing_contact, data=contact, partial=True
-                )
-            else:
-                serializer = ContactSerializer(data=contact)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            contacts_to_add.append(serializer.data["id"])
-        validated_data.update({"contacts": contacts_to_add})
         return super().update(instance, validated_data)
 

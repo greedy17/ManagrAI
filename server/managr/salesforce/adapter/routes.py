@@ -1,5 +1,9 @@
-from .adapter import OpportunityAdapter
+from . import models as model_adapters
+from managr.salesforce import constants as sf_consts
 
-
-routes = {"Opportunity": OpportunityAdapter}
+routes = {
+    sf_consts.RESOURCE_SYNC_ACCOUNT: model_adapters.AccountAdapter,
+    sf_consts.RESOURCE_SYNC_OPPORTUNITY: model_adapters.OpportunityAdapter,
+    sf_consts.RESOURCE_SYNC_CONTACT: model_adapters.ContactAdapter,
+}
 

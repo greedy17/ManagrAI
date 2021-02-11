@@ -15,22 +15,31 @@ REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
-SALESFORCE_FIELDS_URI = (
-    lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
-)  # defaultRecordTypeId
-
+SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
 
 
 # SF CUSTOM URI QUERIES
+def SALSFORCE_RESOURCE_QUERY_URI(owner_id, resource, fields, childRelationshipFields=[]):
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+    if len(childRelationshipFields):
+        for rel, v in childRelationshipFields.items():
+            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
 
-SALSFORCE_OPP_QUERY_URI_COUNT = lambda owner_id: (
-    f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Opportunity WHERE OwnerId = '{owner_id}'"
-)
+    return f"{url} FROM {resource} WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+
+
+def SF_COUNT_URI(resource, owner_id):
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from {resource}"
+    if owner_id:
+        url = f"{url} WHERE OwnerId = '{owner_id}'"
+    return url
+
+
 SALESFORCE_VALIDATION_QUERY = (
-    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND is_active = 'true'"
+    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
 )
 
 # SF HEADERS
@@ -65,10 +74,16 @@ AUTHORIZATION_QUERY = urlencode(
         "state": "SALESFORCE",
     }
 )
+SALESFORCE_JSON_HEADER = {"Content-Type": "application/json"}
+SALESFORCE_BEARER_AUTH_HEADER = lambda x: dict(Authorization=f"Bearer {x}")
 
-RESOURCE_SYNC_ACCOUNT = "ACCOUNT"
-RESOURCE_SYNC_OPPORTUNITY = "OPPORTUNITY"
-RESOURCE_SYNC_STAGE = "STAGE"
+
+RESOURCE_SYNC_ACCOUNT = "Account"
+RESOURCE_SYNC_OPPORTUNITY = "Opportunity"
+RESOURCE_SYNC_CONTACT = "Contact"
+SALESFORCE_RESOURCE_TASK = "Task"
+
+
 SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESOURCE_SYNC"
 
 
@@ -76,17 +91,36 @@ SALESFORCE_QUERY_LIMIT = 500
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 
 
-STANDARD_CONTACT_FIELDS = [
-    # CURRENTLY WE RETRIEVE CONTACTS FROM OPPS DOWN THE LINE WILL SYNC CONTACTS AS WELL
+OPPORTUNITY_CONTACT_ROLE_FIELDS = [
+    # if a user has access to the contactrole we can assume they have access
+    # to the id field (and most likely the role field, and contactid field)
     "Id",
-    "FirstName",
-    "LastName",
+    "Role",
+    "ContactId",
+]
+
+OPPORTUNITY_HISTORY_FIELDS = ["Id", "CreatedDate"]
+OPPORTUNITY_HISTORY_ATTRS = ["LIMIT 1"]
+
+
+OPPORTUNITY_CONTACT_ROLES = "OpportunityContactRoles"
+OPPORTUNITY_HISTORIES = "OpportunityHistories"
+OPP_CHILD_RELATIONSHIPS = [
+    # Users have access to different fields
+    # we are looking for these to add as a subquery
+    # if they exist we can use them
+    OPPORTUNITY_CONTACT_ROLES,
+    OPPORTUNITY_HISTORIES,  # last stage update comes from this object
+]
+
+
+STANDARD_CONTACT_FIELDS = [
+    # standard fields that we save as part of our db's rather than metadata
+    "Id",
     "Email",
-    "Title",
-    "MobilePhone",
-    "Phone",
 ]
 STANDARD_OPP_FIELDS = [
+    # standard fields that we save as part of our db's rather than metadata
     "Id",
     "Name",
     "Amount",
@@ -99,27 +133,9 @@ STANDARD_OPP_FIELDS = [
 ]
 
 
-STANDARD_OPP_CONTACT_FIELDS = list(map(lambda field: f"Contact.{field}", STANDARD_CONTACT_FIELDS))
 STANDARD_ACCOUNT_FIELDS = ["Id", "Name", "Type", "ParentId", "Website", "PhotoUrl"]
 
-SALSFORCE_ACCOUNT_QUERY_URI = (
-    lambda owner_id: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join(STANDARD_ACCOUNT_FIELDS)} from Account WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-)
-SALSFORCE_STAGE_QUERY_URI = f"{CUSTOM_BASE_URI}/query/?q=SELECT id, MasterLabel, ForecastCategory, ApiName, IsActive, SortOrder, IsClosed, IsWon, Description from OpportunityStage order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-SALSFORCE_OPP_QUERY_URI = (
-    lambda owner_id, fields=[],: f"{CUSTOM_BASE_URI}/query/?q=SELECT {', '.join([fields])}, (SELECT {', '.join(STANDARD_OPP_CONTACT_FIELDS)} FROM OpportunityContactRoles), (SELECT CreatedDate FROM OpportunityHistories limit 1) FROM Opportunity WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
-)
 
-SALSFORCE_ACCOUNT_QUERY_URI_COUNT = lambda owner_id: (
-    f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from Account WHERE OwnerId = '{owner_id}'"
-)
-SALSFORCE_STAGE_QUERY_URI_COUNT = (
-    f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from OpportunityStage"
-)
-
-
-SALESFORCE_JSON_HEADER = {"Content-Type": "application/json"}
-SALESFORCE_BEARER_AUTH_HEADER = lambda x: dict(Authorization=f"Bearer {x}")
 """
 u = custom uri
 r = resource 
@@ -128,10 +144,8 @@ k = resource id
 """
 SALESFORCE_WRITE_URI = lambda u, r, k: f"{u}{CUSTOM_BASE_URI}/sobjects/{r}/{k}"
 
-SALESFORCE_RESOURCE_OPPORTUNITY = "Opportunity"
+
 SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE = "OpportunityContactRole"
-SALESFORCE_RESOURCE_CONTACT = "Contact"
-SALESFORCE_RESOURCE_TASK = "Task"
 
 SALESFORCE_CONTACT_VIEW_URI = lambda u, k: f"{u}/lightning/r/Contact/{k}/view"
 
