@@ -70,8 +70,8 @@ export default class SlackAPI {
 
   postOrgCustomForm(data) {
     return this.client
-      .post(SLACK_CUSTOM_FORM_ENDPOINT, data)
-      .then(response => response.data)
+      .patch(SLACK_CUSTOM_FORM_ENDPOINT + '/' + data.id + '/', data)
+      .then(response => objectToCamelCase(response.data))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }
 }

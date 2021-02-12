@@ -1,60 +1,69 @@
 <template>
   <div class="slack-form-builder">
-    <div class="slack-form-builder__sf-fields">
-      <h4>Available Fields</h4>
-      <p><i>Click a field to add it to the form.</i></p>
-      <div
-        v-for="field in sfOpportunityFieldsAvailableToAdd"
-        :key="field.key"
-        class="slack-form-builder__sf-field"
-        @click="() => onAddField(field)"
-      >
-        {{ field.label }}
+    <div>
+      <div class="slack-from-builder__sf-validations">
+        <h4>Validations</h4>
+        <template v-if="showValidations">
+          <div v-for="val in sfValidations">
+            <span>{{ val.description }}</span>
+            <span>{{ val.message }}</span>
+          </div>
+        </template>
       </div>
     </div>
-
-    <div class="slack-form-builder__form">
-      <div class="form-header">
-        <div class="form-header__left">
-          <h3>Customize Your Slack Form</h3>
-        </div>
-        <div class="form-header__right">
-          <p v-if="this.formHasChanges" style="margin-right: 1rem;">
-            <i>Changes detected!</i>
-          </p>
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!this.formHasChanges"
-          />
+    <div style="display:flex;">
+      <div class="slack-form-builder__sf-fields">
+        <h4>Available Fields</h4>
+        <p><i>Click a field to add it to the form.</i></p>
+        <div
+          v-for="field in sfOpportunityFieldsAvailableToAdd"
+          :key="field.key"
+          class="slack-form-builder__sf-field"
+          @click="() => onAddField(field)"
+        >
+          {{ field.label }}
         </div>
       </div>
-      <div
-        v-for="(field, index) in customSlackFormConfig.fields"
-        :key="field.key"
-        class="form-field"
-      >
-        <div class="form-field__left">
-          <div class="form-field__label">
-            {{ field.label }}
+
+      <div class="slack-form-builder__form">
+        <div class="form-header">
+          <div class="form-header__left">
+            <h3>Customize Your Slack Form</h3>
+          </div>
+          <div class="form-header__right">
+            <PulseLoadingSpinnerButton
+              @click="onSave"
+              class="primary-button"
+              text="Save"
+              :loading="savingForm"
+            />
           </div>
         </div>
-        <div class="form-field__right">
-          <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
-          <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
-          <div
-            class="form-field__btn form-field__remove-btn"
-            :class="{ 'form-field__remove-btn--disabled': field.required }"
-            :title="
-              field.required
-                ? 'This field is required and cannot be removed.'
-                : 'Remove this field from the form'
-            "
-            @click="() => !field.required && onRemoveField(field)"
-          >
-            {{ field.required ? 'required' : '× remove' }}
+        <div
+          v-for="(field, index) in customSlackFormConfig.fields"
+          :key="field.key"
+          class="form-field"
+        >
+          <div class="form-field__left">
+            <div class="form-field__label">
+              {{ field.label }}
+            </div>
+          </div>
+          <div class="form-field__right">
+            <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
+            <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
+            <div
+              class="form-field__btn form-field__remove-btn"
+              :class="{ 'form-field__remove-btn--disabled': field.required }"
+              :title="
+                field.required
+                  ? 'This field is required and cannot be removed.'
+                  : 'Remove this field from the form'
+              "
+              @click="() => !field.required && onRemoveField(field)"
+            >
+              {{ field.required ? 'required' : '× remove' }}
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +88,14 @@ export default {
     formType: {
       type: String,
       required: true,
+    },
+    resource: {
+      type: String,
+      required: true,
+    },
+    showValidations: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -105,9 +122,13 @@ export default {
     formFields() {
       return this.customSlackFormConfig ? this.customSlackFormConfig.fields : []
     },
+    sfValidations() {
+      return this.$store.state.user.salesforceAccountRef.objectFields[this.resource].validations
+    },
     sfOpportunityFieldsAsList() {
       // Flatten the Salesforce-provided object of fields to a list of fields
-      const oppFields = this.$store.state.user.salesforceAccountRef.objectFields.Opportunity.fields
+      const oppFields = this.$store.state.user.salesforceAccountRef.objectFields[this.resource]
+        .fields
       const result = []
       for (const [key, value] of Object.entries(oppFields)) {
         result.push({ ...value })
@@ -116,14 +137,25 @@ export default {
     },
     sfOpportunityFieldsAvailableToAdd() {
       // Get SF fields that are updateable and not already added to the form
-      let fieldType = this.formType == 'CREATE' ? 'createable' : 'updateable'
+      // if the form is a create then show creatable or createable and updateable fields
+      // if not show updateable only
+
       if (this.sfOpportunityFieldsAsList) {
-        return this.sfOpportunityFieldsAsList.filter(
-          sfField =>
-            sfField[fieldType] &&
-            sfField.type !== 'Reference' &&
-            !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
-        )
+        if (this.formType == 'CREATE') {
+          return this.sfOpportunityFieldsAsList.filter(
+            sfField =>
+              sfField['createable'] &&
+              sfField.type !== 'Reference' &&
+              !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
+          )
+        } else {
+          return this.sfOpportunityFieldsAsList.filter(
+            sfField =>
+              sfField['updateable'] &&
+              sfField.type !== 'Reference' &&
+              !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
+          )
+        }
       } else {
         return []
       }
@@ -175,10 +207,14 @@ export default {
     },
     onSave() {
       this.savingForm = true
-      this.formHasChanges = false
-      SlackOAuth.api.postOrgCustomForm({ config: this.customSlackFormConfig }).finally(() => {
-        this.savingForm = false
-      })
+      SlackOAuth.api
+        .postOrgCustomForm({ ...this.customForm, config: this.customSlackFormConfig })
+        .then(res => {
+          this.$emit('update:selectedForm', res)
+        })
+        .finally(() => {
+          this.savingForm = false
+        })
     },
   },
 }
@@ -189,10 +225,12 @@ export default {
 
 .slack-form-builder {
   display: flex;
+  flex-direction: column;
 
-  &__sf-fields {
+  &__sf-fields,
+  &__sf-validations {
     flex: 2;
-    margin-right: 1rem;
+    margin-right: -1rem;
   }
 
   &__sf-field {

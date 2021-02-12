@@ -127,7 +127,8 @@ def _generate_forms(user_id):
         if slack_form:
             current_config = slack_form.config
             # replace all current fields that exist in the new fields
-            # remove any fields that no longer exist
+            # re append items that were not part of the automatic list
+            # TODO: Still need to check if previous fields exist (currently this is not an issue as the field will not be sent)
             current_fields = current_config.get("fields", [])
             new_form_fields = new_form_config.get("fields", [])
             combined_fields = []
@@ -138,11 +139,16 @@ def _generate_forms(user_id):
                         if field["key"] == f["key"]:
                             del current_fields[i]
             else:
-                for i, field in enumerate(current_fields):
-                    for f in new_form_fields:
-                        combined_fields.append(f)
-                        if field["key"] == f["key"]:
-                            del current_fields[i]
+                current_dict = {}
+                for field in current_fields:
+                    current_dict[field["key"]] = field
+                new_dict = {}
+                for field in new_form_fields:
+                    new_dict[field["key"]] = field
+                set_diff = set(current_dict) - set(new_dict)
+                combined_fields = new_form_fields
+                for val in set_diff:
+                    combined_fields.append(current_dict[val])
 
             new_form_config["fields"] = combined_fields
             slack_form.config = new_form_config
@@ -187,15 +193,9 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
             serializer = serializer_class(data=item.as_dict)
         # check if already exists and update
 
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        except Exception as e:
-            print(e)
-            logger.exception(
-                f"failed to import {resource} with integration id of {item.integration_id} from {item.integration_source} for user {str(user.id)} {e}"
-            )
-            pass
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
     return
 
 

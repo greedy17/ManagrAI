@@ -25,8 +25,8 @@
         </div>
       </div>
       <div class="box__content">
-        <template v-if="formByType">
-          {{ formByType.resource }}
+        <template v-if="selectedForm">
+          {{ selectedForm.resource }}
           <p>
             <i
               >Required Fields have been pre-filled as part of the form, add or remove additional
@@ -34,9 +34,17 @@
             >
             <br />
             <strong>Additional Validations may apply for your Salesforce Resources</strong
-            ><button>Click Here</button><strong>to view them</strong>
+            ><button @click="showValidations = !showValidations">Click Here</button
+            ><strong>to view them</strong>
           </p>
-          <CustomSlackForm :customForm="formByType" :formType="selectedTab" />
+
+          <CustomSlackForm
+            :show-validations="showValidations"
+            :customForm="selectedForm"
+            :formType="selectedTab"
+            :resource="resource"
+            v-on:update:selectedForm="fnTest($event)"
+          />
         </template>
         <template v-else>
           <p>
@@ -54,33 +62,64 @@
 <script>
 import CustomSlackForm from '../CustomSlackForm'
 import { mapState } from 'vuex'
+import SlackOAuth, { salesforceFields } from '@/services/slack'
 export default {
   name: 'FormSettings',
   components: { CustomSlackForm },
   data() {
     return {
-      forms: [],
+      allForms: [],
+      formsByType: [],
       isLoading: false,
-      selectedTab: 'MEETING_REVIEW',
+      selectedTab: null,
+      resource: 'Opportunity',
+      selectedForm: null,
+      showValidations: false,
     }
   },
+  watch: {
+    selectedTab: {
+      immediate: true,
+      handler(val) {
+        let form = this.formsByType
+          .filter(form => form['resource'] == this.resource)
+          .find(f => f.formType == val)
+
+        if (form && typeof form != undefined) {
+          this.selectedForm = form
+        } else this.selectedForm = null
+      },
+    },
+  },
   async created() {
-    console.log('niether')
+    try {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+    } catch (error) {
+      console.log(error)
+    }
+    this.toggleSelectedTab('MEETING_REVIEW')
   },
   computed: {
     ...mapState(['user']),
-    formByType() {
-      let form = this.forms.find(form => form.formType == this.selectedTab)
-
-      if (form && typeof form != undefined) {
-        return form
-      }
-      return null
-    },
   },
   methods: {
     toggleSelectedTab(tab) {
       this.selectedTab = tab
+    },
+    fnTest(event) {
+      this.selectedForm = event
+      let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
+      console.log(index)
+      console.log(this.formsByType.length, 'bef')
+      if (~index) {
+        console.log('slcing and dicing')
+        this.formsByType[index] = this.selectedForm
+        this.formsByType = [...this.formsByType]
+        console.log(this.formsByType)
+      }
+      console.log(this.formsByType)
+      console.log(this.formsByType.length, 'after')
     },
   },
 }

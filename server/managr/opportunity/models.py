@@ -106,9 +106,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if sf_account:
             # return an object with creatable and required fields
             fields = sf_account.object_fields.get("Opportunity", {}).get("fields", {})
-            validations = sf_account.object_fields.get("Opportunity", {}).get("validations", {})
             if type == "CREATE":
-
                 return dict(
                     fields=list(
                         filter(
@@ -148,6 +146,13 @@ class Opportunity(TimeStampModel, IntegrationModel):
                     .get("fields")
                     .get("CloseDate", None)
                 )
+                amount = (
+                    sf_account.object_fields.get("Opportunity", {})
+                    .get("fields")
+                    .get("Amount", None)
+                )
+                if amount:
+                    amount["required"] = True
                 return {
                     "fields": [
                         meeting_type_field,
@@ -155,6 +160,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
                         stage,
                         forecast_category_name,
                         close_date,
+                        amount,
                     ],
                 }
 
