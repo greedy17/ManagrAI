@@ -33,7 +33,6 @@ class SalesforceAuthAccountAdapter:
         self.object_fields = kwargs.get("object_fields", {})
 
     @staticmethod
-    # @log_all_exceptions
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
@@ -90,8 +89,19 @@ class SalesforceAuthAccountAdapter:
         return formatted_data
 
     @staticmethod
-    def format_child_response(data, class_name):
-        return
+    def custom_field(
+        label, key, type="String", required=True, updateable=True, creatable=True, options=[]
+    ):
+        """ Helper method to convert custom fields we want to add to forms that we do not get from SF"""
+        return dict(
+            label=label,
+            key=key,
+            type=type,
+            required=required,  # is required to pass val on create
+            updateable=updateable,  # cannot be patched
+            createable=creatable,
+            options=options,
+        )
 
     def format_field_options(self, res_data=[]):
         fields = res_data["fields"]

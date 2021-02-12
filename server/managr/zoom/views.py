@@ -121,22 +121,18 @@ def redirect_from_zoom(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_meetings_webhook(request):
-    logger.debug("retrieved here")
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
-    # for v1 only tracking meeting.ended
+    # only tracking meeting.ended
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}
         host_id = obj.get("host_id", None)
         meeting_uuid = obj.get("uuid", None)
         original_duration = obj.get("duration", None)
-        print(meeting_uuid)
         if not original_duration or original_duration < 0:
             original_duration = 0
-        ### move all this to a background task, zoom requires response in 60s
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
-
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
             _get_past_zoom_meeting_details(

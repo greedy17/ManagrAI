@@ -4,6 +4,9 @@ from rest_framework import (
     permissions,
     status,
     viewsets,
+    generics,
+    viewsets,
+    mixins,
 )
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
@@ -14,6 +17,7 @@ from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 
+from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
@@ -84,9 +88,12 @@ class SlackViewSet(viewsets.GenericViewSet,):
             text = {
                 "text": f"<!channel> your organization has enabled slack please integrate your account to receive notifications"
             }
-            # data = {
-            #     "blocks": get_block_set("zoom_meeting_initial", context=TEMPORARY_CONTEXT)
-            # }
+            # Generate the org's standard slack form only if the user has also integrated their salesforce account
+            # update the request data to contain required fields,
+            #
+
+            request.data.update()
+            self._post_org_custom_form(request)
             slack_requests.generic_request(url, text)
         else:
             team_id = data.get("team").get("id")
@@ -193,7 +200,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         # TODO: Add has sales manager permission
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="org-custom-form",
+        url_path="org-custom-forms",
     )
     def org_custom_form(self, request):
         """Create, Retrieve, or Update the Org's custom Slack form"""
@@ -236,3 +243,19 @@ class SlackViewSet(viewsets.GenericViewSet,):
         serializer.save()
 
         return Response(serializer.data)
+
+
+class SlackFormsViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+):
+    filterset_fields = [
+        "resource",
+    ]
+    serializer_class = OrgCustomSlackFormSerializer
+
+    def get_queryset(self):
+        return OrgCustomSlackForm.objects.for_user(self.request.user)
+

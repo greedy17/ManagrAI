@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import OrganizationSlackIntegration, UserSlackIntegration
+from . import models as slack_models
 
-admin.site.register(OrganizationSlackIntegration)
-admin.site.register(UserSlackIntegration)
+admin.site.register(slack_models.OrganizationSlackIntegration)
+admin.site.register(slack_models.OrgCustomSlackForm)
+admin.site.register(slack_models.UserSlackIntegration)

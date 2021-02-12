@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+from . import constants as slack_consts
 
 from managr.core.models import TimeStampModel
 
@@ -105,13 +106,46 @@ class UserSlackIntegration(TimeStampModel):
         ordering = ["user"]
 
 
+class OrgCustomSlackFormQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization_id)
+        else:
+            return self.none()
+
+
 class OrgCustomSlackForm(TimeStampModel):
     """Model to store the organizations JSON-based custom Slack form config."""
 
-    organization = models.OneToOneField(
-        "organization.Organization", related_name="custom_slack_form", on_delete=models.CASCADE,
+    organization = models.ForeignKey(
+        "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
+    )
+    form_type = models.CharField(
+        max_length=255,
+        choices=slack_consts.FORM_TYPES,
+        help_text="Type of forms created, can only have one of each type",
+    )
+    resource = models.CharField(
+        max_length=255,
+        choices=slack_consts.FORM_RESOURCES,
+        help_text="Resources we currently support custom forms for",
     )
     config = JSONField(
         default=dict,
         help_text="The configuration object for this organization's custom Slack form.",
     )
+
+    objects = OrgCustomSlackFormQuerySet.as_manager()
+
+    def __str__(self):
+        return f"Slack Form {self.resource}, {self.form_type}"
+
+    class Meta:
+        ordering = ["resource"]
+        unique_together = ["resource", "form_type", "organization"]
+
+
+# users can have a slack form for create,
+# update resources and one form for reviewing a meeting

@@ -12,6 +12,8 @@ from managr.organization.models import Account, Stage
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
+from managr.slack import constants as slack_consts
+from managr.slack.models import OrgCustomSlackForm
 
 from ..routes import routes
 from ..models import SFSyncOperation
@@ -44,6 +46,10 @@ def emit_sf_update_opportunity(user_id, meeting_review_id):
 
 def emit_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
     return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id)
+
+
+def emit_generate_forms(user_id):
+    return _generate_forms(user_id)
 
 
 @background(schedule=0)
@@ -106,6 +112,45 @@ def _process_gen_next_sync(user_id, operations_list):
         return logger.exception(f"User not found sync operation not created {user_id}")
 
     return SFSyncOperation.objects.create(user=user, operations_list=operations_list).begin_tasks()
+
+
+@background()
+@log_all_exceptions
+def _generate_forms(user_id):
+    ## TODO: Work on updating forms automatically with new fields
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    for form in slack_consts.INITIAL_FORMS:
+        resource, form_type = form.split(".")
+        slack_form = org.custom_slack_forms.filter(resource=resource, form_type=form_type).first()
+        new_form_config = routes[resource]["model"].generate_slack_form_config(user, form_type)
+        if slack_form:
+            current_config = slack_form.config
+            # replace all current fields that exist in the new fields
+            # remove any fields that no longer exist
+            current_fields = current_config.get("fields", [])
+            new_form_fields = new_form_config.get("fields", [])
+            combined_fields = []
+            if len(new_form_fields) >= len(current_fields):
+                for field in new_form_fields:
+                    combined_fields.append(field)
+                    for i, f in enumerate(current_fields):
+                        if field["key"] == f["key"]:
+                            del current_fields[i]
+            else:
+                for i, field in enumerate(current_fields):
+                    for f in new_form_fields:
+                        combined_fields.append(f)
+                        if field["key"] == f["key"]:
+                            del current_fields[i]
+
+            new_form_config["fields"] = combined_fields
+            slack_form.config = new_form_config
+            slack_form.save()
+        else:
+            OrgCustomSlackForm.objects.create(
+                organization=org, resource=resource, form_type=form_type, config=new_form_config,
+            )
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)

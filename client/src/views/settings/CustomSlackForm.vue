@@ -18,7 +18,6 @@
         <div class="form-header__left">
           <h3>Customize Your Slack Form</h3>
         </div>
-
         <div class="form-header__right">
           <p v-if="this.formHasChanges" style="margin-right: 1rem;">
             <i>Changes detected!</i>
@@ -32,7 +31,6 @@
           />
         </div>
       </div>
-
       <div
         v-for="(field, index) in customSlackFormConfig.fields"
         :key="field.key"
@@ -74,6 +72,15 @@ export default {
   components: {
     PulseLoadingSpinnerButton,
   },
+  props: {
+    customForm: {
+      type: Object,
+    },
+    formType: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
       salesforceFields,
@@ -82,42 +89,25 @@ export default {
       savingForm: false,
     }
   },
-  async created() {
-    // TODO: Retrieve Salesforce fields from the API
-
-    // ACTIVE SLACK AND SF INTEGRATIONS ARE REQUIRED FOR THIS FORM BUILDER
-    // TODO: Handle case where SF is not integrated
-    // TODO: Handle case where Slack is not integrated
-
-    // Retrieve the org's custom Slack form from the API
-    const NOT_FOUND = 'NOT_FOUND'
-    let response
-    try {
-      response = await SlackOAuth.api.getOrgCustomForm()
-    } catch (error) {
-      if (error.response.status === 404) {
-        response = NOT_FOUND
-      } else {
-        // Otherwise, rethrow the error
-        throw error
-      }
-    }
-
-    if (response === NOT_FOUND) {
-      // If there is a 404, initialize the Custom Slack Form Config with
-      // ONLY required and updateable fields
-      this.customSlackFormConfig.fields = this.sfOpportunityFieldsAsList.filter(
-        f => f.required && f.updateable,
-      )
-    } else {
-      // Otherwise, get the config from the response object
-      this.customSlackFormConfig = response.config
-    }
+  watch: {
+    customForm: {
+      deep: true,
+      handler(val) {
+        if (val) {
+          this.customSlackFormConfig = { ...this.customForm.config }
+        } else {
+          this.customSlackFormConfig = { fields: [] }
+        }
+      },
+    },
   },
   computed: {
+    formFields() {
+      return this.customSlackFormConfig ? this.customSlackFormConfig.fields : []
+    },
     sfOpportunityFieldsAsList() {
       // Flatten the Salesforce-provided object of fields to a list of fields
-      const oppFields = salesforceFields.Opportunity.fields
+      const oppFields = this.$store.state.user.salesforceAccountRef.objectFields.Opportunity.fields
       const result = []
       for (const [key, value] of Object.entries(oppFields)) {
         result.push({ ...value })
@@ -126,11 +116,17 @@ export default {
     },
     sfOpportunityFieldsAvailableToAdd() {
       // Get SF fields that are updateable and not already added to the form
-      return this.sfOpportunityFieldsAsList.filter(
-        sfField =>
-          sfField.updateable &&
-          !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
-      )
+      let fieldType = this.formType == 'CREATE' ? 'createable' : 'updateable'
+      if (this.sfOpportunityFieldsAsList) {
+        return this.sfOpportunityFieldsAsList.filter(
+          sfField =>
+            sfField[fieldType] &&
+            sfField.type !== 'Reference' &&
+            !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
+        )
+      } else {
+        return []
+      }
     },
   },
   methods: {

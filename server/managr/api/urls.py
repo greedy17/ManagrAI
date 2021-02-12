@@ -70,17 +70,7 @@ router.register("organizations", organization_views.OrganizationViewSet, "organi
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 
-""" router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
-router.register(
-    "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
-)
-router.register(
-    "notifications/settings",
-    core_views.NotificationSettingsViewSet,
-    "notification-settings",
-)
-"""
-
 
 router.register("slack", slack_views.SlackViewSet, "slack")
+router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
 urlpatterns += router.urls

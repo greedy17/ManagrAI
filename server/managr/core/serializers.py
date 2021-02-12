@@ -8,8 +8,10 @@ from managr.organization.serializers import (
     OrganizationSerializer,
     AccountSerializer,
 )
+from managr.salesforce.serializers import SalesforceAuthSerializer
 from managr.organization.models import Organization
 from managr.slack.serializers import UserSlackIntegrationSerializer
+
 
 from .models import (
     User,
@@ -41,7 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
     accounts_ref = AccountSerializer(many=True, source="organization.accounts", read_only=True)
     email_auth_account_ref = EmailAuthAccountSerializer(source="email_auth_account", read_only=True)
-
+    salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
 
     class Meta:
@@ -70,9 +72,11 @@ class UserSerializer(serializers.ModelSerializer):
             "email_auth_account",
             "email_auth_account_ref",
             "salesforce_account",
+            "salesforce_account_ref",
             "slack_ref",
             "zoom_account",
             "has_zoom_integration",
+            "has_salesforce_integration",
         )
 
     read_only_fields = (

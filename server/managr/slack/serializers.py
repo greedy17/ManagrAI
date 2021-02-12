@@ -25,5 +25,11 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
 class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrgCustomSlackForm
-        fields = ("id", "organization", "config")
+        fields = (
+            "id",
+            "organization",
+            "config",
+            "form_type",
+            "resource",
+        )
         read_only_fields = ("organization",)

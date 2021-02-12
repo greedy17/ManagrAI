@@ -38,11 +38,11 @@ class CustomAPIException:
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
         if self.error_class_name == "JSONDecodeError":
-            logger.error(f"An error occured with a zoom integration, {self.fn_name}")
+            logger.error(f"An error occured with a salesforce integration, {self.fn_name}")
             raise Api500Error()
         elif self.code == 401:
             raise TokenExpired()
-        elif self.code == 401:
+        elif self.code == 403:
             raise ApiRateLimitExceeded()
         else:
             raise ValidationError(

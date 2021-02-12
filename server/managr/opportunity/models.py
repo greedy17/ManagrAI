@@ -14,7 +14,7 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
-from managr.salesforce.adapter.models import OpportunityAdapter
+from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 
 # from managr.core import background as bg_task
 from . import constants as opp_consts
@@ -98,6 +98,67 @@ class Opportunity(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return OpportunityAdapter(**data)
+
+    @staticmethod
+    def generate_slack_form_config(user, type):
+        """Helper class to generate a slack form config for an org"""
+        sf_account = user.salesforce_account if user.has_salesforce_integration else None
+        if sf_account:
+            # return an object with creatable and required fields
+            fields = sf_account.object_fields.get("Opportunity", {}).get("fields", {})
+            validations = sf_account.object_fields.get("Opportunity", {}).get("validations", {})
+            if type == "CREATE":
+
+                return dict(
+                    fields=list(
+                        filter(
+                            lambda field: field["required"]
+                            and field["createable"]
+                            and field["type"] != "Reference",
+                            fields.values(),
+                        )
+                    ),
+                )
+            if type == "UPDATE":
+                # no required fields for update
+                return dict(fields=list())
+
+            if type == "MEETING_REVIEW":
+                meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Type", "meeting_type", type="Picklist", required=True, options=["test"]
+                )
+                meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Notes", "meeting_notes", type="String", required=True
+                )
+                # this is a managr form make forecast_category_name required
+                forecast_category_name = (
+                    sf_account.object_fields.get("Opportunity", {})
+                    .get("fields")
+                    .get("ForecastCategoryName", None)
+                )
+                if forecast_category_name:
+                    forecast_category_name["required"] = True
+                stage = (
+                    sf_account.object_fields.get("Opportunity", {})
+                    .get("fields")
+                    .get("StageName", None)
+                )
+                close_date = (
+                    sf_account.object_fields.get("Opportunity", {})
+                    .get("fields")
+                    .get("CloseDate", None)
+                )
+                return {
+                    "fields": [
+                        meeting_type_field,
+                        meeting_notes_field,
+                        stage,
+                        forecast_category_name,
+                        close_date,
+                    ],
+                }
+
+        return
 
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):

@@ -13,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 
+from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
 from managr.core.models import UserManager, TimeStampModel, IntegrationModel, User
@@ -137,6 +138,43 @@ class Account(TimeStampModel, IntegrationModel):
 
         return super(Account, self).save(*args, **kwargs)
 
+    @staticmethod
+    def generate_slack_form_config(user, type):
+        """Helper class to generate a slack form config for an org"""
+        sf_account = user.salesforce_account if user.has_salesforce_integration else None
+        if sf_account:
+            # return an object with creatable and required fields
+            fields = sf_account.object_fields.get("Account", {}).get("fields", {})
+            validations = sf_account.object_fields.get("Account", {}).get("validations", {})
+            if type == "CREATE":
+
+                return dict(
+                    fields=list(
+                        filter(
+                            lambda field: field["required"]
+                            and field["createable"]
+                            and field["type"] != "Reference",
+                            fields.values(),
+                        )
+                    ),
+                )
+            if type == "UPDATE":
+                # no required fields for update
+                return dict(fields=list())
+
+            if type == "MEETING_REVIEW":
+                meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Type", "meeting_type", type="Picklist", required=True, options=["test"]
+                )
+                meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Notes", "meeting_notes", type="String", required=True
+                )
+                return {
+                    "fields": [meeting_type_field, meeting_notes_field,],
+                }
+
+        return
+
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -149,13 +187,6 @@ class ContactQuerySet(models.QuerySet):
 
 
 class Contact(TimeStampModel, IntegrationModel):
-    """
-    Contacts are the point of contacts that belong to
-    an account, they must be unique (by email) and can
-    only belong to one account
-    If we have multiple organizations per account
-    then that will also be unique and added here
-    """
 
     email = models.CharField(max_length=255, blank=True)
     owner = models.ForeignKey(

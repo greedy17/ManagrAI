@@ -85,7 +85,11 @@ class SFSyncOperation(TimeStampModel):
         return f"{self.user.email} tasks {self.progress}% complete"
 
     def begin_tasks(self, attempts=1):
-        from managr.salesforce.background import emit_sf_sync, emit_gen_next_sync
+        from managr.salesforce.background import (
+            emit_sf_sync,
+            emit_gen_next_sync,
+            emit_generate_forms,
+        )
 
         sf_account = self.user.salesforce_account
         adapter = self.user.salesforce_account.adapter_class
@@ -99,6 +103,8 @@ class SFSyncOperation(TimeStampModel):
                     sf_account.get_validations(key)
                     # populate the sf account picklist values (may be unique to each user)
                     sf_account.get_picklist_values(key)
+                    # emit event to create forms
+                    emit_generate_forms(str(self.user.id))
                     break
                 except TokenExpired:
                     if attempts >= 5:

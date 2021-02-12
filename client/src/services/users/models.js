@@ -15,6 +15,7 @@ export default class User extends Model {
   static organization = new fields.Field()
   static organizationRef = new fields.Field()
   static salesforceAccount = new fields.Field()
+  static salesforceAccountRef = new fields.Field()
   static accountsRef = new fields.Field()
   static state = new fields.Field()
   static type = new fields.Field()

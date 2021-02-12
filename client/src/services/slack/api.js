@@ -7,7 +7,7 @@ const TEST_DM_ENDPOINT = '/slack/test-dm/'
 const GET_OAUTH_LINK_ENDPOINT = '/slack/get-oauth-link/'
 const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
-const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/org-custom-form/'
+const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -61,10 +61,10 @@ export default class SlackAPI {
   }
 
   // Org Custom Slack Forms
-  getOrgCustomForm() {
+  getOrgCustomForm(resource = null) {
     return this.client
-      .get(SLACK_CUSTOM_FORM_ENDPOINT)
-      .then(response => response.data)
+      .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource } })
+      .then(response => response.data.results.map(res => objectToCamelCase(res)))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm', enable400Alert: false }))
   }
 

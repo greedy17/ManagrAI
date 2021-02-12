@@ -189,7 +189,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
             if participant not in participants:
                 participants.append(participant)
 
-        if participants:
+        if len(participants):
             user = zoom_account.user
             participant_emails = set(
                 [participant.get("user_email", None) for participant in participants]
@@ -199,6 +199,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 contacts__email__in=participant_emails, owner__organization__id=user.organization.id
             ).first()
             meeting_contacts = []
+
             if opportunity:
                 existing_contacts = Contact.objects.filter(
                     email__in=participant_emails, user__organization__id=user.organization.id

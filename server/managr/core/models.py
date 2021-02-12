@@ -213,6 +213,10 @@ class User(AbstractUser, TimeStampModel):
     def has_slack_integration(self):
         return hasattr(self, "slack_integration")
 
+    @property
+    def has_salesforce_integration(self):
+        return hasattr(self, "salesforce_account")
+
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
 

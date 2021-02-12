@@ -26,6 +26,16 @@
           class="secondary-button"
         >
         </PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Show Forms"
+          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
+          @click="
+            $router.push({ name: 'OpportunityFormSettings', params: { resource: 'Opportunity' } })
+          "
+          v-if="hasSalesforceIntegration"
+          class="secondary-button"
+        >
+        </PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
