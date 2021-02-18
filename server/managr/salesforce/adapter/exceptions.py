@@ -17,6 +17,12 @@ class ApiRateLimitExceeded(Exception):
         super().__init__(self.message)
 
 
+class FieldValidationError(Exception):
+    def __init(self, message="Token Expired"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -44,6 +50,8 @@ class CustomAPIException:
             raise TokenExpired()
         elif self.code == 403:
             raise ApiRateLimitExceeded()
+        elif self.code == 400:
+            raise FieldValidationError(self.message)
         else:
             raise ValidationError(
                 {"detail": {"key": self.code, "message": self.message, "field": self.param,}}

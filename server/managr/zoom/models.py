@@ -236,23 +236,18 @@ class ZoomMeeting(TimeStampModel):
         null=True,
         blank=True,
     )
-
-    should_track = models.CharField(
-        max_length=255,
-        default="NOT_SELECTED",
-        choices=zoom_consts.MEETING_TRACKING_OPTIONS,
-        help_text="FUTURE DEVELOPMENT",
+    linked_account = models.ForeignKey(
+        "organization.Account",
+        on_delete=models.SET_NULL,
+        related_name="meetings",
+        null=True,
+        blank=True,
     )
 
-    notification_attempts = models.PositiveSmallIntegerField(
-        help_text="We make an attempt immedietly and after 2 hours", default=0
-    )
     scoring_in_progress = models.BooleanField(
         default=False, help_text="if an event is emitted to generate a score dont do it again",
     )
-    current_interaction = models.PositiveSmallIntegerField(
-        default=1, help_text="current slack form"
-    )
+
     is_closed = models.BooleanField(
         default=False,
         help_text="is closed is true when we expire attempts or a user has completed all steps",
@@ -284,6 +279,15 @@ class ZoomMeeting(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def meeting_resource(self):
+        if self.opportunity:
+            return "Opportunity"
+        elif self.linked_account and not self.opportunity:
+            return "Account"
+        else:
+            return None
 
     @property
     def should_retry(self):
@@ -333,19 +337,6 @@ class ZoomMeeting(TimeStampModel):
         return "This Meeting has not been scored yet"
 
     def delete(self, *args, **kwargs):
-        # if we still have access to slack and there is a form that is not completed
-        # update the meeting form to indicate it is no longer interactable
-        """
-        if self.slack_form:
-            if self.zoom_account.user.has_slack_integration:
-                # from managr.slack.helpers.requests import update_channel_message
-
-                ts, channel = self.slack_form.split("|")
-                res = update_channel_message(
-                    channel, ts, self.zoom_account.user.slack_integration.access_token
-                )
-                print(res.json())
-        """
         return super(ZoomMeeting, self).delete(*args, **kwargs)
 
 
@@ -363,17 +354,9 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The value must corespond to the values in the ActionChoice Model",
     )
-    forecast_category = models.CharField(
-        choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
-    )
-    stage = models.CharField(
-        blank=True,
-        null=True,
-        max_length=255,
-        help_text="The values must correspond to the values in the Stage model and by Org",
-    )
-    description = models.TextField(blank=True, null=True, max_length=255)
-    # next_step = models.TextField(blank=True, null=True, help_text="populates secondary description")
+    forecast_category = models.CharField(blank=True, null=True, max_length=255)
+    stage = models.CharField(blank=True, null=True, max_length=255,)
+    meeting_notes = models.TextField(blank=True, null=True, max_length=255)
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
@@ -408,7 +391,7 @@ class MeetingReview(TimeStampModel):
     custom_data = JSONField(
         default=dict,
         null=True,
-        help_text="All non primary data that is added to a form is saved as a json object for update",
+        help_text="All data that is added to a form is saved as a json object for update",
         max_length=500,
     )
 
@@ -430,16 +413,38 @@ class MeetingReview(TimeStampModel):
             if end_time
             else end_time
         )
-        meeting_type_string = ActionChoice.objects.filter(id=self.meeting_type).first().title
 
         data = dict(
-            Subject=f"Meeting - {meeting_type_string}",
-            Description=f"{self.description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+            Subject=f"Meeting - {self.meeting_type}",
+            Notes=f"{self.meeting_notes}, this meeting started on {formatted_start} and ended on {formatted_end} ",
             WhatId=self.meeting.opportunity.integration_id,
             ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
             Status="Completed",
             TaskSubType="Call",
         )
+        return data
+
+    @property
+    def meeting_resource(self):
+        """ determines whether this is a meeting review for a meeting with an opp or an acct"""
+        return self.meeting.meeting_resource
+
+    @property
+    def as_sf_update(self):
+        """ return data as an sf updateable object """
+        data = dict()
+        standard_fields = zoom_consts.STANDARD_MEETING_FIELDS[self.meeting_resource]
+        for field in self.__dict__:
+            if field in standard_fields:
+                if field == "amount":
+                    data["amount"] = str(self.amount)
+                elif field == "close_date":
+                    data["close_date"] = self.close_date.strftime("%Y-%m-%d")
+                else:
+                    data[field] = self.__dict__[field]
+
+        if self.custom_data:
+            data = {**data, **self.custom_data}
         return data
 
     @property
@@ -452,10 +457,21 @@ class MeetingReview(TimeStampModel):
         if self.prev_stage and not self.stage:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
+        user = self.meeting.zoom_account.user
+        sf_account = user.salesforce_account
+        stage_field = (
+            sf_account.object_fields.get("Opportunity", {}).get("fields", {}).get("StageName", None)
+        )
+        opts = []
+        if stage_field:
+            opts = stage_field.get("options", [])
         # Check moving from any stage to another
         if self.prev_stage and self.stage:
-            prev_stage_order = Stage.objects.filter(id=self.prev_stage,).first().order
-            current_stage_order = Stage.objects.filter(id=self.stage).first().order
+            for index, stage in enumerate(opts):
+                if self.prev_stage == stage["value"]:
+                    prev_stage_order = index
+                if self.stage == stage["value"]:
+                    current_stage_order = index
 
             if prev_stage_order < current_stage_order:
                 return zoom_consts.MEETING_REVIEW_PROGRESSED
@@ -476,10 +492,22 @@ class MeetingReview(TimeStampModel):
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
         if self.prev_forecast and self.forecast_category:
-            for index, forecast in enumerate(opp_consts.FORECAST_CHOICES):
-                if self.prev_forecast == forecast[0]:
+            # fetch the picklist values and check ordering
+            user = self.meeting.zoom_account.user
+            sf_account = user.salesforce_account
+            forecast_field = (
+                sf_account.object_fields.get("Opportunity", {})
+                .get("fields", {})
+                .get("ForecastCategoryName", None)
+            )
+            opts = []
+            if forecast_field:
+                opts = forecast_field.get("options", [])
+
+            for index, forecast in enumerate(opts):
+                if self.prev_forecast == forecast["value"]:
                     prev_forecast_rank = index
-                if self.forecast_category == forecast[0]:
+                if self.forecast_category == forecast["value"]:
                     current_forecast_rank = index
 
             if prev_forecast_rank > current_forecast_rank:
@@ -571,32 +599,6 @@ class MeetingReview(TimeStampModel):
             return score
         return 0
 
-    @property
-    def as_sf_update(self):
-        data = dict()
-        if self.stage:
-            data["stage"] = Stage.objects.filter(id=self.stage).values("label").first()["label"]
-            # hack our db saves capital constants sf expects the label not the value for the update
-        if self.forecast_category:
-            data["forecast_category"] = list(
-                map(
-                    lambda x: x[1],
-                    list(
-                        filter(
-                            lambda category: category[0] == self.forecast_category,
-                            opp_consts.FORECAST_CHOICES,
-                        )
-                    ),
-                )
-            )[0]
-        if self.amount:
-            data["amount"] = str(self.amount)
-        if self.close_date:
-            data["close_date"] = self.close_date.strftime("%Y-%m-%d")
-        if self.custom_data:
-            data = {**data, **self.custom_data}
-        return data
-
     def save(self, *args, **kwargs):
         opportunity = self.meeting.opportunity
 
@@ -607,11 +609,7 @@ class MeetingReview(TimeStampModel):
                 self.prev_forecast = current_forecast
 
         if self.stage and opportunity.stage:
-            self.prev_stage = opportunity.stage.id
-            """             opportunity.stage = Stage.objects.filter(
-                value=self.stage, organization__id=self.meeting.zoom_account.organization.id,
-            ).first()
-            """
+            self.prev_stage = opportunity.stage
             # update stage
         # Update the opportunity with the new data
         if self.close_date:

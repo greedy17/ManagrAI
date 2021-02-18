@@ -29,9 +29,7 @@
         <PulseLoadingSpinnerButton
           text="Show Forms"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-          @click="
-            $router.push({ name: 'OpportunityFormSettings', params: { resource: 'Opportunity' } })
-          "
+          @click="$router.push({ name: 'SlackFormSettings' })"
           v-if="hasSalesforceIntegration"
           class="secondary-button"
         >

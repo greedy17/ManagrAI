@@ -192,7 +192,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
         if len(participants):
             user = zoom_account.user
             participant_emails = set(
-                [participant.get("user_email", None) for participant in participants]
+                map(
+                    lambda participant: participant["user_email"],
+                    list(
+                        filter(
+                            lambda participant: participant.get("user_email", None)
+                            and len(participant.get("user_email", "")),
+                            participants,
+                        )
+                    ),
+                )
             )
 
             opportunity = Opportunity.objects.filter(
@@ -202,7 +211,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
 
             if opportunity:
                 existing_contacts = Contact.objects.filter(
-                    email__in=participant_emails, user__organization__id=user.organization.id
+                    email__in=participant_emails, owner__organization__id=user.organization.id
                 ).exclude(email=user.email)
                 # convert all contacts to model representation and remove from array
                 for contact in existing_contacts:
@@ -219,7 +228,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 meeting_contacts = [
                     *list(
                         filter(
-                            lambda x: x["first_name"] or x["last_name"] or x["email"],
+                            lambda x: x.get("first_name") or x.get("last_name") or x.get("email"),
                             list(
                                 map(
                                     lambda participant: {
@@ -267,26 +276,15 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
     if meeting:
         # get user
         user = meeting.zoom_account.user
-        org = user.organization.id
-        opportunity = meeting.opportunity.id
 
         if hasattr(user, "slack_integration"):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
-            block_set = get_block_set(
-                "zoom_meeting_initial",
-                {
-                    "o": str(org),
-                    "u": str(user.id),
-                    "opp": str(opportunity),
-                    "m": managr_meeting_id,
-                },
-            )
+            block_set = get_block_set("initial_meeting_interaction", {"m": managr_meeting_id,},)
             res = slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
             ).json()
-            meeting.current_interaction = 1
-            meeting.notification_attempts = meeting.notification_attempts + 1
+            print(res)
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
             meeting.slack_form = f"{res['ts']}|{res['channel']}"
             meeting.save()

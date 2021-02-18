@@ -25,8 +25,7 @@
         </div>
       </div>
       <div class="box__content">
-        <template v-if="selectedForm">
-          {{ selectedForm.resource }}
+        <template v-if="formsByType.length">
           <p>
             <i
               >Required Fields have been pre-filled as part of the form, add or remove additional
@@ -43,7 +42,7 @@
             :customForm="selectedForm"
             :formType="selectedTab"
             :resource="resource"
-            v-on:update:selectedForm="fnTest($event)"
+            v-on:update:selectedForm="updateForm($event)"
           />
         </template>
         <template v-else>
@@ -71,34 +70,25 @@ export default {
       allForms: [],
       formsByType: [],
       isLoading: false,
-      selectedTab: null,
+      selectedTab: 'MEETING_REVIEW',
       resource: 'Opportunity',
       selectedForm: null,
       showValidations: false,
     }
   },
-  watch: {
-    selectedTab: {
-      immediate: true,
-      handler(val) {
-        let form = this.formsByType
-          .filter(form => form['resource'] == this.resource)
-          .find(f => f.formType == val)
-
-        if (form && typeof form != undefined) {
-          this.selectedForm = form
-        } else this.selectedForm = null
-      },
-    },
-  },
+  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+
+      this.formsByType = this.allForms.filter(f => {
+        return f['resource'] == this.resource
+      })
+
+      this.toggleSelectedTab('MEETING_REVIEW')
     } catch (error) {
       console.log(error)
     }
-    this.toggleSelectedTab('MEETING_REVIEW')
   },
   computed: {
     ...mapState(['user']),
@@ -106,20 +96,20 @@ export default {
   methods: {
     toggleSelectedTab(tab) {
       this.selectedTab = tab
+      let form = this.formsByType.find(f => f.formType == tab)
+
+      if (form && typeof form != undefined) {
+        this.selectedForm = form
+      } else this.selectedForm = null
     },
-    fnTest(event) {
+    updateForm(event) {
       this.selectedForm = event
       let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
-      console.log(index)
-      console.log(this.formsByType.length, 'bef')
+
       if (~index) {
-        console.log('slcing and dicing')
         this.formsByType[index] = this.selectedForm
         this.formsByType = [...this.formsByType]
-        console.log(this.formsByType)
       }
-      console.log(this.formsByType)
-      console.log(this.formsByType.length, 'after')
     },
   },
 }

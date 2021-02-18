@@ -21,16 +21,8 @@ def generate_sentiment_button(text, value, params):
     }
 
 
-# TODO: this and other zoom-flow block_sets will likely need "m" for meeting ID
 @block_set(required_context=["o", "u", "opp", "m"])
 def zoom_meeting_initial(context):
-    """Generates the block set for the first Slack message sent after a Zoom meeting has ended.
-
-    This Slack message contains buttons for the sales rep to quickly review
-    how the meeting went (ex: "Great", "Not Well", and "Can't Tell"). After the rep clicks
-    a button, the `zoom_meeting_complete_form` is sent so they can edit
-    contacts and opportunity details directly from Slack.
-    """
     opportunity = Opportunity.objects.get(pk=context["opp"])
     meeting = opportunity.meetings.filter(id=context["m"]).first()
 
@@ -38,7 +30,6 @@ def zoom_meeting_initial(context):
     user_id_param = "u=" + context["u"]
     opportunity_id_param = "opp=" + context["opp"]
     meeting_id_param = "m=" + context["m"]
-
     organization_id_param = "o=" + context["o"]
 
     user_timezone = meeting.zoom_account.timezone

@@ -22,13 +22,19 @@ SALESFORCE_PICKLIST_URI = (
 
 
 # SF CUSTOM URI QUERIES
-def SALSFORCE_RESOURCE_QUERY_URI(owner_id, resource, fields, childRelationshipFields=[]):
+def SALSFORCE_RESOURCE_QUERY_URI(
+    owner_id, resource, fields, childRelationshipFields=[], additional_filters=[]
+):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
             url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+    url = f"{url} FROM {resource} WHERE OwnerId = '{owner_id}'"
+    if len(additional_filters):
+        for f in additional_filters:
+            url = f"{url} {f} "
 
-    return f"{url} FROM {resource} WHERE OwnerId = '{owner_id}' order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+    return f"{url} order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
 
 
 def SF_COUNT_URI(resource, owner_id):

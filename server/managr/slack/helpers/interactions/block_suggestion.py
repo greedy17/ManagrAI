@@ -71,6 +71,25 @@ def process_get_user_opportunities(payload, context):
     }
 
 
+@processor(required_context=["u", "resource"])
+def process_get_local_resource_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    resource = context.get("resource")
+    if resource == "Opportunity":
+
+        return {
+            "options": [
+                l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+            ],
+        }
+
+    if resource == "Account":
+        return {
+            "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)],
+        }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -81,6 +100,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_OPPORTUNITY_FORECASTS: process_get_opportunity_forecasts,
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
+        slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

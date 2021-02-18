@@ -38,9 +38,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     title = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(
-        max_digits=13, decimal_places=2, default=0.00, help_text="This field is editable",
-    )
+    amount = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -122,11 +120,25 @@ class Opportunity(TimeStampModel, IntegrationModel):
                 return dict(fields=list())
 
             if type == "MEETING_REVIEW":
+                # get different meeting_types
+                meeting_types = sf_account.user.organization.action_choices.all()
+
                 meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Type", "meeting_type", type="Picklist", required=True, options=["test"]
+                    "Meeting Type",
+                    "meeting_type",
+                    type="Picklist",
+                    required=True,
+                    length=25,
+                    value=None,
+                    options=[m_type.as_sf_option for m_type in meeting_types],
                 )
                 meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Notes", "meeting_notes", type="String", required=True
+                    "Meeting Notes",
+                    "meeting_notes",
+                    type="String",
+                    required=True,
+                    length=250,
+                    value=None,
                 )
                 # this is a managr form make forecast_category_name required
                 forecast_category_name = (
@@ -170,10 +182,25 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            res = OpportunityAdapter.update_opportunity(data, token, base_url, self.integration_id)
+            object_fields = self.owner.salesforce_account.object_fields
+            res = OpportunityAdapter.update_opportunity(
+                data, token, base_url, self.integration_id, object_fields
+            )
             self.is_stale = True
             self.save()
             return res
+
+    def create_in_salesforce(self, data=None):
+        """ when synchronous create in db first to be able to use immediately """
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        object_fields = self.owner.salesforce_account.object_fields
+        if not data:
+            data = self.adapter_class
+        res = OpportunityAdapter.create_opportunity(data, token, base_url, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
 
     def add_contact_role(self, access_token, base_url, contact_integration_id):
 

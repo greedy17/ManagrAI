@@ -94,11 +94,15 @@ def external_select(
 
 
 def static_select(
-    label, options, action_id=None, initial_option=None, placeholder="Select",
+    label, options, action_id=None, initial_option=None, placeholder="Select", block_id=None,
 ):
+    # options are an array of block_optiosn (see above)
+    if not block_id:
+        block_id = str(uuid.uuid4())
     block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": f"{label}"},
+        "block_id": block_id,
         "accessory": {
             "type": "static_select",
             "placeholder": {"type": "plain_text", "text": placeholder},
@@ -113,20 +117,74 @@ def static_select(
 
 
 def datepicker(
-    date=None, action_id=None, block_id=None, label="Select Date", placeholder="Select a date",
+    initial_date=None,
+    action_id=None,
+    block_id=None,
+    label="Select Date",
+    placeholder="Select a date",
 ):
+    if not block_id:
+        block_id = str(uuid.uuid4())
     block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": f"{label}"},
+        "block_id": block_id,
         "accessory": {
             "type": "datepicker",
             "placeholder": {"type": "plain_text", "text": f"{placeholder}"},
         },
     }
-    if date:
-        block["accessory"]["initial_date"] = date
+    if initial_date:
+        block["accessory"]["initial_date"] = initial_date
     if action_id:
         block["accessory"]["action_id"] = action_id
-    if block_id:
-        block["block_id"] = block_id
     return block
+
+
+def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
+    # action ID must be unique
+    block = {
+        "type": "button",
+        "text": {"type": "plain_text", "text": label},
+        "value": value,
+        # "confirm": confirm,
+        "action_id": action_id if action_id else str(uuid.uuid4()),
+    }
+    if style:
+        block["style"] = style
+    if url:
+        block["url"] = url
+    return block
+
+
+def actions_block(blocks=[], block_id=None):
+    """ 
+    Array of interactive element objects - buttons, select menus, overflow menus, or date pickers. 
+    max of 5
+    """
+    if not len(blocks):
+        return
+    if len(blocks) > 4:
+        return
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    return {"type": "actions", "block_id": block_id, "elements": [*blocks]}
+
+
+def checkbox_block(label, options, action_id=None, initial_options=None, block_id=None):
+    if not action_id:
+        action_id = str(uuid.uuid4())
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "block_id": block_id,
+        "text": {"type": "mrkdwn", "text": f"{label}"},
+        "accessory": {"type": "checkboxes", "action_id": action_id, "options": options},
+    }
+
+    if initial_options:
+        block["accessory"]["initial_options"] = initial_options
+
+    return block
+

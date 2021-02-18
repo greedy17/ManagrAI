@@ -20,14 +20,12 @@ def save_to_salesforce(sender, instance=None, created=False, **kwargs):
         meeting = instance.meeting
         user = meeting.zoom_account.user
         if user.salesforce_account:
-            # emit_sf_update_opportunity(str(user.id), str(instance.id))
             data = instance.get_event_data_salesforce()
             emit_sf_add_call_to_sf(str(user.id), data)
-            emit_push_meeting_contacts(str(meeting.id))
+            # emit_push_meeting_contacts(str(meeting.id))
 
         else:
             logger.exception(
                 f"{user.email} does not have an sf account this meeting was not logged to sf"
             )
-        # emit send task call type meeting - {meeting type}
 

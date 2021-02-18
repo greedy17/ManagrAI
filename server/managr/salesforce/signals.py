@@ -2,9 +2,11 @@ import logging
 import json
 
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 
 from background_task.models import CompletedTask, Task
+from managr.opportunity.models import Opportunity
+
 from .models import SFSyncOperation
 from . import constants as sf_consts
 

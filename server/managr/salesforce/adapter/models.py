@@ -90,7 +90,15 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def custom_field(
-        label, key, type="String", required=True, updateable=True, creatable=True, options=[]
+        label,
+        key,
+        type="String",
+        required=True,
+        updateable=True,
+        creatable=True,
+        options=[],
+        length=0,
+        value=None,
     ):
         """ Helper method to convert custom fields we want to add to forms that we do not get from SF"""
         return dict(
@@ -101,6 +109,8 @@ class SalesforceAuthAccountAdapter:
             updateable=updateable,  # cannot be patched
             createable=creatable,
             options=options,
+            length=length,
+            value=value,
         )
 
     def format_field_options(self, res_data=[]):
@@ -118,7 +128,14 @@ class SalesforceAuthAccountAdapter:
                 required=val.get("required", False),  # is required to pass val on create
                 updateable=val.get("updateable", False),  # cannot be patched
                 createable=val.get("createable", False),
+                reference=val.get("reference", False),  # if relational field
+                relationship_name=val.get("relationshipName", None),
+                relationship_details=val.get(
+                    "referenceToInfos", []
+                ),  # details of relationship used for get
+                length=val.get("length", 0),  # used to determine field size
                 options=[],
+                value=None,  # custom attribute used to add current value
             )
 
         return data
@@ -219,8 +236,8 @@ class SalesforceAuthAccountAdapter:
         from .routes import routes
 
         resource_class = routes.get(resource)
-        relationships = resource_class.get_opportunity_rels()
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_fields, relationships)}"
+        relationships = resource_class.get_child_rels()
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_fields, relationships,)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -278,8 +295,23 @@ class AccountAdapter:
         return reverse
 
     @staticmethod
-    def get_opportunity_rels():
+    def get_child_rels():
         return {}
+
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        """ data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
+
+        return formatted_data
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
@@ -290,8 +322,8 @@ class AccountAdapter:
         for k, v in data.items():
             if k in mapping:
                 formatted_data[mapping.get(k)] = v
-            else:
-                formatted_data["secondary_data"][k] = v
+
+            formatted_data["secondary_data"][k] = v
 
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
         formatted_data["imported_by"] = str(user_id)
@@ -301,6 +333,25 @@ class AccountAdapter:
     @property
     def as_dict(self):
         return vars(self)
+
+    @staticmethod
+    def create_account(data, access_token, custom_base, object_fields, user_id):
+        json_data = json.dumps(
+            AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_ACCOUNT, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        # get the opp as well uses the same url as the write but with get
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        url = f"{url}{r['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = AccountAdapter.from_api(r, user_id)
+        return r
 
 
 class ContactAdapter:
@@ -327,7 +378,7 @@ class ContactAdapter:
     )
 
     @staticmethod
-    def get_opportunity_rels():
+    def get_child_rels():
         return {}
 
     @staticmethod
@@ -346,8 +397,8 @@ class ContactAdapter:
         for k, v in data.items():
             if k in mapping:
                 formatted_data[mapping.get(k)] = v
-            else:
-                formatted_data["secondary_data"][k] = v
+
+            formatted_data["secondary_data"][k] = v
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
         formatted_data["imported_by"] = str(user_id)
 
@@ -427,7 +478,7 @@ class OpportunityAdapter:
     )
 
     @staticmethod
-    def get_opportunity_rels():
+    def get_child_rels():
         return {
             sf_consts.OPPORTUNITY_CONTACT_ROLES: {
                 "fields": sf_consts.OPPORTUNITY_CONTACT_ROLE_FIELDS,
@@ -472,8 +523,7 @@ class OpportunityAdapter:
         for k, v in data.items():
             if k in mapping:
                 formatted_data[mapping.get(k)] = v
-            else:
-                formatted_data["secondary_data"][k] = v
+            formatted_data["secondary_data"][k] = v
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
         formatted_data["last_stage_update"] = OpportunityAdapter._format_stage_update(
             data.get("OpportunityHistories", None)
@@ -491,28 +541,52 @@ class OpportunityAdapter:
         return OpportunityAdapter(**formatted_data)
 
     @staticmethod
-    def to_api(data, mapping):
+    def to_api(data, mapping, object_fields):
+        """ data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
         formatted_data = dict()
         for k, v in data.items():
             key = mapping.get(k, None)
             if key:
                 formatted_data[key] = v
             else:
-                formatted_data[k] = v
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
 
         return formatted_data
 
     @staticmethod
-    def update_opportunity(data, access_token, custom_base, salesforce_id):
-        json_data = json.dumps(OpportunityAdapter.to_api(data, OpportunityAdapter.from_mapping))
+    def update_opportunity(data, access_token, custom_base, salesforce_id, object_fields):
+        json_data = json.dumps(
+            OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
+        )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.SALESFORCE_RESOURCE_OPPORTUNITY, salesforce_id
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, salesforce_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def create_opportunity(data, access_token, custom_base, object_fields, user_id):
+        json_data = json.dumps(
+            OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        # get the opp as well uses the same url as the write but with get
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        url = f"{url}{r['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = OpportunityAdapter.from_api(r, user_id)
+        return r
 
     @staticmethod
     def add_contact_role(access_token, custom_base, contact_id, opp_id):

@@ -16,19 +16,20 @@ from managr.slack.helpers import block_builders
 logger = logging.getLogger("managr")
 
 
-@processor(required_context=["o", "u", "opp", "sentiment"])
+@processor()
 def process_meeting_sentiment(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    access_token = (
-        Organization.objects.select_related("slack_integration")
-        .get(pk=context["o"])
-        .slack_integration.access_token
-    )
+    meeting_id = payload["actions"][0]["value"]
+    sentiment = payload["actions"][0]["action_id"]
+    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
+    context = {"m": meeting_id, "sentiment": sentiment}
 
     private_metadata.update(context)
     data = {
@@ -37,12 +38,13 @@ def process_meeting_sentiment(payload, context):
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
-            "blocks": get_block_set("zoom_meeting_complete_form", context=context),
+            "blocks": get_block_set("meeting_review_modal", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["o", "u", "opp", "m"])
@@ -72,105 +74,6 @@ def process_zoom_meeting_different_opportunity(payload, context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
-@processor(required_context=["r"])
-def process_get_contacts(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    reminder = Reminder.objects.filter(id=context.get("r")).first()
-    org = reminder.created_by.organization
-    access_token = org.slack_integration.access_token
-    blocks = [
-        get_block_set("reminder_contact_block_set", {"contact": contact})
-        for contact in reminder.linked_contacts.all()
-    ]
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}]
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.SHOW_REMINDER_CONTACTS,
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "blocks": blocks if len(blocks) else empty_block,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-
-    private_metadata.update(context)
-
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
-@processor(required_context=["l"])
-def process_get_lead_contacts(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    lead = Lead.objects.filter(id=context.get("l")).first()
-    org = lead.claimed_by.organization
-    access_token = org.slack_integration.access_token
-    blocks = [
-        get_block_set("reminder_contact_block_set", {"contact": contact})
-        for contact in lead.linked_contacts.all()
-    ]
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Contacts Attached"},}]
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.SHOW_LEAD_CONTACTS,
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "blocks": blocks if len(blocks) else empty_block,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-
-    private_metadata.update(context)
-
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
-@processor(required_context=["l"])
-def process_get_lead_logs(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    lead = Lead.objects.filter(id=context.get("l")).first()
-    org = lead.claimed_by.organization
-    access_token = org.slack_integration.access_token
-    blocks = [
-        get_block_set("show_lead_logs", {"activity": activity})
-        for activity in lead.activity_logs.all()
-    ]
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}]
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.SHOW_LEAD_LOGS,
-            "title": {"type": "plain_text", "text": "Logs"},
-            "blocks": blocks if len(blocks) else empty_block,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-
-    private_metadata.update(context)
-
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -214,17 +117,6 @@ def process_get_meeting_score_components(payload, context):
         meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
         org = meeting.zoom_account.user.organization
         access_token = org.slack_integration.access_token
-
-        # order as per mike
-
-        # new line
-        # stage
-        # forecast
-        # close date
-        # new line
-        # attendees
-        # new line
-        # duration
         sentiment = ""
         stage = ""
         forecast = ""
@@ -274,68 +166,6 @@ def process_get_meeting_score_components(payload, context):
     except Exception as e:
         logger.warning(e)
         pass
-
-
-@processor(required_context=["ls"])
-def process_get_lead_score_components(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    lead_score = LeadScore.objects.select_related("lead").filter(id=context.get("ls")).first()
-    lead = lead_score.lead
-
-    org = lead.claimed_by.organization
-    access_token = org.slack_integration.access_token
-    lead_score_components = [
-        {
-            "label": "Action Score",
-            "score": lead_score.actions_score,
-            "insight": lead_score.actions_insight,
-        },
-        {
-            "label": "Incoming Messages Score",
-            "score": lead_score.incoming_messages_score,
-            "insight": lead_score.incoming_messages_insight,
-        },
-        {
-            "label": "Days In Stage Score",
-            "score": lead_score.days_in_stage_score,
-            "insight": lead_score.days_in_stage_insight,
-        },
-        {
-            "label": "Forecast Score",
-            "score": lead_score.forecast_table_score,
-            "insight": lead_score.forecast_table_insight,
-        },
-        {
-            "label": "Expected Close Date Score",
-            "score": lead_score.expected_close_date_score,
-            "insight": lead_score.expected_close_date_insight,
-        },
-    ]
-    blocks = [
-        get_block_set("show_lead_score_description", {"score_components": comp})
-        for comp in lead_score_components
-    ]
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    empty_block = [{"type": "section", "text": {"type": "mrkdwn", "text": "No Logs to show"},}]
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.SHOW_LEAD_SCORE_COMPONENTS,
-            "title": {"type": "plain_text", "text": "Score Components"},
-            "blocks": blocks if len(blocks) else empty_block,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-
-    private_metadata.update(context)
-
-    slack_requests.generic_request(url, data, access_token=access_token)
 
 
 @processor(required_context=["m", "contact_index"])
@@ -448,23 +278,121 @@ def process_remove_contact_from_meeting(payload, context):
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
 
+@processor(required_context=["m"])
+def process_update_search_or_create(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    select = payload["actions"][0]["selected_option"]
+    selected_option = select["value"]
+
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).select_related("zoom_account").first()
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    c = {
+        "m": context.get("m"),
+        "resource": context.get("resource"),
+        "selected_option": select,
+    }
+    current_block_sets = get_block_set("create_or_search_modal", context=c)
+    if selected_option == "SEARCH":
+        blocks = get_block_set("search_modal_block_set", context=c)
+    elif selected_option == "CREATE":
+        blocks = get_block_set("create_modal_block_set", context=c)
+    ts, channel = meeting.slack_form.split("|")
+    private_metadata = {
+        "original_message_timestamp": ts,
+        "original_message_channel": channel,
+    }
+
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "title": {"type": "plain_text", "text": c.get("resource")},
+            "blocks": [*current_block_sets, *blocks],
+            "submit": {"type": "plain_text", "text": "Attach"},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
+
+
+@processor(required_context=["m"])
+def process_meeting_selected_resource(payload, context):
+    """ Opens Modal for creating or selecting a resource value """
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).select_related("zoom_account").first()
+    select = payload["actions"][0]["selected_option"]
+    selected_option = select["value"]
+    selected_label = select["text"]["text"]
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    context = {
+        "m": context.get("m"),
+        "resource": selected_option,
+    }
+
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "title": {"type": "plain_text", "text": f"{selected_label}"},
+            "blocks": get_block_set("create_or_search_modal", context=context),
+            # "submit": {"type": "plain_text", "text": "Attach"},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
+
+
+@processor()
+def process_create_or_search_selected(payload, context):
+    meeting_id = payload["actions"][0]["value"]
+    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    res = slack_requests.update_channel_message(
+        payload["channel"]["id"],
+        payload["message"]["ts"],
+        access_token,
+        block_set=get_block_set("attach_resource_interaction", {"m": meeting_id}),
+    ).json()
+    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.save()
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_meeting_sentiment,
+        slack_const.ZOOM_MEETING__GREAT: process_meeting_sentiment,
+        slack_const.ZOOM_MEETING__NOT_WELL: process_meeting_sentiment,
+        slack_const.ZOOM_MEETING__CANT_TELL: process_meeting_sentiment,
         slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
-        slack_const.SHOW_REMINDER_CONTACTS: process_get_contacts,
-        slack_const.SHOW_LEAD_CONTACTS: process_get_lead_contacts,
-        slack_const.SHOW_LEAD_LOGS: process_get_lead_logs,
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
-        slack_const.SHOW_LEAD_SCORE_COMPONENTS: process_get_lead_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.GET_ORGANIZATION_STAGES: process_update_forecast_category_option,
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
+        slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
+        slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
+        slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH: process_update_search_or_create,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

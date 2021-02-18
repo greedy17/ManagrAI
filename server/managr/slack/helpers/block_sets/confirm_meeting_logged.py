@@ -40,3 +40,4 @@ def confirm_meeting_logged(context):
             },
         )
         return blocks
+

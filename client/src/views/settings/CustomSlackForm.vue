@@ -122,6 +122,12 @@ export default {
     formFields() {
       return this.customSlackFormConfig ? this.customSlackFormConfig.fields : []
     },
+    hasConfig() {
+      return (
+        this.store.state.user.salesforceAccountRef &&
+        this.store.state.user.salesforceAccountRef.objectFields
+      )
+    },
     sfValidations() {
       return this.$store.state.user.salesforceAccountRef.objectFields[this.resource].validations
     },

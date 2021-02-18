@@ -138,6 +138,10 @@ class Account(TimeStampModel, IntegrationModel):
 
         return super(Account, self).save(*args, **kwargs)
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
     @staticmethod
     def generate_slack_form_config(user, type):
         """Helper class to generate a slack form config for an org"""
@@ -145,7 +149,6 @@ class Account(TimeStampModel, IntegrationModel):
         if sf_account:
             # return an object with creatable and required fields
             fields = sf_account.object_fields.get("Account", {}).get("fields", {})
-            validations = sf_account.object_fields.get("Account", {}).get("validations", {})
             if type == "CREATE":
 
                 return dict(
@@ -163,11 +166,23 @@ class Account(TimeStampModel, IntegrationModel):
                 return dict(fields=list())
 
             if type == "MEETING_REVIEW":
+                meeting_types = sf_account.user.organization.action_choices.all()
                 meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Type", "meeting_type", type="Picklist", required=True, options=["test"]
+                    "Meeting Type",
+                    "meeting_type",
+                    type="Picklist",
+                    required=True,
+                    length=25,
+                    value=None,
+                    options=[m_type.as_sf_option for m_type in meeting_types],
                 )
                 meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Notes", "meeting_notes", type="String", required=True
+                    "Meeting Notes",
+                    "meeting_notes",
+                    type="String",
+                    required=True,
+                    length=250,
+                    value=None,
                 )
                 return {
                     "fields": [meeting_type_field, meeting_notes_field,],
@@ -313,7 +328,12 @@ class ActionChoice(TimeStampModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.title, str(self.id))
+        return block_builders.option(self.title, self.title)
+
+    @property
+    def as_sf_option(self):
+        # model these into sf optiona key value pairs to be then changed into slack options
+        return dict(attributes={}, label=self.title, value=self.title, validFor=[])
 
     class Meta:
         ordering = ["title"]

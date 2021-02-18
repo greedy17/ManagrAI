@@ -9,6 +9,7 @@ import pdb
 from django.conf import settings
 
 from managr.slack.models import UserSlackIntegration
+from managr.slack.helpers import block_builders
 
 
 def create_sha256_signature(key, message):
@@ -73,6 +74,71 @@ def block_finder(block_id, blocks=[]):
     return item
 
 
+def map_fields_to_type(fields):
+    data = list()
+    for field in fields:
+        if field["type"] == "Picklist":
+            data.append(
+                block_builders.static_select(
+                    f'*{field["label"]}*',
+                    list(
+                        map(
+                            lambda opt: block_builders.option(opt["label"], opt["value"]),
+                            field["options"],
+                        )
+                    ),
+                    initial_option=dict(
+                        *map(
+                            lambda value: block_builders.option(value["label"], value["value"]),
+                            filter(
+                                lambda opt: opt.get("value", None) == field.get("value", None),
+                                field.get("options", []),
+                            ),
+                        ),
+                    ),
+                    block_id=field.get("key", None),
+                )
+            )
+        elif field["type"] == "Date":
+            data.append(
+                block_builders.datepicker(
+                    label=f"*{field['label']}*",
+                    initial_date=field.get("value", None),
+                    block_id=field.get("key", None),
+                )
+            )
+        elif field["type"] == "Boolean":
+            data.append(
+                block_builders.checkbox_block(
+                    " ",
+                    [block_builders.option(field["label"], "true")],
+                    action_id=field["key"],
+                    block_id=field["key"],
+                )
+            )
+        else:
+            if field["type"] == "String" and field["length"] >= 250:
+                # set these fields to be multiline
+                data.append(
+                    block_builders.input_block(
+                        field["label"],
+                        multiline=True,
+                        initial_value=field.get("value", None),
+                        block_id=field.get("key", None),
+                    )
+                )
+            else:
+                data.append(
+                    block_builders.input_block(
+                        field["label"],
+                        # optional=not field["required"],
+                        initial_value=str(field.get("value")) if field.get("value", None) else None,
+                        block_id=field.get("key", None),
+                    ),
+                )
+    return data
+
+
 class block_set:
     """A decorator that validates that required context keys are present.
 
@@ -102,14 +168,14 @@ class processor:
     Decorator. Checks for required context for a processor.
     """
 
-    def __init__(self, required_context=[], **kwargs):
+    def __init__(self, required_context=[], *args, **kwargs):
         self.required_context = required_context
 
     def __call__(self, f):
-        def wrapped_f(payload, context, **kwargs):
+        def wrapped_f(payload, context, *args, **kwargs):
             for prop in self.required_context:
                 if context.get(prop) is None:
                     raise ValueError(f"context missing: {prop}, in {f.__name__}")
-            return f(payload, context, **kwargs)
+            return f(payload, context, *args, **kwargs)
 
         return wrapped_f

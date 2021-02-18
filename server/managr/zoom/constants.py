@@ -68,11 +68,14 @@ MEETING_REVIEW_REGRESSED = "MEETING_REVIEW_REGRESSED"
 MEETING_REVIEW_UNCHANGED = "MEETING_REVIEW_UNCHANGED"
 
 
-STANDARD_MEETING_FIELDS = [
-    "amount",
-    "stage",
-    "forecast_category",
-    "close_date",
-    "meeting_type",
-    "description",
-]
+STANDARD_MEETING_FIELDS = {
+    "Opportunity": [
+        "amount",
+        "stage",
+        "forecast_category",
+        "close_date",
+        "meeting_type",
+        "meeting_notes",
+    ],
+    "Account": ["meeting_type", "meeting_notes",],
+}

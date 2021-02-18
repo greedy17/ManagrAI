@@ -104,7 +104,8 @@ class SFSyncOperation(TimeStampModel):
                     # populate the sf account picklist values (may be unique to each user)
                     sf_account.get_picklist_values(key)
                     # emit event to create forms
-                    emit_generate_forms(str(self.user.id))
+                    if self.user.is_admin:
+                        emit_generate_forms(str(self.user.id))
                     break
                 except TokenExpired:
                     if attempts >= 5:

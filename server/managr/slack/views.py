@@ -88,12 +88,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
             text = {
                 "text": f"<!channel> your organization has enabled slack please integrate your account to receive notifications"
             }
-            # Generate the org's standard slack form only if the user has also integrated their salesforce account
-            # update the request data to contain required fields,
-            #
-
-            request.data.update()
-            self._post_org_custom_form(request)
             slack_requests.generic_request(url, text)
         else:
             team_id = data.get("team").get("id")

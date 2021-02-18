@@ -9,6 +9,7 @@ export default {
   data() {
     return {
       isLoading: false,
+      resource: 'Opportunity',
     }
   },
   async created() {

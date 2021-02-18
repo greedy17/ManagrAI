@@ -96,36 +96,11 @@ export default new Router({
     //   beforeEnter: Auth.requireAuth,
     // },
     {
-      path: '/custom-slack-form',
-      name: 'CustomSlackForm',
-      component: CustomSlackForm,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
       path: '/forms',
       component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/SlackFormSettings'),
+        import(/* webpackChunkName: "settings" */ '../views/settings/_pages/_FormSettings'),
       beforeEnter: Auth.requireAuth,
-      children: [
-        {
-          path: 'opportunity',
-          name: 'OpportunityFormSettings',
-          components: {
-            'slack-form-settings': () =>
-              import(
-                /* webpackChunkName: "settings" */ '../views/settings/_pages/_OpportunityForm'
-              ),
-          },
-        },
-        {
-          path: 'account',
-          name: 'AccountFormSettings',
-          components: {
-            'slack-form-settings': () =>
-              import(/* webpackChunkName: "settings" */ '../views/settings/_pages/_AccountForm'),
-          },
-        },
-      ],
+      name: 'SlackFormSettings',
     },
   ],
 })

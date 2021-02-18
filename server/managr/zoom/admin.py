@@ -23,14 +23,10 @@ class CustomZoomMeetingForm(ModelForm):
             "type",
             "start_time",
             "duration",
-            "password",
-            "start_url",
-            "join_url",
             "participants",
             "opportunity",
-            "notification_attempts",
             "scoring_in_progress",
-            "current_interaction",
+            "linked_account",
             "is_closed",
             "interaction_status",
             "participants_count",
@@ -48,4 +44,5 @@ class CustomZoomMeeting(admin.ModelAdmin):
 
 
 admin.site.register(models.ZoomAuthAccount)
+admin.site.register(models.MeetingReview)
 admin.site.register(models.ZoomMeeting, CustomZoomMeeting)
