@@ -20,14 +20,19 @@ def _initial_interaction_base_message():
     return f"I've noticed your :calendar: meeting just ended"
 
 
-def _initial_interaction_no_resource():
-    # attach/create, account/opportunity, disregard
-    return f"{_initial_interaction_base_message()} but couldn't find an Opportunity or Account to link what would you like to do?"
+def _initial_interaction_message(resource_name=None, resource_type=None):
+    message = f"{_initial_interaction_base_message()}"
+    if not resource_type:
+        return (
+            message
+            + " but couldn't find an Opportunity or Account to link what would you like to do?"
+        )
 
-
-def _initial_interaction_w_resource(resource_type, resource_name):
     # replace opp, review disregard
-    return f"{_initial_interaction_base_message()} and found this {resource_type} *{resource_name}* associated with it what would you like to do?"
+    return (
+        message
+        + f" found this {resource_type} *{resource_name}* associated with it what would you like to do?"
+    )
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -35,6 +40,7 @@ def generate_edit_contact_form(field, id, value, optional=True):
 
 
 def generate_contact_group(index, contact, instance_url):
+    # get fields from form and display values based on this form as label value in multi block
     integration_id = contact.get("integration_id")
     title = (
         contact.get("title")
@@ -236,6 +242,7 @@ def meeting_contacts_block_set(context):
 
 
 @block_set(required_context=["meeting", "contact"])
+# use fields from model to generate form
 def edit_meeting_contacts_block_set(context):
     contact = context["contact"]
     blocks = [
@@ -247,17 +254,6 @@ def edit_meeting_contacts_block_set(context):
         generate_edit_contact_form("Phone", "phone_number", contact["phone_number"]),
     ]
     return blocks
-
-
-def generate_sentiment_button(text, value, params):
-    return {
-        "type": "button",
-        "text": {"type": "plain_text", "text": text},
-        "value": value,
-        "action_id": action_with_params(
-            slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT, params=params,
-        ),
-    }
 
 
 @block_set(required_context=["m"])
@@ -301,74 +297,42 @@ def initial_meeting_interaction_block_set(context):
         {"type": "divider"},
     ]
     if not meeting_resource:
-        blocks = [
-            block_builders.simple_section(_initial_interaction_no_resource(), "mrkdwn",),
-            *default_blocks,
-            block_builders.actions_block(
-                blocks=[
-                    block_builders.simple_button_block(
-                        "Attach Manually",
-                        str(meeting.id),
-                        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                        style="primary",
-                    ),
-                    block_builders.simple_button_block(
-                        "Disregard",
-                        str(meeting.id),
-                        action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-                        style="danger",
-                    ),
-                ]
-            ),
-        ]
+        title_section = _initial_interaction_message()
     else:
-        blocks = [
-            block_builders.simple_section(
-                _initial_interaction_w_resource(
-                    meeting_resource,
-                    opportunity.title if meeting_resource == "Opportunity" else account.name,
-                ),
-                "mrkdwn",
-            ),
-            *default_blocks,
-            block_builders.actions_block(
-                blocks=[
-                    block_builders.simple_button_block(
-                        "Review",
-                        str(meeting.id),
-                        action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
-                        style="primary",
-                    ),
-                    block_builders.simple_button_block(
-                        f"Change {meeting.meeting_resource}",
-                        str(meeting.id),
-                        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                    ),
-                    block_builders.simple_button_block(
-                        "Disregard",
-                        str(meeting.id),
-                        action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-                        style="danger",
-                    ),
-                ]
-            ),
-        ]
+        name = opportunity.title if meeting_resource == "Opportunity" else account.name
+        title_section = _initial_interaction_message(name, meeting_resource)
+    blocks = [
+        block_builders.simple_section(title_section, "mrkdwn",),
+        *default_blocks,
+    ]
+    # action button blocks
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Attach/Change Link",
+            str(meeting.id),
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            style="primary",
+        ),
+        block_builders.simple_button_block(
+            "Disregard",
+            str(meeting.id),
+            action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
+            style="danger",
+        ),
+    ]
 
-    """blocks = [
-        block_builders.actions_block(
-            blocks=[
-                block_builders.simple_button_block(
-                    "Great!", str(meeting.id), action_id=slack_const.ZOOM_MEETING__GREAT,
-                ),
-                block_builders.simple_button_block(
-                    "Not Well", str(meeting.id), action_id=slack_const.ZOOM_MEETING__NOT_WELL,
-                ),
-                block_builders.simple_button_block(
-                    "Can't Tell", str(meeting.id), action_id=slack_const.ZOOM_MEETING__CANT_TELL,
-                ),
-            ]
-        )
-    ] """
+    if meeting_resource:
+        action_blocks = [
+            block_builders.simple_button_block(
+                "Review",
+                str(meeting.id),
+                action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
+                style="primary",
+            ),
+            *action_blocks,
+        ]
+    blocks.append(block_builders.actions_block(action_blocks))
+
     return blocks
 
 
@@ -377,20 +341,17 @@ def meeting_review_modal_block_set(context):
     meeting = ZoomMeeting.objects.filter(id=context["m"]).first()
     user = meeting.zoom_account.user
     organization = user.organization
-
-    # get user slack form
     if meeting.meeting_resource == "Opportunity":
-
-        slack_form = organization.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_MEETING_REVIEW, resource="Opportunity"
-        ).first()
-        opportunity = meeting.opportunity
-        fields = slack_form.config.get("fields", [])
-        values = opportunity.secondary_data
+        resource = meeting.opportunity
     elif meeting.meeting_resource == "Account":
-        account = meeting.linked_account
-        fields = slack_form.config.get("fields", [])
-        values = account.secondary_data
+        resource = meeting.linked_account
+    # get user slack form
+
+    slack_form = organization.custom_slack_forms.filter(
+        form_type=slack_const.FORM_TYPE_MEETING_REVIEW, resource=meeting.meeting_resource
+    ).first()
+    fields = slack_form.config.get("fields", [])
+    values = resource.secondary_data
 
     for k, value in values.items():
         for i, field in enumerate(fields):
@@ -408,21 +369,18 @@ def meeting_review_modal_block_set(context):
 @block_set(required_context=["m"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
     """ This modal allows a user attach an existing resource or create a new one """
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    meeting_resource = meeting.meeting_resource
-
-    # if there is no meeting resource this is from the interaction where no resource was found
-    if not meeting_resource:
-        blocks = [
-            block_builders.static_select(
-                "Select a resource to attach to the meeting",
-                [
-                    block_builders.option("Opportunity", "Opportunity"),
-                    block_builders.option("Account", "Account"),
-                ],
-                action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?m={context.get('m')}",
-            ),
-        ]
+    blocks = [
+        block_builders.static_select(
+            "Select a resource to attach to the meeting\n :information_source: *If you want to create a new opportunity and add it to an existing/new account choose to Account first*",
+            [
+                *map(
+                    lambda resource: block_builders.option(resource, resource),
+                    slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
+                )
+            ],
+            action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?m={context.get('m')}",
+        ),
+    ]
 
     return blocks
 
@@ -468,3 +426,55 @@ def create_modal_block_set(context, *args, **kwargs):
 
     return blocks
 
+
+@block_set(required_context=["m"])
+def disregard_meeting_review_block_set(context, *args, **kwargs):
+    """ Shows a modal to create/select a resource """
+    m = ZoomMeeting.objects.get(id=context.get("m"))
+    user = m.zoom_account.user
+    blocks = [
+        block_builders.section_with_button_block(
+            "Review",
+            str(m.id),
+            f":thumbsup: okay, you can always come back to review *{m.topic}* :calendar:",
+            action_id=slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW,
+        )
+    ]
+
+    return blocks
+
+
+@block_set(required_context=["m"])
+def final_meeting_interaction_block_set(context):
+
+    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
+    meeting_id_param = "m=" + context["m"]
+    if meeting.meeting_resource == "Opportunity":
+        regarding_message = meeting.opportunity.title
+    elif meeting.meeting_resource == "Account":
+        regarding_message = meeting.linked_account.name
+
+    blocks = [
+        block_builders.simple_section(
+            f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {regarding_message}"
+        )
+    ]
+    if context.get("show_contacts", False):
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Review the people who joined your meeting and save them to Salesforce",
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                    "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                    "action_id": action_with_params(
+                        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                    ),
+                },
+            },
+        )
+    return blocks

@@ -75,7 +75,8 @@ STANDARD_MEETING_FIELDS = {
         "forecast_category",
         "close_date",
         "meeting_type",
-        "meeting_notes",
+        "meeting_comments",
+        "sentiment",
     ],
-    "Account": ["meeting_type", "meeting_notes",],
+    "Account": ["meeting_type", "meeting_comments", "sentiment"],
 }

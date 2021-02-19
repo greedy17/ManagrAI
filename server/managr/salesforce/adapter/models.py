@@ -14,7 +14,7 @@ from managr.api.decorators import log_all_exceptions
 from .exceptions import CustomAPIException
 from .. import constants as sf_consts
 
-client = HttpClient().client
+client = HttpClient(timeout=20).client
 
 
 class SalesforceAuthAccountAdapter:

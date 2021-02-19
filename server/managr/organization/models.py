@@ -23,6 +23,7 @@ from managr.core import nylas as email_client
 from managr.slack.helpers import block_builders
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.opportunity import constants as opp_consts
+from managr.slack import constants as slack_consts
 from . import constants as org_consts
 
 
@@ -176,16 +177,32 @@ class Account(TimeStampModel, IntegrationModel):
                     value=None,
                     options=[m_type.as_sf_option for m_type in meeting_types],
                 )
-                meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Notes",
-                    "meeting_notes",
+                meeting_comments_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Comments",
+                    "meeting_comments",
                     type="String",
                     required=True,
                     length=250,
                     value=None,
                 )
+                meeting_sentiment_field = SalesforceAuthAccountAdapter.custom_field(
+                    "How did it go ?",
+                    "sentiment",
+                    type="Picklist",
+                    required=True,
+                    length=250,
+                    value=None,
+                    options=[
+                        *map(
+                            lambda opt: dict(
+                                attributes={}, label=opt[0], value=opt[1], validFor=[]
+                            ),
+                            slack_consts.ZOOM_MEETING__SENTIMENTS,
+                        )
+                    ],
+                )
                 return {
-                    "fields": [meeting_type_field, meeting_notes_field,],
+                    "fields": [meeting_type_field, meeting_comments_field, meeting_sentiment_field],
                 }
 
         return
@@ -250,6 +267,31 @@ class Contact(TimeStampModel, IntegrationModel):
             if existing:
                 raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
+
+    @staticmethod
+    def generate_slack_form_config(user, type):
+        """Helper class to generate a slack form config for an org"""
+        sf_account = user.salesforce_account if user.has_salesforce_integration else None
+        if sf_account:
+            # return an object with creatable and required fields
+            fields = sf_account.object_fields.get("Contact", {}).get("fields", {})
+            if type == "CREATE":
+
+                return dict(
+                    fields=list(
+                        filter(
+                            lambda field: field["required"]
+                            and field["createable"]
+                            and field["type"] != "Reference",
+                            fields.values(),
+                        )
+                    ),
+                )
+            if type == "UPDATE":
+                # no required fields for update
+                return dict(fields=list())
+
+        return
 
 
 class StageQuerySet(models.QuerySet):

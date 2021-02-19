@@ -35,7 +35,7 @@ def process_zoom_meeting_data(payload, context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     user = meeting.zoom_account.user
     slack_access_token = user.organization.slack_integration.access_token
-    sentiment = context.get("sentiment", None)
+
     standard_values = {}
     custom_values = {}
     opportunity = meeting.opportunity
@@ -70,12 +70,7 @@ def process_zoom_meeting_data(payload, context):
         # get field type to retrieve the correct value
 
     m_r = MeetingReview.objects.create(
-        **{
-            **standard_values,
-            "meeting": meeting,
-            "custom_data": custom_values,
-            "sentiment": sentiment,
-        }
+        **{**standard_values, "meeting": meeting, "custom_data": custom_values,}
     )
 
     meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
@@ -89,7 +84,6 @@ def process_zoom_meeting_data(payload, context):
         # field errors in slack must contain the field name, in our case we are sending validations
         # therefore these need to be added as an element and removed manually
 
-        print(e)
         return logger.exception(f"failed to log meeting {e}")
 
     # use this for errors
@@ -97,10 +91,10 @@ def process_zoom_meeting_data(payload, context):
     ts, channel = meeting.slack_form.split("|")
 
     slack_requests.update_channel_message(
-        context["original_message_channel"],
-        context["original_message_timestamp"],
+        channel,
+        ts,
         slack_access_token,
-        block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+        block_set=get_block_set("final_meeting_interaction", context=block_set_context),
     )
 
 
@@ -112,9 +106,7 @@ def process_zoom_meeting_attach_resource(payload, context):
     sf_account = user.salesforce_account
     vals = {}
 
-    meeting_resource = (
-        meeting.meeting_resource if meeting.meeting_resource else context.get("resource")
-    )
+    meeting_resource = context.get("resource")
     # get state - state contains the values based on the block_id
     state = payload["view"]["state"]["values"]
 
@@ -132,25 +124,30 @@ def process_zoom_meeting_attach_resource(payload, context):
             elif value["type"] == "checkboxes":
                 current_value = bool(len(value.get("selected_options", [])))
             elif value["type"] == "datepicker":
-                # convert date to correct format and make aware
                 date = value.get("selected_date", None)
                 current_value = date
             vals[field] = current_value
 
     if "select_existing" in vals and vals["select_existing"]:
-        if meeting_resource == "Opportunity":
+        if meeting_resource == slack_const.FORM_RESOURCE_OPPORTUNITY:
             meeting.opportunity_id = vals["select_existing"]
+            # find opp and attach account if exists
+            acct = meeting.zoom_account.user.accounts.filter(
+                opportunities__in=[vals["select_existing"]]
+            ).first()
+            meeting.linked_account = acct
         else:
-            meeting.account_id = vals["select_existing"]
+            meeting.linked_account_id = vals["select_existing"]
+            meeting.opportunity = None
 
     else:
         # create new resource
         # get class
-        model_class = model_routes.get(meeting_resource).get("model")
+        # model_class = model_routes.get(meeting_resource).get("model")
         serializer_class = model_routes.get(meeting_resource).get("serializer")
         # format as coming from api
         adapter_class = adapter_routes.get(meeting_resource)
-        if meeting_resource == "Opportunity":
+        if meeting_resource == slack_const.FORM_RESOURCE_OPPORTUNITY:
             data = adapter_class.create_opportunity(
                 vals,
                 sf_account.access_token,
@@ -158,7 +155,7 @@ def process_zoom_meeting_attach_resource(payload, context):
                 sf_account.object_fields.get(meeting_resource, dict()).get("fields"),
                 str(user.id),
             )
-        elif meeting_resource == "Account":
+        elif meeting_resource == slack_const.FORM_RESOURCE_ACCOUNT:
             data = adapter_class.create_account(
                 vals,
                 sf_account.access_token,
@@ -170,9 +167,15 @@ def process_zoom_meeting_attach_resource(payload, context):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if meeting_resource == "Opportunity":
+        if meeting_resource == slack_const.FORM_RESOURCE_OPPORTUNITY:
             meeting.opportunity_id = serializer.instance.id
+            if serializer.instance.account:
+                meeting.linked_account = serializer.instance.account
+            else:
+                meeting.linked_account = None
+
         else:
+            meeting.opportunity_id = None
             meeting.linked_account_id = serializer.instance.id
 
     meeting.save()
@@ -187,58 +190,6 @@ def process_zoom_meeting_attach_resource(payload, context):
 
     meeting.slack_form = f"{res['ts']}|{res['channel']}"
     meeting.save()
-
-
-@processor(
-    required_context=["u", "opp", "o", "original_message_channel", "original_message_timestamp",]
-)
-def process_zoom_meeting_different_opportunity_submit(payload, context):
-    state = payload["view"]["state"]["values"]
-    new_opportunity_state = state["new_opportunity"]
-
-    user_id_param = "u=" + context["u"]
-    a_id = action_with_params(slack_const.GET_USER_OPPORTUNITIES, params=[user_id_param,],)
-
-    new_opportunity = new_opportunity_state[a_id]["selected_option"]
-
-    if new_opportunity:
-        new_opportunity = new_opportunity["value"]
-    else:
-        # user did not select an option, show them error
-        data = {
-            "response_action": "errors",
-            "errors": {"new_opportunity": "You must select an option."},
-        }
-        return data
-
-    block_set_context = {
-        "opp": new_opportunity,
-        "u": context["u"],
-        "o": context["o"],
-        "m": context["m"],
-    }
-
-    meeting = ZoomMeeting.objects.filter(id=context["m"]).select_related("opportunity").first()
-
-    new_lead = Opportunity.objects.filter(id=new_opportunity).first()
-
-    meeting.opportunity = new_lead
-    meeting.save()
-    # remove newly added leads that are in the meeting participants but are not common with the new_lead contacts
-
-    access_token = (
-        Organization.objects.select_related("slack_integration")
-        .get(pk=context["o"])
-        .slack_integration.access_token
-    )
-
-    res = slack_requests.update_channel_message(
-        context["original_message_channel"],
-        context["original_message_timestamp"],
-        access_token,
-        block_set=get_block_set("zoom_meeting_initial", context=block_set_context),
-    )
-    print(res.json())
 
 
 @processor()
@@ -274,7 +225,6 @@ def handle_view_submission(payload):
     switcher = {
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_zoom_meeting_attach_resource,
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
-        slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity_submit,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_update_meeting_contact,
     }
     callback_id = payload["view"]["callback_id"]

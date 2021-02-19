@@ -103,6 +103,7 @@ TEMPLATES = [
             os.path.join(BASE_DIR, "../client/dist/"),
             os.path.join(BASE_DIR, "managr", "salesforce", "templates", ""),
             os.path.join(BASE_DIR, "managr", "core", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "api", "templates", ""),
         ],
         "APP_DIRS": True,
         "OPTIONS": {

@@ -356,7 +356,7 @@ class MeetingReview(TimeStampModel):
     )
     forecast_category = models.CharField(blank=True, null=True, max_length=255)
     stage = models.CharField(blank=True, null=True, max_length=255,)
-    meeting_notes = models.TextField(blank=True, null=True, max_length=255)
+    meeting_comments = models.TextField(blank=True, null=True, max_length=255)
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
@@ -368,7 +368,7 @@ class MeetingReview(TimeStampModel):
         null=True,
         blank=True,
     )
-    close_date = models.DateTimeField(null=True, blank=True)
+    close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
         choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
@@ -378,7 +378,7 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
-    prev_close_date = models.DateTimeField(null=True, blank=True)
+    prev_close_date = models.DateField(null=True, blank=True)
 
     prev_amount = models.DecimalField(
         max_digits=13,
@@ -416,7 +416,7 @@ class MeetingReview(TimeStampModel):
 
         data = dict(
             Subject=f"Meeting - {self.meeting_type}",
-            Notes=f"{self.meeting_notes}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+            Notes=f"{self.meeting_comments}, this meeting started on {formatted_start} and ended on {formatted_end} ",
             WhatId=self.meeting.opportunity.integration_id,
             ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
             Status="Completed",

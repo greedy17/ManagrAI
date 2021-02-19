@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.template.loader import render_to_string
 
 from rest_framework.views import APIView
 from rest_framework import (
@@ -32,6 +33,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from managr.salesforce.background import emit_sf_sync, emit_gen_next_sync
 from managr.api.decorators import log_all_exceptions
+from managr.api.emails import send_html_email
+
+
 from .models import SFSyncOperation
 from .serializers import SalesforceAuthSerializer
 from .adapter.models import SalesforceAuthAccountAdapter
@@ -76,4 +80,31 @@ def revoke(request):
     if hasattr(user, "salesforce_account"):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
+        user_context = dict(organization=user.organization.name)
+        admin_context = dict(
+            id=str(user.id),
+            email=user.email,
+            is_admin=user.is_admin,
+            revoked_at=datetime.now().date().strftime("%y-%m-%d"),
+        )
+        # send email to user
+        subject = render_to_string("salesforce/access_token_revoked-subject.txt")
+        recipient = [user.email]
+        send_html_email(
+            subject,
+            "salesforce/access_token_revoked.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context=user_context,
+        )
+        # send email to admin
+        subject = render_to_string("salesforce/admin_access_token_revoked-subject.txt")
+        recipient = [settings.STAFF_EMAIL]
+        send_html_email(
+            subject,
+            "salesforce/admin_access_token_revoked.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context={"data": admin_context},
+        )
     return Response()

@@ -18,8 +18,6 @@ import Invite from '@/views/settings/_pages/_Invite'
 // import Styles from '@/views/settings/Styles'
 // END TODO
 
-import CustomSlackForm from '@/views/settings/CustomSlackForm'
-
 Vue.use(Router)
 
 export default new Router({
@@ -98,7 +96,7 @@ export default new Router({
     {
       path: '/forms',
       component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/_pages/_FormSettings'),
+        import(/* webpackChunkName: "settings" */ '../views/settings/SlackFormSettings'),
       beforeEnter: Auth.requireAuth,
       name: 'SlackFormSettings',
     },

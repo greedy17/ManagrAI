@@ -14,6 +14,7 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
+from managr.slack import constants as slack_consts
 from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 
 # from managr.core import background as bg_task
@@ -132,13 +133,29 @@ class Opportunity(TimeStampModel, IntegrationModel):
                     value=None,
                     options=[m_type.as_sf_option for m_type in meeting_types],
                 )
-                meeting_notes_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Notes",
-                    "meeting_notes",
+                meeting_comments_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Comments",
+                    "meeting_comments",
                     type="String",
                     required=True,
                     length=250,
                     value=None,
+                )
+                meeting_sentiment_field = SalesforceAuthAccountAdapter.custom_field(
+                    "How did it go ?",
+                    "sentiment",
+                    type="Picklist",
+                    required=True,
+                    length=250,
+                    value=None,
+                    options=[
+                        *map(
+                            lambda opt: dict(
+                                attributes={}, label=opt[0], value=opt[1], validFor=[]
+                            ),
+                            slack_consts.ZOOM_MEETING__SENTIMENTS,
+                        )
+                    ],
                 )
                 # this is a managr form make forecast_category_name required
                 forecast_category_name = (
@@ -168,7 +185,8 @@ class Opportunity(TimeStampModel, IntegrationModel):
                 return {
                     "fields": [
                         meeting_type_field,
-                        meeting_notes_field,
+                        meeting_comments_field,
+                        meeting_sentiment_field,
                         stage,
                         forecast_category_name,
                         close_date,

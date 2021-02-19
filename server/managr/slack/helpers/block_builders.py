@@ -141,6 +141,50 @@ def datepicker(
     return block
 
 
+{
+    "type": "section",
+    "text": {"type": "mrkdwn", "text": "test"},
+    "block_id": "will work",
+    "accessory": {
+        "type": "button",
+        "text": {"type": "plain_text", "text": "sure will"},
+        "value": "cool",
+    },
+}
+
+
+def section_with_button_block(
+    button_label,
+    button_value,
+    section_text,
+    text_type="mrkdwn",
+    block_id=None,
+    url=None,
+    style=None,
+    confirm=False,
+    action_id=None,
+):
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": text_type, "text": section_text},
+        "block_id": block_id,
+        "accessory": {
+            "type": "button",
+            "text": {"type": "plain_text", "text": button_label},
+            "value": button_value,
+            # "confirm": confirm,
+            "action_id": action_id if action_id else str(uuid.uuid4()),
+        },
+    }
+    if style:
+        block["accessory"]["style"] = style
+    if url:
+        block["accessory"]["url"] = url
+    return block
+
+
 def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
     # action ID must be unique
     block = {

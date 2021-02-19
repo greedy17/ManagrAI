@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
-from managr.organization.models import Contact
+from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity
 from managr.salesforce.adapter.models import ContactAdapter
 
@@ -204,69 +204,81 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 )
             )
 
+            meeting_contacts = []
+
+            # find existing contacts
+
+            existing_contacts = Contact.objects.filter(
+                email__in=participant_emails, owner__organization__id=user.organization.id
+            ).exclude(email=user.email)
+            # convert all contacts to model representation and remove from array
+            for contact in existing_contacts:
+                formatted_contact = contact.adapter_class.as_dict
+                formatted_contact["from_integration"] = True
+                meeting_contacts.append(formatted_contact)
+                for index, participant in enumerate(participants):
+                    if (
+                        participant["user_email"] == contact.email
+                        or participant["user_email"] == user.email
+                    ):
+                        del participants[index]
+
+            meeting_contacts = [
+                *list(
+                    filter(
+                        lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
+                        list(
+                            map(
+                                lambda participant: {
+                                    **ContactAdapter(
+                                        **dict(
+                                            email=participant["user_email"],
+                                            # these will only get stored if lastname and firstname are accessible from sf
+                                            secondary_data={
+                                                "firstName": _split_first_name(participant["name"]),
+                                                "lastName": _split_last_name(participant["name"]),
+                                            },
+                                        )
+                                    ).as_dict,
+                                    "from_integration": False,
+                                },
+                                participants,
+                            ),
+                        ),
+                    )
+                ),
+                *meeting_contacts,
+            ]
+
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__organization__id=user.organization.id
             ).first()
-            meeting_contacts = []
-
             if opportunity:
-                existing_contacts = Contact.objects.filter(
-                    email__in=participant_emails, owner__organization__id=user.organization.id
-                ).exclude(email=user.email)
-                # convert all contacts to model representation and remove from array
-                for contact in existing_contacts:
-                    formatted_contact = contact.adapter_class.as_dict
-                    formatted_contact["from_integration"] = True
-                    meeting_contacts.append(formatted_contact)
-                    for index, participant in enumerate(participants):
-                        if (
-                            participant["user_email"] == contact.email
-                            or participant["user_email"] == user.email
-                        ):
-                            del participants[index]
-
-                meeting_contacts = [
-                    *list(
-                        filter(
-                            lambda x: x.get("first_name") or x.get("last_name") or x.get("email"),
-                            list(
-                                map(
-                                    lambda participant: {
-                                        **ContactAdapter(
-                                            **dict(
-                                                email=participant["user_email"],
-                                                first_name=_split_first_name(participant["name"]),
-                                                last_name=_split_last_name(participant["name"]),
-                                            )
-                                        ).as_dict,
-                                        "from_integration": False,
-                                    },
-                                    participants,
-                                ),
-                            ),
-                        )
-                    ),
-                    *meeting_contacts,
-                ]
-
-                # push to sf
-
-                # for v1 will only be able to assign to one opportunity
                 meeting.opportunity = opportunity.id
-                meeting.participants = meeting_contacts
-                serializer = ZoomMeetingSerializer(data=meeting.as_dict)
+                if opportunity.account:
+                    meeting.linked_account = opportunity.account.id
+            else:
+                account = Account.objects.filter(
+                    contacts__email__in=participant_emails,
+                    owner__organization__id=user.organization.id,
+                ).first()
+                if account:
+                    meeting.linked_account = account.id
 
-                try:
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                except ValidationError as e:
-                    logger.exception(
-                        f"Unable to save and initiate slack for meeting with uuid {meeting_uuid} becuase of error {json.dumps(e.detail)}"
-                    )
-                    return e
+            meeting.participants = meeting_contacts
+            serializer = ZoomMeetingSerializer(data=meeting.as_dict)
 
-                # emit the event to start slack interaction
-                emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            except ValidationError as e:
+                logger.exception(
+                    f"Unable to save and initiate slack for meeting with uuid {meeting_uuid} becuase of error {json.dumps(e.detail)}"
+                )
+                return e
+
+            # emit the event to start slack interaction
+            emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
 
 
 @background(schedule=0)

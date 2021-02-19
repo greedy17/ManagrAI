@@ -17,11 +17,11 @@ logger = logging.getLogger("managr")
 
 
 @processor()
-def process_meeting_sentiment(payload, context):
+def process_meeting_review(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     meeting_id = payload["actions"][0]["value"]
-    sentiment = payload["actions"][0]["action_id"]
+
     meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
@@ -29,7 +29,7 @@ def process_meeting_sentiment(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    context = {"m": meeting_id, "sentiment": sentiment}
+    context = {"m": meeting_id}
 
     private_metadata.update(context)
     data = {
@@ -291,7 +291,7 @@ def process_update_search_or_create(payload, context):
     access_token = organization.slack_integration.access_token
     c = {
         "m": context.get("m"),
-        "resource": context.get("resource"),
+        "resource": str(context.get("resource")),
         "selected_option": select,
     }
     current_block_sets = get_block_set("create_or_search_modal", context=c)
@@ -331,7 +331,6 @@ def process_meeting_selected_resource(payload, context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).select_related("zoom_account").first()
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
-    selected_label = select["text"]["text"]
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
     private_metadata = {
@@ -340,7 +339,7 @@ def process_meeting_selected_resource(payload, context):
     }
     context = {
         "m": context.get("m"),
-        "resource": selected_option,
+        "resource": str(selected_option),
     }
 
     private_metadata.update(context)
@@ -349,9 +348,8 @@ def process_meeting_selected_resource(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
-            "title": {"type": "plain_text", "text": f"{selected_label}"},
+            "title": {"type": "plain_text", "text": f"{selected_option}"},
             "blocks": get_block_set("create_or_search_modal", context=context),
-            # "submit": {"type": "plain_text", "text": "Attach"},
             "private_metadata": json.dumps(private_metadata),
         },
     }
@@ -365,11 +363,49 @@ def process_create_or_search_selected(payload, context):
     meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
+    # get current blocks
+    previous_blocks = payload["message"]["blocks"]
+    # create new block including the resource type
+    block_sets = get_block_set("attach_resource_interaction", {"m": meeting_id})
     res = slack_requests.update_channel_message(
         payload["channel"]["id"],
         payload["message"]["ts"],
         access_token,
-        block_set=get_block_set("attach_resource_interaction", {"m": meeting_id}),
+        block_set=[*previous_blocks, *block_sets],
+    ).json()
+    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.save()
+
+
+@processor()
+def process_restart_flow(payload, context):
+    meeting_id = payload["actions"][0]["value"]
+    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    ts, channel = meeting.slack_form.split("|")
+    res = slack_requests.update_channel_message(
+        channel,
+        ts,
+        access_token,
+        block_set=get_block_set("initial_meeting_interaction", context={"m": meeting_id}),
+    ).json()
+
+    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.save()
+
+
+@processor()
+def process_disregard_meeting_review(payload, context):
+    meeting_id = payload["actions"][0]["value"]
+    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    res = slack_requests.update_channel_message(
+        payload["channel"]["id"],
+        payload["message"]["ts"],
+        access_token,
+        block_set=get_block_set("disregard_meeting_review", context={"m": meeting_id}),
     ).json()
     meeting.slack_form = f"{res['ts']}|{res['channel']}"
     meeting.save()
@@ -381,10 +417,6 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__GREAT: process_meeting_sentiment,
-        slack_const.ZOOM_MEETING__NOT_WELL: process_meeting_sentiment,
-        slack_const.ZOOM_MEETING__CANT_TELL: process_meeting_sentiment,
-        slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY: process_zoom_meeting_different_opportunity,
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
@@ -393,6 +425,9 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
         slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH: process_update_search_or_create,
+        slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
+        slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
+        slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
