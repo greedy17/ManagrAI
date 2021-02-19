@@ -92,6 +92,7 @@ def _refresh_zoom_token(zoom_account_id):
 
 @background(schedule=0)
 def _push_meeting_contacts(meeting_id):
+    """ After a meeting is reviewed this task will create contacts for whom we have and email or a lastName (required by sf)"""
     from managr.salesforce.background import emit_add_c_role_to_opp
 
     meeting = ZoomMeeting.objects.filter(id=meeting_id).first()
@@ -110,13 +111,20 @@ def _push_meeting_contacts(meeting_id):
                 if not contact["email"] or not len(contact["email"]):
                     not_created_contacts.append(contact)
                     continue
-                if not contact["last_name"] or not len(contact["last_name"]):
-                    contact["last_name"] = "N/A"
+                # if a contact doesnt have a last name append N/A so we can at least add them
+                last_name = contact.get("secondary_data", {}).get("LastName")
+                contact["secondary_data"]["LastName"] = last_name if last_name else "N/A"
+                if meeting.meeting_resource == "Account":
+                    # add the account external id
+                    contact["external_account"] = str(meeting.linked_account_id)
                 while True:
                     attempts = 0
                     try:
                         res = ContactAdapter.create_new_contact(
-                            contact, sf.access_token, sf.instance_url
+                            contact,
+                            sf.access_token,
+                            sf.instance_url,
+                            sf.object_fields.get("Contact", {}).get("fields", {}),
                         )
                         contact["integration_id"] = res["id"]
                         contact["integration_source"] = "SALESFORCE"
@@ -143,14 +151,14 @@ def _push_meeting_contacts(meeting_id):
                     *meeting.participants[len(contacts_not_in_sf) :],
                 ]
                 meeting.save()
-
-            for contact in created_contacts:
-                emit_add_c_role_to_opp(
-                    str(user.id), str(meeting.opportunity.id), contact["integration_id"]
-                )
+            if meeting.meeting_resource != "Account":
+                "Leads and Opportunities need to have a contact role"
+                for contact in created_contacts:
+                    emit_add_c_role_to_opp(
+                        str(user.id), str(meeting.opportunity.id), contact["integration_id"]
+                    )
 
         block_set_context = {
-            "opp": str(meeting.opportunity.id),
             "m": str(meeting.id),
             "show_contacts": True,
         }
@@ -159,7 +167,7 @@ def _push_meeting_contacts(meeting_id):
             channel,
             ts,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("confirm_meeting_logged", context=block_set_context),
+            block_set=get_block_set("final_meeting_interaction", context=block_set_context),
         )
 
     # emit event to create contact role
@@ -235,8 +243,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                                             email=participant["user_email"],
                                             # these will only get stored if lastname and firstname are accessible from sf
                                             secondary_data={
-                                                "firstName": _split_first_name(participant["name"]),
-                                                "lastName": _split_last_name(participant["name"]),
+                                                "FirstName": _split_first_name(participant["name"]),
+                                                "LastName": _split_last_name(participant["name"]),
                                             },
                                         )
                                     ).as_dict,

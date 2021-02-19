@@ -416,8 +416,10 @@ class MeetingReview(TimeStampModel):
 
         data = dict(
             Subject=f"Meeting - {self.meeting_type}",
-            Notes=f"{self.meeting_comments}, this meeting started on {formatted_start} and ended on {formatted_end} ",
-            WhatId=self.meeting.opportunity.integration_id,
+            Description=f"{self.meeting_comments}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+            WhatId=self.meeting.opportunity.integration_id
+            if self.meeting.meeting_resource == "Opportunity"
+            else self.meeting.linked_account.integration_id,
             ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
             Status="Completed",
             TaskSubType="Call",

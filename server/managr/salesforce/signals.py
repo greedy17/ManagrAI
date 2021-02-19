@@ -25,7 +25,7 @@ def update_succesful_operations(sender, instance=None, created=False, **kwargs):
             sync_id = json.loads(instance.task_params)[0][1]
             operation = SFSyncOperation.objects.filter(id=sync_id).first()
             if operation:
-                operation.completed_operations.append(task_id)
+                operation.completed_operations.append(str(instance.task_hash))
                 operation.save()
             else:
                 logger.info(

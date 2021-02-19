@@ -122,9 +122,9 @@ class SFSyncOperation(TimeStampModel):
 
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
                 if self.operations:
-                    self.operations.append(str(t.id))
+                    self.operations.append(str(t.task_hash))
                 else:
-                    self.operations = [str(t.id)]
+                    self.operations = [str(t.task_hash)]
                 self.save()
 
         scheduled_time = timezone.now() + timezone.timedelta(minutes=1)

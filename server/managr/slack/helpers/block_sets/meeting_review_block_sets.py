@@ -5,6 +5,7 @@ import json
 
 from datetime import datetime
 
+from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -42,35 +43,40 @@ def generate_edit_contact_form(field, id, value, optional=True):
 def generate_contact_group(index, contact, instance_url):
     # get fields from form and display values based on this form as label value in multi block
     integration_id = contact.get("integration_id")
+    # get fields show only these items if they exist in the secondary data as options
+    contact_secondary_data = contact.get("secondary_data", {})
     title = (
-        contact.get("title")
-        if contact.get("title", "") and len(contact.get("title", ""))
+        contact_secondary_data.get("Title")
+        if contact_secondary_data.get("Title", "") and len(contact_secondary_data.get("Title", ""))
         else "N/A"
     )
     first_name = (
-        contact.get("first_name")
-        if contact.get("first_name", "") and len(contact.get("first_name", ""))
+        contact_secondary_data.get("FirstName")
+        if contact_secondary_data.get("FirstName", "")
+        and len(contact_secondary_data.get("FirstName", ""))
         else "N/A"
     )
     last_name = (
-        contact.get("last_name")
-        if contact.get("last_name", "") and len(contact.get("last_name", ""))
+        contact_secondary_data.get("LastName")
+        if contact_secondary_data.get("LastName", "")
+        and len(contact_secondary_data.get("LastName", ""))
         else "N/A"
     )
 
     email = (
-        contact.get("email")
-        if contact.get("email", "") and len(contact.get("email", ""))
+        contact_secondary_data.get("Email")
+        if contact_secondary_data.get("Email", "") and len(contact_secondary_data.get("Email", ""))
         else "N/A"
     )
     mobile_number = (
-        contact.get("mobile_number")
-        if contact.get("mobile_number") and len(contact.get("mobile_number"))
+        contact_secondary_data.get("MobilePhone")
+        if contact_secondary_data.get("MobilePhone")
+        and len(contact_secondary_data.get("MobilePhone"))
         else "N/A"
     )
     phone_number = (
-        contact.get("phone_number")
-        if contact.get("phone_number") and len(contact.get("phone_number"))
+        contact_secondary_data.get("Phone")
+        if contact_secondary_data.get("Phone") and len(contact_secondary_data.get("Phone"))
         else "N/A"
     )
 
@@ -80,6 +86,7 @@ def generate_contact_group(index, contact, instance_url):
     )
 
     if integration_id:
+        # url button to show in sf
         blocks["accessory"] = {
             "type": "button",
             "text": {"type": "plain_text", "text": "View In Salesforce"},
@@ -102,12 +109,15 @@ def meeting_contacts_block_set(context):
         {"type": "header", "text": {"type": "plain_text", "text": "Review Meeting Participants",},},
         {"type": "divider"},
     ]
+    # list contacts we already had from sf
     contacts_in_sf = list(filter(lambda contact: contact["from_integration"], contacts))
+    # list contacts we added automatically to sf
     contacts_added_to_sf = list(
         filter(
             lambda contact: not contact["from_integration"] and contact["integration_id"], contacts
         )
     )
+    # list contacts we could not add to sf aka no useful info
     contacts_not_added = list(
         filter(
             lambda contact: not contact["from_integration"]
@@ -245,14 +255,40 @@ def meeting_contacts_block_set(context):
 # use fields from model to generate form
 def edit_meeting_contacts_block_set(context):
     contact = context["contact"]
-    blocks = [
-        generate_edit_contact_form("Title", "title", contact["title"]),
-        generate_edit_contact_form("First Name", "first_name", contact["first_name"]),
-        generate_edit_contact_form("Last Name", "last_name", contact["last_name"], optional=False),
-        generate_edit_contact_form("Email", "email", contact["email"]),
-        generate_edit_contact_form("Mobile Phone", "mobile_phone", contact["mobile_phone"]),
-        generate_edit_contact_form("Phone", "phone_number", contact["phone_number"]),
-    ]
+
+    slack_form = (
+        context.get("meeting")
+        .zoom_account.user.organization.custom_slack_forms.filter(
+            resource="Contact", form_type="UPDATE"
+        )
+        .first()
+    )
+    if not slack_form:
+        return [
+            block_builders.simple_section(
+                "It seems we are still generating this form please try again in a few"
+            )
+        ]
+    fields = slack_form.config.get("fields", [])
+    if not len(fields):
+        return [
+            block_builders.section_with_button_block(
+                "Forms",
+                "form",
+                "Please add fields to your contact update form",
+                url=f"{get_site_url()}/forms",
+            )
+        ]
+
+    secondary_data = contact.get("secondary_data", {})
+
+    for k, value in secondary_data.items():
+        for i, field in enumerate(fields):
+            if field["key"] == k:
+                field["value"] = value
+                fields[i] = field
+
+    blocks = map_fields_to_type(fields)
     return blocks
 
 

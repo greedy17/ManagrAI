@@ -32,24 +32,26 @@
           </div>
         </div>
         <div class="box__tab-content">
-          <p>
-            <i
-              >Required Fields have been pre-filled as part of the form, add or remove additional
-              fields</i
-            >
-            <br />
-            <strong>Additional Validations may apply for your Salesforce Resources</strong
-            ><button @click="showValidations = !showValidations">Click Here</button
-            ><strong>to view them</strong>
-          </p>
+          <template v-if="selectedForm">
+            <p>
+              <i
+                >Required Fields have been pre-filled as part of the form, add or remove additional
+                fields</i
+              >
+              <br />
+              <strong>Additional Validations may apply for your Salesforce Resources</strong
+              ><button @click="showValidations = !showValidations">Click Here</button
+              ><strong>to view them</strong>
+            </p>
 
-          <!--         <CustomSlackForm
-            :show-validations="showValidations"
-            :customForm="selectedForm"
-            :formType="selectedTab"
-            :resource="resource"
-            v-on:update:selectedForm="updateForm($event)"
-          /> -->
+            <CustomSlackForm
+              :show-validations="showValidations"
+              :customForm="selectedForm"
+              :formType="selectedTab"
+              :resource="resource"
+              v-on:update:selectedForm="updateForm($event)"
+            />
+          </template>
         </div>
       </div>
     </div>
@@ -77,7 +79,7 @@ export default {
       formsByType: [],
       isLoading: false,
       selectedTab: null,
-      resource: 'Opportunity',
+      resource: null,
       selectedForm: null,
       showValidations: false,
       FORM_RESOURCES,
@@ -89,7 +91,7 @@ export default {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
 
-      this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+      //
 
       //this.toggleSelectedTab('MEETING_REVIEW')
     } catch (error) {
@@ -103,11 +105,13 @@ export default {
     toggleSelectedFormResource(resource) {
       if (this.resource && resource) {
         if (this.resource == resource) {
-          // toggle to open and close if the same expand is clicked
           let classList = this.$refs[`${resource.toLowerCase()}-content`][0].classList
           if (classList.contains('box__content--expanded')) {
             classList.toggle('box__content--closed')
             classList.toggle('box__content--expanded')
+            setTimeout(() => {
+              classList.toggle('box__content--closed')
+            }, 500)
           } else if (classList.contains('box__content--closed')) {
             classList.toggle('box__content--expanded')
             classList.toggle('box__content--closed')
@@ -117,14 +121,28 @@ export default {
         } else {
           let prev = this.resource
           this.resource = resource
+          this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
           if (prevClassList.contains('box__content--expanded')) {
             prevClassList.toggle('box__content--closed')
             prevClassList.toggle('box__content--expanded')
+            setTimeout(() => {
+              prevClassList.toggle('box__content--closed')
+            }, 500)
           }
           classList.toggle('box__content--expanded')
         }
+      } else {
+        this.resource = resource
+        this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+        let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
+        classList.toggle('box__content--expanded')
+      }
+      if (this.resource == CONTACT) {
+        this.toggleSelectedTab(CREATE)
+      } else {
+        this.toggleSelectedTab(MEETING_REVIEW)
       }
     },
     toggleSelectedTab(tab) {
@@ -156,6 +174,11 @@ export default {
 @import '@/styles/emails';
 @import '@/styles/sidebars';
 
+.box__header {
+  &:hover {
+    cursor: pointer;
+  }
+}
 .box__content {
   display: none;
   &--closed {
@@ -186,10 +209,12 @@ export default {
 
 @keyframes closemenu {
   0% {
+    display: block;
     height: 50rem;
     opacity: 0.01;
   }
   100% {
+    display: none;
     height: 0rem;
     opacity: 0;
   }

@@ -76,15 +76,16 @@ def process_zoom_meeting_data(payload, context):
     meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
     meeting.is_closed = True
     meeting.save()
-    formatted_data = m_r.as_sf_update
-    try:
-        meeting.opportunity.update_in_salesforce(formatted_data)
+    if meeting_resource_type != "Account":
+        formatted_data = m_r.as_sf_update
+        try:
+            meeting.opportunity.update_in_salesforce(formatted_data)
 
-    except FieldValidationError as e:
-        # field errors in slack must contain the field name, in our case we are sending validations
-        # therefore these need to be added as an element and removed manually
+        except FieldValidationError as e:
+            # field errors in slack must contain the field name, in our case we are sending validations
+            # therefore these need to be added as an element and removed manually
 
-        return logger.exception(f"failed to log meeting {e}")
+            return logger.exception(f"failed to log meeting {e}")
 
     # use this for errors
     block_set_context = {"m": context["m"]}
@@ -204,16 +205,33 @@ def process_update_meeting_contact(payload, context):
     integration_id = participant.get("integration_id")
     instance_url = meeting.zoom_account.user.salesforce_account.instance_url
     access_token = meeting.zoom_account.user.salesforce_account.access_token
+    object_fields = meeting.zoom_account.user.salesforce_account.object_fields
+
     if participant.get("integration_id", None):
-        ContactAdapter.update_contact(data, access_token, instance_url, integration_id)
+        ContactAdapter.update_contact(
+            data,
+            access_token,
+            instance_url,
+            integration_id,
+            object_fields.get("Contact", {}).get("fields", {}),
+        )
     else:
-        res = ContactAdapter.create_new_contact(participant, access_token, instance_url)
+        data["external_owner"] = meeting.zoom_account.user.salesforce_account.salesforce_id
+        # if the meeting type is account add the contact account manually
+        if meeting.meeting_resource == slack_const.FORM_RESOURCE_ACCOUNT:
+            data["external_account"] = meeting.linked_account.integration_id
+        res = ContactAdapter.create_new_contact(
+            data, access_token, instance_url, object_fields.get("Contact", {}).get("fields", {}),
+        )
         participant["integration_id"] = res["id"]
         participant["integration_source"] = "SALESFORCE"
-        meeting.opportunity.add_contact_role(
-            access_token, instance_url, participant["integration_id"]
-        )
-    meeting.participants[index] = {**meeting.participants[index], **data}
+
+        # if the meeting type is not an account we need to add a contact role
+        if meeting.meeting_resource == slack_const.FORM_RESOURCE_OPPORTUNITY:
+            meeting.opportunity.add_contact_role(
+                access_token, instance_url, participant["integration_id"],
+            )
+    meeting.participants[index] = {**meeting.participants[index], "secondary_data": data}
     meeting.save()
     return
 

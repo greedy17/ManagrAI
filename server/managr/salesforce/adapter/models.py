@@ -405,19 +405,25 @@ class ContactAdapter:
         return ContactAdapter(**formatted_data)
 
     @staticmethod
-    def to_api(data, mapping):
+    def to_api(data, mapping, object_fields):
         formatted_data = dict()
         for k, v in data.items():
             key = mapping.get(k, None)
             if key:
                 formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
 
         return formatted_data
 
     @staticmethod
-    def create_new_contact(data, access_token, custom_base):
-        json_data = json.dumps(ContactAdapter.to_api(data, ContactAdapter.from_mapping))
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, "")
+    def create_new_contact(data, access_token, custom_base, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
@@ -425,10 +431,12 @@ class ContactAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def update_contact(data, access_token, custom_base, integration_id):
-        json_data = json.dumps(ContactAdapter.to_api(data, ContactAdapter.from_mapping))
+    def update_contact(data, access_token, custom_base, integration_id, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.SALESFORCE_RESOURCE_CONTACT, integration_id
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
