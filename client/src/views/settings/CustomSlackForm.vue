@@ -4,12 +4,17 @@
       <div class="slack-from-builder__sf-validations">
         <h4>Validations</h4>
         <template v-if="showValidations">
-          <ul v-for="val in sfValidations">
-            <li>
-              <strong>Title:</strong> {{ val.description }} <strong>Message:</strong>
-              {{ val.message }}
-            </li>
-          </ul>
+          <template v-if="sfValidations.length">
+            <ul :key="val.id" v-for="val in sfValidations">
+              <li>
+                <strong>Title:</strong> {{ val.description }} <strong>Message:</strong>
+                {{ val.message }}
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+            {{ resource }} does not appear to have any custom validations
+          </template>
         </template>
       </div>
     </div>
