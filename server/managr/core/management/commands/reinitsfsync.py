@@ -1,4 +1,4 @@
-import timezone
+from django.utils import timezone
 
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.models import SalesforceAuthAccount
