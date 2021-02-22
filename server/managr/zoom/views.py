@@ -41,6 +41,8 @@ from managr.core.permissions import (
 
 from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.slack.helpers import auth as slack_auth
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from managr.slack.models import UserSlackIntegration
@@ -146,6 +148,8 @@ def zoom_meetings_webhook(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
+    # list of accepted commands for this fake endpoint
+    allowed_commands = ["opportunity", "account"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -169,32 +173,77 @@ def init_fake_meeting(request):
         command_params = text.split(" ")
     else:
         command_params = []
+    meeting_resource = None
     if len(command_params):
-        meeting_uuid = command_params[0]
-        host_id = host_id
-        meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
-        if meeting:
-            meeting.delete()
-        original_duration = None
-
-        if not original_duration or original_duration < 0:
-            original_duration = 0
-        ### move all this to a background task, zoom requires response in 60s
-        zoom_account = user.zoom_account
-
-        if zoom_account and not zoom_account.is_revoked:
-            # emit the process
-            _get_past_zoom_meeting_details(
-                str(zoom_account.user.id), meeting_uuid, original_duration
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that option: {}".format(command_params[0]),
+                }
             )
+        meeting_resource = command_params[0]
 
-        return Response(data="Cool I'll Initiate the demo")
-    return Response(
-        data={
-            "response_type": "ephemeral",
-            "text": "Sorry I need the meeting uuid and the host id",
-        }
-    )
+    meeting_uuid = settings.ZOOM_FAKE_MEETING_UUID
+    if not meeting_uuid:
+        return Response(
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
+        )
+    host_id = host_id
+    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    if meeting:
+        meeting.delete()
+    original_duration = None
+
+    if not original_duration or original_duration < 0:
+        original_duration = 0
+    ### move all this to a background task, zoom requires response in 60s
+    zoom_account = user.zoom_account
+
+    if zoom_account and not zoom_account.is_revoked:
+        # emit the process
+        _get_past_zoom_meeting_details.now(
+            str(zoom_account.user.id), meeting_uuid, original_duration
+        )
+        # get meeting
+        if meeting_resource and meeting_resource.lower() == "account":
+            meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+            meeting.opportunity = None
+            acc = user.accounts.first()
+            meeting.linked_account_id = acc.id
+            meeting.save()
+        elif not meeting_resource:
+            meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+            meeting.opportunity = None
+            meeting.linked_account = None
+            meeting.save()
+        if not meeting_resource or not meeting_resource.lower() == "opportunity":
+            access_token = user.organization.slack_integration.access_token
+            attempts = 0
+            while True:
+
+                if not len(meeting.slack_interaction):
+
+                    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+                    attempts += 1
+
+                else:
+                    break
+            ts, channel = meeting.slack_interaction.split("|")
+            res = slack_requests.update_channel_message(
+                channel,
+                ts,
+                access_token,
+                block_set=get_block_set(
+                    "initial_meeting_interaction", context={"m": str(meeting.id)},
+                ),
+            ).json()
+            meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
+            meeting.save()
+
+        # if commands has a type update meeting to that type
+
+    return Response(data="Done")
 
 
 @api_view(["post"])

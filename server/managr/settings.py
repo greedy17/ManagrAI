@@ -372,6 +372,7 @@ if USE_ZOOM:
     ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID")
     ZOOM_SECRET = _env_get_required("ZOOM_SECRET")
     ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN")
+    ZOOM_FAKE_MEETING_UUID = os.environ.get("ZOOM_FAKE_MEETING_UUID", None)
 
 
 USE_SLACK = os.environ.get("USE_SLACK") == "True"

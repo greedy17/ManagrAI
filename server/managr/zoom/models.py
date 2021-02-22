@@ -273,7 +273,12 @@ class ZoomMeeting(TimeStampModel):
     slack_form = models.CharField(
         blank=True,
         max_length=255,
-        help_text="Id of slack form, we will use this id to delete/update the form when the meeting is deleted",
+        help_text="Id of slack form, we will use this id to delete/update the form when using an async flow",
+    )
+    slack_interaction = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
     )
     objects = ZoomMeetingQuerySet.as_manager()
 

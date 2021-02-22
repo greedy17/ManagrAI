@@ -162,13 +162,16 @@ def _push_meeting_contacts(meeting_id):
             "m": str(meeting.id),
             "show_contacts": True,
         }
-        ts, channel = meeting.slack_form.split("|")
-        slack_requests.update_channel_message(
+        ts, channel = meeting.slack_interaction.split("|")
+        res = slack_requests.update_channel_message(
             channel,
             ts,
             user.organization.slack_integration.access_token,
             block_set=get_block_set("final_meeting_interaction", context=block_set_context),
-        )
+        ).json()
+
+        meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
+        meeting.save()
 
     # emit event to create contact role
     # save to the meeting
@@ -304,9 +307,9 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             res = slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
             ).json()
-            print(res)
+
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
-            meeting.slack_form = f"{res['ts']}|{res['channel']}"
+            meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
             meeting.save()
 
 

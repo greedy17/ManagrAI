@@ -395,7 +395,39 @@ def meeting_review_modal_block_set(context):
                 field["value"] = value
                 fields[i] = field
 
-    blocks = map_fields_to_type(fields)
+    blocks = [
+        block_builders.simple_section(
+            ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+            "mrkdwn",
+        ),
+    ]
+
+    # additional validations
+    validations = user.salesforce_account.object_fields.get(meeting.meeting_resource, {}).get(
+        "validations", None
+    )
+    if validations:
+
+        blocks.extend(
+            [
+                block_builders.simple_section(
+                    ":warning: *_Additional Validations required to avoid errors_*", "mrkdwn"
+                ),
+                block_builders.simple_section_multiple(
+                    list(
+                        map(
+                            lambda validation: block_builders.text_block(
+                                f'_{validation[0]+1}. {validation[1]["message"]}_', "mrkdwn"
+                            ),
+                            enumerate(validations),
+                        )
+                    )
+                ),
+            ]
+        )
+
+    blocks.extend(map_fields_to_type(fields))
+    # static blocks
 
     # make params here
 
@@ -404,10 +436,10 @@ def meeting_review_modal_block_set(context):
 
 @block_set(required_context=["m"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
-    """ This modal allows a user attach an existing resource or create a new one """
+    """ This interaction updates the message to show a drop down of resources """
     blocks = [
         block_builders.static_select(
-            "Select a resource to attach to the meeting\n :information_source: *If you want to create a new opportunity and add it to an existing/new account choose to Account first*",
+            ":information_source: Select a resource to attach to the meeting",
             [
                 *map(
                     lambda resource: block_builders.option(resource, resource),
@@ -415,6 +447,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
                 )
             ],
             action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?m={context.get('m')}",
+            block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),
     ]
 
@@ -451,7 +484,7 @@ def search_modal_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["m", "resource"])
 def create_modal_block_set(context, *args, **kwargs):
-    """ Shows a modal to create/select a resource """
+    """ Shows a modal to create a resource """
     m = ZoomMeeting.objects.get(id=context.get("m"))
     user = m.zoom_account.user
     slack_form = user.organization.custom_slack_forms.filter(

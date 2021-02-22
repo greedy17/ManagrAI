@@ -36,6 +36,7 @@
               class="primary-button"
               text="Save"
               :loading="savingForm"
+              :disabled="!$store.state.user.isAdmin"
             />
           </div>
         </div>
@@ -54,15 +55,15 @@
             <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
             <div
               class="form-field__btn form-field__remove-btn"
-              :class="{ 'form-field__remove-btn--disabled': field.required }"
+              :class="{ 'form-field__remove-btn--disabled': !canRemoveField(field) }"
               :title="
-                field.required
-                  ? 'This field is required and cannot be removed.'
-                  : 'Remove this field from the form'
+                canRemoveField(field)
+                  ? 'Remove this field from the form'
+                  : 'This field is required and cannot be removed.'
               "
-              @click="() => !field.required && onRemoveField(field)"
+              @click="() => canRemoveField(field) && onRemoveField(field)"
             >
-              {{ field.required ? 'required' : '× remove' }}
+              {{ !canRemoveField(field) ? 'required' : '× remove' }}
             </div>
           </div>
         </div>
@@ -75,6 +76,7 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'CustomSlackForm',
@@ -104,6 +106,7 @@ export default {
       customSlackFormConfig: { fields: [] },
       formHasChanges: false,
       savingForm: false,
+      ...FORM_CONSTS,
     }
   },
   watch: {
@@ -168,6 +171,29 @@ export default {
     },
   },
   methods: {
+    canRemoveField(field) {
+      // If form is create required fields cannot be removed
+      // if form is update required fields can be removed
+      // if form is meeting review depening on the resource it can/cant be removed
+      if (this.formType == this.CREATE) {
+        if (field.required) {
+          return false
+        } else {
+          return true
+        }
+      } else if (this.formType == this.MEETING_REVIEW) {
+        if (
+          this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
+          ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex(f => field.key == f)
+        ) {
+          return false
+        } else {
+          return true
+        }
+      } else {
+        return true
+      }
+    },
     onAddField(field) {
       this.customSlackFormConfig.fields = [...this.customSlackFormConfig.fields, { ...field }]
       this.formHasChanges = true

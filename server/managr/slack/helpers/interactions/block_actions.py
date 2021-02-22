@@ -299,7 +299,7 @@ def process_update_search_or_create(payload, context):
         blocks = get_block_set("search_modal_block_set", context=c)
     elif selected_option == "CREATE":
         blocks = get_block_set("create_modal_block_set", context=c)
-    ts, channel = meeting.slack_form.split("|")
+    ts, channel = meeting.slack_interaction.split("|")
     private_metadata = {
         "original_message_timestamp": ts,
         "original_message_channel": channel,
@@ -365,15 +365,20 @@ def process_create_or_search_selected(payload, context):
     access_token = organization.slack_integration.access_token
     # get current blocks
     previous_blocks = payload["message"]["blocks"]
-    # create new block including the resource type
-    block_sets = get_block_set("attach_resource_interaction", {"m": meeting_id})
+    # check if the dropdown option has been added already
+    select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
+    block_sets = []
+    if not select_block:
+        # create new block including the resource type
+        block_sets = get_block_set("attach_resource_interaction", {"m": meeting_id})
+
     res = slack_requests.update_channel_message(
         payload["channel"]["id"],
         payload["message"]["ts"],
         access_token,
         block_set=[*previous_blocks, *block_sets],
     ).json()
-    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
     meeting.save()
 
 
@@ -383,7 +388,7 @@ def process_restart_flow(payload, context):
     meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
-    ts, channel = meeting.slack_form.split("|")
+    ts, channel = meeting.slack_interaction.split("|")
     res = slack_requests.update_channel_message(
         channel,
         ts,
@@ -391,7 +396,7 @@ def process_restart_flow(payload, context):
         block_set=get_block_set("initial_meeting_interaction", context={"m": meeting_id}),
     ).json()
 
-    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
     meeting.save()
 
 
@@ -407,7 +412,7 @@ def process_disregard_meeting_review(payload, context):
         access_token,
         block_set=get_block_set("disregard_meeting_review", context={"m": meeting_id}),
     ).json()
-    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
     meeting.save()
 
 

@@ -123,6 +123,7 @@ def map_fields_to_type(fields):
                     block_builders.input_block(
                         field["label"],
                         multiline=True,
+                        optional=not field["required"],
                         initial_value=field.get("value", None),
                         block_id=field.get("key", None),
                     )
@@ -131,7 +132,7 @@ def map_fields_to_type(fields):
                 data.append(
                     block_builders.input_block(
                         field["label"],
-                        # optional=not field["required"],
+                        optional=not field["required"],
                         initial_value=str(field.get("value")) if field.get("value", None) else None,
                         block_id=field.get("key", None),
                     ),

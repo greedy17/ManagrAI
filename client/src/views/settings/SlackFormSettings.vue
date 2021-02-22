@@ -62,14 +62,8 @@
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
-const MEETING_REVIEW = 'MEETING_REVIEW'
-const CREATE = 'CREATE'
-const UPDATE = 'UPDATE'
-const OPPORTUNITY = 'Opportunity'
-const CONTACT = 'Contact'
-const ACCOUNT = 'Account'
-const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT]
-const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
+import * as FORM_CONSTS from '@/services/slack'
+
 export default {
   name: 'SlackFormSettings',
   components: { CustomSlackForm },
@@ -82,8 +76,7 @@ export default {
       resource: null,
       selectedForm: null,
       showValidations: false,
-      FORM_RESOURCES,
-      FORM_TYPES,
+      ...FORM_CONSTS,
     }
   },
   watch: {},
@@ -139,10 +132,10 @@ export default {
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
-      if (this.resource == CONTACT) {
-        this.toggleSelectedTab(CREATE)
+      if (this.resource == this.CONTACT) {
+        this.toggleSelectedTab(this.CREATE)
       } else {
-        this.toggleSelectedTab(MEETING_REVIEW)
+        this.toggleSelectedTab(this.MEETING_REVIEW)
       }
     },
     toggleSelectedTab(tab) {

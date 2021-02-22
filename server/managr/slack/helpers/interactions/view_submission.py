@@ -89,14 +89,17 @@ def process_zoom_meeting_data(payload, context):
 
     # use this for errors
     block_set_context = {"m": context["m"]}
-    ts, channel = meeting.slack_form.split("|")
+    ts, channel = meeting.slack_interaction.split("|")
 
-    slack_requests.update_channel_message(
+    res = slack_requests.update_channel_message(
         channel,
         ts,
         slack_access_token,
         block_set=get_block_set("final_meeting_interaction", context=block_set_context),
-    )
+    ).json()
+
+    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
+    meeting.save()
 
 
 @processor(required_context=["m"])
@@ -181,7 +184,7 @@ def process_zoom_meeting_attach_resource(payload, context):
 
     meeting.save()
 
-    ts, channel = meeting.slack_form.split("|")
+    ts, channel = meeting.slack_interaction.split("|")
     res = slack_requests.update_channel_message(
         channel,
         ts,
@@ -189,7 +192,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         block_set=get_block_set("initial_meeting_interaction", context={"m": str(meeting.id)}),
     ).json()
 
-    meeting.slack_form = f"{res['ts']}|{res['channel']}"
+    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
     meeting.save()
 
 

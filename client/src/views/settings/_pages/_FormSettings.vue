@@ -135,6 +135,7 @@
 import CustomSlackForm from '../CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import * as FORM_CONSTS from '@/services/slack'
 export default {
   name: 'FormSettings',
   components: { CustomSlackForm },
@@ -147,6 +148,7 @@ export default {
       resource: 'Opportunity',
       selectedForm: null,
       showValidations: false,
+      ...FORM_CONSTS,
     }
   },
   watch: {
