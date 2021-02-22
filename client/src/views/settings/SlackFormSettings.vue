@@ -1,64 +1,74 @@
 <template>
   <div class="container">
     <div :key="i" class="box" v-for="(resource, i) in FORM_RESOURCES">
-      <div @click="toggleSelectedFormResource(resource)" class="box__header">
-        <span class="box__title">
-          {{ resource }}
-        </span>
-      </div>
+      <template v-if="allForms && allForms.length">
+        <div @click="toggleSelectedFormResource(resource)" class="box__header">
+          <span class="box__title">
+            {{ resource }}
+          </span>
+        </div>
 
-      <div :ref="`${resource.toLowerCase()}-content`" class="box__content">
-        <div class="box__tab-header">
-          <div
-            class="box__tab"
-            :class="{ 'box__tab--active': selectedTab == 'MEETING_REVIEW' }"
-            @click="toggleSelectedTab('MEETING_REVIEW')"
-          >
-            Meeting Review Form
+        <div :ref="`${resource.toLowerCase()}-content`" class="box__content">
+          <div class="box__tab-header">
+            <div
+              class="box__tab"
+              :class="{ 'box__tab--active': selectedTab == 'MEETING_REVIEW' }"
+              @click="toggleSelectedTab('MEETING_REVIEW')"
+            >
+              Meeting Review Form
+            </div>
+            <div
+              class="box__tab"
+              :class="{ 'box__tab--active': selectedTab == 'CREATE' }"
+              @click="toggleSelectedTab('CREATE')"
+            >
+              Create {{ resource }} Form
+            </div>
+            <div
+              class="box__tab"
+              :class="{ 'box__tab--active': selectedTab == 'UPDATE' }"
+              @click="toggleSelectedTab('UPDATE')"
+            >
+              Update {{ resource }} Form
+            </div>
           </div>
-          <div
-            class="box__tab"
-            :class="{ 'box__tab--active': selectedTab == 'CREATE' }"
-            @click="toggleSelectedTab('CREATE')"
-          >
-            Create {{ resource }} Form
-          </div>
-          <div
-            class="box__tab"
-            :class="{ 'box__tab--active': selectedTab == 'UPDATE' }"
-            @click="toggleSelectedTab('UPDATE')"
-          >
-            Update {{ resource }} Form
+          <div class="box__tab-content">
+            <template v-if="selectedForm">
+              <p>
+                <i
+                  >Required Fields have been pre-filled as part of the form, add or remove
+                  additional fields</i
+                >
+                <br />
+                <strong>Additional Validations may apply for your Salesforce Resources</strong>
+                <PulseLoadingSpinnerButton
+                  @click="showValidations = !showValidations"
+                  class="primary-button"
+                  text="Click Here"
+                />
+                <strong>to view them</strong>
+              </p>
+
+              <CustomSlackForm
+                :show-validations="showValidations"
+                :customForm="selectedForm"
+                :formType="selectedTab"
+                :resource="resource"
+                v-on:update:selectedForm="updateForm($event)"
+              />
+            </template>
           </div>
         </div>
-        <div class="box__tab-content">
-          <template v-if="selectedForm">
-            <p>
-              <i
-                >Required Fields have been pre-filled as part of the form, add or remove additional
-                fields</i
-              >
-              <br />
-              <strong>Additional Validations may apply for your Salesforce Resources</strong
-              ><button @click="showValidations = !showValidations">Click Here</button
-              ><strong>to view them</strong>
-            </p>
-
-            <CustomSlackForm
-              :show-validations="showValidations"
-              :customForm="selectedForm"
-              :formType="selectedTab"
-              :resource="resource"
-              v-on:update:selectedForm="updateForm($event)"
-            />
-          </template>
-        </div>
-      </div>
+      </template>
+      <template v-else>
+        We are currently generating your forms please check back in a few minutes
+      </template>
     </div>
   </div>
 </template>
 
 <script>
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -66,7 +76,7 @@ import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'SlackFormSettings',
-  components: { CustomSlackForm },
+  components: { CustomSlackForm, PulseLoadingSpinnerButton },
   data() {
     return {
       allForms: [],
@@ -83,10 +93,6 @@ export default {
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-
-      //
-
-      //this.toggleSelectedTab('MEETING_REVIEW')
     } catch (error) {
       console.log(error)
     }

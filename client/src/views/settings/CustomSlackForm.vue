@@ -4,10 +4,12 @@
       <div class="slack-from-builder__sf-validations">
         <h4>Validations</h4>
         <template v-if="showValidations">
-          <div v-for="val in sfValidations">
-            <span>{{ val.description }}</span>
-            <span>{{ val.message }}</span>
-          </div>
+          <ul v-for="val in sfValidations">
+            <li>
+              <strong>Title:</strong> {{ val.description }} <strong>Message:</strong>
+              {{ val.message }}
+            </li>
+          </ul>
         </template>
       </div>
     </div>
