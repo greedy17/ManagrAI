@@ -4,8 +4,11 @@ import pytz
 from datetime import datetime
 import logging
 
+
 from rest_framework.response import Response
 from django.http import JsonResponse
+
+from managr.api.decorators import log_all_exceptions
 from managr.salesforce.adapter.exceptions import FieldValidationError
 from managr.organization.models import Organization
 from managr.opportunity.models import Opportunity
@@ -27,6 +30,7 @@ from managr.salesforce.adapter.routes import routes as adapter_routes
 logger = logging.getLogger("managr")
 
 
+@log_all_exceptions
 @processor(
     required_context=["m", "original_message_channel", "original_message_timestamp",]
 )
@@ -102,6 +106,7 @@ def process_zoom_meeting_data(payload, context):
     meeting.save()
 
 
+@log_all_exceptions
 @processor(required_context=["m"])
 def process_zoom_meeting_attach_resource(payload, context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
