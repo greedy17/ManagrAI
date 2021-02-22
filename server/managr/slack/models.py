@@ -108,9 +108,7 @@ class UserSlackIntegration(TimeStampModel):
 
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
+        if user.organization and user.is_active:
             return self.filter(organization=user.organization_id)
         else:
             return self.none()
