@@ -47,11 +47,8 @@
             />
           </div>
         </div>
-        <div
-          v-for="(field, index) in customSlackFormConfig.fields"
-          :key="field.key"
-          class="form-field"
-        >
+
+        <div v-for="(field, index) in customSlackFormConfig" :key="field.key" class="form-field">
           <div class="form-field__left">
             <div class="form-field__label">
               {{ field.label }}
@@ -110,7 +107,7 @@ export default {
   data() {
     return {
       salesforceFields,
-      customSlackFormConfig: { fields: [] },
+      customSlackFormConfig: [],
       formHasChanges: false,
       savingForm: false,
       ...FORM_CONSTS,
@@ -119,19 +116,17 @@ export default {
   watch: {
     customForm: {
       deep: true,
+      immediate: true,
       handler(val) {
         if (val) {
-          this.customSlackFormConfig = { ...this.customForm.config }
+          this.customSlackFormConfig = [...this.customForm.config.fields]
         } else {
-          this.customSlackFormConfig = { fields: [] }
+          this.customSlackFormConfig = []
         }
       },
     },
   },
   computed: {
-    formFields() {
-      return this.customSlackFormConfig ? this.customSlackFormConfig.fields : []
-    },
     hasConfig() {
       return (
         this.store.state.user.salesforceAccountRef &&
@@ -162,14 +157,14 @@ export default {
             sfField =>
               sfField['createable'] &&
               sfField.type !== 'Reference' &&
-              !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
+              !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
           )
         } else {
           return this.sfOpportunityFieldsAsList.filter(
             sfField =>
               sfField['updateable'] &&
               sfField.type !== 'Reference' &&
-              !this.customSlackFormConfig.fields.map(f => f.key).includes(sfField.key),
+              !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
           )
         }
       } else {
@@ -202,7 +197,7 @@ export default {
       }
     },
     onAddField(field) {
-      this.customSlackFormConfig.fields = [...this.customSlackFormConfig.fields, { ...field }]
+      this.customSlackFormConfig = [...this.customSlackFormConfig, { ...field }]
       this.formHasChanges = true
     },
     onRemoveField(field) {
@@ -211,9 +206,7 @@ export default {
         return
       }
 
-      this.customSlackFormConfig.fields = this.customSlackFormConfig.fields.filter(
-        f => f.key !== field.key,
-      )
+      this.customSlackFormConfig = this.customSlackFormConfig.filter(f => f.key !== field.key)
       this.formHasChanges = true
     },
     onMoveFieldUp(field, index) {
@@ -223,31 +216,31 @@ export default {
       }
 
       // Make a copy of fields and do the swap
-      const newFields = [...this.customSlackFormConfig.fields]
-      newFields[index] = this.customSlackFormConfig.fields[index - 1]
+      const newFields = [...this.customSlackFormConfig]
+      newFields[index] = this.customSlackFormConfig[index - 1]
       newFields[index - 1] = field
 
       // Apply update to the view model
-      this.customSlackFormConfig.fields = newFields
+      this.customSlackFormConfig = newFields
     },
     onMoveFieldDown(field, index) {
       // Disallow move if this is the last field
-      if (index + 1 === this.customSlackFormConfig.fields.length) {
+      if (index + 1 === this.customSlackFormConfig.length) {
         return
       }
 
       // Make a copy of slides and do the swap
-      const newFields = [...this.customSlackFormConfig.fields]
-      newFields[index] = this.customSlackFormConfig.fields[index + 1]
+      const newFields = [...this.customSlackFormConfig]
+      newFields[index] = this.customSlackFormConfig[index + 1]
       newFields[index + 1] = field
 
       // Apply update to the view model
-      this.customSlackFormConfig.fields = newFields
+      this.customSlackFormConfig = newFields
     },
     onSave() {
       this.savingForm = true
       SlackOAuth.api
-        .postOrgCustomForm({ ...this.customForm, config: this.customSlackFormConfig })
+        .postOrgCustomForm({ ...this.customForm, config: { fields: this.customSlackFormConfig } })
         .then(res => {
           this.$emit('update:selectedForm', res)
         })

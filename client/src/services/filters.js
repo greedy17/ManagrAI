@@ -1,4 +1,5 @@
 import moment from 'moment'
+import { snakeCaseToText } from './utils'
 
 export {
   uppercase,
@@ -9,6 +10,7 @@ export {
   prependUrlProtocol,
   formatDateShortWithTime,
   roundToOneDecimalPlace,
+  snakeCaseToTextFilter,
 }
 
 function uppercase(value) {
@@ -67,4 +69,8 @@ function roundToOneDecimalPlace(value) {
     return NaN
   }
   return Math.round(parseFloat(value) * 10) / 10
+}
+
+function snakeCaseToTextFilter(value) {
+  return snakeCaseToText(value)
 }

@@ -11,25 +11,13 @@
         <div :ref="`${resource.toLowerCase()}-content`" class="box__content">
           <div class="box__tab-header">
             <div
+              :key="i"
+              v-for="(k, i) in formTabHeaders"
               class="box__tab"
-              :class="{ 'box__tab--active': selectedTab == 'MEETING_REVIEW' }"
-              @click="toggleSelectedTab('MEETING_REVIEW')"
+              :class="{ 'box__tab--active': selectedTab == k }"
+              @click="toggleSelectedTab(k)"
             >
-              Meeting Review Form
-            </div>
-            <div
-              class="box__tab"
-              :class="{ 'box__tab--active': selectedTab == 'CREATE' }"
-              @click="toggleSelectedTab('CREATE')"
-            >
-              Create {{ resource }} Form
-            </div>
-            <div
-              class="box__tab"
-              :class="{ 'box__tab--active': selectedTab == 'UPDATE' }"
-              @click="toggleSelectedTab('UPDATE')"
-            >
-              Update {{ resource }} Form
+              {{ k | snakeCaseToTextFilter }} Form
             </div>
           </div>
           <div class="box__tab-content">
@@ -45,6 +33,7 @@
                   @click="showValidations = !showValidations"
                   class="primary-button"
                   text="Click Here"
+                  :loading="false"
                 />
                 <strong>to view them</strong>
               </p>
@@ -99,6 +88,12 @@ export default {
   },
   computed: {
     ...mapState(['user']),
+    formTabHeaders() {
+      if (this.resource == this.CONTACT) {
+        return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
+      }
+      return this.FORM_TYPES
+    },
   },
   methods: {
     toggleSelectedFormResource(resource) {

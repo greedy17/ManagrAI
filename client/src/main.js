@@ -29,6 +29,7 @@ import {
   timeToNow,
   prependUrlProtocol,
   roundToOneDecimalPlace,
+  snakeCaseToTextFilter,
 } from '@/services/filters'
 import pluralize from 'pluralize'
 
@@ -60,6 +61,7 @@ Vue.filter('prependUrlProtocol', prependUrlProtocol)
 Vue.filter('dateShortWithTime', formatDateShortWithTime)
 Vue.filter('constantToCapitalized', constantToCapitalized)
 Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
+Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })
