@@ -164,6 +164,7 @@ def process_zoom_meeting_attach_resource(payload, context):
                 sf_account.object_fields.get(meeting_resource, dict()).get("fields"),
                 str(user.id),
             )
+            logger.info(f"VALUES FROM FORM: {vals}")
         elif meeting_resource == slack_const.FORM_RESOURCE_ACCOUNT:
             data = adapter_class.create_account(
                 vals,

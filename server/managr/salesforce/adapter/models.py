@@ -583,6 +583,8 @@ class OpportunityAdapter:
 
     @staticmethod
     def create_opportunity(data, access_token, custom_base, object_fields, user_id):
+        logger.info(f"UNFORMATED DATA: {data}")
+        logger.info(f"OBJECT FIELDS: {object_fields}")
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
