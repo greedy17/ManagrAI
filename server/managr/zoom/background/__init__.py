@@ -61,8 +61,8 @@ def emit_refresh_zoom_token(zoom_account_id, schedule):
     return _refresh_zoom_token(zoom_account_id, schedule=schedule)
 
 
-def emit_process_past_zoom_meeting(user_id, meeting_uuid):
-    return _get_past_zoom_meeting_details(user_id, meeting_uuid)
+def emit_process_past_zoom_meeting(user_id, meeting_uuid, send_slack=True):
+    return _get_past_zoom_meeting_details(user_id, meeting_uuid, send_slack)
 
 
 def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
@@ -184,11 +184,12 @@ def _push_meeting_contacts(meeting_id):
     # save to the meeting
     # update the slack message
 
-    return  # emit create the contact role
+    return meeting
 
 
 @background(schedule=0)
-def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
+def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
+    # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     if zoom_account and not zoom_account.is_revoked:
         # emit the process
@@ -297,7 +298,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                 return e
 
             # emit the event to start slack interaction
-            emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
+            if send_slack:
+                emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
+            return serializer.instance
 
 
 @background(schedule=0)

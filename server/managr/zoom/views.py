@@ -54,7 +54,7 @@ from .serializers import (
     ZoomMeetingSerializer,
 )
 from . import constants as zoom_consts
-from .background import _get_past_zoom_meeting_details
+from .background import _get_past_zoom_meeting_details, _kick_off_slack_interaction
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -202,18 +202,20 @@ def init_fake_meeting(request):
 
     if zoom_account and not zoom_account.is_revoked:
         # emit the process
-        _get_past_zoom_meeting_details.now(
-            str(zoom_account.user.id), meeting_uuid, original_duration
+        meeting = _get_past_zoom_meeting_details.now(
+            str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         # get meeting
+        _kick_off_slack_interaction.now(str(user.id), str(meeting.id))
+        meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
         if meeting_resource and meeting_resource.lower() == "account":
-            meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+
             meeting.opportunity = None
             acc = user.accounts.first()
             meeting.linked_account_id = acc.id
             meeting.save()
         elif not meeting_resource:
-            meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+
             meeting.opportunity = None
             meeting.linked_account = None
             meeting.save()

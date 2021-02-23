@@ -344,7 +344,7 @@ def initial_meeting_interaction_block_set(context):
     # action button blocks
     action_blocks = [
         block_builders.simple_button_block(
-            "Attach/Change Link",
+            "Attach/Change",
             str(meeting.id),
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             style="primary",

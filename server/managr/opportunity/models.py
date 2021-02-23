@@ -200,7 +200,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.salesforce_account.object_fields
+            object_fields = self.owner.salesforce_account.object_fields.get("Opportunity", {}).get(
+                "fields", {}
+            )
             res = OpportunityAdapter.update_opportunity(
                 data, token, base_url, self.integration_id, object_fields
             )
