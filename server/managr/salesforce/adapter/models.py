@@ -3,6 +3,8 @@ import pytz
 import requests
 from datetime import datetime
 import os.path
+import logging
+
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
@@ -13,6 +15,8 @@ from managr.api.decorators import log_all_exceptions
 
 from .exceptions import CustomAPIException
 from .. import constants as sf_consts
+
+logger = logging.getLogger("managr")
 
 client = HttpClient(timeout=20).client
 
@@ -584,14 +588,17 @@ class OpportunityAdapter:
         )
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        logger.info(f"REQUEST DATA: {json_data}")
         r = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
+
         # get the opp as well uses the same url as the write but with get
+        logger.info(f"REQUEST RES: {r.json()}")
         r = SalesforceAuthAccountAdapter._handle_response(r)
         url = f"{url}{r['id']}"
         r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
-
+        logger.info(f"NEW DATA: {r.json()}")
         r = SalesforceAuthAccountAdapter._handle_response(r)
         r = OpportunityAdapter.from_api(r, user_id)
         return r
