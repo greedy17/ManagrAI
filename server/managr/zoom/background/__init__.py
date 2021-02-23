@@ -164,20 +164,22 @@ def _push_meeting_contacts(meeting_id):
                     emit_add_c_role_to_opp(
                         str(user.id), str(meeting.opportunity.id), contact["integration_id"]
                     )
-            """
+
             else:
                 for contact in contacts_in_sf:
                     contact["account"] = str(meeting.linked_account.integration_id)
                     contact["external_account"] = contact["account"]
 
                     ContactAdapter.update_contact(
-                        {**contact["secondary_data"], **contact},
+                        {
+                            "account": contact["account"],
+                            "external_acount": contact["external_account"],
+                        },
                         sf.access_token,
                         sf.instance_url,
                         contact["integration_id"],
                         sf.object_fields.get("Contact", {}).get("fields", {}),
                     )
-            """
 
         block_set_context = {
             "m": str(meeting.id),

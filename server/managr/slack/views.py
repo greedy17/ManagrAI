@@ -143,11 +143,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         test_text = "Testing, testing... 1, 2. Hello, Friend!"
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
         slack_requests.send_channel_message(user_slack.channel, access_token, text=test_text)
-        # slack_requests.send_channel_message(
-        #     user_slack.channel,
-        #     access_token,
-        #     block_set=get_block_set("zoom_meeting_initial", TEMPORARY_CONTEXT),
-        # )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(

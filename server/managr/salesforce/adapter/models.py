@@ -426,14 +426,18 @@ class ContactAdapter:
     def to_api(data, mapping, object_fields):
         formatted_data = dict()
         for k, v in data.items():
+            if k == "Id":
+                print(k)
             key = mapping.get(k, None)
             if key and key != "Id":
-                formatted_data[key] = v
+                if v is not None:
+                    formatted_data[key] = v
             else:
 
                 # TODO: add extra check here to only push creatable on creatable and updateable on updateable
-                if k in object_fields:
-                    formatted_data[k] = v
+                if k in object_fields and k != "Id":
+                    if v is not None:
+                        formatted_data[k] = v
 
         return formatted_data
 
