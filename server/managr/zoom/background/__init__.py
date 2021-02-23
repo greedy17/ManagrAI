@@ -120,7 +120,7 @@ def _push_meeting_contacts(meeting_id):
                 contact["secondary_data"]["LastName"] = last_name if last_name else "N/A"
                 if meeting.meeting_resource == "Account":
                     # add the account external id
-                    contact["external_account"] = str(meeting.linked_account_id)
+                    contact["external_account"] = str(meeting.linked_account.integration_id)
 
                 contact = {**contact, **contact.get("secondary_data", {})}
                 del contact["secondary_data"]

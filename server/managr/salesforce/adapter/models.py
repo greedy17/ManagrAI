@@ -339,6 +339,20 @@ class AccountAdapter:
         return vars(self)
 
     @staticmethod
+    def update_account(data, access_token, custom_base, salesforce_id, object_fields):
+        json_data = json.dumps(
+            AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_ACCOUNT, salesforce_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
     def create_account(data, access_token, custom_base, object_fields, user_id):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
@@ -413,9 +427,10 @@ class ContactAdapter:
         formatted_data = dict()
         for k, v in data.items():
             key = mapping.get(k, None)
-            if key:
+            if key and key != "Id":
                 formatted_data[key] = v
             else:
+
                 # TODO: add extra check here to only push creatable on creatable and updateable on updateable
                 if k in object_fields:
                     formatted_data[k] = v

@@ -21,7 +21,7 @@ from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.slack.helpers import block_builders
-from managr.salesforce.adapter.models import ContactAdapter
+from managr.salesforce.adapter.models import ContactAdapter, AccountAdapter
 from managr.opportunity import constants as opp_consts
 from managr.slack import constants as slack_consts
 from . import constants as org_consts
@@ -206,6 +206,20 @@ class Account(TimeStampModel, IntegrationModel):
                 }
 
         return
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.get("Account", {}).get(
+                "fields", {}
+            )
+            res = AccountAdapter.update_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
 
 
 class ContactQuerySet(models.QuerySet):

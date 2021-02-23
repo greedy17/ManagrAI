@@ -80,16 +80,20 @@ def process_zoom_meeting_data(payload, context):
     meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
     meeting.is_closed = True
     meeting.save()
-    if meeting_resource_type != "Account":
-        formatted_data = m_r.as_sf_update
-        try:
-            meeting.opportunity.update_in_salesforce(formatted_data)
 
-        except FieldValidationError as e:
-            # field errors in slack must contain the field name, in our case we are sending validations
-            # therefore these need to be added as an element and removed manually
+    formatted_data = m_r.as_sf_update
+    if meeting.meeting_resource == "Account":
+        r = meeting.linked_account
+    elif meeting.meeting_resource == "Opportunity":
+        r = meeting.opportunity
+    try:
+        r.update_in_salesforce(formatted_data)
 
-            return logger.exception(f"failed to log meeting {e}")
+    except FieldValidationError as e:
+        # field errors in slack must contain the field name, in our case we are sending validations
+        # therefore these need to be added as an element and removed manually
+
+        return logger.exception(f"failed to log meeting {e}")
 
     # use this for errors
     block_set_context = {"m": context["m"]}
