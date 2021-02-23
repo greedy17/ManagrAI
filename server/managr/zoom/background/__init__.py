@@ -218,12 +218,13 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         zoom_participants = meeting.as_dict.get("participants", None)
         # remove duplicates
         participants = []
+        user = zoom_account.user
         for participant in zoom_participants:
-            if participant not in participants:
+            if participant not in participants and participant.get("user_email") != user.email:
                 participants.append(participant)
 
         if len(participants):
-            user = zoom_account.user
+
             participant_emails = set(
                 map(
                     lambda participant: participant["user_email"],
