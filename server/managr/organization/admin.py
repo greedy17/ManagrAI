@@ -38,11 +38,12 @@ class CustomContact(admin.ModelAdmin):
             },
         ),
     )
+    list_filter = ("owner",)
 
 
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 
-admin.site.register(Contact)
+admin.site.register(Contact, CustomContact)
 admin.site.register(ActionChoice)
 admin.site.register(Stage)

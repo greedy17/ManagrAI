@@ -266,7 +266,7 @@ class Contact(TimeStampModel, IntegrationModel):
         return ContactAdapter(**data)
 
     def __str__(self):
-        return f"contact integration: {self.integration_source}: {self.integration_id}"
+        return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
 
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique
