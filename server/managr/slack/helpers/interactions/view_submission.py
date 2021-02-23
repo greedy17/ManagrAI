@@ -128,6 +128,12 @@ def process_zoom_meeting_attach_resource(payload, context):
                     if value.get("selected_option", None)
                     else None
                 )
+            elif value["type"] == "multi_static_select":
+                current_value = (
+                    ";".join(list(map(lambda val: val["value"], value.get("selected_options", []))))
+                    if value.get("selected_options", None)
+                    else None
+                )
             elif value["type"] == "plain_text_input":
                 current_value = value["value"]
             elif value["type"] == "checkboxes":

@@ -116,6 +116,29 @@ def static_select(
     return block
 
 
+def multi_static_select(
+    label, options, action_id=None, initial_options=None, placeholder="Select", block_id=None,
+):
+    # options are an array of block_optiosn (see above)
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"{label}"},
+        "block_id": block_id,
+        "accessory": {
+            "type": "multi_static_select",
+            "placeholder": {"type": "plain_text", "text": placeholder},
+            "options": options,
+        },
+    }
+    if initial_options:
+        block["accessory"]["initial_option"] = initial_options
+    if action_id:
+        block["accessory"]["action_id"] = action_id
+    return block
+
+
 def datepicker(
     initial_date=None,
     action_id=None,

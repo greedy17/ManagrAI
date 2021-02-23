@@ -99,6 +99,30 @@ def map_fields_to_type(fields):
                     block_id=field.get("key", None),
                 )
             )
+        elif field["type"] == "MultiPicklist":
+            data.append(
+                block_builders.multi_static_select(
+                    f'*{field["label"]}*',
+                    list(
+                        map(
+                            lambda opt: block_builders.option(opt["label"], opt["value"]),
+                            field["options"],
+                        )
+                    ),
+                    initial_options=list(
+                        dict(
+                            *map(
+                                lambda value: block_builders.option(value["label"], value["value"]),
+                                filter(
+                                    lambda opt: opt.get("value", None) == field.get("value", None),
+                                    field.get("options", []),
+                                ),
+                            ),
+                        )
+                    ),
+                    block_id=field.get("key", None),
+                )
+            )
         elif field["type"] == "Date":
             data.append(
                 block_builders.datepicker(
