@@ -557,7 +557,8 @@ def final_meeting_interaction_block_set(context):
 
     blocks = [
         block_builders.simple_section(
-            f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {regarding_message}"
+            f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {regarding_message}",
+            "mrkdwn",
         )
     ]
     if context.get("show_contacts", False):

@@ -101,6 +101,9 @@ def _push_meeting_contacts(meeting_id):
         contacts_not_in_sf = list(
             filter(lambda contact: not contact["from_integration"], meeting.participants)
         )
+        contacts_in_sf = list(
+            filter(lambda contact: contact["from_integration"], meeting.participants)
+        )
         user = meeting.zoom_account.user
         if hasattr(user, "salesforce_account"):
             sf = user.salesforce_account
@@ -108,6 +111,7 @@ def _push_meeting_contacts(meeting_id):
             created_contacts = []
             not_created_contacts = []
             for index, contact in enumerate(contacts_not_in_sf):
+
                 if not contact["email"] or not len(contact["email"]):
                     not_created_contacts.append(contact)
                     continue
@@ -117,6 +121,9 @@ def _push_meeting_contacts(meeting_id):
                 if meeting.meeting_resource == "Account":
                     # add the account external id
                     contact["external_account"] = str(meeting.linked_account_id)
+
+                contact = {**contact, **contact.get("secondary_data", {})}
+                del contact["secondary_data"]
                 while True:
                     attempts = 0
                     try:
@@ -131,7 +138,7 @@ def _push_meeting_contacts(meeting_id):
                         # contact from integration source is still False
                         # we use this to show a message that we created the contact
                         created_contacts.append(contact)
-                        meeting.participants
+                        # meeting.participants
                         break
                     except TokenExpired:
                         if attempts >= 5:
@@ -153,7 +160,7 @@ def _push_meeting_contacts(meeting_id):
                 meeting.save()
             if meeting.meeting_resource != "Account":
                 "Leads and Opportunities need to have a contact role"
-                for contact in created_contacts:
+                for contact in [*created_contacts, *contacts_in_sf]:
                     emit_add_c_role_to_opp(
                         str(user.id), str(meeting.opportunity.id), contact["integration_id"]
                     )
@@ -245,6 +252,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration):
                                         **dict(
                                             email=participant["user_email"],
                                             # these will only get stored if lastname and firstname are accessible from sf
+                                            external_owner=user.salesforce_account.salesforce_id,
                                             secondary_data={
                                                 "FirstName": _split_first_name(participant["name"]),
                                                 "LastName": _split_last_name(participant["name"]),
