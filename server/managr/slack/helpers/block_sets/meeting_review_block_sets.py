@@ -491,7 +491,39 @@ def create_modal_block_set(context, *args, **kwargs):
         form_type=slack_const.FORM_TYPE_CREATE, resource=context.get("resource")
     ).first()
     fields = slack_form.config.get("fields", [])
-    blocks = map_fields_to_type(fields)
+
+    blocks = [
+        block_builders.simple_section(
+            ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+            "mrkdwn",
+        ),
+    ]
+
+    # additional validations
+    validations = user.salesforce_account.object_fields.get(m.meeting_resource, {}).get(
+        "validations", None
+    )
+    if validations:
+
+        blocks.extend(
+            [
+                block_builders.simple_section(
+                    ":warning: *_Additional Validations required to avoid errors_*", "mrkdwn"
+                ),
+                block_builders.simple_section_multiple(
+                    list(
+                        map(
+                            lambda validation: block_builders.text_block(
+                                f'_{validation[0]+1}. {validation[1]["message"]}_', "mrkdwn"
+                            ),
+                            enumerate(validations),
+                        )
+                    )
+                ),
+            ]
+        )
+
+    blocks.extend(map_fields_to_type(fields))
 
     return blocks
 
