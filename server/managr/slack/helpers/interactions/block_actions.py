@@ -44,7 +44,6 @@ def process_meeting_review(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["o", "u", "opp", "m"])
@@ -106,7 +105,6 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     # private_metadata.update(context)
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -202,7 +200,6 @@ def process_edit_meeting_contact(payload, context):
     }
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["o"])
@@ -319,7 +316,6 @@ def process_update_search_or_create(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -354,7 +350,6 @@ def process_meeting_selected_resource(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
 
 
 @processor()
