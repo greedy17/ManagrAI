@@ -41,6 +41,7 @@ class CustomZoomMeetingForm(ModelForm):
 class CustomZoomMeeting(admin.ModelAdmin):
     form = CustomZoomMeetingForm
     inlines = (MeetinReviewInline,)
+    list_filter = ("zoom_account__user",)
 
 
 admin.site.register(models.ZoomAuthAccount)
