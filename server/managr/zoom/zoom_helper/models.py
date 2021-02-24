@@ -63,11 +63,11 @@ class ZoomMtg:
         return vars(self)
 
     @property
-    def start_time_iso(self):
+    def start_time_timestamp(self):
         return int(timezone.datetime.fromisoformat(self.start_time.replace("Z", "")).timestamp())
 
     @property
-    def end_time_iso(self):
+    def end_time_timestamp(self):
         return int(timezone.datetime.fromisoformat(self.end_time.replace("Z", "")).timestamp())
 
 
