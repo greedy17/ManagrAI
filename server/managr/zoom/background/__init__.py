@@ -4,12 +4,10 @@ import pytz
 from datetime import datetime
 
 from background_task import background
-from background_task.models import Task
-
-from django.db.models import F, Q, Count
-from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
+
+from managr.core.calendars import calendar_participants_from_zoom_meeting
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
@@ -20,16 +18,8 @@ from managr.salesforce.adapter.models import ContactAdapter
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired
-from ..zoom_helper import auth as zoom_auth
-from ..zoom_helper import constants as zoom_model_consts
-from ..zoom_helper.models import ZoomAcct, ZoomMtg
 from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview
-from ..serializers import (
-    ZoomAuthRefSerializer,
-    ZoomAuthSerializer,
-    ZoomMeetingWebhookSerializer,
-    ZoomMeetingSerializer,
-)
+from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
 
@@ -205,6 +195,8 @@ def _push_meeting_contacts(meeting_id):
 
 @background(schedule=0)
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
+    logger.info("Retrieving past Zoom meeting details...")
+
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     if zoom_account and not zoom_account.is_revoked:
@@ -217,28 +209,41 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             return _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration)
 
         meeting.original_duration = original_duration
+
+        #
+        logger.info(f"    Got Meeting: {meeting} with ID: {meeting.id}")
+        logger.info(f"    Meeting Start: {meeting.start_time}")
+        logger.info(f"    Meeting End: {meeting.end_time}")
+
+        # Gather Meeting Participants from Zoom and Calendar
+        logger.info("Gathering meeting participants...")
         zoom_participants = meeting.as_dict.get("participants", None)
-        # remove duplicates
+
+        logger.info(f"    Zoom Participants: {zoom_participants}")
+
+        # Gather unique emails from the Zoom Meeting participants
         participants = []
         user = zoom_account.user
         for participant in zoom_participants:
             if participant not in participants and participant.get("user_email") != user.email:
                 participants.append(participant)
 
-        if len(participants):
+        # If the user has their calendar connected through Nylas, find a
+        # matching meeting and gather unique participant emails.
+        calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
 
-            participant_emails = set(
-                map(
-                    lambda participant: participant["user_email"],
-                    list(
-                        filter(
-                            lambda participant: participant.get("user_email", None)
-                            and len(participant.get("user_email", "")),
-                            participants,
-                        )
-                    ),
-                )
-            )
+        # Combine the sets of participants. Filter out empty emails and the meeting owner
+        participants = [
+            p
+            for p in [*zoom_participants, *calendar_participants]
+            if p.get("user_email") not in [None, "", user.email]
+        ]
+
+        logger.info(f"    Got list of participants: {participants}")
+
+        if len(participants):
+            # Reduce to set of unique participant emails
+            participant_emails = set([p.get("user_email") for p in participants])
 
             meeting_contacts = []
 
@@ -310,7 +315,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 serializer.save()
             except ValidationError as e:
                 logger.exception(
-                    f"Unable to save and initiate slack for meeting with uuid {meeting_uuid} becuase of error {json.dumps(e.detail)}"
+                    f"Unable to save and initiate slack for meeting with uuid "
+                    f"{meeting_uuid} because of error {json.dumps(e.detail)}"
                 )
                 return e
 

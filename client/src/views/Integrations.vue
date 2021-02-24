@@ -234,7 +234,7 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
-      return !!this.$store.state.user.emailAuthAccount
+      return !!this.$store.state.user.nylas
     },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin

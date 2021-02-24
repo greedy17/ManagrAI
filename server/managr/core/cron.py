@@ -1,20 +1,13 @@
 import logging
 import kronos
-import requests
 import datetime
-import random
 
 from django.utils import timezone
 from django.db.models import Q
-from django.conf import settings
 
-from managr.core.nylas.auth import revoke_all_access_tokens
-from managr.core.models import EmailAuthAccount, User
-from managr.opportunity.models import Opportunity
 from managr.core import constants as core_consts
-from managr.opportunity import constants as opp_consts
-
-from managr.core.nylas.auth import revoke_all_access_tokens, revoke_access_token
+from managr.core.models import NylasAuthAccount
+from managr.core.nylas.auth import revoke_access_token
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
@@ -105,10 +98,10 @@ def _generate_notification_key_lapsed(num):
 def revoke_tokens():
     expire = timezone.now() + datetime.timedelta(days=5)
     """ revokes tokens for email auth accounts in state of sync_error, stopped, invalid """
-    email_auth_accounts = EmailAuthAccount.objects.filter(
+    nylas_tokens = NylasAuthAccount.objects.filter(
         sync_status__in=core_consts.NYLAS_SYNC_STATUSES_FAILING, last_edited__gte=expire
     ).values_list("access_token", flat=True)
-    for token in email_auth_accounts:
+    for token in nylas_tokens:
         revoke_access_token(token)
 
 

@@ -1,10 +1,8 @@
-import json
-import pytz
-import requests
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 
+from django.utils import timezone
 
 from managr.utils.client import HttpClient
 
@@ -63,6 +61,14 @@ class ZoomMtg:
     @property
     def as_dict(self):
         return vars(self)
+
+    @property
+    def start_time_iso(self):
+        return int(timezone.datetime.fromisoformat(self.start_time.replace("Z", "")).timestamp())
+
+    @property
+    def end_time_iso(self):
+        return int(timezone.datetime.fromisoformat(self.end_time.replace("Z", "")).timestamp())
 
 
 class ZoomAcct:
