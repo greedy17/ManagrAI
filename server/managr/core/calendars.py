@@ -94,7 +94,7 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
 
     logger.info(f"    Found {len(user_events)} user event/s")
 
-    # Compute the distance btwn the zoom meeting and each calendar meeting
+    # Compute the distance between the zoom meeting and each calendar meeting
     distances = []
     for e in user_events:
         # Get the distance between Calendar (start, end) and Zoom (start, end)
@@ -109,6 +109,8 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     # Get events with distances less than the defined threshold
     best_events = [d["event"] for d in distances if d["distance"] < DISTANCE_THRESHOLD]
 
+    distances_str = ", ".join([str(d["distance"]) for d in distances])
+    logger.info(f"    Meeting distances: {distances_str}")
     logger.info(f"    Found {len(best_events)} event/s within the threshold distance.")
 
     # Collect participants from ALL of the meeting/s we retrieved and return that list

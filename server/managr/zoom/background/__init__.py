@@ -232,11 +232,17 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
 
-        # Combine the sets of participants. Filter out empty emails and the meeting owner
+        # Combine the sets of participants. Filter out empty emails, meeting owner, and any
+        # emails with domains that match the owner, which are teammates of the owner.
+        def get_domain(email):
+            """Parse domain out of an email"""
+            return email[email.index("@") + 1 :]
+
         participants = [
             p
             for p in [*zoom_participants, *calendar_participants]
-            if p.get("user_email") not in [None, "", user.email]
+            if p.get("user_email", "") not in ["", user.email]
+            and get_domain(p.get("user_email", "")) != get_domain(user.email)
         ]
 
         logger.info(f"    Got list of participants: {participants}")
