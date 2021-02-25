@@ -2,14 +2,35 @@
 Helpers for interacting with Google and Microsoft calendars via Nylas.
 """
 import logging
+import math
 from nylas import APIClient
 
 from django.conf import settings
-from django.utils import timezone
 
 from .models import NylasAuthAccount
 
 logger = logging.getLogger("managr")
+
+# Calendar events will be accepted as a match for the Zoom Meeting if
+# their (start, end) "distance" from the actual (start, end) distance
+# falls within this threshold. This is measured as seconds since
+# the epoch.
+#
+# NOTE: This may be less accurate for longer or shorter meetings, so
+#       it might be a good idea to scale the threshold based on meeting
+#       duration.
+#
+DISTANCE_THRESHOLD = 2500
+
+
+def _euclidean_distance(x, y):
+    """Get the Euclidean distance between two vectors.
+
+    Args:
+        x (tuple)
+        y (tuple)
+    """
+    return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x, y)]))
 
 
 def calendar_participants_from_zoom_meeting(zoom_meeting, user):
@@ -50,9 +71,12 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     zoom_end = zoom_meeting.end_time_timestamp
     filters = {
         "limit": 50,
-        # Get all events starting/ending within two hours of the start/end times
+        # Get all events starting within two hours of the start/end times
+        # NOTE: We use start time only because the filters are combined using an AND,
+        #       so we don't want to miss longer events that might end just outside
+        #       of the window of time we're looking at.
         "starts_after": zoom_start - (60 * 60 * 2),
-        "ends_before": zoom_end + (60 * 60 * 2),
+        "starts_before": zoom_end + (60 * 60 * 2),
     }
 
     # NOTE: The time range should really narrow things down, but there is a chance
@@ -70,33 +94,22 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
 
     logger.info(f"    Found {len(user_events)} user event/s")
 
-    # Compute the overlap percentage of the zoom meeting vs each calendar meeting
-    overlaps = []
+    # Compute the distance btwn the zoom meeting and each calendar meeting
+    distances = []
     for e in user_events:
-        calendar_end = e.when["end_time"]
-        calendar_start = e.when["start_time"]
-        if zoom_end > calendar_start:
-            zoom_diff = zoom_end - calendar_start
-            calendar_duration = calendar_end - calendar_start
-        elif zoom_start < calendar_end:
-            zoom_diff = calendar_end - zoom_start
-            calendar_duration = calendar_end - calendar_start
-        else:
-            # No overlap, omit from list
-            continue
-
-        # Compute percentage overlap with calendar event, 1-100
-        overlap = int((zoom_diff / calendar_duration) * 100)
-
-        # Bundle overlaps with event objects
-        overlaps.append(
-            {"overlap": overlap, "event": e,}
+        # Get the distance between Calendar (start, end) and Zoom (start, end)
+        distance = _euclidean_distance(
+            (e.when["start_time"], e.when["end_time"]), (zoom_start, zoom_end)
+        )
+        # Bundle distances with event objects
+        distances.append(
+            {"distance": distance, "event": e,}
         )
 
-    # Get events with overlap greater than 70%
-    best_events = [o["event"] for o in overlaps if o["overlap"] > 70]
+    # Get events with distances less than the defined threshold
+    best_events = [d["event"] for d in distances if d["distance"] < DISTANCE_THRESHOLD]
 
-    logger.info(f"    Found {len(best_events)} events with overlap over 70%")
+    logger.info(f"    Found {len(best_events)} event/s within the threshold distance.")
 
     # Collect participants from ALL of the meeting/s we retrieved and return that list
     participants = []
