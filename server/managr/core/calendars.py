@@ -53,7 +53,7 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
             "Attempted to look up calendar participants for a Zoom Meeting that ended "
             "but the user does not have an active Nylas integration."
         )
-        return
+        return []
 
     # Otherwise, init the Nylas Client
     nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
