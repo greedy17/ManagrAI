@@ -16,7 +16,7 @@ from managr.opportunity import constants as lead_constants
 
 from .exceptions import NylasAPIError
 from .. import constants as core_consts
-from ..models import EmailAuthAccount
+from ..models import NylasAuthAccount
 
 logger = logging.getLogger("managr")
 
@@ -26,10 +26,10 @@ def _generate_nylas_basic_auth_token(user):
     Details here: https://docs.nylas.com/docs/using-access-tokens
     """
     password = ""
-    if user.email_auth_account is None or user.email_auth_account.access_token is None:
+    if user.nylas is None or user.nylas.access_token is None:
         raise PermissionDenied(detail="User does not have a Nylas access token")
 
-    access_token = user.email_auth_account.access_token
+    access_token = user.nylas.access_token
     auth_string = f"{access_token}:{password}"
     base64_secret = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
     return base64_secret
@@ -274,8 +274,14 @@ def send_new_email_legacy(auth, sender, receipient, message):
 def send_system_email(
     recipients, message,
 ):
-    """ sends an email from a service account """
-    ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
+    """Sends an email from a service account.
+
+    TODO: System emails should now be sent using Mailgun instead of Nylas.
+    """
+    raise NotImplementedError(
+        "Cannot call `send_system_email`. It must be migrated to use Mailgun instead of Nylas."
+    )
+    ea = NylasAuthAccount.objects.filter(user__is_serviceaccount=True).first()
     if ea:
         token = ea.access_token
         sender = {"email": ea.email_address, "name": "Managr"}

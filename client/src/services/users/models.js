@@ -21,8 +21,8 @@ export default class User extends Model {
   static type = new fields.Field()
   static fullName = new fields.Field()
   static emailAuthLink = new fields.CharField()
-  static emailAuthAccount = new fields.Field({ default: () => {} })
-  static emailAuthAccountRef = new fields.Field({ default: () => {} })
+  static nylas = new fields.Field({ default: () => {} })
+  static nylasRef = new fields.Field({ default: () => {} })
   static isStaff = new fields.BooleanField()
   static isAdmin = new fields.BooleanField()
   static slackRef = new fields.Field()
@@ -32,7 +32,7 @@ export default class User extends Model {
   static userLevel = new fields.Field({})
 
   get emailConnected() {
-    return this.emailAuthAccount && this.emailAuthAccountRef.accessToken
+    return this.nylas && this.nylasRef.accessToken
   }
 
   get textConnected() {
