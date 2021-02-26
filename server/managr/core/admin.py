@@ -8,7 +8,7 @@ from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
-    EmailAuthAccount,
+    NylasAuthAccount,
     #    NotificationOption,
     #    NotificationSelection,
 )
@@ -33,7 +33,7 @@ class EmailAuthAccForm(forms.ModelForm):
     linked_at = forms.IntegerField()
 
     class Meta:
-        model = EmailAuthAccount
+        model = NylasAuthAccount
         fields = (
             "access_token",
             "account_id",
@@ -95,7 +95,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = []
 
 
-class CustomEmailAuthAccount(admin.ModelAdmin):
+class CustomNylasAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
@@ -140,6 +140,6 @@ class CustomNotificationOption(admin.ModelAdmin):
  """
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
+admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 # admin.site.register(NotificationOption, CustomNotificationOption)
 # admin.site.register(NotificationSelection, CustomNotificationSelection)

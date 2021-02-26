@@ -15,13 +15,13 @@ from managr.slack.serializers import UserSlackIntegrationSerializer
 
 from .models import (
     User,
-    EmailAuthAccount,
+    NylasAuthAccount,
 )
 
 
-class EmailAuthAccountSerializer(serializers.ModelSerializer):
+class NylasAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EmailAuthAccount
+        model = NylasAuthAccount
         fields = "__all__"
 
 
@@ -42,7 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
     accounts_ref = AccountSerializer(many=True, source="organization.accounts", read_only=True)
-    email_auth_account_ref = EmailAuthAccountSerializer(source="email_auth_account", read_only=True)
+    nylas_ref = NylasAuthAccountSerializer(source="nylas", read_only=True)
     salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
 
@@ -69,8 +69,8 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_photo",
             "role",
             # integrations
-            "email_auth_account",
-            "email_auth_account_ref",
+            "nylas",
+            "nylas_ref",
             "salesforce_account",
             "salesforce_account_ref",
             "slack_ref",
@@ -86,7 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
         "is_active",
         "is_invited",
         "full_name",
-        "email_auth_account",
+        "nylas_auth_account",
         "is_staff",
         "is_admin",
         "is_superuser",

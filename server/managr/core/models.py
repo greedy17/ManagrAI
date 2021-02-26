@@ -224,8 +224,10 @@ class User(AbstractUser, TimeStampModel):
         ordering = ["email"]
 
 
-class EmailAuthAccount(TimeStampModel):
+class NylasAuthAccount(TimeStampModel):
     """Records Nylas OAuth authentication information for a user.
+
+    Nylas is used to access the user's calendar information.
 
     The Nylas email integration follows the standard OAuth protocol. Once a user has
     authorized Nylas, we will receive an access_token and related information required
@@ -242,7 +244,7 @@ class EmailAuthAccount(TimeStampModel):
         help_text="sync state is managed by web_hook after it is set for the first time",
     )
     name = models.CharField(max_length=255, null=True)
-    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="email_auth_account")
+    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="nylas")
 
     def __str__(self):
         return f"{self.email_address}"
@@ -257,7 +259,7 @@ class EmailAuthAccount(TimeStampModel):
 
     def save(self, *args, **kwargs):
         try:
-            return super(EmailAuthAccount, self).save(*args, **kwargs)
+            return super().save(*args, **kwargs)
         except IntegrityError:
             raise ValidationError(
                 {

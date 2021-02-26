@@ -32,7 +32,7 @@ from managr.api.emails import send_html_email
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
-    EmailAuthAccount,
+    NylasAuthAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -356,7 +356,7 @@ class NylasAccountWebhook(APIView):
         ]
         email_accounts = []
         for v in values:
-            email_account = EmailAuthAccount.objects.filter(account_id=v[0]).first()
+            email_account = NylasAuthAccount.objects.filter(account_id=v[0]).first()
             if email_account:
                 if email_account.sync_state != v[1]:
                     email_account.sync_state = v[1]
@@ -367,7 +367,7 @@ class NylasAccountWebhook(APIView):
                 # we will be removing accounts from our db and from nylas if it has
                 # been inactive for 5 days
 
-        EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
+        NylasAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
 
         return Response()
 
@@ -381,14 +381,14 @@ def email_auth_token(request):
 
     # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
     try:
-        u.email_auth_account.revoke()
-    except EmailAuthAccount.DoesNotExist:
+        u.nylas.revoke()
+    except NylasAuthAccount.DoesNotExist:
         # pass here since user does not already have a token to revoke
         pass
     except requests.exceptions.HTTPError as e:
         if 401 in e.args:
             # delete the record so we can create a new link
-            u.email_auth_account.delete()
+            u.nylas.delete()
             # we have out of sync data, pass
             # we have a cron job running every 24 hours to remove all old
             # tokens which are not in sync
@@ -407,7 +407,7 @@ def email_auth_token(request):
         try:
             access_token = get_access_token(code)
             account = get_account_details(access_token)
-            EmailAuthAccount.objects.create(
+            NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
                 email_address=account["email_address"],
@@ -438,17 +438,17 @@ def revoke_access_token(request):
     alternatively they can set a user to is_active=false and this will
     call the revoke endpoint for the user in an org
     """
-    if request.user.email_auth_account.access_token:
+    if request.user.nylas.access_token:
         try:
-            request.user.email_auth_account.revoke()
+            request.user.nylas.revoke()
             return Response(status=status.HTTP_200_OK)
-        except EmailAuthAccount.DoesNotExist:
+        except NylasAuthAccount.DoesNotExist:
             # pass here since user does not already have a token to revoke
             pass
         except requests.exceptions.HTTPError as e:
             if 401 in e.args:
                 # delete the record so we can create a new link
-                request.user.email_auth_account.delete()
+                request.user.nylas.delete()
                 # we have out of sync data, pass
                 # we have a cron job running every 24 hours to remove all old
                 #  tokens which are not in sync
