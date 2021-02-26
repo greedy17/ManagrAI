@@ -43,11 +43,11 @@ class SObjectFieldAdapter:
 
     @staticmethod
     def from_api(data):
-        formatted_data = dict()
-        for key, val in data.items():
-            formatted_data[key] = object_to_snake_case(val)
+        return object_to_snake_case(data)
 
-        return formatted_data
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
 
     @property
     def display_value_keys(self):
@@ -81,7 +81,47 @@ class SObjectFieldAdapter:
 
 class SObjectValidationAdapter:
     def __init__(self, *args, **kwargs):
-        self.stuff = stuff
+        self.id = kwargs.get("id", None)
+        self.validation_id = kwargs.get("validation_id", None)
+        self.description = kwargs.get("description", None)
+        self.message = kwargs.get("message", None)
+
+    @staticmethod
+    def from_api(data):
+        return dict(
+            validation_id=data.get("Id", None),
+            description=data.get("Description", None),
+            message=data.get("ErrorMessage", None),
+        )
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class SObjectPicklistAdapter:
+    def __init__(self, *args, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.validation_id = kwargs.get("validation_id", None)
+        self.description = kwargs.get("description", None)
+        self.message = kwargs.get("message", None)
+        self.field = kwargs.get("field", None)
+
+    @staticmethod
+    def from_api(data):
+        return object_to_snake_case(data)
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
 
 
 class SalesforceAuthAccountAdapter:
@@ -98,6 +138,7 @@ class SalesforceAuthAccountAdapter:
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
         self.object_fields = kwargs.get("object_fields", {})
+        self.default_record_id = kwargs.get("default_record_id", {})
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -187,50 +228,18 @@ class SalesforceAuthAccountAdapter:
 
     def format_field_options(self, res_data=[]):
         fields = res_data["fields"]
-        data = {}
-        for key, val in fields.items():
-            if (
-                key == "CloneSourceId"
-            ):  # according to Teja CloneSourceId is returned as a field but is not queryable
-                continue
-            data[key] = dict(
-                label=val.get("label", None),
-                key=val.get("apiName", None),
-                type=val.get("dataType", None),
-                required=val.get("required", False),  # is required to pass val on create
-                updateable=val.get("updateable", False),  # cannot be patched
-                createable=val.get("createable", False),
-                reference=val.get("reference", False),  # if relational field
-                relationship_name=val.get("relationshipName", None),
-                relationship_details=val.get(
-                    "referenceToInfos", []
-                ),  # details of relationship used for get
-                length=val.get("length", 0),  # used to determine field size
-                options=[],
-                value=None,  # custom attribute used to add current value
-            )
+        data = [SObjectFieldAdapter.create_from_api(f) for f in fields]
 
         return data
 
     def format_validation_rules(self, res_data=[]):
         records = res_data["records"]
-        return list(
-            map(
-                lambda rule: dict(
-                    id=rule.get("Id", None),
-                    description=rule.get("Description", None),
-                    message=rule.get("ErrorMessage", None),
-                ),
-                records,
-            )
-        )
+        return list(map(lambda rule: SObjectValidationAdapter.create_from_api(rule), records,))
 
     def format_picklist_values(self, res_data=[]):
         fields = res_data["picklistFieldValues"]
-        data = {}
-        for field, value in fields.items():
-            data[field] = value["values"]
-        return data
+
+        return [map(lambda field: SObjectPicklistAdapter.create_from_api(field), fields)]
 
     @staticmethod
     def from_api(data, user_id=None):

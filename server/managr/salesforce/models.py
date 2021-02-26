@@ -27,6 +27,7 @@ class ArrayLength(models.Func):
 
 
 class SFSyncOperation(TimeStampModel):
+    operation_type = models.CharField(max_length=255, blank=True)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="sf_sync")
     operations_list = ArrayField(
         models.CharField(max_length=255, blank=True),
@@ -135,6 +136,11 @@ class SFSyncOperation(TimeStampModel):
             return super().delete(*args, **kwargs)
 
 
+class SFObjectFieldsOperation(SFSyncOperation):
+    def begin_tasks(self, attempts=1):
+        return super().begin_tasks(attempts=attempts)
+
+
 class SalesforceAuthAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="salesforce_account"
@@ -160,6 +166,12 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
+    default_record_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="The default record id should be the same for all objects and is used for picklist values",
+    )
+
     is_busy = models.BooleanField(default=False)
 
     class Meta:
@@ -194,14 +206,7 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_fields(self, resource):
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
-        if self.object_fields:
-            self.object_fields.update(
-                {resource: {"fields": fields, "record_type_id": record_type_id,}}
-            )
-        else:
-            self.object_fields = {resource: {"fields": fields, "record_type_id": record_type_id,}}
-
-        self.save()
+        self.default_record_id = record_type_id
 
     def get_validations(self, resource):
         rules = self.adapter_class.list_validations(resource)

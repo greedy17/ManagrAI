@@ -61,6 +61,7 @@ def authenticate(request):
         ]
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+
         emit_gen_next_sync(str(request.user.id), operations, formatted_time)
         # initiate process
         return Response(data={"success": True})
