@@ -22,7 +22,7 @@ def save_to_salesforce(sender, instance=None, created=False, **kwargs):
         if user.salesforce_account:
             data = instance.get_event_data_salesforce()
             emit_sf_add_call_to_sf(str(user.id), data)
-            emit_push_meeting_contacts(str(meeting.id))
+            # emit_push_meeting_contacts(str(meeting.id))
 
         else:
             logger.exception(

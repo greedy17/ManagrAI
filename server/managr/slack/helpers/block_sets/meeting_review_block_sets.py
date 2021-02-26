@@ -300,7 +300,7 @@ def initial_meeting_interaction_block_set(context):
     meeting_resource = meeting.meeting_resource
     opportunity = meeting.opportunity
     account = meeting.linked_account
-
+    meeting_id_param = "m=" + context["m"]
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -328,6 +328,21 @@ def initial_meeting_interaction_block_set(context):
                 "type": "image",
                 "image_url": "https://api.slack.com/img/blocks/bkb_template_images/notifications.png",
                 "alt_text": "calendar thumbnail",
+            },
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": "Review the people who joined your meeting and save them to Salesforce",
+            },
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                "action_id": action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                ),
             },
         },
         {"type": "divider"},
@@ -559,24 +574,23 @@ def final_meeting_interaction_block_set(context):
         block_builders.simple_section(
             f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {regarding_message}",
             "mrkdwn",
-        )
-    ]
-    if context.get("show_contacts", False):
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Review the people who joined your meeting and save them to Salesforce",
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Review Meeting Participants",},
-                    "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                    "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
-                    ),
-                },
+        ),
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": "Review the people who joined your meeting and save them to Salesforce",
             },
-        )
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                "action_id": action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                ),
+            },
+        },
+    ]
+
     return blocks
+
