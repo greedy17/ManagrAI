@@ -32,7 +32,7 @@ class SObjectFieldAdapter:
         self.label = data.get("label", None)
         self.length = data.get("length", None)
         self.reference = data.get("reference", None)
-        self.reference_to_infos = data.get("reference_to_infos", None)
+        self.reference_to_infos = data.get("reference_to_infos", [])
         self.updateable = data.get("updateable", None)
         self.required = data.get("required", None)
         self.unique = data.get("unique", None)
@@ -50,33 +50,8 @@ class SObjectFieldAdapter:
         return cls(cls.from_api(data))
 
     @property
-    def display_value_keys(self):
-        return
-
-    @property
     def as_dict(self):
         return vars(self)
-
-    @property
-    def as_slack_block(self):
-        return self
-
-    def to_slack_field_type(self):
-        if self.data_type == "Picklist":
-            return block_builders.static_select
-        elif self.data_type == "Reference":
-            return block_builders.external_select
-
-        elif self.data_type == "Date":
-            return block_builders.datePicker
-
-        elif self.data_type == "MultiPicklist":
-            return block_builders.mulit_static_select
-
-        elif self.data_type == "Boolean":
-            return block_builders.checkbox_block
-        else:
-            return block_builders.input_block
 
 
 class SObjectValidationAdapter:
@@ -105,10 +80,7 @@ class SObjectValidationAdapter:
 
 class SObjectPicklistAdapter:
     def __init__(self, *args, **kwargs):
-        self.id = kwargs.get("id", None)
-        self.validation_id = kwargs.get("validation_id", None)
-        self.description = kwargs.get("description", None)
-        self.message = kwargs.get("message", None)
+
         self.field = kwargs.get("field", None)
 
     @staticmethod

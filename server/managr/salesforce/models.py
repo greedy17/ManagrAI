@@ -14,6 +14,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
+from managr.slack.helpers import block_builders
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import TokenExpired
@@ -24,6 +25,85 @@ logger = logging.getLogger("managr")
 
 class ArrayLength(models.Func):
     function = "CARDINALITY"
+
+
+class SObjectField(IntegrationModel):  # change this to the integration object
+    salesforce_account = models.ForeignKey(
+        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+    )
+    salesforce_object = models.CharField(max_length=255)
+    api_name = models.CharField(max_length=255)
+    custom = models.BooleanField(default=False)
+    createable = models.BooleanField(default=False)
+    updateable = models.BooleanField(default=False)
+    unique = models.BooleanField(default=False)
+    required = models.BooleanField(default=False)
+    data_type = models.CharField(max_length=255)
+    display_value = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="if this is a reference field we save the display value as well",
+    )
+    value = models.CharField(max_length=255, null=True, blank=True)
+    label = models.CharField(max_length=255)
+    length = models.PositiveIntegerField(default=0)
+    reference = models.CharField(max_length=255, null=True)
+    reference_to_infos = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of operations to perform on",
+    )
+    options = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of operations to perform on",
+    )
+
+    def __str__(self):
+        return f"{self.label} {self.salesforce_account__user}"
+
+    def to_slack_field_type(self):
+        if self.data_type == "Picklist":
+            return block_builders.static_select
+        elif self.data_type == "Reference":
+            return block_builders.external_select
+
+        elif self.data_type == "Date":
+            return block_builders.datePicker
+
+        elif self.data_type == "MultiPicklist":
+            return block_builders.mulit_static_select
+
+        elif self.data_type == "Boolean":
+            return block_builders.checkbox_block
+        else:
+            return block_builders.input_block
+
+    @property
+    def display_value_keys(self):
+        return
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @property
+    def as_slack_block(self):
+        return self
+
+
+class SObjectValidation(IntegrationModel):
+    message = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    salesforce_object = models.CharField(max_length=255)
+    salesforce_account = models.ForeignKey(
+        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+    )
+
+    def __str__(self):
+        return f"{self.salesforce_account}-{self.salesforce_account__user}"
 
 
 class SFSyncOperation(TimeStampModel):
