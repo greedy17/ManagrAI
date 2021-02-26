@@ -63,11 +63,7 @@ def generate_contact_group(index, contact, instance_url):
         else "N/A"
     )
 
-    email = (
-        contact_secondary_data.get("Email")
-        if contact_secondary_data.get("Email", "") and len(contact_secondary_data.get("Email", ""))
-        else "N/A"
-    )
+    email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
     mobile_number = (
         contact_secondary_data.get("MobilePhone")
         if contact_secondary_data.get("MobilePhone")

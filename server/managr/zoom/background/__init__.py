@@ -285,6 +285,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                                             secondary_data={
                                                 "FirstName": _split_first_name(participant["name"]),
                                                 "LastName": _split_last_name(participant["name"]),
+                                                "Email": participant["user_email"],
                                             },
                                         )
                                     ).as_dict,
