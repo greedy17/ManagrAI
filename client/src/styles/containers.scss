@@ -124,6 +124,8 @@
     display: flex;
     padding: 0.25rem 0 0;
     box-shadow: 0 1px 0 0 $soft-gray;
+    max-width: 85%;
+    overflow-x: scroll;
   }
   &__tab {
     padding: 1rem 2rem;
@@ -131,6 +133,7 @@
     color: #bcbcc1;
     font-weight: normal;
     cursor: pointer;
+    white-space: nowrap;
   }
   &__tab--active {
     padding: 1rem 2rem;

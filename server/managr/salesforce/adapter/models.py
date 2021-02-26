@@ -10,8 +10,10 @@ from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
 
 from managr.utils.client import HttpClient
+from managr.utils.misc import object_to_snake_case
 from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
+from managr.slack.helpers import block_builders
 
 from .exceptions import CustomAPIException
 from .. import constants as sf_consts
@@ -19,6 +21,67 @@ from .. import constants as sf_consts
 logger = logging.getLogger("managr")
 
 client = HttpClient(timeout=20).client
+
+
+class SObjectFieldAdapter:
+    def __init__(self, data):
+        self.api_name = data.get("apiName", None)
+        self.custom = data.get("custom", None)
+        self.createable = data.get("createable", None)
+        self.data_type = data.get("data_type", None)
+        self.label = data.get("label", None)
+        self.length = data.get("length", None)
+        self.reference = data.get("reference", None)
+        self.reference_to_infos = data.get("reference_to_infos", None)
+        self.updateable = data.get("updateable", None)
+        self.required = data.get("required", None)
+        self.unique = data.get("unique", None)
+        self.updateable = data.get("updateable", None)
+        self.value = data.get("value", None)
+        self.display_value = data.get("display_value", None)
+        self.options = data.get("options", [])
+
+    @staticmethod
+    def from_api(data):
+        formatted_data = dict()
+        for key, val in data.items():
+            formatted_data[key] = object_to_snake_case(val)
+
+        return formatted_data
+
+    @property
+    def display_value_keys(self):
+        return
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @property
+    def as_slack_block(self):
+        return self
+
+    def to_slack_field_type(self):
+        if self.data_type == "Picklist":
+            return block_builders.static_select
+        elif self.data_type == "Reference":
+            return block_builders.external_select
+
+        elif self.data_type == "Date":
+            return block_builders.datePicker
+
+        elif self.data_type == "MultiPicklist":
+            return block_builders.mulit_static_select
+
+        elif self.data_type == "Boolean":
+            return block_builders.checkbox_block
+        else:
+            return block_builders.input_block
+
+
+class SObjectValidationAdapter:
+    def __init__(self, *args, **kwargs):
+        self.stuff = stuff
 
 
 class SalesforceAuthAccountAdapter:
@@ -81,15 +144,20 @@ class SalesforceAuthAccountAdapter:
         return data
 
     def _format_resource_response(self, response_data, class_name, *args, **kwargs):
+
         res = response_data.get("records", [])
         formatted_data = []
+        from .routes import routes
+
+        resource_class = routes.get(class_name, None)
         for result in res:
             result.pop("attributes")  # unnecessary metadata field
-            from .routes import routes
 
-            resource_class = routes.get(class_name, None)
             if resource_class:
                 formatted_data.append(resource_class.from_api(result, self.user, *args))
+            else:
+                formatted_data.append(result)
+
         return formatted_data
 
     @staticmethod
@@ -247,6 +315,26 @@ class SalesforceAuthAccountAdapter:
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
         res = self._format_resource_response(res, resource)
+        return res
+
+    def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
+
+        # build the filter query from the name fields and value
+        filter_query = ""
+        for index, f in enumerate(fields):
+            string_val = f"{f} LIKE '%{value}%'"
+            if index != 0:
+                string_val = f" OR {string_val}"
+            filter_query = filter_query + string_val
+
+        filter_query_string = f"AND ({filter_query})"
+        # always retreive id
+        fields.append("Id")
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+        # no need to format to any adapter
+        res = self._format_resource_response(res, None)
         return res
 
     def get_resource_count(self, resource):
@@ -478,7 +566,7 @@ class OpportunityAdapter:
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
         self.account = kwargs.get("account", None)
-        self.title = kwargs.get("title", None)
+        self.name = kwargs.get("name", None)
         self.stage = kwargs.get("stage", None)
         self.amount = kwargs.get("amount", None)
         self.close_date = kwargs.get("close_date", None)
@@ -497,7 +585,7 @@ class OpportunityAdapter:
         # mapping of 'standard' data when sending to the SF API
         integration_id="Id",
         account="AccountId",  # overwritten (ignored in reverse)
-        title="Name",
+        name="Name",
         stage="StageName",
         amount="Amount",
         close_date="CloseDate",

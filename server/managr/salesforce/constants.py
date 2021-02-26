@@ -15,6 +15,7 @@ REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
+SALESFORCE_QUERY_LIMIT = 500
 SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
@@ -23,7 +24,12 @@ SALESFORCE_PICKLIST_URI = (
 
 # SF CUSTOM URI QUERIES
 def SALSFORCE_RESOURCE_QUERY_URI(
-    owner_id, resource, fields, childRelationshipFields=[], additional_filters=[]
+    owner_id,
+    resource,
+    fields,
+    childRelationshipFields=[],
+    additional_filters=[],
+    limit=SALESFORCE_QUERY_LIMIT,
 ):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
@@ -34,7 +40,7 @@ def SALSFORCE_RESOURCE_QUERY_URI(
         for f in additional_filters:
             url = f"{url} {f} "
 
-    return f"{url} order by CreatedDate limit {SALESFORCE_QUERY_LIMIT}"
+    return f"{url} order by CreatedDate limit {limit}"
 
 
 def SF_COUNT_URI(resource, owner_id):
@@ -93,7 +99,6 @@ SALESFORCE_RESOURCE_TASK = "Task"
 SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESOURCE_SYNC"
 
 
-SALESFORCE_QUERY_LIMIT = 500
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
 
 

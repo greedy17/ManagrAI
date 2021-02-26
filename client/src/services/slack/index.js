@@ -1,7 +1,26 @@
+import Model, { fields } from '@thinknimble/tn-models'
+import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import SlackAPI from './api'
 
+export class CustomSlackForm extends Model {
+  static api = null
+  static id = new fields.CharField({ readOnly: true })
+  static config = new fields.Field({
+    defaultVal: () => {
+      return { fields: [] }
+    },
+  })
+  static formType = new fields.Field({})
+  static resource = new fields.Field({})
+  static stage = new fields.CharField({})
+
+  static fromApi(obj) {
+    return CustomSlackForm.create(objectToCamelCase(obj))
+  }
+}
 export default class SlackOAuth {
   static api = SlackAPI.create(SlackOAuth)
+  static customSlackForm = CustomSlackForm
   static options = {
     WORKSPACE: 'WORKSPACE',
     USER: 'USER',
@@ -16,6 +35,7 @@ const UPDATE = 'UPDATE'
 const OPPORTUNITY = 'Opportunity'
 const CONTACT = 'Contact'
 const ACCOUNT = 'Account'
+const STAGE_GATING = 'STAGE_GATING'
 const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT]
 const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
@@ -37,6 +57,7 @@ export {
   OPPORTUNITY,
   CONTACT,
   ACCOUNT,
+  STAGE_GATING,
   FORM_RESOURCES,
   FORM_TYPES,
   MEETING_REVIEW_REQUIRED_FIELDS,

@@ -1,5 +1,42 @@
 <template>
   <div class="container">
+    <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
+      <div class="modal-container">
+        <div class="modal-container__box">
+          <div class="modal-container__box__header">
+            <div class="modal-container__box__title">
+              Select a stage
+            </div>
+          </div>
+          <div class="modal-container__box__content">
+            <div class="box__content-select">
+              <DropDownSearch
+                :items="stagesFromFields"
+                v-model="selectedStage"
+                displayKey="label"
+                valueKey="value"
+                nullDisplay="Select a Stage"
+                searchable
+              />
+            </div>
+          </div>
+
+          <div class="box__footer">
+            <button
+              @click="
+                () => {
+                  $modal.hide('add-stage-modal'),
+                    addForm(this.selectedStage),
+                    toggleSelectedTab(`.${this.selectedStage}`)
+                }
+              "
+            >
+              Select
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
     <div :key="i" class="box" v-for="(resource, i) in FORM_RESOURCES">
       <template v-if="allForms && allForms.length">
         <div @click="toggleSelectedFormResource(resource)" class="box__header">
@@ -12,14 +49,20 @@
           <div class="box__tab-header">
             <div
               :key="i"
-              v-for="(k, i) in formTabHeaders"
+              v-for="(k, i) in allFormsByType"
               class="box__tab"
-              :class="{ 'box__tab--active': selectedTab == k }"
-              @click="toggleSelectedTab(k)"
+              :class="{ 'box__tab--active': selectedTab == `${k.id}.${k.stage}` }"
+              @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
             >
-              {{ k | snakeCaseToTextFilter }} Form
+              {{ resource }} {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }} Form
+            </div>
+            <div class="box__tab-button">
+              <button class="button" @click="onAddForm" v-if="resource == OPPORTUNITY">
+                Add Stage Gating Form
+              </button>
             </div>
           </div>
+
           <div class="box__tab-content">
             <template v-if="selectedForm">
               <p>
@@ -61,11 +104,12 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import DropDownSearch from '@/components/DropDownSearch'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'SlackFormSettings',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton },
+  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch },
   data() {
     return {
       allForms: [],
@@ -75,6 +119,8 @@ export default {
       resource: null,
       selectedForm: null,
       showValidations: false,
+      newForms: [],
+      selectedStage: null,
       ...FORM_CONSTS,
     }
   },
@@ -91,12 +137,59 @@ export default {
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
         return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
+      } else if (this.resource == this.OPPORTUNITY) {
+        return [...this.FORM_TYPES, this.STAGE_GATING]
       }
       return this.FORM_TYPES
     },
+    allFormsByType() {
+      // this getter gets all forms byType existing and new (new forms arent appended until they are created)
+      return [...this.formsByType, ...this.newForms]
+    },
+    currentFormStages() {
+      // users can only create one form for the stage
+      if (this.resource == this.OPPORTUNITY) {
+        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
+      }
+      return []
+    },
+
+    stagesFromFields() {
+      if (
+        this.$store.state.user.salesforceAccountRef &&
+        this.$store.state.user.salesforceAccountRef.objectFields
+      ) {
+        return this.$store.state.user.salesforceAccountRef.objectFields.Opportunity.fields.StageName
+          .options
+      } else {
+        return []
+      }
+    },
   },
   methods: {
+    onAddForm() {
+      this.$modal.show('add-stage-modal')
+    },
+    addForm(stage) {
+      /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
+
+      if (this.currentFormStages.includes(stage)) {
+        return this.$Alert.alert({
+          message: 'This Stage already has a form',
+          timeout: 5000,
+        })
+      }
+      this.newForms = [
+        ...this.newForms,
+        SlackOAuth.customSlackForm.create({
+          resource: this.OPPORTUNITY,
+          formType: this.STAGE_GATING,
+          stage: stage,
+        }),
+      ]
+    },
     toggleSelectedFormResource(resource) {
+      /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
       if (this.resource && resource) {
         if (this.resource == resource) {
           let classList = this.$refs[`${resource.toLowerCase()}-content`][0].classList
@@ -133,21 +226,22 @@ export default {
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
-      if (this.resource == this.CONTACT) {
-        this.toggleSelectedTab(this.CREATE)
-      } else {
-        this.toggleSelectedTab(this.MEETING_REVIEW)
-      }
+
+      let f = this.allFormsByType[0]
+      this.toggleSelectedTab(`${f.id}.${f.stage}`)
     },
     toggleSelectedTab(tab) {
       this.selectedTab = tab
-      let form = this.formsByType.find(f => f.formType == tab)
+      let [id, stage] = tab.split('.')
+
+      let form = this.allFormsByType.find(f => f.id == id && f.stage == stage)
 
       if (form && typeof form != undefined) {
         this.selectedForm = form
       } else this.selectedForm = null
     },
     updateForm(event) {
+      console.log(event)
       this.selectedForm = event
       let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
 
@@ -155,6 +249,7 @@ export default {
         this.formsByType[index] = this.selectedForm
         this.formsByType = [...this.formsByType]
       }
+      this.selectedTab = `${event.id}.${event.tage}`
     },
   },
 }
@@ -173,6 +268,17 @@ export default {
     cursor: pointer;
   }
 }
+.box__tab-header {
+  padding: 0 10rem 0 0;
+}
+.box__tab-button {
+  > .button {
+    height: 100%;
+  }
+  position: absolute;
+  right: 3rem;
+  height: 3rem;
+}
 .box__content {
   display: none;
   &--closed {
@@ -190,6 +296,12 @@ export default {
   animation-iteration-count: 1;
   overflow-y: scroll;
 }
+.modal-container {
+  &__box {
+    @include box--bordered;
+  }
+}
+
 @keyframes expandmenu {
   0% {
     height: 0rem;

@@ -80,7 +80,7 @@ def process_get_local_resource_options(payload, context):
 
         return {
             "options": [
-                l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+                l.as_slack_option for l in user.owned_opportunities.filter(name__icontains=value)
             ],
         }
 
@@ -88,6 +88,23 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)],
         }
+
+
+@processor(required_context=["u", "relationship", "fields"])
+def process_get_external_relationship_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    sf_account = user.salesforce_account
+    sf_adapter = sf_account.adapter_class
+    relationship = context.get("relationship")
+    fields = context.get("fields").split(",")
+    value = payload["value"]
+    res = sf_adapter.list_relationship_data(relationship, fields, value)
+
+    return {
+        "options": list(
+            map(lambda val: block_builders.option(val.get("Name"), val.get("Id")), res)
+        ),
+    }
 
 
 def handle_block_suggestion(payload):
@@ -101,6 +118,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_OPPORTUNITY_FORECASTS: process_get_opportunity_forecasts,
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
+        slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

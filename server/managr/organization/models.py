@@ -125,6 +125,11 @@ class Account(TimeStampModel, IntegrationModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def title(self):
+        """ Returns the name as a title using common fields as we have with leads and opps"""
+        return self.name
+
     def save(self, *args, **kwargs):
         """ In case of duplicates update not save"""
         obj = (

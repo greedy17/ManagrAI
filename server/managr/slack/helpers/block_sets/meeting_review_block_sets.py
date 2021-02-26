@@ -335,7 +335,7 @@ def initial_meeting_interaction_block_set(context):
     if not meeting_resource:
         title_section = _initial_interaction_message()
     else:
-        name = opportunity.title if meeting_resource == "Opportunity" else account.name
+        name = opportunity.name if meeting_resource == "Opportunity" else account.name
         title_section = _initial_interaction_message(name, meeting_resource)
     blocks = [
         block_builders.simple_section(title_section, "mrkdwn",),
@@ -426,7 +426,7 @@ def meeting_review_modal_block_set(context):
             ]
         )
 
-    blocks.extend(map_fields_to_type(fields))
+    blocks.extend(map_fields_to_type(fields, user_id=str(user.id)))
     # static blocks
 
     # make params here
@@ -551,7 +551,7 @@ def final_meeting_interaction_block_set(context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     meeting_id_param = "m=" + context["m"]
     if meeting.meeting_resource == "Opportunity":
-        regarding_message = meeting.opportunity.title
+        regarding_message = meeting.opportunity.name
     elif meeting.meeting_resource == "Account":
         regarding_message = meeting.linked_account.name
 

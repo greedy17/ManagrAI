@@ -10,6 +10,7 @@ from django.conf import settings
 
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders
+from managr.slack import constants as slack_consts
 
 
 def create_sha256_signature(key, message):
@@ -74,7 +75,7 @@ def block_finder(block_id, blocks=[]):
     return item
 
 
-def map_fields_to_type(fields):
+def map_fields_to_type(fields, **kwargs):
     data = list()
     for field in fields:
         if field["type"] == "Picklist":
@@ -97,6 +98,29 @@ def map_fields_to_type(fields):
                         ),
                     ),
                     block_id=field.get("key", None),
+                )
+            )
+
+        elif field["type"] == "Reference":
+            initial_option = (
+                block_builders.option(field["value"], field["value"]) if field["value"] else None
+            )
+            relationship_name = field["relationshipName"]
+            relationship_fields = list(
+                *map(
+                    lambda rel: rel["nameFields"],
+                    filter(
+                        lambda details: details["apiName"] == relationship_name,
+                        field["relationshipDetails"],
+                    ),
+                )
+            )
+            data.append(
+                block_builders.external_select(
+                    f'*{field["label"]}*',
+                    f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={kwargs.get('user_id')}&relationship={relationship_name}&fields={','.join(relationship_fields)}",
+                    block_id=field.get("key", None),
+                    initial_option=initial_option,
                 )
             )
         elif field["type"] == "MultiPicklist":

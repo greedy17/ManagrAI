@@ -52,7 +52,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "id",
             "integration_id",
             "integration_source",
-            "title",
+            "name",
             "amount",
             "close_date",
             "forecast_category",
