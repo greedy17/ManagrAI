@@ -36,14 +36,17 @@ class SObjectFieldAdapter:
         self.updateable = data.get("updateable", None)
         self.required = data.get("required", None)
         self.unique = data.get("unique", None)
-        self.updateable = data.get("updateable", None)
         self.value = data.get("value", None)
         self.display_value = data.get("display_value", None)
         self.options = data.get("options", [])
+        self.integration_source = data.get("integration_source", None)
+        self.integration_id = data.get("integration_id", None)
 
     @staticmethod
     def from_api(data):
-        return object_to_snake_case(data)
+        d = object_to_snake_case(data)
+        d.update({"integration_source", "SALESFORCE"})
+        return d
 
     @classmethod
     def create_from_api(cls, data):
@@ -63,11 +66,14 @@ class SObjectValidationAdapter:
 
     @staticmethod
     def from_api(data):
-        return dict(
-            validation_id=data.get("Id", None),
+        d = dict(
+            integration_id=data.get("Id", None),
             description=data.get("Description", None),
             message=data.get("ErrorMessage", None),
         )
+
+        d.update({"integration_source", "SALESFORCE"})
+        return d
 
     @classmethod
     def create_from_api(cls, data):
@@ -80,12 +86,18 @@ class SObjectValidationAdapter:
 
 class SObjectPicklistAdapter:
     def __init__(self, *args, **kwargs):
-
+        self.attributes = kwargs.get("attributes", None)
+        self.default_probablity = kwargs.get("default_probablity", None)
+        self.label = kwargs.get("label", None)
+        self.valid_for = kwargs.get("valid_for", None)
+        self.value = kwargs.get("value", None)
         self.field = kwargs.get("field", None)
 
     @staticmethod
     def from_api(data):
-        return object_to_snake_case(data)
+        d = object_to_snake_case(data)
+        d.update({"integration_source", "SALESFORCE"})
+        return d
 
     @classmethod
     def create_from_api(cls, data):

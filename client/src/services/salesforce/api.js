@@ -1,4 +1,4 @@
-import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
+import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 
 export default class SalesforceAPI extends ModelAPI {
@@ -31,6 +31,25 @@ export default class SalesforceAPI extends ModelAPI {
     try {
       const res = await this.client.post(SalesforceAPI.ENDPOINT + 'revoke')
       return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+}
+
+export class SObjectFormBuilderAPI extends ModelAPI {
+  async listFields() {
+    try {
+      const res = await this.client.get(SalesforceAPI.ENDPOINT + 'fields')
+      return res.data.map(f => this.cls.fromAPI(f))
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+  async listValidations() {
+    try {
+      const res = await this.client.get(SalesforceAPI.ENDPOINT + 'fields')
+      return res.data.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
     }

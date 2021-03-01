@@ -109,3 +109,12 @@ def revoke(request):
             context={"data": admin_context},
         )
     return Response()
+
+
+class SObjectValidationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = SObjectValidationSerializer()
+    filter_fields = ("salesforce_object",)
+
+    def get_queryset(self):
+        return SObjectValidation.objects.for_user(self.request.user)
+

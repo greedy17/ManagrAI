@@ -36,11 +36,6 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_fields_sync(user_id, ops_list, schedule_time=timezone.now()):
-    schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
-
-
 def emit_sf_add_call_to_sf(user_id, data):
     return _process_add_call_to_sf(user_id, data)
 

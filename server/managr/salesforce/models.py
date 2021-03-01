@@ -27,6 +27,39 @@ class ArrayLength(models.Func):
     function = "CARDINALITY"
 
 
+class SObjectFieldQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(organization=user.organization_id, is_public=False)
+        else:
+            return self.none()
+
+    def for_form_template(self, user, form_id=None):
+        if form_id:
+            # get the type and resource
+            # get the fields
+            return self.for_user(user)
+
+        return self.none()
+
+
+class SObjectValidationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(organization=user.organization_id)
+        else:
+            return self.none()
+
+    def for_sf_object(self, user, form_id=None):
+        if form_id:
+            # get the form
+            # get the type and resource
+            # get the fields
+            return self.for_user(user)
+
+        return self.none()
+
+
 class SObjectField(IntegrationModel):  # change this to the integration object
     salesforce_account = models.ForeignKey(
         "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
@@ -52,17 +85,27 @@ class SObjectField(IntegrationModel):  # change this to the integration object
         models.CharField(max_length=255, blank=True),
         default=list,
         blank=True,
-        help_text="An Array of operations to perform on",
+        help_text="An of objects containing the API Name ",
     )
     options = ArrayField(
         models.CharField(max_length=255, blank=True),
         default=list,
         blank=True,
-        help_text="An Array of operations to perform on",
+        help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
+    )
+    is_public = models.BooleanField(
+        default=False,
+        help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
     )
 
     def __str__(self):
         return f"{self.label} {self.salesforce_account__user}"
+
+    def reference_display_label(self):
+        """ returns the reference object's name as a display label """
+        if self.data_type == "Reference" and self.reference:
+            return self.reference
+        return self.label
 
     def to_slack_field_type(self):
         if self.data_type == "Picklist":
@@ -98,6 +141,24 @@ class SObjectValidation(IntegrationModel):
     message = models.TextField(blank=True)
     description = models.TextField(blank=True)
     salesforce_object = models.CharField(max_length=255)
+    salesforce_account = models.ForeignKey(
+        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+    )
+
+    def __str__(self):
+        return f"{self.salesforce_account}-{self.salesforce_account__user}"
+
+
+class SObjectPicklist(IntegrationModel):
+    label = models.CharField(blank=True, max_length=255)
+    attributes = models.CharField(blank=True, max_length=255)
+    valid_for = models.CharField(blank=True, max_length=255)
+    value = models.CharField(blank=True, max_length=255)
+
+    field = models.ForeignKey(
+        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="object_fields"
+    )
+
     salesforce_account = models.ForeignKey(
         "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
     )
@@ -217,6 +278,8 @@ class SFSyncOperation(TimeStampModel):
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
+    """ May no Longer need to use this """
+
     def begin_tasks(self, attempts=1):
         return super().begin_tasks(attempts=attempts)
 
