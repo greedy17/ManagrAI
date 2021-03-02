@@ -233,6 +233,8 @@ export default {
           resource: this.OPPORTUNITY,
           formType: this.STAGE_GATING,
           stage: stage,
+          fields: [],
+          fieldsRef: [],
         }),
       ]
     },

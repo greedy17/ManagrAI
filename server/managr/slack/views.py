@@ -252,8 +252,29 @@ class SlackFormsViewSet(
 
     def create(self, request, *args, **kwargs):
         data = self.request.data
+        fields = data.pop("fields", [])
+        data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        instance = serializer.instance
+        instance.fields.set(fields)
+        instance.save()
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+
+        data = self.request.data
+        fields = data.pop("fields", [])
+        data.pop("fields_ref", [])
+        data.update({"organization": self.request.user.organization_id})
+        serializer = self.get_serializer(data=data, instance=self.get_object())
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        instance = serializer.instance
+        instance.fields.set(fields)
+        instance.save()
+
         return Response(serializer.data)

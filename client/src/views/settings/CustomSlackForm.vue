@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <div v-for="(field, index) in customForm.fieldsRef" :key="field.apiName" class="form-field">
+        <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div class="form-field__left">
             <div class="form-field__label">
               {{ field.referenceDisplayLabel }}
@@ -115,14 +115,28 @@ export default {
       customSlackFormConfig: [],
       formHasChanges: false,
       savingForm: false,
-
+      addedFields: [],
+      removedFields: [],
       ...FORM_CONSTS,
     }
   },
-  watch: {},
+  watch: {
+    customForm: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val && val.fields) {
+          this.addedFields = [...val.fieldsRef]
+        }
+      },
+    },
+  },
   computed: {
     sfFieldsAvailableToAdd() {
       return this.fields
+    },
+    currentFields() {
+      return this.customForm ? this.customForm.fields : []
     },
   },
   created() {},
@@ -151,17 +165,16 @@ export default {
       }
     },
     onAddField(field) {
-      this.customSlackFormConfig = [...this.customSlackFormConfig, { ...field }]
-      this.formHasChanges = true
+      this.addedFields.push(field)
     },
     onRemoveField(field) {
-      // Block removal of 'required' fields.
-      if (field.required) {
-        return
-      }
+      // remove from the array if it exists
+      this.addedFields = [...this.addedFields.filter(f => f.id != field.id)]
+      // if it exists in the current fields add it to remove field
 
-      this.customSlackFormConfig = this.customSlackFormConfig.filter(f => f.key !== field.key)
-      this.formHasChanges = true
+      if (~this.currentFields.findIndex(f => f == field.id)) {
+        this.removedFields = [this.removedFields, field]
+      }
     },
     onMoveFieldUp(field, index) {
       // Disallow move if this is the first field
@@ -193,8 +206,14 @@ export default {
     },
     onSave() {
       this.savingForm = true
+      let fields = new Set([...this.currentFields, ...this.addedFields.map(f => f.id)])
+      fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
+
       SlackOAuth.api
-        .postOrgCustomForm({ ...this.customForm, config: { fields: this.customSlackFormConfig } })
+        .postOrgCustomForm({
+          ...this.customForm,
+          fields: fields,
+        })
         .then(res => {
           this.$emit('update:selectedForm', res)
         })

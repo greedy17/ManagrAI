@@ -24,7 +24,7 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
 
 
 class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
-    fields_ref = SObjectFieldSerializer(source="fields", many=True)
+    fields_ref = SObjectFieldSerializer(source="fields", many=True, read_only=True)
 
     class Meta:
         model = OrgCustomSlackForm
@@ -35,6 +35,11 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "form_type",
             "resource",
             "stage",
+            "fields",
+            "fields_ref",
+        )
+
+        read_only_fields = (
             "fields",
             "fields_ref",
         )

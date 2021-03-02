@@ -72,12 +72,12 @@ export default class SlackAPI {
     if (data.id.length) {
       return this.client
         .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', this.cls.customSlackForm.toAPI(data))
-        .then(response => objectToCamelCase(response.data))
+        .then(response => this.cls.customSlackForm.fromAPI(response.data))
         .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
     }
     return this.client
       .post(SLACK_CUSTOM_FORM_ENDPOINT, this.cls.customSlackForm.toAPI(data))
-      .then(response => objectToCamelCase(response.data))
+      .then(response => this.cls.customSlackForm.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }
 }
