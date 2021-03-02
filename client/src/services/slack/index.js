@@ -1,6 +1,7 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import SlackAPI from './api'
+import { SObjectField } from '../salesforce'
 
 export class CustomSlackForm extends Model {
   static api = null
@@ -13,6 +14,8 @@ export class CustomSlackForm extends Model {
   static formType = new fields.Field({})
   static resource = new fields.Field({})
   static stage = new fields.CharField({})
+  static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
+  static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
 
   static fromApi(obj) {
     return CustomSlackForm.create(objectToCamelCase(obj))

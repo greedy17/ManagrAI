@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from managr.salesforce.serializers import SObjectFieldSerializer
 from .models import OrganizationSlackIntegration, OrgCustomSlackForm, UserSlackIntegration
 
 
@@ -23,6 +24,8 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
 
 
 class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
+    fields_ref = SObjectFieldSerializer(source="fields", many=True)
+
     class Meta:
         model = OrgCustomSlackForm
         fields = (
@@ -32,5 +35,7 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "form_type",
             "resource",
             "stage",
+            "fields",
+            "fields_ref",
         )
 

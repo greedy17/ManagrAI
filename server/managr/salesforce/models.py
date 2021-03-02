@@ -30,7 +30,9 @@ class ArrayLength(models.Func):
 class SObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id, is_public=False)
+            return self.filter(
+                salesforce_account__user__organization__id=user.organization_id, is_public=False
+            )
         else:
             return self.none()
 
@@ -46,7 +48,7 @@ class SObjectFieldQuerySet(models.QuerySet):
 class SObjectValidationQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
+            return self.filter(salesforce_account__user__organization__id=user.organization_id)
         else:
             return self.none()
 
@@ -60,11 +62,22 @@ class SObjectValidationQuerySet(models.QuerySet):
         return self.none()
 
 
-class SObjectField(IntegrationModel):  # change this to the integration object
+class SObjectPicklistQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(salesforce_account__user__organization__id=user.organization_id)
+        else:
+            return self.none()
+
+
+class SObjectField(TimeStampModel, IntegrationModel):
     salesforce_account = models.ForeignKey(
-        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+        "salesforce.SalesforceAuthAccount",
+        on_delete=models.CASCADE,
+        related_name="object_fields",
+        null=True,
     )
-    salesforce_object = models.CharField(max_length=255)
+    salesforce_object = models.CharField(max_length=255, null=True)
     api_name = models.CharField(max_length=255)
     custom = models.BooleanField(default=False)
     createable = models.BooleanField(default=False)
@@ -80,15 +93,16 @@ class SObjectField(IntegrationModel):  # change this to the integration object
     value = models.CharField(max_length=255, null=True, blank=True)
     label = models.CharField(max_length=255)
     length = models.PositiveIntegerField(default=0)
-    reference = models.CharField(max_length=255, null=True)
+    reference = models.BooleanField(default=False)
+    relationship_name = models.CharField(max_length=255, null=True)
     reference_to_infos = ArrayField(
-        models.CharField(max_length=255, blank=True),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
-        help_text="An of objects containing the API Name ",
+        help_text="An of objects containing the API Name references",
     )
     options = ArrayField(
-        models.CharField(max_length=255, blank=True),
+        JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
         help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
@@ -97,14 +111,15 @@ class SObjectField(IntegrationModel):  # change this to the integration object
         default=False,
         help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
     )
+    objects = SObjectFieldQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.label} {self.salesforce_account__user}"
+        return f"{self.label} {self.salesforce_account}"
 
     def reference_display_label(self):
         """ returns the reference object's name as a display label """
         if self.data_type == "Reference" and self.reference:
-            return self.reference
+            return self.relationship_name
         return self.label
 
     def to_slack_field_type(self):
@@ -137,34 +152,50 @@ class SObjectField(IntegrationModel):  # change this to the integration object
         return self
 
 
-class SObjectValidation(IntegrationModel):
+class SObjectValidation(TimeStampModel, IntegrationModel):
     message = models.TextField(blank=True)
     description = models.TextField(blank=True)
     salesforce_object = models.CharField(max_length=255)
     salesforce_account = models.ForeignKey(
-        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+        "salesforce.SalesforceAuthAccount",
+        on_delete=models.CASCADE,
+        related_name="object_validations",
     )
+    objects = SObjectValidationQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.salesforce_account}-{self.salesforce_account__user}"
+        return f"{self.salesforce_account}-{self.salesforce_object}"
 
 
-class SObjectPicklist(IntegrationModel):
-    label = models.CharField(blank=True, max_length=255)
-    attributes = models.CharField(blank=True, max_length=255)
-    valid_for = models.CharField(blank=True, max_length=255)
-    value = models.CharField(blank=True, max_length=255)
+class SObjectPicklist(TimeStampModel, IntegrationModel):
+    # label = models.CharField(blank=True, max_length=255)
+    # attributes = JSONField(default=dict, max_length=255)
 
+    # valid_for = models.CharField(blank=True, max_length=255)
+    picklist_for = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="the name of the field this picklist is for, serializer will translate to actual field",
+    )
+    # value = models.CharField(blank=True, max_length=255)
+    values = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        help_text="An array of objects containing the values",
+    )
+    salesforce_object = models.CharField(max_length=255)
     field = models.ForeignKey(
-        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="object_fields"
+        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="picklist_options"
     )
 
     salesforce_account = models.ForeignKey(
-        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="object_fields"
+        "salesforce.SalesforceAuthAccount", on_delete=models.CASCADE, related_name="picklist_values"
     )
+    objects = SObjectPicklistQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.salesforce_account}-{self.salesforce_account__user}"
+        return f"{self.salesforce_account}-{self.picklist_for}"
 
 
 class SFSyncOperation(TimeStampModel):
@@ -226,6 +257,11 @@ class SFSyncOperation(TimeStampModel):
     def __str__(self):
         return f"{self.user.email} tasks {self.progress}% complete"
 
+    def remove_from_operations_list(self, operations=[]):
+        """ This method is used to remove operations (array) from the NEXT sync """
+        self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
+        self.save()
+
     def begin_tasks(self, attempts=1):
         from managr.salesforce.background import (
             emit_sf_sync,
@@ -239,12 +275,6 @@ class SFSyncOperation(TimeStampModel):
             while True:
                 try:
                     count = adapter.get_resource_count(key)["totalSize"]
-                    # populate the sf account resource fields (unique to each user)
-                    sf_account.get_fields(key)
-                    # populate the sf account resource validators (may be unique to each user)
-                    sf_account.get_validations(key)
-                    # populate the sf account picklist values (may be unique to each user)
-                    sf_account.get_picklist_values(key)
                     # emit event to create forms
                     if self.user.is_admin:
                         emit_generate_forms(str(self.user.id))
@@ -280,8 +310,40 @@ class SFSyncOperation(TimeStampModel):
 class SFObjectFieldsOperation(SFSyncOperation):
     """ May no Longer need to use this """
 
+    @property
+    def operations_map(self):
+        from managr.salesforce.background import (
+            emit_sync_sobject_fields,
+            emit_sync_sobject_validations,
+            emit_generate_form_template,
+            emit_sync_sobject_picklist,
+        )
+
+        return {
+            sf_consts.SALESFORCE_OBJECT_FIELDS: emit_sync_sobject_fields,
+            sf_consts.SALESFORCE_VALIDATIONS: emit_sync_sobject_validations,
+            sf_consts.SALESFORCE_PICKLIST_VALUES: emit_sync_sobject_picklist,
+        }
+
     def begin_tasks(self, attempts=1):
-        return super().begin_tasks(attempts=attempts)
+        from managr.salesforce.background import emit_gen_next_object_field_opp_sync
+
+        for op in self.operations_list:
+            # split the operation to get opp and params
+            operation_name, param = op.split(".")
+            operation = self.operations_map.get(operation_name)
+
+            # determine the operation and its param and get event emitter
+            t = operation(str(self.user.id), str(self.id), param)
+            if self.operations:
+                self.operations.append(str(t.task_hash))
+            else:
+                self.operations = [str(t.task_hash)]
+            self.save()
+
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=720)
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_object_field_opp_sync(str(self.user.id), self.operations_list, formatted_time)
 
 
 class SalesforceAuthAccount(TimeStampModel):
@@ -303,11 +365,8 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
-    object_fields = JSONField(
-        default=dict,
-        null=True,
-        help_text="All non primary fields that are on the model each org may have its own",
-        max_length=500,
+    sobjects = JSONField(
+        default=dict, null=True, help_text="All resources we are retrieving", max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,
@@ -350,24 +409,16 @@ class SalesforceAuthAccount(TimeStampModel):
     def get_fields(self, resource):
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
         self.default_record_id = record_type_id
+        self.save()
+        return fields
 
     def get_validations(self, resource):
         rules = self.adapter_class.list_validations(resource)
-        if self.object_fields and self.object_fields.get(resource, None):
-            self.object_fields[resource]["validations"] = rules
-        self.save()
+        return rules
 
     def get_picklist_values(self, resource):
         values = self.adapter_class.list_picklist_values(resource)
-
-        if self.object_fields and self.object_fields.get(resource, None):
-            fields = self.object_fields.get(resource).get("fields", [])
-            for k, v in values.items():
-                if k in fields:
-                    fields[k]["options"] = v
-                    continue
-
-        self.save()
+        return values
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)

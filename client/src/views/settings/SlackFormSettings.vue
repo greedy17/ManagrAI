@@ -2,7 +2,7 @@
   <div class="container">
     <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
       <div class="modal-container">
-        <div class="modal-container__box">
+        <div v-if="!loadingStages" class="modal-container__box">
           <div class="modal-container__box__header">
             <div class="modal-container__box__title">
               Select a stage
@@ -11,7 +11,7 @@
           <div class="modal-container__box__content">
             <div class="box__content-select">
               <DropDownSearch
-                :items="stagesFromFields"
+                :items="stages"
                 v-model="selectedStage"
                 displayKey="label"
                 valueKey="value"
@@ -34,6 +34,9 @@
               Select
             </button>
           </div>
+        </div>
+        <div v-else>
+          LOADING
         </div>
       </div>
     </modal>
@@ -82,6 +85,7 @@
               </p>
 
               <CustomSlackForm
+                :fields="selectedFormFields"
                 :show-validations="showValidations"
                 :customForm="selectedForm"
                 :formType="selectedTab"
@@ -104,6 +108,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
 import DropDownSearch from '@/components/DropDownSearch'
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -121,10 +126,35 @@ export default {
       showValidations: false,
       newForms: [],
       selectedStage: null,
+      selectedFormFields: [],
+      stages: [],
+      loadingStages: false,
       ...FORM_CONSTS,
     }
   },
-  watch: {},
+  watch: {
+    selectedFormType: {
+      immediate: true,
+      async handler(val, prev) {
+        if (val && val != prev && this.resource) {
+          let fieldParam = {}
+          if (val == this.CREATE) {
+            fieldParam['createable'] = true
+          } else {
+            fieldParam['updateable'] = true
+          }
+          try {
+            this.selectedFormFields = await this.listFields({
+              salesforceObject: this.resource,
+              ...fieldParam,
+            })
+          } catch (e) {
+            console.log(e)
+          }
+        }
+      },
+    },
+  },
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -134,6 +164,9 @@ export default {
   },
   computed: {
     ...mapState(['user']),
+    selectedFormType() {
+      return this.selectedForm ? this.selectedForm.formType : null
+    },
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
         return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
@@ -153,22 +186,37 @@ export default {
       }
       return []
     },
-
-    stagesFromFields() {
-      if (
-        this.$store.state.user.salesforceAccountRef &&
-        this.$store.state.user.salesforceAccountRef.objectFields
-      ) {
-        return this.$store.state.user.salesforceAccountRef.objectFields.Opportunity.fields.StageName
-          .options
-      } else {
-        return []
-      }
-    },
   },
   methods: {
-    onAddForm() {
+    async listFields(query_params = {}) {
+      try {
+        const res = await SObjectField.api.listFields(query_params)
+        return res
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        console.log(res)
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    async onAddForm() {
       this.$modal.show('add-stage-modal')
+      this.loadingStages = true
+      try {
+        await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
+      } catch (e) {
+        this.$modal.close('add-stage-modal')
+        this.$Alert.alert({ message: 'Failed to retrieve stages', timeout: 3000 })
+      } finally {
+        this.loadingStages = false
+      }
     },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
@@ -241,7 +289,6 @@ export default {
       } else this.selectedForm = null
     },
     updateForm(event) {
-      console.log(event)
       this.selectedForm = event
       let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
 

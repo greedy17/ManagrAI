@@ -4,7 +4,7 @@ import json
 from django.db import models
 from django.db.models import F, Q, Count
 from rest_framework.exceptions import ValidationError
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
 from django.core import serializers
 
@@ -83,6 +83,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
+    reference_data = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        help_text="An array of objects containing the API Name references and values for displaying",
+    )
     objects = OpportunityQuerySet.as_manager()
 
     class Meta:
@@ -97,104 +103,6 @@ class Opportunity(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return OpportunityAdapter(**data)
-
-    @staticmethod
-    def generate_slack_form_config(user, type):
-        """Helper class to generate a slack form config for an org"""
-        sf_account = user.salesforce_account if user.has_salesforce_integration else None
-        if sf_account:
-            # return an object with creatable and required fields
-            fields = sf_account.object_fields.get("Opportunity", {}).get("fields", {})
-            if type == "CREATE":
-                return dict(
-                    fields=list(
-                        filter(
-                            lambda field: field["required"]
-                            and field["createable"]
-                            and field["type"] != "Reference",
-                            fields.values(),
-                        )
-                    ),
-                )
-            if type == "UPDATE":
-                # no required fields for update
-                return dict(fields=list())
-
-            if type == "MEETING_REVIEW":
-                # get different meeting_types
-                meeting_types = sf_account.user.organization.action_choices.all()
-
-                meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Type",
-                    "meeting_type",
-                    type="Picklist",
-                    required=True,
-                    length=25,
-                    value=None,
-                    options=[m_type.as_sf_option for m_type in meeting_types],
-                )
-                meeting_comments_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Comments",
-                    "meeting_comments",
-                    type="String",
-                    required=True,
-                    length=250,
-                    value=None,
-                )
-                meeting_sentiment_field = SalesforceAuthAccountAdapter.custom_field(
-                    "How did it go ?",
-                    "sentiment",
-                    type="Picklist",
-                    required=True,
-                    length=250,
-                    value=None,
-                    options=[
-                        *map(
-                            lambda opt: dict(
-                                attributes={}, label=opt[0], value=opt[1], validFor=[]
-                            ),
-                            slack_consts.ZOOM_MEETING__SENTIMENTS,
-                        )
-                    ],
-                )
-                # this is a managr form make forecast_category_name required
-                forecast_category_name = (
-                    sf_account.object_fields.get("Opportunity", {})
-                    .get("fields")
-                    .get("ForecastCategoryName", None)
-                )
-                if forecast_category_name:
-                    forecast_category_name["required"] = True
-                stage = (
-                    sf_account.object_fields.get("Opportunity", {})
-                    .get("fields")
-                    .get("StageName", None)
-                )
-                close_date = (
-                    sf_account.object_fields.get("Opportunity", {})
-                    .get("fields")
-                    .get("CloseDate", None)
-                )
-                amount = (
-                    sf_account.object_fields.get("Opportunity", {})
-                    .get("fields")
-                    .get("Amount", None)
-                )
-                if amount:
-                    amount["required"] = True
-                return {
-                    "fields": [
-                        meeting_type_field,
-                        meeting_comments_field,
-                        meeting_sentiment_field,
-                        stage,
-                        forecast_category_name,
-                        close_date,
-                        amount,
-                    ],
-                }
-
-        return
 
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):

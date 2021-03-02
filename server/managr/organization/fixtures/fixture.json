@@ -1,72 +1,71 @@
 [
   {
-    "model": "organization.stage",
+    "model": "salesforce.SObjectField",
     "pk": "6407b7a1-a877-44e2-979d-1effafec5035",
     "fields": {
-      "title": "READY",
-      "description": "Defines an Opportunity as a Lead",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#F9CD53",
+      "api_name": "meeting_type",
+      "custom": true,
+      "createable": true,
+      "updateable": true,
+      "unique": false,
+      "required": false,
+      "data_type": "Picklist",
+      "display_value": "",
+      "value": null,
+      "label": "Meeting Type",
+      "length": 10,
+      "reference": "False",
+      "reference_to_infos": [],
+      "options": [],
+      "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "order": 1
+      "last_edited": "2020-08-03 11:39:23.632256Z"
     }
   },
   {
-    "model": "organization.stage",
-    "pk": "2b6d451f-c1db-4da3-9bde-632c6150804e",
+    "model": "salesforce.SObjectField",
+    "pk": "77f62583-c26f-4ba0-91c4-238f97531a8f",
     "fields": {
-      "title": "BOOKED",
-      "description": "Defines an opportunity as ready",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#FA646A",
+      "api_name": "meeting_sentiment",
+      "custom": true,
+      "createable": true,
+      "updateable": true,
+      "unique": false,
+      "required": false,
+      "data_type": "Picklist",
+      "display_value": "",
+      "value": null,
+      "label": "How Did It go?",
+      "length": 10,
+      "reference": "False",
+      "reference_to_infos": [],
+      "options": [],
+      "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "order": 2
+      "last_edited": "2020-08-03 11:39:23.632256Z"
     }
   },
   {
-    "model": "organization.stage",
-    "pk": "ea67dcc4-cc7d-4ad9-a859-d62b1d2c6f8d",
+    "model": "salesforce.SObjectField",
+    "pk": "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
     "fields": {
-      "title": "DEMO",
-      "description": "Defines an opportunity as ready",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#5FA9E5",
+      "api_name": "meeting_comments",
+      "custom": true,
+      "createable": true,
+      "updateable": true,
+      "unique": false,
+      "required": false,
+      "data_type": "String",
+      "display_value": "",
+      "value": null,
+      "label": "Meeting Comments",
+      "length": 255,
+      "reference": "False",
+      "reference_to_infos": [],
+      "options": [],
+      "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "order": 3
-    }
-  },
-  {
-    "model": "organization.stage",
-    "pk": "fe89a6fd-f049-4b23-a059-86d45c12b14b",
-    "fields": {
-      "title": "CLOSED",
-      "description": "Defines an opportunity as closed",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#2F9E54",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "order": 4
-    }
-  },
-  {
-    "model": "organization.stage",
-    "pk": "36be069d-7d39-4b7f-a339-aa7c0a27085d",
-    "fields": {
-      "title": "LOST",
-      "description": "Defines an opportunity as closed",
-      "type": "PUBLIC",
-      "organization": null,
-      "color": "#4C4949",
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "order": 5
+      "last_edited": "2020-08-03 11:39:23.632256Z"
     }
   }
 ]

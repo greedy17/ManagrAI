@@ -140,6 +140,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
+    fields = models.ManyToManyField("salesforce.SObjectField", related_name="form_fields")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 

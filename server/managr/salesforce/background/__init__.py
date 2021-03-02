@@ -16,7 +16,18 @@ from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm
 
 from ..routes import routes
-from ..models import SFSyncOperation
+from ..models import (
+    SFSyncOperation,
+    SFObjectFieldsOperation,
+    SObjectField,
+    SObjectValidation,
+    SObjectPicklist,
+)
+from ..serializers import (
+    SObjectFieldSerializer,
+    SObjectValidationSerializer,
+    SObjectPicklistSerializer,
+)
 from ..adapter.models import AccountAdapter, OpportunityAdapter, ActivityAdapter
 from ..adapter.exceptions import TokenExpired
 
@@ -36,6 +47,23 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
+def emit_gen_next_object_field_opp_sync(user_id, ops_list, schedule_time=timezone.now()):
+    schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
+    return _process_gen_next_object_field_opp_sync(user_id, ops_list, schedule=schedule)
+
+
+def emit_sync_sobject_fields(user_id, sync_id, resource):
+    return _process_sobject_fields_sync(user_id, sync_id, resource)
+
+
+def emit_sync_sobject_validations(user_id, sync_id, resource):
+    return _process_sobject_validations_sync(user_id, sync_id, resource)
+
+
+def emit_sync_sobject_picklist(user_id, sync_id, resource):
+    return _process_picklist_values_sync(user_id, sync_id, resource)
+
+
 def emit_sf_add_call_to_sf(user_id, data):
     return _process_add_call_to_sf(user_id, data)
 
@@ -48,8 +76,8 @@ def emit_add_c_role_to_opp(user_id, opp_id, sf_contact_id):
     return _process_add_c_role_to_opp(user_id, opp_id, sf_contact_id)
 
 
-def emit_generate_forms(user_id):
-    return _generate_forms(user_id)
+def emit_generate_form_template(user_id):
+    return _generate_form_template(user_id)
 
 
 @background(schedule=0)
@@ -114,49 +142,32 @@ def _process_gen_next_sync(user_id, operations_list):
     return SFSyncOperation.objects.create(user=user, operations_list=operations_list).begin_tasks()
 
 
+@background(schedule=0)
+@log_all_exceptions
+def _process_gen_next_object_field_opp_sync(user_id, operations_list):
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return logger.exception(f"User not found sync operation not created {user_id}")
+
+    return SFObjectFieldsOperation.objects.create(
+        user=user, operations_list=operations_list
+    ).begin_tasks()
+
+
 @background()
 @log_all_exceptions
-def _generate_forms(user_id):
-    ## TODO: Work on updating forms automatically with new fields
+def _generate_form_template(user_id):
     user = User.objects.get(id=user_id)
     org = user.organization
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
-        slack_form = org.custom_slack_forms.filter(resource=resource, form_type=form_type).first()
-        new_form_config = routes[resource]["model"].generate_slack_form_config(user, form_type)
-        if slack_form:
-            current_config = slack_form.config
-            # replace all current fields that exist in the new fields
-            # re append items that were not part of the automatic list
-            # TODO: Still need to check if previous fields exist (currently this is not an issue as the field will not be sent)
-            current_fields = current_config.get("fields", [])
-            new_form_fields = new_form_config.get("fields", [])
-            combined_fields = []
-            if len(new_form_fields) >= len(current_fields):
-                for field in new_form_fields:
-                    combined_fields.append(field)
-                    for i, f in enumerate(current_fields):
-                        if field["key"] == f["key"]:
-                            del current_fields[i]
-            else:
-                current_dict = {}
-                for field in current_fields:
-                    current_dict[field["key"]] = field
-                new_dict = {}
-                for field in new_form_fields:
-                    new_dict[field["key"]] = field
-                set_diff = set(current_dict) - set(new_dict)
-                combined_fields = new_form_fields
-                for val in set_diff:
-                    combined_fields.append(current_dict[val])
 
-            new_form_config["fields"] = combined_fields
-            slack_form.config = new_form_config
-            slack_form.save()
-        else:
-            OrgCustomSlackForm.objects.create(
-                organization=org, resource=resource, form_type=form_type, config=new_form_config,
-            )
+        f = OrgCustomSlackForm.objects.create(
+            form_type=form_type, resource=resource, organization=org
+        )
+        if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
+            f.fields.set(SObjectField.objects.filter(is_public=True))
+            f.save()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
@@ -226,5 +237,78 @@ def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
                     return _process_update_opportunity(user_id, meeting_review_id, attempts)
 
             # push to sf
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_sobject_fields_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    fields = sf.get_fields(resource)
+    # make fields into model and save them
+    # need to update existing ones in case they are already on a form rather than override
+    for field in fields:
+        existing = SObjectField.objects.filter(
+            api_name=field.api_name,
+            salesforce_account_id=field.salesforce_account,
+            salesforce_object=resource,
+        ).first()
+        if existing:
+            serializer = SObjectFieldSerializer(data=field.as_dict, instance=existing)
+        else:
+            serializer = SObjectFieldSerializer(data=field.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_picklist_values_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    values = sf.get_picklist_values(resource)
+    # make fields into model and save them
+    # need to update existing ones in case they are already on a form rather than override
+    for value in values:
+        existing = SObjectPicklist.objects.filter(
+            picklist_for=value.picklist_for,
+            salesforce_account_id=value.salesforce_account,
+            salesforce_object=resource,
+        ).first()
+        if existing:
+            serializer = SObjectPicklistSerializer(data=value.as_dict, instance=existing)
+        else:
+            serializer = SObjectPicklistSerializer(data=value.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_sobject_validations_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    validations = sf.get_validations(resource)
+    # make fields into model and save them
+    for validation in validations:
+        existing = SObjectValidation.objects.filter(
+            integration_id=validation.integration_id
+        ).first()
+        if existing:
+            serializer = SObjectValidationSerializer(data=validation.as_dict, instance=existing)
+        else:
+            serializer = SObjectValidationSerializer(data=validation.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer.instance
     return
 

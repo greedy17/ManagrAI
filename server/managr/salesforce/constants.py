@@ -51,7 +51,7 @@ def SF_COUNT_URI(resource, owner_id):
 
 
 SALESFORCE_VALIDATION_QUERY = (
-    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
+    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage,EntityDefinition.DeveloperName From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
 )
 
 # SF HEADERS

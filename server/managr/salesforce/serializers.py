@@ -20,7 +20,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "salesforce_account",
             "login_link",
             "user",
-            "object_fields",
+            "sobjects",
             "is_busy",
         )
 
@@ -45,11 +45,13 @@ class SObjectFieldSerializer(serializers.ModelSerializer):
             "length",
             "reference",
             "reference_to_infos",
+            "relationship_name",
             "options",
             "reference_display_label",
             "integration_source",
             "integration_id",
             "is_public",
+            "imported_by",
         )
 
 
@@ -62,19 +64,37 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
             "description",
             "salesforce_object",
             "salesforce_account",
+            "integration_id",
+            "integration_source",
+            "imported_by",
         )
 
 
-class SObjectPicklisterializer(serializers.ModelSerializer):
+class SObjectPicklistSerializer(serializers.ModelSerializer):
     class Meta:
         model = SObjectPicklist
         fields = (
             "id",
-            "label",
-            "attributes",
-            "valid_for",
-            "value",
+            "values",
             "field",
-            "salesforce_object",
             "salesforce_account",
+            "picklist_for",
+            "imported_by",
+            "salesforce_object",
         )
+
+    def to_internal_value(self, data):
+
+        if data.get("picklist_for") not in ["", None]:
+
+            data["field"] = (
+                SObjectField.objects.filter(
+                    imported_by__id=data.get("imported_by"),
+                    api_name=data.get("picklist_for"),
+                    salesforce_object=data.get("salesforce_object"),
+                )
+                .values_list("id", flat=True)
+                .first()
+            )
+        return super().to_internal_value(data)
+

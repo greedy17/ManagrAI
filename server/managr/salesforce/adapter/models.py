@@ -25,27 +25,32 @@ client = HttpClient(timeout=20).client
 
 class SObjectFieldAdapter:
     def __init__(self, data):
-        self.api_name = data.get("apiName", None)
+        self.api_name = data.get("api_name", None)
         self.custom = data.get("custom", None)
         self.createable = data.get("createable", None)
         self.data_type = data.get("data_type", None)
-        self.label = data.get("label", None)
-        self.length = data.get("length", None)
+        self.label = data.get("label", "")
+        self.length = data.get("length", 0)
         self.reference = data.get("reference", None)
         self.reference_to_infos = data.get("reference_to_infos", [])
+        self.relationship_name = data.get("relationship_name", None)
         self.updateable = data.get("updateable", None)
         self.required = data.get("required", None)
         self.unique = data.get("unique", None)
         self.value = data.get("value", None)
-        self.display_value = data.get("display_value", None)
+        self.display_value = data.get("display_value", "")
         self.options = data.get("options", [])
-        self.integration_source = data.get("integration_source", None)
-        self.integration_id = data.get("integration_id", None)
+        self.integration_source = data.get("integration_source", "")
+        self.integration_id = data.get("integration_id", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.salesforce_object = data.get("salesforce_object", None)
+        self.imported_by = data.get("imported_by", None)
 
     @staticmethod
     def from_api(data):
+        data["integration_source"] = "SALESFORCE"
         d = object_to_snake_case(data)
-        d.update({"integration_source", "SALESFORCE"})
+
         return d
 
     @classmethod
@@ -58,11 +63,15 @@ class SObjectFieldAdapter:
 
 
 class SObjectValidationAdapter:
-    def __init__(self, *args, **kwargs):
-        self.id = kwargs.get("id", None)
-        self.validation_id = kwargs.get("validation_id", None)
-        self.description = kwargs.get("description", None)
-        self.message = kwargs.get("message", None)
+    def __init__(self, data):
+        self.id = data.get("id", None)
+        self.integration_id = data.get("integration_id", None)
+        self.description = data.get("description", "")
+        self.message = data.get("message", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.integration_source = data.get("integration_source", None)
+        self.salesforce_object = data.get("salesforce_object", None)
+        self.imported_by = data.get("imported_by", None)
 
     @staticmethod
     def from_api(data):
@@ -70,9 +79,12 @@ class SObjectValidationAdapter:
             integration_id=data.get("Id", None),
             description=data.get("Description", None),
             message=data.get("ErrorMessage", None),
+            salesforce_object=data.get("EntityDefinition", {}).get("DeveloperName", None),
+            integration_source="SALESFORCE",
+            salesforce_account=data.get("salesforce_account", None),
+            imported_by=data.get("imported_by", None),
         )
 
-        d.update({"integration_source", "SALESFORCE"})
         return d
 
     @classmethod
@@ -85,18 +97,24 @@ class SObjectValidationAdapter:
 
 
 class SObjectPicklistAdapter:
-    def __init__(self, *args, **kwargs):
-        self.attributes = kwargs.get("attributes", None)
-        self.default_probablity = kwargs.get("default_probablity", None)
-        self.label = kwargs.get("label", None)
-        self.valid_for = kwargs.get("valid_for", None)
-        self.value = kwargs.get("value", None)
-        self.field = kwargs.get("field", None)
+    def __init__(self, data):
+        # self.attributes = data.get("attributes", {})
+        # self.label = data.get("label", "")
+        # self.valid_for = data.get("valid_for", "")
+        # self.value = data.get("value", "")
+        self.values = data.get("values", [])
+        self.field = data.get("field", None)
+        self.picklist_for = data.get("picklist_for", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.integration_source = data.get("integration_source", "")
+        self.imported_by = data.get("imported_by", None)
+        self.salesforce_object = data.get("salesforce_object", None)
 
     @staticmethod
     def from_api(data):
+        data["integration_source"] = "SALESFORCE"
         d = object_to_snake_case(data)
-        d.update({"integration_source", "SALESFORCE"})
+
         return d
 
     @classmethod
@@ -185,45 +203,53 @@ class SalesforceAuthAccountAdapter:
 
         return formatted_data
 
-    @staticmethod
-    def custom_field(
-        label,
-        key,
-        type="String",
-        required=True,
-        updateable=True,
-        creatable=True,
-        options=[],
-        length=0,
-        value=None,
+    def format_field_options(
+        self, sf_account_id, user_id, res_data=[],
     ):
-        """ Helper method to convert custom fields we want to add to forms that we do not get from SF"""
-        return dict(
-            label=label,
-            key=key,
-            type=type,
-            required=required,  # is required to pass val on create
-            updateable=updateable,  # cannot be patched
-            createable=creatable,
-            options=options,
-            length=length,
-            value=value,
+        fields = res_data["fields"]
+        custom_additions = dict(
+            salesforce_account=sf_account_id,
+            salesforce_object=res_data["apiName"],
+            imported_by=user_id,
         )
 
-    def format_field_options(self, res_data=[]):
-        fields = res_data["fields"]
-        data = [SObjectFieldAdapter.create_from_api(f) for f in fields]
+        data = [
+            SObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
+        ]
 
         return data
 
-    def format_validation_rules(self, res_data=[]):
+    def format_validation_rules(
+        self, sf_account_id, user_id, res_data=[],
+    ):
         records = res_data["records"]
-        return list(map(lambda rule: SObjectValidationAdapter.create_from_api(rule), records,))
+        return list(
+            map(
+                lambda rule: SObjectValidationAdapter.create_from_api(
+                    {**rule, "salesforce_account": sf_account_id, "imported_by": user_id}
+                ),
+                records,
+            )
+        )
 
-    def format_picklist_values(self, res_data=[]):
+    def format_picklist_values(
+        self, sf_account_id, user_id, resource, res_data=[],
+    ):
         fields = res_data["picklistFieldValues"]
-
-        return [map(lambda field: SObjectPicklistAdapter.create_from_api(field), fields)]
+        return list(
+            map(
+                lambda field: SObjectPicklistAdapter.create_from_api(
+                    {
+                        "values": field[1]["values"],
+                        "salesforce_account": sf_account_id,
+                        "picklist_for": field[0],
+                        "imported_by": user_id,
+                        "salesforce_object": resource,
+                    }
+                ),
+                fields.items(),
+            )
+        )
 
     @staticmethod
     def from_api(data, user_id=None):
@@ -267,22 +293,21 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
+
         return {
-            "fields": self.format_field_options(res),
+            "fields": self.format_field_options(str(self.id), str(self.user), res),
             "record_type_id": res["defaultRecordTypeId"],  # required for the picklist options
         }
 
     def list_picklist_values(self, resource):
         """ Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to """
-        extra_fields_object = self.object_fields.get(resource, None)
-        if extra_fields_object:
-            record_type_id = extra_fields_object.get("record_type_id")
-            url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-            res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-            )
-            res = self._handle_response(res)
-            return self.format_picklist_values(res)
+
+        record_type_id = self.default_record_id
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+
+        return self.format_picklist_values(str(self.id), str(self.user), resource, res)
 
     def list_validations(self, resource):
         """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
@@ -290,7 +315,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
-        return self.format_validation_rules(res)
+
+        return self.format_validation_rules(str(self.id), str(self.user), res)
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string

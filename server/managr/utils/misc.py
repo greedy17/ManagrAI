@@ -25,11 +25,18 @@ def to_snake_case(val):
 
 
 def object_to_snake_case(obj):
-    if type(obj) != dict:
-        return
+    if type(obj) != dict and type(obj) != str:
+        return obj
+    elif type(obj) == str:
+        return to_snake_case(obj)
     new_obj = dict()
     for k, v in obj.items():
-        new_obj[to_snake_case(k)] = v
+        if type(v) == list:
+            new_obj[to_snake_case(k)] = list(map(lambda new_v: object_to_snake_case(new_v), v))
+        elif type(v) == dict:
+            new_obj[to_snake_case(k)] = object_to_snake_case(v)
+        else:
+            new_obj[to_snake_case(k)] = v
     return new_obj
 
 

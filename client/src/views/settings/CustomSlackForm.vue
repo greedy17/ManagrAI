@@ -23,12 +23,12 @@
         <h4>Available Fields</h4>
         <p><i>Click a field to add it to the form.</i></p>
         <div
-          v-for="field in sfOpportunityFieldsAvailableToAdd"
-          :key="field.key"
+          v-for="field in sfFieldsAvailableToAdd"
+          :key="field.apiName"
           class="slack-form-builder__sf-field"
           @click="() => onAddField(field)"
         >
-          {{ field.label }}
+          {{ field.referenceDisplayLabel }}
         </div>
       </div>
 
@@ -48,10 +48,10 @@
           </div>
         </div>
 
-        <div v-for="(field, index) in customSlackFormConfig" :key="field.key" class="form-field">
+        <div v-for="(field, index) in customForm.fieldsRef" :key="field.apiName" class="form-field">
           <div class="form-field__left">
             <div class="form-field__label">
-              {{ field.label }}
+              {{ field.referenceDisplayLabel }}
             </div>
           </div>
           <div class="form-field__right">
@@ -80,6 +80,7 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import { SObjectField, SObjectValidations } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -103,6 +104,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    fields: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
@@ -114,63 +119,13 @@ export default {
       ...FORM_CONSTS,
     }
   },
-  watch: {
-    customForm: {
-      deep: true,
-      immediate: true,
-      handler(val) {
-        if (val) {
-          this.customSlackFormConfig = [...this.customForm.config.fields]
-        } else {
-          this.customSlackFormConfig = []
-        }
-      },
-    },
-  },
+  watch: {},
   computed: {
-    hasConfig() {
-      return (
-        this.store.state.user.salesforceAccountRef &&
-        this.store.state.user.salesforceAccountRef.objectFields
-      )
-    },
-    sfValidations() {
-      return this.$store.state.user.salesforceAccountRef.objectFields[this.resource].validations
-    },
-    sfOpportunityFieldsAsList() {
-      // Flatten the Salesforce-provided object of fields to a list of fields
-      const oppFields = this.$store.state.user.salesforceAccountRef.objectFields[this.resource]
-        .fields
-      const result = []
-      for (const [key, value] of Object.entries(oppFields)) {
-        result.push({ ...value })
-      }
-      return result
-    },
-    sfOpportunityFieldsAvailableToAdd() {
-      // Get SF fields that are updateable and not already added to the form
-      // if the form is a create then show creatable or createable and updateable fields
-      // if not show updateable only
-
-      if (this.sfOpportunityFieldsAsList) {
-        if (this.formType == 'CREATE') {
-          return this.sfOpportunityFieldsAsList.filter(
-            sfField =>
-              sfField['createable'] &&
-              !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
-          )
-        } else {
-          return this.sfOpportunityFieldsAsList.filter(
-            sfField =>
-              sfField['updateable'] &&
-              !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
-          )
-        }
-      } else {
-        return []
-      }
+    sfFieldsAvailableToAdd() {
+      return this.fields
     },
   },
+  created() {},
   methods: {
     canRemoveField(field) {
       // If form is create required fields cannot be removed

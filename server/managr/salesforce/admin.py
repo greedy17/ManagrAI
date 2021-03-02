@@ -21,4 +21,7 @@ class CustomSyncOperationAdmin(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(models.SalesforceAuthAccount)
+admin.site.register(models.SObjectField)
+admin.site.register(models.SObjectValidation)
+admin.site.register(models.SObjectPicklist)
 admin.site.register(models.SFSyncOperation, CustomSyncOperationAdmin)

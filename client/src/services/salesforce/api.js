@@ -38,18 +38,68 @@ export default class SalesforceAPI extends ModelAPI {
 }
 
 export class SObjectFormBuilderAPI extends ModelAPI {
-  async listFields() {
+  static ENDPOINT = 'salesforce/'
+  get client() {
+    return apiClient()
+  }
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+
+  async listFields(query_params = {}) {
+    let filterMaps = {
+      ...SObjectFormBuilderAPI.FILTERS_MAP,
+      createable: ApiFilter.create({ key: 'createable' }),
+      updateable: ApiFilter.create({ key: 'updateable' }),
+      salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+    }
+
+    let params = ApiFilter.buildParams(filterMaps, { ...query_params })
+
     try {
-      const res = await this.client.get(SalesforceAPI.ENDPOINT + 'fields')
-      return res.data.map(f => this.cls.fromAPI(f))
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
+        params: this.cls.toAPI(params),
+      })
+
+      return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
     }
   }
-  async listValidations() {
+  async listValidations(query_params = {}) {
+    let filterMaps = {
+      ...SObjectFormBuilderAPI.FILTERS_MAP,
+
+      salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+    }
+
+    let params = ApiFilter.buildParams(filterMaps, { ...query_params })
+
     try {
-      const res = await this.client.get(SalesforceAPI.ENDPOINT + 'fields')
-      return res.data.map(f => this.cls.fromAPI(f))
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'validations/', {
+        params: this.cls.toAPI(params),
+      })
+      return res.data.results.map(f => this.cls.fromAPI(f))
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+  async listPicklists(query_params = {}) {
+    let filterMaps = {
+      ...SObjectFormBuilderAPI.FILTERS_MAP,
+
+      salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+      picklistFor: ApiFilter.create({ key: 'picklistFor' }),
+    }
+
+    let params = ApiFilter.buildParams(filterMaps, { ...query_params })
+
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/', {
+        params: this.cls.toAPI(params),
+      })
+      return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
     }
