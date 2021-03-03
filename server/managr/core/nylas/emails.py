@@ -11,13 +11,12 @@ from django.urls import reverse
 from django.template import Context, Template
 
 from managr.utils import sites as site_utils
-from managr.lead.models import LeadEmail
-from managr.lead import constants as lead_constants
-from managr.lead.background import emit_event
+from managr.opportunity import constants as lead_constants
+
 
 from .exceptions import NylasAPIError
 from .. import constants as core_consts
-from ..models import EmailAuthAccount
+from ..models import NylasAuthAccount
 
 logger = logging.getLogger("managr")
 
@@ -27,10 +26,10 @@ def _generate_nylas_basic_auth_token(user):
     Details here: https://docs.nylas.com/docs/using-access-tokens
     """
     password = ""
-    if user.email_auth_account is None or user.email_auth_account.access_token is None:
+    if user.nylas is None or user.nylas.access_token is None:
         raise PermissionDenied(detail="User does not have a Nylas access token")
 
-    access_token = user.email_auth_account.access_token
+    access_token = user.nylas.access_token
     auth_string = f"{access_token}:{password}"
     base64_secret = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
     return base64_secret
@@ -44,13 +43,11 @@ def _handle_nylas_response(response):
         return response.json()
     elif response.status_code == 401:
         raise APIException(
-            detail="401 Unauthorized Response from Nylas server",
-            code=response.status_code,
+            detail="401 Unauthorized Response from Nylas server", code=response.status_code,
         )
     elif response.status_code == 400:
         raise APIException(
-            detail="400 Bad Request response from Nylas server",
-            code=response.status_code,
+            detail="400 Bad Request response from Nylas server", code=response.status_code,
         )
     else:
         raise APIException(detail="Error from Nylas server", code=response.status_code)
@@ -61,66 +58,6 @@ def _return_nylas_headers(user):
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
     headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
-
-
-def retrieve_threads(user, to_email=None, any_email=None, page=1, page_size=10):
-    """Use the Nylas API to retrieve threads.
-
-    Args:
-        user (User):             Access the API on this user's behalf.
-        to_email (str):          Retrieve threads addressed to this email.
-        any_email (list[str]):   Retrieve threads involving any of these emails.
-        page (str, int):         Page of results to access (based on page_size).
-        page_size (str, int):    Maximum number of results to retrieve (based on page).
-    """
-    page = int(page)
-    page_size = int(page_size)
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/"
-    headers = _return_nylas_headers(user)
-
-    # Set up the request parameters
-    params = {"offset": (page - 1) * page_size, "limit": page_size}
-
-    if to_email:
-        params["to"] = to_email
-
-    if any_email:
-        params["any_email"] = any_email
-
-    response = requests.get(request_url, params=params, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
-
-
-def retrieve_messages(user, thread_id, page=1, page_size=10):
-    """Use Nylas to retrieve messages from specific threads ids."""
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/"
-    headers = _return_nylas_headers(user)
-    params = {
-        "offset": (page - 1) * page_size,
-        "limit": page_size,
-        "thread_id": thread_id,
-    }
-    response = requests.get(request_url, params=params, headers=headers)
-    json_response = _handle_nylas_response(response)
-
-    return json_response
-
-
-def retrieve_message(user, message_id):
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/messages/{message_id}"
-    headers = _return_nylas_headers(user)
-    response = requests.get(request_url, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
-
-
-def retrieve_thread(user, thread_id):
-    request_url = f"{core_consts.NYLAS_API_BASE_URL}/threads/{thread_id}"
-    headers = _return_nylas_headers(user)
-    response = requests.get(request_url, headers=headers)
-    json_response = _handle_nylas_response(response)
-    return json_response
 
 
 def return_file_id_from_nylas(user, file_object):
@@ -277,18 +214,6 @@ def send_new_email(
         headers=headers,
     )
 
-    if response.status_code == 200:
-        # Create a Lead/Thread connection
-        obj = LeadEmail.objects.create(
-            created_by=sender, lead=lead, thread_id=response.json()["thread_id"],
-        )
-        cleaned_contacts = [c["email"] for c in to if c["email"]]
-        linked_contacts = lead.linked_contacts.filter(email__in=cleaned_contacts)
-        obj.linked_contacts.set(linked_contacts)
-
-        # Emit an EMAIL_SENT event and pass in Lead/Thread record.
-        emit_event(lead_constants.EMAIL_SENT, sender, obj)
-
     return _handle_nylas_response(response)
 
 
@@ -334,13 +259,7 @@ def send_new_email_legacy(auth, sender, receipient, message):
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {
-            "from": sender,
-            "to": to,
-            "subject": subject,
-            "body": body,
-            "tracking": {"opens": True},
-        }
+        {"from": sender, "to": to, "subject": subject, "body": body, "tracking": {"opens": True},}
     )
 
     response = requests.post(
@@ -355,8 +274,14 @@ def send_new_email_legacy(auth, sender, receipient, message):
 def send_system_email(
     recipients, message,
 ):
-    """ sends an email from a service account """
-    ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
+    """Sends an email from a service account.
+
+    TODO: System emails should now be sent using Mailgun instead of Nylas.
+    """
+    raise NotImplementedError(
+        "Cannot call `send_system_email`. It must be migrated to use Mailgun instead of Nylas."
+    )
+    ea = NylasAuthAccount.objects.filter(user__is_serviceaccount=True).first()
     if ea:
         token = ea.access_token
         sender = {"email": ea.email_address, "name": "Managr"}

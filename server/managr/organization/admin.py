@@ -1,24 +1,23 @@
 from django.contrib import admin
 
-# Register your models here.
+from managr.slack.models import OrganizationSlackIntegration
 
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, Account, Contact, Stage, ActionChoice
+
+
+class OrganizationSlackIntegrationInline(admin.StackedInline):
+    model = OrganizationSlackIntegration
 
 
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
-    list_display = (
-        "name",
-        "message_auth_count",
-    )
+    inlines = (OrganizationSlackIntegrationInline,)
+    list_display = ("name",)
 
 
 class CustomAccount(admin.ModelAdmin):
     model = Account
-    list_display = (
-        "name",
-        "url",
-    )
+    list_display = ("name",)
 
 
 class CustomContact(admin.ModelAdmin):
@@ -28,20 +27,23 @@ class CustomContact(admin.ModelAdmin):
             None,
             {
                 "fields": (
-                    "first_name",
-                    "last_name",
                     "email",
-                    "phone_number_1",
-                    "phone_number_2",
                     "account",
+                    "external_owner",
+                    "external_account",
+                    "owner",
+                    "imported_by",
+                    "secondary_data",
                 ),
             },
         ),
     )
+    list_filter = ("owner",)
 
 
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 
-admin.site.register(Contact)
+admin.site.register(Contact, CustomContact)
+admin.site.register(ActionChoice)
 admin.site.register(Stage)

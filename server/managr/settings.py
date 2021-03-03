@@ -1,14 +1,14 @@
 import os
 import dj_database_url
+from managr.utils import sites as site_utils
 
 
 def _env_get_required(setting_name):
     """Get the value of an environment variable and assert that it is set."""
     setting = os.environ.get(setting_name)
-    assert setting not in {
-        None,
-        "",
-    }, "{0} must be defined as an environment variable.".format(setting_name)
+    assert setting not in {None, "",}, "{0} must be defined as an environment variable.".format(
+        setting_name
+    )
     return setting
 
 
@@ -32,7 +32,7 @@ if IN_DEV:
 elif IN_STAGING:
     SERVER_EMAIL = "Managr Staging <noreply-staging@managr.com>"
 else:
-    SERVER_EMAIL = "Managr <noreply@managr.com>"
+    SERVER_EMAIL = "Managr <support@managr.com>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
@@ -53,13 +53,18 @@ if CURRENT_DOMAIN not in ALLOWED_HOSTS:
 # Application definition
 
 INSTALLED_APPS = [
+    # Django Channels
+    "channels",
     # Local
     "managr.core",
     "managr.api",
-    "managr.lead",
+    "managr.opportunity",
     "managr.organization",
-    "managr.polling",
-    "managr.report",
+    # "managr.report",
+    "managr.slack",
+    "managr.zoom",
+    "managr.salesforce",
+    # "managr.demo",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -75,6 +80,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "background_task",
+    "kronos",
 ]
 
 MIDDLEWARE = [
@@ -93,7 +99,12 @@ ROOT_URLCONF = "managr.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "../client/dist/"),],
+        "DIRS": [
+            os.path.join(BASE_DIR, "../client/dist/"),
+            os.path.join(BASE_DIR, "managr", "salesforce", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "core", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "api", "templates", ""),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -108,6 +119,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "managr.wsgi.application"
 
+# Channels
+ASGI_APPLICATION = "managr.routing.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            # 'hosts': [('127.0.0.1', 6379)],
+            "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379")],
+            "capacity": 500,
+        },
+    },
+}
 
 # Database
 """There are two ways to specifiy the database connection
@@ -162,9 +185,7 @@ USE_TZ = True
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": ("managr.core.pagination.PageNumberPagination"),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.TokenAuthentication",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
@@ -268,11 +289,7 @@ LOGGING = {
     "loggers": {
         "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
         # The logger name matters -- it MUST match the name of the app
-        "managr": {
-            "handlers": ["console", "mail_admins",],
-            "level": "DEBUG",
-            "propagate": True,
-        },
+        "managr": {"handlers": ["console", "mail_admins",], "level": "DEBUG", "propagate": True,},
         "managr.request": {"handlers": [], "level": "INFO", "propagate": True},
         "managr.tasks": {"handlers": [], "level": "INFO", "propagate": True},
     },
@@ -280,6 +297,13 @@ LOGGING = {
 
 # Popular testing framework that allows logging to stdout while running unit tests
 TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
+
+# Shows stdout when running tests.
+NOSE_ARGS = [
+    "--nocapture",
+    "--nologcapture",
+]
+
 
 # Rollbar error logging
 if _env_get_required("USE_ROLLBAR") == "True":
@@ -341,3 +365,48 @@ if USE_TWILIO:
         else os.environ.get("TWILIO_BASE_CALLBACK_URL", "")
     )
 
+USE_ZOOM = os.environ.get("USE_ZOOM") == "True"
+if USE_ZOOM:
+
+    ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI")
+    ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID")
+    ZOOM_SECRET = _env_get_required("ZOOM_SECRET")
+    ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN")
+    ZOOM_FAKE_MEETING_UUID = os.environ.get("ZOOM_FAKE_MEETING_UUID", None)
+
+
+USE_SLACK = os.environ.get("USE_SLACK") == "True"
+if USE_SLACK:
+    SLACK_SECRET = _env_get_required("SLACK_SECRET")
+    SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
+    SLACK_SIGNING_SECRET = _env_get_required("SLACK_SIGNING_SECRET")
+    SLACK_APP_VERSION = _env_get_required("SLACK_APP_VERSION")
+
+TEST_SLACK = os.environ.get("TEST_SLACK") == "True"
+if USE_SLACK and TEST_SLACK:
+    SLACK_TEST_TEAM_NAME = _env_get_required("SLACK_TEST_TEAM_NAME")
+    SLACK_TEST_TEAM_ID = _env_get_required("SLACK_TEST_TEAM_ID")
+    SLACK_TEST_BOT_USER_ID = _env_get_required("SLACK_TEST_BOT_USER_ID")
+    SLACK_TEST_ACCESS_TOKEN = _env_get_required("SLACK_TEST_ACCESS_TOKEN")
+    SLACK_TEST_INCOMING_WEBHOOK_URL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_URL")
+    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_CHANNEL")
+    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID"
+    )
+    SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL = _env_get_required(
+        "SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL"
+    )
+
+
+USE_SALESFORCE = os.environ.get("USE_SALESFORCE") == "True"
+if USE_SALESFORCE:
+    SALESFORCE_SECRET = _env_get_required("SALESFORCE_SECRET")
+    SALESFORCE_CONSUMER_KEY = _env_get_required("SALESFORCE_CONSUMER_KEY")
+    SALESFORCE_BASE_URL = _env_get_required("SALESFORCE_BASE_URL")
+    SALESFORCE_SCOPES = _env_get_required("SALESFORCE_SCOPES")
+    SALESFORCE_REDIRECT_URL = (
+        f'http://localhost:8080/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+        if IN_DEV
+        else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+    )
+    SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'

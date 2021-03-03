@@ -1,26 +1,22 @@
 // modules
 import Vue from 'vue'
 import Router from 'vue-router'
-
-// auth
 import Auth from '@/services/auth'
 
-// views
-import Login from '@/views/auth/Login'
-import Invite from '@/views/auth/Invite'
+// Auth Views
 import Activation from '@/views/auth/Activation'
-import LeadsIndex from '@/views/leads/LeadsIndex'
-import LeadsDetail from '@/views/leads/LeadsDetail'
-import LeadsNew from '@/views/leads/LeadsNew'
-import Prospect from '@/views/leads/Prospect'
-import Forecast from '@/views/leads/Forecast'
-import Nylas from '@/views/nylas-integration/Nylas'
-import NylasCallback from '@/views/nylas-integration/NylasCallback'
+import Login from '@/views/auth/Login'
+import Register from '@/views/auth/Register'
+
+// TODO: Add pages for Salesforce integration
+// Settigns-related views
 import Settings from '@/views/settings/Settings'
-import Reports from '@/views/reports/Reports'
-import StoryReportDetail from '@/views/reports/StoryReportDetail'
-import PerformanceReportDetail from '@/views/reports/PerformanceReportDetail'
+import Profile from '@/views/settings/_pages/_Profile'
+import Invite from '@/views/settings/_pages/_Invite'
+
+// TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
+// END TODO
 
 Vue.use(Router)
 
@@ -30,6 +26,7 @@ export default new Router({
     {
       path: '/',
       beforeEnter: Auth.homepageRedirect,
+      component: Settings,
     },
     {
       path: '/login',
@@ -37,90 +34,71 @@ export default new Router({
       component: Login,
     },
     {
-      path: '/invite',
-      name: 'Invite',
-      component: Invite,
-      beforeEnter: Auth.requireUserTypeManagerOrStaff,
+      path: '/register',
+      name: 'Register',
+      component: Register,
     },
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
       component: Activation,
     },
-    {
-      path: '/leads',
-      name: 'LeadsIndex',
-      component: LeadsIndex,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/leads/new',
-      name: 'LeadsNew',
-      component: LeadsNew,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/leads/:id',
-      name: 'LeadsDetail',
-      component: LeadsDetail,
-      props: true,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/prospect',
-      name: 'Prospect',
-      component: Prospect,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/forecast',
-      name: 'Forecast',
-      component: Forecast,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/nylas',
-      name: 'Nylas',
-      component: Nylas,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/nylas/callback',
-      name: 'NylasCallback',
-      component: NylasCallback,
-      beforeEnter: Auth.requireAuth,
-    },
+
     {
       path: '/settings',
-      name: 'Settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
+      children: [
+        {
+          path: 'integrations',
+          name: 'Integrations',
+          components: {
+            'user-settings': () =>
+              import(/* webpackChunkName: "settings" */ '../views/Integrations'),
+          },
+        },
+
+        {
+          path: '',
+          name: 'Profile',
+          components: {
+            'user-settings': Profile,
+          },
+        },
+        // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
+        // {
+        //   path: 'password',
+        //   name: 'Password',
+        //   components: {
+        //     'user-settings': Password,
+        //   },
+        // },
+        {
+          path: 'invite',
+          name: 'Invite',
+          components: { 'user-settings': Invite },
+          //beforeEnter: Auth.requireUserTypeManagerOrStaff,
+        },
+        // {
+        //   path: 'notification-settings',
+        //   name: 'NotificationSettings',
+        //   components: { 'user-settings': NotificationSettings },
+        // },
+      ],
     },
-    {
-      path: '/reports',
-      name: 'Reports',
-      component: Reports,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/story-reports/:id',
-      name: 'StoryReportDetail',
-      props: true,
-      component: StoryReportDetail,
-      beforeEnter: Auth.requireAuth,
-    },
-    {
-      path: '/performance-reports/:id',
-      name: 'PerformanceReportDetail',
-      props: true,
-      component: PerformanceReportDetail,
-      beforeEnter: Auth.requireAuth,
-    },
+    //
     // {
     //   path: '/styles',
     //   name: 'Styles',
     //   component: Styles,
     //   beforeEnter: Auth.requireAuth,
     // },
+    {
+      path: '/forms',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/SlackFormSettings'),
+      beforeEnter: Auth.requireAuth,
+      name: 'SlackFormSettings',
+    },
   ],
 })

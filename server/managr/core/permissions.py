@@ -2,10 +2,10 @@ from rest_framework import permissions, exceptions
 from rest_framework.permissions import SAFE_METHODS
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from managr.lead.models import Lead, List
+from managr.opportunity.models import Opportunity
+
 from managr.organization.models import Organization, Stage
 from managr.core import constants as core_consts
-from .models import ACCOUNT_TYPE_MANAGER, STATE_ACTIVE
 
 
 class IsOrganizationManager(permissions.BasePermission):
@@ -18,7 +18,7 @@ class IsOrganizationManager(permissions.BasePermission):
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
         if (
-            user.type == core_consts.ACCOUNT_TYPE_MANAGER
+            user.user_level == core_consts.ACCOUNT_TYPE_MANAGER
             and user.organization
             and user.is_active
         ):
@@ -32,7 +32,7 @@ class IsExternalIntegrationAccount(permissions.BasePermission):
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
-        if request.method in permissions.SAFE_METHODS and user.is_serviceaccount:
+        if request.method in permissions.SAFE_METHODS:
             return True
         return False
 
@@ -57,10 +57,10 @@ def lead_permissions(self, request, view, obj):
             return True
         elif obj.is_claimed and obj.claimed_by != request.user:
             raise PermissionDenied(
-                {"detail": "Cannot un claim a Lead that is not claimed By You"}
+                {"detail": "Cannot un claim a Opportunity that is not claimed By You"}
             )
         else:
-            raise PermissionDenied({"detail": "lead is not claimed"})
+            raise PermissionDenied({"detail": "Opportunity is not claimed"})
 
     elif view.action == "claim":
         if not obj.is_claimed:
@@ -105,8 +105,8 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
             or request.user.type == "INTEGRATION"
         ):
             return True
-        elif isinstance(obj, Lead):
-            """ if obj is Lead check claimed_by unless it is being claimed or unclaimed"""
+        elif isinstance(obj, Opportunity):
+            """ if obj is Opportunity check claimed_by unless it is being claimed or unclaimed"""
             return lead_permissions(self, request, view, obj)
         elif isinstance(obj, List):
             return list_permissions(self, request, view, obj)

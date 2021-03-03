@@ -5,11 +5,12 @@ export default class Organization {
   static readOnlyFields = ['id']
   static api = OrganizationAPI.create(Organization)
 
-  constructor({ id = null, name = null, isExternalsyncenabled = false } = {}) {
+  constructor({ id = null, name = null, isExternalsyncenabled = false, slackRef = null } = {}) {
     Object.assign(this, {
       id,
       name,
       isExternalsyncenabled,
+      slackRef,
     })
   }
 

@@ -1,0 +1,128 @@
+import pdb
+from django.db.models import Q
+
+from managr.core.models import User
+from managr.organization.models import Organization, Stage
+from managr.opportunity import constants as opp_consts
+
+from managr.slack import constants as slack_const
+from managr.slack.helpers.utils import process_action_id, NO_OP, processor
+from managr.slack.helpers import block_builders
+
+
+@processor(required_context=["o"])
+def process_get_organization_stages(payload, context):
+    organization = Organization.objects.get(pk=context["o"])
+
+    return {
+        "options": [
+            s.as_slack_option
+            for s in Stage.objects.filter(Q(organization=organization) & Q(is_active=True))
+        ],
+    }
+
+
+@processor(required_context=["stage", "original_forecast_value"])
+def process_get_forecast_from_stage(payload, context):
+    """ get connected forecast if exists or return original option """
+    stage = Stage.objects.get(pk=context["stage"])
+    fc_to_return = context["original_forecast_value"]
+
+    if stage.forecast_category:
+        fc_to_return = stage.forecast_category
+
+    return block_builders.option(
+        *list(
+            map(
+                lambda x: (x[1], x[0]),
+                list(
+                    filter(
+                        lambda category: category[0] == fc_to_return, opp_consts.FORECAST_CHOICES,
+                    )
+                ),
+            )
+        )[0]
+    )
+
+
+@processor(required_context=["o"])
+def process_get_organization_action_choices(payload, context):
+    organization = Organization.objects.get(pk=context["o"])
+    return {
+        "options": [ac.as_slack_option for ac in organization.action_choices.all()],
+    }
+
+
+@processor()
+def process_get_opportunity_forecasts(payload, context):
+    return {
+        "options": [block_builders.option(f[1], f[0]) for f in opp_consts.FORECAST_CHOICES],
+    }
+
+
+@processor(required_context=["u"])
+def process_get_user_opportunities(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    return {
+        "options": [
+            l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+        ],
+    }
+
+
+@processor(required_context=["u", "resource"])
+def process_get_local_resource_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    resource = context.get("resource")
+    if resource == "Opportunity":
+
+        return {
+            "options": [
+                l.as_slack_option for l in user.owned_opportunities.filter(name__icontains=value)
+            ],
+        }
+
+    if resource == "Account":
+        return {
+            "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)],
+        }
+
+
+@processor(required_context=["u", "relationship", "fields"])
+def process_get_external_relationship_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    sf_account = user.salesforce_account
+    sf_adapter = sf_account.adapter_class
+    relationship = context.get("relationship")
+    fields = context.get("fields").split(",")
+    value = payload["value"]
+    res = sf_adapter.list_relationship_data(relationship, fields, value)
+
+    return {
+        "options": list(
+            map(lambda val: block_builders.option(val.get("Name"), val.get("Id")), res)
+        ),
+    }
+
+
+def handle_block_suggestion(payload):
+    """
+    This takes place when a select_field requires data from Managr
+    to populate its options.
+    """
+    switcher = {
+        slack_const.GET_ORGANIZATION_STAGES: process_get_organization_stages,
+        slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
+        slack_const.GET_OPPORTUNITY_FORECASTS: process_get_opportunity_forecasts,
+        slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
+        slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
+        slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
+    }
+    action_query_string = payload["action_id"]
+    processed_string = process_action_id(action_query_string)
+    action_id = processed_string.get("true_id")
+    action_params = processed_string.get("params")
+    print(f"ID: {action_query_string}")
+    return switcher.get(action_id, NO_OP)(payload, action_params)

@@ -1,0 +1,215 @@
+FILE_TYPE_OTHER = "OTHER"
+FILE_TYPE_CONTRACT = "CONTRACT"
+FILE_TYPE_CHOICES = ((FILE_TYPE_OTHER, "Other"), (FILE_TYPE_CONTRACT, "Contract"))
+
+LEAD_STATUS_READY = "READY"
+LEAD_STATUS_TRIAL = "TRIAL"
+LEAD_STATUS_DEMO = "DEMO"
+LEAD_STATUS_WAITING = "WAITING"
+LEAD_STATUS_CLOSED = "CLOSED"
+LEAD_STATUS_LOST = "LOST"
+LEAD_STATUS_BOOKED = "BOOKED"
+LEAD_STATUS_LEAD = "LEAD"
+LEAD_STATUS_CHOICES = (
+    (LEAD_STATUS_READY, "Ready"),
+    (LEAD_STATUS_TRIAL, "Trial"),
+    (LEAD_STATUS_DEMO, "Demo"),
+    (LEAD_STATUS_WAITING, "Waiting"),
+    (LEAD_STATUS_CLOSED, "Closed"),
+    (LEAD_STATUS_LOST, "Lost"),
+    (LEAD_STATUS_BOOKED, "Booked"),
+    (LEAD_STATUS_LEAD, "Lead"),
+)
+
+LEAD_RATING_CHOICES = [
+    (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5),
+]
+
+LEAD_STATE_CLAIMED = "CLAIMED"
+LEAD_STATE_UNCLAIMED = "UNCLAIMED"
+LEAD_STATE_CHOICES = (
+    (LEAD_STATE_CLAIMED, "Claimed"),
+    (LEAD_STATE_UNCLAIMED, "Unclaimed"),
+)
+
+
+# Forecasts that make up the 'Forecast Table',
+# NOTE: Ordered from most weighted to least weighted,
+# because their order matters when generating PerformanceReport,
+# and this set is used therein!
+
+# Define constants for the types of model events that can happen.
+CREATED = "CREATED"
+UPDATED = "UPDATED"
+DELETED = "DELETED"
+CLAIMED = "CLAIMED"  # Leads only
+RELEASED = "RELEASED"  # Leads only
+CLOSED = "CLOSED"  # Leads only
+
+
+# Possible Lead actions
+LEAD_CREATED = "Lead.CREATED"
+LEAD_UPDATED = "Lead.UPDATED"
+LEAD_DELETED = "Lead.DELETED"
+LEAD_CLAIMED = "Lead.CLAIMED"
+LEAD_RELEASED = "Lead.RELEASED"
+LEAD_RESET = "Lead.RESET"
+LEAD_CLOSED = "Lead.CLOSED"
+
+# extra lead actions from api
+LEAD_CREATED_API = "Lead.CREATED_API"
+LEAD_UPDATED_API = "Lead.UPDATED_API"
+LEAD_DELETED_API = "Lead.DELETED_API"
+LEAD_CLAIMED_API = "Lead.CLAIMED_API"
+LEAD_RELEASED_API = "Lead.RELEASED_API"
+LEAD_CLOSED_API = "Lead.CLOSED_API"
+
+
+# Possible Note actions
+NOTE_CREATED = "Note.CREATED"
+NOTE_UPDATED = "Note.UPDATED"
+NOTE_DELETED = "Note.DELETED"
+
+CALL_NOTE_CREATED = "CallNote.CREATED"
+CALL_NOTE_UPDATED = "CallNote.UPDATED"
+CALL_NOTE_DELETED = "CallNote.DELETED"
+
+FILE_CREATED = "File.CREATED"
+FILE_UPDATED = "File.UPDATED"
+FILE_DELETED = "File.DELETED"
+
+REMINDER_CREATED = "Reminder.CREATED"
+REMINDER_UPDATED = "Reminder.UPDATED"
+REMINDER_DELETED = "Reminder.DELETED"
+
+ACTION_CREATED = "Action.CREATED"
+ACTION_UPDATED = "Action.UPDATED"
+ACTION_DELETED = "Action.DELETED"
+
+# Email-specific events
+SENT = "SENT"
+RECEIVED = "RECEIVED"
+EMAIL_SENT = "LeadEmail.SENT"
+EMAIL_RECEIVED = "LeadEmail.RECEIVED"
+EMAIL_OPENED = "EMAIL_OPENED"
+
+
+# Message-specific events
+MESSAGE_RECEIVED = "LeadMessage.RECEIVED"
+MESSAGE_SENT = "LeadMessage.SENT"
+MESSAGE_DIRECTION_CHOICES = (
+    (SENT, "Sent",),
+    (RECEIVED, "Received",),
+)
+TWILIO_MESSAGE_DELIVERED = "delivered"
+TWILIO_MESSAGE_UNDELIVERED = "undelivered"
+TWILIO_MESSAGE_SENDING = "sending"
+TWILIO_MESSAGE_SENT = "sent"
+TWILIO_MESSAGE_RECEIVING = "receiving"
+TWILIO_MESSAGE_RECEIVED = "received"
+TWILIO_MESSAGE_FAILED = "failed"
+
+MESSAGE_DELIVERED_OPTIONS = (
+    TWILIO_MESSAGE_DELIVERED,
+    TWILIO_MESSAGE_SENT,
+)
+MESSAGE_NOT_DELIVERED_OPTIONS = (
+    TWILIO_MESSAGE_UNDELIVERED,
+    TWILIO_MESSAGE_FAILED,
+)
+
+MESSAGE_PENDING_OPTIONS = TWILIO_MESSAGE_SENDING
+
+MESSAGE_DELIVERED = "DELIVERED"
+MESSAGE_NOT_DELIVERED = "NOT_DELIVERED"
+MESSAGE_PENDING = "MESSAGE_PENDING"
+
+MESSAGE_STATUS_CHOICES = (
+    (MESSAGE_DELIVERED, "Delivered",),
+    (MESSAGE_NOT_DELIVERED, "Not Delivered",),
+    (MESSAGE_PENDING, "Pending",),
+)
+
+ACTIVITY_CHOICES = (
+    (LEAD_CREATED, "Lead Created",),
+    (LEAD_UPDATED, "Lead Updated",),
+    (LEAD_DELETED, "Lead Deleted",),
+    (LEAD_CLAIMED, "Lead Claimed",),
+    (LEAD_RELEASED, "Lead Released",),
+    (LEAD_RESET, "Lead Reset",),
+    (LEAD_CLOSED, "Lead Closed",),
+    (NOTE_CREATED, "Note Created",),
+    (NOTE_UPDATED, "Note Updated",),
+    (NOTE_DELETED, "Note Deleted",),
+    (CALL_NOTE_CREATED, "Call Note Created",),
+    (CALL_NOTE_UPDATED, "Call Note Updated",),
+    (CALL_NOTE_DELETED, "Call Note Deleted",),
+    (FILE_CREATED, "File Created",),
+    (FILE_UPDATED, "File Updated",),
+    (FILE_DELETED, "File Deleted",),
+    (REMINDER_CREATED, "Reminder Created",),
+    (REMINDER_UPDATED, "Reminder Updated",),
+    (REMINDER_DELETED, "Reminder Deleted",),
+    (ACTION_CREATED, "Action Created",),
+    (ACTION_UPDATED, "Action Updated",),
+    (ACTION_DELETED, "Action Deleted",),
+    (EMAIL_SENT, "Email Sent",),
+    (EMAIL_RECEIVED, "Email Received",),
+    (MESSAGE_RECEIVED, "Message Received",),
+    (MESSAGE_SENT, "Message Sent",),
+)
+
+LEAD_ACTIONS_TRIGGER_ALERT = (
+    CALL_NOTE_CREATED,
+    CALL_NOTE_UPDATED,
+    ACTION_CREATED,
+    ACTION_UPDATED,
+    EMAIL_RECEIVED,
+    MESSAGE_RECEIVED,
+)
+
+
+ACTIVITIES_TO_EXCLUDE_FROM_HISTORY = [
+    LEAD_UPDATED,
+    LEAD_CLAIMED,
+    LEAD_RELEASED,
+    LEAD_RESET,
+]
+
+
+# Choices for Lead type field
+EXISTING_CUSTOMER_UPGRADE = "UPGRADE"
+EXISTING_CUSTOMER_REPLACEMENT = "REPLACEMENT"
+EXISTING_CUSTOMER_DOWNGRADE = "DOWNGRADE"
+NEW_CUSTOMER = "NEW"
+
+OTHER_OPPORTUNITY = "OTHER"
+
+OPPORTUNITY_TYPE_CHOICES = (
+    (EXISTING_CUSTOMER_UPGRADE, "Upgrade"),
+    (EXISTING_CUSTOMER_DOWNGRADE, "Downgrade"),
+    (EXISTING_CUSTOMER_REPLACEMENT, "Replacement"),
+    (NEW_CUSTOMER, "New"),
+    (OTHER_OPPORTUNITY, "Other"),
+)
+
+
+# New Forecasts from SF
+
+FORECAST_OMITTED = "Omitted"
+FORECAST_PIPELINE = "Pipeline"
+FORECAST_BEST_CASE = "BestCase"
+FORECAST_COMMIT = "Forecast"
+FORECAST_CLOSED = "Closed"
+
+FORECAST_CHOICES = (
+    (FORECAST_OMITTED, "Omitted"),
+    (FORECAST_PIPELINE, "Pipeline"),
+    (FORECAST_BEST_CASE, "Best Case"),
+    (FORECAST_COMMIT, "Commit"),
+    (FORECAST_CLOSED, "Closed"),
+)

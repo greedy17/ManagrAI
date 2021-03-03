@@ -1,30 +1,6 @@
 <template>
   <div class="page">
-    <div class="page__left-nav-bar">
-      <SideNavToolbar>
-        <template v-slot:trigger>
-          <span
-            class="toggle-icon"
-            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-          >
-            <div class="filter__button" v-show="!$store.state.showToolbarNav">
-              <img class="filter__image" src="@/assets/images/logo.png" />
-              <div class="filter__text">At a Glance</div>
-            </div>
-          </span>
-        </template>
-        <template v-slot:toolbar>
-          <ToolBar
-            :repFilterState="repFilterState"
-            :triggerRefreshKPIs="triggerRefreshKPIs"
-            @toggle-active-rep="toggleActiveRep"
-            @select-all-reps="selectAllReps"
-            @deselect-all-reps="deselectAllReps"
-            @date-range-filter-change="dateRange => updateForecastCollections(dateRange)"
-          />
-        </template>
-      </SideNavToolbar>
-    </div>
+    <div class="page__left-nav-bar"></div>
 
     <div class="page__main-content-area-with-panel">
       <div class="view-toggle-container">
@@ -55,7 +31,6 @@ import ToolBar from '@/components/forecast/ToolBar'
 
 import ListsContainer from '@/components/forecast/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
-import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 import Forecast from '@/services/forecasts'
 import CollectionManager from '@/services/collectionManager'
 import Pagination from '@/services/pagination'
@@ -70,10 +45,8 @@ function allRepsReducer(obj, id) {
 export default {
   name: 'Forecast',
   components: {
-    ToolBar,
     ToggleCheckBox,
     ListsContainer,
-    SideNavToolbar,
   },
   data() {
     return {

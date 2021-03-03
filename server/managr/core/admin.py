@@ -3,24 +3,37 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
+
+from managr.slack.models import UserSlackIntegration
+from managr.zoom.models import ZoomAuthAccount
 from .models import (
     User,
-    EmailAuthAccount,
-    EmailTemplate,
-    MessageAuthAccount,
-    NotificationOption,
-    NotificationSelection,
+    NylasAuthAccount,
+    #    NotificationOption,
+    #    NotificationSelection,
 )
+
 from . import constants as core_consts
 
-TRUE_FALSE_CHOICES = (("True", "ON",), ("False", "OFF"))
+TRUE_FALSE_CHOICES = (
+    ("True", "ON",),
+    ("False", "OFF"),
+)
+
+
+class UserSlackIntegrationInline(admin.StackedInline):
+    model = UserSlackIntegration
+
+
+class ZoomAuthAccountInline(admin.StackedInline):
+    model = ZoomAuthAccount
 
 
 class EmailAuthAccForm(forms.ModelForm):
     linked_at = forms.IntegerField()
 
     class Meta:
-        model = EmailAuthAccount
+        model = NylasAuthAccount
         fields = (
             "access_token",
             "account_id",
@@ -29,7 +42,6 @@ class EmailAuthAccForm(forms.ModelForm):
             "sync_state",
             "name",
             "user",
-            "linked_at",
         )
 
 
@@ -49,24 +61,23 @@ class CustomUserAdmin(UserAdmin):
                     "profile_photo",
                     "is_active",
                     "is_invited",
-                    "quota",
-                    "commit",
-                    "upside",
-                    "magic_token_expiration",
-                    "is_serviceaccount",
+                    "is_admin",
                     "is_superuser",
                     "is_staff",
                     "organization",
-                    "type",
+                    "user_level",
                 )
             },
         ),
     )
 
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),}),
+        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
-
+    inlines = (
+        UserSlackIntegrationInline,
+        ZoomAuthAccountInline,
+    )
     list_display = ("email", "first_name", "last_name")
 
     list_display_links = (
@@ -84,10 +95,11 @@ class CustomUserAdmin(UserAdmin):
     ordering = []
 
 
-class CustomEmailAuthAccount(admin.ModelAdmin):
+class CustomNylasAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
+""" 
 class CustomNotificationOptionForm(forms.ModelForm):
     default_value = forms.ChoiceField(
         widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES
@@ -125,12 +137,9 @@ class CustomNotificationSelection(admin.ModelAdmin):
 
 class CustomNotificationOption(admin.ModelAdmin):
     form = CustomNotificationOptionForm
-
+ """
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(EmailAuthAccount, CustomEmailAuthAccount)
-admin.site.register(EmailTemplate)
-admin.site.register(MessageAuthAccount)
-admin.site.register(NotificationOption, CustomNotificationOption)
-admin.site.register(NotificationSelection, CustomNotificationSelection)
-
+admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
+# admin.site.register(NotificationOption, CustomNotificationOption)
+# admin.site.register(NotificationSelection, CustomNotificationSelection)

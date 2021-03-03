@@ -100,9 +100,7 @@ def validate_phone_number(value, country="US"):
     matches_length = len(matches)
     if (value_length - matches_length) < 10 or value_length - matches_length > 11:
         # make sure at least 10 chars are included and no more than 11 (including the 1)
-        raise ValueError(
-            f"{value} must be at least 10 numeric characters and no more than 11"
-        )
+        raise ValueError(f"{value} must be at least 10 numeric characters and no more than 11")
     return True
 
 

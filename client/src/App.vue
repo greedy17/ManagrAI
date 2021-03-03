@@ -1,21 +1,12 @@
 <template>
   <div id="app">
-    <NavBar
-      v-if="!hideNavBar"
-      @update-unviewed-notif-count="updateUnviewedNotifCount"
-      :unViewedCount="unviewedNotifCount"
-    />
+    <NavBar v-if="!hideNavBar" />
     <alert-alert />
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-
-    <SideNavBar
-      v-if="userIsLoggedIn"
-      @viewed-notif="countViewed => updateUnviewedNotifCount(unviewedNotifCount - countViewed)"
-    />
   </div>
 </template>
 
@@ -24,7 +15,6 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
-import SideNavBar from '@/components/navigation/SideNavBar'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
@@ -32,7 +22,6 @@ export default {
   name: 'app',
   components: {
     NavBar,
-    SideNavBar,
   },
   data() {
     return {
@@ -53,16 +42,9 @@ export default {
 
   methods: {
     ...mapActions(['refreshCurrentUser']),
-    toggleNotifications() {
-      this.$store.commit('TOGGLE_SIDE_NAV', !this.showSideNav)
-    },
-    updateUnviewedNotifCount(count) {
-      this.unviewedNotifCount = count
-    },
   },
   computed: {
     ...mapGetters(['userIsLoggedIn']),
-    ...mapGetters(['showSideNav']),
     hideNavBar() {
       return routesWithoutNavBar.includes(this.$route.name)
     },
@@ -71,16 +53,23 @@ export default {
 </script>
 
 <style lang="scss">
+// Include global variables and styles here
 @import '@/styles/variables';
+@import '@/styles/buttons';
+@import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   overflow-y: scroll;
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
-  background-color: $off-white;
+  background-color: $soft-gray;
 }
 
 #app {
@@ -88,7 +77,7 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: $off-white;
+  background-color: $soft-gray;
 }
 
 .page-content {
@@ -102,6 +91,7 @@ body {
 ::-webkit-scrollbar {
   width: 0px;
 }
+
 .muted {
   color: rgba(47, 48, 53, 0.4);
   font-family: inherit;

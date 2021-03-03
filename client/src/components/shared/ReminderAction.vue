@@ -70,10 +70,12 @@ export default {
             title: this.reminder.title,
             content: this.reminder.content,
             datetimeFor: moment(this.reminder.datetimeFor).format(),
+            linkedContacts: this.activeContacts,
           },
           createdFor: [this.lead.id],
         })
         this.reminder = Reminder.create({})
+        this.activeContacts = []
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,

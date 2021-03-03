@@ -41,7 +41,6 @@
       "order": 3
     }
   },
-
   {
     "model": "organization.stage",
     "pk": "fe89a6fd-f049-4b23-a059-86d45c12b14b",

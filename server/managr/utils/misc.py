@@ -1,8 +1,59 @@
+import random
+import re
+from django.core.management.base import BaseCommand
+
 from django.conf import settings
 from django.utils import timezone
 
 from rest_framework.response import Response
 from rest_framework import filters
+
+
+def to_snake_case(val):
+    # note if first value is capital then it will return a starting _
+    if not val:
+        return
+    value = str(val)
+    for index, char in enumerate(re.finditer(r"[A-Z]", value)):
+        value = (
+            value[: index + char.start()]
+            + "_"
+            + value[index + char.start()].lower()
+            + value[index + char.start() + 1 :]
+        )
+    return value
+
+
+def object_to_snake_case(obj):
+    if type(obj) != dict:
+        return
+    new_obj = dict()
+    for k, v in obj.items():
+        new_obj[to_snake_case(k)] = v
+    return new_obj
+
+
+def snake_to_space(word):
+    _matches = []
+    if type(word) != str:
+        return word
+    if not len(word):
+        return word
+    while True:
+        matches = re.search(r"_", word)
+        if matches:
+            _matches.append(matches.end())
+            word = re.sub("_", " ", word, 1)
+            print(word)
+        else:
+            break
+
+    for match in _matches:
+        word = word[0].upper() + word[1:match] + word[match].upper() + word[match + 1 :]
+
+    if not len(_matches):
+        word = word[0].upper() + word[1:]
+    return word
 
 
 def datetime_appended_filepath(instance, filename):
@@ -57,3 +108,26 @@ def get_site_url():
     return "{0}://{1}{2}".format(
         protocol, domain, f":{settings.CURRENT_PORT}" if settings.CURRENT_PORT else ""
     )
+
+
+def query_debugger(func):
+    @functools.wraps(func)
+    def inner_func(*args, **kwargs):
+
+        reset_queries()
+
+        start_queries = len(connection.queries)
+
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+
+        end_queries = len(connection.queries)
+
+        print(f"Function : {func.__name__}")
+        print(f"Number of Queries : {end_queries - start_queries}")
+        print(f"Finished in : {(end - start):.2f}s")
+        return result
+
+    return inner_func
+

@@ -7,45 +7,29 @@ from django.db.models import Sum, Avg, Q
 from django.db.models.functions import Concat
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField, ArrayField
 
 from rest_framework.authtoken.models import Token
-
-from managr.utils.numbers import format_phone_number
-
-from django.db.models import Sum, Avg, Q
 from rest_framework.exceptions import ValidationError
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db.models import Sum, Avg
+
+from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
-
-from managr.core.models import UserManager, TimeStampModel
-from . import constants as org_consts
-
-
-from managr.core.models import UserManager, TimeStampModel
+from managr.core.models import UserManager, TimeStampModel, IntegrationModel, User
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
-from managr.lead.models import Notification
-
+from managr.slack.helpers import block_builders
+from managr.salesforce.adapter.models import ContactAdapter, AccountAdapter
+from managr.opportunity import constants as opp_consts
+from managr.slack import constants as slack_consts
 from . import constants as org_consts
-
-
-# Create your models here.
-
-
-ACCOUNT_TYPE_RENEWAL = "RENEWAL"
-ACCOUNT_TYPE_NEW = "NEW"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_RENEWAL, "Renewal"), (ACCOUNT_TYPE_NEW, "New"))
-STATE_ACTIVE = "ACTIVE"
-STATE_INACTIVE = "INACTIVE"
-STATE_CHOCIES = ((STATE_ACTIVE, "Active"), (STATE_INACTIVE, "Inactive"))
 
 
 class OrganizationQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser or user.is_serviceaccount:
+        if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
             return self.filter(pk=user.organization_id)
@@ -55,20 +39,17 @@ class OrganizationQuerySet(models.QuerySet):
 
 class Organization(TimeStampModel):
     """
-        Main Organization Model, Users are attached to this model
-        Users can either be limited, or Manager (possibly also have a main admin for the org)
+    Main Organization Model, Users are attached to this model
+    Users can either be limited, or Manager (possibly also have a main admin for the org)
     """
 
-    name = models.CharField(max_length=255, null=True)
-    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, null=True)
+    name = models.CharField(max_length=255, blank=True)
+    photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     state = models.CharField(
-        max_length=255,
-        choices=STATE_CHOCIES,
-        default=STATE_ACTIVE,
-        null=False,
-        blank=False,
+        max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
     )
-    is_externalsyncenabled = models.BooleanField(default=False, null=False, blank=False)
+    is_trial = models.BooleanField(default=False)
+
     objects = OrganizationQuerySet.as_manager()
 
     @property
@@ -77,7 +58,7 @@ class Organization(TimeStampModel):
         """ helper method to deactivate all users if their org is deactivated """
         users = User.objects.filter(organization=self)
         for u in users:
-            u.state = STATE_INACTIVE
+            u.state = org_consts.STATE_INACTIVE
             u.save()
 
     def __str__(self):
@@ -87,35 +68,10 @@ class Organization(TimeStampModel):
         ordering = ["-datetime_created"]
 
     @property
-    def total_amount_closed_contracts(self):
-        total = Organization.objects.aggregate(Sum("accounts__leads__closing_amount"))
-        if total:
-            return total
-        else:
-            return 0
+    def has_stages_integrated(self):
+        """ if an org already has stages assume we already synced and dont try again """
 
-    @property
-    def avg_amount_closed_contracts(self):
-        return Organization.objects.aggregate(Avg("accounts__leads__amount"))
-
-    @property
-    def message_auth_count(self):
-        """ returns a count of how many message auth phone numbers an org has """
-        return self.users.filter(message_auth_account__isnull=False).count()
-
-    @property
-    def org_token(self):
-        if self.is_externalsyncenabled:
-            integration = self.users.filter(
-                type=core_consts.ACCOUNT_TYPE_INTEGRATION
-            ).first()
-            if integration:
-                if integration.is_active and integration.is_invited:
-                    auth_token, token_created = Token.objects.get_or_create(
-                        user=integration
-                    )
-                    token = json.loads(serializers.serialize("json", [auth_token,]))
-                    return token[0]["pk"]
+        return self.stages.count() > 0
 
 
 class AccountQuerySet(models.QuerySet):
@@ -128,36 +84,39 @@ class AccountQuerySet(models.QuerySet):
             return None
 
 
-class Account(TimeStampModel):
+class Account(TimeStampModel, IntegrationModel):
     """
-        Accounts are potential and exisiting clients that 
-        can be made into leads and added to lists
+    Accounts are potential and exisiting clients that
+    can be made into leads and added to lists
 
     """
 
-    name = models.CharField(max_length=255, null=True)
-    url = models.CharField(max_length=255, null=True)
-    type = models.CharField(
-        choices=ACCOUNT_TYPES, default=ACCOUNT_TYPE_NEW, max_length=255
-    )
+    name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "Organization",
-        related_name="accounts",
-        blank=False,
+        "Organization", related_name="accounts", on_delete=models.CASCADE,
+    )
+    parent = models.ForeignKey(
+        "organization.Account",
+        on_delete=models.SET_NULL,
+        related_name="parent_account",
+        blank=True,
         null=True,
-        on_delete=models.CASCADE,
     )
-    state = models.CharField(
+    parent_integration_id = models.CharField(
         max_length=255,
-        choices=STATE_CHOCIES,
-        default=STATE_ACTIVE,
-        null=False,
-        blank=False,
+        blank=True,
+        help_text="UUID from integration for parent account, saved in case of errors",
     )
-    logo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+    owner = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="accounts", blank=True, null=True
     )
-
+    external_owner = models.CharField(max_length=255, blank=True)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):
@@ -165,6 +124,107 @@ class Account(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def title(self):
+        """ Returns the name as a title using common fields as we have with leads and opps"""
+        return self.name
+
+    def save(self, *args, **kwargs):
+        """ In case of duplicates update not save"""
+        obj = (
+            Account.objects.filter(
+                integration_id=self.integration_id, organization=self.organization
+            )
+            .exclude(id=self.id)
+            .first()
+        )
+        if obj:
+            return
+
+        return super(Account, self).save(*args, **kwargs)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
+    @staticmethod
+    def generate_slack_form_config(user, type):
+        """Helper class to generate a slack form config for an org"""
+        sf_account = user.salesforce_account if user.has_salesforce_integration else None
+        if sf_account:
+            # return an object with creatable and required fields
+            fields = sf_account.object_fields.get("Account", {}).get("fields", {})
+            if type == "CREATE":
+
+                return dict(
+                    fields=list(
+                        filter(
+                            lambda field: field["required"]
+                            and field["createable"]
+                            and field["type"] != "Reference",
+                            fields.values(),
+                        )
+                    ),
+                )
+            if type == "UPDATE":
+                # no required fields for update
+                return dict(fields=list())
+
+            if type == "MEETING_REVIEW":
+                meeting_types = sf_account.user.organization.action_choices.all()
+                meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Type",
+                    "meeting_type",
+                    type="Picklist",
+                    required=True,
+                    length=25,
+                    value=None,
+                    options=[m_type.as_sf_option for m_type in meeting_types],
+                )
+                meeting_comments_field = SalesforceAuthAccountAdapter.custom_field(
+                    "Meeting Comments",
+                    "meeting_comments",
+                    type="String",
+                    required=True,
+                    length=250,
+                    value=None,
+                )
+                meeting_sentiment_field = SalesforceAuthAccountAdapter.custom_field(
+                    "How did it go ?",
+                    "sentiment",
+                    type="Picklist",
+                    required=True,
+                    length=250,
+                    value=None,
+                    options=[
+                        *map(
+                            lambda opt: dict(
+                                attributes={}, label=opt[0], value=opt[1], validFor=[]
+                            ),
+                            slack_consts.ZOOM_MEETING__SENTIMENTS,
+                        )
+                    ],
+                )
+                return {
+                    "fields": [meeting_type_field, meeting_comments_field, meeting_sentiment_field],
+                }
+
+        return
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.get("Account", {}).get(
+                "fields", {}
+            )
+            res = AccountAdapter.update_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
 
 
 class ContactQuerySet(models.QuerySet):
@@ -177,59 +237,80 @@ class ContactQuerySet(models.QuerySet):
             return self.none()
 
 
-class Contact(TimeStampModel):
-    """
-        Contacts are the point of contacts that belong to 
-        an account, they must be unique (by email) and can 
-        only belong to one account
-        If we have multiple organizations per account 
-        then that will also be unique and added here
-    """
+class Contact(TimeStampModel, IntegrationModel):
 
-    title = models.CharField(max_length=255, blank=True)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255, blank=True)
-    email = models.CharField(max_length=255)
-    phone_number_1 = models.CharField(max_length=255)
-    phone_number_2 = models.CharField(max_length=255, blank=True)
+    email = models.CharField(max_length=255, blank=True)
+    owner = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="contacts", blank=True, null=True
+    )
     account = models.ForeignKey(
-        "Account",
+        "organization.Account",
+        on_delete=models.SET_NULL,
         related_name="contacts",
-        blank=False,
         null=True,
-        on_delete=models.CASCADE,
+        blank=True,
+    )
+    external_owner = models.CharField(max_length=255, blank=True)
+    external_account = models.CharField(max_length=255, blank=True)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
     )
     objects = ContactQuerySet.as_manager()
 
     class Meta:
-        ordering = ["first_name"]
-        # unique hash so only one contact with the same email can be created per account
-        unique_together = (
-            "email",
-            "account",
-        )
-
-    def __str__(self):
-        return f"{self.full_name} {self.account}"
+        ordering = ["-datetime_created"]
 
     @property
-    def full_name(self):
-        """ Property for a user's full name """
-        return f"{self.first_name} {self.last_name}"
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        data["owner"] = str(self.owner.id)
+        return ContactAdapter(**data)
+
+    def __str__(self):
+        return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
 
     def save(self, *args, **kwargs):
-        self.email = BaseUserManager.normalize_email(self.email).lower()
-        self.phone_number_1 = (
-            format_phone_number(self.phone_number_1, format="+1%d%d%d%d%d%d%d%d%d%d")
-            if self.phone_number_1
-            else ""
-        )
-        self.phone_number_2 = (
-            format_phone_number(self.phone_number_2, format="+1%d%d%d%d%d%d%d%d%d%d")
-            if self.phone_number_2
-            else ""
-        )
+        # if there is an integration id make sure it is unique
+        if self.integration_id:
+            existing = (
+                Contact.objects.filter(
+                    integration_id=self.integration_id, imported_by=self.imported_by
+                )
+                .exclude(id=self.id)
+                .first()
+            )
+            if existing:
+                raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
+
+    @staticmethod
+    def generate_slack_form_config(user, type):
+        """Helper class to generate a slack form config for an org"""
+        sf_account = user.salesforce_account if user.has_salesforce_integration else None
+        if sf_account:
+            # return an object with creatable and required fields
+            fields = sf_account.object_fields.get("Contact", {}).get("fields", {})
+            if type == "CREATE":
+
+                return dict(
+                    fields=list(
+                        filter(
+                            lambda field: field["required"]
+                            and field["createable"]
+                            and field["type"] != "Reference",
+                            fields.values(),
+                        )
+                    ),
+                )
+            if type == "UPDATE":
+                # no required fields for update
+                return dict(fields=list())
+
+        return
 
 
 class StageQuerySet(models.QuerySet):
@@ -237,95 +318,86 @@ class StageQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(Q(type="PUBLIC") | Q(organization=user.organization))
+            return self.filter(Q(organization=user.organization))
         else:
             return self.none()
 
 
-class Stage(TimeStampModel):
-    """ 
-        Stages are Opportunity statuses each organization can set their own (if they have an SF integration these are merged from there)
-        There are some static stages available to all organizations and private ones that belong only to certain organizations. 
+class Stage(TimeStampModel, IntegrationModel):
+    """
+    Each Org Will have its own stages on set up
     """
 
-    title = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
-    color = models.CharField(
-        max_length=255, default="#9B9B9B", help_text="hex code for color"
+    color = models.CharField(max_length=255, default="#9B9B9B", help_text="hex code for color")
+    value = models.CharField(
+        max_length=255, blank=True, help_text="This may be use as a unique value, if it exists"
     )
-    type = models.CharField(max_length=255, choices=(org_consts.STAGE_TYPES))
-
     organization = models.ForeignKey(
-        "Organization",
-        related_name="stages",
-        null=True,
-        blank=True,
-        default="",
-        on_delete=models.CASCADE,
+        "Organization", related_name="stages", on_delete=models.CASCADE,
     )
-    # currently setting default to 6 we have 5 public tags that are taking 1-5
-    order = models.IntegerField(blank=False, null=False, default=6)
+    order = models.IntegerField(blank=True, null=True)
+    is_closed = models.BooleanField(default=False)
+    is_won = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
+    forecast_category = models.CharField(
+        max_length=255, choices=opp_consts.FORECAST_CHOICES, blank=True
+    )
 
     objects = StageQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.label, self.id)
 
     class Meta:
         ordering = ["order"]
 
     def __str__(self):
-        if self.organization:
-            return f"Stage ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
-        else:
-            return f"Stage ({self.id}) -- Title: {self.title}, Organization: None (is Public)"
+        return f"Stage ({self.id}) -- label: {self.label}"
 
     def save(self, *args, **kwargs):
-        if self.type == org_consts.STAGE_TYPE_PRIVATE:
-            users = self.organization.users.filter(is_active=True)
-            allowed_notifications = []
-            for user in users:
-                ## get user selection for this notification
-                if user.check_notification_enabled_setting(
-                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
-                    core_consts.NOTIFICATION_TYPE_EMAIL,
-                ):
-                    allowed_notifications.append(user)
-
-            recipients = [
-                {"email": user.email, "name": user.full_name}
-                for user in allowed_notifications
-            ]
-
-            message = {
-                "subject": f"Stages Updated",
-                "body": f"Your organization has added new stages, please log out and login to update your list",
-            }
-            email_client.emails.send_system_email(recipients, message)
-            for user in users:
-                if user.check_notification_enabled_setting(
-                    core_consts.NOTIFICATION_OPTION_KEY_ORGANIZATION_STAGES,
-                    core_consts.NOTIFICATION_TYPE_ALERT,
-                ):
-
-                    Notification.objects.create(
-                        notify_at=timezone.now(),
-                        title="Stages Updated",
-                        notification_type="SYSTEM",
-                        resource_id=self.id,
-                        user=user,
-                        meta={
-                            "content": "Your organization has added new stages, please log out and login to update your list"
-                        },
-                    )
-
-        # save all as upper case
-        self.title = self.title.upper()
-        if (
-            Stage.objects.filter(title=self.title, organization=self.organization)
+        obj = (
+            Stage.objects.filter(integration_id=self.integration_id, organization=self.organization)
             .exclude(id=self.id)
-            .exists()
-        ):
-            raise ValidationError(
-                detail={"key_error": "A stage with this title already exists"}
-            )
-
+            .first()
+        )
+        if obj:
+            return
         return super(Stage, self).save(*args, **kwargs)
 
+
+class ActionChoiceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization_id)
+        else:
+            return None
+
+
+class ActionChoice(TimeStampModel):
+    title = models.CharField(max_length=255, blank=True, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+    organization = models.ForeignKey(
+        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
+    )
+
+    objects = ActionChoiceQuerySet.as_manager()
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title, self.title)
+
+    @property
+    def as_sf_option(self):
+        # model these into sf optiona key value pairs to be then changed into slack options
+        return dict(attributes={}, label=self.title, value=self.title, validFor=[])
+
+    class Meta:
+        ordering = ["title"]
+
+    def __str__(self):
+        return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"

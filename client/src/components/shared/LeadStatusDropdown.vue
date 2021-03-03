@@ -11,15 +11,6 @@
         {{ option.title.toLowerCase() }}
       </option>
     </select>
-    <Modal
-      v-if="modal.isOpen"
-      dimmed
-      @close-modal="closeModal"
-      @closed-lead="$emit('closed-lead')"
-      :width="50"
-    >
-      <CloseLead @closed-lead="updateLeadItem" :lead="leadItem" />
-    </Modal>
   </div>
 </template>
 

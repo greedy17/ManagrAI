@@ -1,35 +1,19 @@
 import uuid
-from datetime import datetime, timedelta
-import pytz
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
-from django.utils import timezone
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
+from managr.organization import constants as org_consts
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
-
-
-ACCOUNT_TYPE_LIMITED = "LIMITED"
-ACCOUNT_TYPE_MANAGER = "MANAGER"
-ACCOUNT_TYPES = ((ACCOUNT_TYPE_LIMITED, "LIMITED"), (ACCOUNT_TYPE_MANAGER, "MANAGER"))
-
-STATE_ACTIVE = "ACTIVE"
-STATE_INACTIVE = "INACTIVE"
-STATE_INVITED = "INVITED"
-STATE_CHOCIES = (
-    (STATE_ACTIVE, "Active"),
-    (STATE_INACTIVE, "Inactive"),
-    (STATE_INVITED, "Invited"),
-)
 
 
 class TimeStampModel(models.Model):
@@ -41,18 +25,39 @@ class TimeStampModel(models.Model):
         abstract = True
 
 
+class IntegrationModel(models.Model):
+    integration_id = models.CharField(
+        max_length=255, blank=True, help_text="The UUID from the integration source"
+    )
+    integration_source = models.CharField(
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+    )
+    imported_by = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
+    )
+
+    class Meta:
+        abstract = True
+
+
+class WebhookAuthUser(AnonymousUser):
+    @property
+    def is_authenticated(self):
+        # this purposefully always returns True and gives us a user for the webhook auth
+        # the check for the token occurs in the custom authentication class
+        return True
+
+
 class UserQuerySet(models.QuerySet):
-    # TODO: Ideally I am trying to attach user roles so that INTEGRATION can assume roles for manager pb 10/15/20
+    # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
+    #       INTEGRATION can assume roles for managr
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
         elif user.is_active:
-            if (
-                user.type == core_consts.ACCOUNT_TYPE_MANAGER
-                or user.type == core_consts.ACCOUNT_TYPE_INTEGRATION
-            ):
+            if user.user_level == core_consts.ACCOUNT_TYPE_MANAGER:
                 return self.filter(organization=user.organization)
-            if user.type == core_consts.ACCOUNT_TYPE_REP:
+            if user.user_level == core_consts.ACCOUNT_TYPE_REP:
                 return self.filter(id=user.id)
         else:
             return self.none()
@@ -79,8 +84,17 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         """Create and save a regular User with the given email and password."""
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = False
-        extra_fields["is_serviceaccount"] = False
+        extra_fields["is_active"] = True
+        extra_fields["is_admin"] = False
+        return self._create_user(email, password, **extra_fields)
+
+    def create_admin_user(self, email, password=None, **extra_fields):
+        """ An Admin user is the one who set up the initial account and org """
+        extra_fields["is_staff"] = False
+        extra_fields["is_superuser"] = False
+        extra_fields["is_active"] = True
+        extra_fields["is_admin"] = True
+        extra_fields["user_level"] = core_consts.USER_LEVEL_MANAGER
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -88,17 +102,6 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_staff"] = True
         extra_fields["is_superuser"] = True
         extra_fields["is_active"] = True
-        extra_fields["is_serviceaccount"] = False
-        return self._create_user(email, password, **extra_fields)
-
-    def create_serviceaccount(self, email, password, service_for, **extra_fields):
-        """ Create service accounts that will be used to send emails/notifications etc """
-        extra_fields["is_staff"] = False
-        extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = True
-        extra_fields["is_serviceaccount"] = True
-        extra_fields["service_for"] = service_for
-        password = self.make_random_password()
         return self._create_user(email, password, **extra_fields)
 
     class Meta:
@@ -106,29 +109,44 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
 
 
 class User(AbstractUser, TimeStampModel):
+    # Override the Django-provided username field and replace with email
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     username = None
     email = models.EmailField(unique=True)
-    is_serviceaccount = models.BooleanField(default=False)
-    service_for = models.CharField(
-        choices=core_consts.SERVICE_TYPES, max_length=255, null=True
-    )
+
+    # User role options
+    LEADERSHIP = "LEADERSHIP"
+    FRONTLINE_MANAGER = "FRONTLINE_MANAGER"
+    ACCOUNT_EXEC = "ACCOUNT_EXEC"
+    ACCOUNT_MANAGER = "ACCOUNT MANAGER"
+    OPERATIONS = "OPERATIONS"
+    ENABLEMENT = "ENABLEMENT"
+    ROLE_CHOICES = [
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
+    ]
+    role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
+
     is_active = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     organization = models.ForeignKey(
         "organization.Organization",
         related_name="users",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
+        blank=True,
         null=True,
     )
-    type = models.CharField(
-        choices=core_consts.ACCOUNT_TYPES,
-        max_length=255,
-        default=core_consts.ACCOUNT_TYPE_REP,
+    user_level = models.CharField(
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True, null=False)
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
-    phone_number = models.CharField(max_length=255, blank=True, null=False, default="")
+    phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
     magic_token = models.UUIDField(
         default=uuid.uuid4,
@@ -137,21 +155,10 @@ class User(AbstractUser, TimeStampModel):
             "The magic token is a randomly-generated uuid that can be "
             "used to identify the user in a non-password based login flow. "
         ),
+        blank=True,
     )
-    # may need to make this a property as it keeps re-running a migration
-    # is_invited = models.BooleanField(max_length=255, default=False)
-    magic_token_expiration = models.DateTimeField(
-        help_text="The datetime when the magic token is expired.", null=True
-    )
-    quota = models.PositiveIntegerField(
-        help_text="Target sell amount for some defined timespan "
-        "set by their Organization.",
-        default=0,
-    )
-    commit = models.PositiveIntegerField(help_text="Worst-case quota.", default=0)
-    upside = models.PositiveIntegerField(help_text="Optimistic quota.", default=0)
     profile_photo = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True
+        upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
 
     objects = UserManager()
@@ -167,58 +174,48 @@ class User(AbstractUser, TimeStampModel):
         return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
 
     @property
-    def magic_token_expired(self):
-        if not self.magic_token_expiration:
-            self.magic_token_expiration = timezone.now() + timedelta(days=30)
-
-        now = timezone.now()
-        return now > self.magic_token_expiration
-
-    @property
     def email_auth_link(self):
         """
-        This property sets the user specific url for authorizing the users email to give Nylas access
+        This property sets the user specific url for authorizing
+        the users email to give Nylas access.
         """
-        if self.magic_token_expired:
-            self.regen_magic_token()
 
-        return gen_auth_url(email=self.email, magic_token=str(self.magic_token),)
-
-    @property
-    def unviewed_notifications_count(self):
-        return self.notifications.filter(viewed=False).count()
+        return gen_auth_url(email=self.email)
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
-        self.magic_token_expiration = timezone.now() + timedelta(days=30)
         self.save()
         return self.magic_token
 
     def login(self, request, serializer_type):
-        """
-        Log-in user and append authentication token to serialized response.
-        """
+        """Log in user and append authentication token to serialized response."""
         login(request, self, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, token_created = Token.objects.get_or_create(user=self)
+        auth_token, _ = Token.objects.get_or_create(user=self)
 
         serializer = serializer_type(self, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
 
-    def get_contacts_from_leads(self):
-        return self.claimed_leads
-
-    def check_notification_enabled_setting(self, key, type):
-        setting_value = self.notification_settings.filter(
-            option__key=key, option__notification_type=type, user=self
-        ).first()
-        if setting_value:
-            return setting_value.value
+    @property
+    def has_zoom_integration(self):
+        # when a user integrates we set the info once
+        # when the user then removes the integration we keep the account
+        # but we only remove the token and refresh tokens
+        if hasattr(self, "zoom_account"):
+            zoom_acct = self.zoom_account
+            return not zoom_acct.is_revoked
         else:
-            # if a user does not have a value then assume True which is the default
-            return True
+            return False
+
+    @property
+    def has_slack_integration(self):
+        return hasattr(self, "slack_integration")
+
+    @property
+    def has_salesforce_integration(self):
+        return hasattr(self, "salesforce_account")
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
@@ -227,8 +224,10 @@ class User(AbstractUser, TimeStampModel):
         ordering = ["email"]
 
 
-class EmailAuthAccount(TimeStampModel):
+class NylasAuthAccount(TimeStampModel):
     """Records Nylas OAuth authentication information for a user.
+
+    Nylas is used to access the user's calendar information.
 
     The Nylas email integration follows the standard OAuth protocol. Once a user has
     authorized Nylas, we will receive an access_token and related information required
@@ -245,10 +244,7 @@ class EmailAuthAccount(TimeStampModel):
         help_text="sync state is managed by web_hook after it is set for the first time",
     )
     name = models.CharField(max_length=255, null=True)
-    linked_at = models.DateTimeField(null=True)
-    user = models.OneToOneField(
-        "User", on_delete=models.CASCADE, related_name="email_auth_account"
-    )
+    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="nylas")
 
     def __str__(self):
         return f"{self.email_address}"
@@ -262,10 +258,8 @@ class EmailAuthAccount(TimeStampModel):
         ordering = ["email_address"]
 
     def save(self, *args, **kwargs):
-        utc_time = datetime.utcfromtimestamp(self.linked_at)
-        self.linked_at = utc_time.replace(tzinfo=pytz.utc)
         try:
-            return super(EmailAuthAccount, self).save(*args, **kwargs)
+            return super().save(*args, **kwargs)
         except IntegrityError:
             raise ValidationError(
                 {
@@ -277,182 +271,56 @@ class EmailAuthAccount(TimeStampModel):
             )
 
 
-class MessageAuthAccount(TimeStampModel):
-    account_sid = models.CharField(max_length=128)
-    capabilities = JSONField(max_length=128, default=dict)
-    date_created = models.DateTimeField(max_length=128)
-    date_updated = models.DateTimeField(max_length=128)
-    friendly_name = models.CharField(max_length=128)
-    identity_sid = models.CharField(max_length=128, null=True)
-    origin = models.CharField(max_length=128)
-    sid = models.CharField(max_length=128, null=True)
-    phone_number = models.CharField(max_length=128, blank=True)
-    sms_method = models.CharField(max_length=128)
-    sms_url = models.CharField(
-        max_length=128, help_text="the webhook url for incoming messages"
-    )
-    status_callback = models.CharField(
-        max_length=128, help_text="the webhook url for message status"
-    )
-    status_callback_method = models.CharField(max_length=128)
-    uri = models.CharField(max_length=128)
-    voice_method = models.CharField(max_length=128)
-    voice_url = models.CharField(max_length=128, null=True)
-    status = models.CharField(max_length=128)
-    user = models.OneToOneField(
-        "User", on_delete=models.CASCADE, related_name="message_auth_account"
-    )
-
-    def __str__(self):
-        return f"{self.user.full_name}, {self.friendly_name}"
-
-    class Meta:
-        ordering = ["datetime_created"]
-
-
-class EmailTemplateQuerySet(models.QuerySet):
-    def for_user(self, user):
-
-        if user.is_superuser:
-            return self.all()
-        elif user.is_active:
-            return self.filter(user=user)
-        else:
-            return None
-
-
-class EmailTemplate(TimeStampModel):
-    user = models.ForeignKey(
-        "core.User", on_delete=models.CASCADE, related_name="email_templates"
-    )
-    name = models.CharField(max_length=128)
-    subject = models.TextField(blank=True)
-    body_html = models.TextField(
-        help_text="WARNING: This content is not auto-escaped. Generally take care not to "
-        "render user-provided data to avoid a possible HTML-injection."
-    )
-
-    objects = EmailTemplateQuerySet.as_manager()
-
-    def __str__(self):
-        return f"{self.user} - {self.name}"
-
-    class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "Email Templates"
-        unique_together = ["user", "name"]
-
-
-class NotificationOptionQuerySet(models.QuerySet):
-
-    ### NOTE We are using __contains here as the field type is text[] in sql __in will search equality
-    ### this will throw a mismatch type error
+class NotificationQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.is_active:
-            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
-                return self.filter(
-                    user_groups__contains=[core_consts.ACCOUNT_TYPE_MANAGER]
-                )
-            elif user.type == core_consts.ACCOUNT_TYPE_REP:
-                return self.filter(user_groups__contains=[core_consts.ACCOUNT_TYPE_REP])
-            elif user.type == core_consts.ACCOUNT_TYPE_ADMIN:
-                return self.filter(
-                    user_groups__contains=[core_consts.ACCOUNT_TYPE_ADMIN]
-                )
-        else:
-            return None
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
 
 
-class NotificationSelectionQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_active:
-            return self.filter(user=user)
-        else:
-            return None
+class Notification(TimeStampModel):
+    """ By default Notifications will only return alerts
+        We also will allow the code to access all types of notifications
+        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
+    """
 
-
-class NotificationSelection(TimeStampModel):
-    """ a model for the selection made by the user for the option """
-
-    option = models.ForeignKey(
-        "core.NotificationOption", on_delete=models.CASCADE, related_name="selections"
+    notify_at = models.DateTimeField(
+        null=True,
+        help_text=(
+            "Set a time for the notification to be executed, "
+            "if this is a reminder it can be something like 5 "
+            "minutes before time if it is an email it can be "
+            "the time the email is received "
+        ),
     )
-    user = models.ForeignKey(
-        "core.User", on_delete=models.CASCADE, related_name="notification_settings"
+    notified_at = models.DateTimeField(
+        null=True, help_text="date time when the notification was executed"
     )
-    value = models.BooleanField(
-        help_text="If no option is selected it will take the default value",
-    )
-
-    def __str__(self):
-        return f"user:{self.user}, option: {self.option}, value: {self.value}"
-
-    class Meta:
-        ordering = ["-datetime_created"]
-        # only allow one selection per option for each user
-        unique_together = (
-            "user",
-            "option",
-        )
-
-
-class NotificationOption(TimeStampModel):
-    """ Manage Email and Alert Notifications (Alerts are notfications
-     they receive on the Notifications side nav) options """
-
-    # user groups will be used to populate the options for each user type
-    title = models.CharField(max_length=128, help_text="Friendly Name")
-    description = models.TextField(
-        blank=True, help_text="this will show up as a tooltip for the option"
-    )
-    default_value = models.BooleanField(
-        default=True,
-        help_text="All options are Boolean, the value here populates the default for the user",
-    )
-    user_groups = ArrayField(
-        models.CharField(max_length=255, choices=core_consts.ACCOUNT_TYPES, blank=True),
-        default=list,
-        blank=True,
-        help_text="An Array of user types that have access to this setting",
-    )
+    title = models.CharField(max_length=255, null=True, help_text="a title for the notification")
     notification_type = models.CharField(
-        choices=core_consts.NOTIFICATION_TYPES,
         max_length=255,
-        help_text="Email or Alert",
+        choices=core_consts.NOTIFICATION_TYPE_CHOICES,
+        null=True,
+        help_text="type of Notification being created",
+    )
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="Id of the resource if it is an email it will be the thread id",
+    )
+    notification_class = models.CharField(
+        max_length=255,
+        help_text="Classification of notification, email, alert, slack",
+        choices=core_consts.NOTIFICATION_CLASS_CHOICES,
+    )
+    viewed = models.BooleanField(blank=False, null=False, default=False)
+    meta = JSONField(help_text="Details about the notification", default=dict)
+    user = models.ForeignKey(
+        "core.User", on_delete=models.SET_NULL, related_name="notifications", null=True
     )
 
-    resource = models.CharField(
-        max_length=255,
-        choices=core_consts.NOTIFICATION_RESOURCES,
-        null=True,
-        help_text="select a resource to apply notification to",
-    )
-    key = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text="unique identifier for notification option",
-    )
-    objects = NotificationOptionQuerySet.as_manager()
-
-    def __str__(self):
-        return f"{self.title} - {self.notification_type}"
+    objects = NotificationQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-datetime_created"]
-
-    def get_value(self, user):
-        selection = self.selections.filter(user=user)
-        if selection.exists():
-            return selection.first()
-        else:
-            # create an option for the user with the default value
-            selection = NotificationSelection.objects.create(
-                option=self, user=user, value=self.default_value
-            )
-            return selection
-
+        ordering = ["-notify_at"]
