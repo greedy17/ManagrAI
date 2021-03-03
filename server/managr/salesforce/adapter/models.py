@@ -112,7 +112,7 @@ class SObjectPicklistAdapter:
 
     @staticmethod
     def from_api(data):
-        data["integration_source"] = "SALESFORCE"
+
         d = object_to_snake_case(data)
 
         return d
@@ -139,6 +139,7 @@ class SalesforceAuthAccountAdapter:
         self.salesforce_account = kwargs.get("salesforce_account", None)
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
+        self.sobjects = kwargs.get("sobjects", None)
         self.object_fields = kwargs.get("object_fields", {})
         self.default_record_id = kwargs.get("default_record_id", {})
 
@@ -207,6 +208,8 @@ class SalesforceAuthAccountAdapter:
         self, sf_account_id, user_id, res_data=[],
     ):
         fields = res_data["fields"]
+        ### REMOVE CLONESOURCE ID THIS FIELD DOES NOT WORK IN QUERY
+        del fields["CloneSourceId"]
         custom_additions = dict(
             salesforce_account=sf_account_id,
             salesforce_object=res_data["apiName"],
@@ -245,6 +248,7 @@ class SalesforceAuthAccountAdapter:
                         "picklist_for": field[0],
                         "imported_by": user_id,
                         "salesforce_object": resource,
+                        "integration_source": "SALESFORCE",
                     }
                 ),
                 fields.items(),
@@ -321,14 +325,11 @@ class SalesforceAuthAccountAdapter:
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
-        extra_fields = []
-        if extra_items:
-            extra_fields = extra_items.get("fields", [])
         from .routes import routes
 
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_fields, relationships,)}"
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships,)}"
         if offset:
             url = f"{url} offset {offset}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -535,6 +536,104 @@ class ContactAdapter:
         for k, v in data.items():
             if k == "Id":
                 print(k)
+            key = mapping.get(k, None)
+            if key and key != "Id":
+                if v is not None:
+                    formatted_data[key] = v
+            else:
+
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields and k != "Id":
+                    if v is not None:
+                        formatted_data[k] = v
+
+        return formatted_data
+
+    @staticmethod
+    def create_new_contact(data, access_token, custom_base, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def update_contact(data, access_token, custom_base, integration_id, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class LeadAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.email = kwargs.get("email", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.name = kwargs.get("name", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        email="Email",
+        name="Name",
+        owner="OwnerId",  # overwritten (ignored in reverse)
+        account="AccountId",
+        external_account="AccountId",
+        external_owner="OwnerId",
+    )
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """ mapping of 'standard' data when sending from the SF API """
+        reverse = {}
+        for k, v in LeadAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = LeadAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return LeadAdapter(**formatted_data)
+
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        formatted_data = dict()
+        for k, v in data.items():
             key = mapping.get(k, None)
             if key and key != "Id":
                 if v is not None:

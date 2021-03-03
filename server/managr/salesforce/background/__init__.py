@@ -210,6 +210,118 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
     return
 
 
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_sobject_fields_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    attempts = 1
+    while True:
+        try:
+            fields = sf.get_fields(resource)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+
+    # make fields into model and save them
+    # need to update existing ones in case they are already on a form rather than override
+    for field in fields:
+        existing = SObjectField.objects.filter(
+            api_name=field.api_name,
+            salesforce_account_id=field.salesforce_account,
+            salesforce_object=resource,
+        ).first()
+        if existing:
+            serializer = SObjectFieldSerializer(data=field.as_dict, instance=existing)
+        else:
+            serializer = SObjectFieldSerializer(data=field.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_picklist_values_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    attempts = 1
+    while True:
+        try:
+            values = sf.get_picklist_values(resource)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+
+    # make fields into model and save them
+    # need to update existing ones in case they are already on a form rather than override
+    for value in values:
+        existing = SObjectPicklist.objects.filter(
+            picklist_for=value.picklist_for,
+            salesforce_account_id=value.salesforce_account,
+            salesforce_object=resource,
+        ).first()
+        if existing:
+            serializer = SObjectPicklistSerializer(data=value.as_dict, instance=existing)
+        else:
+            serializer = SObjectPicklistSerializer(data=value.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@log_all_exceptions
+def _process_sobject_validations_sync(user_id, sync_id, resource):
+    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
+    if not hasattr(user, "salesforce_account"):
+        return
+    sf = user.salesforce_account
+    attempts = 1
+    while True:
+        try:
+            validations = sf.get_validations(resource)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+
+    # make fields into model and save them
+    for validation in validations:
+        existing = SObjectValidation.objects.filter(
+            integration_id=validation.integration_id
+        ).first()
+        if existing:
+            serializer = SObjectValidationSerializer(data=validation.as_dict, instance=existing)
+        else:
+            serializer = SObjectValidationSerializer(data=validation.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer.instance
+    return
+
+
 @background(schedule=0)
 def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
     user = (
@@ -237,78 +349,5 @@ def _process_update_opportunity(user_id, meeting_review_id, attempts=1):
                     return _process_update_opportunity(user_id, meeting_review_id, attempts)
 
             # push to sf
-    return
-
-
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-@log_all_exceptions
-def _process_sobject_fields_sync(user_id, sync_id, resource):
-    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
-    if not hasattr(user, "salesforce_account"):
-        return
-    sf = user.salesforce_account
-    fields = sf.get_fields(resource)
-    # make fields into model and save them
-    # need to update existing ones in case they are already on a form rather than override
-    for field in fields:
-        existing = SObjectField.objects.filter(
-            api_name=field.api_name,
-            salesforce_account_id=field.salesforce_account,
-            salesforce_object=resource,
-        ).first()
-        if existing:
-            serializer = SObjectFieldSerializer(data=field.as_dict, instance=existing)
-        else:
-            serializer = SObjectFieldSerializer(data=field.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    return
-
-
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-@log_all_exceptions
-def _process_picklist_values_sync(user_id, sync_id, resource):
-    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
-    if not hasattr(user, "salesforce_account"):
-        return
-    sf = user.salesforce_account
-    values = sf.get_picklist_values(resource)
-    # make fields into model and save them
-    # need to update existing ones in case they are already on a form rather than override
-    for value in values:
-        existing = SObjectPicklist.objects.filter(
-            picklist_for=value.picklist_for,
-            salesforce_account_id=value.salesforce_account,
-            salesforce_object=resource,
-        ).first()
-        if existing:
-            serializer = SObjectPicklistSerializer(data=value.as_dict, instance=existing)
-        else:
-            serializer = SObjectPicklistSerializer(data=value.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    return
-
-
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
-@log_all_exceptions
-def _process_sobject_validations_sync(user_id, sync_id, resource):
-    user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
-    if not hasattr(user, "salesforce_account"):
-        return
-    sf = user.salesforce_account
-    validations = sf.get_validations(resource)
-    # make fields into model and save them
-    for validation in validations:
-        existing = SObjectValidation.objects.filter(
-            integration_id=validation.integration_id
-        ).first()
-        if existing:
-            serializer = SObjectValidationSerializer(data=validation.as_dict, instance=existing)
-        else:
-            serializer = SObjectValidationSerializer(data=validation.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        serializer.instance
     return
 

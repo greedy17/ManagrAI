@@ -15,12 +15,15 @@ def to_snake_case(val):
         return
     value = str(val)
     for index, char in enumerate(re.finditer(r"[A-Z]", value)):
-        value = (
-            value[: index + char.start()]
-            + "_"
-            + value[index + char.start()].lower()
-            + value[index + char.start() + 1 :]
-        )
+        if char.start() == 0:
+            value = value.lower()
+        else:
+            value = (
+                value[: index + char.start()]
+                + "_"
+                + value[index + char.start()].lower()
+                + value[index + char.start() + 1 :]
+            )
     return value
 
 

@@ -3,7 +3,7 @@ from django import forms
 
 # Register your models here.
 
-from .models import Opportunity
+from .models import Opportunity, Lead
 
 # Register your models here.
 
@@ -38,3 +38,4 @@ class CustomOpportunityAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Opportunity, CustomOpportunityAdmin)
+admin.site.register(Lead)

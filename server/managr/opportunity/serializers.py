@@ -23,7 +23,7 @@ from managr.core.models import User, Notification
 from . import constants as opp_consts
 
 
-from .models import Opportunity
+from .models import Opportunity, Lead
 from . import constants as opp_consts
 
 
@@ -117,3 +117,42 @@ class OpportunitySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
 
+
+class LeadSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Accounts tied to organization
+    Only Organization Managers can add, update, delete accounts
+    Other users can list
+    """
+
+    class Meta:
+        model = Lead
+        fields = (
+            "id",
+            "name",
+            "integration_id",
+            "integration_source",
+            "imported_by",
+            "owner",
+            "secondary_data",
+            "email",
+        )
+
+    def to_internal_value(self, data):
+        owner = data.get("external_owner", None)
+        if data.get("email", None) in ["", None]:
+            data.update({"email": ""})
+        if not data.get("external_owner", None):
+            data.update({"external_owner": ""})
+
+        if owner:
+            sf_account = (
+                SalesforceAuthAccount.objects.filter(salesforce_id=owner)
+                .select_related("user")
+                .first()
+            )
+            user = sf_account.user.id if sf_account else sf_account
+            data.update({"owner": user})
+        # remove contacts from validation
+        internal_data = super().to_internal_value(data)
+        return internal_data

@@ -38,20 +38,14 @@ const UPDATE = 'UPDATE'
 const OPPORTUNITY = 'Opportunity'
 const CONTACT = 'Contact'
 const ACCOUNT = 'Account'
+const LEAD = 'Lead'
 const STAGE_GATING = 'STAGE_GATING'
-const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT]
+const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT, LEAD]
 const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
-  [ACCOUNT]: ['meeting_type', 'meeting_comments', 'sentiment'],
-  [OPPORTUNITY]: [
-    'meeting_type',
-    'meeting_comments',
-    'sentiment',
-    'StageName',
-    'ForecastCategoryName',
-    'CloseDate',
-    'Amount',
-  ],
+  [ACCOUNT]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
+  [OPPORTUNITY]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
+  [LEAD]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
 }
 export {
   MEETING_REVIEW,

@@ -223,31 +223,6 @@ class Contact(TimeStampModel, IntegrationModel):
                 raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
 
-    @staticmethod
-    def generate_slack_form_config(user, type):
-        """Helper class to generate a slack form config for an org"""
-        sf_account = user.salesforce_account if user.has_salesforce_integration else None
-        if sf_account:
-            # return an object with creatable and required fields
-            fields = sf_account.object_fields.get("Contact", {}).get("fields", {})
-            if type == "CREATE":
-
-                return dict(
-                    fields=list(
-                        filter(
-                            lambda field: field["required"]
-                            and field["createable"]
-                            and field["type"] != "Reference",
-                            fields.values(),
-                        )
-                    ),
-                )
-            if type == "UPDATE":
-                # no required fields for update
-                return dict(fields=list())
-
-        return
-
 
 class StageQuerySet(models.QuerySet):
     def for_user(self, user):

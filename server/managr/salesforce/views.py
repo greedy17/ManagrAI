@@ -71,26 +71,27 @@ def authenticate(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # create sf sync object
-        """
-        operations = [
-            sf_consts.RESOURCE_SYNC_CONTACT,
-            sf_consts.RESOURCE_SYNC_ACCOUNT,
-            sf_consts.RESOURCE_SYNC_OPPORTUNITY,
-        ]
-        scheduled_time = timezone.now()
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
 
-        emit_gen_next_sync(str(request.user.id), operations, formatted_time)
-        """
         operations = [
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
             f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
             f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
         ]
         if serializer.instance.user.is_admin:
             # we only need validations to show the user who is creating the forms
 
-            operations.append(
-                f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}"
+            operations.extend(
+                [
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_LEAD}",
+                ]
             )
 
         scheduled_time = timezone.now()
@@ -99,7 +100,17 @@ def authenticate(request):
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
-        # initiate process
+        # emit resource sync
+        operations = [
+            sf_consts.RESOURCE_SYNC_ACCOUNT,
+            sf_consts.RESOURCE_SYNC_CONTACT,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY,
+            sf_consts.RESOURCE_SYNC_LEAD,
+        ]
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_sync(str(request.user.id), operations, formatted_time)
+
         return Response(data={"success": True})
 
 

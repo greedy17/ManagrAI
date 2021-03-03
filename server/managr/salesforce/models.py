@@ -15,6 +15,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
+from managr.slack import constants as slack_consts
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import TokenExpired
@@ -116,40 +117,126 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def __str__(self):
         return f"{self.label} {self.salesforce_account}"
 
+    @property
     def reference_display_label(self):
         """ returns the reference object's name as a display label """
         if self.data_type == "Reference" and self.reference:
             return self.relationship_name
         return self.label
 
-    def to_slack_field_type(self):
+    def to_slack_field(self, value=None, **kwargs):
         if self.data_type == "Picklist":
-            return block_builders.static_select
+
+            block = block_builders.static_select(
+                f"*{self.reference_display_label}*",
+                self.get_slack_options,
+                initial_option=dict(
+                    *map(
+                        lambda value: block_builders.option(value["label"], value["value"]),
+                        filter(
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                        ),
+                    ),
+                ),
+                block_id=self.api_name,
+            )
+            return block
+
         elif self.data_type == "Reference":
-            return block_builders.external_select
+            # temporarily using id as display value need to sync display value as part of data
+            initial_option = block_builders.option(value, value) if value else None
+            user_id = str(self.salesforce_account.user.id)
+            if self.is_public:
+                action_query = (
+                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={self.salesforce_object}",
+                )
+            else:
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={kwargs.get('user_id')}&relationship={self.relationship_name}&fields={','.join(self.display_value_keys)}"
+            return block_builders.external_select(
+                f"*{self.reference_display_label}*",
+                action_query,
+                block_id=self.api_name,
+                initial_option=initial_option,
+            )
 
         elif self.data_type == "Date":
-            return block_builders.datePicker
+            return block_builders.datepicker(
+                label=f"*{self.reference_display_label['label']}*",
+                initial_date=value,
+                block_id=self.api_name,
+            )
 
         elif self.data_type == "MultiPicklist":
-            return block_builders.mulit_static_select
+            return block_builders.multi_static_select(
+                f"*{self.reference_display_label}*",
+                list(
+                    map(
+                        lambda value: block_builders.option(value["label"], value["value"]),
+                        filter(lambda opt: opt.get("value", None) == value, self.picklist_options,),
+                    ),
+                ),
+                initial_options=self.picklist_options.as_slack_options,
+                block_id=self.api_name,
+            )
 
         elif self.data_type == "Boolean":
-            return block_builders.checkbox_block
+            return block_builders.checkbox_block(
+                " ",
+                [block_builders.option(self.reference_display_label, "true")],
+                action_id=self.api_name,
+                block_id=self.api_name,
+            )
         else:
-            return block_builders.input_block
+            if self.data_type == "String" and self.length >= 250:
+                # set these fields to be multiline
+
+                return block_builders.input_block(
+                    self.reference_display_label,
+                    multiline=True,
+                    optional=not self.required,
+                    initial_value=value,
+                    block_id=self.api_name,
+                )
+
+            else:
+                return (
+                    block_builders.input_block(
+                        self.reference_display_label,
+                        optional=not self.required,
+                        initial_value=value,
+                        block_id=self.api_name,
+                    ),
+                )
 
     @property
     def display_value_keys(self):
-        return
+        """ helper getter to retrieve related name display keys """
+        if self.reference:
+            return list(
+                *map(
+                    lambda rel: rel["name_fields"],
+                    filter(
+                        lambda details: details["api_name"] == self.relationship_name,
+                        self.reference_to_infos,
+                    ),
+                )
+            )
+
+        return None
 
     @property
-    def as_dict(self):
-        return vars(self)
-
-    @property
-    def as_slack_block(self):
-        return self
+    def get_slack_options(self):
+        if self.is_public and len(self.options):
+            return list(
+                map(
+                    lambda option: block_builders.option(option["label"], option["value"]),
+                    self.options,
+                )
+            )
+        elif not self.is_public and hasattr(self.picklist_options):
+            return self.picklist_values.as_slack_options
+        else:
+            return None
 
 
 class SObjectValidation(TimeStampModel, IntegrationModel):
@@ -185,7 +272,7 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
         help_text="An array of objects containing the values",
     )
     salesforce_object = models.CharField(max_length=255)
-    field = models.ForeignKey(
+    field = models.OneToOneField(
         "salesforce.SObjectField", on_delete=models.CASCADE, related_name="picklist_options"
     )
 
@@ -196,6 +283,14 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
 
     def __str__(self):
         return f"{self.salesforce_account}-{self.picklist_for}"
+
+    @property
+    def as_slack_options(self):
+        return list(
+            map(
+                lambda option: block_builders.option(option["label"], option["value"]), self.options
+            )
+        )
 
 
 class SFSyncOperation(TimeStampModel):
@@ -266,7 +361,6 @@ class SFSyncOperation(TimeStampModel):
         from managr.salesforce.background import (
             emit_sf_sync,
             emit_gen_next_sync,
-            emit_generate_forms,
         )
 
         sf_account = self.user.salesforce_account
@@ -275,9 +369,6 @@ class SFSyncOperation(TimeStampModel):
             while True:
                 try:
                     count = adapter.get_resource_count(key)["totalSize"]
-                    # emit event to create forms
-                    if self.user.is_admin:
-                        emit_generate_forms(str(self.user.id))
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -309,6 +400,46 @@ class SFSyncOperation(TimeStampModel):
 
 class SFObjectFieldsOperation(SFSyncOperation):
     """ May no Longer need to use this """
+
+    @property
+    def operations_map(self):
+        from managr.salesforce.background import (
+            emit_sync_sobject_fields,
+            emit_sync_sobject_validations,
+            emit_generate_form_template,
+            emit_sync_sobject_picklist,
+        )
+
+        return {
+            sf_consts.SALESFORCE_OBJECT_FIELDS: emit_sync_sobject_fields,
+            sf_consts.SALESFORCE_VALIDATIONS: emit_sync_sobject_validations,
+            sf_consts.SALESFORCE_PICKLIST_VALUES: emit_sync_sobject_picklist,
+        }
+
+    def begin_tasks(self, attempts=1):
+        from managr.salesforce.background import emit_gen_next_object_field_opp_sync
+
+        for op in self.operations_list:
+            # split the operation to get opp and params
+            operation_name, param = op.split(".")
+            operation = self.operations_map.get(operation_name)
+
+            # determine the operation and its param and get event emitter
+            t = operation(str(self.user.id), str(self.id), param)
+            if self.operations:
+                self.operations.append(str(t.task_hash))
+            else:
+                self.operations = [str(t.task_hash)]
+            self.save()
+
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=720)
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_object_field_opp_sync(str(self.user.id), self.operations_list, formatted_time)
+
+
+class MeetingWorkflow(SFSyncOperation):
+
+    meeting = models.ForeignKey("zoom.ZoomMeeting", models.CASCADE, "review_workflow")
 
     @property
     def operations_map(self):
@@ -387,6 +518,21 @@ class SalesforceAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["user"] = str(self.user.id)
+        data["object_fields"] = dict(
+            ## TODO: Use loop from sobjects
+            Account=self.object_fields.filter(salesforce_object="Account").values_list(
+                "api_name", flat=True
+            ),
+            Opportunity=self.object_fields.filter(salesforce_object="Opportunity").values_list(
+                "api_name", flat=True
+            ),
+            Contact=self.object_fields.filter(salesforce_object="Contact").values_list(
+                "api_name", flat=True
+            ),
+            Lead=self.object_fields.filter(salesforce_object="Lead").values_list(
+                "api_name", flat=True
+            ),
+        )
         return SalesforceAuthAccountAdapter(**data)
 
     def regenerate_token(self):

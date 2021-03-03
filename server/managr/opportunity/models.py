@@ -15,10 +15,54 @@ from managr.slack.helpers import block_builders
 from managr.organization import constants as org_consts
 from managr.core import constants as core_consts
 from managr.slack import constants as slack_consts
-from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
+from managr.salesforce.adapter.models import (
+    SalesforceAuthAccountAdapter,
+    OpportunityAdapter,
+    LeadAdapter,
+)
 
 # from managr.core import background as bg_task
 from . import constants as opp_consts
+
+
+class LeadQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(imported_by__organization=user.organization_id)
+        else:
+            return None
+
+
+class Lead(TimeStampModel, IntegrationModel):
+    email = models.CharField(max_length=255, blank=True)
+    external_owner = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    name = models.CharField(max_length=255, blank=True)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
+    owner = models.ForeignKey(
+        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+    )
+
+    def __str__(self):
+        return f"name{self.name}, email {self.email}, owner: {self.owner}, integration_id: {self.integration_id}"
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return LeadAdapter(**data)
 
 
 class OpportunityQuerySet(models.QuerySet):
