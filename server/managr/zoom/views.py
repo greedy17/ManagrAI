@@ -231,7 +231,7 @@ def init_fake_meeting(request):
 
                 else:
                     break
-            ts, channel = meeting.slack_interaction.split("|")
+            ts, channel = workflow.slack_interaction.split("|")
             res = slack_requests.update_channel_message(
                 channel,
                 ts,

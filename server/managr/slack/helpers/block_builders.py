@@ -7,7 +7,7 @@ def text_block(value, text_type="plain_text"):
 
 def input_block(
     label,
-    initial_value=False,
+    initial_value=None,
     placeholder=False,
     multiline=False,
     placeholder_type="plain_text",

@@ -186,9 +186,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     resource_id = models.CharField(
         max_length=255, blank=True, help_text="The resource for this form (if not create"
     )
-    review_workflow = models.ForeignKey(
-        "salesforce.MeetingWorkflow", models.PROTECT, "forms", null=True
-    )
+    workflow = models.ForeignKey("salesforce.MeetingWorkflow", models.CASCADE, "forms", null=True)
 
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
@@ -211,6 +209,18 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         model_object = model_class.objects.filter(id=self.resource_id).first()
         return model_object
 
+    def get_user_fields(self):
+        template_fields = self.template.fields.all().values_list("api_name", "salesforce_object",)
+        user_fields = SObjectField.objects.filter(
+            Q(api_name__in=list(map(lambda field: field[0], template_fields)),)
+            & Q(
+                Q(salesforce_object__in=list(map(lambda field: field[1], template_fields)),)
+                | Q(salesforce_object__isnull=True)
+            )
+            & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+        )
+        return user_fields
+
     def generate_form(self):
         """ 
         Collects all the fields 
@@ -221,15 +231,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         will be passed in as values
         """
         # get all fields that belong to the user based on the template fields
-        template_fields = self.template.fields.all().values_list("api_name", "salesforce_object",)
-        user_fields = SObjectField.objects.filter(
-            Q(api_name__in=list(map(lambda field: field[0], template_fields)),)
-            & Q(
-                Q(salesforce_object__in=list(map(lambda field: field[1], template_fields)),)
-                | Q(salesforce_object__isnull=True)
-            )
-            & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
-        )
+        user_fields = self.get_user_fields()
         if self.template.form_type != slack_consts.FORM_TYPE_CREATE and self.resource_id:
             if not self.resource_object:
                 return logger.exception(
@@ -240,13 +242,63 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             form_blocks = []
             for field in user_fields:
                 val = model_data.get(field.api_name)
-                form_blocks.append(field.to_slack_field(val))
+                if field.is_public:
+                    # pass in user as a kwarg
+                    form_blocks.append(
+                        field.to_slack_field(val, user=self.user, resource=self.resource_type,)
+                    )
+                else:
+                    form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
 
-            print(form_blocks)
+            return form_blocks
         else:
             return [field.to_slack_field() for field in user_fields]
 
+    def get_values(self, state):
+        vals = dict()
+        for field, data in state.items():
+            for value in data.values():
+                current_value = None
+                if value["type"] == "external_select" or value["type"] == "static_select":
+                    current_value = (
+                        value.get("selected_option").get("value", None)
+                        if value.get("selected_option", {})
+                        else None
+                    )
+                elif value["type"] == "multi_static_select":
+                    current_value = (
+                        ";".join(
+                            list(map(lambda val: val["value"], value.get("selected_options", [])))
+                        )
+                        if value.get("selected_options", None)
+                        else None
+                    )
+                elif value["type"] == "plain_text_input":
+                    current_value = value["value"]
+                elif value["type"] == "checkboxes":
+                    current_value = bool(len(value.get("selected_options", [])))
+                elif value["type"] == "datepicker":
+                    date = value.get("selected_date", None)
+                    current_value = date
+                vals[field] = current_value
+        return vals
 
-# users can have a slack form for create,
-# update resources and one form for reviewing a meeting
+    def save_form(self, state):
+        """ gets all form values but only saves values for fields """
+        # this is a HACK because we needed to concatenate all stage gating forms since
+        # we can only show 3 stacked forms
+        values = self.get_values(state)
+        fields = self.get_user_fields().values_list("api_name", flat=True)
+
+        data = dict()
+        for k, v in values.items():
+            if k in fields:
+                data[k] = v
+                pass
+
+        self.saved_data = data
+        self.save()
+
+    # users can have a slack form for create,
+    # update resources and one form for reviewing a meeting
 

@@ -11,6 +11,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
+from managr.salesforce.models import MeetingWorkflow
 
 
 logger = logging.getLogger("managr")
@@ -20,16 +21,16 @@ logger = logging.getLogger("managr")
 def process_meeting_review(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    meeting_id = payload["actions"][0]["value"]
-
-    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
+    workflow_id = payload["actions"][0]["value"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    meeting = workflow.meeting
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    context = {"m": meeting_id}
+    context = {"w": workflow_id}
 
     private_metadata.update(context)
     data = {
@@ -44,6 +45,10 @@ def process_meeting_review(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    view_id = res.json().get("view").get("id")
+    workflow.slack_view = view_id
+    # meeting.slack_form = view_id
+    workflow.save()
 
 
 @processor(required_context=["o", "u", "opp", "m"])
@@ -202,67 +207,70 @@ def process_edit_meeting_contact(payload, context):
     res = slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_context=["o"])
-def process_update_forecast_category_option(payload, context):
+@processor(required_context=[])
+def process_stage_selected(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    org = Organization.objects.get(id=context["o"])
+    workflow = MeetingWorkflow.objects.filter(id=context.get("w")).first()
+    user = workflow.user
+    org = user.organization
     access_token = org.slack_integration.access_token
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-    # check actions for specific select action
-    select_action = list(filter(lambda x: x["block_id"] == "stage", payload["actions"]))
-    if select_action:
+    private_metadata = json.loads(payload["view"]["private_metadata"])
+
+    if len(payload["actions"]):
+        action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
-        selected_value = select_action[0]["selected_option"]["value"]
-        forecast_block = block_finder("forecast_category", payload["view"]["blocks"])
+        selected_value = action["selected_option"]["value"]
+        # blockfinder returns a tuple of its index in the block and the object
+        index, action_block = block_finder(action["block_id"], blocks)
+        # forecast_block =
+        block_options = list(map(lambda opt: opt["value"], action_block["accessory"]["options"]))
+        # find all stages previous to it
+        # delete all existing stage forms
+        workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
+        new_forms_count = 0
+        for opt in block_options:
+            if opt == selected_value:
 
-        # grab the suggested block message if it exists and remove it
-        suggestion_block = block_finder("forecast_suggestion", payload["view"]["blocks"])
-        if len(suggestion_block):
-            del blocks[suggestion_block[0]]
-
-        stage = Stage.objects.get(pk=selected_value)
-        fc_to_return = None  # forecast_block[1]["accessory"]["initial_option"]["value"]
-        if stage.forecast_category:
-            fc_to_return = stage.forecast_category
-        if fc_to_return:
-            # get label to show as recommended value
-            # create new text block
-            # show recommendation
-            # slice and add in position
-            label = (
-                list(
-                    filter(
-                        lambda category: category[0] == fc_to_return, opp_consts.FORECAST_CHOICES,
-                    )
-                ),
-            )
-            if len(label):
-
-                text = f"The recommended forecast for this stage is *{label[0][0][1]}*, Would you like to override the Forecast Category ?"
-                suggestion_block = block_builders.simple_section(
-                    text, "mrkdwn", "forecast_suggestion"
+                f = workflow.add_form(
+                    workflow.resource_type, slack_const.FORM_TYPE_STAGE_GATING, stage=opt
                 )
-                blocks = [
-                    *blocks[: forecast_block[0] + 1],
-                    suggestion_block,
-                    *blocks[forecast_block[0] + 1 :],
-                ]
+                if f:
+                    new_forms_count += 1
+                break
+            else:
 
+                f = workflow.add_form(
+                    workflow.resource_type, slack_const.FORM_TYPE_STAGE_GATING, stage=opt
+                )
+                if f:
+                    new_forms_count += 1
+        # gather and attach all forms
+
+    private_metadata.update(context)
+    submit_text = "Submit" if new_forms_count == 0 else "Next"
+    callback_id = (
+        slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        if new_forms_count == 0
+        else slack_const.ZOOM_MEETING__PROCESS_NEXT_PAGE
+    )
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "type": "modal",
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": blocks,
-            "private_metadata": payload["view"]["private_metadata"],
+            "submit": {"type": "plain_text", "text": submit_text},
+            "private_metadata": json.dumps(private_metadata),
         },
     }
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
+    print(trigger_id)
 
 
 @processor(required_context=["m", "contact_index"])
@@ -275,19 +283,20 @@ def process_remove_contact_from_meeting(payload, context):
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
 
-@processor(required_context=["m"])
+@processor(required_context=["w"])
 def process_update_search_or_create(payload, context):
+    """ Updates the form view to show what is currently selected """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
 
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).select_related("zoom_account").first()
-    organization = meeting.zoom_account.user.organization
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     c = {
-        "m": context.get("m"),
+        "w": context.get("w"),
         "resource": str(context.get("resource")),
         "selected_option": select,
     }
@@ -296,7 +305,7 @@ def process_update_search_or_create(payload, context):
         blocks = get_block_set("search_modal_block_set", context=c)
     elif selected_option == "CREATE":
         blocks = get_block_set("create_modal_block_set", context=c)
-    ts, channel = meeting.slack_interaction.split("|")
+    ts, channel = workflow.slack_interaction.split("|")
     private_metadata = {
         "original_message_timestamp": ts,
         "original_message_channel": channel,
@@ -318,23 +327,23 @@ def process_update_search_or_create(payload, context):
     res = slack_requests.generic_request(url, data, access_token=access_token)
 
 
-@processor(required_context=["m"])
+@processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
-    """ Opens Modal for creating or selecting a resource value """
+    """ opens a modal with the options to search or create """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
 
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).select_related("zoom_account").first()
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
-    organization = meeting.zoom_account.user.organization
+    organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
     context = {
-        "m": context.get("m"),
+        "w": context.get("w"),
         "resource": str(selected_option),
     }
 
@@ -343,20 +352,24 @@ def process_meeting_selected_resource(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
             "title": {"type": "plain_text", "text": f"{selected_option}"},
             "blocks": get_block_set("create_or_search_modal", context=context),
             "private_metadata": json.dumps(private_metadata),
+            "submit": {"type": "plain_text", "text": "Next"},
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor()
 def process_create_or_search_selected(payload, context):
-    meeting_id = payload["actions"][0]["value"]
-    meeting = ZoomMeeting.objects.filter(id=meeting_id).select_related("zoom_account").first()
-    organization = meeting.zoom_account.user.organization
+    workflow_id = payload["actions"][0]["value"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    meeting = workflow.meeting
+
+    organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     # get current blocks
     previous_blocks = payload["message"]["blocks"]
@@ -365,7 +378,7 @@ def process_create_or_search_selected(payload, context):
     block_sets = []
     if not select_block:
         # create new block including the resource type
-        block_sets = get_block_set("attach_resource_interaction", {"m": meeting_id})
+        block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
 
     res = slack_requests.update_channel_message(
         payload["channel"]["id"],
@@ -373,8 +386,8 @@ def process_create_or_search_selected(payload, context):
         access_token,
         block_set=[*previous_blocks, *block_sets],
     ).json()
-    meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-    meeting.save()
+    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    workflow.meeting.save()
 
 
 @processor()
@@ -420,7 +433,6 @@ def handle_block_actions(payload):
         slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
-        slack_const.GET_ORGANIZATION_STAGES: process_update_forecast_category_option,
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
@@ -428,6 +440,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
+        slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

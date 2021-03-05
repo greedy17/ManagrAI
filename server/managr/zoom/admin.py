@@ -24,17 +24,10 @@ class CustomZoomMeetingForm(ModelForm):
             "start_time",
             "duration",
             "participants",
-            "opportunity",
-            "scoring_in_progress",
-            "linked_account",
-            "is_closed",
-            "interaction_status",
             "participants_count",
             "total_minutes",
-            "meeting_score",
             "meeting_score_components",
             "original_duration",
-            "slack_form",
         )
 
 

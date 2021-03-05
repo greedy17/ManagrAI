@@ -36,5 +36,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "show_lead_score_description": slack_alerts.lead_score_description_block_set,
         "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
         "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
+        "loading": meeting_review_block_sets.loading_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

@@ -38,7 +38,6 @@ def process_get_local_resource_options(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource")
-    resource = context.get("resource")
     if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
         return {
             "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)],
@@ -55,7 +54,7 @@ def process_get_local_resource_options(payload, context):
             ],
         }
 
-    elif resource == org_consts.ACTION_CHOICE_RESOURCE:
+    elif resource == slack_const.SLACK_ACTION_RESOURCE_ACTION_CHOICE:
         return {
             "options": [
                 l.as_slack_option

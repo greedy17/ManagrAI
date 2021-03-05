@@ -14,6 +14,9 @@ from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import block_builders
+from managr.slack.helpers.block_sets import get_block_set
 
 from ..routes import routes
 from ..models import (
@@ -22,6 +25,7 @@ from ..models import (
     SObjectField,
     SObjectValidation,
     SObjectPicklist,
+    MeetingWorkflow,
 )
 from ..serializers import (
     SObjectFieldSerializer,
@@ -34,6 +38,33 @@ from ..adapter.exceptions import TokenExpired
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
+
+
+## for testing
+
+
+def emit_fake_event_end(workflow_id):
+    schedule = timezone.now() - timezone.timedelta(seconds=30)
+    return _process_fake_event_end(workflow_id, schedule=schedule)
+
+
+@background(schedule=0)
+def _process_fake_event_end(workflow_id):
+    w = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    user = w.user
+    access_token = user.organization.slack_integration.access_token
+    ts, channel = w.meeting.slack_interaction.split("|")
+    res = slack_requests.update_channel_message(
+        channel,
+        ts,
+        access_token,
+        block_set=get_block_set("final_meeting_interaction", context={"m": str(w.meeting.id)}),
+    ).json()
+
+    w.meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
+    w.meeting.save()
+
+    return
 
 
 def emit_sf_sync(user_id, sync_id, resource, offset):

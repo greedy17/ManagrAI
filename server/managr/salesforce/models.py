@@ -10,7 +10,7 @@ from django.db import models
 from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField, ArrayField
-
+from django.db.models import Q
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
@@ -126,13 +126,21 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
     def to_slack_field(self, value=None, **kwargs):
         if self.data_type == "Picklist":
+            # stage has a special function so we add the action param
+            action_id = None
+            if self.api_name == "StageName":
+                action_id = (
+                    slack_consts.ZOOM_MEETING__STAGE_SELECTED
+                    + f"?w={str(kwargs.get('workflow').id)}"
+                )
 
             block = block_builders.static_select(
                 f"*{self.reference_display_label}*",
                 self.get_slack_options,
+                action_id=action_id,
                 initial_option=dict(
                     *map(
-                        lambda value: block_builders.option(value["label"], value["value"]),
+                        lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
                             lambda opt: opt.get("value", None) == value, self.get_slack_options,
                         ),
@@ -145,13 +153,16 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
             initial_option = block_builders.option(value, value) if value else None
-            user_id = str(self.salesforce_account.user.id)
             if self.is_public:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
                 action_query = (
-                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={self.salesforce_object}",
+                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
                 )
+
             else:
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={kwargs.get('user_id')}&relationship={self.relationship_name}&fields={','.join(self.display_value_keys)}"
+                user_id = str(self.salesforce_account.user.id)
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.relationship_name}&fields={','.join(self.display_value_keys)}"
             return block_builders.external_select(
                 f"*{self.reference_display_label}*",
                 action_query,
@@ -161,7 +172,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
         elif self.data_type == "Date":
             return block_builders.datepicker(
-                label=f"*{self.reference_display_label['label']}*",
+                label=f"*{self.reference_display_label}*",
                 initial_date=value,
                 block_id=self.api_name,
             )
@@ -172,7 +183,9 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 list(
                     map(
                         lambda value: block_builders.option(value["label"], value["value"]),
-                        filter(lambda opt: opt.get("value", None) == value, self.picklist_options,),
+                        filter(
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                        ),
                     ),
                 ),
                 initial_options=self.picklist_options.as_slack_options,
@@ -198,15 +211,12 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                 )
 
-            else:
-                return (
-                    block_builders.input_block(
-                        self.reference_display_label,
-                        optional=not self.required,
-                        initial_value=value,
-                        block_id=self.api_name,
-                    ),
-                )
+            return block_builders.input_block(
+                self.reference_display_label,
+                optional=not self.required,
+                initial_value=value,
+                block_id=self.api_name,
+            )
 
     @property
     def display_value_keys(self):
@@ -226,6 +236,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
     @property
     def get_slack_options(self):
+        # non sf fields are created with is_public = True and may take options directly
         if self.is_public and len(self.options):
             return list(
                 map(
@@ -233,8 +244,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     self.options,
                 )
             )
-        elif not self.is_public and hasattr(self.picklist_options):
-            return self.picklist_values.as_slack_options
+        elif not self.is_public and hasattr(self, "picklist_options"):
+            return self.picklist_options.as_slack_options
         else:
             return None
 
@@ -287,9 +298,7 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         return list(
-            map(
-                lambda option: block_builders.option(option["label"], option["value"]), self.options
-            )
+            map(lambda option: block_builders.option(option["label"], option["value"]), self.values)
         )
 
 
@@ -439,7 +448,36 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 class MeetingWorkflow(SFSyncOperation):
 
-    meeting = models.ForeignKey("zoom.ZoomMeeting", models.CASCADE, "review_workflow")
+    meeting = models.OneToOneField("zoom.ZoomMeeting", models.CASCADE, related_name="workflow")
+
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The id of the related resource unopinionated",
+    )
+    resource_type = models.CharField(
+        max_length=255, null=True, blank=True, help_text="The class name of the resource"
+    )
+    slack_view = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="Id of slack view/modal, we will use this id to delete/update the form when using an async flow",
+    )
+    slack_interaction = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
+    )
+
+    @property
+    def resource(self):
+        from managr.salesforce.routes import routes
+
+        model_route = routes.get(self.resource_type, None)
+        if model_route and self.resource_id:
+            return model_route["model"].objects.get(id=self.resource_id)
+        return None
 
     @property
     def operations_map(self):
@@ -457,24 +495,47 @@ class MeetingWorkflow(SFSyncOperation):
         }
 
     def begin_tasks(self, attempts=1):
-        from managr.salesforce.background import emit_gen_next_object_field_opp_sync
+        return
 
-        for op in self.operations_list:
-            # split the operation to get opp and params
-            operation_name, param = op.split(".")
-            operation = self.operations_map.get(operation_name)
+    def begin_communication(self):
+        from managr.zoom.background import emit_kick_off_slack_interaction
 
-            # determine the operation and its param and get event emitter
-            t = operation(str(self.user.id), str(self.id), param)
-            if self.operations:
-                self.operations.append(str(t.task_hash))
-            else:
-                self.operations = [str(t.task_hash)]
-            self.save()
+        if self.resource:
+            self.add_form(
+                self.resource_type, slack_consts.FORM_TYPE_MEETING_REVIEW
+            )  # maybe add the generated form instead (if this is too slow and slack times out)
 
-        scheduled_time = timezone.now() + timezone.timedelta(minutes=720)
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_object_field_opp_sync(str(self.user.id), self.operations_list, formatted_time)
+        emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
+
+        # always start this interaction by appending the meeting review form for the meeting resource
+
+    def add_form(self, resource, form_type, **kwargs):
+        """ 
+            helper method to add form for the review 
+            E.g Create form if creating new resource, stage gating form 
+        """
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        template = (
+            OrgCustomSlackForm.objects.for_user(self.user)
+            .filter(
+                Q(resource=resource, form_type=form_type,)
+                & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+            )
+            .first()
+        )
+        if template:
+
+            # check if a form with that template already exists and remove it
+            self.forms.filter(template__id=template.id).delete()
+            return OrgCustomSlackFormInstance.objects.create(
+                user=self.user, template=template, resource_id=str(self.resource.id), workflow=self,
+            )
+        return None
+
+    def remove_form(self):
+        """ helper method to remove for the review """
+        return
 
 
 class SalesforceAuthAccount(TimeStampModel):

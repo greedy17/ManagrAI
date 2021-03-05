@@ -14,7 +14,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity
 from managr.salesforce.adapter.models import ContactAdapter
-
+from managr.salesforce.models import MeetingWorkflow
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired
@@ -149,7 +149,7 @@ def _push_meeting_contacts(meeting_id):
                 ]
                 meeting.save()
             if meeting.meeting_resource != "Account":
-                "Leads and Opportunities need to have a contact role"
+                "Opportunities need to have a contact role"
                 for contact in [*created_contacts, *contacts_in_sf]:
                     emit_add_c_role_to_opp(
                         str(user.id), str(meeting.opportunity.id), contact["integration_id"]
@@ -175,7 +175,7 @@ def _push_meeting_contacts(meeting_id):
             "m": str(meeting.id),
             "show_contacts": True,
         }
-        ts, channel = meeting.slack_interaction.split("|")
+        ts, channel = workflow.slack_interaction.split("|")
         res = slack_requests.update_channel_message(
             channel,
             ts,
@@ -298,21 +298,22 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 ),
                 *meeting_contacts,
             ]
-
+            meeting_resource_data = dict(resource_id="", resource_type="")
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__organization__id=user.organization.id
             ).first()
             if opportunity:
-                meeting.opportunity = opportunity.id
-                if opportunity.account:
-                    meeting.linked_account = opportunity.account.id
+                meeting_resource_data["resource_id"] = str(opportunity.id)
+                meeting_resource_data["resource_type"] = "Opportunity"
+
             else:
                 account = Account.objects.filter(
                     contacts__email__in=participant_emails,
                     owner__organization__id=user.organization.id,
                 ).first()
                 if account:
-                    meeting.linked_account = account.id
+                    meeting_resource_data["resource_id"] = str(account.id)
+                    meeting_resource_data["resource_type"] = "Account"
 
             meeting.participants = meeting_contacts
             serializer = ZoomMeetingSerializer(data=meeting.as_dict)
@@ -328,30 +329,39 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 return e
 
             # emit the event to start slack interaction
+            workflow = MeetingWorkflow.objects.create(
+                user=user,
+                meeting=serializer.instance,
+                operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
+                **meeting_resource_data,
+            )
             if send_slack:
-                emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
-            return serializer.instance
+                workflow.begin_communication()
+                # create new workflow
+                # emit_kick_off_slack_interaction(user_id, str(serializer.instance.id))
+
+            return workflow
 
 
 @background(schedule=0)
 def _kick_off_slack_interaction(user_id, managr_meeting_id):
     # get meeting
-    meeting = ZoomMeeting.objects.filter(id=managr_meeting_id).first()
-    if meeting:
+    workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id).first()
+    if workflow:
         # get user
-        user = meeting.zoom_account.user
+        user = workflow.user
 
         if hasattr(user, "slack_integration"):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
-            block_set = get_block_set("initial_meeting_interaction", {"m": managr_meeting_id,},)
+            block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
             res = slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
             ).json()
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
-            meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-            meeting.save()
+            workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+            workflow.save()
 
 
 @background(schedule=0)

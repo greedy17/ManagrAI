@@ -5,16 +5,20 @@ import json
 
 from datetime import datetime
 
+from django.db.models import Q
+
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
+from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
 from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
+from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
 
 def _initial_interaction_base_message():
@@ -92,6 +96,17 @@ def generate_contact_group(index, contact, instance_url):
         }
 
     return blocks
+
+
+@block_set()
+def loading_block_set(context):
+    return [
+        {
+            "type": "image",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif",
+            "alt_text": "Plants",
+        },
+    ]
 
 
 @block_set(required_context=["m"])
@@ -288,15 +303,15 @@ def edit_meeting_contacts_block_set(context):
     return blocks
 
 
-@block_set(required_context=["m"])
+@block_set(required_context=["w"])
 def initial_meeting_interaction_block_set(context):
     # get the meeting
-    meeting = ZoomMeeting.objects.filter(id=context["m"]).first()
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
-    meeting_resource = meeting.meeting_resource
-    opportunity = meeting.opportunity
-    account = meeting.linked_account
-    meeting_id_param = "m=" + context["m"]
+
+    resource = workflow.resource
+    meeting = workflow.meeting
+    meeting_id_param = "m=" + str(meeting.id)
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -343,11 +358,11 @@ def initial_meeting_interaction_block_set(context):
         },
         {"type": "divider"},
     ]
-    if not meeting_resource:
+    if not resource:
         title_section = _initial_interaction_message()
     else:
-        name = opportunity.name if meeting_resource == "Opportunity" else account.name
-        title_section = _initial_interaction_message(name, meeting_resource)
+        name = resource.name
+        title_section = _initial_interaction_message(name, workflow.resource_type)
     blocks = [
         block_builders.simple_section(title_section, "mrkdwn",),
         *default_blocks,
@@ -356,23 +371,26 @@ def initial_meeting_interaction_block_set(context):
     action_blocks = [
         block_builders.simple_button_block(
             "Attach/Change",
-            str(meeting.id),
+            str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             style="primary",
         ),
         block_builders.simple_button_block(
             "Disregard",
-            str(meeting.id),
+            str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
             style="danger",
         ),
     ]
 
-    if meeting_resource:
+    if (
+        workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
+        or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
+    ):
         action_blocks = [
             block_builders.simple_button_block(
                 "Review",
-                str(meeting.id),
+                str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
             ),
@@ -383,28 +401,13 @@ def initial_meeting_interaction_block_set(context):
     return blocks
 
 
-@block_set(required_context=["m"])
+@block_set(required_context=["w"])
 def meeting_review_modal_block_set(context):
-    meeting = ZoomMeeting.objects.filter(id=context["m"]).first()
-    user = meeting.zoom_account.user
-    organization = user.organization
-    if meeting.meeting_resource == "Opportunity":
-        resource = meeting.opportunity
-    elif meeting.meeting_resource == "Account":
-        resource = meeting.linked_account
-    # get user slack form
-
-    slack_form = organization.custom_slack_forms.filter(
-        form_type=slack_const.FORM_TYPE_MEETING_REVIEW, resource=meeting.meeting_resource
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    slack_form = workflow.forms.filter(
+        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
     ).first()
-    fields = slack_form.config.get("fields", [])
-    values = resource.secondary_data
-
-    for k, value in values.items():
-        for i, field in enumerate(fields):
-            if field["key"] == k:
-                field["value"] = value
-                fields[i] = field
 
     blocks = [
         block_builders.simple_section(
@@ -414,9 +417,7 @@ def meeting_review_modal_block_set(context):
     ]
 
     # additional validations
-    validations = user.salesforce_account.object_fields.get(meeting.meeting_resource, {}).get(
-        "validations", None
-    )
+    validations = None
     if validations:
 
         blocks.extend(
@@ -437,7 +438,7 @@ def meeting_review_modal_block_set(context):
             ]
         )
 
-    blocks.extend(map_fields_to_type(fields, user_id=str(user.id)))
+    blocks.extend(slack_form.generate_form())
     # static blocks
 
     # make params here
@@ -445,7 +446,7 @@ def meeting_review_modal_block_set(context):
     return blocks
 
 
-@block_set(required_context=["m"])
+@block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
     """ This interaction updates the message to show a drop down of resources """
     blocks = [
@@ -457,7 +458,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
                     slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
                 )
             ],
-            action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?m={context.get('m')}",
+            action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}",
             block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),
     ]
@@ -465,25 +466,25 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     return blocks
 
 
-@block_set(required_context=["m", "resource"])
+@block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
     blocks = [
         block_builders.static_select(
             "Would you like to create a new item or search for an existing option",
             [block_builders.option("Search", "SEARCH"), block_builders.option("Create", "CREATE"),],
-            action_id=f"{slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH}?m={context.get('m')}&resource={context.get('resource')}",
+            # action_id=f"{slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH}?w={context.get('w')}&resource={context.get('resource')}",
+            block_id="create_or_search",
+            action_id="selected_option",
         ),
     ]
-    if context.get("selected_option", None):
-        blocks[0]["accessory"]["initial_option"] = context.get("selected_option")
 
     return blocks
 
 
-@block_set(required_context=["m", "resource"])
+@block_set(required_context=["w", "resource"])
 def search_modal_block_set(context, *args, **kwargs):
-    m = ZoomMeeting.objects.get(id=context.get("m"))
-    user = m.zoom_account.user
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
     return [
         block_builders.external_select(
             f"*Search for an {context.get('resource')}*",
@@ -493,50 +494,31 @@ def search_modal_block_set(context, *args, **kwargs):
     ]
 
 
-@block_set(required_context=["m", "resource"])
+@block_set(required_context=["w", "resource"])
 def create_modal_block_set(context, *args, **kwargs):
     """ Shows a modal to create a resource """
-    m = ZoomMeeting.objects.get(id=context.get("m"))
-    user = m.zoom_account.user
-    slack_form = user.organization.custom_slack_forms.filter(
-        form_type=slack_const.FORM_TYPE_CREATE, resource=context.get("resource")
-    ).first()
-    fields = slack_form.config.get("fields", [])
-
-    blocks = [
-        block_builders.simple_section(
-            ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-            "mrkdwn",
-        ),
-    ]
-
-    # additional validations
-    validations = user.salesforce_account.object_fields.get(m.meeting_resource, {}).get(
-        "validations", None
-    )
-    if validations:
-
-        blocks.extend(
-            [
-                block_builders.simple_section(
-                    ":warning: *_Additional Validations required to avoid errors_*", "mrkdwn"
-                ),
-                block_builders.simple_section_multiple(
-                    list(
-                        map(
-                            lambda validation: block_builders.text_block(
-                                f'_{validation[0]+1}. {validation[1]["message"]}_', "mrkdwn"
-                            ),
-                            enumerate(validations),
-                        )
-                    )
-                ),
-            ]
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(
+            Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
+            & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
         )
+        .first()
+    )
+    if template:
+        slack_form = OrgCustomSlackFormInstance.objects.create(user=user, template=template)
+        blocks = [
+            block_builders.simple_section(
+                ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                "mrkdwn",
+            ),
+        ]
 
-    blocks.extend(map_fields_to_type(fields))
+        blocks.extend(slack_form.generate_form())
 
-    return blocks
+        return blocks
 
 
 @block_set(required_context=["m"])
