@@ -8,6 +8,7 @@ import Auth from '@/services/auth'
 // views
 import Login from '@/views/auth/Login'
 import Invite from '@/views/auth/Invite'
+import LeadershipCode from '@/views/auth/LeadershipCode'
 import Activation from '@/views/auth/Activation'
 import LeadsIndex from '@/views/leads/LeadsIndex'
 import LeadsDetail from '@/views/leads/LeadsDetail'
@@ -41,6 +42,11 @@ export default new Router({
       name: 'Invite',
       component: Invite,
       beforeEnter: Auth.requireUserTypeManagerOrStaff,
+    },
+    {
+      path: '/leadership-code',
+      name: 'LeadershipCode',
+      component: LeadershipCode,
     },
     {
       path: '/activation/:uid/:token',

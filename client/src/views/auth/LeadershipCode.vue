@@ -1,0 +1,232 @@
+<template>
+  <div class="leadership-code">
+    <img class="leadership-code__logo" src="@/assets/images/logo.png" />
+    <h2>Welcome</h2>
+    <div
+      class="leadership-code__text"
+    >Please enter your Leadership code provided by the managr team.</div>
+    <form @submit.prevent="handleSubmit">
+      <div class="errors">
+        <!-- client side validations -->
+        <div
+          v-if="
+            isFormValid !== null && !isFormValid && (errors.emailIsBlank || errors.passwordIsBlank)
+          "
+        >{{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.</div>
+        <!-- server side validations -->
+        <div
+          v-else-if="success !== null && !success && errors[500]"
+        >Something went wrong, please retry later.</div>
+        <div
+          v-else-if="success !== null && !success && errors.invalidEmail"
+        >Invalid or not-activated email.</div>
+        <div v-else-if="success !== null && !success && errors.invalidPassword">Incorrect password.</div>
+      </div>
+      <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
+      <input
+        :class="{ hidden: currentStep < 2 }"
+        ref="passwordInput"
+        v-model="password"
+        type="password"
+        placeholder="password"
+      />
+      <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
+    </form>
+  </div>
+</template>
+
+<script>
+import User from '@/services/users'
+
+export default {
+  name: 'Login',
+  components: {},
+  data() {
+    return {
+      currentStep: 1,
+      email: '', // step 1
+      password: '', // step 2
+      isFormValid: null, // client side validations
+      success: null, //server side validations
+      errors: {},
+    }
+  },
+  methods: {
+    handleSubmit() {
+      if (this.currentStep === 1) {
+        this.checkAccountStatus()
+      } else {
+        this.handleLoginAttempt()
+      }
+    },
+    checkAccountStatus() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data for this request
+      let validationResults = this.emailClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      let checkStatusPromise = User.api.checkStatus(this.email)
+
+      checkStatusPromise
+        .then(() => {
+          this.currentStep = 2
+          // setTimeout(..., 0) is used to focus once JS Stack is clear -- for some reason this is needed, even though the
+          // element is already on the DOM by this point (it is always present, see template).
+          setTimeout(() => this.$refs.passwordInput.focus(), 0)
+        })
+        .catch(error => {
+          if (error.response.status >= 500) {
+            this.errors[500] = true
+            this.success = false
+          } else if (error.response.status >= 400) {
+            // handle invalid or inactive email
+            this.errors.invalidEmail = true
+            this.success = false
+          }
+        })
+    },
+    handleLoginAttempt() {
+      // reset component data when submission begins, in case of prior request
+      this.isFormValid = null
+      this.success = null
+      this.errors = {}
+
+      // check form data for this request
+      let validationResults = this.passwordClientSideValidations()
+      this.isFormValid = validationResults[0]
+      this.errors = validationResults[1]
+      if (!this.isFormValid) {
+        return
+      }
+
+      let loginPromise = User.api.login(this.email, this.password)
+
+      loginPromise
+        .then(response => {
+          // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
+          let token = response.data.token
+          let userData = response.data
+          delete userData.token
+          this.$store.dispatch('updateUserToken', token)
+          this.$store.dispatch('updateUser', User.fromAPI(userData))
+          this.$store.dispatch('updateStages')
+          this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
+          this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
+          if (this.$route.query.redirect) {
+            this.$router.push(this.$route.query.redirect)
+          } else {
+            this.$router.push({ name: 'LeadsIndex' })
+          }
+          this.success = true
+        })
+        .catch(error => {
+          if (error.response.status >= 500) {
+            this.errors[500] = true
+            this.success = false
+          } else if (error.response.status >= 400) {
+            // handle invalid password
+            this.errors.invalidPassword = true
+            this.success = false
+          }
+        })
+    },
+    emailClientSideValidations() {
+      let formErrors = {
+        emailIsBlank: this.emailIsBlank,
+      }
+      let isFormValid = !this.emailIsBlank
+
+      return [isFormValid, formErrors]
+    },
+    passwordClientSideValidations() {
+      let formErrors = {
+        passwordIsBlank: this.passwordIsBlank,
+      }
+      let isFormValid = !this.passwordIsBlank
+
+      return [isFormValid, formErrors]
+    },
+  },
+  computed: {
+    emailIsBlank() {
+      return !this.email.length
+    },
+    passwordIsBlank() {
+      return !this.password.length
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/mixins/inputs';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
+
+.leadership-code {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  &__logo {
+    height: 5rem;
+  }
+
+  &__text {
+    color: #{$mid-gray};
+    font-family: #{$base-font-family};
+  }
+}
+
+h2 {
+  @include base-font-styles();
+  font-weight: bold;
+  color: $main-font-gray;
+  text-align: center;
+}
+
+form {
+  @include standard-border();
+  margin-top: 3.125rem;
+  width: 31.25rem;
+  height: 18.75rem;
+  background-color: $white;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+
+input {
+  @include input-field();
+  height: 2.5rem;
+  width: 15.65rem;
+  display: block;
+  margin: 0.625rem 0;
+
+  &:disabled {
+    border: 2px solid $dark-green;
+  }
+}
+
+button {
+  @include primary-button();
+  margin-top: 1.25rem;
+  height: 1.875rem;
+  width: 9.375rem;
+}
+
+.hidden {
+  display: none;
+}
+</style>
