@@ -7,6 +7,7 @@
     transform: scale(1.0);
     }      
 }
+
 @mixin extreme-pulse-animation () {
-animation: extreme-pulse 1.4s infinite ease-in-out both;
+    animation: extreme-pulse 1.4s infinite ease-in-out both;
 }

@@ -1,8 +1,8 @@
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
-import EmailAuthAccountAPI from './api'
+import NylasAuthAccountAPI from './api'
 
-export default class EmailAuthAccount {
-  static api = EmailAuthAccountAPI.create(EmailAuthAccount)
+export default class NylasAuthAccount {
+  static api = NylasAuthAccountAPI.create(NylasAuthAccount)
 
   constructor({
     id = '',
@@ -33,11 +33,11 @@ export default class EmailAuthAccount {
   }
 
   static create(opts) {
-    return new EmailAuthAccount(opts)
+    return new NylasAuthAccount(opts)
   }
 
   static fromAPI(json) {
-    return new EmailAuthAccount(objectToCamelCase(json))
+    return new NylasAuthAccount(objectToCamelCase(json))
   }
 
   static toAPI(json) {
@@ -46,6 +46,6 @@ export default class EmailAuthAccount {
   }
 
   clone() {
-    return new EmailAuthAccount(this)
+    return new NylasAuthAccount(this)
   }
 }

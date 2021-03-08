@@ -3,12 +3,13 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const REGISTRATION_ENDPOINT = '/register/'
+const USERS_ENDPOINT = '/users/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
-const USERS_ENDPOINT = '/users/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
@@ -17,6 +18,7 @@ export default class UserAPI {
   get client() {
     return apiClient()
   }
+
   /**
    * Instantiate a new `UserAPI`
    *
@@ -70,6 +72,28 @@ export default class UserAPI {
   /* Perform logout by clearing the Vuex store. */
   logout() {
     store.commit('LOGOUT_USER')
+  }
+
+  /**
+   * Register a new user
+   *
+   * @param {UserRegistrationForm} registerForm - A form containing first name, last name, email,
+   *                                              password, and organization name.
+   */
+  register(registerForm) {
+    const data = registerForm.toAPI()
+
+    return this.client
+      .post(REGISTRATION_ENDPOINT, data)
+      .then(response => response.data)
+      .then(data => this.cls.fromAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'Register User',
+          enable400Alert: true,
+          enable500Alert: true,
+        }),
+      )
   }
 
   invite(email, type, organization) {

@@ -1,2 +1,0 @@
-class ConsumerConfigError(Exception):
-    pass

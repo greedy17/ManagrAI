@@ -31,7 +31,7 @@ function requireUserTypeManagerOrStaff(to, from, next) {
     })
   } else if (!store.state.user.isStaff && !store.state.user.isManager) {
     next({
-      name: 'Settings',
+      name: 'EmailIntegration',
     })
   } else {
     next()
@@ -66,7 +66,7 @@ function homepageRedirect(to, from, next) {
     })
   } else {
     next({
-      name: 'LeadsIndex',
+      name: 'Integrations',
     })
   }
 }

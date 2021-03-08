@@ -1,0 +1,17 @@
+<br />
+<br />
+Hello!
+<br />
+
+<p>User has revoked their salesforce token for <strong>{{ organization }}</strong> on Managr</p>
+
+<br />
+<p>If they have not re-enabled the sync delete their data within 24 hours</p>
+<br />
+
+<ul>
+  <strong>User Data</strong>
+  {% for key,value in data.items %}
+  <li><strong>{{ key }} : {{ value }}</strong></li>
+  {% endfor %}
+</ul>

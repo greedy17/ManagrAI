@@ -31,6 +31,11 @@
         placeholder="password"
       />
       <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
+      <div style="margin-top: 1rem">
+        <router-link :to="{ name: 'Register' }">
+          No account? Sign Up
+        </router-link>
+      </div>
     </form>
   </div>
 </template>
@@ -118,12 +123,10 @@ export default {
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
           this.$store.dispatch('updateStages')
-          this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notification')
-          this.$store.commit('UPDATE_ITEMS_TO_POLL', 'notificationCount')
           if (this.$route.query.redirect) {
             this.$router.push(this.$route.query.redirect)
           } else {
-            this.$router.push({ name: 'LeadsIndex' })
+            this.$router.push({ name: 'Integrations' })
           }
           this.success = true
         })

@@ -8,117 +8,48 @@
             You're viewing settings for {{ organization }}
           </h5>
         </div>
-        <div
-          class="toolbar__row"
-          @click="toggleActivePage('emailIntegration')"
-          :class="{ toolbar__active: emailIntegrationActive }"
+        <router-link
+          v-if="$store.state.user.userLevel == 'MANAGER' || $store.state.user.isAdmin"
+          :to="{ name: 'Invite' }"
         >
-          Email Integration
-        </div>
-        <div
-          class="toolbar__row"
-          @click="toggleActivePage('emailTemplates')"
-          :class="{ toolbar__active: emailTemplatesActive }"
-        >
-          Email Templates
-        </div>
+          <div class="toolbar__row">
+            Invite User
+          </div>
+        </router-link>
 
-        <div
-          class="toolbar__row"
-          @click="toggleActivePage('textIntegration')"
-          :class="{ toolbar__active: textIntegrationActive }"
-        >
-          Text Integration
-        </div>
-        <div
-          class="toolbar__row"
-          :class="{ toolbar__active: notificationSettingsPageActive }"
-          @click="toggleActivePage('notificationSettingsPage')"
-        >
-          Notification Settings
-        </div>
-        <div
-          class="toolbar__row"
-          v-if="$store.state.user.isManager || $store.state.user.isStaff"
-          @click="routeToInviteUser"
-        >
-          Invite User
-        </div>
-        <div
-          class="toolbar__row"
-          :class="{ toolbar__active: profileActive }"
-          @click="toggleActivePage('profile')"
-        >
-          Profile
-        </div>
-        <!-- NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page -->
-        <!-- <div class="toolbar__row" @click="toggleActivePage('password')">
-          Password
-        </div> -->
+        <router-link :to="{ name: 'Profile' }">
+          <div class="toolbar__row">
+            Profile
+          </div>
+        </router-link>
+        <router-link :to="{ name: 'Integrations' }">
+          <div class="toolbar__row">
+            Integrations
+          </div>
+        </router-link>
       </div>
     </div>
     <div class="page__main-content-area" style="padding: 1rem;">
-      <EmailIntegration v-if="emailIntegrationActive" />
-      <EmailTemplates v-if="emailTemplatesActive" />
-      <TextIntegration v-if="textIntegrationActive" />
-      <Profile v-if="profileActive" />
-      <Password v-if="passwordActive" />
-      <NotificationSettings v-if="notificationSettingsPageActive" />
+      <router-view name="user-settings" :key="$route.fullPath"></router-view>
     </div>
   </div>
 </template>
 
 <script>
-import TextIntegration from '@/components/settings/TextIntegration'
-import EmailIntegration from '@/components/settings/EmailIntegration'
-import EmailTemplates from '@/components/settings/EmailTemplates'
-import Profile from '@/components/settings/Profile'
-import Password from '@/components/settings/Password'
-import NotificationSettings from '@/views/settings/_pages/_NotificationSettings'
+import User from '@/services/users'
+
+import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 
 export default {
   name: 'Settings',
-  components: {
-    EmailIntegration,
-    EmailTemplates,
-    TextIntegration,
-    Profile,
-    Password,
-    NotificationSettings,
-  },
-  data() {
-    return {
-      emailIntegrationActive: true,
-      emailTemplatesActive: false,
-      textIntegrationActive: false,
-      profileActive: false,
-      passwordActive: false,
-      notificationSettingsPageActive: false,
-    }
-  },
-  methods: {
-    toggleActivePage(pageToActivate) {
-      this.emailIntegrationActive = false
-      this.emailTemplatesActive = false
-      this.textIntegrationActive = false
-      this.profileActive = false
-      this.passwordActive = false
-      this.notificationSettingsPageActive = false
-      if (pageToActivate === 'emailIntegration') this.emailIntegrationActive = true
-      if (pageToActivate === 'emailTemplates') this.emailTemplatesActive = true
-      if (pageToActivate === 'textIntegration') this.textIntegrationActive = true
-      if (pageToActivate === 'profile') this.profileActive = true
-      if (pageToActivate === 'password') this.passwordActive = true
-      if (pageToActivate === 'notificationSettingsPage') this.notificationSettingsPageActive = true
-    },
-    routeToInviteUser() {
-      this.$router.push({ name: 'Invite' })
-    },
-  },
+  created() {},
   computed: {
     isStaff() {
       // used to check superuser if is staff then they currently do not have an org
       return this.$store.state.user.isStaff
+    },
+    isManager() {
+      return this.$store.state.user.type === User.types.MANAGER
     },
     organization() {
       return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name
@@ -142,5 +73,14 @@ export default {
   color: $mid-gray;
   margin-top: 1rem;
   margin-bottom: 0;
+}
+a {
+  text-decoration: none;
+}
+::v-deep .router-link-exact-active.router-link-active {
+  .toolbar__row {
+    background-color: #e5f2ea;
+    border-bottom: 4px #199e54 solid;
+  }
 }
 </style>

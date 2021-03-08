@@ -6,13 +6,13 @@ from urllib.parse import urlencode
 from .. import constants as core_consts
 
 
-def gen_auth_url(email, magic_token, scopes=core_consts.ALL_SCOPES_STR):
+def gen_auth_url(email, scopes=core_consts.ALL_SCOPES_STR):
     """Generate the redirect URL that should kick off the Nylas OAuth flow."""
     query = dict(
         redirect_uri=core_consts.NYLAS_OAUTH_CALLBACK_URL,
         response_type="code",
         login_hint=email,
-        state=magic_token,
+        state="NYLAS",
         scopes=scopes,
         client_id=core_consts.NYLAS_CLIENT_ID,
     )
@@ -22,9 +22,9 @@ def gen_auth_url(email, magic_token, scopes=core_consts.ALL_SCOPES_STR):
 
 def get_access_token(code):
     """ gets access token from code """
-    base64_secret = base64.b64encode(
-        core_consts.NYLAS_CLIENT_SECRET.encode("ascii")
-    ).decode("utf-8")
+    base64_secret = base64.b64encode(core_consts.NYLAS_CLIENT_SECRET.encode("ascii")).decode(
+        "utf-8"
+    )
     headers = dict(Authorization=f"Basic {base64_secret}")
     data = dict(
         client_id=core_consts.NYLAS_CLIENT_ID,
@@ -56,8 +56,7 @@ def get_account_details(token):
     """ gets account details from token to store in db """
     headers = dict(Authorization=f"Bearer {token}")
     res = requests.get(
-        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}",
-        headers=headers,
+        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}", headers=headers,
     )
     return res.json()
 

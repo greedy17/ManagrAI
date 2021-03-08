@@ -29,12 +29,13 @@ import {
   timeToNow,
   prependUrlProtocol,
   roundToOneDecimalPlace,
+  snakeCaseToTextFilter,
 } from '@/services/filters'
 import pluralize from 'pluralize'
 
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
-
+import vmodal from 'vue-js-modal'
 Vue.config.productionTip = false
 
 Vue.use(Vuex)
@@ -60,6 +61,7 @@ Vue.filter('prependUrlProtocol', prependUrlProtocol)
 Vue.filter('dateShortWithTime', formatDateShortWithTime)
 Vue.filter('constantToCapitalized', constantToCapitalized)
 Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
+Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })
@@ -67,7 +69,9 @@ Vue.filter('pluralize', function(value, number) {
 Vue.component('PageLoadingSVG', PageLoadingSVG)
 Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)
+
 Vue.component('datetime', Datetime)
+Vue.use(vmodal)
 
 /* eslint-disable no-new */
 new Vue({

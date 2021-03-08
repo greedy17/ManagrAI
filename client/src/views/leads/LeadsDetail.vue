@@ -3,34 +3,7 @@
     <ComponentLoadingSVG style="margin-top: 5rem;" />
   </div>
   <div v-else class="page">
-    <div class="page__left-nav-bar">
-      <!--        -->
-      <SideNavToolbar>
-        <template v-slot:trigger>
-          <span
-            class="toggle-icon"
-            @click="$store.commit('TOGGLE_SIDE_TOOLBAR_NAV', !showToolbarNav)"
-          >
-            <div class="filter__button" v-show="!$store.state.showToolbarNav">
-              <img class="filter__image" src="@/assets/images/logo.png" />
-              <div class="filter__text">At a Glance</div>
-            </div>
-          </span>
-        </template>
-        <template v-slot:toolbar>
-          <ToolBar
-            v-if="showToolbarNav"
-            :lead="lead"
-            :lists="lists"
-            :leadContacts="contacts"
-            @updated-rating="updateRating"
-            @updated-amount="updateAmount"
-            @updated-expected-close-date="updateExpectedCloseDate"
-            @updated-title="updateTitle"
-          />
-        </template>
-      </SideNavToolbar>
-    </div>
+    <div class="page__left-nav-bar"></div>
     <div class="page__main-content-area-with-panel">
       <div class="lead-header">
         <h3>{{ lead.title }}</h3>
@@ -160,7 +133,6 @@ import LeadActions from '@/components/shared/LeadActions'
 import PinnedNotes from '@/components/leads-detail/PinnedNotes'
 
 import DropDownMenu from '@/components/forms/DropDownMenu'
-import SideNavToolbar from '@/components/navigation/SideNavToolbar'
 
 import CollectionManager from '@/services/collectionManager'
 import Lead from '@/services/leads'
@@ -183,8 +155,6 @@ export default {
   name: 'LeadsDetail',
   props: ['id'],
   components: {
-    ToolBar,
-    LeadCustomFields,
     LeadBanner,
     LeadActions,
     PinnedNotes,
@@ -193,7 +163,6 @@ export default {
     LeadEmails,
     DropDownMenu,
     LeadMessages,
-    SideNavToolbar,
   },
   data() {
     return {

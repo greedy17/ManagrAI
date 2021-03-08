@@ -1,83 +1,45 @@
-import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
+import Model, { fields } from '@thinknimble/tn-models'
+
 import UserAPI from './api'
+import { roles, types } from './constants'
 
-export default class User {
+export default class User extends Model {
   static api = UserAPI.create(User)
-  static USER_TYPE_MANAGER = 'MANAGER'
-  static USER_TYPE_REP = 'REP'
-  static USER_TYPE_INTEGRATION = 'INTEGRATION'
+  static roles = roles
+  static types = types
 
-  constructor(user) {
-    user = user || {}
-
-    const {
-      id = '',
-      firstName = '',
-      lastName = '',
-      email = '',
-      organization = null,
-      organizationRef = null,
-      accountsRef = null,
-      state = null,
-      type = null,
-      fullName = null,
-      emailAuthLink = '',
-      messageAuthAccount = null,
-      messageAuthAccountRef = {},
-      emailAuthAccount = {},
-      emailAuthAccountRef = {},
-      isStaff = false,
-      quota = null,
-      upside = null,
-      commit = null,
-    } = user
-    Object.assign(this, {
-      id,
-      firstName,
-      lastName,
-      email,
-      organization,
-      organizationRef,
-      accountsRef,
-      state,
-      type,
-      fullName,
-      emailAuthLink,
-      messageAuthAccount,
-      messageAuthAccountRef,
-      emailAuthAccount,
-      emailAuthAccountRef,
-      isStaff,
-      quota,
-      upside,
-      commit,
-    })
-  }
-
-  static create(opts) {
-    return new User(opts)
-  }
-
-  static fromAPI(json) {
-    return new User(objectToCamelCase(json))
-  }
-
-  static toAPI(json) {
-    const data = objectToSnakeCase(json)
-    return data
-  }
-
-  clone() {
-    return new User(this)
-  }
+  static id = new fields.CharField()
+  static firstName = new fields.CharField()
+  static lastName = new fields.CharField()
+  static email = new fields.CharField()
+  static organization = new fields.Field()
+  static organizationRef = new fields.Field()
+  static salesforceAccount = new fields.Field()
+  static salesforceAccountRef = new fields.Field()
+  static accountsRef = new fields.Field()
+  static state = new fields.Field()
+  static type = new fields.Field()
+  static fullName = new fields.Field()
+  static emailAuthLink = new fields.CharField()
+  static nylas = new fields.Field({ default: () => {} })
+  static nylasRef = new fields.Field({ default: () => {} })
+  static isStaff = new fields.BooleanField()
+  static isAdmin = new fields.BooleanField()
+  static slackRef = new fields.Field()
+  static zoomAccount = new fields.Field()
+  static token = new fields.Field()
+  static hasZoomIntegration = new fields.Field({ readOnly: true })
+  static userLevel = new fields.Field({})
 
   get emailConnected() {
-    return this.emailAuthAccount && this.emailAuthAccountRef.accessToken
+    return this.nylas && this.nylasRef.accessToken
   }
+
   get textConnected() {
     return this.messageAuthAccount && this.messageAuthAccountRef.phoneNumber
   }
+
   get isManager() {
-    return this.type && this.type == User.USER_TYPE_MANAGER
+    return this.type && this.type == User.types.MANAGER
   }
 }
