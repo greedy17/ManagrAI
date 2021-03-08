@@ -69,7 +69,7 @@ body {
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
-  background-color: $soft-gray;
+  // background-color: $soft-gray;
 }
 
 #app {
@@ -77,7 +77,7 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: $soft-gray;
+  // background-color: $soft-gray;
 }
 
 .page-content {
