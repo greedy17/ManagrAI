@@ -7,6 +7,7 @@ import Auth from '@/services/auth'
 import Activation from '@/views/auth/Activation'
 import Login from '@/views/auth/Login'
 import Register from '@/views/auth/Register'
+import Registration from '@/views/auth/Registration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
 
 // TODO: Add pages for Salesforce integration
@@ -36,8 +37,8 @@ export default new Router({
     },
     {
       path: '/register',
-      name: 'Register',
-      component: Register,
+      name: 'Registration',
+      component: Registration,
     },
     {
       path: '/leadership-code',

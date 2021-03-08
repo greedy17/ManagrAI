@@ -1,5 +1,7 @@
 <template>
-  <div class="register">
+  <div class="registration">
+    <img class="registration__logo" src="@/assets/images/logo.png" />
+    <h2>Welcome</h2>
     <form @submit.prevent="onSubmit">
       <h2>Create Account</h2>
 
@@ -108,7 +110,7 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.register {
+.registration {
   display: flex;
   padding: 2rem;
   flex-flow: row;
@@ -116,10 +118,6 @@ export default {
   max-width: 24rem;
   margin: 0 auto;
   background-color: white;
-
-  &__logo {
-    height: 5rem;
-  }
 }
 
 .divider {
