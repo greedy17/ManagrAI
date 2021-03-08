@@ -116,10 +116,6 @@ export default {
   max-width: 24rem;
   margin: 0 auto;
   background-color: white;
-
-  &__logo {
-    height: 5rem;
-  }
 }
 
 .divider {

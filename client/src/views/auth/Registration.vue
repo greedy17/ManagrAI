@@ -2,6 +2,10 @@
   <div class="registration">
     <img class="registration__logo" src="@/assets/images/logo.png" />
     <h2>Welcome</h2>
+
+    <div class="registration__text">
+      Please enter your Leadership code provided by the managr team.
+    </div>
     <form @submit.prevent="onSubmit">
       <h2>Create Account</h2>
 
@@ -113,11 +117,22 @@ export default {
 .registration {
   display: flex;
   padding: 2rem;
-  flex-flow: row;
+  flex-flow: column;
   justify-content: center;
   max-width: 24rem;
   margin: 0 auto;
   background-color: white;
+  &__logo {
+    height: 5rem;
+    object-fit: contain;
+  }
+  &__text {
+    color: #{$mid-gray};
+    font-family: #{$base-font-family};
+    width: 100%;
+    max-width: 20rem;
+    margin-bottom: 4rem;
+  }
 }
 
 .divider {
