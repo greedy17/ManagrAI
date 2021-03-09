@@ -7,6 +7,10 @@
 
     <button type="submit" @click="handleInvite">Invite Team Member</button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+
+    <button type="submit" @click="handleContinue" class="invite-users__continue-button">
+      Continue to Integrations
+    </button>
   </div>
 </template>
 
@@ -28,6 +32,9 @@ export default {
     },
     handleCancel() {
       this.inviteOpen = false
+    },
+    handleContinue() {
+      this.$router.push({ name: 'Integrations' })
     },
   },
 }
@@ -63,6 +70,11 @@ export default {
 
   &__inviter {
     margin-top: 5rem;
+  }
+
+  &__continue-button {
+    width: 19rem;
+    margin-top: 2.5rem;
   }
 }
 
