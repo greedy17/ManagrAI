@@ -6,6 +6,7 @@
         the detail endpoint changes-->
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
+      <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
     </div>
   </div>
 </template>
@@ -69,7 +70,6 @@ body {
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
-  // background-color: $soft-gray;
 }
 
 #app {
@@ -77,7 +77,7 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  // background-color: $soft-gray;
+  position: relative;
 }
 
 .page-content {
@@ -96,5 +96,12 @@ body {
   color: rgba(47, 48, 53, 0.4);
   font-family: inherit;
   font-weight: 300;
+}
+
+.background-logo {
+  position: absolute;
+  top: 70%;
+  right: -6rem;
+  height: 60vh;
 }
 </style>

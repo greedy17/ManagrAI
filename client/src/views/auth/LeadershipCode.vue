@@ -6,8 +6,7 @@
       Please enter your Leadership code provided by the managr team.
     </div>
     <div class="input__container">
-      Enter Code
-      <input v-model="code" type="text" />
+      Enter Code <input v-model="code" type="text" class="leadership-code__input" />
     </div>
     <button type="submit" @click="handleApplyCode">Apply Code</button>
   </div>
@@ -17,7 +16,7 @@
 import User from '@/services/users'
 
 export default {
-  name: 'Leadership Code',
+  name: 'LeadershipCode',
   components: {},
   data() {
     const LEADERSHIP_CODE = 'M@n@gr!100'
@@ -69,9 +68,10 @@ export default {
   }
 
   &__input {
-    @include input-field();
+    @include input-field-white();
     width: 19rem;
-    height: 1rem !important;
+    // height: 1rem !important;
+    // border: 2px solid red;
   }
 }
 
