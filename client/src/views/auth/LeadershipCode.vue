@@ -28,7 +28,7 @@ export default {
   methods: {
     handleApplyCode() {
       if (this.code === this.leadershipCode) {
-        this.$router.push({ name: 'Registration' })
+        this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
       } else {
         this.$Alert.alert({
           type: 'error',

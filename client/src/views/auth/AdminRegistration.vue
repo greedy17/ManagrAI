@@ -97,6 +97,16 @@ export default {
       reenterPassword: '',
     }
   },
+  created() {
+    const validCode = this.$route.params.validCode
+
+    if (!validCode) {
+      // redirects to enter code registration screen if they try to get there without putting in leaderrshop code
+      this.$router.push({
+        name: 'Register',
+      })
+    }
+  },
   methods: {
     onSelectRole(role) {
       this.registrationForm.field.role.value = role.key
@@ -139,7 +149,7 @@ export default {
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
 
-      this.$router.push({ name: 'Integrations' })
+      this.$router.push({ name: 'InviteUsers' })
     },
   },
 }

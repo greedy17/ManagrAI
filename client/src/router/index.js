@@ -7,8 +7,9 @@ import Auth from '@/services/auth'
 import Activation from '@/views/auth/Activation'
 import Login from '@/views/auth/Login'
 import Register from '@/views/auth/Register'
-import Registration from '@/views/auth/Registration'
+import AdminRegistration from '@/views/auth/AdminRegistration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
+import InviteUsers from '@/views/auth/InviteUsers'
 
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
@@ -36,19 +37,25 @@ export default new Router({
       component: Login,
     },
     {
-      path: '/register',
-      name: 'Registration',
-      component: Registration,
+      path: '/admin-registration',
+      name: 'AdminRegistration',
+      component: AdminRegistration,
     },
     {
-      path: '/leadership-code',
-      name: 'LeadershipCode',
+      path: '/register',
+      name: 'Register',
       component: LeadershipCode,
     },
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
       component: Activation,
+    },
+    {
+      path: '/invite-users',
+      name: 'InviteUsers',
+      component: InviteUsers,
+      beforeEnter: Auth.requireAuth,
     },
 
     {
