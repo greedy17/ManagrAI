@@ -43,7 +43,7 @@
       "reference_to_infos": [],
       "options": [
         { "label": "Great !", "value": "GREAT" },
-        { "label": "Not Well !", "value": "NOT_WELL" },
+        { "label": "Fine", "value": "FINE" },
         { "label": "Can't Tell !", "value": "CANT_TELL" }
       ],
       "is_public": true,
