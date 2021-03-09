@@ -450,10 +450,15 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
+    options = [
+        block_builders.option("Search", "SEARCH"),
+    ]
+    if context.get("resource") != sf_consts.RESOURCE_SYNC_LEAD:
+        options.append(block_builders.option("Search", "SEARCH"),)
     blocks = [
         block_builders.static_select(
             "Would you like to create a new item or search for an existing option",
-            [block_builders.option("Search", "SEARCH"), block_builders.option("Create", "CREATE"),],
+            options,
             # action_id=f"{slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH}?w={context.get('w')}&resource={context.get('resource')}",
             block_id="create_or_search",
             action_id="selected_option",

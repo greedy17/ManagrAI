@@ -14,7 +14,7 @@ from managr.core.calendars import calendar_participants_from_zoom_meeting
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact, Account
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -362,6 +362,13 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = "Account"
+                else:
+                    lead = Lead.objects.filter(
+                        email__in=participant_emails, owner__organization__id=user.organization.id
+                    )
+                    if lead:
+                        meeting_resource_data["resource_id"] = str(lead.id)
+                        meeting_resource_data["resource_type"] = "Lead"
 
             meeting.participants = meeting_contacts
             serializer = ZoomMeetingSerializer(data=meeting.as_dict)
