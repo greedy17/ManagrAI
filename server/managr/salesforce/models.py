@@ -17,6 +17,7 @@ from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
 
+
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import TokenExpired
 from . import constants as sf_consts
@@ -332,6 +333,15 @@ class SFSyncOperation(TimeStampModel):
     )
 
     @property
+    def status(self):
+        if not len(self.operations_list):
+            return "No Operations"
+        if len(self.operations_list) and not len(self.operations):
+            return "Not Started"
+        else:
+            return "In Progress"
+
+    @property
     def failed_count(self):
         return len(self.failed_operations)
 
@@ -351,7 +361,7 @@ class SFSyncOperation(TimeStampModel):
         if len(self.operations):
             return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
 
-        return 100
+        return 0
 
     @property
     def in_progress(self):
@@ -359,7 +369,7 @@ class SFSyncOperation(TimeStampModel):
         return self.progress != 100
 
     def __str__(self):
-        return f"{self.user.email} tasks {self.progress}% complete"
+        return f"{self.user.email} status: {self.status} tasks {self.progress}% complete"
 
     def remove_from_operations_list(self, operations=[]):
         """ This method is used to remove operations (array) from the NEXT sync """
@@ -402,9 +412,6 @@ class SFSyncOperation(TimeStampModel):
         scheduled_time = timezone.now() + timezone.timedelta(minutes=2.5)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
-
-        def delete(*args, **kwargs):
-            return super().delete(*args, **kwargs)
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
@@ -482,32 +489,47 @@ class MeetingWorkflow(SFSyncOperation):
     @property
     def operations_map(self):
         from managr.salesforce.background import (
-            emit_sync_sobject_fields,
-            emit_sync_sobject_validations,
-            emit_generate_form_template,
-            emit_sync_sobject_picklist,
+            emit_add_call_to_sf,
+            emit_update_contacts,
+            emit_create_new_contacts,
+            emit_sf_update_resource_from_meeting,
         )
 
         return {
-            sf_consts.SALESFORCE_OBJECT_FIELDS: emit_sync_sobject_fields,
-            sf_consts.SALESFORCE_VALIDATIONS: emit_sync_sobject_validations,
-            sf_consts.SALESFORCE_PICKLIST_VALUES: emit_sync_sobject_picklist,
+            sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
+            sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
+            sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
+            sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
         }
 
     def begin_tasks(self, attempts=1):
-        return
 
-    def begin_communication(self):
-        from managr.zoom.background import emit_kick_off_slack_interaction
+        for op in self.operations_list:
+            # split the operation to get opp and params
+            operation_name, param = op.split(".")
+            operation = self.operations_map.get(operation_name)
+            params = param.split(",")
+
+            # determine the operation and its param and get event emitter
+            t = operation(params[0], params[1:])
+            if self.operations:
+                self.operations.append(str(t.task_hash))
+            else:
+                self.operations = [str(t.task_hash)]
+            self.save()
+
+    def begin_communication(self, now=False):
+        from managr.zoom.background import (
+            emit_kick_off_slack_interaction,
+            _kick_off_slack_interaction,
+        )
 
         if self.resource:
-            self.add_form(
-                self.resource_type, slack_consts.FORM_TYPE_MEETING_REVIEW
-            )  # maybe add the generated form instead (if this is too slow and slack times out)
-
-        emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
-
-        # always start this interaction by appending the meeting review form for the meeting resource
+            self.add_form(self.resource_type, slack_consts.FORM_TYPE_MEETING_REVIEW)
+        if not now:
+            return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
+            # used for testing a fake meeting
+        return _kick_off_slack_interaction.now(str(self.user.id), str(self.id))
 
     def add_form(self, resource, form_type, **kwargs):
         """ 
@@ -536,6 +558,27 @@ class MeetingWorkflow(SFSyncOperation):
     def remove_form(self):
         """ helper method to remove for the review """
         return
+
+    def save(self, *args, **kwargs):
+        """ sets the loading to done """
+        if self.progress == 100 and self.slack_interaction:
+            from managr.slack.helpers import requests as slack_requests
+            from managr.slack.helpers.block_sets import get_block_set
+
+            slack_access_token = self.user.organization.slack_integration.access_token
+            ts, channel = self.slack_interaction.split("|")
+            res = slack_requests.update_channel_message(
+                channel,
+                ts,
+                slack_access_token,
+                block_set=[
+                    *get_block_set("final_meeting_interaction", {"w": str(self.id)}),
+                    get_block_set("create_meeting_task", {"w": str(self.id)}),
+                ],
+            ).json()
+
+            self.slack_interaction = f"{res['ts']}|{res['channel']}"
+        return super(MeetingWorkflow, self).save(*args, **kwargs)
 
 
 class SalesforceAuthAccount(TimeStampModel):

@@ -152,15 +152,32 @@ class Account(TimeStampModel, IntegrationModel):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.salesforce_account.object_fields.get("Account", {}).get(
-                "fields", {}
-            )
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Account"
+            ).values_list("api_name", flat=True)
             res = AccountAdapter.update_account(
                 data, token, base_url, self.integration_id, object_fields
             )
             self.is_stale = True
             self.save()
             return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Account"
+            ).values_list("api_name", flat=True)
+            res = AccountAdapter.create_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            from managr.salesforce.routes import routes
+
+            serializer = routes["Account"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
 
 
 class ContactQuerySet(models.QuerySet):

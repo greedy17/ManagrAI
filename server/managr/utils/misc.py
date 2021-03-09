@@ -1,5 +1,7 @@
 import random
 import re
+import boto3
+
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
@@ -141,3 +143,11 @@ def query_debugger(func):
 
     return inner_func
 
+
+def upload_to_bucket(filename, bucket_name, access_key_id, secret):
+    AWS_ACCESS_KEY_ID = access_key_id
+    AWS_SECRET_ACCESS_KEY = secret
+    s3 = boto3.client(
+        "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
+    s3.upload_file(filename, bucket_name, filename)

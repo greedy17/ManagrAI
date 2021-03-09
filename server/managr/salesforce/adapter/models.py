@@ -461,7 +461,7 @@ class AccountAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create_account(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, custom_base, object_fields, user_id):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
         )
@@ -807,7 +807,7 @@ class OpportunityAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create_opportunity(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, custom_base, object_fields, user_id):
         logger.info(f"UNFORMATED DATA: {data}")
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)

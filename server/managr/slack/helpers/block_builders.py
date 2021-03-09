@@ -164,18 +164,6 @@ def datepicker(
     return block
 
 
-{
-    "type": "section",
-    "text": {"type": "mrkdwn", "text": "test"},
-    "block_id": "will work",
-    "accessory": {
-        "type": "button",
-        "text": {"type": "plain_text", "text": "sure will"},
-        "value": "cool",
-    },
-}
-
-
 def section_with_button_block(
     button_label,
     button_value,
@@ -254,4 +242,28 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
         block["accessory"]["initial_options"] = initial_options
 
     return block
+
+
+def section_with_accessory_block(
+    section_text, accessory, text_type="mrkdwn", block_id=None,
+):
+    """ Builds a section with an accessory (image/button) """
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": text_type, "text": section_text},
+        "block_id": block_id,
+        "accessory": accessory,
+    }
+
+    return block
+
+
+def simple_image_block(url, alt_text):
+    return {
+        "type": "image",
+        "image_url": url,
+        "alt_text": alt_text,
+    }
 

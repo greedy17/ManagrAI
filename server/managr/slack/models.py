@@ -221,7 +221,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         )
         return user_fields
 
-    def generate_form(self):
+    def generate_form(self, data=None):
         """ 
         Collects all the fields 
         and creates them into an object 
@@ -229,30 +229,35 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         slack blocks 
         If a resource is available it's current values
         will be passed in as values
+        ## Optionally pass in data to override instance data
         """
         # get all fields that belong to the user based on the template fields
         user_fields = self.get_user_fields()
-        if self.template.form_type != slack_consts.FORM_TYPE_CREATE and self.resource_id:
-            if not self.resource_object:
-                return logger.exception(
-                    f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
-                )
-            model_data = self.resource_object.secondary_data
-
-            form_blocks = []
-            for field in user_fields:
-                val = model_data.get(field.api_name)
-                if field.is_public:
-                    # pass in user as a kwarg
-                    form_blocks.append(
-                        field.to_slack_field(val, user=self.user, resource=self.resource_type,)
-                    )
-                else:
-                    form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
-
-            return form_blocks
+        form_values = {}
+        if data:
+            form_values = data
         else:
-            return [field.to_slack_field() for field in user_fields]
+            if self.template.form_type != slack_consts.FORM_TYPE_CREATE:
+                if self.resource_id:
+                    if not self.resource_object:
+                        return logger.exception(
+                            f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
+                        )
+                else:
+                    form_values = self.resource_object.secondary_data
+
+        form_blocks = []
+        for field in user_fields:
+            val = form_values.get(field.api_name, None)
+            if field.is_public:
+                # pass in user as a kwarg
+                form_blocks.append(
+                    field.to_slack_field(val, user=self.user, resource=self.resource_type,)
+                )
+            else:
+                form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
+
+        return form_blocks
 
     def get_values(self, state):
         vals = dict()

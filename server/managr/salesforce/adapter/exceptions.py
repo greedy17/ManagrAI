@@ -18,7 +18,13 @@ class ApiRateLimitExceeded(Exception):
 
 
 class FieldValidationError(Exception):
-    def __init(self, message="Token Expired"):
+    def __init(self, message="Validation Error on Fields"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class RequiredFieldError(Exception):
+    def __init(self, message="Invalid/Missing Required Field"):
         self.message = message
         super().__init__(self.message)
 
@@ -50,8 +56,10 @@ class CustomAPIException:
             raise TokenExpired()
         elif self.code == 403:
             raise ApiRateLimitExceeded()
-        elif self.code == 400:
+        elif self.code == 400 and self.param == "FIELD_CUSTOM_VALIDATION_EXCEPTION":
             raise FieldValidationError(self.message)
+        elif self.code == 400 and self.param == "REQUIRED_FIELD_MISSING":
+            raise RequiredFieldError(self.message)
         else:
             raise ValidationError(
                 {"detail": {"key": self.code, "message": self.message, "field": self.param,}}

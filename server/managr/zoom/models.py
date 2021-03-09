@@ -276,6 +276,26 @@ class ZoomMeeting(TimeStampModel):
         return "This Meeting has not been scored yet"
 
     def delete(self, *args, **kwargs):
+        if hasattr(self, "workflow"):
+            if self.workflow.slack_interaction and len(self.workflow.slack_interaction):
+                from managr.slack.helpers import block_builders
+                from managr.slack.helpers import requests as slack_requests
+                from managr.slack.helpers.block_sets import get_block_set
+
+                slack_access_token = self.workflow.user.organization.slack_integration.access_token
+                ts, channel = self.workflow.slack_interaction.split("|")
+                res = slack_requests.update_channel_message(
+                    channel,
+                    ts,
+                    slack_access_token,
+                    block_set=[
+                        block_builders.simple_section(
+                            ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                        )
+                    ],
+                ).json()
+
+                self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(ZoomMeeting, self).delete(*args, **kwargs)
 
 
@@ -334,59 +354,10 @@ class MeetingReview(TimeStampModel):
         max_length=500,
     )
 
-    def get_event_data_salesforce(self):
-        user_timezone = self.meeting.zoom_account.timezone
-        start_time = self.meeting.start_time
-        end_time = self.meeting.end_time
-        formatted_start = (
-            datetime.strftime(
-                start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-            )
-            if start_time
-            else start_time
-        )
-        formatted_end = (
-            datetime.strftime(
-                end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-            )
-            if end_time
-            else end_time
-        )
-
-        data = dict(
-            Subject=f"Meeting - {self.meeting_type}",
-            Description=f"{self.meeting_comments}, this meeting started on {formatted_start} and ended on {formatted_end} ",
-            WhatId=self.meeting.opportunity.integration_id
-            if self.meeting.meeting_resource == "Opportunity"
-            else self.meeting.linked_account.integration_id,
-            ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
-            Status="Completed",
-            TaskSubType="Call",
-        )
-        return data
-
     @property
     def meeting_resource(self):
         """ determines whether this is a meeting review for a meeting with an opp or an acct"""
-        return self.meeting.meeting_resource
-
-    @property
-    def as_sf_update(self):
-        """ return data as an sf updateable object """
-        data = dict()
-        standard_fields = zoom_consts.STANDARD_MEETING_FIELDS[self.meeting_resource]
-        for field in self.__dict__:
-            if field in standard_fields:
-                if field == "amount":
-                    data["amount"] = str(self.amount)
-                elif field == "close_date":
-                    data["close_date"] = self.close_date.strftime("%Y-%m-%d")
-                else:
-                    data[field] = self.__dict__[field]
-
-        if self.custom_data:
-            data = {**data, **self.custom_data}
-        return data
+        return self.meeting.workflow.meeting_resource
 
     @property
     def stage_progress(self):

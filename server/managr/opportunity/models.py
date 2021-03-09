@@ -152,9 +152,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.salesforce_account.object_fields.get("Opportunity", {}).get(
-                "fields", {}
-            )
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Opportunity"
+            ).values_list("api_name", flat=True)
             res = OpportunityAdapter.update_opportunity(
                 data, token, base_url, self.integration_id, object_fields
             )
@@ -162,17 +162,23 @@ class Opportunity(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
-    def create_in_salesforce(self, data=None):
+    def create_in_salesforce(self, data=None, user_id=None):
         """ when synchronous create in db first to be able to use immediately """
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
-        object_fields = self.owner.salesforce_account.object_fields
+        object_fields = self.owner.salesforce_account.object_fields.filter(
+            salesforce_object="Opportunity"
+        ).values_list("api_name", flat=True)
         if not data:
             data = self.adapter_class
-        res = OpportunityAdapter.create_opportunity(data, token, base_url, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+
+        res = OpportunityAdapter.create_opportunity(data, token, base_url, object_fields, user_id)
+        from managr.salesforce.routes import routes
+
+        serializer = routes["Opportunity"]["serializer"](data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer.instance
 
     def add_contact_role(self, access_token, base_url, contact_integration_id):
 

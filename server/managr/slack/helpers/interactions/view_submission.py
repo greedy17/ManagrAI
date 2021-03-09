@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 
 from managr.api.decorators import log_all_exceptions
-from managr.salesforce.adapter.exceptions import FieldValidationError
+from managr.salesforce.adapter.exceptions import FieldValidationError, RequiredFieldError
 from managr.organization.models import Organization
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting, MeetingReview
@@ -21,12 +21,11 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import action_with_params, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter
-from managr.salesforce.background import _process_update_opportunity
 from managr.zoom import constants as zoom_consts
 from managr.zoom.background import _save_meeting_review_data
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
-from managr.salesforce.background import emit_fake_event_end
+from managr.salesforce.background import _process_create_new_resource
 
 logger = logging.getLogger("managr")
 
@@ -73,26 +72,20 @@ def process_search_or_create_next_page(payload, context):
 
 
 @log_all_exceptions
-@processor(
-    required_context=["w", "original_message_channel", "original_message_timestamp",]
-)
-def process_next_page(payload, context):
+@processor(required_context=["w", "form_type"])
+def process_stage_next_page(payload, context):
     # get context
     block_set_context = {"w": context["w"]}
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
-    state = payload["view"]["state"]["values"]
+    state = view["state"]["values"]
 
-    review_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    review_form = workflow.forms.filter(template__form_type=context.get("form_type")).first()
     review_form.save_form(state)
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).all()
     if len(forms):
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
-
         next_blocks = []
         for form in forms:
             next_blocks.extend(form.generate_form())
@@ -101,20 +94,13 @@ def process_next_page(payload, context):
             "response_action": "push",
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "Updated view"},
+                "title": {"type": "plain_text", "text": "Stage Related Fields"},
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "blocks": next_blocks,
                 "private_metadata": view["private_metadata"],
-                "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+                "callback_id": context.get("callback_id"),
             },
         }
-        # access_token = workflow.user.organization.slack_integration.access_token
-        # res = slack_requests.generic_request(url, data, access_token=access_token)
-        # print(res.json())
-    # first save the data to the form
-    # check if there is a stage form to show
-    # update to save
-    # ts, channel = meeting.slack_interaction.split("|")
     return
 
 
@@ -129,17 +115,44 @@ def process_zoom_meeting_data(payload, context):
     slack_access_token = user.organization.slack_integration.access_token
     # get state - state contains the values based on the block_id
     state = payload["view"]["state"]["values"]
-    forms = workflow.forms.all().exclude(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW)
-    for form in forms:
+    # if we had a next page the form data for the review was already saved
+    forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+    if len(forms):
+        for form in forms:
+            form.save_form(state)
+    # otherwise we save the meeting review form
+    else:
+        form = workflow.forms.filter(
+            template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
+        ).first()
         form.save_form(state)
 
+    # emit all events
+    ops = [
+        # update
+        f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
+        # create call log
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+        # save meeting data
+    ]
+    if len(workflow.operations_list):
+        workflow.operations_list = [*workflow.operations_list, *ops]
+    else:
+        workflow.operations_list = ops
+
     ts, channel = workflow.slack_interaction.split("|")
+    block_set = [
+        get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+        get_block_set("create_meeting_task", {"w": str(workflow.id)}),
+    ]
+
     res = slack_requests.update_channel_message(
-        channel, ts, slack_access_token, block_set=get_block_set("loading"),
+        channel, ts, slack_access_token, block_set=block_set
     ).json()
 
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
+    workflow.begin_tasks()
 
     # use this for errors
     return {"response_action": "clear"}
@@ -164,11 +177,60 @@ def process_zoom_meeting_attach_resource(payload, context):
             "value"
         ]
         workflow.resource_type = meeting_resource
+        # update the forms to the correct type
+
         workflow.save()
 
+    elif selected_action == "CREATE":
+        create_forms = workflow.forms.filter(
+            template__form_type__in=[
+                slack_const.FORM_TYPE_CREATE,
+                slack_const.FORM_TYPE_STAGE_GATING,
+            ]
+        )
+        for form in create_forms:
+            form.save_form(state)
+        try:
+            resource = _process_create_new_resource.now(context.get("w"), meeting_resource)
+        except FieldValidationError as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occured"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except RequiredFieldError as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        workflow.resource_id = str(resource.id)
+        workflow.resource_type = meeting_resource
+
+    workflow.save()
+
     ts, channel = workflow.slack_interaction.split("|")
-    # clear old forms
-    workflow.forms.all().delete()
+    # clear old forms (except contact forms)
+
+    workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
     workflow.add_form(
         meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
     )
@@ -187,43 +249,145 @@ def process_zoom_meeting_attach_resource(payload, context):
 @processor()
 def process_update_meeting_contact(payload, context):
     state = payload["view"]["state"]["values"]
-    data = {}
-    for k, v in state.items():
-        data[k] = v["plain_input"]["value"]
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    index = int(context.get("contact_index"))
-    participant = meeting.participants[index]
-    integration_id = participant.get("integration_id")
-    instance_url = meeting.zoom_account.user.salesforce_account.instance_url
-    access_token = meeting.zoom_account.user.salesforce_account.access_token
-    object_fields = meeting.zoom_account.user.salesforce_account.object_fields
-
-    if participant.get("integration_id", None):
-        ContactAdapter.update_contact(
-            data,
-            access_token,
-            instance_url,
-            integration_id,
-            object_fields.get("Contact", {}).get("fields", {}),
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    contact = dict(
+        *filter(
+            lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
+            workflow.meeting.participants,
         )
-    else:
-        data["external_owner"] = meeting.zoom_account.user.salesforce_account.salesforce_id
-        # if the meeting type is account add the contact account manually
-        if meeting.meeting_resource == slack_const.FORM_RESOURCE_ACCOUNT:
-            data["external_account"] = meeting.linked_account.integration_id
-        res = ContactAdapter.create_new_contact(
-            data, access_token, instance_url, object_fields.get("Contact", {}).get("fields", {}),
-        )
-        participant["integration_id"] = res["id"]
-        participant["integration_source"] = "SALESFORCE"
+    )
 
-        # if the meeting type is not an account we need to add a contact role
-        if meeting.meeting_resource == slack_const.FORM_RESOURCE_OPPORTUNITY:
-            meeting.opportunity.add_contact_role(
-                access_token, instance_url, participant["integration_id"],
-            )
-    meeting.participants[index] = {**meeting.participants[index], "secondary_data": data}
-    meeting.save()
+    form = workflow.forms.get(id=contact["_form"])
+    form.save_form(state)
+    # reconstruct the current data with the updated data
+    adapter = ContactAdapter.from_api(
+        {**contact.get("secondary_data", {}), **form.saved_data}, str(workflow.user_id)
+    )
+    new_contact = {
+        **contact,
+        **adapter.as_dict,
+        "id": contact.get("id", None),
+        "__has_changes": True,
+    }
+    # replace the contact in the participants list
+    part_index = None
+    for index, participant in enumerate(workflow.meeting.participants):
+        if participant["_tracking_id"] == new_contact["_tracking_id"]:
+            part_index = index
+            break
+    workflow.meeting.participants = [
+        *workflow.meeting.participants[:part_index],
+        new_contact,
+        *workflow.meeting.participants[part_index + 1 :],
+    ]
+    workflow.meeting.save()
+    action = slack_const.VIEWS_UPDATE
+    url = slack_const.SLACK_API_ROOT + action
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+
+    org = workflow.user.organization
+
+    access_token = org.slack_integration.access_token
+    blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
+
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+            "title": {"type": "plain_text", "text": "Contacts"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+        },
+    }
+
+    # res = slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
+@processor()
+def process_edit_meeting_contact(payload, context):
+    # update the old view to change edit contact to submit again
+    action = slack_const.VIEWS_UPDATE
+    url = slack_const.SLACK_API_ROOT + action
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    meeting = workflow.meeting
+    org = workflow.user.organization
+
+    access_token = org.slack_integration.access_token
+    blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
+
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
+            "title": {"type": "plain_text", "text": "Contacts"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+            "private_metadata": payload["view"]["private_metadata"],
+        },
+    }
+
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+
+    return {
+        "response_action": "push",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Updated view"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": get_block_set("edit_meeting_contacts", context,),
+            "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
+            "private_metadata": json.dumps(context),
+        },
+    }
+
+
+@processor()
+def process_save_contact_data(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    # update the old view to change edit contact to submit again
+
+    state = payload["view"]["state"]["values"]
+    ## save the checked contacts to the operations list
+    create = []
+    update = []
+    for val in state.values():
+        if val.get("CREATE") and len(val["CREATE"]["selected_options"]):
+            create.append(val["CREATE"]["selected_options"][0]["value"])
+        elif val.get("UPDATE") and len(val["UPDATE"]["selected_options"]):
+            update.append(val["UPDATE"]["selected_options"][0]["value"])
+
+    if not len(workflow.operations_list):
+        workflow.operations_list = []
+    if len(create):
+
+        workflow.operations_list = [
+            *workflow.operations_list,
+            *[
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{form}"
+                for form in create
+            ],
+        ]
+
+    if len(update):
+        workflow.operations_list = [
+            *workflow.operations_list,
+            *[
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{form}"
+                for form in update
+            ],
+        ]
+
+    workflow.save()
+
     return
 
 
@@ -234,9 +398,11 @@ def handle_view_submission(payload):
     switcher = {
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_zoom_meeting_attach_resource,
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
-        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_update_meeting_contact,
-        slack_const.ZOOM_MEETING__PROCESS_NEXT_PAGE: process_next_page,
+        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
+        slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE: process_stage_next_page,
         slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE: process_search_or_create_next_page,
+        slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA: process_update_meeting_contact,
+        slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

@@ -1,6 +1,7 @@
 import pdb
-from django.db.models import Q
+import logging
 
+from django.db.models import Q
 from managr.opportunity import constants as opp_consts
 from managr.organization import constants as org_consts
 from managr.slack import constants as slack_const
@@ -12,6 +13,9 @@ from managr.organization.models import Organization, Account, ActionChoice
 
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
+from managr.salesforce.adapter.exceptions import TokenExpired
+
+logger = logging.getLogger("managr")
 
 
 @processor(required_context=["o"])
@@ -71,7 +75,19 @@ def process_get_external_relationship_options(payload, context):
     relationship = context.get("relationship")
     fields = context.get("fields").split(",")
     value = payload["value"]
-    res = sf_adapter.list_relationship_data(relationship, fields, value)
+    attempts = 1
+    while True:
+        try:
+            res = sf_adapter.list_relationship_data(relationship, fields, value)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to retrieve reference data for {relationship} data for user {str(user.id)} after {attempts} tries"
+                )
+            else:
+                sf_account.regenerate_token()
+                attempts += 1
 
     return {
         "options": list(
