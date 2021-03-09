@@ -70,6 +70,8 @@ body {
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
+
+  position: relative;
 }
 
 #app {
@@ -77,7 +79,6 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  position: relative;
 }
 
 .page-content {
@@ -100,8 +101,10 @@ body {
 
 .background-logo {
   position: absolute;
-  top: 70%;
+  top: 40%;
   right: -6rem;
   height: 60vh;
+  width: 50vw;
+  z-index: -1;
 }
 </style>

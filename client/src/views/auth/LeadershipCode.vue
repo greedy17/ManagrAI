@@ -28,7 +28,7 @@ export default {
   methods: {
     handleApplyCode() {
       if (this.code === this.leadershipCode) {
-        this.$router.push({ name: 'Register' })
+        this.$router.push({ name: 'Registration' })
       } else {
         this.$Alert.alert({
           type: 'error',
@@ -53,8 +53,7 @@ export default {
   justify-content: center;
   align-items: center;
   text-align: center;
-  background-color: white;
-
+  background-color: transparent;
   &__logo {
     height: 5rem;
   }
@@ -69,9 +68,6 @@ export default {
 
   &__input {
     @include input-field-white();
-    width: 19rem;
-    // height: 1rem !important;
-    // border: 2px solid red;
   }
 }
 

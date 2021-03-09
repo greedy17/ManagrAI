@@ -1,51 +1,75 @@
 <template>
   <div class="registration">
     <img class="registration__logo" src="@/assets/images/logo.png" />
-    <h2>Welcome</h2>
+    <h2>Register</h2>
 
     <div class="registration__text">
-      Please enter your Leadership code provided by the managr team.
+      Create and customize your Managr account within minutes.
     </div>
-    <form @submit.prevent="onSubmit">
-      <h2>Create Account</h2>
-
-      <div>
-        <GoogleButton />
+    <!-- <form @submit.prevent="onSubmit"> -->
+    <div class="registration__form">
+      <div class="registration__input__label">
+        Your Name
+        <input
+          v-model="registrationForm.field.fullName.value"
+          type="text"
+          class="registration__input"
+        />
+      </div>
+      <div class="registration__input__label">
+        Your Email
+        <input
+          v-model="registrationForm.field.email.value"
+          type="text"
+          class="registration__input"
+        />
       </div>
 
-      <div class="divider"></div>
+      <div class="registration__input__label">
+        Set a Password
+        <input
+          v-model="registrationForm.field.password.value"
+          type="password"
+          class="registration__input"
+        />
+      </div>
 
-      <input v-model="registrationForm.field.fullName.value" type="text" placeholder="Your Name" />
-      <input v-model="registrationForm.field.email.value" type="text" placeholder="Your Email" />
-      <input
-        v-model="registrationForm.field.password.value"
-        type="password"
-        placeholder="Set a Password"
-      />
-      <input
-        v-model="registrationForm.field.organizationName.value"
-        type="text"
-        placeholder="Company"
-      />
+      <div class="registration__input__label">
+        Re-enter Password
+        <input v-model="reenterPassword" type="password" class="registration__input" />
+      </div>
 
-      <div style="margin-top: 0.5rem;">
-        <TNDropdown
+      <div class="registration__input__label">
+        Company
+        <input
+          v-model="registrationForm.field.organizationName.value"
+          type="text"
+          class="registration__input"
+        />
+      </div>
+
+      <div class="registration__input__label">
+        Role
+        <managrDropdown
           :options="User.roles.ROLE_CHOICES"
           placeholder="Your Role"
           @selected="onSelectRole"
         />
       </div>
+      <div class="registration__privacy">
+        By clicking Work With Managr, I agree to the <a href="">Terms of Service</a> and
+        <a href="">Privacy Policy</a>
+      </div>
 
-      <!-- TODO: Use LoadingSpinnerButton and indicate when working -->
-      <button type="submit">Submit</button>
-      <!-- END TODO -->
+      <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
 
       <div style="margin-top: 1rem">
         <router-link :to="{ name: 'Login' }">
-          Have an account? Sign In
+          Back to Login
         </router-link>
       </div>
-    </form>
+      <!-- </form> -->
+    </div>
   </div>
 </template>
 
@@ -54,18 +78,23 @@ import User, { UserRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
 import TNDropdown from '@/components/TNDropdown'
+import managrDropdown from '@/components/managrDropdown'
+import Button from '@thinknimble/button'
 
 export default {
-  name: 'Register',
+  name: 'Registration',
   components: {
     GoogleButton,
     TNDropdown,
+    managrDropdown,
+    Button,
   },
   data() {
     return {
       User,
       submitting: false,
       registrationForm: new UserRegistrationForm(),
+      reenterPassword: '',
     }
   },
   methods: {
@@ -79,6 +108,14 @@ export default {
       // Do not continue if the form has errors
       if (this.registrationForm.errors.length > 0) {
         this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
+        return
+      }
+
+      if (this.registrationForm.field.password.value !== this.reenterPassword) {
+        this.$Alert.alert({
+          type: 'error',
+          message: 'Please make sure password and re-entered password match.',
+        })
         return
       }
 
@@ -121,7 +158,7 @@ export default {
   justify-content: center;
   max-width: 24rem;
   margin: 0 auto;
-  background-color: white;
+
   &__logo {
     height: 5rem;
     object-fit: contain;
@@ -132,6 +169,24 @@ export default {
     width: 100%;
     max-width: 20rem;
     margin-bottom: 4rem;
+    text-align: center;
+  }
+  &__input {
+    @include input-field-white();
+  }
+  &__input__label {
+    font-size: 14px;
+  }
+  &__privacy {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  &__button {
+    @include primary-button();
+    width: 19rem;
+    border-radius: 3px;
+    margin-top: 1rem;
   }
 }
 
@@ -157,8 +212,8 @@ h2 {
   text-align: center;
 }
 
-form {
-  background-color: $white;
+.registration__form {
+  background-color: transparent !important;
   display: flex;
   flex-flow: column;
   align-items: center;
