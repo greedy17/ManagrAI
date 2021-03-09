@@ -243,8 +243,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         return logger.exception(
                             f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
                         )
-                else:
                     form_values = self.resource_object.secondary_data
+                else:
+                    form_values = {}
 
         form_blocks = []
         for field in user_fields:
