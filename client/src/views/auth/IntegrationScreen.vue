@@ -136,8 +136,8 @@
       text="Slack Form Builder"
     ></PulseLoadingSpinnerButton>
     <div
-      @click="goToSlackFormBuilder"
-      class="slack-button slack-button--disabled"
+      v-if="!hasSalesforceIntegration"
+      class="slack-button--disabled"
       text="Slack Form Builder"
     >Slack Form Builder</div>
     <div
@@ -345,9 +345,13 @@ export default {
   width: 19rem;
   margin: 6rem 0 5rem 0;
 
-  &__disabled {
-    background-color: gray;
+  &--disabled {
+    background-color: #{$gray} !important;
+    height: 2.5rem;
+    width: 19rem;
+    margin: 6rem 0 5rem 0;
     @include secondary-button();
+    cursor: default !important;
   }
 }
 
