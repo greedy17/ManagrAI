@@ -53,7 +53,7 @@
           />
         </div>
 
-        <button type="submit">Invite</button>
+        <Button class="invite-button" text="Invite" :loading="loading" @click="handleInvite"></Button>
         <div class="cancel-button" @click="handleCancel">Cancel</div>
       </form>
       <div v-if="success" class="success-prompt">
@@ -100,12 +100,14 @@ import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Pagination from '@/services/pagination'
 import Modal from '../../../components/Modal'
+import Button from '@thinknimble/button'
 
 export default {
   name: 'Invite',
   components: {
     DropDownSelect,
     Modal,
+    Button,
   },
   props: {
     inviteOpen: {
@@ -134,22 +136,28 @@ export default {
       team: CollectionManager.create({ ModelClass: User }),
 
       user: null,
+      loading: false,
     }
   },
   watch: {},
   async created() {
-    this.user = this.$store.state.user
-    if (this.isStaff) {
-      await this.organizations.refresh()
-    } else {
-      this.organization = this.$store.state.user.organization
-    }
-
-    this.team.refresh()
+    this.refresh()
   },
 
   methods: {
+    async refresh() {
+      this.user = this.$store.state.user
+      if (this.isStaff) {
+        await this.organizations.refresh()
+      } else {
+        this.organization = this.$store.state.user.organization
+      }
+
+      this.team.refresh()
+    },
+
     handleCancel() {
+      this.refresh()
       this.$emit('cancel')
     },
     handleInvite() {
@@ -164,6 +172,8 @@ export default {
       if (!this.isFormValid) {
         return
       }
+
+      this.loading = true
 
       let invitePromise = User.api.invite(this.email, this.selectedUserType, this.organization)
 
@@ -183,7 +193,8 @@ export default {
             this.errors = { 400: true }
           }
         })
-      this.team.refresh()
+      this.refresh()
+      this.loading = false
     },
     clientSideValidations() {
       let formErrors = {
@@ -213,6 +224,8 @@ export default {
       this.isIntegrationAccount = false
       this.organization = null
       this.selectedUserType = User.USER_TYPE_REP
+
+      this.refresh()
     },
   },
   computed: {
@@ -290,6 +303,14 @@ form,
   height: auto;
 }
 
+.invite-button {
+  @include primary-button();
+  margin-top: 1.25rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
+}
+
 button {
   @include primary-button();
   margin-top: 1.25rem;
@@ -362,10 +383,13 @@ button {
     &__container {
       width: 100%;
       display: flex;
+      margin-bottom: 0.5rem;
     }
 
     &__item {
-      flex: 1;
+      width: 33%;
+
+      overflow-wrap: break-word;
     }
   }
 
