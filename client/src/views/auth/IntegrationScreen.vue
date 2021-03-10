@@ -130,10 +130,16 @@
     </div>
 
     <PulseLoadingSpinnerButton
+      v-if="hasSalesforceIntegration"
       @click="goToSlackFormBuilder"
       class="slack-button"
       text="Slack Form Builder"
     ></PulseLoadingSpinnerButton>
+    <div
+      @click="goToSlackFormBuilder"
+      class="slack-button slack-button--disabled"
+      text="Slack Form Builder"
+    >Slack Form Builder</div>
     <div
       class="privacy"
     >We take your security and privacy very seriously. Your data is encrypted, and not being stored by managr.</div>
@@ -162,6 +168,9 @@ export default {
     }
   },
   methods: {
+    goToSlackFormBuilder() {
+      this.$router.push({ name: 'SlackFormSettings' })
+    },
     async onGetAuthLink(integration) {
       this.generatingToken = true
       this.selectedIntegration = integration
@@ -311,6 +320,8 @@ export default {
     display: flex;
 
     align-items: center;
+
+    height: 5rem;
   }
 
   &__title {
@@ -333,6 +344,11 @@ export default {
   height: 2.5rem;
   width: 19rem;
   margin: 6rem 0 5rem 0;
+
+  &__disabled {
+    background-color: gray;
+    @include secondary-button();
+  }
 }
 
 .privacy {

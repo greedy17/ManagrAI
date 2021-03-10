@@ -16,6 +16,7 @@ import IntegrationScreen from '@/views/auth/IntegrationScreen'
 import Settings from '@/views/settings/Settings'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
+import SlackFormSettings from '../views/settings/SlackFormSettings'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -62,21 +63,19 @@ export default new Router({
       name: 'Integrations',
       component: IntegrationScreen,
     },
+    {
+      path: '/forms',
+      component: SlackFormSettings,
+
+      beforeEnter: Auth.requireAuth,
+      name: 'SlackFormSettings',
+    },
 
     {
       path: '/settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
       children: [
-        // {
-        //   path: 'integrations',
-        //   name: 'Integrations',
-        //   components: {
-        //     'user-settings': () =>
-        //       import(/* webpackChunkName: "settings" */ '../views/Integrations'),
-        //   },
-        // },
-
         {
           path: '',
           name: 'Profile',
@@ -112,12 +111,6 @@ export default new Router({
     //   component: Styles,
     //   beforeEnter: Auth.requireAuth,
     // },
-    {
-      path: '/forms',
-      component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/SlackFormSettings'),
-      beforeEnter: Auth.requireAuth,
-      name: 'SlackFormSettings',
-    },
+    // {
   ],
 })
