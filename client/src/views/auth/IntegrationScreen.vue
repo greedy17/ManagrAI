@@ -1,6 +1,9 @@
 <template>
   <div class="integrations">
-    <h2>Integrations</h2>
+    <h2>Integrate your apps</h2>
+    <div
+      class="integrations__subtitle"
+    >Connect with the apps below to sync your sales data for managr to use.</div>
 
     <div class="integrations__cards">
       <div class="card">
@@ -125,6 +128,15 @@
         <p class="card-text">Coming Soon...</p>
       </div>
     </div>
+
+    <PulseLoadingSpinnerButton
+      @click="goToSlackFormBuilder"
+      class="slack-button"
+      text="Slack Form Builder"
+    ></PulseLoadingSpinnerButton>
+    <div
+      class="privacy"
+    >We take your security and privacy very seriously. Your data is encrypted, and not being stored by managr.</div>
   </div>
 </template>
 
@@ -271,11 +283,20 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/buttons';
 
 .integrations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   &__cards {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
+  }
+  &__subtitle {
+    font-size: 14px;
+    margin-bottom: 2rem;
   }
 }
 
@@ -305,5 +326,18 @@ export default {
   font-size: 1.1rem;
   color: $light-gray-blue;
   min-height: 4rem;
+}
+
+.slack-button {
+  @include primary-button();
+  height: 2.5rem;
+  width: 19rem;
+  margin: 6rem 0 5rem 0;
+}
+
+.privacy {
+  font-family: #{$bold-font-family};
+  font-size: 14px;
+  margin-bottom: 2rem;
 }
 </style>
