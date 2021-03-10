@@ -5,25 +5,25 @@
         <div class="errors">
           <!-- client side validations -->
 
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
-            Fields may not be blank.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch">
-            Fields must match.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
-            Must be a valid email address.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.invalidUserType">
-            Must be a valid user type
-          </div>
+          <div
+            v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank"
+          >Fields may not be blank.</div>
+          <div
+            v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch"
+          >Fields must match.</div>
+          <div
+            v-if="isFormValid !== null && !isFormValid && errors.invalidEmail"
+          >Must be a valid email address.</div>
+          <div
+            v-if="isFormValid !== null && !isFormValid && errors.invalidUserType"
+          >Must be a valid user type</div>
           <!-- server side validations -->
-          <div v-if="success !== null && !success && errors[500]">
-            Something went wrong. Please try again later.
-          </div>
-          <div v-if="success !== null && !success && errors[400]">
-            The provided email is associated with an existing account.
-          </div>
+          <div
+            v-if="success !== null && !success && errors[500]"
+          >Something went wrong. Please try again later.</div>
+          <div
+            v-if="success !== null && !success && errors[400]"
+          >The provided email is associated with an existing account.</div>
         </div>
         <div v-if="isStaff" class="group">
           <DropDownSelect
@@ -60,29 +60,34 @@
         <h2>Success</h2>
         <p>
           An invitation will be sent to:
-          <span :style="{ fontWeight: 'bold' }">{{ email }}</span
-          >.
+          <span :style="{ fontWeight: 'bold' }">{{ email }}</span>.
         </p>
         <button @click="resetData">Send Another</button>
+        <div class="cancel-button" @click="handleCancel">Close</div>
       </div>
     </Modal>
     <div class="invite-list__container">
       <div class="invite-list__title">Your Team</div>
-      <div class="invite-list__section__container " style="margin-bottom: 1.5rem">
+      <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
         <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
-        <div class="invite-list__section__item invite-list__status">
-          {{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}
-        </div>
+        <div
+          class="invite-list__section__item invite-list__status"
+        >{{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}</div>
         <div class="invite-list__section__item invite-list__status">Registered</div>
       </div>
-      <div v-for="member in team" :key="member.id" class="invite-list__section__container">
-        <div class="invite-list__section__item invite-list__name">{{ member.fullName }}</div>
-        <div class="invite-list__section__item invite-list__status">
-          {{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}
-        </div>
-        <div class="invite-list__section__item invite-list__status">
-          {{ member.email ? 'Registered' : 'Pending' }}
-        </div>
+      <div
+        v-for="member in team.list"
+        :key="member.id"
+        class="invite-list__section__container"
+        v-if="member.id !==user.id"
+      >
+        <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
+        <div
+          class="invite-list__section__item invite-list__status"
+        >{{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}</div>
+        <div
+          class="invite-list__section__item invite-list__status"
+        >{{ member.isActive ? 'Registered' : 'Pending' }}</div>
       </div>
     </div>
   </div>
@@ -93,6 +98,7 @@ import User from '@/services/users'
 import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
+import Pagination from '@/services/pagination'
 import Modal from '../../../components/Modal'
 
 export default {
@@ -124,11 +130,9 @@ export default {
         { key: 'Representative', value: User.types.REP },
       ],
       showInvited: true,
-      team: [
-        // need user call fixed so this can be live
-        { fullName: 'timmy jimmy', userLevel: 'REP', status: 'Pending' },
-        { fullName: 'Booby Flay', userLevel: 'REP', status: 'Pending' },
-      ],
+
+      team: CollectionManager.create({ ModelClass: User }),
+
       user: null,
     }
   },
@@ -141,13 +145,7 @@ export default {
       this.organization = this.$store.state.user.organization
     }
 
-    // const team = await User.api.list({}).then(res => {
-    //   // return res.results
-    //   console.log(res)
-    // })
-    // this.team = team
-
-    // console.log(team)
+    this.team.refresh()
   },
 
   methods: {
@@ -185,6 +183,7 @@ export default {
             this.errors = { 400: true }
           }
         })
+      this.team.refresh()
     },
     clientSideValidations() {
       let formErrors = {
@@ -256,6 +255,8 @@ export default {
   flex-flow: row;
   justify-content: center;
   height: 80vh;
+
+  width: 80%;
 }
 
 h2 {
@@ -313,6 +314,7 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+
   > * {
   }
 
@@ -379,6 +381,7 @@ button {
 }
 .cancel-button {
   width: 19rem;
+  margin-top: 0.5rem;
   &:hover {
     cursor: pointer;
   }

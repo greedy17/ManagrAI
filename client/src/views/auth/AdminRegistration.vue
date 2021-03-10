@@ -3,9 +3,7 @@
     <img class="registration__logo" src="@/assets/images/logo.png" />
     <h2>Register</h2>
 
-    <div class="registration__text">
-      Create and customize your Managr account within minutes.
-    </div>
+    <div class="registration__text">Create and customize your Managr account within minutes.</div>
     <!-- <form @submit.prevent="onSubmit"> -->
     <div class="registration__form">
       <div class="registration__input__label">
@@ -36,7 +34,11 @@
 
       <div class="registration__input__label">
         Re-enter Password
-        <input v-model="reenterPassword" type="password" class="registration__input" />
+        <input
+          v-model="reenterPassword"
+          type="password"
+          class="registration__input"
+        />
       </div>
 
       <div class="registration__input__label">
@@ -57,16 +59,15 @@
         />
       </div>
       <div class="registration__privacy">
-        By clicking Work With Managr, I agree to the <a href="">Terms of Service</a> and
-        <a href="">Privacy Policy</a>
+        By clicking Sign Up, I agree to the
+        <a href>Terms of Service</a> and
+        <a href>Privacy Policy</a>
       </div>
 
       <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
 
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">
-          Back to Login
-        </router-link>
+        <router-link :to="{ name: 'Login' }">Back to Login</router-link>
       </div>
       <!-- </form> -->
     </div>

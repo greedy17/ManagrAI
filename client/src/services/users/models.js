@@ -1,4 +1,5 @@
 import Model, { fields } from '@thinknimble/tn-models'
+import { objectToCamelCase } from '@thinknimble/tn-utils'
 
 import UserAPI from './api'
 import { roles, types } from './constants'
@@ -33,6 +34,10 @@ export default class User extends Model {
   static hasZoomIntegration = new fields.Field({ readOnly: true })
   static hasSalesforceIntegration = new fields.Field({ readOnly: true })
   static userLevel = new fields.Field({})
+
+  static fromAPI(json = {}) {
+    return new User(objectToCamelCase(json))
+  }
 
   get emailConnected() {
     return this.nylas && this.nylasRef.accessToken
