@@ -116,7 +116,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
     objects = SObjectFieldQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.label} {self.salesforce_account}"
+        return f"{self.label} {self.salesforce_account} {self.salesforce_object}"
 
     @property
     def reference_display_label(self):
@@ -163,7 +163,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
             else:
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.relationship_name}&fields={','.join(self.display_value_keys)}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
             return block_builders.external_select(
                 f"*{self.reference_display_label}*",
                 action_query,
@@ -222,16 +222,22 @@ class SObjectField(TimeStampModel, IntegrationModel):
     @property
     def display_value_keys(self):
         """ helper getter to retrieve related name display keys """
-        if self.reference:
-            return list(
-                *map(
-                    lambda rel: rel["name_fields"],
-                    filter(
-                        lambda details: details["api_name"] == self.relationship_name,
-                        self.reference_to_infos,
-                    ),
-                )
+        if self.reference and len(self.reference_to_infos):
+            # some fields are referenced to completely different objects (as in ReportsTo)
+            items = dict(
+                *filter(
+                    lambda details: details["api_name"] == self.relationship_name,
+                    self.reference_to_infos,
+                ),
             )
+            if not len(items):
+
+                # arbitrarily chosing first option avaliable
+                items = self.reference_to_infos[0]
+            return items
+
+        elif self.reference and not len(self.reference_to_infos):
+            raise ValueError()
 
         return None
 
@@ -550,9 +556,11 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            return OrgCustomSlackFormInstance.objects.create(
-                user=self.user, template=template, resource_id=str(self.resource.id), workflow=self,
-            )
+            kwargs = dict(user=self.user, template=template, workflow=self,)
+            if self.resource:
+                kwargs["resource_id"] = str(self.resource.id)
+
+            return OrgCustomSlackFormInstance.objects.create(**kwargs)
         return None
 
     def remove_form(self):

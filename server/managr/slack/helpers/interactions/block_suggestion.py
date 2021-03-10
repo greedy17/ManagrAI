@@ -70,13 +70,13 @@ def process_get_local_resource_options(payload, context):
 @processor(required_context=["u", "relationship", "fields"])
 def process_get_external_relationship_options(payload, context):
     user = User.objects.get(pk=context["u"])
-    sf_account = user.salesforce_account
-    sf_adapter = sf_account.adapter_class
     relationship = context.get("relationship")
-    fields = context.get("fields").split(",")
+    fields = context.get("fields").split(",") if len(context.get("fields")) else []
     value = payload["value"]
     attempts = 1
     while True:
+        sf_account = user.salesforce_account
+        sf_adapter = sf_account.adapter_class
         try:
             res = sf_adapter.list_relationship_data(relationship, fields, value)
             break

@@ -118,6 +118,7 @@ export default {
   data() {
     return {
       allForms: [],
+      allFields: [],
       formsByType: [],
       isLoading: false,
       selectedTab: null,
@@ -136,6 +137,7 @@ export default {
     selectedFormType: {
       immediate: true,
       async handler(val, prev) {
+        console.log(val)
         if (val && val != prev && this.resource) {
           let fieldParam = {}
           if (val == this.CREATE) {
@@ -158,6 +160,7 @@ export default {
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.allFields = await this.listFields()
     } catch (error) {
       console.log(error)
     }
@@ -199,7 +202,7 @@ export default {
     async listPicklists(query_params = {}) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
-        console.log(res)
+
         this.stages = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
@@ -238,7 +241,7 @@ export default {
         }),
       ]
     },
-    toggleSelectedFormResource(resource) {
+    async toggleSelectedFormResource(resource) {
       /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
       if (this.resource && resource) {
         if (this.resource == resource) {

@@ -60,6 +60,10 @@ class CustomAPIException:
             raise FieldValidationError(self.message)
         elif self.code == 400 and self.param == "REQUIRED_FIELD_MISSING":
             raise RequiredFieldError(self.message)
+        elif self.code == 400 and self.param == "INVALID_FIELD":
+            # this error is a malformced query error we should log this (most likely from relationship feilds)
+            logger.error(f"An error occured with a query sent to SF {self.message}")
+            raise Api500Error()
         else:
             raise ValidationError(
                 {"detail": {"key": self.code, "message": self.message, "field": self.param,}}

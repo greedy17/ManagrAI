@@ -43,11 +43,6 @@ def _split_last_name(name):
             return "".join(name_parts[1:])
 
 
-def emit_push_meeting_contacts(meeting_id):
-    meeting_id = str(meeting_id)
-    return _push_meeting_contacts(meeting_id)
-
-
 def emit_refresh_zoom_token(zoom_account_id, schedule):
     # scedule can be seconds int or datetime string
     zoom_account_id = str(zoom_account_id)
@@ -82,119 +77,6 @@ def _refresh_zoom_token(zoom_account_id):
             f"Did not attempt refresh for user because token was revoked, {zoom_account.user.id}, {zoom_account.user.email}"
         )
     return
-
-
-@background(schedule=0)
-def _push_meeting_contacts(meeting_id):
-    """ After a meeting is reviewed this task will create contacts for whom we have and email or a lastName (required by sf)"""
-    # from managr.salesforce.background import emit_add_c_role_to_opp
-
-    meeting = ZoomMeeting.objects.filter(id=meeting_id).first()
-    if meeting:
-        # find contacts and push them to sf
-        contacts_not_in_sf = list(
-            filter(lambda contact: not contact["from_integration"], meeting.participants)
-        )
-        contacts_in_sf = list(
-            filter(lambda contact: contact["from_integration"], meeting.participants)
-        )
-        user = meeting.zoom_account.user
-        if hasattr(user, "salesforce_account"):
-            sf = user.salesforce_account
-            # add the contacts with the details to sf place the id int source and user
-            created_contacts = []
-            not_created_contacts = []
-            for index, contact in enumerate(contacts_not_in_sf):
-
-                if not contact["email"] or not len(contact["email"]):
-                    not_created_contacts.append(contact)
-                    continue
-                # if a contact doesnt have a last name append N/A so we can at least add them
-                last_name = contact.get("secondary_data", {}).get("LastName")
-                contact["secondary_data"]["LastName"] = last_name if last_name else "N/A"
-                if meeting.meeting_resource == "Account":
-                    # add the account external id
-                    contact["external_account"] = str(meeting.linked_account.integration_id)
-
-                contact = {**contact, **contact.get("secondary_data", {})}
-                del contact["secondary_data"]
-                while True:
-                    attempts = 0
-                    try:
-                        res = ContactAdapter.create_new_contact(
-                            contact,
-                            sf.access_token,
-                            sf.instance_url,
-                            sf.object_fields.get("Contact", {}).get("fields", {}),
-                        )
-                        contact["integration_id"] = res["id"]
-                        contact["integration_source"] = "SALESFORCE"
-                        # contact from integration source is still False
-                        # we use this to show a message that we created the contact
-                        created_contacts.append(contact)
-                        # meeting.participants
-                        break
-                    except TokenExpired:
-                        if attempts >= 5:
-                            logger.exception(
-                                f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-                            )
-                            break
-                        else:
-                            sf.regenerate_token()
-                            attempts += 1
-
-            if len(contacts_not_in_sf):
-                meeting.participants = [
-                    ### NOTE THE ORDER HERE IS IMPORTANT FOR REMOVING FROM MEETING
-                    *not_created_contacts,
-                    *created_contacts,
-                    *meeting.participants[len(contacts_not_in_sf) :],
-                ]
-                meeting.save()
-            if meeting.meeting_resource != "Account":
-                "Opportunities need to have a contact role"
-                for contact in [*created_contacts, *contacts_in_sf]:
-                    emit_add_c_role_to_opp(
-                        str(user.id), str(meeting.opportunity.id), contact["integration_id"]
-                    )
-
-            else:
-                for contact in contacts_in_sf:
-                    contact["account"] = str(meeting.linked_account.integration_id)
-                    contact["external_account"] = contact["account"]
-
-                    ContactAdapter.update_contact(
-                        {
-                            "account": contact["account"],
-                            "external_acount": contact["external_account"],
-                        },
-                        sf.access_token,
-                        sf.instance_url,
-                        contact["integration_id"],
-                        sf.object_fields.get("Contact", {}).get("fields", {}),
-                    )
-
-        block_set_context = {
-            "m": str(meeting.id),
-            "show_contacts": True,
-        }
-        ts, channel = workflow.slack_interaction.split("|")
-        res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set("final_meeting_interaction", context=block_set_context),
-        ).json()
-
-        meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-        meeting.save()
-
-    # emit event to create contact role
-    # save to the meeting
-    # update the slack message
-
-    return meeting
 
 
 @background(schedule=0)
