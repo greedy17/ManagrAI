@@ -45,6 +45,7 @@ def process_meeting_review(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
     view_id = res.json().get("view").get("id")
     workflow.slack_view = view_id
     # meeting.slack_form = view_id

@@ -44,6 +44,7 @@ def input_block(
         obj["element"]["min_length"] = min_length
 
     if initial_value:
+        initial_value = str(initial_value)
         obj["element"]["initial_value"] = initial_value
 
     return obj

@@ -17,7 +17,14 @@ export class CustomSlackForm extends Model {
   static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
   static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
 
-  static fromApi(obj) {
+  static fromAPI(obj) {
+    // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
+
+    let _refFields = obj['fields_ref'].map(ref => {
+      return { ...ref['field_ref'], order: ref['order'] }
+    })
+    obj['fields_ref'] = _refFields
+    console.log(_refFields)
     return CustomSlackForm.create(objectToCamelCase(obj))
   }
 }

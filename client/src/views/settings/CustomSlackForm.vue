@@ -165,7 +165,7 @@ export default {
       }
     },
     onAddField(field) {
-      this.addedFields.push(field)
+      this.addedFields.push({ ...field, order: this.addedFields.length })
     },
     onRemoveField(field) {
       // remove from the array if it exists
@@ -183,36 +183,36 @@ export default {
       }
 
       // Make a copy of fields and do the swap
-      const newFields = [...this.customSlackFormConfig]
-      newFields[index] = this.customSlackFormConfig[index - 1]
+      const newFields = [...this.addedFields]
+      newFields[index] = this.addedFields[index - 1]
       newFields[index - 1] = field
 
       // Apply update to the view model
-      this.customSlackFormConfig = newFields
+      this.addedFields = newFields
     },
     onMoveFieldDown(field, index) {
       // Disallow move if this is the last field
-      if (index + 1 === this.customSlackFormConfig.length) {
+      if (index + 1 === this.addedFields.length) {
         return
       }
 
       // Make a copy of slides and do the swap
-      const newFields = [...this.customSlackFormConfig]
-      newFields[index] = this.customSlackFormConfig[index + 1]
+      const newFields = [...this.addedFields]
+      newFields[index] = this.addedFields[index + 1]
       newFields[index + 1] = field
 
       // Apply update to the view model
-      this.customSlackFormConfig = newFields
+      this.addedFields = newFields
     },
     onSave() {
       this.savingForm = true
-      let fields = new Set([...this.currentFields, ...this.addedFields.map(f => f.id)])
+      let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
-
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
           fields: fields,
+          removedFields: this.removedFields,
         })
         .then(res => {
           this.$emit('update:selectedForm', res)

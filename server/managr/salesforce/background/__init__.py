@@ -150,14 +150,20 @@ def _process_gen_next_object_field_opp_sync(user_id, operations_list):
 def _generate_form_template(user_id):
     user = User.objects.get(id=user_id)
     org = user.organization
+    # delete all existing forms
+
+    org.custom_slack_forms.all().delete()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
 
         f = OrgCustomSlackForm.objects.create(
             form_type=form_type, resource=resource, organization=org
         )
+
         if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
-            f.fields.set(SObjectField.objects.filter(is_public=True))
+            fields = SObjectField.objects.filter(is_public=True)
+            for i, field in enumerate(fields):
+                f.fields.add(field, through_defaults={"order": i})
             f.save()
 
 
