@@ -301,7 +301,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         # this is a HACK because we needed to concatenate all stage gating forms since
         # we can only show 3 stacked forms
         values = self.get_values(state)
-        fields = self.get_user_fields().values_list("api_name", flat=True)
+        fields = [field.api_name for field in self.get_user_fields()]
 
         data = dict()
         for k, v in values.items():
