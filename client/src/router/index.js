@@ -6,10 +6,10 @@ import Auth from '@/services/auth'
 // Auth Views
 import Activation from '@/views/auth/Activation'
 import Login from '@/views/auth/Login'
-import Register from '@/views/auth/Register'
 import AdminRegistration from '@/views/auth/AdminRegistration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
 import InviteUsers from '@/views/auth/InviteUsers'
+import IntegrationScreen from '@/views/auth/IntegrationScreen'
 
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
@@ -57,20 +57,25 @@ export default new Router({
       component: InviteUsers,
       beforeEnter: Auth.requireAuth,
     },
+    {
+      path: '/integrations',
+      name: 'Integrations',
+      component: IntegrationScreen,
+    },
 
     {
       path: '/settings',
       component: Settings,
       beforeEnter: Auth.requireAuth,
       children: [
-        {
-          path: 'integrations',
-          name: 'Integrations',
-          components: {
-            'user-settings': () =>
-              import(/* webpackChunkName: "settings" */ '../views/Integrations'),
-          },
-        },
+        // {
+        //   path: 'integrations',
+        //   name: 'Integrations',
+        //   components: {
+        //     'user-settings': () =>
+        //       import(/* webpackChunkName: "settings" */ '../views/Integrations'),
+        //   },
+        // },
 
         {
           path: '',

@@ -1,16 +1,16 @@
 <template>
   <div class="invite-users">
     <h2>Build Your Team</h2>
-    <div class="invite-users__text">
-      Invite your team sales representatives to join your team
-    </div>
+    <div class="invite-users__text">Invite your team sales representatives to join your team</div>
 
     <button type="submit" @click="handleInvite">Invite Team Member</button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
-    <button type="submit" @click="handleContinue" class="invite-users__continue-button">
-      Continue to Integrations
-    </button>
+    <button
+      type="submit"
+      @click="handleContinue"
+      class="invite-users__continue-button"
+    >Continue to Integrations</button>
   </div>
 </template>
 
