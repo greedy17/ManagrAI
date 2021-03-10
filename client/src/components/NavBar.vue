@@ -14,7 +14,7 @@
             @mouseleave="toggleTooltip"
           />
           <div class="tooltip__popup" v-if="tooltipOpen">
-            <div>Having issues?</div>
+            <div class="tooltip__popup__bold">Having issues?</div>
             <div>Email mike@mymanagr.com</div>
           </div>
         </div>
@@ -221,6 +221,10 @@ nav {
     background-color: #ffffff;
     position: absolute;
     right: 4rem;
+
+    &__bold {
+      font-family: #{$bold-font-family};
+    }
   }
 }
 </style>
