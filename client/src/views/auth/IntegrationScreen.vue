@@ -1,9 +1,9 @@
 <template>
   <div class="integrations">
     <h2>Integrate your apps</h2>
-    <div
-      class="integrations__subtitle"
-    >Connect with the apps below to sync your sales data for managr to use.</div>
+    <div class="integrations__subtitle">
+      Connect with the apps below to sync your sales data for managr to use.
+    </div>
 
     <div class="integrations__cards">
       <div class="card">
@@ -11,16 +11,17 @@
           <img class="card-img" src="@/assets/images/salesforce.png" />
           <h3 class="card__title">Salesforce</h3>
         </div>
-        <p
-          class="card-text"
-        >Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.</p>
+        <p class="card-text">
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
+        </p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-        >Connect</PulseLoadingSpinnerButton>
+          >Connect</PulseLoadingSpinnerButton
+        >
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -134,15 +135,19 @@
       @click="goToSlackFormBuilder"
       class="slack-button"
       text="Slack Form Builder"
+      :disabled="!hasSalesforceIntegration"
     ></PulseLoadingSpinnerButton>
-    <div
+    <!--     <div
       @click="goToSlackFormBuilder"
       class="slack-button slack-button--disabled"
       text="Slack Form Builder"
-    >Slack Form Builder</div>
-    <div
-      class="privacy"
-    >We take your security and privacy very seriously. Your data is encrypted, and not being stored by managr.</div>
+    >
+      Slack Form Builder
+    </div> -->
+    <div class="privacy">
+      We take your security and privacy very seriously. Your data is encrypted, and not being stored
+      by managr.
+    </div>
   </div>
 </template>
 

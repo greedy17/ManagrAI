@@ -193,6 +193,7 @@ export default {
     },
   },
   async created() {
+    console.log('here')
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true
