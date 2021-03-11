@@ -6,11 +6,9 @@
     <button type="submit" @click="handleInvite">Invite Team Member</button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
-    <button
-      type="submit"
-      @click="handleContinue"
-      class="invite-users__continue-button"
-    >Continue to Integrations</button>
+    <button type="submit" @click="handleContinue" class="invite-users__continue-button">
+      Continue to Integrations
+    </button>
   </div>
 </template>
 

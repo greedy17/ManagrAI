@@ -299,11 +299,11 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                 vals[field] = current_value
         return vals
 
-    def save_form(self, state):
+    def save_form(self, state, from_slack_object=True):
         """ gets all form values but only saves values for fields """
         # this is a HACK because we needed to concatenate all stage gating forms since
         # we can only show 3 stacked forms
-        values = self.get_values(state)
+        values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
 
         data = dict()

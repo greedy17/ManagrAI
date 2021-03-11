@@ -426,8 +426,6 @@ def _process_create_new_contacts(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
 
-    sf = user.salesforce_account
-    sf_adapter = sf.adapter_class
     attempts = 1
     contact_forms = workflow.forms.filter(id__in=args[0])
     for form in contact_forms:
@@ -435,9 +433,21 @@ def _process_create_new_contacts(workflow_id, *args):
         # if it is an opp we create a contact role as well
 
         data = form.saved_data
+        if not data:
+            # try and collect whatever data we have
+            contact = dict(
+                *filter(
+                    lambda contact: contact.get("_form") == str(form.id),
+                    workflow.meeting.participants,
+                )
+            )
+            if contact:
+                form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
         while True:
+            sf = user.salesforce_account
+            sf_adapter = sf.adapter_class
             try:
                 res = ContactAdapter.create_new_contact(
                     data,
@@ -445,6 +455,7 @@ def _process_create_new_contacts(workflow_id, *args):
                     sf.instance_url,
                     sf_adapter.object_fields.get("Contact", {}),
                 )
+
                 if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
                     workflow.resource.add_contact_role(
                         sf.access_token, sf.instance_url, res.get("id")
@@ -459,7 +470,17 @@ def _process_create_new_contacts(workflow_id, *args):
                 else:
                     sf.regenerate_token()
                     attempts += 1
+            except FieldValidationError as e:
+                logger.exception(
+                    f"Validation failed for form with id {str(form.id)} in workflow {str(workflow.id)} {e}"
+                )
+                raise e
 
+            except RequiredFieldError as e:
+                logger.exception(
+                    f"Validation failed for form with id {str(form.id)} in workflow {str(workflow.id)} {e}"
+                )
+                raise e
     return
 
 
