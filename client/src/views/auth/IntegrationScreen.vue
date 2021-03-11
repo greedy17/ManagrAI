@@ -28,13 +28,6 @@
           v-else
           class="secondary-button"
         ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          text="Show Forms"
-          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-          @click="$router.push({ name: 'SlackFormSettings' })"
-          v-if="hasSalesforceIntegration"
-          class="secondary-button"
-        ></PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
@@ -129,17 +122,19 @@
       </div>
     </div>
 
-    <PulseLoadingSpinnerButton
-      v-if="hasSalesforceIntegration"
-      @click="goToSlackFormBuilder"
-      class="slack-button"
-      text="Slack Form Builder"
-    ></PulseLoadingSpinnerButton>
-    <div
-      v-if="!hasSalesforceIntegration"
-      class="slack-button--disabled"
-      text="Slack Form Builder"
-    >Slack Form Builder</div>
+    <div v-if="user.isAdmin">
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Slack Form Builder"
+      ></PulseLoadingSpinnerButton>
+      <div
+        v-if="!hasSalesforceIntegration"
+        class="slack-button--disabled"
+        text="Slack Form Builder"
+      >Slack Form Builder</div>
+    </div>
     <div
       class="privacy"
     >We take your security and privacy very seriously. Your data is encrypted, and not being stored by managr.</div>

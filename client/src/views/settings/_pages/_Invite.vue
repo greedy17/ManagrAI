@@ -147,6 +147,11 @@ export default {
   methods: {
     async refresh() {
       this.user = this.$store.state.user
+
+      if (!this.user.isAdmin) {
+        this.$router.push({ name: 'Integrations' })
+      }
+
       if (this.isStaff) {
         await this.organizations.refresh()
       } else {

@@ -96,7 +96,8 @@ export default {
       return this.$store.getters.userIsLoggedIn
     },
     isAdmin() {
-      return this.$store.state.user.isAdmin
+      // return this.$store.state.user.isAdmin
+      return false
     },
   },
 }
