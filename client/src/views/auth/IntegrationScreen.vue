@@ -137,7 +137,7 @@
     </div>
     <div
       class="privacy"
-    >We take your security and privacy very seriously. Your data is encrypted, and not being stored by managr.</div>
+    >We take your security and privacy very seriously. Your data is encrypted, and not being stored by Managr.</div>
   </div>
 </template>
 
