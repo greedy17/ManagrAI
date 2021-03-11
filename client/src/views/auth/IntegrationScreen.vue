@@ -39,7 +39,7 @@
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/zoom.png" />
+          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
           <h3 class="card__title">Zoom</h3>
         </div>
 

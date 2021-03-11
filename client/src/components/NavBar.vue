@@ -15,7 +15,7 @@
           />
           <div class="tooltip__popup" v-if="tooltipOpen">
             <div class="tooltip__popup__bold">Having issues?</div>
-            <div>Email mike@mymanagr.com</div>
+            <div>Email support@mymanagr.com</div>
           </div>
         </div>
 
