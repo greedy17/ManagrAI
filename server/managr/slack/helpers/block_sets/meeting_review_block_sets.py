@@ -2,6 +2,7 @@ import pdb
 import pytz
 import uuid
 import json
+import logging
 
 from datetime import datetime
 
@@ -19,6 +20,8 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+logger = logging.getLogger("managr")
 
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
@@ -98,6 +101,8 @@ def create_meeting_task(context):
 
 @block_set(required_context=["w"])
 def meeting_contacts_block_set(context):
+    # if this is a returning view it will also contain the selected contacts
+
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
 
@@ -123,7 +128,7 @@ def meeting_contacts_block_set(context):
                     "mrkdwn",
                 ),
                 block_builders.simple_section(
-                    ":ballot_box_with_check: _Select contacts to create them in salesforce_",
+                    f":ballot_box_with_check: _These contacts will be added to Salesforce and attached to the {workflow.resource_type}_",
                     "mrkdwn",
                 ),
             ]
@@ -132,13 +137,6 @@ def meeting_contacts_block_set(context):
     for i, contact in enumerate(contacts_not_in_sf):
         workflow_id_param = f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
-        block_sets.append(
-            block_builders.checkbox_block(
-                " ",
-                [block_builders.option("Create New Contact", contact["_form"])],
-                action_id="CREATE",
-            )
-        )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -148,32 +146,25 @@ def meeting_contacts_block_set(context):
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Click To Select for Editing"},
-                        "value": "click_me_123",
+                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
-                    }
+                    },
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                        "action_id": action_with_params(
+                            slack_const.ZOOM_MEETING__REMOVE_CONTACT,
+                            params=[workflow_id_param, tracking_id_param],
+                        ),
+                    },
                 ],
             }
         )
-        if not contact.get("integration_id", None):
-            block_sets.append(
-                {
-                    "type": "actions",
-                    "elements": [
-                        {
-                            "type": "button",
-                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                            "value": "click_me_123",
-                            "action_id": action_with_params(
-                                slack_const.ZOOM_MEETING__REMOVE_CONTACT,
-                                params=[workflow_id_param, tracking_id_param],
-                            ),
-                        }
-                    ],
-                }
-            )
+
     if len(contacts_in_sf):
         block_sets.extend(
             [
@@ -181,7 +172,7 @@ def meeting_contacts_block_set(context):
                     ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
                 ),
                 block_builders.simple_section(
-                    ":ballot_box_with_check: _Select contacts to add them to the opportunity_",
+                    f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type}_",
                     "mrkdwn",
                 ),
             ]
@@ -197,13 +188,7 @@ def meeting_contacts_block_set(context):
     for i, contact in enumerate(contacts_in_sf):
         workflow_id_param = f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
-        block_sets.append(
-            block_builders.checkbox_block(
-                " ",
-                [block_builders.option("Add Contact Role", contact["_form"])],
-                action_id="UPDATE",
-            )
-        )
+
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -212,20 +197,13 @@ def meeting_contacts_block_set(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Edit Details"},
-                        "value": "click_me_123",
+                        "text": {"type": "plain_text", "text": "Click To Select for Editing"},
+                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
-                    }
-                ],
-            }
-        )
-        block_sets.append(
-            {
-                "type": "actions",
-                "elements": [
+                    },
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Remove From Meeting"},
@@ -234,7 +212,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
-                    }
+                    },
                 ],
             }
         )
@@ -254,15 +232,23 @@ def edit_meeting_contacts_block_set(context):
             meeting.participants,
         )
     )
+    # if it already has an existing form it will be used
     form_id = contact.get("_form")
-    if not form_id:
+    if form_id in ["", None]:
         form_type = (
             slack_const.FORM_TYPE_UPDATE
             if contact.get("integration_id", None) not in ["", None]
             else slack_const.FORM_TYPE_CREATE
         )
+        template = (
+            OrgCustomSlackForm.objects.for_user(workflow.user)
+            .filter(form_type=form_type, resource=slack_const.FORM_RESOURCE_CONTACT)
+            .first()
+        )
         # try to create the form on the fly
-        slack_form = workflow.add_form(slack_const.FORM_RESOURCE_CONTACT, form_type)
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            user=workflow.user, template=template, workflow=workflow
+        )
     else:
         slack_form = workflow.forms.filter(id=contact.get("_form")).first()
     if not slack_form:
@@ -273,6 +259,9 @@ def edit_meeting_contacts_block_set(context):
         ]
 
     if not len(slack_form.template.fields.all()):
+        logger.info(
+            f"instance id: {str(slack_form.id)},instance template id: {str(slack_form.template.id)}"
+        )
         return [
             block_builders.section_with_button_block(
                 "Forms",

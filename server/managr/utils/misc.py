@@ -37,7 +37,14 @@ def object_to_snake_case(obj):
     new_obj = dict()
     for k, v in obj.items():
         if type(v) == list:
-            new_obj[to_snake_case(k)] = list(map(lambda new_v: object_to_snake_case(new_v), v))
+            new_obj[to_snake_case(k)] = []
+            for item in v:
+                if type(item) == dict:
+                    new_obj[to_snake_case(k)].append(object_to_snake_case(item))
+                else:
+                    new_obj[to_snake_case(k)].append(item)
+
+            list(map(lambda new_v: object_to_snake_case(new_v) if type(new_v) == dict else v, v))
         elif type(v) == dict:
             new_obj[to_snake_case(k)] = object_to_snake_case(v)
         else:

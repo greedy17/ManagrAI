@@ -5,8 +5,9 @@ import uuid
 import random
 from datetime import datetime
 
-from background_task import background
+from django.conf import settings
 
+from background_task import background
 from rest_framework.exceptions import ValidationError
 
 from managr.core.calendars import calendar_participants_from_zoom_meeting
@@ -41,11 +42,6 @@ def _split_last_name(name):
         if len(name_parts) > 1:
 
             return "".join(name_parts[1:])
-
-
-def emit_push_meeting_contacts(meeting_id):
-    meeting_id = str(meeting_id)
-    return _push_meeting_contacts(meeting_id)
 
 
 def emit_refresh_zoom_token(zoom_account_id, schedule):
@@ -85,119 +81,6 @@ def _refresh_zoom_token(zoom_account_id):
 
 
 @background(schedule=0)
-def _push_meeting_contacts(meeting_id):
-    """ After a meeting is reviewed this task will create contacts for whom we have and email or a lastName (required by sf)"""
-    # from managr.salesforce.background import emit_add_c_role_to_opp
-
-    meeting = ZoomMeeting.objects.filter(id=meeting_id).first()
-    if meeting:
-        # find contacts and push them to sf
-        contacts_not_in_sf = list(
-            filter(lambda contact: not contact["from_integration"], meeting.participants)
-        )
-        contacts_in_sf = list(
-            filter(lambda contact: contact["from_integration"], meeting.participants)
-        )
-        user = meeting.zoom_account.user
-        if hasattr(user, "salesforce_account"):
-            sf = user.salesforce_account
-            # add the contacts with the details to sf place the id int source and user
-            created_contacts = []
-            not_created_contacts = []
-            for index, contact in enumerate(contacts_not_in_sf):
-
-                if not contact["email"] or not len(contact["email"]):
-                    not_created_contacts.append(contact)
-                    continue
-                # if a contact doesnt have a last name append N/A so we can at least add them
-                last_name = contact.get("secondary_data", {}).get("LastName")
-                contact["secondary_data"]["LastName"] = last_name if last_name else "N/A"
-                if meeting.meeting_resource == "Account":
-                    # add the account external id
-                    contact["external_account"] = str(meeting.linked_account.integration_id)
-
-                contact = {**contact, **contact.get("secondary_data", {})}
-                del contact["secondary_data"]
-                while True:
-                    attempts = 0
-                    try:
-                        res = ContactAdapter.create_new_contact(
-                            contact,
-                            sf.access_token,
-                            sf.instance_url,
-                            sf.object_fields.get("Contact", {}).get("fields", {}),
-                        )
-                        contact["integration_id"] = res["id"]
-                        contact["integration_source"] = "SALESFORCE"
-                        # contact from integration source is still False
-                        # we use this to show a message that we created the contact
-                        created_contacts.append(contact)
-                        # meeting.participants
-                        break
-                    except TokenExpired:
-                        if attempts >= 5:
-                            logger.exception(
-                                f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-                            )
-                            break
-                        else:
-                            sf.regenerate_token()
-                            attempts += 1
-
-            if len(contacts_not_in_sf):
-                meeting.participants = [
-                    ### NOTE THE ORDER HERE IS IMPORTANT FOR REMOVING FROM MEETING
-                    *not_created_contacts,
-                    *created_contacts,
-                    *meeting.participants[len(contacts_not_in_sf) :],
-                ]
-                meeting.save()
-            if meeting.meeting_resource != "Account":
-                "Opportunities need to have a contact role"
-                for contact in [*created_contacts, *contacts_in_sf]:
-                    emit_add_c_role_to_opp(
-                        str(user.id), str(meeting.opportunity.id), contact["integration_id"]
-                    )
-
-            else:
-                for contact in contacts_in_sf:
-                    contact["account"] = str(meeting.linked_account.integration_id)
-                    contact["external_account"] = contact["account"]
-
-                    ContactAdapter.update_contact(
-                        {
-                            "account": contact["account"],
-                            "external_acount": contact["external_account"],
-                        },
-                        sf.access_token,
-                        sf.instance_url,
-                        contact["integration_id"],
-                        sf.object_fields.get("Contact", {}).get("fields", {}),
-                    )
-
-        block_set_context = {
-            "m": str(meeting.id),
-            "show_contacts": True,
-        }
-        ts, channel = workflow.slack_interaction.split("|")
-        res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set("final_meeting_interaction", context=block_set_context),
-        ).json()
-
-        meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-        meeting.save()
-
-    # emit event to create contact role
-    # save to the meeting
-    # update the slack message
-
-    return meeting
-
-
-@background(schedule=0)
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
     logger.info("Retrieving past Zoom meeting details...")
 
@@ -231,14 +114,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         for participant in zoom_participants:
             if participant not in participants and participant.get("user_email") != user.email:
                 participants.append(participant)
-        ### ADDING RANDOM USER FOR TESTING PURPOSES ONLY ###
-        participants.append(
-            {
-                "name": "testertesty",
-                "id": "",
-                "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-            }
-        )
+            ### ADDING RANDOM USER FOR TESTING PURPOSES ONLY ###
+
+        if settings.IN_DEV or settings.IN_STAGING:
+            participants.append(
+                {
+                    "name": "testertesty",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+                }
+            )
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -273,24 +158,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             # convert all contacts to model representation and remove from array
             for contact in existing_contacts:
                 formatted_contact = contact.adapter_class.as_dict
-                formatted_contact["_form"] = None
-                formatted_contact["_tracking_id"] = str(uuid.uuid4())
+
                 # create a form for each contact to save to workflow
-                template = OrgCustomSlackForm.objects.filter(
-                    form_type=slack_consts.FORM_TYPE_UPDATE,
-                    resource=slack_consts.FORM_RESOURCE_CONTACT,
-                ).first()
-                if not template:
-                    logger.exception(
-                        f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
-                    )
-                else:
-                    # create instance
-                    form = OrgCustomSlackFormInstance.objects.create(
-                        user=user, template=template, resource_id=str(contact.id),
-                    )
-                    contact_forms.append(form)
-                    formatted_contact["_form"] = str(form.id)
 
                 meeting_contacts.append(formatted_contact)
                 for index, participant in enumerate(participants):
@@ -317,30 +186,12 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                                         },
                                     )
                                 ).as_dict,
-                                "_tracking_id": str(uuid.uuid4()),
                             },
                             participants,
                         ),
                     ),
                 )
             )
-
-            for contact in new_contacts:
-                # create new form
-                contact["_form"] = None
-                template = OrgCustomSlackForm.objects.filter(
-                    form_type=slack_consts.FORM_TYPE_CREATE,
-                    resource=slack_consts.FORM_RESOURCE_CONTACT,
-                ).first()
-                if not template:
-                    logger.exception(
-                        f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
-                    )
-                else:
-                    # create instance
-                    form = OrgCustomSlackFormInstance.objects.create(user=user, template=template,)
-                    contact_forms.append(form)
-                    contact["_form"] = str(form.id)
 
             meeting_contacts = [
                 *new_contacts,
@@ -370,6 +221,33 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                         meeting_resource_data["resource_id"] = str(lead.id)
                         meeting_resource_data["resource_type"] = "Lead"
 
+            for contact in meeting_contacts:
+                contact["_tracking_id"] = str(uuid.uuid4())
+                form_type = (
+                    slack_consts.FORM_TYPE_UPDATE
+                    if contact["id"] not in ["", None]
+                    else slack_consts.FORM_TYPE_CREATE
+                )
+                template = OrgCustomSlackForm.objects.filter(
+                    form_type=form_type,
+                    resource=slack_consts.FORM_RESOURCE_CONTACT,
+                    organization=user.organization,
+                ).first()
+                if not template:
+                    logger.exception(
+                        f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
+                    )
+                    contact["_form"] = None
+                else:
+                    # create instance
+                    logger.info(f"contact_id: {contact['id']}")
+                    form = OrgCustomSlackFormInstance.objects.create(
+                        user=user,
+                        template=template,
+                        resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
+                    )
+                    contact_forms.append(form)
+                    contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
             serializer = ZoomMeetingSerializer(data=meeting.as_dict)
 
@@ -390,6 +268,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
                 **meeting_resource_data,
             )
+
             workflow.forms.set(contact_forms)
             if send_slack:
                 # sends false only for Mike testing

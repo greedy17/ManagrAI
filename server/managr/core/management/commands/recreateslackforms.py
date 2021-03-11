@@ -3,12 +3,7 @@ from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.core.models import User
-from managr.salesforce.background import (
-    emit_sf_sync,
-    emit_gen_next_sync,
-    emit_gen_next_object_field_opp_sync,
-    emit_generate_form_template,
-)
+from managr.salesforce.background import emit_generate_form_template
 from managr.salesforce import constants as sf_consts
 
 

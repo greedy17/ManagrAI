@@ -53,7 +53,7 @@ from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
     emit_sf_sync,
     emit_gen_next_sync,
-    emit_gen_next_object_field_opp_sync,
+    emit_gen_next_object_field_sync,
     emit_generate_form_template,
     emit_sync_sobject_picklist,
 )
@@ -96,7 +96,7 @@ def authenticate(request):
 
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_object_field_opp_sync(str(request.user.id), operations, formatted_time)
+        emit_gen_next_object_field_sync(str(request.user.id), operations, formatted_time)
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)

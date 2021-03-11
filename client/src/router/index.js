@@ -6,13 +6,17 @@ import Auth from '@/services/auth'
 // Auth Views
 import Activation from '@/views/auth/Activation'
 import Login from '@/views/auth/Login'
-import Register from '@/views/auth/Register'
+import AdminRegistration from '@/views/auth/AdminRegistration'
+import LeadershipCode from '@/views/auth/LeadershipCode'
+import InviteUsers from '@/views/auth/InviteUsers'
+import IntegrationScreen from '@/views/auth/IntegrationScreen'
 
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
 import Settings from '@/views/settings/Settings'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
+import SlackFormSettings from '../views/settings/SlackFormSettings'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -34,14 +38,32 @@ export default new Router({
       component: Login,
     },
     {
+      path: '/admin-registration',
+      name: 'AdminRegistration',
+      component: AdminRegistration,
+    },
+    {
       path: '/register',
       name: 'Register',
-      component: Register,
+      component: LeadershipCode,
     },
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
       component: Activation,
+    },
+    {
+      path: '/invite-users',
+      name: 'InviteUsers',
+      component: InviteUsers,
+      beforeEnter: Auth.requireAuth,
+    },
+    {
+      path: '/forms',
+      component: SlackFormSettings,
+
+      beforeEnter: Auth.requireAuth,
+      name: 'SlackFormSettings',
     },
 
     {
@@ -52,38 +74,9 @@ export default new Router({
         {
           path: 'integrations',
           name: 'Integrations',
-          components: {
-            'user-settings': () =>
-              import(/* webpackChunkName: "settings" */ '../views/Integrations'),
-          },
+          component: () =>
+            import(/* webpackChunkName: "settings" */ '../views/auth/IntegrationScreen'),
         },
-
-        {
-          path: '',
-          name: 'Profile',
-          components: {
-            'user-settings': Profile,
-          },
-        },
-        // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
-        // {
-        //   path: 'password',
-        //   name: 'Password',
-        //   components: {
-        //     'user-settings': Password,
-        //   },
-        // },
-        {
-          path: 'invite',
-          name: 'Invite',
-          components: { 'user-settings': Invite },
-          //beforeEnter: Auth.requireUserTypeManagerOrStaff,
-        },
-        // {
-        //   path: 'notification-settings',
-        //   name: 'NotificationSettings',
-        //   components: { 'user-settings': NotificationSettings },
-        // },
       ],
     },
     //
@@ -93,12 +86,6 @@ export default new Router({
     //   component: Styles,
     //   beforeEnter: Auth.requireAuth,
     // },
-    {
-      path: '/forms',
-      component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/SlackFormSettings'),
-      beforeEnter: Auth.requireAuth,
-      name: 'SlackFormSettings',
-    },
+    // {
   ],
 })

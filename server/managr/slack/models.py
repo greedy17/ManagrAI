@@ -149,7 +149,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
-    fields = models.ManyToManyField("salesforce.SObjectField", related_name="form_fields")
+    fields = models.ManyToManyField("salesforce.SObjectField", through="FormField")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
@@ -157,7 +157,9 @@ class OrgCustomSlackForm(TimeStampModel):
         return f"Slack Form {self.resource}, {self.form_type}"
 
     class Meta:
-        ordering = ["resource", "-stage"]
+        ordering = [
+            "resource",
+        ]
         unique_together = ["resource", "form_type", "organization", "stage"]
 
 
@@ -198,7 +200,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     @property
     def resource_type(self):
-        return self.template.resource
+        if self.template:
+            return self.template.resource
+        else:
+            return None
 
     @property
     def resource_object(self):
@@ -210,15 +215,20 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return model_object
 
     def get_user_fields(self):
-        template_fields = self.template.fields.all().values_list("api_name", "salesforce_object",)
-        user_fields = SObjectField.objects.filter(
-            Q(api_name__in=list(map(lambda field: field[0], template_fields)),)
-            & Q(
-                Q(salesforce_object__in=list(map(lambda field: field[1], template_fields)),)
-                | Q(salesforce_object__isnull=True)
-            )
-            & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+        template_fields = (
+            self.template.formfield_set.all()
+            .values_list("field__api_name", "field__salesforce_object",)
+            .order_by("order")
         )
+        user_fields = []
+        # hack to maintain order
+        for field in template_fields:
+            f = SObjectField.objects.get(
+                Q(api_name=field[0])
+                & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
+                & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+            )
+            user_fields.append(f)
         return user_fields
 
     def generate_form(self, data=None):
@@ -243,8 +253,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         return logger.exception(
                             f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
                         )
-                else:
                     form_values = self.resource_object.secondary_data
+                else:
+                    form_values = {}
 
         form_blocks = []
         for field in user_fields:
@@ -293,7 +304,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         # this is a HACK because we needed to concatenate all stage gating forms since
         # we can only show 3 stacked forms
         values = self.get_values(state)
-        fields = self.get_user_fields().values_list("api_name", flat=True)
+        fields = [field.api_name for field in self.get_user_fields()]
 
         data = dict()
         for k, v in values.items():
@@ -307,3 +318,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     # users can have a slack form for create,
     # update resources and one form for reviewing a meeting
 
+
+class FormField(TimeStampModel):
+    field = models.ForeignKey(
+        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
+    )
+    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
+    order = models.IntegerField(default=0)

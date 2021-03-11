@@ -44,6 +44,7 @@ def input_block(
         obj["element"]["min_length"] = min_length
 
     if initial_value:
+        initial_value = str(initial_value)
         obj["element"]["initial_value"] = initial_value
 
     return obj
@@ -196,7 +197,9 @@ def section_with_button_block(
     return block
 
 
-def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
+def simple_button_block(
+    label, value, url=None, style=None, confirm=False, action_id=None, block_id=None
+):
     # action ID must be unique
     block = {
         "type": "button",

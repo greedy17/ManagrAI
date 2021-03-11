@@ -1,7 +1,7 @@
 import json
 import pdb
 import logging
-
+from urllib.parse import urlencode
 from managr.organization.models import Organization, Stage
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -45,6 +45,7 @@ def process_meeting_review(payload, context):
         },
     }
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
     view_id = res.json().get("view").get("id")
     workflow.slack_view = view_id
     # meeting.slack_form = view_id
@@ -98,9 +99,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         # "view_id": view_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
+            # "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
             "title": {"type": "plain_text", "text": "Contacts"},
-            "submit": {"type": "plain_text", "text": "Submit"},
+            # "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
             "private_metadata": json.dumps(context),
         },
@@ -111,6 +112,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     # private_metadata.update(context)
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
+    print(res.json())
 
 
 @processor(required_context=["m"])
@@ -185,21 +187,47 @@ def process_edit_meeting_contact(payload, context):
 
     salesforce_account = meeting.zoom_account.user.salesforce_account
 
-    # since this is internal we can pass in objects into the context
-    # blocks =
     view = payload["view"]
+    # retrieve original blocks, view will use the same blocks but change the submit action
     blocks = view["blocks"]
     view_id = view["id"]
     title = view["title"]
+    actions = payload["actions"]
+    callback_id = None
+    submit_button_text = None
+    selected_action_block = actions[0] if len(actions) else None
+    if selected_action_block:
+        action = process_action_id(selected_action_block["action_id"])
+        block_id = selected_action_block["block_id"]
+        index, selected_block = block_finder(block_id, blocks)
+        if (
+            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+            and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+        ):
+            selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
+            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+            blocks[index] = selected_block
+            callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
+            submit_button_text = "Edit Contact"
+            # change the block to show it is selected
+        elif (
+            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+            and selected_block["elements"][0]["value"]
+            == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+        ):
+            selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
+            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
+            blocks[index] = selected_block
+            callback_id = None
+            submit_button_text = None
+            # change the block to show it is selected
 
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
-            "submit": {"type": "plain_text", "text": "Edit Contact", "emoji": True},
             "close": {"type": "plain_text", "text": "Close", "emoji": True},
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__EDIT_CONTACT,
             "title": title,
             "blocks": blocks,
             "private_metadata": json.dumps(
@@ -207,6 +235,11 @@ def process_edit_meeting_contact(payload, context):
             ),
         },
     }
+    if callback_id:
+        data["view"]["callback_id"] = callback_id
+
+    if submit_button_text:
+        data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
 
     res = slack_requests.generic_request(url, data, access_token=access_token)
     print(res.json())
@@ -239,7 +272,9 @@ def process_stage_selected(payload, context):
             if opt == selected_value:
 
                 f = workflow.add_form(
-                    workflow.resource_type, slack_const.FORM_TYPE_STAGE_GATING, stage=opt
+                    slack_const.FORM_RESOURCE_OPPORTUNITY,
+                    slack_const.FORM_TYPE_STAGE_GATING,
+                    stage=opt,
                 )
                 if f:
                     new_forms_count += 1
@@ -247,7 +282,9 @@ def process_stage_selected(payload, context):
             else:
 
                 f = workflow.add_form(
-                    workflow.resource_type, slack_const.FORM_TYPE_STAGE_GATING, stage=opt
+                    slack_const.FORM_RESOURCE_OPPORTUNITY,
+                    slack_const.FORM_TYPE_STAGE_GATING,
+                    stage=opt,
                 )
                 if f:
                     new_forms_count += 1
@@ -290,11 +327,18 @@ def process_stage_selected(payload, context):
     print(trigger_id)
 
 
-@processor(required_context=["m", "contact_index"])
+@processor(required_context=["w", "tracking_id"])
 def process_remove_contact_from_meeting(payload, context):
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    index = int(context.get("contact_index"))
-    del meeting.participants[index]
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    meeting = workflow.meeting
+
+    for i, part in enumerate(meeting.participants):
+        if part["_tracking_id"] == context.get("tracking_id"):
+            # remove its form if it exists
+            if part["_form"] not in [None, ""]:
+                workflow.forms.filter(id=part["_form"]).delete()
+            del meeting.participants[i]
+            break
     meeting.save()
 
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)

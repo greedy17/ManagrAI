@@ -27,6 +27,7 @@ export class SObjectField extends Model {
   static value = new fields.CharField()
   static displayValue = new fields.CharField()
   static referenceDisplayLabel = new fields.CharField({ readOnly: true })
+  static order = new fields.IntegerField()
 }
 
 export class SObjectValidation extends Model {

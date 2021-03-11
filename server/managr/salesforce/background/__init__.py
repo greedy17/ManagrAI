@@ -79,9 +79,9 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_opp_sync(user_id, ops_list, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.now()):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_object_field_opp_sync(user_id, ops_list, schedule=schedule)
+    return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
 
 
 def emit_sync_sobject_fields(user_id, sync_id, resource):
@@ -135,7 +135,7 @@ def _process_gen_next_sync(user_id, operations_list):
 
 @background(schedule=0)
 @log_all_exceptions
-def _process_gen_next_object_field_opp_sync(user_id, operations_list):
+def _process_gen_next_object_field_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
@@ -150,14 +150,20 @@ def _process_gen_next_object_field_opp_sync(user_id, operations_list):
 def _generate_form_template(user_id):
     user = User.objects.get(id=user_id)
     org = user.organization
+    # delete all existing forms
+
+    org.custom_slack_forms.all().delete()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
 
         f = OrgCustomSlackForm.objects.create(
             form_type=form_type, resource=resource, organization=org
         )
+
         if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
-            f.fields.set(SObjectField.objects.filter(is_public=True))
+            fields = SObjectField.objects.filter(is_public=True)
+            for i, field in enumerate(fields):
+                f.fields.add(field, through_defaults={"order": i})
             f.save()
 
 
@@ -317,6 +323,8 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
 
 
 ## Meeting Review Workflow tasks
+
+
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
@@ -425,6 +433,7 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
+
         data = form.saved_data
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
@@ -464,8 +473,6 @@ def _process_update_contacts(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
 
-    sf = user.salesforce_account
-    sf_adapter = sf.adapter_class
     attempts = 1
     contact_forms = workflow.forms.filter(id__in=args[0])
     for form in contact_forms:
@@ -474,28 +481,49 @@ def _process_update_contacts(workflow_id, *args):
         data = form.saved_data
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
-        try:
-            ContactAdapter.update_contact(
-                data,
-                sf.access_token,
-                sf.instance_url,
-                form.resource_object.integration_id,
-                sf_adapter.object_fields.get("Contact", {}),
-            )
-            if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
-                workflow.resource.add_contact_role(
-                    sf.access_token, sf.instance_url, form.resource_object.integration_id
-                )
+        if data:
+            while True:
+                sf = user.salesforce_account
+                sf_adapter = sf.adapter_class
+                try:
+                    ContactAdapter.update_contact(
+                        data,
+                        sf.access_token,
+                        sf.instance_url,
+                        form.resource_object.integration_id,
+                        sf_adapter.object_fields.get("Contact", {}),
+                    )
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+                        )
+                        break
+                    else:
+                        sf.regenerate_token()
+                        attempts += 1
+        # if no data was saved the resource was not updated but we still add the contact role
 
-        except TokenExpired:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-                )
-                break
-            else:
-                sf.regenerate_token()
-                attempts += 1
+        if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
+            attempts = 1
+            while True:
+                sf = user.salesforce_account
+                sf_adapter = sf.adapter_class
+                try:
+                    workflow.resource.add_contact_role(
+                        sf.access_token, sf.instance_url, form.resource_object.integration_id
+                    )
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+                        )
+                        break
+                    else:
+                        sf.regenerate_token()
+                        attempts += 1
 
     return
 

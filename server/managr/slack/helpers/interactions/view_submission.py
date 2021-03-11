@@ -127,7 +127,7 @@ def process_zoom_meeting_data(payload, context):
         ).first()
         form.save_form(state)
 
-    # emit all events
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -135,6 +135,17 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
         # save meeting data
     ]
+    for form in contact_forms:
+        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+        else:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+
+    # emit all events
     if len(workflow.operations_list):
         workflow.operations_list = [*workflow.operations_list, *ops]
     else:
@@ -304,13 +315,13 @@ def process_update_meeting_contact(payload, context):
         },
     }
 
-    # res = slack_requests.generic_request(url, data, access_token=access_token)
+    res = slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
 @processor()
 def process_edit_meeting_contact(payload, context):
-    # update the old view to change edit contact to submit again
+    """ This Submission returns the update form stacked on top of the view contacts form """
     action = slack_const.VIEWS_UPDATE
     url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]
@@ -320,22 +331,9 @@ def process_edit_meeting_contact(payload, context):
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
+    # blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
 
-    data = {
-        "trigger_id": trigger_id,
-        "view_id": view_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "blocks": blocks,
-            "private_metadata": payload["view"]["private_metadata"],
-        },
-    }
-
-    res = slack_requests.generic_request(url, data, access_token=access_token)
+    # res = slack_requests.generic_request(url, data, access_token=access_token)
 
     return {
         "response_action": "push",

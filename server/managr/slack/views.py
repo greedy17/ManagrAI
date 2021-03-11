@@ -259,7 +259,10 @@ class SlackFormsViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.set(fields)
+        instance.fields.clear()
+        for i, field in enumerate(fields):
+            instance.fields.add(field, through_defaults={"order": i})
+
         instance.save()
         return Response(serializer.data)
 
@@ -274,7 +277,9 @@ class SlackFormsViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.set(fields)
+        instance.fields.clear()
+        for i, field in enumerate(fields):
+            instance.fields.add(field, through_defaults={"order": i})
         instance.save()
 
         return Response(serializer.data)
