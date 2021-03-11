@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
 
-from rest_framework.views import APIView
+from rest_framework.views import APIView 
 from rest_framework import (
     authentication,
     filters,
