@@ -271,7 +271,9 @@ def edit_meeting_contacts_block_set(context):
             )
         ]
     else:
-        return slack_form.generate_form(contact["secondary_data"])
+
+        slack_form = slack_form.generate_form(contact["secondary_data"])
+        return slack_form
 
 
 @block_set(required_context=["w"])

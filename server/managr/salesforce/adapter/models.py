@@ -177,6 +177,7 @@ class SalesforceAuthAccountAdapter:
                 raise HTTPError(kwargs)
             except HTTPError as e:
                 CustomAPIException(e, fn_name)
+                pass
         return data
 
     @classmethod
