@@ -156,28 +156,24 @@ class SalesforceAuthAccountAdapter:
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
-            try:
-                error_code = response.status_code
-                error_data = (
-                    response.json()[0] if isinstance(response.json(), list) else response.json()
-                )
-                if error_code == 400:
-                    error_param = error_data.get("error", error_data.get("errorCode", None))
-                    error_message = error_data.get(
-                        "error_description", error_data.get("message", None)
-                    )
-                else:
-                    error_param = error_data.get("errorCode", None)
-                    error_message = error_data.get("message", None)
-                kwargs = {
-                    "error_code": error_code,
-                    "error_param": error_param,
-                    "error_message": error_message,
-                }
-                raise HTTPError(kwargs)
-            except HTTPError as e:
-                CustomAPIException(e, fn_name)
-                pass
+
+            error_code = response.status_code
+            error_data = (
+                response.json()[0] if isinstance(response.json(), list) else response.json()
+            )
+            if error_code == 400:
+                error_param = error_data.get("error", error_data.get("errorCode", None))
+                error_message = error_data.get("error_description", error_data.get("message", None))
+            else:
+                error_param = error_data.get("errorCode", None)
+                error_message = error_data.get("message", None)
+            kwargs = {
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            CustomAPIException(HTTPError(kwargs), fn_name)
         return data
 
     @classmethod

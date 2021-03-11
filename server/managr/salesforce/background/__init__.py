@@ -417,7 +417,6 @@ def _process_add_call_to_sf(workflow_id, *args):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
-@log_all_exceptions
 def _process_create_new_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
