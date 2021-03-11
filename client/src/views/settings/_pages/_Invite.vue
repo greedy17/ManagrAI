@@ -72,7 +72,7 @@
         <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
         <div
           class="invite-list__section__item invite-list__status"
-        >{{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}</div>
+        >{{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}</div>
         <div class="invite-list__section__item invite-list__status">Registered</div>
       </div>
       <div
@@ -84,7 +84,7 @@
         <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
         <div
           class="invite-list__section__item invite-list__status"
-        >{{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}</div>
+        >{{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}</div>
         <div
           class="invite-list__section__item invite-list__status"
         >{{ member.isActive ? 'Registered' : 'Pending' }}</div>
@@ -267,7 +267,7 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  height: 80vh;
+  // height: 80vh;
 
   width: 80%;
 }
@@ -331,7 +331,7 @@ button {
 .invite-form {
   border: none;
   width: 100%;
-  height: 50vh;
+  height: 70vh;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -369,7 +369,7 @@ button {
     border: solid 2px #dcdddf;
     width: 0%;
     min-width: 40vw;
-    padding: 25px 12px 322px 37px;
+    padding: 1.5rem 1rem 1.5rem 1.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     display: flex;

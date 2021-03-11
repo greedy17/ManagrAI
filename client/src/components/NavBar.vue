@@ -211,8 +211,8 @@ nav {
   }
 
   &__popup {
-    width: 259px;
-    height: 69px;
+    width: 20rem;
+
     margin: 2px 13px 3px 40px;
     padding: 13px 21px 16px 29px;
     border-radius: 5px;
