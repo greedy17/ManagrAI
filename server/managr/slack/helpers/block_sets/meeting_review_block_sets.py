@@ -484,7 +484,7 @@ def create_modal_block_set(context, *args, **kwargs):
                 slack_const.FORM_TYPE_CREATE,
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
-        ).delete()
+        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
         # remove old instance (in case there was an error that required the form to add fields)
 
         slack_form = OrgCustomSlackFormInstance.objects.create(

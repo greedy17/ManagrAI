@@ -5,38 +5,27 @@
         <div class="errors">
           <!-- client side validations -->
 
-          <div
-            v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank"
-          >Fields may not be blank.</div>
-          <div
-            v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch"
-          >Fields must match.</div>
-          <div
-            v-if="isFormValid !== null && !isFormValid && errors.invalidEmail"
-          >Must be a valid email address.</div>
-          <div
-            v-if="isFormValid !== null && !isFormValid && errors.invalidUserType"
-          >Must be a valid user type</div>
+          <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
+            Fields may not be blank.
+          </div>
+          <div v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch">
+            Fields must match.
+          </div>
+          <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
+            Must be a valid email address.
+          </div>
+          <div v-if="isFormValid !== null && !isFormValid && errors.invalidUserType">
+            Must be a valid user type
+          </div>
           <!-- server side validations -->
-          <div
-            v-if="success !== null && !success && errors[500]"
-          >Something went wrong. Please try again later.</div>
-          <div
-            v-if="success !== null && !success && errors[400]"
-          >The provided email is associated with an existing account.</div>
+          <div v-if="success !== null && !success && errors[500]">
+            Something went wrong. Please try again later.
+          </div>
+          <div v-if="success !== null && !success && errors[400]">
+            The provided email is associated with an existing account.
+          </div>
         </div>
-        <div v-if="isStaff" class="group">
-          <DropDownSelect
-            :items="organizations.list"
-            :itemsRef.sync="organizationRef"
-            v-model="organization"
-            displayKey="name"
-            valueKey="id"
-            nullDisplay="Select an Org"
-            searchable
-            :haseNext="!!organizations.pagination.next"
-          />
-        </div>
+
         <!-- type="text" instead of type="email" so we can control UI when invalid -->
         <div class="invite-form__title">Email</div>
         <input class="invite-form__form-input" v-model="email" type="text" />
@@ -52,15 +41,21 @@
             class="invite-form__dropdown"
           />
         </div>
-
-        <Button class="invite-button" text="Invite" :loading="loading" @click="handleInvite"></Button>
+        <PulseLoadingSpinnerButton
+          @click="handleInvite"
+          class="invite-button"
+          text="Inviate"
+          :loading="loading"
+          >Invite</PulseLoadingSpinnerButton
+        >
         <div class="cancel-button" @click="handleCancel">Cancel</div>
       </form>
       <div v-if="success" class="success-prompt">
         <h2>Success</h2>
         <p>
           An invitation will be sent to:
-          <span :style="{ fontWeight: 'bold' }">{{ email }}</span>.
+          <span :style="{ fontWeight: 'bold' }">{{ email }}</span
+          >.
         </p>
         <button @click="resetData">Send Another</button>
         <div class="cancel-button" @click="handleCancel">Close</div>
@@ -70,24 +65,24 @@
       <div class="invite-list__title">Your Team</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
         <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
-        <div
-          class="invite-list__section__item invite-list__status"
-        >{{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}</div>
+        <div class="invite-list__section__item invite-list__status">
+          {{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}
+        </div>
         <div class="invite-list__section__item invite-list__status">Registered</div>
       </div>
       <div
         v-for="member in team.list"
         :key="member.id"
         class="invite-list__section__container"
-        v-if="member.id !==user.id"
+        v-if="member.id !== user.id"
       >
         <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
-        <div
-          class="invite-list__section__item invite-list__status"
-        >{{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}</div>
-        <div
-          class="invite-list__section__item invite-list__status"
-        >{{ member.isActive ? 'Registered' : 'Pending' }}</div>
+        <div class="invite-list__section__item invite-list__status">
+          {{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}
+        </div>
+        <div class="invite-list__section__item invite-list__status">
+          {{ member.isActive ? 'Registered' : 'Pending' }}
+        </div>
       </div>
     </div>
   </div>
@@ -162,6 +157,7 @@ export default {
     },
     handleInvite() {
       // reset component data when submission begins, in case of prior request
+      this.loading = true
       this.isFormValid = null
       this.success = null
       this.errors = {}
@@ -170,10 +166,9 @@ export default {
       this.isFormValid = validationResults[0]
       this.errors = validationResults[1]
       if (!this.isFormValid) {
+        this.loading = false
         return
       }
-
-      this.loading = true
 
       let invitePromise = User.api.invite(this.email, this.selectedUserType, this.organization)
 
@@ -193,8 +188,8 @@ export default {
             this.errors = { 400: true }
           }
         })
-      this.refresh()
       this.loading = false
+      this.refresh()
     },
     clientSideValidations() {
       let formErrors = {
