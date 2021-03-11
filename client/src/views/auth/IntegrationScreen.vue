@@ -135,6 +135,7 @@
         text="Slack Form Builder"
       >Slack Form Builder</div>
     </div>
+    <img class="lock" src="@/assets/images/lockAsset.png" />
     <div
       class="privacy"
     >We take your security and privacy very seriously. Your data is encrypted, and not being stored by Managr.</div>
@@ -354,5 +355,10 @@ export default {
   font-family: #{$bold-font-family};
   font-size: 14px;
   margin-bottom: 2rem;
+}
+
+.lock {
+  height: 2rem;
+  margin-bottom: 1rem;
 }
 </style>
