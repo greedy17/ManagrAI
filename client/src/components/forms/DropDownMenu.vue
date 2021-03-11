@@ -1,12 +1,12 @@
 <template>
-  <div class="dropdown">
+  <div class="dropdown" @click="toggle">
     <div class="dropdown-container">
-      <slot :classes="'dd-button'" :toggle="toggle" name="dropdown-trigger">
-        <button class="dd-button" @click="toggle">
-          <svg class="dd-icon" viewBox="0 0 24 24">
-            <use xlink:href="@/assets/images/dropdown-arrow.svg#caret" />
-          </svg>
-        </button>
+      <slot :classes="'dd-button'" :toggle="none" name="dropdown-trigger">
+        <!-- <button class="dd-button"> -->
+        <svg class="dd-icon" viewBox="0 0 24 24">
+          <use xlink:href="@/assets/images/dropdown-arrow.svg#caret" />
+        </svg>
+        <!-- </button> -->
       </slot>
     </div>
 
@@ -30,9 +30,7 @@
             :key="`${item[valueKey]}-${i}`"
             @click.prevent="emitSelected(item[valueKey])"
             class="dd-item"
-          >
-            {{ item[displayKey] }}
-          </div>
+          >{{ item[displayKey] }}</div>
         </slot>
       </template>
     </div>
@@ -116,6 +114,7 @@ export default {
     toggle() {
       this.visible = !this.visible
     },
+    none() {},
     closeDropDownEvent() {
       this.$emit('close')
     },
@@ -154,11 +153,17 @@ Display dropdown relative to the component it is triggered by
 .dropdown {
   position: relative;
   display: inline-block;
+  border: 2px solid white;
+  border-radius: 50%;
+
+  width: 2rem;
+  height: 2rem;
 }
 .dd-button {
   border: none;
   background-color: transparent;
   outline: none;
+
   &:hover {
     cursor: pointer;
   }
