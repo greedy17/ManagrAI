@@ -1,3 +1,5 @@
+import logging
+import json
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
@@ -10,6 +12,7 @@ from . import constants as zoom_model_consts
 from .exceptions import ZoomAPIException
 
 client = HttpClient().client
+logger = logging.getLogger("managr")
 
 
 class ZoomMtg:
@@ -141,6 +144,9 @@ class ZoomAcct:
                 data = response.json()
             except Exception as e:
                 ZoomAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+
         else:
             try:
                 error_code = response.status_code

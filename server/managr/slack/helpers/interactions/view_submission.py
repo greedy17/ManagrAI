@@ -128,6 +128,7 @@ def process_zoom_meeting_data(payload, context):
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    logger.info(f"{contact_forms.values_list('id', 'template__form_type')}")
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",

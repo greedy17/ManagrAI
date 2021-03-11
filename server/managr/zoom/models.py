@@ -124,15 +124,18 @@ class ZoomAuthAccount(TimeStampModel):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data
         # - cannot refresh a token if it is also expired
-
-        if self.is_refresh_token_expired and self.is_token_expired:
+        try:
+            if self.is_refresh_token_expired and self.is_token_expired:
+                pass
+            elif self.is_token_expired and not self.is_refresh_token_expired:
+                # first refresh and then revoke
+                self.regenerate_token()
+                self.helper_class.revoke()
+            else:
+                self.helper_class.revoke()
+        except Exception as e:
+            print(e)
             pass
-        elif self.is_token_expired and not self.is_refresh_token_expired:
-            # first refresh and then revoke
-            self.regenerate_token()
-            self.helper_class.revoke()
-        else:
-            self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
 
