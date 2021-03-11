@@ -483,6 +483,13 @@ class MeetingWorkflow(SFSyncOperation):
         help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
     )
 
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    def __str__(self):
+        meeting_name = self.meeting.topic if self.meeting else "No Meeting Topic"
+        return f"{self.user.email}, {meeting_name}, for resource {self.resource_type}"
+
     @property
     def resource(self):
         from managr.salesforce.routes import routes

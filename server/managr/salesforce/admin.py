@@ -28,6 +28,7 @@ class CustomFormInstanceInline(admin.StackedInline):
 class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
+    list_filter = ("user",)
 
 
 # Register your models here.
