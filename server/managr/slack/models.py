@@ -200,7 +200,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     @property
     def resource_type(self):
-        return self.template.resource
+        if self.template:
+            return self.template.resource
+        else:
+            return None
 
     @property
     def resource_object(self):

@@ -439,7 +439,7 @@ class SFObjectFieldsOperation(SFSyncOperation):
         }
 
     def begin_tasks(self, attempts=1):
-        from managr.salesforce.background import emit_gen_next_object_field_opp_sync
+        from managr.salesforce.background import emit_gen_next_object_field_sync
 
         for op in self.operations_list:
             # split the operation to get opp and params
@@ -456,7 +456,7 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
         scheduled_time = timezone.now() + timezone.timedelta(minutes=720)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_object_field_opp_sync(str(self.user.id), self.operations_list, formatted_time)
+        emit_gen_next_object_field_sync(str(self.user.id), self.operations_list, formatted_time)
 
 
 class MeetingWorkflow(SFSyncOperation):

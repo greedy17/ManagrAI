@@ -6,7 +6,7 @@ from managr.core.models import User
 from managr.salesforce.background import (
     emit_sf_sync,
     emit_gen_next_sync,
-    emit_gen_next_object_field_opp_sync,
+    emit_gen_next_object_field_sync,
 )
 from managr.salesforce import constants as sf_consts
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-            emit_gen_next_object_field_opp_sync(str(user.id), operations, formatted_time)
+            emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
             self.stdout.write(
                 self.style.SUCCESS(
                     "Successfully initiated the object field sync for the user {}".format(

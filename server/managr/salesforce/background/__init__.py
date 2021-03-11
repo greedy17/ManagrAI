@@ -79,9 +79,9 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_opp_sync(user_id, ops_list, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.now()):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_object_field_opp_sync(user_id, ops_list, schedule=schedule)
+    return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
 
 
 def emit_sync_sobject_fields(user_id, sync_id, resource):
@@ -135,7 +135,7 @@ def _process_gen_next_sync(user_id, operations_list):
 
 @background(schedule=0)
 @log_all_exceptions
-def _process_gen_next_object_field_opp_sync(user_id, operations_list):
+def _process_gen_next_object_field_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
