@@ -291,6 +291,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             res = slack_requests.send_channel_message(
                 user_slack_channel, slack_org_access_token, block_set=block_set
             ).json()
+            print(res)
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"

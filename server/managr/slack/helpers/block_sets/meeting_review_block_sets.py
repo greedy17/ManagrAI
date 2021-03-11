@@ -300,33 +300,21 @@ def initial_meeting_interaction_block_set(context):
     )
     default_blocks = [
         {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
-            },
-            "accessory": {
-                "type": "image",
-                "image_url": "https://api.slack.com/img/blocks/bkb_template_images/notifications.png",
-                "alt_text": "calendar thumbnail",
-            },
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "plain_text",
-                "text": "Review the people who joined your meeting and save them to Salesforce",
-            },
-            "accessory": {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
-                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                "action_id": action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
-                ),
-            },
-        },
+        block_builders.section_with_accessory_block(
+            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
+            block_builders.simple_image_block(
+                "https://api.slack.com/img/blocks/bkb_template_images/notifications.png",
+                "calendar thumbnail",
+            ),
+        ),
+        block_builders.section_with_button_block(
+            "Review Meeting Participants",
+            slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+            "Review the people who joined your meeting before saving them to Salesforce",
+            action_id=action_with_params(
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+            ),
+        ),
         {"type": "divider"},
     ]
     if not resource:
@@ -363,6 +351,16 @@ def initial_meeting_interaction_block_set(context):
                 "Review",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
+                style="primary",
+            ),
+            *action_blocks,
+        ]
+    elif workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
+        action_blocks = [
+            block_builders.simple_button_block(
+                "Convert Lead",
+                str(workflow.id),
+                action_id=slack_const.ZOOM_MEETING__CONVERT_LEAD_TO_OPP,
                 style="primary",
             ),
             *action_blocks,
