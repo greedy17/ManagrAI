@@ -346,7 +346,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_update_search_or_create(payload, context):
-    """ Updates the form view to show what is currently selected """
+    """ Updates the form view to either a create form or a search box what is currently selected """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -426,6 +426,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
+    """ attaches a drop down to the message block for selecting a resource type """
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting

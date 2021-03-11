@@ -443,7 +443,7 @@ def create_or_search_modal_block_set(context):
         block_builders.option("Search", "SEARCH"),
     ]
     if context.get("resource") != sf_consts.RESOURCE_SYNC_LEAD:
-        options.append(block_builders.option("Search", "SEARCH"),)
+        options.append(block_builders.option("Create", "CREATE"),)
     blocks = [
         block_builders.static_select(
             "Would you like to create a new item or search for an existing option",
