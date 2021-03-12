@@ -445,7 +445,6 @@ def create_or_search_modal_block_set(context):
         block_builders.static_select(
             "Would you like to create a new item or search for an existing option",
             [block_builders.option("Search", "SEARCH"), block_builders.option("Create", "CREATE"),],
-            # action_id=f"{slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH}?w={context.get('w')}&resource={context.get('resource')}",
             block_id="create_or_search",
             action_id="selected_option",
         ),
