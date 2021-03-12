@@ -148,7 +148,6 @@ export default {
           try {
             this.selectedFormFields = await this.listFields({
               salesforceObject: this.resource,
-              search: 'account',
               ...fieldParam,
             })
           } catch (e) {
