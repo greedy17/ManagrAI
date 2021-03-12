@@ -551,6 +551,7 @@ class ContactAdapter:
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
+        logger.info(f"JSON_DATA Create Contact {json_data}")
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(

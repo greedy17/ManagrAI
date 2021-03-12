@@ -421,6 +421,7 @@ def _process_create_new_contacts(workflow_id, *args):
         while True:
             sf = user.salesforce_account
             sf_adapter = sf.adapter_class
+            logger.info(f"Data from form {data}")
             try:
                 res = ContactAdapter.create_new_contact(
                     data,
@@ -522,7 +523,7 @@ def _process_create_new_resource(workflow_id, resource, *args):
             slack_consts.FORM_TYPE_CREATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
-    )
+    ).exclude(template__resource=slack_consts.FORM_RESOURCE_CONTACT)
     sf = user.salesforce_account
     data = dict()
     for form in create_forms:

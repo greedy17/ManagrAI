@@ -12,6 +12,7 @@ from managr.slack.helpers.utils import process_action_id, NO_OP, processor, bloc
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.salesforce.models import MeetingWorkflow
+from managr.core.models import User
 
 
 logger = logging.getLogger("managr")
@@ -485,6 +486,27 @@ def process_disregard_meeting_review(payload, context):
     workflow.save()
 
 
+@processor(requried_context="u")
+def process_coming_soon(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
+            "title": {"type": "plain_text", "text": f"Coming Soon"},
+            "blocks": get_block_set("coming_soon_modal", {}),
+            "submit": {"type": "plain_text", "text": "Next"},
+        },
+    }
+    res = slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    print(res.json())
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -502,6 +524,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
+        slack_const.ZOOM_MEETING__CREATE_TASK: process_coming_soon,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

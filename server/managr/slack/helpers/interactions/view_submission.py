@@ -199,7 +199,7 @@ def process_zoom_meeting_attach_resource(payload, context):
                 slack_const.FORM_TYPE_CREATE,
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
-        )
+        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
         for form in create_forms:
             form.save_form(state)
         try:

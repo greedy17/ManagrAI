@@ -95,7 +95,12 @@ def create_meeting_task(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     return block_builders.section_with_button_block(
-        "Create Task", "CREATE_A_TASK", f"Would you like to create a task from this meeting?",
+        "Create Task",
+        "CREATE_A_TASK",
+        "Would you like to create a task from this meeting?",
+        action_id=action_with_params(
+            slack_const.ZOOM_MEETING__CREATE_TASK, params=[f"u={str(workflow.user.id)}"],
+        ),
     )
 
 
