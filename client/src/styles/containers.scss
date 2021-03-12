@@ -157,6 +157,77 @@
   }
 }
 
+.box-updated {
+  &--no-border {
+    border: none;
+  }
+  &__header {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 0 0 #eeeeee;
+  }
+  &__title {
+    font-family: #{$bold-font-family};
+    padding: 1rem 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.14;
+    color: $main-font-gray;
+    text-transform: uppercase;
+    text-align: left;
+  }
+  &__icon {
+    height: 3rem;
+    font-size: 14px;
+    line-height: 1.14;
+    color: $main-font-gray;
+    text-transform: uppercase;
+  }
+  &__content {
+    padding: 1rem 1rem;
+  }
+  // Dont know if we need this anymore
+  &__bordered-content {
+    padding: 1rem 1rem;
+    box-shadow: 0 1px 0 0 #eeeeee;
+  }
+
+  &__tab {
+    padding: 2rem 2rem 0.5rem 1rem;
+
+    border-bottom: 0.5px solid #9e9ea6;
+    color: #bcbcc1;
+    font-weight: normal;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: left;
+
+    flex: 1;
+  }
+  &__tab--active {
+    padding: 2rem 2rem 0.5rem 1rem;
+    color: #110f24;
+    border-bottom: 2px solid #2f9e54;
+  }
+  &__panel-row {
+    padding: 1rem 1rem;
+    box-shadow: 0 1px 0 0 #eeeeee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  &__panel-row-icon {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  &__panel-row-content {
+    flex: 4;
+  }
+}
+
 .item-list {
   @include standard-border();
   background-color: $white;

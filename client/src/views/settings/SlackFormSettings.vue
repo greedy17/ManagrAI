@@ -4,9 +4,7 @@
       <div class="modal-container">
         <div v-if="!loadingStages" class="modal-container__box">
           <div class="modal-container__box__header">
-            <div class="modal-container__box__title">
-              Select a stage
-            </div>
+            <div class="modal-container__box__title">Select a stage</div>
           </div>
           <div class="modal-container__box__content">
             <div class="box__content-select">
@@ -30,49 +28,58 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
-            >
-              Select
-            </button>
+            >Select</button>
           </div>
         </div>
-        <div v-else>
-          LOADING
-        </div>
+        <div v-else>LOADING</div>
       </div>
     </modal>
-    <div :key="i" class="box" v-for="(resource, i) in FORM_RESOURCES">
+
+    <div class="header__container">
+      <h3 class="header__title">Customize your Slack form</h3>
+      <div class="header__list">
+        <div
+          class="header__list__item"
+        >1. Customize your Slack forms by picking from the fields on the left. Note required “Managr” fields have been preselected</div>
+        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
+        <div
+          class="header__list__item"
+        >3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by selecting each Stage that is gated</div>
+        <div
+          class="header__list__item"
+        >4. Make sure to double check that all your required fields are on the form</div>
+      </div>
+    </div>
+    <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
       <template v-if="allForms && allForms.length">
-        <div @click="toggleSelectedFormResource(resource)" class="box__header">
-          <span class="box__title">
-            {{ resource }}
-          </span>
+        <div @click="toggleSelectedFormResource(resource)" class="box-updated__header">
+          <span class="box-updated__title">{{ resource }}</span>
         </div>
 
-        <div :ref="`${resource.toLowerCase()}-content`" class="box__content">
-          <div class="box__tab-header">
+        <div :ref="`${resource.toLowerCase()}-content`" class="box-updated__content">
+          <div class="box-updated__tab-header">
             <div
               :key="i"
               v-for="(k, i) in allFormsByType"
-              class="box__tab"
-              :class="{ 'box__tab--active': selectedTab == `${k.id}.${k.stage}` }"
+              class="box-updated__tab"
+              :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
-            >
-              {{ resource }} {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }} Form
-            </div>
-            <div class="box__tab-button">
-              <button class="button" @click="onAddForm" v-if="resource == OPPORTUNITY">
-                Add Stage Gating Form
-              </button>
-            </div>
+            >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
+
+            <div
+              class="box-updated__tab"
+              @click="onAddForm"
+              v-if="resource == OPPORTUNITY"
+            >Stage Specific</div>
           </div>
 
           <div class="box__tab-content">
             <template v-if="selectedForm">
               <p>
-                <i
-                  >Required Fields have been pre-filled as part of the form, add or remove
-                  additional fields</i
-                >
+                <i>
+                  Required Fields have been pre-filled as part of the form, add or remove
+                  additional fields
+                </i>
                 <br />
                 <strong>Additional Validations may apply for your Salesforce Resources</strong>
                 <PulseLoadingSpinnerButton
@@ -96,9 +103,7 @@
           </div>
         </div>
       </template>
-      <template v-else>
-        We are currently generating your forms please check back in a few minutes
-      </template>
+      <template v-else>We are currently generating your forms please check back in a few minutes</template>
     </div>
   </div>
 </template>
@@ -315,13 +320,17 @@ export default {
 @import '@/styles/emails';
 @import '@/styles/sidebars';
 
-.box__header {
+.box-updated__header {
   &:hover {
     cursor: pointer;
+    background-color: #f4f5f6;
   }
 }
-.box__tab-header {
-  padding: 0 10rem 0 0;
+.box-updated__tab-header {
+  padding: 0 2rem;
+
+  width: 100%;
+  display: flex;
 }
 .box__tab-button {
   > .button {
@@ -331,8 +340,9 @@ export default {
   right: 3rem;
   height: 3rem;
 }
-.box__content {
+.box-updated__content {
   display: none;
+
   &--closed {
     animation: closemenu forwards;
     animation-duration: 0.5s;
@@ -375,6 +385,26 @@ export default {
     display: none;
     height: 0rem;
     opacity: 0;
+  }
+}
+
+.header {
+  &__container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.25rem;
+  }
+  &__list {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 2rem;
+
+    &__item {
+      font-size: 14px;
+    }
   }
 }
 </style>
