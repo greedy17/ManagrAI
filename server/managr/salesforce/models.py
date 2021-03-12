@@ -331,11 +331,10 @@ class SFSyncOperation(TimeStampModel):
         help_text="An Array of completed task id's",
     )
     failed_operations = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.CharField(max_length=255, blank=True),
         default=list,
         blank=True,
-        null=True,
-        help_text="List of failed tasks as json since they are deleted",
+        help_text="List of failed tasks as that failed from task runner for uncaught exceptions after 5 tries",
     )
 
     @property
@@ -481,6 +480,12 @@ class MeetingWorkflow(SFSyncOperation):
         blank=True,
         max_length=255,
         help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
+    )
+    failed_task_description = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="list of dict failures",
     )
 
     class Meta:

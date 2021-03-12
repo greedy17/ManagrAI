@@ -6,7 +6,7 @@ from background_task import background
 
 from django.utils import timezone
 
-from managr.api.decorators import log_all_exceptions
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions
 
 from managr.core.models import User
 from managr.organization.models import Account, Stage
@@ -39,33 +39,6 @@ from ..adapter.exceptions import TokenExpired, FieldValidationError, RequiredFie
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
-
-
-## for testing
-
-
-def emit_fake_event_end(workflow_id):
-    schedule = timezone.now() - timezone.timedelta(seconds=30)
-    return _process_fake_event_end(workflow_id, schedule=schedule)
-
-
-@background(schedule=0)
-def _process_fake_event_end(workflow_id):
-    w = MeetingWorkflow.objects.filter(id=workflow_id).first()
-    user = w.user
-    access_token = user.organization.slack_integration.access_token
-    ts, channel = w.meeting.slack_interaction.split("|")
-    res = slack_requests.update_channel_message(
-        channel,
-        ts,
-        access_token,
-        block_set=get_block_set("final_meeting_interaction", context={"m": str(w.meeting.id)}),
-    ).json()
-
-    w.meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-    w.meeting.save()
-
-    return
 
 
 def emit_sf_sync(user_id, sync_id, resource, offset):
@@ -417,6 +390,7 @@ def _process_add_call_to_sf(workflow_id, *args):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@sf_api_exceptions
 def _process_create_new_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -469,17 +443,6 @@ def _process_create_new_contacts(workflow_id, *args):
                 else:
                     sf.regenerate_token()
                     attempts += 1
-            except FieldValidationError as e:
-                logger.exception(
-                    f"Validation failed for form with id {str(form.id)} in workflow {str(workflow.id)} {e}"
-                )
-                raise e
-
-            except RequiredFieldError as e:
-                logger.exception(
-                    f"Validation failed for form with id {str(form.id)} in workflow {str(workflow.id)} {e}"
-                )
-                raise e
     return
 
 
