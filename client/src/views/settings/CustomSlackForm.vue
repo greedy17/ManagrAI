@@ -2,34 +2,34 @@
   <div class="slack-form-builder">
     <div>
       <div class="slack-from-builder__sf-validations">
-        <h4>Validations</h4>
+        <!-- <h4>Validations</h4> -->
         <template v-if="showValidations">
           <template v-if="sfValidations.length">
             <ul :key="val.id" v-for="val in sfValidations">
               <li>
-                <strong>Title:</strong> {{ val.description }} <strong>Message:</strong>
+                <strong>Title:</strong>
+                {{ val.description }}
+                <strong>Message:</strong>
                 {{ val.message }}
               </li>
             </ul>
           </template>
-          <template v-else>
-            {{ resource }} does not appear to have any custom validations
-          </template>
+          <template v-else>{{ resource }} does not appear to have any custom validations</template>
         </template>
       </div>
     </div>
     <div style="display:flex;">
       <div class="slack-form-builder__sf-fields">
         <h4>Available Fields</h4>
-        <p><i>Click a field to add it to the form.</i></p>
+        <p>
+          <i>Click a field to add it to the form.</i>
+        </p>
         <div
           v-for="field in sfFieldsAvailableToAdd"
           :key="field.apiName"
           class="slack-form-builder__sf-field"
           @click="() => onAddField(field)"
-        >
-          {{ field.referenceDisplayLabel }}
-        </div>
+        >{{ field.referenceDisplayLabel }}</div>
       </div>
 
       <div class="slack-form-builder__form">
@@ -50,9 +50,7 @@
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div class="form-field__left">
-            <div class="form-field__label">
-              {{ field.referenceDisplayLabel }}
-            </div>
+            <div class="form-field__label">{{ field.referenceDisplayLabel }}</div>
           </div>
           <div class="form-field__right">
             <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
@@ -66,9 +64,7 @@
                   : 'This field is required and cannot be removed.'
               "
               @click="() => canRemoveField(field) && onRemoveField(field)"
-            >
-              {{ !canRemoveField(field) ? 'required' : '× remove' }}
-            </div>
+            >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>
           </div>
         </div>
       </div>
@@ -234,8 +230,7 @@ export default {
 
   &__sf-fields,
   &__sf-validations {
-    flex: 2;
-    margin-right: -1rem;
+    margin-right: 2rem;
   }
 
   &__sf-field {
@@ -248,7 +243,16 @@ export default {
   }
 
   &__form {
-    flex: 10;
+    // flex: 10;
+
+    width: 50vw;
+
+    margin: 45px 108px 1px 35px;
+    padding: 25px 17px 32px 39.6px;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
+    border: solid 2px #dcdddf;
+    background-color: #ffffff;
   }
 }
 

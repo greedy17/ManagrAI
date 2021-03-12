@@ -75,7 +75,7 @@
 
           <div class="box__tab-content">
             <template v-if="selectedForm">
-              <p>
+              <!-- <p>
                 <i>
                   Required Fields have been pre-filled as part of the form, add or remove
                   additional fields
@@ -89,7 +89,7 @@
                   :loading="false"
                 />
                 <strong>to view them</strong>
-              </p>
+              </p>-->
 
               <CustomSlackForm
                 :fields="selectedFormFields"
@@ -320,6 +320,10 @@ export default {
 @import '@/styles/emails';
 @import '@/styles/sidebars';
 
+.container {
+  margin-left: 13rem;
+  margin-right: 5rem;
+}
 .box-updated__header {
   &:hover {
     cursor: pointer;
