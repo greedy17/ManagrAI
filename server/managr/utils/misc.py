@@ -151,10 +151,10 @@ def query_debugger(func):
     return inner_func
 
 
-def upload_to_bucket(filename, bucket_name, access_key_id, secret):
+def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
     AWS_ACCESS_KEY_ID = access_key_id
     AWS_SECRET_ACCESS_KEY = secret
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
-    s3.upload_file(filename, bucket_name, filename)
+    s3.upload_file(f, bucket_name, filename)
