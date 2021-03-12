@@ -24,7 +24,7 @@
         <p>
           <i>Click a field to add it to the form.</i>
         </p>
-        {{addedFields.id}}
+
         <div
           v-for="field in sfFieldsAvailableToAdd"
           class="slack-form-builder__container"
@@ -34,7 +34,6 @@
           <div
             :key="field.apiName"
             class="slack-form-builder__sf-field"
-            @click="() => onAddField(field)"
           >{{ field.referenceDisplayLabel }}</div>
         </div>
       </div>
@@ -42,17 +41,9 @@
       <div class="slack-form-builder__form">
         <div class="form-header">
           <div class="form-header__left">
-            <h3>Customize Your Slack Form</h3>
+            <h3>Your Slack Form</h3>
           </div>
-          <div class="form-header__right">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
+          <div class="form-header__right"></div>
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -62,7 +53,7 @@
           <div class="form-field__right">
             <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
             <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
-            <div
+            <!-- <div
               class="form-field__btn form-field__remove-btn"
               :class="{ 'form-field__remove-btn--disabled': !canRemoveField(field) }"
               :title="
@@ -71,8 +62,17 @@
                   : 'This field is required and cannot be removed.'
               "
               @click="() => canRemoveField(field) && onRemoveField(field)"
-            >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>
+            >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>-->
           </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
       </div>
     </div>
@@ -176,13 +176,17 @@ export default {
     },
     onAddField(field) {
       if (this.addedFieldIds.includes(field.id)) {
+        this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length })
     },
+
     onRemoveField(field) {
-      // remove from the array if it exists
+      // remove from the array if  it exists
+
       this.addedFields = [...this.addedFields.filter(f => f.id != field.id)]
+
       // if it exists in the current fields add it to remove field
 
       if (~this.currentFields.findIndex(f => f == field.id)) {
@@ -244,6 +248,7 @@ export default {
 .slack-form-builder {
   display: flex;
   flex-direction: column;
+  position: relative;
 
   &__sf-fields,
   &__sf-validations {
@@ -343,5 +348,16 @@ export default {
       }
     }
   }
+}
+.save-button {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.primary-button {
+  position: absolute;
+
+  width: 10rem;
+  bottom: 2rem;
 }
 </style>
