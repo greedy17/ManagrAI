@@ -20,18 +20,22 @@
     </div>
 
     <div style="display:flex;">
-      <div class="slack-form-builder__sf-fields">
-        <div
-          v-for="field in sfFieldsAvailableToAdd"
-          class="slack-form-builder__container"
-          @click="()=> onAddField(field)"
-          :key="field.id"
-        >
-          <CheckBox :checked="addedFieldIds.includes(field.id)" />
+      <div>
+        <PulseLoadingSpinner v-if="loading" />
+
+        <div v-if="!loading" class="slack-form-builder__sf-fields">
           <div
-            :key="field.apiName"
-            class="slack-form-builder__sf-field"
-          >{{ field.referenceDisplayLabel }}</div>
+            v-for="field in sfFieldsAvailableToAdd"
+            class="slack-form-builder__container"
+            @click="()=> onAddField(field)"
+            :key="field.id"
+          >
+            <CheckBox :checked="addedFieldIds.includes(field.id)" />
+            <div
+              :key="field.apiName"
+              class="slack-form-builder__sf-field"
+            >{{ field.referenceDisplayLabel }}</div>
+          </div>
         </div>
       </div>
 
@@ -53,7 +57,7 @@
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Type' || field.referenceDisplayLabel === 'Meeting Comments' || field.referenceDisplayLabel === 'How Did It go?'"
                 class="form-field__body"
-              >{{ field.referenceDisplayLabel }}</div>
+              >{{ }}</div>
               <div
                 class="form-field__label"
                 v-if="field.referenceDisplayLabel !== 'Meeting Type' && field.referenceDisplayLabel !== 'Meeting Comments' && field.referenceDisplayLabel !== 'How Did It go?'"
@@ -93,6 +97,7 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -104,6 +109,7 @@ export default {
   components: {
     PulseLoadingSpinnerButton,
     CheckBox,
+    PulseLoadingSpinner,
   },
   props: {
     customForm: {
@@ -124,6 +130,10 @@ export default {
     fields: {
       type: Array,
       default: () => [],
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -287,13 +297,15 @@ export default {
     // flex: 10;
 
     width: 50vw;
-
+    position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     border: solid 2px #dcdddf;
     background-color: #ffffff;
+    left: 13rem;
+    top: -6rem;
   }
 }
 

@@ -58,6 +58,8 @@ export class SObjectFormBuilderAPI extends ModelAPI {
 
     let params = ApiFilter.buildParams(filterMaps, { ...query_params })
 
+    console.log(query_params)
+
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
         params: this.cls.toAPI(params),

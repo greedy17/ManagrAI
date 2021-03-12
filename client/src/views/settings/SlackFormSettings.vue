@@ -99,7 +99,7 @@
                   type="text"
                   class="search-bar"
                   placeholder="Search for a field to add..."
-                  @change="searchFields"
+                  @input="searchFields"
                   v-model="search"
                 />
               </div>
@@ -111,6 +111,7 @@
                 :formType="selectedTab"
                 :resource="resource"
                 v-on:update:selectedForm="updateForm($event)"
+                :loading="loading"
               />
             </template>
           </div>
@@ -150,6 +151,8 @@ export default {
       loadingStages: false,
       ...FORM_CONSTS,
       search: '',
+      fieldParam: null,
+      loading: false,
     }
   },
   watch: {
@@ -164,9 +167,11 @@ export default {
           } else {
             fieldParam['updateable'] = true
           }
+          this.fieldParam = fieldParam
           try {
             this.selectedFormFields = await this.listFields({
               salesforceObject: this.resource,
+
               ...fieldParam,
             })
           } catch (e) {
@@ -210,10 +215,20 @@ export default {
     },
   },
   methods: {
-    searchFields() {},
+    async searchFields() {
+      this.loading = true
+      console.log('search')
+      const filter = {
+        search: this.search,
+        salesforceObject: this.resource,
+        ...this.fieldParam,
+      }
+
+      this.selectedFormFields = await this.listFields(filter)
+      this.loading = false
+    },
 
     async listFields(query_params = {}) {
-      console.log('list fields')
       try {
         const res = await SObjectField.api.listFields(query_params)
         return res
