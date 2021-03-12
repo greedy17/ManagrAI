@@ -110,6 +110,7 @@ export default {
       customSlackFormConfig: [],
       formHasChanges: false,
       savingForm: false,
+
       ...FORM_CONSTS,
     }
   },
@@ -156,14 +157,12 @@ export default {
           return this.sfOpportunityFieldsAsList.filter(
             sfField =>
               sfField['createable'] &&
-              sfField.type !== 'Reference' &&
               !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
           )
         } else {
           return this.sfOpportunityFieldsAsList.filter(
             sfField =>
               sfField['updateable'] &&
-              sfField.type !== 'Reference' &&
               !this.customSlackFormConfig.map(f => f.key).includes(sfField.key),
           )
         }

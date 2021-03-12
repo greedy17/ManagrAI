@@ -14,7 +14,7 @@ class OpportunityForm(forms.ModelForm):
         fields = (
             "integration_id",
             "integration_source",
-            "title",
+            "name",
             "amount",
             "close_date",
             "forecast_category",

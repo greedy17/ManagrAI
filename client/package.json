@@ -36,6 +36,7 @@
     "v-tooltip": "^2.0.3",
     "vue": "^2.5.22",
     "vue-datetime": "^1.0.0-beta.13",
+    "vue-js-modal": "^2.0.0-rc.6",
     "vue-router": "^3.0.2",
     "vue-scrollto": "^2.17.1",
     "vue-template-compiler": "^2.6.10",

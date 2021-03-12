@@ -9,6 +9,30 @@ from rest_framework.response import Response
 from rest_framework import filters
 
 
+def to_snake_case(val):
+    # note if first value is capital then it will return a starting _
+    if not val:
+        return
+    value = str(val)
+    for index, char in enumerate(re.finditer(r"[A-Z]", value)):
+        value = (
+            value[: index + char.start()]
+            + "_"
+            + value[index + char.start()].lower()
+            + value[index + char.start() + 1 :]
+        )
+    return value
+
+
+def object_to_snake_case(obj):
+    if type(obj) != dict:
+        return
+    new_obj = dict()
+    for k, v in obj.items():
+        new_obj[to_snake_case(k)] = v
+    return new_obj
+
+
 def snake_to_space(word):
     _matches = []
     if type(word) != str:
@@ -106,3 +130,4 @@ def query_debugger(func):
         return result
 
     return inner_func
+

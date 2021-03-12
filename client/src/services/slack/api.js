@@ -64,13 +64,19 @@ export default class SlackAPI {
   getOrgCustomForm(resource = null) {
     return this.client
       .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource } })
-      .then(response => response.data.results.map(res => objectToCamelCase(res)))
+      .then(response => response.data.results.map(res => this.cls.customSlackForm.fromAPI(res)))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm', enable400Alert: false }))
   }
 
   postOrgCustomForm(data) {
+    if (data.id.length) {
+      return this.client
+        .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', this.cls.customSlackForm.toAPI(data))
+        .then(response => objectToCamelCase(response.data))
+        .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
+    }
     return this.client
-      .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', data)
+      .post(SLACK_CUSTOM_FORM_ENDPOINT, this.cls.customSlackForm.toAPI(data))
       .then(response => objectToCamelCase(response.data))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }

@@ -211,7 +211,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         meeting.original_duration = original_duration
 
         #
-        logger.info(f"    Got Meeting: {meeting} with ID: {meeting.id}")
+        logger.info(f"    Got Meeting: {meeting} with ID: {meeting_uuid}")
         logger.info(f"    Meeting Start: {meeting.start_time}")
         logger.info(f"    Meeting End: {meeting.end_time}")
 
@@ -240,7 +240,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 
         participants = [
             p
-            for p in [*zoom_participants, *calendar_participants]
+            for p in [*participants, *calendar_participants]
             if p.get("user_email", "") not in ["", user.email]
             and get_domain(p.get("user_email", "")) != get_domain(user.email)
         ]
@@ -285,6 +285,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                                             secondary_data={
                                                 "FirstName": _split_first_name(participant["name"]),
                                                 "LastName": _split_last_name(participant["name"]),
+                                                "Email": participant["user_email"],
                                             },
                                         )
                                     ).as_dict,

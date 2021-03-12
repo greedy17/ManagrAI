@@ -31,5 +31,6 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "config",
             "form_type",
             "resource",
+            "stage",
         )
-        read_only_fields = ("organization",)
+

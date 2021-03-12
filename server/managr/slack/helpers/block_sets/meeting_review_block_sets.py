@@ -63,11 +63,7 @@ def generate_contact_group(index, contact, instance_url):
         else "N/A"
     )
 
-    email = (
-        contact_secondary_data.get("Email")
-        if contact_secondary_data.get("Email", "") and len(contact_secondary_data.get("Email", ""))
-        else "N/A"
-    )
+    email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
     mobile_number = (
         contact_secondary_data.get("MobilePhone")
         if contact_secondary_data.get("MobilePhone")
@@ -300,7 +296,7 @@ def initial_meeting_interaction_block_set(context):
     meeting_resource = meeting.meeting_resource
     opportunity = meeting.opportunity
     account = meeting.linked_account
-
+    meeting_id_param = "m=" + context["m"]
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -330,12 +326,27 @@ def initial_meeting_interaction_block_set(context):
                 "alt_text": "calendar thumbnail",
             },
         },
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": "Review the people who joined your meeting and save them to Salesforce",
+            },
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                "action_id": action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                ),
+            },
+        },
         {"type": "divider"},
     ]
     if not meeting_resource:
         title_section = _initial_interaction_message()
     else:
-        name = opportunity.title if meeting_resource == "Opportunity" else account.name
+        name = opportunity.name if meeting_resource == "Opportunity" else account.name
         title_section = _initial_interaction_message(name, meeting_resource)
     blocks = [
         block_builders.simple_section(title_section, "mrkdwn",),
@@ -426,7 +437,7 @@ def meeting_review_modal_block_set(context):
             ]
         )
 
-    blocks.extend(map_fields_to_type(fields))
+    blocks.extend(map_fields_to_type(fields, user_id=str(user.id)))
     # static blocks
 
     # make params here
@@ -551,7 +562,7 @@ def final_meeting_interaction_block_set(context):
     meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
     meeting_id_param = "m=" + context["m"]
     if meeting.meeting_resource == "Opportunity":
-        regarding_message = meeting.opportunity.title
+        regarding_message = meeting.opportunity.name
     elif meeting.meeting_resource == "Account":
         regarding_message = meeting.linked_account.name
 
@@ -559,24 +570,23 @@ def final_meeting_interaction_block_set(context):
         block_builders.simple_section(
             f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {regarding_message}",
             "mrkdwn",
-        )
-    ]
-    if context.get("show_contacts", False):
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Review the people who joined your meeting and save them to Salesforce",
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Review Meeting Participants",},
-                    "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                    "action_id": action_with_params(
-                        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
-                    ),
-                },
+        ),
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": "Review the people who joined your meeting and save them to Salesforce",
             },
-        )
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Review Meeting Participants",},
+                "value": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                "action_id": action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[meeting_id_param,],
+                ),
+            },
+        },
+    ]
+
     return blocks
+

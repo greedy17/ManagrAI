@@ -240,6 +240,7 @@ class SlackFormsViewSet(
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
 ):
     filterset_fields = [
         "resource",
@@ -249,3 +250,10 @@ class SlackFormsViewSet(
     def get_queryset(self):
         return OrgCustomSlackForm.objects.for_user(self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        data = self.request.data
+        data.update({"organization": self.request.user.organization_id})
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

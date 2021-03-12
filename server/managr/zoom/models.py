@@ -280,6 +280,15 @@ class ZoomMeeting(TimeStampModel):
         max_length=255,
         help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
     )
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The id of the related resource unopinionated",
+    )
+    resource_type = models.CharField(
+        max_length=255, null=True, blank=True, help_text="The class name of the resource"
+    )
     objects = ZoomMeetingQuerySet.as_manager()
 
     class Meta:
@@ -293,6 +302,15 @@ class ZoomMeeting(TimeStampModel):
             return "Account"
         else:
             return None
+
+    @property
+    def resource(self):
+        from server.managr.salesforce.routes import routes
+
+        model_class = routes.get(self.resource_type, None)
+        if model_class and self.resource_id:
+            return model_class.get(id=self.resource_id)
+        return None
 
     @property
     def should_retry(self):

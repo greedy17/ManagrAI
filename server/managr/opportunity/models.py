@@ -38,7 +38,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     choose to use PROTECT and require that leads are transferred before delete.
     """
 
-    title = models.CharField(max_length=255, blank=True, null=False)
+    name = models.CharField(max_length=255, blank=True, null=False)
     amount = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
@@ -90,7 +90,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.title, str(self.id))
+        return block_builders.option(self.name, str(self.id))
 
     @property
     def adapter_class(self):
@@ -229,7 +229,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
         )
 
     def __str__(self):
-        return f"Lead '{self.title}' ({self.id})"
+        return f"Opportunity '{self.name}' ({self.id})"
 
     def save(self, *args, **kwargs):
         obj = (

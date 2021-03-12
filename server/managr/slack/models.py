@@ -115,7 +115,7 @@ class OrgCustomSlackFormQuerySet(models.QuerySet):
 
 
 class OrgCustomSlackForm(TimeStampModel):
-    """Model to store the organizations JSON-based custom Slack form config."""
+    """Model to store the organizations JSON-based custom Slack form config - these are templates """
 
     organization = models.ForeignKey(
         "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
@@ -134,6 +134,12 @@ class OrgCustomSlackForm(TimeStampModel):
         default=dict,
         help_text="The configuration object for this organization's custom Slack form.",
     )
+    stage = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="if this is a special stage form the stage will appear here",
+    )
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
@@ -141,8 +147,42 @@ class OrgCustomSlackForm(TimeStampModel):
         return f"Slack Form {self.resource}, {self.form_type}"
 
     class Meta:
-        ordering = ["resource"]
-        unique_together = ["resource", "form_type", "organization"]
+        ordering = ["resource", "-stage"]
+        unique_together = ["resource", "form_type", "organization", "stage"]
+
+
+class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(user=user.id)
+        else:
+            return self.none()
+
+
+class OrgCustomSlackFormInstance(TimeStampModel):
+    """Model to store the instances created when a form is submitted from slack """
+
+    user = models.ForeignKey(
+        "organization.Organization",
+        related_name="custom_slack_form_instances",
+        on_delete=models.CASCADE,
+    )
+    template = models.ForeignKey(
+        "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
+    )
+
+    form_data = JSONField(
+        default=dict,
+        help_text="The form data as a field object with a value inserted for this organization's custom Slack form.",
+    )
+
+    objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
+
+    def __str__(self):
+        return f"Slack Form {self.resource}, {self.form_type}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
 
 
 # users can have a slack form for create,
