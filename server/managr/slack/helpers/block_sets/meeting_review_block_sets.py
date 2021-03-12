@@ -15,7 +15,12 @@ from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
+from managr.slack.helpers.utils import (
+    action_with_params,
+    block_set,
+    map_fields_to_type,
+)
+
 from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
@@ -102,6 +107,13 @@ def create_meeting_task(context):
             slack_const.ZOOM_MEETING__CREATE_TASK, params=[f"u={str(workflow.user.id)}"],
         ),
     )
+
+
+@block_set()
+def convert_lead_block_set(context):
+    from .common_blocksets import coming_soon_modal_block_set
+
+    return coming_soon_modal_block_set()
 
 
 @block_set(required_context=["w"])
@@ -367,7 +379,9 @@ def initial_meeting_interaction_block_set(context):
             block_builders.simple_button_block(
                 "Convert Lead",
                 str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__CONVERT_LEAD_TO_OPP,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__CONVERT_LEAD, params=[f"u={str(workflow.user.id)}"]
+                ),
                 style="primary",
             ),
             *action_blocks,
