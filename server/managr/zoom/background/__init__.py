@@ -289,7 +289,10 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
             res = slack_requests.send_channel_message(
-                user_slack_channel, slack_org_access_token, block_set=block_set
+                user_slack_channel,
+                slack_org_access_token,
+                text=f"Your Meeting just ended {workflow.meeting.topic}",
+                block_set=block_set,
             ).json()
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
