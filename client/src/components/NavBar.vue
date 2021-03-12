@@ -15,14 +15,38 @@
           />
           <div class="tooltip__popup" v-if="tooltipOpen">
             <div class="tooltip__popup__bold">Having issues?</div>
-            <div>Email mike@mymanagr.com</div>
+            <div>Email support@mymanagr.com</div>
           </div>
         </div>
 
-        <div v-if="userIsLoggedIn" class="right__items">
-          <DropDownMenu @selectedItem="routeToSelected" :right="10" :items="items">
+        <div v-if="userIsLoggedIn" class="right__items" @click="toggleDropDown">
+          <DropDownMenu
+            @selectedItem="routeToSelected"
+            :right="10"
+            :items="[ { key: 'Integrations', value: 'Integrations' },
+        { key: 'Slack Forms', value: 'SlackFormSettings' },
+        { key: 'Invite Users', value: 'InviteUsers' },
+        { key: 'Log Out', value: 'logout' },]"
+            v-if="isAdmin"
+          >
             <template v-slot:dropdown-trigger="{ toggle }">
-              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="0 0 24 20">
+              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
+                <use xlink:href="@/assets/images/icon-menu.svg#settings" />
+              </svg>
+            </template>
+          </DropDownMenu>
+
+          <DropDownMenu
+            @selectedItem="routeToSelected"
+            :right="10"
+            :items="[ { key: 'Integrations', value: 'Integrations' },
+        
+        
+        { key: 'Log Out', value: 'logout' },]"
+            v-if="!isAdmin"
+          >
+            <template v-slot:dropdown-trigger="{ toggle }">
+              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
                 <use xlink:href="@/assets/images/icon-menu.svg#settings" />
               </svg>
             </template>
@@ -49,6 +73,7 @@ export default {
       },
       items: [],
       tooltipOpen: false,
+      dropdownOpen: false,
     }
   },
 
@@ -71,6 +96,9 @@ export default {
   destroyed() {},
 
   methods: {
+    toggleDropDown() {
+      this.dropdownOpen = !this.dropdownOpen
+    },
     toggleTooltip() {
       this.tooltipOpen = !this.tooltipOpen
     },
@@ -211,8 +239,8 @@ nav {
   }
 
   &__popup {
-    width: 259px;
-    height: 69px;
+    width: 20rem;
+
     margin: 2px 13px 3px 40px;
     padding: 13px 21px 16px 29px;
     border-radius: 5px;
