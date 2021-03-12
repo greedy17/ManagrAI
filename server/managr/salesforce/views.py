@@ -5,6 +5,8 @@ from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.management import call_command
@@ -172,7 +174,12 @@ class SObjectValidationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectFieldSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
     filter_fields = ("salesforce_object", "createable", "updateable")
+    search_fields = ("label",)
 
     def get_queryset(self):
         return SObjectField.objects.for_user(self.request.user)
