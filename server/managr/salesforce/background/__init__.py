@@ -299,6 +299,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@sf_api_exceptions("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -335,7 +336,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
-@log_all_exceptions
+@sf_api_exceptions("add_call_log")
 def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -448,7 +449,7 @@ def _process_create_new_contacts(workflow_id, *args):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
-@log_all_exceptions
+@sf_api_exceptions("update_contacts_or_link_contacts")
 def _process_update_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -512,6 +513,7 @@ def _process_update_contacts(workflow_id, *args):
     return
 
 
+### This is currently run as async so dont catch the errors in the same way
 @background(schedule=0)
 def _process_create_new_resource(workflow_id, resource, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
