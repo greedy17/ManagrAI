@@ -32,9 +32,9 @@ export default {
   }
 
   &--empty {
-    width: 1rem;
-    height: 1rem;
-    border: 1px solid black;
+    width: 1.2rem;
+    height: 1.2rem;
+    background-color: #f4f5f6;
     margin-left: 0.2rem;
     margin-top: 0.3rem;
     border-radius: 0.15rem;
