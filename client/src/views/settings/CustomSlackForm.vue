@@ -55,9 +55,18 @@
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
               <div
-                v-if="field.referenceDisplayLabel === 'Meeting Type' || field.referenceDisplayLabel === 'Meeting Comments' || field.referenceDisplayLabel === 'How Did It go?'"
+                v-if="field.referenceDisplayLabel === 'Meeting Type'"
                 class="form-field__body"
-              >{{ }}</div>
+              >{{"This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'" }}</div>
+              <div
+                v-if=" field.referenceDisplayLabel === 'Meeting Comments' "
+                class="form-field__body"
+              >{{ "Logs the rep’s comments about the meeting"}}</div>
+              <div
+                v-if=" field.referenceDisplayLabel === 'How Did It go?'"
+                class="form-field__body"
+              >{{"Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)" }}</div>
+
               <div
                 class="form-field__label"
                 v-if="field.referenceDisplayLabel !== 'Meeting Type' && field.referenceDisplayLabel !== 'Meeting Comments' && field.referenceDisplayLabel !== 'How Did It go?'"
@@ -66,18 +75,15 @@
 
             <div class="form-field__middle">{{field.required? 'required':''}}</div>
             <div class="form-field__right">
-              <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
-              <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
-              <!-- <div
-              class="form-field__btn form-field__remove-btn"
-              :class="{ 'form-field__remove-btn--disabled': !canRemoveField(field) }"
-              :title="
-                canRemoveField(field)
-                  ? 'Remove this field from the form'
-                  : 'This field is required and cannot be removed.'
-              "
-              @click="() => canRemoveField(field) && onRemoveField(field)"
-              >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>-->
+              <div
+                class="form-field__btn form-field__btn--flipped"
+                @click="() => onMoveFieldUp(field, index)"
+              >
+                <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
+              <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
+                <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
             </div>
           </div>
         </div>
@@ -306,6 +312,7 @@ export default {
     background-color: #ffffff;
     left: 13rem;
     top: -6rem;
+    min-height: 70vh;
   }
 }
 
@@ -368,6 +375,10 @@ export default {
 
     &:hover {
       color: black;
+    }
+
+    &--flipped {
+      transform: rotateX(180deg);
     }
   }
 
