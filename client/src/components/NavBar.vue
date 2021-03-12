@@ -6,17 +6,47 @@
       </div>
 
       <div class="right" ref="user-menu-icon">
-        <div v-if="userIsLoggedIn" class="right__items">
+        <div>
+          <img
+            src="@/assets/images/toolTip.png"
+            class="tooltip__icon"
+            @mouseover="toggleTooltip"
+            @mouseleave="toggleTooltip"
+          />
+          <div class="tooltip__popup" v-if="tooltipOpen">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div>Email support@mymanagr.com</div>
+          </div>
+        </div>
+
+        <div v-if="userIsLoggedIn" class="right__items" @click="toggleDropDown">
           <DropDownMenu
             @selectedItem="routeToSelected"
             :right="10"
-            :items="[
-              { key: 'Settings', value: 'settings' },
-              { key: 'Log Out', value: 'logout' },
-            ]"
+            :items="[ { key: 'Integrations', value: 'Integrations' },
+        { key: 'Slack Forms', value: 'SlackFormSettings' },
+        { key: 'Invite Users', value: 'InviteUsers' },
+        { key: 'Log Out', value: 'logout' },]"
+            v-if="isAdmin"
           >
             <template v-slot:dropdown-trigger="{ toggle }">
-              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="0 0 24 20">
+              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
+                <use xlink:href="@/assets/images/icon-menu.svg#settings" />
+              </svg>
+            </template>
+          </DropDownMenu>
+
+          <DropDownMenu
+            @selectedItem="routeToSelected"
+            :right="10"
+            :items="[ { key: 'Integrations', value: 'Integrations' },
+        
+        
+        { key: 'Log Out', value: 'logout' },]"
+            v-if="!isAdmin"
+          >
+            <template v-slot:dropdown-trigger="{ toggle }">
+              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
                 <use xlink:href="@/assets/images/icon-menu.svg#settings" />
               </svg>
             </template>
@@ -41,19 +71,42 @@ export default {
       showMenus: {
         user: false,
       },
+      items: [],
+      tooltipOpen: false,
+      dropdownOpen: false,
     }
   },
-  async created() {},
+
+  async created() {
+    if (this.isAdmin) {
+      this.items = [
+        { key: 'Integrations', value: 'Integrations' },
+        { key: 'Slack Forms', value: 'SlackFormSettings' },
+        { key: 'Invite Users', value: 'InviteUsers' },
+        { key: 'Log Out', value: 'logout' },
+      ]
+    } else {
+      this.items = [
+        { key: 'Integrations', value: 'Integrations' },
+        { key: 'Log Out', value: 'logout' },
+      ]
+    }
+  },
   mounted() {},
   destroyed() {},
 
   methods: {
+    toggleDropDown() {
+      this.dropdownOpen = !this.dropdownOpen
+    },
+    toggleTooltip() {
+      this.tooltipOpen = !this.tooltipOpen
+    },
     routeToSelected(selected) {
-      if (selected == 'settings') {
-        this.routeToSettings()
-      }
       if (selected == 'logout') {
         this.logOut()
+      } else {
+        this.$router.push({ name: selected })
       }
     },
 
@@ -69,6 +122,9 @@ export default {
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
     },
   },
 }
@@ -143,6 +199,7 @@ nav {
   justify-content: space-evenly;
   position: relative;
   margin-right: 1rem;
+
   > * {
     margin-right: 1rem;
   }
@@ -170,5 +227,32 @@ nav {
   width: 20px;
   height: 15px;
   fill: #484a6e;
+}
+
+.tooltip {
+  position: relative;
+  &__icon {
+    width: 18px;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  &__popup {
+    width: 20rem;
+
+    margin: 2px 13px 3px 40px;
+    padding: 13px 21px 16px 29px;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    border: solid 2px #dcdddf;
+    background-color: #ffffff;
+    position: absolute;
+    right: 4rem;
+
+    &__bold {
+      font-family: #{$bold-font-family};
+    }
+  }
 }
 </style>

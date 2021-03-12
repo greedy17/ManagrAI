@@ -30,9 +30,7 @@
             :key="`${item[valueKey]}-${i}`"
             @click.prevent="emitSelected(item[valueKey])"
             class="dd-item"
-          >
-            {{ item[displayKey] }}
-          </div>
+          >{{ item[displayKey] }}</div>
         </slot>
       </template>
     </div>
@@ -159,6 +157,7 @@ Display dropdown relative to the component it is triggered by
   border: none;
   background-color: transparent;
   outline: none;
+
   &:hover {
     cursor: pointer;
   }
