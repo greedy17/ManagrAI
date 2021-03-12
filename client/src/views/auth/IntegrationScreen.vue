@@ -29,18 +29,11 @@
           v-else
           class="secondary-button"
         ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          text="Show Forms"
-          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-          @click="$router.push({ name: 'SlackFormSettings' })"
-          v-if="hasSalesforceIntegration"
-          class="secondary-button"
-        ></PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/zoom.png" />
+          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
           <h3 class="card__title">Zoom</h3>
         </div>
 
@@ -350,9 +343,13 @@ export default {
   width: 19rem;
   margin: 6rem 0 5rem 0;
 
-  &__disabled {
-    background-color: gray;
+  &--disabled {
+    background-color: #{$gray} !important;
+    height: 2.5rem;
+    width: 19rem;
+    margin: 6rem 0 5rem 0;
     @include secondary-button();
+    cursor: default !important;
   }
 }
 
@@ -360,5 +357,10 @@ export default {
   font-family: #{$bold-font-family};
   font-size: 14px;
   margin-bottom: 2rem;
+}
+
+.lock {
+  height: 2rem;
+  margin-bottom: 1rem;
 }
 </style>

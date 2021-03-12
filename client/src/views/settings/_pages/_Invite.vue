@@ -66,23 +66,20 @@
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
         <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
         <div class="invite-list__section__item invite-list__status">
-          {{ user.userLevel == 'Manager' ? 'Team Leader(You)' : 'Rep(You)' }}
+          {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
         <div class="invite-list__section__item invite-list__status">Registered</div>
       </div>
-      <div
-        v-for="member in team.list"
-        :key="member.id"
-        class="invite-list__section__container"
-        v-if="member.id !== user.id"
-      >
-        <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
-        <div class="invite-list__section__item invite-list__status">
-          {{ member.userLevel == 'Manager' ? 'Team Leader' : 'Rep' }}
-        </div>
-        <div class="invite-list__section__item invite-list__status">
-          {{ member.isActive ? 'Registered' : 'Pending' }}
-        </div>
+      <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
+        <template v-if="member.id !== user.id">
+          <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
+          <div class="invite-list__section__item invite-list__status">
+            {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
+          </div>
+          <div class="invite-list__section__item invite-list__status">
+            {{ member.isActive ? 'Registered' : 'Pending' }}
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -142,6 +139,11 @@ export default {
   methods: {
     async refresh() {
       this.user = this.$store.state.user
+
+      if (!this.user.isAdmin) {
+        this.$router.push({ name: 'Integrations' })
+      }
+
       if (this.isStaff) {
         await this.organizations.refresh()
       } else {
@@ -262,7 +264,7 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  height: 80vh;
+  // height: 80vh;
 
   width: 80%;
 }
@@ -326,7 +328,7 @@ button {
 .invite-form {
   border: none;
   width: 100%;
-  height: 50vh;
+  height: 70vh;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -364,7 +366,7 @@ button {
     border: solid 2px #dcdddf;
     width: 0%;
     min-width: 40vw;
-    padding: 25px 12px 322px 37px;
+    padding: 1.5rem 1rem 1.5rem 1.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     display: flex;
