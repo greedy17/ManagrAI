@@ -89,7 +89,20 @@
                   :loading="false"
                 />
                 <strong>to view them</strong>
+
               </p>-->
+              <div class="field-title field-title__bold">Available Fields</div>
+
+              <div class="field-title">Add or remove additional tags</div>
+              <div>
+                <input
+                  type="text"
+                  class="search-bar"
+                  placeholder="Search for a field to add..."
+                  @change="searchFields"
+                  v-model="search"
+                />
+              </div>
 
               <CustomSlackForm
                 :fields="selectedFormFields"
@@ -136,6 +149,7 @@ export default {
       stages: [],
       loadingStages: false,
       ...FORM_CONSTS,
+      search: '',
     }
   },
   watch: {
@@ -196,7 +210,10 @@ export default {
     },
   },
   methods: {
+    searchFields() {},
+
     async listFields(query_params = {}) {
+      console.log('list fields')
       try {
         const res = await SObjectField.api.listFields(query_params)
         return res
@@ -410,5 +427,22 @@ export default {
       font-size: 14px;
     }
   }
+}
+.field-title {
+  font-size: 0.75rem;
+  margin-left: 1rem;
+
+  &__bold {
+    font-family: #{$bold-font-family};
+    margin: 2rem 0 0 1rem;
+  }
+}
+
+.search-bar {
+  @include input-field();
+  height: 2.5rem !important;
+  width: 13rem;
+  padding: 0 0 0 1rem;
+  margin: 1rem;
 }
 </style>

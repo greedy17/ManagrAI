@@ -18,17 +18,14 @@
         </template>
       </div>
     </div>
+
     <div style="display:flex;">
       <div class="slack-form-builder__sf-fields">
-        <h4>Available Fields</h4>
-        <p>
-          <i>Click a field to add it to the form.</i>
-        </p>
-
         <div
           v-for="field in sfFieldsAvailableToAdd"
           class="slack-form-builder__container"
           @click="()=> onAddField(field)"
+          :key="field.id"
         >
           <CheckBox :checked="addedFieldIds.includes(field.id)" />
           <div
@@ -47,13 +44,27 @@
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
-          <div class="form-field__left">
-            <div class="form-field__label">{{ field.referenceDisplayLabel }}</div>
-          </div>
-          <div class="form-field__right">
-            <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
-            <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
-            <!-- <div
+          <div
+            v-if="field.referenceDisplayLabel === 'Meeting Type' || field.referenceDisplayLabel === 'Meeting Comments' || field.referenceDisplayLabel === 'How Did It go?'"
+            class="form-field__label"
+          >{{ field.referenceDisplayLabel }}</div>
+          <div style="display: flex; width: 100%;">
+            <div class="form-field__left">
+              <div
+                v-if="field.referenceDisplayLabel === 'Meeting Type' || field.referenceDisplayLabel === 'Meeting Comments' || field.referenceDisplayLabel === 'How Did It go?'"
+                class="form-field__body"
+              >{{ field.referenceDisplayLabel }}</div>
+              <div
+                class="form-field__label"
+                v-if="field.referenceDisplayLabel !== 'Meeting Type' && field.referenceDisplayLabel !== 'Meeting Comments' && field.referenceDisplayLabel !== 'How Did It go?'"
+              >{{ field.referenceDisplayLabel }}</div>
+            </div>
+
+            <div class="form-field__middle">{{field.required? 'required':''}}</div>
+            <div class="form-field__right">
+              <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">▲</div>
+              <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">▼</div>
+              <!-- <div
               class="form-field__btn form-field__remove-btn"
               :class="{ 'form-field__remove-btn--disabled': !canRemoveField(field) }"
               :title="
@@ -62,7 +73,8 @@
                   : 'This field is required and cannot be removed.'
               "
               @click="() => canRemoveField(field) && onRemoveField(field)"
-            >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>-->
+              >{{ !canRemoveField(field) ? 'required' : '× remove' }}</div>-->
+            </div>
           </div>
         </div>
         <div class="save-button">
@@ -244,6 +256,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+@import '@/styles/mixins/inputs.scss';
 
 .slack-form-builder {
   display: flex;
@@ -261,6 +274,8 @@ export default {
 
   &__sf-field {
     padding: 0.25rem;
+    font-size: 0.75rem;
+    font-display: #{$bold-font-family};
 
     &:hover {
       background-color: $dark-gray-blue;
@@ -298,13 +313,26 @@ export default {
 }
 
 .form-field {
-  display: flex;
   background-color: white;
   padding: 1rem;
   margin: 0.5rem 0;
 
   &__left {
     flex: 10;
+
+    display: flex;
+    align-items: center;
+  }
+
+  &__middle {
+    flex: 2;
+
+    display: flex;
+    align-items: center;
+  }
+
+  &__body {
+    font-size: 0.75rem;
   }
 
   &__label {
@@ -314,6 +342,9 @@ export default {
   &__right {
     flex: 2;
     display: flex;
+
+    display: flex;
+    align-items: center;
   }
 
   &__btn {
@@ -358,6 +389,24 @@ export default {
   position: absolute;
 
   width: 10rem;
-  bottom: 2rem;
+  bottom: 1.5rem;
+}
+
+.search-bar {
+  @include input-field();
+  height: 2.5rem !important;
+  width: 13rem;
+  padding: 0 0 0 1rem;
+  margin: 1rem;
+}
+
+.field-title {
+  font-size: 0.75rem;
+  margin-left: 1rem;
+
+  &__bold {
+    font-family: #{$bold-font-family};
+    margin: 2rem 0 0 1rem;
+  }
 }
 </style>
