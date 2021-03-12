@@ -24,12 +24,19 @@
         <p>
           <i>Click a field to add it to the form.</i>
         </p>
+        {{addedFields.id}}
         <div
           v-for="field in sfFieldsAvailableToAdd"
-          :key="field.apiName"
-          class="slack-form-builder__sf-field"
-          @click="() => onAddField(field)"
-        >{{ field.referenceDisplayLabel }}</div>
+          class="slack-form-builder__container"
+          @click="()=> onAddField(field)"
+        >
+          <CheckBox :checked="addedFieldIds.includes(field.id)" />
+          <div
+            :key="field.apiName"
+            class="slack-form-builder__sf-field"
+            @click="() => onAddField(field)"
+          >{{ field.referenceDisplayLabel }}</div>
+        </div>
       </div>
 
       <div class="slack-form-builder__form">
@@ -74,6 +81,7 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import CheckBox from '../../components/CheckBoxUpdated'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations } from '@/services/salesforce'
@@ -83,6 +91,7 @@ export default {
   name: 'CustomSlackForm',
   components: {
     PulseLoadingSpinnerButton,
+    CheckBox,
   },
   props: {
     customForm: {
@@ -134,6 +143,11 @@ export default {
     currentFields() {
       return this.customForm ? this.customForm.fields : []
     },
+    addedFieldIds() {
+      return this.addedFields.map(field => {
+        return field.id
+      })
+    },
   },
   created() {},
   methods: {
@@ -161,6 +175,9 @@ export default {
       }
     },
     onAddField(field) {
+      if (this.addedFieldIds.includes(field.id)) {
+        return
+      }
       this.addedFields.push({ ...field, order: this.addedFields.length })
     },
     onRemoveField(field) {
@@ -231,6 +248,10 @@ export default {
   &__sf-fields,
   &__sf-validations {
     margin-right: 2rem;
+  }
+
+  &__container {
+    display: flex;
   }
 
   &__sf-field {
