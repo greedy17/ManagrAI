@@ -382,10 +382,7 @@ class SFSyncOperation(TimeStampModel):
         self.save()
 
     def begin_tasks(self, attempts=1):
-        from managr.salesforce.background import (
-            emit_sf_sync,
-            emit_gen_next_sync,
-        )
+        from managr.salesforce.background import emit_sf_sync
 
         sf_account = self.user.salesforce_account
         adapter = self.user.salesforce_account.adapter_class
@@ -414,9 +411,19 @@ class SFSyncOperation(TimeStampModel):
                     self.operations = [str(t.task_hash)]
                 self.save()
 
-        scheduled_time = timezone.now() + timezone.timedelta(minutes=2.5)
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
+    def save(self, *args, **kwargs):
+        from managr.salesforce.background import (
+            emit_sf_sync,
+            emit_gen_next_sync,
+        )
+
+        logger.info(f"{self.progress}")
+        if self.progress == 100:
+            logger.info("starting new process")
+            scheduled_time = timezone.now() + timezone.timedelta(minutes=2.5)
+            formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+            emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
+        return super(SFSyncOperation, self).save(*args, **kwargs)
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
@@ -456,6 +463,10 @@ class SFObjectFieldsOperation(SFSyncOperation):
         scheduled_time = timezone.now() + timezone.timedelta(minutes=720)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_object_field_sync(str(self.user.id), self.operations_list, formatted_time)
+
+    def save(self, *args, **kwargs):
+        # overriding to make sure super does not call parent
+        return super(SFObjectFieldsOperation, self).save(*args, **kwargs)
 
 
 class MeetingWorkflow(SFSyncOperation):

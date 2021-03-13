@@ -122,14 +122,17 @@
         <p class="card-text">Coming Soon...</p>
       </div>
     </div>
+    <div class="slack-form-builder">
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Slack Form Builder"
+        :disabled="!hasSalesforceIntegration"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+    </div>
 
-    <PulseLoadingSpinnerButton
-      v-if="hasSalesforceIntegration"
-      @click="goToSlackFormBuilder"
-      class="slack-button"
-      text="Slack Form Builder"
-      :disabled="!hasSalesforceIntegration"
-    ></PulseLoadingSpinnerButton>
     <!--     <div
       @click="goToSlackFormBuilder"
       class="slack-button slack-button--disabled"
@@ -308,11 +311,14 @@ export default {
 }
 
 .card {
-  flex: 1;
-  min-width: 28rem;
-  max-width: 28rem;
-  margin-right: 2rem;
+  width: 10rem;
+  margin-right: 1rem;
   margin-bottom: 2rem;
+  @media only screen and (min-width: 768px) {
+    flex: 1 0 24%;
+    min-width: 21rem;
+    max-width: 30rem;
+  }
 
   &__header {
     display: flex;

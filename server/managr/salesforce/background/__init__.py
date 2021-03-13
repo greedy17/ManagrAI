@@ -146,7 +146,6 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-    sf = user.salesforce_account
 
     # if route doesnt exist catch all will catch the value error here
     route = routes[resource]
@@ -154,6 +153,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
     serializer_class = route["serializer"]
 
     while True:
+        sf = user.salesforce_account
         try:
             res = sf.list_resource_data(resource, offset)
             break
@@ -189,9 +189,10 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-    sf = user.salesforce_account
+
     attempts = 1
     while True:
+        sf = user.salesforce_account
         try:
             fields = sf.get_fields(resource)
             break
@@ -227,9 +228,10 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-    sf = user.salesforce_account
+
     attempts = 1
     while True:
+        sf = user.salesforce_account
         try:
             values = sf.get_picklist_values(resource)
             break
@@ -265,9 +267,9 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-    sf = user.salesforce_account
     attempts = 1
     while True:
+        sf = user.salesforce_account
         try:
             validations = sf.get_validations(resource)
             break
