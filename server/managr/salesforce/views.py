@@ -15,6 +15,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     authentication,
     filters,

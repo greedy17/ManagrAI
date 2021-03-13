@@ -133,13 +133,20 @@
       ></PulseLoadingSpinnerButton>
     </div>
 
-    <!--     <div
+    <PulseLoadingSpinnerButton
+      v-if="hasSalesforceIntegration && user.isAdmin"
       @click="goToSlackFormBuilder"
+      class="slack-button"
+      text="Slack Form Builder"
+    ></PulseLoadingSpinnerButton>
+    <div
+      v-if="!hasSalesforceIntegration && user.isAdmin"
       class="slack-button slack-button--disabled"
       text="Slack Form Builder"
     >
       Slack Form Builder
-    </div> -->
+    </div>
+    <img class="lock" src="@/assets/images/lockAsset.png" />
     <div class="privacy">
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
       by managr.
