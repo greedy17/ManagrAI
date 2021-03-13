@@ -53,6 +53,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       createable: ApiFilter.create({ key: 'createable' }),
       updateable: ApiFilter.create({ key: 'updateable' }),
       salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+      search: ApiFilter.create({ key: 'search' }),
     }
 
     let params = ApiFilter.buildParams(filterMaps, { ...query_params })

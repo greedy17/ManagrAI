@@ -13,6 +13,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     authentication,
     filters,
@@ -172,7 +173,13 @@ class SObjectValidationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectFieldSerializer
+
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
     filter_fields = ("salesforce_object", "createable", "updateable")
+    search_fields = ("label",)
 
     def get_queryset(self):
         return SObjectField.objects.for_user(self.request.user)
