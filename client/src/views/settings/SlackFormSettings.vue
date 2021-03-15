@@ -19,7 +19,17 @@
             <div class="required__content">{{ validation.message }}</div>
           </div>
         </div>
-        <Paginator class="popup-paginator" pagination="validations.pagination" />
+
+        <Paginator
+          v-if="validations.pagination.next || validations.pagination.previous"
+          :pagination="validations.pagination"
+          @next-page="nextValidation"
+          @previous-page="previousValidation"
+          :loading="validations.loadingNextPage"
+          arrows
+          size="small"
+          class="popup-paginator"
+        />
       </div>
     </modal>
     <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
@@ -643,6 +653,9 @@ export default {
   }
 }
 
+.popup-paginator {
+  @include paginator();
+}
 .stage {
   &__container {
     position: relative;
@@ -709,7 +722,6 @@ export default {
   &__content {
     margin: 1rem 0 2rem 0;
     &__container {
-      border: 2px solid red;
       width: 100%;
       padding: 1rem 3rem;
     }
