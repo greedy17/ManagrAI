@@ -80,4 +80,11 @@ export default class SlackAPI {
       .then(response => this.cls.customSlackForm.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }
+
+  delete(id) {
+    return this.client
+      .delete(SLACK_CUSTOM_FORM_ENDPOINT + id + '/')
+      .then(response => response)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
+  }
 }

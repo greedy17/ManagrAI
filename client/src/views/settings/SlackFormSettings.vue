@@ -89,7 +89,7 @@
         </div>
       </div>
     </div>
-    <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
+    <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
       <template v-if="allForms && allForms.length">
         <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
           <span class="box-updated__title">
@@ -125,11 +125,11 @@
                 Stage Specific
                 <img src="@/assets/images/dropdown-arrow-green.svg" />
               </div>
-              <div v-if="stageDropDownOpen" class="stage__dropdown">
+              <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
                 <div v-if="currentFormStages.length">
                   <div class="stage__dropdown__header">Your Stage Gate Forms</div>
                   <div
-                    v-for="form in formStages"
+                    v-for="(form, i) in formStages"
                     :key="form"
                     class="stage__dropdown__stages__container"
                   >
@@ -139,12 +139,13 @@
                     >
                       {{ form.stage }}
                     </div>
-                    <!-- <div class="stage__dropdown__stages__x">x</div> -->
-                    <!--delete not added yet  -->
+                    <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
+                      x
+                    </div>
                   </div>
-                  <div style="display: flex; justify-content: center;">
-                    <button @click="onAddForm" class="modal-container__box__button">Add</button>
-                  </div>
+                </div>
+                <div style="display: flex; justify-content: center;">
+                  <button @click="onAddForm" class="modal-container__box__button">Add</button>
                 </div>
               </div>
             </div>
@@ -382,6 +383,38 @@ export default {
         console.log(e)
       }
     },
+
+    async deleteForm(index) {
+      const forms = this.allFormsByType
+
+      if (forms[index].id.length) {
+        const id = forms[index].id
+        console.log(this.formsByType)
+        SlackOAuth.api
+          .delete(id)
+          .then(async res => {
+            this.$Alert.alert({
+              type: 'success',
+              message: 'Form deleted successfully',
+              duration: 4500,
+            })
+            this.formsByType.splice(index, 1)
+            console.log(this.formsByType)
+          })
+          .catch(e => {
+            this.$Alert.alert({
+              type: 'error',
+              message: 'There was an error, please try again',
+              duration: 4500,
+            })
+          })
+          .finally(() => {})
+      } else {
+        const length = this.allFormsByType.length - this.formsByType
+        this.newForms.splice(length - 1, 1)
+      }
+    },
+
     openStageDropDown() {
       this.stageDropDownOpen = !this.stageDropDownOpen
     },
