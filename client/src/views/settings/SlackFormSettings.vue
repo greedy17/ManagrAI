@@ -29,9 +29,7 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
-            >
-              Select
-            </button>
+            >Select</button>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -45,16 +43,14 @@
           1. Customize your Slack forms by picking from the fields on the left. Note required
           “Managr” fields have been preselected
         </div>
-        <div class="header__list__item">
-          2. Please make sure to fill out all the tabs for all Objects
-        </div>
+        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
         <div class="header__list__item">
           3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
           selecting each Stage that is gated
         </div>
-        <div class="header__list__item">
-          4. Make sure to double check that all your required fields are on the form
-        </div>
+        <div
+          class="header__list__item"
+        >4. Make sure to double check that all your required fields are on the form</div>
       </div>
     </div>
     <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
@@ -71,12 +67,38 @@
               class="box-updated__tab"
               :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
-            >
-              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
-            </div>
+              v-if="k.formType !== 'STAGE_GATING'"
+            >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
 
-            <div class="box-updated__tab" @click="onAddForm" v-if="resource == OPPORTUNITY">
-              Stage Specific
+            <div class="stage__container">
+              <div
+                class="box-updated__tab"
+                @click="openStageDropDown"
+                v-if="resource == OPPORTUNITY"
+              >
+                Stage Specific
+                <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
+              <div v-if="stageDropDownOpen" class="stage__dropdown">
+                <div v-if="currentFormStages.length">
+                  <div class="stage__dropdown__header">Your Stage Gate Forms</div>
+                  <div
+                    v-for="form in formStages"
+                    :key="form"
+                    class="stage__dropdown__stages__container"
+                  >
+                    <div
+                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+                      class="stage__dropdown__stages__title"
+                    >{{ form.stage }}</div>
+                    <!-- <div class="stage__dropdown__stages__x">x</div> -->
+                    <!--delete not added yet  -->
+                  </div>
+                  <div style="display: flex; justify-content: center;">
+                    <button @click="onAddForm" class="modal-container__box__button">Add</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -139,9 +161,7 @@
           </div>
         </div>
       </template>
-      <template v-else
-        >We are currently generating your forms please check back in a few minutes</template
-      >
+      <template v-else>We are currently generating your forms please check back in a few minutes</template>
     </div>
   </div>
 </template>
@@ -180,6 +200,7 @@ export default {
       fieldParam: null,
       loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      stageDropDownOpen: false,
     }
   },
   watch: {
@@ -234,10 +255,18 @@ export default {
       // this getter gets all forms byType existing and new (new forms arent appended until they are created)
       return [...this.formsByType, ...this.newForms]
     },
+
     currentFormStages() {
       // users can only create one form for the stage
       if (this.resource == this.OPPORTUNITY) {
         return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
+      }
+      return []
+    },
+    formStages() {
+      // users can only create one form for the stage
+      if (this.resource == this.OPPORTUNITY) {
+        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING)
       }
       return []
     },
@@ -280,6 +309,9 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+    openStageDropDown() {
+      this.stageDropDownOpen = !this.stageDropDownOpen
     },
 
     async onAddForm() {
@@ -357,6 +389,7 @@ export default {
       this.toggleSelectedTab(`${f.id}.${f.stage}`)
     },
     toggleSelectedTab(tab) {
+      console.log(tab)
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
@@ -399,6 +432,11 @@ export default {
     cursor: pointer;
     background-color: #f4f5f6;
   }
+}
+
+.box-updated__tab {
+  display: flex;
+  padding: 0;
 }
 .box-updated__tab-header {
   padding: 0 2rem;
@@ -537,6 +575,46 @@ export default {
   }
   &__text {
     width: 6rem;
+  }
+}
+
+.stage {
+  &__container {
+    position: relative;
+  }
+  &__dropdown {
+    width: 15rem;
+
+    margin: 18px 113px 49px 108px;
+    padding: 6px 0 14px;
+    border-radius: 3px;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    background-color: #f4f5f6;
+    position: absolute;
+    right: -7rem;
+    z-index: 100;
+
+    &__header {
+      font-size: 0.75rem;
+      padding: 0.5rem;
+      border-bottom: solid 0.5px #9e9ea6;
+    }
+    &__stages {
+      &__container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+      }
+      &__title {
+        font-size: 12;
+        font-family: #{$bold-font-family};
+        cursor: pointer;
+      }
+      &__x {
+      }
+    }
   }
 }
 </style>
