@@ -347,7 +347,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_update_search_or_create(payload, context):
-    """ Updates the form view to show what is currently selected """
+    """ Updates the form view to either a create form or a search box what is currently selected """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -427,6 +427,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
+    """ attaches a drop down to the message block for selecting a resource type """
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
@@ -500,7 +501,6 @@ def process_coming_soon(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
             "title": {"type": "plain_text", "text": f"Coming Soon"},
             "blocks": get_block_set("coming_soon_modal", {}),
-            "submit": {"type": "plain_text", "text": "Next"},
         },
     }
     res = slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
@@ -525,6 +525,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_coming_soon,
+        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

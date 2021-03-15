@@ -150,7 +150,7 @@ def zoom_meetings_webhook(request):
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opp", "acc"]
+    allowed_commands = ["opp", "acc", "lead"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -220,6 +220,11 @@ def init_fake_meeting(request):
         elif not meeting_resource:
             workflow.resource_id = None
             workflow.resource_type = ""
+            workflow.save()
+        elif meeting_resource == "lead":
+            l = user.owned_leads.first()
+            workflow.resource_id = str(l.id)
+            workflow.resource_type = "Lead"
             workflow.save()
 
         access_token = user.organization.slack_integration.access_token

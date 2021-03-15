@@ -50,6 +50,7 @@ class Lead(TimeStampModel, IntegrationModel):
     owner = models.ForeignKey(
         "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
     )
+    objects = LeadQuerySet.as_manager()
 
     def __str__(self):
         return f"name{self.name}, email {self.email}, owner: {self.owner}, integration_id: {self.integration_id}"
