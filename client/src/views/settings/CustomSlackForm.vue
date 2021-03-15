@@ -27,14 +27,13 @@
           <div
             v-for="field in sfFieldsAvailableToAdd"
             class="slack-form-builder__container"
-            @click="()=> onAddField(field)"
+            @click="() => onAddField(field)"
             :key="field.id"
           >
             <CheckBox :checked="addedFieldIds.includes(field.id)" />
-            <div
-              :key="field.apiName"
-              class="slack-form-builder__sf-field"
-            >{{ field.referenceDisplayLabel }}</div>
+            <div :key="field.apiName" class="slack-form-builder__sf-field">
+              {{ field.referenceDisplayLabel }}
+            </div>
           </div>
         </div>
       </div>
@@ -49,31 +48,47 @@
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div
-            v-if="field.referenceDisplayLabel === 'Meeting Type' || field.referenceDisplayLabel === 'Meeting Comments' || field.referenceDisplayLabel === 'How Did It go?'"
+            v-if="
+              field.referenceDisplayLabel === 'Meeting Type' ||
+                field.referenceDisplayLabel === 'Meeting Comments' ||
+                field.referenceDisplayLabel === 'How Did It go?'
+            "
             class="form-field__label"
-          >{{ field.referenceDisplayLabel }}</div>
+          >
+            {{ field.referenceDisplayLabel }}
+          </div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
+              <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
+                {{
+                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                }}
+              </div>
               <div
-                v-if="field.referenceDisplayLabel === 'Meeting Type'"
+                v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
-              >{{"This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'" }}</div>
-              <div
-                v-if=" field.referenceDisplayLabel === 'Meeting Comments' "
-                class="form-field__body"
-              >{{ "Logs the rep’s comments about the meeting"}}</div>
-              <div
-                v-if=" field.referenceDisplayLabel === 'How Did It go?'"
-                class="form-field__body"
-              >{{"Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)" }}</div>
+              >
+                {{ 'Logs the rep’s comments about the meeting' }}
+              </div>
+              <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
+                {{
+                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
+                }}
+              </div>
 
               <div
                 class="form-field__label"
-                v-if="field.referenceDisplayLabel !== 'Meeting Type' && field.referenceDisplayLabel !== 'Meeting Comments' && field.referenceDisplayLabel !== 'How Did It go?'"
-              >{{ field.referenceDisplayLabel }}</div>
+                v-if="
+                  field.referenceDisplayLabel !== 'Meeting Type' &&
+                    field.referenceDisplayLabel !== 'Meeting Comments' &&
+                    field.referenceDisplayLabel !== 'How Did It go?'
+                "
+              >
+                {{ field.referenceDisplayLabel }}
+              </div>
             </div>
 
-            <div class="form-field__middle">{{field.required? 'required':''}}</div>
+            <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
             <div class="form-field__right">
               <div
                 class="form-field__btn form-field__btn--flipped"
@@ -105,6 +120,8 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
+import { CollectionManager } from '@thinknimble/tn-models'
+import Paginator from '@thinknimble/paginator'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations } from '@/services/salesforce'
@@ -116,6 +133,7 @@ export default {
     PulseLoadingSpinnerButton,
     CheckBox,
     PulseLoadingSpinner,
+    Paginator,
   },
   props: {
     customForm: {

@@ -68,6 +68,56 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
     }
   }
+  // async list(query_params = {}) {
+  //   // list fields method that works with collection manager
+  //   let filterMaps = {
+  //     ...SObjectFormBuilderAPI.FILTERS_MAP,
+  //     createable: ApiFilter.create({ key: 'createable' }),
+  //     updateable: ApiFilter.create({ key: 'updateable' }),
+  //     salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+  //     search: ApiFilter.create({ key: 'search' }),
+  //   }
+
+  //   let params = ApiFilter.buildParams(filterMaps, { ...query_params })
+
+  //   try {
+  //     const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
+  //       params: this.cls.toAPI(params),
+  //     })
+  //     console.log(res)
+  //     return res.data.results.map(f => this.cls.fromAPI(f))
+  //   } catch (e) {
+  //     apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+  //   }
+  // }
+
+  async list({ filters = {}, pagination = {} } = {}) {
+    let filtersMap = {
+      ...SObjectFormBuilderAPI.FILTERS_MAP,
+      createable: ApiFilter.create({ key: 'createable' }),
+      updateable: ApiFilter.create({ key: 'updateable' }),
+      salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+      search: ApiFilter.create({ key: 'search' }),
+    }
+
+    const url = SObjectFormBuilderAPI.ENDPOINT + 'fields/'
+
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, {
+        ...filters,
+        page: pagination.page,
+        pageSize: pagination.size,
+      }),
+    }
+    return this.client
+      .get(url, options)
+      .then(response => response.data)
+      .then(data => ({
+        ...data,
+        results: data.results.map(this.cls.fromAPI),
+      }))
+  }
+
   async listValidations(query_params = {}) {
     let filterMaps = {
       ...SObjectFormBuilderAPI.FILTERS_MAP,

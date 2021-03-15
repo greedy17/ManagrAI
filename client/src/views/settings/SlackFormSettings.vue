@@ -28,7 +28,9 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
-            >Select</button>
+            >
+              Select
+            </button>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -38,16 +40,20 @@
     <div class="header__container">
       <h3 class="header__title">Customize your Slack form</h3>
       <div class="header__list">
-        <div
-          class="header__list__item"
-        >1. Customize your Slack forms by picking from the fields on the left. Note required “Managr” fields have been preselected</div>
-        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
-        <div
-          class="header__list__item"
-        >3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by selecting each Stage that is gated</div>
-        <div
-          class="header__list__item"
-        >4. Make sure to double check that all your required fields are on the form</div>
+        <div class="header__list__item">
+          1. Customize your Slack forms by picking from the fields on the left. Note required
+          “Managr” fields have been preselected
+        </div>
+        <div class="header__list__item">
+          2. Please make sure to fill out all the tabs for all Objects
+        </div>
+        <div class="header__list__item">
+          3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
+          selecting each Stage that is gated
+        </div>
+        <div class="header__list__item">
+          4. Make sure to double check that all your required fields are on the form
+        </div>
       </div>
     </div>
     <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
@@ -64,13 +70,13 @@
               class="box-updated__tab"
               :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
-            >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
+            >
+              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+            </div>
 
-            <div
-              class="box-updated__tab"
-              @click="onAddForm"
-              v-if="resource == OPPORTUNITY"
-            >Stage Specific</div>
+            <div class="box-updated__tab" @click="onAddForm" v-if="resource == OPPORTUNITY">
+              Stage Specific
+            </div>
           </div>
 
           <div class="box__tab-content">
@@ -117,13 +123,16 @@
           </div>
         </div>
       </template>
-      <template v-else>We are currently generating your forms please check back in a few minutes</template>
+      <template v-else
+        >We are currently generating your forms please check back in a few minutes</template
+      >
     </div>
   </div>
 </template>
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import { CollectionManager } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -153,6 +162,7 @@ export default {
       search: '',
       fieldParam: null,
       loading: false,
+      formFields: CollectionManager.create({ ModelClass: SObjectField }),
     }
   },
   watch: {
@@ -174,6 +184,13 @@ export default {
 
               ...fieldParam,
             })
+
+            this.formFields.filters = {
+              salesforceObject: this.resource,
+
+              ...fieldParam,
+            }
+            this.formFields.refresh()
           } catch (e) {
             console.log(e)
           }
@@ -231,6 +248,8 @@ export default {
     async listFields(query_params = {}) {
       try {
         const res = await SObjectField.api.listFields(query_params)
+        this.formFields.filters = query_params
+        this.formFields.refresh()
         return res
       } catch (e) {
         console.log(e)

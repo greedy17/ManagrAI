@@ -28,6 +28,10 @@ export class SObjectField extends Model {
   static displayValue = new fields.CharField()
   static referenceDisplayLabel = new fields.CharField({ readOnly: true })
   static order = new fields.IntegerField()
+
+  static fromAPI(json = {}) {
+    return new SObjectField(objectToCamelCase(json))
+  }
 }
 
 export class SObjectValidation extends Model {
