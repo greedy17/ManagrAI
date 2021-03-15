@@ -1,5 +1,20 @@
 <template>
   <div class="container">
+    <modal name="required-modal" heading="Select a Stage" height="500" adaptive>
+      <div class="required__container">
+        <img
+          v-if="resource == OPPORTUNITY && selectedTab"
+          class="tooltip image"
+          src="@/assets/images/toolTip.png"
+          @click="toggleRequiredModal"
+        />
+        <div class="required__title">Required Fields</div>
+        <div class="required__instructions">
+          Below are your company’s validation rules for this object. These are fields that have been pre-filled as part of the form for this resource.
+          Additional Validations may apply for your Salesforce Resources
+        </div>
+      </div>
+    </modal>
     <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
       <div class="modal-container">
         <div v-if="!loadingStages" class="modal-container__box">
@@ -55,8 +70,16 @@
     </div>
     <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
       <template v-if="allForms && allForms.length">
-        <div @click="toggleSelectedFormResource(resource)" class="box-updated__header">
-          <span class="box-updated__title">{{ resource }}</span>
+        <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
+          <span class="box-updated__title">
+            {{ resource }}
+            <img
+              v-if="resource == OPPORTUNITY && selectedTab"
+              style="height: 1rem; margin-left: 1rem; "
+              src="@/assets/images/toolTip.png"
+              @click="toggleRequiredModal"
+            />
+          </span>
         </div>
 
         <div :ref="`${resource.toLowerCase()}-content`" class="box-updated__content">
@@ -280,7 +303,6 @@ export default {
     },
     async searchFields() {
       this.loading = true
-      console.log('search')
 
       this.formFields.filters = {
         search: this.search,
@@ -290,6 +312,10 @@ export default {
       this.formFields.refresh()
 
       this.loading = false
+    },
+
+    toggleRequiredModal() {
+      this.$modal.show('required-modal')
     },
 
     async listFields(query_params = {}) {
@@ -615,6 +641,30 @@ export default {
       &__x {
       }
     }
+  }
+}
+
+.tooltip {
+  height: 1rem;
+  margin: 2rem 0rem;
+}
+
+.required {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__title {
+    font-family: #{$bold-font-family};
+  }
+  &__instructions {
+    text-align: center;
+    padding: 1rem 4rem;
+  }
+
+  .image {
   }
 }
 </style>
