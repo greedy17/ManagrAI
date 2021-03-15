@@ -122,16 +122,6 @@
         <p class="card-text">Coming Soon...</p>
       </div>
     </div>
-    <div class="slack-form-builder">
-      <PulseLoadingSpinnerButton
-        v-if="hasSalesforceIntegration"
-        @click="goToSlackFormBuilder"
-        class="slack-button"
-        text="Slack Form Builder"
-        :disabled="!hasSalesforceIntegration"
-        :loading="false"
-      ></PulseLoadingSpinnerButton>
-    </div>
 
     <PulseLoadingSpinnerButton
       v-if="hasSalesforceIntegration && user.isAdmin"
