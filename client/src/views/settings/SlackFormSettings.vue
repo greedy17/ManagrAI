@@ -111,15 +111,30 @@
               </div>
 
               <CustomSlackForm
-                :fields="selectedFormFields"
+                :fields="formFields.list"
                 :show-validations="showValidations"
                 :customForm="selectedForm"
                 :formType="selectedTab"
                 :resource="resource"
                 v-on:update:selectedForm="updateForm($event)"
-                :loading="loading"
+                :loading="formFields.refreshing"
               />
             </template>
+          </div>
+          <div
+            class="paginator__container"
+            v-if="formFields.pagination.next || formFields.pagination.previous"
+          >
+            <div class="paginator__text">View More</div>
+            <Paginator
+              :pagination="formFields.pagination"
+              @next-page="nextPage"
+              @previous-page="previousPage"
+              :loading="formFields.loadingNextPage"
+              arrows
+              size="small"
+              class="paginator"
+            />
           </div>
         </div>
       </template>
@@ -132,6 +147,7 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import Paginator from '@thinknimble/paginator'
 import { CollectionManager } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
@@ -142,7 +158,7 @@ import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'SlackFormSettings',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch },
+  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
   data() {
     return {
       allForms: [],
@@ -179,12 +195,6 @@ export default {
           }
           this.fieldParam = fieldParam
           try {
-            this.selectedFormFields = await this.listFields({
-              salesforceObject: this.resource,
-
-              ...fieldParam,
-            })
-
             this.formFields.filters = {
               salesforceObject: this.resource,
 
@@ -232,22 +242,28 @@ export default {
     },
   },
   methods: {
+    nextPage() {
+      this.formFields.nextPage()
+    },
+    previousPage(model) {
+      this.formFields.prevPage()
+    },
     async searchFields() {
       this.loading = true
       console.log('search')
-      const filter = {
+
+      this.formFields.filters = {
         search: this.search,
         salesforceObject: this.resource,
         ...this.fieldParam,
       }
+      this.formFields.refresh()
 
-      this.selectedFormFields = await this.listFields(filter)
       this.loading = false
     },
 
     async listFields(query_params = {}) {
       try {
-        const res = await SObjectField.api.listFields(query_params)
         this.formFields.filters = query_params
         this.formFields.refresh()
         return res
@@ -370,6 +386,7 @@ export default {
 @import '@/styles/forms';
 @import '@/styles/emails';
 @import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
 
 .container {
   margin-left: 13rem;
@@ -478,5 +495,20 @@ export default {
   width: 13rem;
   padding: 0 0 0 1rem;
   margin: 1rem;
+}
+
+.paginator {
+  @include paginator();
+  &__container {
+    border: none;
+    display: flex;
+    justify-content: flex-start;
+    width: 11rem;
+    font-size: 0.75rem;
+    margin-top: 1rem;
+  }
+  &__text {
+    width: 6rem;
+  }
 }
 </style>
