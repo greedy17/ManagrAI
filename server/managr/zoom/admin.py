@@ -5,10 +5,6 @@ from django.forms import ModelForm, Textarea
 # Register your models here.
 
 
-class MeetinReviewInline(admin.StackedInline):
-    model = models.MeetingReview
-
-
 class CustomZoomMeetingForm(ModelForm):
     class Meta:
         model = models.ZoomMeeting
@@ -23,19 +19,9 @@ class CustomZoomMeetingForm(ModelForm):
             "type",
             "start_time",
             "duration",
-            "password",
-            "start_url",
-            "join_url",
             "participants",
-            "opportunity",
-            "notification_attempts",
-            "scoring_in_progress",
-            "current_interaction",
-            "is_closed",
-            "interaction_status",
             "participants_count",
             "total_minutes",
-            "meeting_score",
             "meeting_score_components",
             "original_duration",
         )
@@ -43,8 +29,9 @@ class CustomZoomMeetingForm(ModelForm):
 
 class CustomZoomMeeting(admin.ModelAdmin):
     form = CustomZoomMeetingForm
-    inlines = (MeetinReviewInline,)
+    list_filter = ("zoom_account__user",)
 
 
 admin.site.register(models.ZoomAuthAccount)
+admin.site.register(models.MeetingReview)
 admin.site.register(models.ZoomMeeting, CustomZoomMeeting)

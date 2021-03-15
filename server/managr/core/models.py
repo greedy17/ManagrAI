@@ -9,7 +9,7 @@ from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
-from managr.utils.misc import datetime_appended_filepath
+from managr.utils.misc import datetime_appended_filepath 
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 
@@ -31,6 +31,9 @@ class IntegrationModel(models.Model):
     )
     integration_source = models.CharField(
         max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+    )
+    imported_by = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
     )
 
     class Meta:
@@ -91,6 +94,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_admin"] = True
+        extra_fields["user_level"] = core_consts.USER_LEVEL_MANAGER
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -138,7 +142,7 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.ACCOUNT_TYPES, max_length=255, default=core_consts.ACCOUNT_TYPE_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
     first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
@@ -194,16 +198,24 @@ class User(AbstractUser, TimeStampModel):
         response_data["token"] = auth_token.key
         return response_data
 
-    # TODO 2021-01-16 William: Remove if no longer necessary.
-    # def check_notification_enabled_setting(self, key, type):
-    #     setting_value = self.notification_settings.filter(
-    #         option__key=key, option__notification_type=type, user=self
-    #     ).first()
-    #     if setting_value:
-    #         return setting_value.value
-    #     else:
-    #         # if a user does not have a value then assume True which is the default
-    #         return True
+    @property
+    def has_zoom_integration(self):
+        # when a user integrates we set the info once
+        # when the user then removes the integration we keep the account
+        # but we only remove the token and refresh tokens
+        if hasattr(self, "zoom_account"):
+            zoom_acct = self.zoom_account
+            return not zoom_acct.is_revoked
+        else:
+            return False
+
+    @property
+    def has_slack_integration(self):
+        return hasattr(self, "slack_integration")
+
+    @property
+    def has_salesforce_integration(self):
+        return hasattr(self, "salesforce_account")
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
@@ -212,8 +224,10 @@ class User(AbstractUser, TimeStampModel):
         ordering = ["email"]
 
 
-class EmailAuthAccount(TimeStampModel):
+class NylasAuthAccount(TimeStampModel):
     """Records Nylas OAuth authentication information for a user.
+
+    Nylas is used to access the user's calendar information.
 
     The Nylas email integration follows the standard OAuth protocol. Once a user has
     authorized Nylas, we will receive an access_token and related information required
@@ -230,7 +244,7 @@ class EmailAuthAccount(TimeStampModel):
         help_text="sync state is managed by web_hook after it is set for the first time",
     )
     name = models.CharField(max_length=255, null=True)
-    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="email_auth_account")
+    user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="nylas")
 
     def __str__(self):
         return f"{self.email_address}"
@@ -245,7 +259,7 @@ class EmailAuthAccount(TimeStampModel):
 
     def save(self, *args, **kwargs):
         try:
-            return super(EmailAuthAccount, self).save(*args, **kwargs)
+            return super().save(*args, **kwargs)
         except IntegrityError:
             raise ValidationError(
                 {
@@ -255,120 +269,6 @@ class EmailAuthAccount(TimeStampModel):
                     }
                 }
             )
-
-
-"""
-class NotificationOptionQuerySet(models.QuerySet):
-
-    ### NOTE We are using __contains here as the field type is
-    #        text[] in sql __in will search equality
-    ### this will throw a mismatch type error
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_active:
-            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
-                return self.filter(
-                    user_groups__contains=[core_consts.ACCOUNT_TYPE_MANAGER]
-                )
-            elif user.type == core_consts.ACCOUNT_TYPE_REP:
-                return self.filter(user_groups__contains=[core_consts.ACCOUNT_TYPE_REP])
-            elif user.type == core_consts.ACCOUNT_TYPE_ADMIN:
-                return self.filter(
-                    user_groups__contains=[core_consts.ACCOUNT_TYPE_ADMIN]
-                )
-        else:
-            return None
-
-
-class NotificationSelectionQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_active:
-            return self.filter(user=user)
-        else:
-            return None
-
-
-class NotificationSelection(TimeStampModel):
-
-    option = models.ForeignKey(
-        "core.NotificationOption", on_delete=models.CASCADE, related_name="selections"
-    )
-    user = models.ForeignKey(
-        "core.User", on_delete=models.CASCADE, related_name="notification_settings"
-    )
-    value = models.BooleanField(
-        help_text="If no option is selected it will take the default value",
-    )
-
-    def __str__(self):
-        return f"user:{self.user}, option: {self.option}, value: {self.value}"
-
-    class Meta:
-        ordering = ["-datetime_created"]
-        # only allow one selection per option for each user
-        unique_together = (
-            "user",
-            "option",
-        )
-
-
-class NotificationOption(TimeStampModel):
-
-    # user groups will be used to populate the options for each user type
-    title = models.CharField(max_length=128, help_text="Friendly Name")
-    description = models.TextField(
-        blank=True, help_text="this will show up as a tooltip for the option"
-    )
-    default_value = models.BooleanField(
-        default=True,
-        help_text="All options are Boolean, the value here populates the default for the user",
-    )
-    user_groups = ArrayField(
-        models.CharField(max_length=255, choices=core_consts.ACCOUNT_TYPES, blank=True),
-        default=list,
-        blank=True,
-        help_text="An Array of user types that have access to this setting",
-    )
-    notification_type = models.CharField(
-        choices=core_consts.NOTIFICATION_TYPE_CHOICES,
-        max_length=255,
-        help_text="Email or Alert",
-    )
-
-    resource = models.CharField(
-        max_length=255,
-        choices=core_consts.NOTIFICATION_RESOURCES,
-        null=True,
-        help_text="select a resource to apply notification to",
-    )
-    key = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text="unique identifier for notification option",
-    )
-    objects = NotificationOptionQuerySet.as_manager()
-
-    def __str__(self):
-        return f"{self.title} - {self.notification_type}"
-
-    class Meta:
-        ordering = ["-datetime_created"]
-
-    def get_value(self, user):
-        selection = self.selections.filter(user=user)
-        if selection.exists():
-            return selection.first()
-        else:
-            # create an option for the user with the default value
-            selection = NotificationSelection.objects.create(
-                option=self, user=user, value=self.default_value
-            )
-            return selection
- """
 
 
 class NotificationQuerySet(models.QuerySet):

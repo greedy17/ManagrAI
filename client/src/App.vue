@@ -7,6 +7,7 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
+    <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
   </div>
 </template>
 
@@ -69,7 +70,7 @@ body {
   overflow-x: auto;
   margin: 0;
   min-height: 100vh;
-  background-color: $soft-gray;
+  position: relative;
 }
 
 #app {
@@ -77,7 +78,6 @@ body {
   height: inherit;
   display: flex;
   flex-flow: column;
-  background-color: $soft-gray;
 }
 
 .page-content {
@@ -96,5 +96,14 @@ body {
   color: rgba(47, 48, 53, 0.4);
   font-family: inherit;
   font-weight: 300;
+}
+
+.background-logo {
+  position: absolute;
+  top: 40%;
+  right: 0rem;
+  height: 60vh;
+  width: 50vw;
+  z-index: -1;
 }
 </style>

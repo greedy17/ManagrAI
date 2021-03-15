@@ -15,7 +15,6 @@ django-nose = "==1.*"
 django-rest-auth = "==0.*"
 django-storages = "==1.*"
 djangorestframework = "==3.*"
-daphne = "==2.*"
 # Used for populating example models while running tests
 factory-boy = "==2.*"
 faker = "==2.*"
@@ -30,6 +29,9 @@ whitenoise = "==3.*"
 django-kronos = "==1.*"
 django-background-tasks = "==1.2.*"
 twilio = "==6.44.*"
+channels-redis = "==2.4.0"
+channels = "~=2.1"
+nylas = "*"
 
 [requires]
 python_version = "3.9"

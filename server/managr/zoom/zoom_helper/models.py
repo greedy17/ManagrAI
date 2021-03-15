@@ -1,10 +1,10 @@
+import logging
 import json
-import pytz
-import requests
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 
+from django.utils import timezone
 
 from managr.utils.client import HttpClient
 
@@ -12,6 +12,7 @@ from . import constants as zoom_model_consts
 from .exceptions import ZoomAPIException
 
 client = HttpClient().client
+logger = logging.getLogger("managr")
 
 
 class ZoomMtg:
@@ -63,6 +64,14 @@ class ZoomMtg:
     @property
     def as_dict(self):
         return vars(self)
+
+    @property
+    def start_time_timestamp(self):
+        return int(timezone.datetime.fromisoformat(self.start_time.replace("Z", "")).timestamp())
+
+    @property
+    def end_time_timestamp(self):
+        return int(timezone.datetime.fromisoformat(self.end_time.replace("Z", "")).timestamp())
 
 
 class ZoomAcct:
@@ -135,6 +144,9 @@ class ZoomAcct:
                 data = response.json()
             except Exception as e:
                 ZoomAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+
         else:
             try:
                 error_code = response.status_code

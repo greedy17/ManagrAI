@@ -7,13 +7,15 @@ from django.db import models
 from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.fields import JSONField
+
+from background_task.models import Task
 
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-from managr.opportunity.models import ActionChoice
+from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
+from managr.salesforce.adapter.models import ActivityAdapter
 
 
 from . import constants as zoom_consts
@@ -59,7 +61,12 @@ class ZoomAuthAccount(TimeStampModel):
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField()
     token_scope = models.CharField(max_length=150, null=True, blank=True)
-    is_revoked = models.BooleanField(default=True)
+    is_revoked = models.BooleanField(default=False)
+    refresh_token_task = models.CharField(
+        max_length=55,
+        blank=True,
+        help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
+    )
 
     objects = ZoomAuthAccountQuerySet.as_manager()
 
@@ -69,7 +76,8 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def helper_class(self):
         if self.is_token_expired and self.is_refresh_token_expired:
-            self.delete()
+            self.is_revoked = True
+            self.save()
 
         elif self.is_token_expired and not self.is_refresh_token_expired:
             self.regenerate_token()
@@ -80,7 +88,9 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def is_refresh_token_expired(self):
         if self.refresh_token:
-            decoded = jwt.decode(self.refresh_token, verify=False)
+            decoded = jwt.decode(
+                self.refresh_token, algorithms="HS512", options={"verify_signature": False}
+            )
             exp = decoded["exp"]
 
             return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
@@ -89,39 +99,73 @@ class ZoomAuthAccount(TimeStampModel):
     @property
     def is_token_expired(self):
         if self.access_token:
-            decoded = jwt.decode(self.access_token, verify=False)
+            decoded = jwt.decode(
+                self.refresh_token, algorithms="HS512", options={"verify_signature": False}
+            )
             exp = decoded["exp"]
 
             return exp <= datetime.timestamp(timezone.now() - timezone.timedelta(minutes=5))
         return True
 
     def regenerate_token(self):
-        data = self.__dict__
-        data["id"] = str(data.get("id"))
+        if not self.is_revoked:
+            data = self.__dict__
+            data["id"] = str(data.get("id"))
 
-        helper = ZoomAcct(**data)
-        res = helper.refresh_access_token()
-        self.token_generated_date = timezone.now()
-        self.access_token = res.get("access_token", None)
-        self.refresh_token = res.get("refresh_token", None)
-        self.save()
+            helper = ZoomAcct(**data)
+            res = helper.refresh_access_token()
+            self.token_generated_date = timezone.now()
+            self.access_token = res.get("access_token", None)
+            self.refresh_token = res.get("refresh_token", None)
+            self.is_revoked = False
+            self.save()
 
     def delete(self, *args, **kwargs):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data
         # - cannot refresh a token if it is also expired
-
-        if self.is_refresh_token_expired and self.is_token_expired:
+        try:
+            if self.is_refresh_token_expired and self.is_token_expired:
+                pass
+            elif self.is_token_expired and not self.is_refresh_token_expired:
+                # first refresh and then revoke
+                self.regenerate_token()
+                self.helper_class.revoke()
+            else:
+                self.helper_class.revoke()
+        except Exception as e:
+            print(e)
             pass
-        elif self.is_token_expired and not self.is_refresh_token_expired:
-            # first refresh and then revoke
-            self.regenerate_token()
-
-            self.helper_class.revoke()
-        else:
-            self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        if not self.is_revoked:
+            # check token if its not expired
+            # emit an event to refresh a token at a certain time
+            if self.access_token:
+                decoded = jwt.decode(
+                    self.access_token, algorithms="HS512", options={"verify_signature": False}
+                )
+                exp = decoded["exp"]
+                expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+                # send a refresh 10 mins before expiration only if there is a refresh token and it is not expired
+                if self.refresh_token and not self.is_refresh_token_expired:
+                    # check for current task if it exists
+                    from .background import emit_refresh_zoom_token
+
+                    t = emit_refresh_zoom_token(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+                    self.refresh_token_task = str(t.id)
+
+        if self.is_revoked:
+            # find the refresh task and delete it
+            if self.refresh_token_task:
+                t = Task.objects.filter(id=self.refresh_token_task).first()
+                if t:
+
+                    t.save()
+
+        return super(ZoomAuthAccount, self).save(*args, **kwargs)
 
 
 class ZoomMeetingQuerySet(models.QuerySet):
@@ -181,42 +225,16 @@ class ZoomMeeting(TimeStampModel):
         null=True,
         help_text="if recurring meeting",
     )
-
-    participants = models.ManyToManyField("organization.Contact", related_name="meetings")
-    opportunity = models.ForeignKey(
-        "opportunity.Opportunity",
-        on_delete=models.SET_NULL,
-        related_name="meetings",
-        null=True,
+    participants = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
         blank=True,
+        null=True,
+        help_text="Json object of participants",
     )
 
-    should_track = models.CharField(
-        max_length=255,
-        default="NOT_SELECTED",
-        choices=zoom_consts.MEETING_TRACKING_OPTIONS,
-        help_text="FUTURE DEVELOPMENT",
-    )
-
-    notification_attempts = models.PositiveSmallIntegerField(
-        help_text="We make an attempt immedietly and after 2 hours", default=0
-    )
-    scoring_in_progress = models.BooleanField(
-        default=False, help_text="if an event is emitted to generate a score dont do it again",
-    )
-    current_interaction = models.PositiveSmallIntegerField(
-        default=1, help_text="current slack form"
-    )
-    is_closed = models.BooleanField(
-        default=False,
-        help_text="is closed is true when we expire attempts or a user has completed all steps",
-    )
     latest_attempt = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    interaction_status = models.CharField(
-        choices=zoom_consts.MEETING_INTERACTION_STATUSES,
-        max_length=255,
-        default=zoom_consts.MEETING_INTERACTION_STATUS_NOT_STARTED,
-    )
+
     participants_count = models.SmallIntegerField(null=True, blank=True)
     total_minutes = models.SmallIntegerField(null=True, blank=True)
 
@@ -229,40 +247,62 @@ class ZoomMeeting(TimeStampModel):
         help_text="Original duration is the duration sent from the meeting.end webhook, it is updated to the real duration when retrieving from the meetin endpoint so we save it for scoring",
     )
     #
+
     objects = ZoomMeetingQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
 
     @property
-    def should_retry(self):
-        # is complete
-        # is_closed
-        # notification_attempts <=1
-        # latest_attempt > 2hrs
-        # if the latest attempt is 2 hours after the first attempt try again
-        two_hour_timeline = (timezone.now() - self.latest_attempt).seconds >= (60 * 3600)
-        return (
-            self.interaction_status != zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
-            or not self.is_closed
-            and (self.notification_attempts <= 1 and two_hour_timeline)
-        )
+    def readable_score_message(self):
+        if self.meeting_score_components:
+            sentiment = ""
+            stage = ""
+            forecast = ""
+            close_date = ""
+            attendance = ""
+            duration = ""
+            for comp in self.meeting_score_components:
+                if comp["type"] == "sentiment":
+                    sentiment = comp.get("message", "N/A")
+                if comp["type"] == "stage":
+                    stage = comp.get("message", "N/A")
+                if comp["type"] == "forecast_category":
+                    forecast = comp.get("message", "N/A")
+                if comp["type"] == "close_date":
+                    close_date = comp.get("message", "N/A")
+                if comp["type"] == "attendance":
+                    attendance = comp.get("message", "N/A")
+                if comp["type"] == "duration":
+                    duration = comp.get("message", "N/A")
+            return f"{sentiment} {stage} {forecast} {close_date} {attendance} {duration}"
+        return "This Meeting has not been scored yet"
 
-    def retry_slack_integration(self):
-        # retries slack message at a step
-        from .background import _kick_off_slack_interaction
+    def delete(self, *args, **kwargs):
+        if hasattr(self, "workflow"):
+            if self.workflow.slack_interaction and len(self.workflow.slack_interaction):
+                from managr.slack.helpers import block_builders
+                from managr.slack.helpers import requests as slack_requests
+                from managr.slack.helpers.block_sets import get_block_set
 
-        return _kick_off_slack_interaction(
-            str(self.zoom_account.user.id), str(self.id), self.current_interaction
-        )
+                slack_access_token = self.workflow.user.organization.slack_integration.access_token
+                ts, channel = self.workflow.slack_interaction.split("|")
+                res = slack_requests.update_channel_message(
+                    channel,
+                    ts,
+                    slack_access_token,
+                    block_set=[
+                        block_builders.simple_section(
+                            ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                        )
+                    ],
+                ).json()
+
+                self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+        return super(ZoomMeeting, self).delete(*args, **kwargs)
 
 
 class MeetingReview(TimeStampModel):
-
-    # work required to get limit choices to by orgs not currently available
-    # could use thread locals or check on save method
-    # https://stackoverflow.com/questions/232435/how-do-i-restrict-foreign-keys-choices-to-related-objects-only-in-django
-
     meeting = models.OneToOneField(
         "ZoomMeeting",
         on_delete=models.CASCADE,
@@ -276,19 +316,9 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The value must corespond to the values in the ActionChoice Model",
     )
-    forecast_strength = models.CharField(
-        choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
-    )
-    update_stage = models.CharField(
-        blank=True,
-        null=True,
-        max_length=255,
-        help_text="The values must correspond to the values in the Stage model and by Org",
-    )
-    description = models.TextField(blank=True, null=True, max_length=255)
-    next_steps = models.TextField(
-        blank=True, null=True, help_text="populates secondary description"
-    )
+    forecast_category = models.CharField(blank=True, null=True, max_length=255)
+    stage = models.CharField(blank=True, null=True, max_length=255,)
+    meeting_comments = models.TextField(blank=True, null=True, max_length=255)
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
@@ -300,6 +330,7 @@ class MeetingReview(TimeStampModel):
         null=True,
         blank=True,
     )
+    close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
         choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
     )
@@ -309,8 +340,8 @@ class MeetingReview(TimeStampModel):
         max_length=255,
         help_text="The values must correspond to the values in the Stage model and by Org",
     )
-    prev_expected_close_date = models.DateTimeField(null=True, blank=True)
-    updated_close_date = models.DateTimeField(null=True, blank=True)
+    prev_close_date = models.DateField(null=True, blank=True)
+
     prev_amount = models.DecimalField(
         max_digits=13,
         decimal_places=2,
@@ -319,21 +350,43 @@ class MeetingReview(TimeStampModel):
         null=True,
         blank=True,
     )
+    custom_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All data that is added to a form is saved as a json object for update",
+        max_length=500,
+    )
+
+    @property
+    def meeting_resource(self):
+        """ determines whether this is a meeting review for a meeting with an opp or an acct"""
+        return self.meeting.workflow.meeting_resource
 
     @property
     def stage_progress(self):
         # Moving from 'None' to a stage is progress
-        if not self.prev_stage and self.update_stage:
+        if not self.prev_stage and self.stage:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
         # Moving from a stage to 'None' is a regression
-        if self.prev_stage and not self.update_stage:
+        if self.prev_stage and not self.stage:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
+        user = self.meeting.zoom_account.user
+        sf_account = user.salesforce_account
+        stage_field = (
+            sf_account.object_fields.get("Opportunity", {}).get("fields", {}).get("StageName", None)
+        )
+        opts = []
+        if stage_field:
+            opts = stage_field.get("options", [])
         # Check moving from any stage to another
-        if self.prev_stage and self.update_stage:
-            prev_stage_order = Stage.objects.get(id=self.prev_stage).order
-            current_stage_order = Stage.objects.get(id=self.update_stage).order
+        if self.prev_stage and self.stage:
+            for index, stage in enumerate(opts):
+                if self.prev_stage == stage["value"]:
+                    prev_stage_order = index
+                if self.stage == stage["value"]:
+                    current_stage_order = index
 
             if prev_stage_order < current_stage_order:
                 return zoom_consts.MEETING_REVIEW_PROGRESSED
@@ -346,18 +399,30 @@ class MeetingReview(TimeStampModel):
     @property
     def forecast_progress(self):
         # Moving from 'None' to a forecast is progress
-        if not self.prev_forecast and self.forecast_strength:
+        if not self.prev_forecast and self.forecast_category:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
         # Moving from a forecast to 'None' is a regression
-        if self.prev_forecast and not self.forecast_strength:
+        if self.prev_forecast and not self.forecast_category:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
-        if self.prev_forecast and self.forecast_strength:
-            for index, forecast in enumerate(opp_consts.FORECAST_CHOICES):
-                if self.prev_forecast == forecast[0]:
+        if self.prev_forecast and self.forecast_category:
+            # fetch the picklist values and check ordering
+            user = self.meeting.zoom_account.user
+            sf_account = user.salesforce_account
+            forecast_field = (
+                sf_account.object_fields.get("Opportunity", {})
+                .get("fields", {})
+                .get("ForecastCategoryName", None)
+            )
+            opts = []
+            if forecast_field:
+                opts = forecast_field.get("options", [])
+
+            for index, forecast in enumerate(opts):
+                if self.prev_forecast == forecast["value"]:
                     prev_forecast_rank = index
-                if self.forecast_strength == forecast[0]:
+                if self.forecast_category == forecast["value"]:
                     current_forecast_rank = index
 
             if prev_forecast_rank > current_forecast_rank:
@@ -368,20 +433,20 @@ class MeetingReview(TimeStampModel):
         return zoom_consts.MEETING_REVIEW_UNCHANGED
 
     @property
-    def expected_close_date_progress(self):
-        if not self.prev_expected_close_date and not self.updated_close_date:
+    def close_date_progress(self):
+        if not self.prev_close_date and not self.close_date:
             return zoom_consts.MEETING_REVIEW_UNCHANGED
 
-        if not self.prev_expected_close_date and self.updated_close_date:
+        if not self.prev_close_date and self.close_date:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
-        if self.prev_expected_close_date and not self.updated_close_date:
+        if self.prev_close_date and not self.close_date:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
-        if self.prev_expected_close_date > self.updated_close_date:
+        if self.prev_close_date > self.close_date:
             return zoom_consts.MEETING_REVIEW_PROGRESSED
 
-        elif self.prev_expected_close_date < self.updated_close_date:
+        elif self.prev_close_date < self.close_date:
             return zoom_consts.MEETING_REVIEW_REGRESSED
 
         return zoom_consts.MEETING_REVIEW_UNCHANGED
@@ -452,40 +517,20 @@ class MeetingReview(TimeStampModel):
     def save(self, *args, **kwargs):
         opportunity = self.meeting.opportunity
 
-        # adjust opportunity data based on these fields
-        if self.forecast_strength:
-            current_forecast = opportunity.current_forecast
+        # fill previous values if the
+        if self.forecast_category:
+            current_forecast = opportunity.forecast_category
             if current_forecast:
                 self.prev_forecast = current_forecast
-                opportuntiy.current_forecast = self.forecast_strength
 
-            opportunity.current_forecast = self.forecast_strength
-            # update opportunity forcecase
-
-        if self.update_stage and opportunity.status:
-            self.prev_stage = opportunity.status.id
-            opportunity.status = Stage.objects.filter(id=self.update_stage).first()
-
+        if self.stage and opportunity.stage:
+            self.prev_stage = opportunity.stage
             # update stage
-        if self.next_steps:
-            opportunity.secondary_description = self.next_steps
-            # update secondary desc
-
-        if self.meeting_type:
-            # create action from action choice
-            print("will update action")
-
         # Update the opportunity with the new data
-        if self.updated_close_date:
-
+        if self.close_date:
             # Override previous close date with whatever is on the Opportunity
-            if opportunity.expected_close_date:
-                self.prev_expected_close_date = opportunity.expected_close_date
-            opportunity.expected_close_date = self.updated_close_date
+            if opportunity.close_date:
+                self.prev_close_date = opportunity.close_date
         if self.amount:
             self.prev_amount = opportunity.amount
-            opportunity.amount = float(self.amount)
-
-        opportunity.save()
-
         return super(MeetingReview, self).save(*args, **kwargs)

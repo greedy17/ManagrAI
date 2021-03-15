@@ -1,6 +1,26 @@
 from rest_framework import serializers
 
-from .models import OrganizationSlackIntegration, UserSlackIntegration
+from managr.salesforce.serializers import SObjectFieldSerializer
+from .models import (
+    OrganizationSlackIntegration,
+    OrgCustomSlackForm,
+    UserSlackIntegration,
+    FormField,
+)
+
+
+class CustomFormFieldSerializer(serializers.ModelSerializer):
+    field_ref = SObjectFieldSerializer(source="field", read_only=True)
+
+    class Meta:
+        model = FormField
+        fields = (
+            "datetime_created",
+            "order",
+            "field",
+            "form",
+            "field_ref",
+        )
 
 
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
@@ -20,3 +40,32 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
             "slack_id",
             "datetime_created",
         )
+
+
+class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
+    fields_ref = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrgCustomSlackForm
+        fields = (
+            "id",
+            "organization",
+            "config",
+            "form_type",
+            "resource",
+            "stage",
+            "fields",
+            "fields_ref",
+        )
+
+        read_only_fields = (
+            "fields",
+            "fields_ref",
+        )
+
+    def get_fields_ref(self, obj):
+        fields = obj.formfield_set.all().order_by("order")
+        fields_ref = []
+        for field in fields:
+            fields_ref.append(CustomFormFieldSerializer(field).data)
+        return fields_ref

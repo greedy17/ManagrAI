@@ -32,7 +32,7 @@ if IN_DEV:
 elif IN_STAGING:
     SERVER_EMAIL = "Managr Staging <noreply-staging@managr.com>"
 else:
-    SERVER_EMAIL = "Managr <noreply@managr.com>"
+    SERVER_EMAIL = "Managr <support@managr.com>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
@@ -53,6 +53,8 @@ if CURRENT_DOMAIN not in ALLOWED_HOSTS:
 # Application definition
 
 INSTALLED_APPS = [
+    # Django Channels
+    "channels",
     # Local
     "managr.core",
     "managr.api",
@@ -78,6 +80,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "background_task",
+    "kronos",
 ]
 
 MIDDLEWARE = [
@@ -99,6 +102,8 @@ TEMPLATES = [
         "DIRS": [
             os.path.join(BASE_DIR, "../client/dist/"),
             os.path.join(BASE_DIR, "managr", "salesforce", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "core", "templates", ""),
+            os.path.join(BASE_DIR, "managr", "api", "templates", ""),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -114,6 +119,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "managr.wsgi.application"
 
+# Channels
+ASGI_APPLICATION = "managr.routing.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            # 'hosts': [('127.0.0.1', 6379)],
+            "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379")],
+            "capacity": 500,
+        },
+    },
+}
 
 # Database
 """There are two ways to specifiy the database connection
@@ -355,6 +372,7 @@ if USE_ZOOM:
     ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID")
     ZOOM_SECRET = _env_get_required("ZOOM_SECRET")
     ZOOM_WEBHOOK_TOKEN = _env_get_required("ZOOM_WEBHOOK_TOKEN")
+    ZOOM_FAKE_MEETING_UUID = os.environ.get("ZOOM_FAKE_MEETING_UUID", None)
 
 
 USE_SLACK = os.environ.get("USE_SLACK") == "True"
@@ -391,3 +409,7 @@ if USE_SALESFORCE:
         if IN_DEV
         else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
     )
+    SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
+
+MAX_ATTEMPTS = 5
+

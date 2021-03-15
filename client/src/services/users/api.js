@@ -50,6 +50,7 @@ export default class UserAPI {
     }
     try {
       const res = await this.client.get(url, options)
+
       return {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),
@@ -82,6 +83,7 @@ export default class UserAPI {
    */
   register(registerForm) {
     const data = registerForm.toAPI()
+
     return this.client
       .post(REGISTRATION_ENDPOINT, data)
       .then(response => response.data)

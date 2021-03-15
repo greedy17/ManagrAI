@@ -1,24 +1,30 @@
+from datetime import datetime
+from collections import OrderedDict
+
+
+from django.core.paginator import Paginator
+
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from .models import (
-    Opportunity,
-    OpportunityScore,
-)
-from managr.organization.models import Stage
+from rest_framework import status, filters, permissions
+from rest_framework.response import Response
+
+from managr.organization.models import Stage, Account, Contact
 from managr.organization.serializers import (
     AccountSerializer,
     ContactSerializer,
     StageSerializer,
 )
+from managr.salesforce.models import SalesforceAuthAccount
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.organization import constants as org_consts
 from managr.core.models import User, Notification
-from managr.organization import constants as opp_consts
-from django.core.paginator import Paginator
-from collections import OrderedDict
+from . import constants as opp_consts
 
-from rest_framework import status, filters, permissions
 
-from rest_framework.response import Response
+from .models import Opportunity, Lead
+from . import constants as opp_consts
 
 
 class UserRefSerializer(serializers.ModelSerializer):
@@ -39,37 +45,114 @@ class UserRefSerializer(serializers.ModelSerializer):
         return f"{instance.first_name} {instance.last_name}"
 
 
-class PrevLeadScoreSerializer(serializers.ModelSerializer):
-    score = serializers.SerializerMethodField()
-
+class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = OpportunityScore
+        model = Opportunity
         fields = (
             "id",
-            "score",
+            "integration_id",
+            "integration_source",
+            "name",
+            "amount",
+            "close_date",
+            "forecast_category",
+            "account",
+            "stage",
+            "owner",
+            "last_stage_update",
+            "last_activity_date",
+            "external_account",
+            "external_owner",
+            "imported_by",
+            "contacts",
+            "is_stale",
+            "secondary_data",
         )
 
-    def get_score(self, instance):
-        return instance.final_score
+    def _format_date_time_from_api(self, d):
+        if d and len(d) > 10:
+            return datetime.strptime(d, "%Y-%m-%dT%H:%M:%S.%f%z")
+        elif d and len(d) <= 10:
+            return datetime.strptime(d, "%Y-%m-%d")
+        return None
+
+    def to_internal_value(self, data):
+        imported_by = data.get("imported_by")
+        owner = data.get("external_owner", None)
+        account = data.get("external_account", None)
+        if not data.get("external_account", None):
+            data.update({"external_account": ""})
+        if not data.get("external_owner", None):
+            data.update({"external_owner": ""})
+        if owner:
+            sf_account = (
+                SalesforceAuthAccount.objects.filter(salesforce_id=owner)
+                .select_related("user")
+                .first()
+            )
+            user = sf_account.user.id if sf_account else sf_account
+            data.update({"owner": user})
+        if account:
+            acct = Account.objects.filter(
+                integration_id=account, organization__users__id=imported_by
+            ).first()
+            acct = acct.id if acct else acct
+            data.update({"account": acct})
+        if data.get("last_activity_date"):
+            data["last_activity_date"] = self._format_date_time_from_api(data["last_activity_date"])
+        # remove contacts from validation
+
+        contacts = data.pop("contacts", [])
+        contacts = Contact.objects.filter(integration_id__in=contacts).values_list("id", flat=True)
+        data.update({"contacts": contacts})
+        internal_data = super().to_internal_value(data)
+        return internal_data
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except ResourceAlreadyImported:
+            pass
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 
-class LeadScoreSerializer(serializers.ModelSerializer):
-    previous_ref = PrevLeadScoreSerializer(source="previous_score", read_only=True)
-    current = serializers.SerializerMethodField()
+class LeadSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Accounts tied to organization
+    Only Organization Managers can add, update, delete accounts
+    Other users can list
+    """
 
     class Meta:
-        model = OpportunityScore
+        model = Lead
         fields = (
             "id",
-            "current",
-            "previous_ref",
-            "actions_insight",
-            "recent_action_insight",
-            "incoming_messages_insight",
-            "days_in_stage_insight",
-            "forecast_table_insight",
-            "expected_close_date_insight",
+            "name",
+            "integration_id",
+            "integration_source",
+            "imported_by",
+            "owner",
+            "secondary_data",
+            "email",
         )
 
-    def get_current(self, instance):
-        return instance.final_score
+    def to_internal_value(self, data):
+        owner = data.get("external_owner", None)
+        if data.get("email", None) in ["", None]:
+            data.update({"email": ""})
+        if not data.get("external_owner", None):
+            data.update({"external_owner": ""})
+
+        if owner:
+            sf_account = (
+                SalesforceAuthAccount.objects.filter(salesforce_id=owner)
+                .select_related("user")
+                .first()
+            )
+            user = sf_account.user.id if sf_account else sf_account
+            data.update({"owner": user})
+        # remove contacts from validation
+        internal_data = super().to_internal_value(data)
+        return internal_data

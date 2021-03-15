@@ -17,7 +17,11 @@ class IsOrganizationManager(permissions.BasePermission):
         user = request.user
         if not user or request.user.is_anonymous:
             raise exceptions.ValidationError("Authentication Required.")
-        if user.type == core_consts.ACCOUNT_TYPE_MANAGER and user.organization and user.is_active:
+        if (
+            user.user_level == core_consts.ACCOUNT_TYPE_MANAGER
+            and user.organization
+            and user.is_active
+        ):
             return True
         else:
             return False

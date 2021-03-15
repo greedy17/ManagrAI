@@ -1,7 +1,7 @@
 import pdb
 
 from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity, OpportunityScore
+from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 
 from managr.slack import constants as slack_const
@@ -106,7 +106,7 @@ def meeting_review_score(context):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f":heavy_check_mark: *{meeting.zoom_account.user.full_name}* meeting with *{meeting.lead.title}* scored *{meeting.meeting_score}*, it was a {action_choice.title} meeting. Click below to see the summary.",
+                    "text": f":heavy_check_mark: *{meeting.zoom_account.user.full_name}* meeting with *{meeting.opportunity.name}* scored *{meeting.meeting_score}*, it was a {action_choice.title}. Click below to see the summary.",
                 },
             },
             {

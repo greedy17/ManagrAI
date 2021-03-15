@@ -1,33 +1,26 @@
-import requests
 import json
 
 from rest_framework import (
-    authentication,
-    filters,
     permissions,
-    generics,
-    mixins,
     status,
-    views,
     viewsets,
+    generics,
+    viewsets,
+    mixins,
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, APIException
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
-from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.helpers.utils import validate_slack_request
 
+from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
-from .models import OrganizationSlackIntegration, UserSlackIntegration
-import pdb
-
-
-from managr.opportunity.models import Opportunity  # for dev purposes
+from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
+from .serializers import OrgCustomSlackFormSerializer
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -95,9 +88,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
             text = {
                 "text": f"<!channel> your organization has enabled slack please integrate your account to receive notifications"
             }
-            # data = {
-            #     "blocks": get_block_set("zoom_meeting_initial", context=TEMPORARY_CONTEXT)
-            # }
             slack_requests.generic_request(url, text)
         else:
             team_id = data.get("team").get("id")
@@ -121,18 +111,11 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="test-channel",
     )
     def test_channel(self, request, *args, **kwargs):
-        """
-        Interact with the SlackAPI to trigger a test message in the Organization's
-        default Slack Channel for the Managr app
-        """
-
+        """Send a test message in the Organization's default Slack Channel for the Managr app."""
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
 
         data = {"text": "Testing, testing... 1, 2. Hello, World!"}
-        # data = {
-        #     "blocks": get_block_set("zoom_meeting_initial", context=TEMPORARY_CONTEXT)
-        # }
         slack_requests.generic_request(url, data)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -143,10 +126,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="test-dm",
     )
     def test_DM(self, request, *args, **kwargs):
-        """
-        Interact with the SlackAPI to trigger a test direct message for the
-        requesting user
-        """
+        """Send a test direct message for the requesting user."""
         user = request.user
         user_slack = user.slack_integration
         access_token = user.organization.slack_integration.access_token
@@ -163,11 +143,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         test_text = "Testing, testing... 1, 2. Hello, Friend!"
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
         slack_requests.send_channel_message(user_slack.channel, access_token, text=test_text)
-        # slack_requests.send_channel_message(
-        #     user_slack.channel,
-        #     access_token,
-        #     block_set=get_block_set("zoom_meeting_initial", TEMPORARY_CONTEXT),
-        # )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -181,6 +157,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         """
         Open webhook for the SlackAPI to send data when users
         interact with our Slack App's interface.
+
         The body of that request will contain a JSON payload parameter.
         Will have a TYPE field that is used to handle request accordingly.
         """
@@ -195,12 +172,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="revoke",
     )
     def revoke(self, request):
-        """
-        Open webhook for the SlackAPI to send data when users
-        interact with our Slack App's interface.
-        The body of that request will contain a JSON payload parameter.
-        Will have a TYPE field that is used to handle request accordingly.
-        """
+        """Revoke the requesting user's Slack authentication tokens."""
         user = request.user
         organization = request.user.organization
         if user.is_admin and hasattr(organization, "slack_integration"):
@@ -212,3 +184,103 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 user.slack_integration.delete()
 
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get", "post"],
+        # TODO: Add has sales manager permission
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="org-custom-forms",
+    )
+    def org_custom_form(self, request):
+        """Create, Retrieve, or Update the Org's custom Slack form"""
+        # Handle POST
+        if request.method == "POST":
+            return self._post_org_custom_form(request)
+
+        # Otherwise, handle a GET
+        organization = request.user.organization
+
+        # Retrieve the custom slack form and serialize it
+        try:
+            serializer = OrgCustomSlackFormSerializer(instance=organization.custom_slack_form)
+        except OrgCustomSlackForm.DoesNotExist:
+            # Raise a NotFound if a custom Slack form hasn't been created yet
+            raise NotFound(
+                detail="A custom Slack form for your organization does not exist yet.", code=404
+            )
+
+        return Response(serializer.data)
+
+    def _post_org_custom_form(self, request):
+        """Handle POST action of the custom Slack form endpoint."""
+        organization = request.user.organization
+
+        print("REQUEST.DATA:", request.data)
+
+        # Make updates - get or create custom_slack_form
+        try:
+            instance = organization.custom_slack_form
+        except OrgCustomSlackForm.DoesNotExist:
+            # Create a new custom Slack form from the POST data, if one doesn't exist yet
+            instance = OrgCustomSlackForm.objects.create(organization=organization)
+
+        # Validate incoming POST data
+        serializer = OrgCustomSlackFormSerializer(
+            data=request.data, instance=instance, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+
+
+class SlackFormsViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    filterset_fields = [
+        "resource",
+    ]
+    serializer_class = OrgCustomSlackFormSerializer
+
+    def get_queryset(self):
+        return OrgCustomSlackForm.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        data = self.request.data
+        fields = data.pop("fields", [])
+        data.pop("fields_ref", [])
+        data.update({"organization": self.request.user.organization_id})
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        instance = serializer.instance
+        instance.fields.clear()
+        for i, field in enumerate(fields):
+            instance.fields.add(field, through_defaults={"order": i})
+
+        instance.save()
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+
+        data = self.request.data
+        fields = data.pop("fields", [])
+        data.pop("fields_ref", [])
+        data.update({"organization": self.request.user.organization_id})
+        serializer = self.get_serializer(data=data, instance=self.get_object())
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        instance = serializer.instance
+        instance.fields.clear()
+        for i, field in enumerate(fields):
+            instance.fields.add(field, through_defaults={"order": i})
+        instance.save()
+
+        return Response(serializer.data)

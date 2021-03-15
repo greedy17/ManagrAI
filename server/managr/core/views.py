@@ -1,14 +1,17 @@
 import logging
 import requests
 
-from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
+from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
+from django.conf import settings
 
+
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
 from rest_framework import (
     permissions,
     generics,
@@ -24,11 +27,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from managr.core.nylas.auth import get_access_token, get_account_details
+from managr.api.emails import send_html_email
 
+from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
-    EmailAuthAccount,
+    NylasAuthAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -186,11 +190,7 @@ class UserViewSet(
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
         try:
             user = User.objects.get(pk=pk)
-            if (
-                str(user.magic_token) == str(magic_token)
-                and not user.magic_token_expired
-                and user.is_invited
-            ):
+            if str(user.magic_token) == str(magic_token) and user.is_invited:
                 user.set_password(password)
                 user.is_active = True
                 # expire old magic token and create a new one for other uses
@@ -352,7 +352,7 @@ class NylasAccountWebhook(APIView):
         ]
         email_accounts = []
         for v in values:
-            email_account = EmailAuthAccount.objects.filter(account_id=v[0]).first()
+            email_account = NylasAuthAccount.objects.filter(account_id=v[0]).first()
             if email_account:
                 if email_account.sync_state != v[1]:
                     email_account.sync_state = v[1]
@@ -363,7 +363,7 @@ class NylasAccountWebhook(APIView):
                 # we will be removing accounts from our db and from nylas if it has
                 # been inactive for 5 days
 
-        EmailAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
+        NylasAuthAccount.objects.bulk_update(email_accounts, ["sync_state"])
 
         return Response()
 
@@ -377,14 +377,14 @@ def email_auth_token(request):
 
     # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
     try:
-        u.email_auth_account.revoke()
-    except EmailAuthAccount.DoesNotExist:
+        u.nylas.revoke()
+    except NylasAuthAccount.DoesNotExist:
         # pass here since user does not already have a token to revoke
         pass
     except requests.exceptions.HTTPError as e:
         if 401 in e.args:
             # delete the record so we can create a new link
-            u.email_auth_account.delete()
+            u.nylas.delete()
             # we have out of sync data, pass
             # we have a cron job running every 24 hours to remove all old
             # tokens which are not in sync
@@ -403,7 +403,7 @@ def email_auth_token(request):
         try:
             access_token = get_access_token(code)
             account = get_account_details(access_token)
-            EmailAuthAccount.objects.create(
+            NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
                 email_address=account["email_address"],
@@ -434,17 +434,17 @@ def revoke_access_token(request):
     alternatively they can set a user to is_active=false and this will
     call the revoke endpoint for the user in an org
     """
-    if request.user.email_auth_account.access_token:
+    if request.user.nylas.access_token:
         try:
-            request.user.email_auth_account.revoke()
+            request.user.nylas.revoke()
             return Response(status=status.HTTP_200_OK)
-        except EmailAuthAccount.DoesNotExist:
+        except NylasAuthAccount.DoesNotExist:
             # pass here since user does not already have a token to revoke
             pass
         except requests.exceptions.HTTPError as e:
             if 401 in e.args:
                 # delete the record so we can create a new link
-                request.user.email_auth_account.delete()
+                request.user.nylas.delete()
                 # we have out of sync data, pass
                 # we have a cron job running every 24 hours to remove all old
                 #  tokens which are not in sync
@@ -481,13 +481,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         # use server/manage.py createserviceaccount and supply an email
         # for now we will only need one email (ex no-reply@) but in the future we will have more
         # therefore selecting the first email that is of type service_account
-
-        try:
-            ea = EmailAuthAccount.objects.filter(user__is_serviceaccount=True).first()
-        except EmailAuthAccount.DoesNotExist:
-            # currently passing if there is an error, when we are ready we will require this
-            pass
-
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
@@ -500,26 +493,19 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
-        if ea:
-            token = ea.access_token
-            sender = {"email": ea.email_address, "name": "Managr"}
-            recipient = [{"email": response_data["email"], "name": response_data["first_name"]}]
-            message = {
-                "subject": "Invitation To Join",
-                "body": "Your Organization {} has invited you to join Managr, \
-                   Please click the following link to accept and activate your account \
-                       {}".format(
-                    user.organization.name, user.activation_link
-                ),
-            }
-            try:
-                send_new_email_legacy(token, sender, recipient, message)
-            except Exception:
-                """this error is most likely going to be an error on our set
-                up rather than the user_token"""
-                # TODO 2021-01-16 William: We should avoid catch-all Exception handlers and
-                #      at least log a warning here.
-                pass
+
+        subject = render_to_string("registration/invitation-subject.txt")
+        recipient = [response_data["email"]]
+        context = dict(organization=user.organization.name, activation_link=user.activation_link)
+        send_html_email(
+            subject,
+            "registration/invitation-body.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context=context,
+        )
+
         response_data["activation_link"] = user.activation_link
 
         return Response(response_data)
+

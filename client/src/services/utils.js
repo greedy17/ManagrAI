@@ -208,6 +208,9 @@ export function getSubdomain() {
 export function textToKabobCase(text) {
   return text.toLowerCase().replace(' ', '-')
 }
+export function snakeCaseToText(text) {
+  return capitalizeWord(text.toLowerCase().replace('_', ' '))
+}
 
 /**
  * Format a number as US Dollars

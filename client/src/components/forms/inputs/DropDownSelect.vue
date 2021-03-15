@@ -9,9 +9,11 @@
           :disabled="!isSearchable"
         />
         <div v-if="!isMulti" class="selected-items">
-          <span v-show="!isMulti && !visible">{{
+          <span v-show="!isMulti && !visible">
+            {{
             objectSelectedItems ? objectSelectedItems[displayKey] : ''
-          }}</span>
+            }}
+          </span>
         </div>
         <div v-if="isMulti" class="selected-items multi">
           <span
@@ -19,9 +21,7 @@
             :key="`${item[valueKey]}-${i}`"
             v-for="(item, i) in objectSelectedItems"
             class="selected-items__item"
-          >
-            {{ item[displayKey] }}
-          </span>
+          >{{ item[displayKey] }}</span>
         </div>
       </div>
 
@@ -66,16 +66,12 @@
                   ? ~checkIsSelected(item[valueKey])
                   : item[valueKey] == selectedItems,
               }"
-            >
-              {{ item[displayKey] }}
-            </div>
+            >{{ item[displayKey] }}</div>
           </slot>
         </template>
 
         <slot name="dd-pagination" :classes="'dd-item'" :loadMore="onLoadMore">
-          <div v-if="hasNext" @click.prevent="onLoadMore" class="dd-item">
-            +
-          </div>
+          <div v-if="hasNext" @click.prevent="onLoadMore" class="dd-item">+</div>
         </slot>
       </div>
     </div>
@@ -222,7 +218,7 @@ export default {
       }
       if (this.isLocalFilter) {
         this.isLoading = true
-        console.log(results)
+
         let results = this.itemList.filter(i => {
           return i[this.displayKey].toLowerCase().includes(val)
         })

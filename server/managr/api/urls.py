@@ -46,6 +46,11 @@ urlpatterns = [
     path(
         "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
+    path(
+        "users/zoom/revoke/direct",
+        zoom_views.revoke_zoom_access_token,
+        name="revoke_zoom_access_token",
+    ),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(
         "users/salesforce/authorization",
@@ -54,6 +59,8 @@ urlpatterns = [
     ),
     path("users/salesforce/authenticate", sf_views.authenticate, name="salesforce-authentication",),
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
+    path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
+    path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),
 ]
 
 
@@ -62,20 +69,12 @@ router.register("users", core_views.UserViewSet, "users")
 router.register("organizations", organization_views.OrganizationViewSet, "organizations")
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
-
-""" router.register("story-reports", report_views.StoryReportViewSet, "story-reports")
+router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
 router.register(
-    "performance-reports", report_views.PerformanceReportViewSet, "performance-reports"
+    "salesforce/validations", sf_views.SObjectValidationViewSet, "salesforce-validation"
 )
-router.register(
-    "notifications/settings",
-    core_views.NotificationSettingsViewSet,
-    "notification-settings",
-)
-"""
-
-
-router.register("zoom/meetings", zoom_views.ZoomMeetingViewSet, "zoom-meetings")
+router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesforce-picklists")
 
 router.register("slack", slack_views.SlackViewSet, "slack")
+router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
 urlpatterns += router.urls

@@ -78,6 +78,7 @@ export default {
 
       // Continue with user registration...
       this.submitting = true
+
       let user
       try {
         user = await User.api.register(this.registrationForm)

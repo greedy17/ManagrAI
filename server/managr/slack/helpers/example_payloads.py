@@ -1,4 +1,26 @@
 # NOTE: This is an example payload received @ /slack/api/interactive-endpoint
+from managr.zoom.background import _kick_off_slack_interaction
+
+
+def trigger_fake_slack(type):
+    if type == 1:  # aeeb764f-b6bc-4ba7-b92f-4bef11bf3258
+        return _kick_off_slack_interaction.now(
+            "7cfd2353-942d-4ff7-a0ff-47be5ebde745", "aeeb764f-b6bc-4ba7-b92f-4bef11bf3258"
+        )
+    if type == 2:  # b501e594-9bc2-4717-b6fb-efcd06d7e406
+        return _kick_off_slack_interaction.now(
+            "7cfd2353-942d-4ff7-a0ff-47be5ebde745", "b501e594-9bc2-4717-b6fb-efcd06d7e406"
+        )
+    if type == 3:  # 841fe0d4-0de9-422f-a9a3-b9fac3c5c1de
+        return _kick_off_slack_interaction.now(
+            "7cfd2353-942d-4ff7-a0ff-47be5ebde745", "841fe0d4-0de9-422f-a9a3-b9fac3c5c1de"
+        )
+    if type == 4:  # e3bdf8cd-c309-4fcb-ae0b-7de2b779f223
+        return _kick_off_slack_interaction.now(
+            "7cfd2353-942d-4ff7-a0ff-47be5ebde745", "e3bdf8cd-c309-4fcb-ae0b-7de2b779f223"
+        )
+
+
 block_actions_type = {
     "type": "block_actions",
     "user": {"id": "UUTLULA84", "username": "bruno", "name": "bruno", "team_id": "T03EVK2FC",},
@@ -295,3 +317,4 @@ view_submission_type = {
     },
     "response_urls": [],
 }
+

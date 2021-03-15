@@ -1,0 +1,3 @@
+#0 0 * * * bash -c 'source /opt/venv/bin/activate && /home/ubuntu/.pyenv/shims/pipenv run python /opt/managr/server/manage.py revoke_tokens' 2>&1
+
+10 * * * * bash -c 'source /opt/venv/bin/activate && /home/ubuntu/.pyenv/shims/pipenv run python /opt/managr/server/manage.py process_tasks --duration 3600' >> /opt/festi/logs/process_tasks.log 2>&1

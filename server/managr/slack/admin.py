@@ -1,5 +1,24 @@
 from django.contrib import admin
-from .models import OrganizationSlackIntegration, UserSlackIntegration
+from . import models as slack_models
 
-admin.site.register(OrganizationSlackIntegration)
-admin.site.register(UserSlackIntegration)
+
+class CustomFormFieldInline(admin.StackedInline):
+    model = slack_models.FormField
+
+
+class CustomOrgSlackForms(admin.ModelAdmin):
+    model = slack_models.OrgCustomSlackForm
+    inlines = (CustomFormFieldInline,)
+    list_filter = ("organization",)
+
+
+class CustomOrgSlackFormsInstance(admin.ModelAdmin):
+    model = slack_models.OrgCustomSlackFormInstance
+    list_filter = ("user",)
+
+
+admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)
+admin.site.register(slack_models.OrgCustomSlackFormInstance, CustomOrgSlackFormsInstance)
+admin.site.register(slack_models.OrganizationSlackIntegration)
+admin.site.register(slack_models.UserSlackIntegration)
+

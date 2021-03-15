@@ -99,8 +99,6 @@ class ZoomMeetingSerializer(serializers.ModelSerializer):
             "join_url",
             "recurrence",
             "participants",
-            "lead",
-            "should_track",
             "end_time",
             "participants_count",
             "total_minutes",

@@ -7,6 +7,7 @@ const TEST_DM_ENDPOINT = '/slack/test-dm/'
 const GET_OAUTH_LINK_ENDPOINT = '/slack/get-oauth-link/'
 const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
+const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -50,11 +51,33 @@ export default class SlackAPI {
       .catch(apiErrorHandler({ apiName: 'SlackAPI.testDM' }))
     return promise
   }
+
   async revoke() {
     try {
       await this.client.post(SLACK_REVOKE_ENDPOINT)
     } catch {
       apiErrorHandler({ apiName: 'SlackAPI.testDM' })
     }
+  }
+
+  // Org Custom Slack Forms
+  getOrgCustomForm(resource = null) {
+    return this.client
+      .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource } })
+      .then(response => response.data.results.map(res => this.cls.customSlackForm.fromAPI(res)))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm', enable400Alert: false }))
+  }
+
+  postOrgCustomForm(data) {
+    if (data.id.length) {
+      return this.client
+        .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', this.cls.customSlackForm.toAPI(data))
+        .then(response => this.cls.customSlackForm.fromAPI(response.data))
+        .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
+    }
+    return this.client
+      .post(SLACK_CUSTOM_FORM_ENDPOINT, this.cls.customSlackForm.toAPI(data))
+      .then(response => this.cls.customSlackForm.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }
 }
