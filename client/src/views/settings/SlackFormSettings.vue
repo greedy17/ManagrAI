@@ -21,6 +21,7 @@
 
           <div class="box__footer">
             <button
+              class="modal-container__box__button"
               @click="
                 () => {
                   $modal.hide('add-stage-modal'),
@@ -387,6 +388,7 @@ export default {
 @import '@/styles/emails';
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
+@import '@/styles/buttons';
 
 .container {
   margin-left: 13rem;
@@ -431,9 +433,35 @@ export default {
   overflow-y: scroll;
 }
 .modal-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  border-radius: 10px;
+
   &__box {
-    @include box--bordered;
+    &__title {
+      text-align: center;
+      margin: 2rem 0;
+
+      width: 100%;
+    }
+
+    &__content {
+      display: flex;
+      justify-content: center;
+    }
+    &__button {
+      @include primary-button();
+      margin-top: 1rem;
+    }
   }
+}
+
+.box__footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
 }
 
 @keyframes expandmenu {
