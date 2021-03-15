@@ -5,13 +5,14 @@
         <img
           v-if="resource == OPPORTUNITY && selectedTab"
           class="tooltip image"
-          src="@/assets/images/toolTip.png"
+          src="@/assets/images/tooltipgray.png"
           @click="toggleRequiredModal"
         />
         <div class="required__title">Required Fields</div>
         <div class="required__instructions">
-          Below are your company’s validation rules for this object. These are fields that have been pre-filled as part of the form for this resource.
-          Additional Validations may apply for your Salesforce Resources
+          Below are your company’s validation rules for this object. These are fields that have been
+          pre-filled as part of the form for this resource. Additional Validations may apply for
+          your Salesforce Resources
         </div>
       </div>
     </modal>
@@ -44,7 +45,9 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
-            >Select</button>
+            >
+              Select
+            </button>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -58,14 +61,16 @@
           1. Customize your Slack forms by picking from the fields on the left. Note required
           “Managr” fields have been preselected
         </div>
-        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
+        <div class="header__list__item">
+          2. Please make sure to fill out all the tabs for all Objects
+        </div>
         <div class="header__list__item">
           3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
           selecting each Stage that is gated
         </div>
-        <div
-          class="header__list__item"
-        >4. Make sure to double check that all your required fields are on the form</div>
+        <div class="header__list__item">
+          4. Make sure to double check that all your required fields are on the form
+        </div>
       </div>
     </div>
     <div :key="i" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
@@ -74,9 +79,9 @@
           <span class="box-updated__title">
             {{ resource }}
             <img
-              v-if="resource == OPPORTUNITY && selectedTab"
+              v-if="selectedTab && isVisible"
               style="height: 1rem; margin-left: 1rem; "
-              src="@/assets/images/toolTip.png"
+              src="@/assets/images/tooltipgray.png"
               @click="toggleRequiredModal"
             />
           </span>
@@ -91,7 +96,9 @@
               :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
               v-if="k.formType !== 'STAGE_GATING'"
-            >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
+            >
+              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+            </div>
 
             <div class="stage__container">
               <div
@@ -113,7 +120,9 @@
                     <div
                       @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                       class="stage__dropdown__stages__title"
-                    >{{ form.stage }}</div>
+                    >
+                      {{ form.stage }}
+                    </div>
                     <!-- <div class="stage__dropdown__stages__x">x</div> -->
                     <!--delete not added yet  -->
                   </div>
@@ -184,7 +193,9 @@
           </div>
         </div>
       </template>
-      <template v-else>We are currently generating your forms please check back in a few minutes</template>
+      <template v-else
+        >We are currently generating your forms please check back in a few minutes</template
+      >
     </div>
   </div>
 </template>
@@ -224,6 +235,7 @@ export default {
       loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
       stageDropDownOpen: false,
+      isVisible: false,
     }
   },
   watch: {
@@ -373,6 +385,7 @@ export default {
       ]
     },
     async toggleSelectedFormResource(resource) {
+      this.isVisible = !this.isVisible
       /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
       if (this.resource && resource) {
         if (this.resource == resource) {
