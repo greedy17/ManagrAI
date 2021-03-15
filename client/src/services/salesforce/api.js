@@ -105,7 +105,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
 
     let params = ApiFilter.buildParams(filterMaps, { ...query_params })
-
+    console.log(SObjectFormBuilderAPI.ENDPOINT)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'validations/', {
         params: this.cls.toAPI(params),
@@ -132,6 +132,41 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+}
+
+export class SObjectValidationAPI extends ModelAPI {
+  static ENDPOINT = 'salesforce/'
+  get client() {
+    return apiClient()
+  }
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+
+  async list({ filters = {}, pagination = {} } = {}) {
+    // list method that works with collection manager for pagination
+    let filtersMap = {
+      ...SObjectValidationAPI.FILTERS_MAP,
+
+      salesforceObject: ApiFilter.create({ key: 'salesforce_object' }),
+    }
+
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, {
+        ...filters,
+        page: pagination.page,
+        pageSize: pagination.size,
+      }),
+    }
+
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'validations/', options)
+      return { ...res.data, results: res.data.results.map(f => this.cls.fromAPI(f)) }
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Listing Validations' })(e)
     }
   }
 }

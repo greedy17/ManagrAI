@@ -2,7 +2,7 @@ import Model, { fields } from '@thinknimble/tn-models'
 import models from '@thinknimble/tn-models/lib/models'
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 
-import SalesforceAPI, { SObjectFormBuilderAPI } from './api'
+import SalesforceAPI, { SObjectFormBuilderAPI, SObjectValidationAPI } from './api'
 
 export default class Salesforce extends Model {
   static api = SalesforceAPI.create(Salesforce)
@@ -35,11 +35,15 @@ export class SObjectField extends Model {
 }
 
 export class SObjectValidation extends Model {
-  static api = SObjectFormBuilderAPI.create(SObjectValidation)
+  static api = SObjectValidationAPI.create(SObjectValidation)
   static id = new fields.CharField({ readOnly: true })
   static integration_id = new fields.CharField({})
   static description = new fields.CharField()
   static message = new fields.CharField()
+
+  static fromAPI(json = {}) {
+    return new SObjectValidation(objectToCamelCase(json))
+  }
 }
 // HACK:- PB quick class to use array fields
 class SObjectPicklistValues extends Model {

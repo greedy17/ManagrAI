@@ -3,7 +3,6 @@
     <modal name="required-modal" heading="Select a Stage" height="500" adaptive>
       <div class="required__container">
         <img
-          v-if="resource == OPPORTUNITY && selectedTab"
           class="tooltip image"
           src="@/assets/images/tooltipgray.png"
           @click="toggleRequiredModal"
@@ -14,6 +13,13 @@
           pre-filled as part of the form for this resource. Additional Validations may apply for
           your Salesforce Resources
         </div>
+        <div class="required__content__container">
+          <div v-for="validation in validations.list" :key="validation.id">
+            <div class="required__title">{{ validation.description }}</div>
+            <div class="required__content">{{ validation.message }}</div>
+          </div>
+        </div>
+        <Paginator class="popup-paginator" pagination="validations.pagination" />
       </div>
     </modal>
     <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
@@ -203,7 +209,7 @@
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import Paginator from '@thinknimble/paginator'
-import { CollectionManager } from '@thinknimble/tn-models'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -236,6 +242,10 @@ export default {
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
       stageDropDownOpen: false,
       isVisible: false,
+      validations: CollectionManager.create({
+        ModelClass: SObjectValidation,
+        pagination: Pagination.create({ size: 2 }),
+      }),
     }
   },
   watch: {
@@ -310,8 +320,14 @@ export default {
     nextPage() {
       this.formFields.nextPage()
     },
-    previousPage(model) {
+    previousPage() {
       this.formFields.prevPage()
+    },
+    nextValidation() {
+      this.validations.nextPage()
+    },
+    previousValidation() {
+      this.validations.prevPage()
     },
     async searchFields() {
       this.loading = true
@@ -334,7 +350,15 @@ export default {
       try {
         this.formFields.filters = query_params
         this.formFields.refresh()
-        return res
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async listValidations(query_params = {}) {
+      console.log('hi')
+      try {
+        this.validations.filters = query_params
+        this.validations.refresh()
       } catch (e) {
         console.log(e)
       }
@@ -386,6 +410,7 @@ export default {
     },
     async toggleSelectedFormResource(resource) {
       this.isVisible = !this.isVisible
+      await this.listValidations({ salesforceObject: this.resource })
       /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
       if (this.resource && resource) {
         if (this.resource == resource) {
@@ -406,6 +431,7 @@ export default {
           let prev = this.resource
           this.resource = resource
           this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
           if (prevClassList.contains('box__content--expanded')) {
@@ -678,6 +704,15 @@ export default {
   }
 
   .image {
+  }
+
+  &__content {
+    margin: 1rem 0 2rem 0;
+    &__container {
+      border: 2px solid red;
+      width: 100%;
+      padding: 1rem 3rem;
+    }
   }
 }
 </style>
