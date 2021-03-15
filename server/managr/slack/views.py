@@ -241,6 +241,7 @@ class SlackFormsViewSet(
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     filterset_fields = [
         "resource",
