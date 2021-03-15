@@ -98,7 +98,7 @@
               v-if="selectedTab && isVisible"
               style="height: 1rem; margin-left: 1rem; "
               src="@/assets/images/tooltipgray.png"
-              @click="toggleRequiredModal"
+              @click.prevent.stop="toggleRequiredModal"
             />
           </span>
         </div>
@@ -139,9 +139,9 @@
                     >
                       {{ form.stage }}
                     </div>
-                    <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
+                    <!--                     <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
                       x
-                    </div>
+                    </div> -->
                   </div>
                 </div>
                 <div style="display: flex; justify-content: center;">
