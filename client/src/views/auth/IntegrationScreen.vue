@@ -2,7 +2,7 @@
   <div class="integrations">
     <h2>Integrate your apps</h2>
     <div class="integrations__subtitle">
-      Connect with the apps below to sync your sales data for managr to use.
+      Connect with the apps below to sync your sales data for Managr to use.
     </div>
 
     <div class="integrations__cards">
@@ -12,7 +12,7 @@
           <h3 class="card__title">Salesforce</h3>
         </div>
         <p class="card-text">
-          Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.
         </p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
@@ -37,7 +37,7 @@
           <h3 class="card__title">Zoom</h3>
         </div>
 
-        <p class="card-text">Connect Zoom to sync meeting data with managr.</p>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
@@ -149,7 +149,7 @@
     <img class="lock" src="@/assets/images/lockAsset.png" />
     <div class="privacy">
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
-      by managr.
+      by Managr.
     </div>
   </div>
 </template>
