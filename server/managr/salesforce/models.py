@@ -400,7 +400,8 @@ class SFSyncOperation(TimeStampModel):
                         sf_account.regenerate_token()
                         attempts += 1
                 # get counts to set offsets
-            count = min(count, 1000)
+            count = min(count, 10000)
+            logger.info(f"{count} {key} {self.user.email}")
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
 
