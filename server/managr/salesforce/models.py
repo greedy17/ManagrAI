@@ -421,6 +421,7 @@ class SFSyncOperation(TimeStampModel):
                 else:
                     self.operations = [str(t.task_hash)]
                 self.save()
+                break
 
     def save(self, *args, **kwargs):
         from managr.salesforce.background import (
@@ -518,7 +519,7 @@ class MeetingWorkflow(SFSyncOperation):
 
     def __str__(self):
         meeting_name = self.meeting.topic if self.meeting else "No Meeting Topic"
-        return f"{self.user.email}, {meeting_name}, for resource {self.resource_type}"
+        return f"{self.user.email}, {meeting_name}, for resource {self.resource_type} at progress {self.progress}"
 
     @property
     def resource(self):
