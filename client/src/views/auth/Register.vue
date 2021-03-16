@@ -98,6 +98,9 @@ export default {
   created() {
     const email = this.$route.params.email
     this.registrationForm.field.email.value = email
+    User.api.list().then(res => {
+      console.log(res)
+    })
   },
   methods: {
     onSelectRole(role) {
