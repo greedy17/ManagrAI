@@ -69,6 +69,15 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
             "imported_by",
         )
 
+    def to_internal_value(self, data):
+        if data.get("message", None) not in ["", None]:
+            data.update({"message": "No Message Provided"})
+
+        if data.get("description", None) not in ["", None]:
+            data.update({"message": "No Description Provided"})
+
+        return super().to_internal_value(data)
+
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,7 +95,6 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
 
         if data.get("picklist_for") not in ["", None]:
-
             data["field"] = (
                 SObjectField.objects.filter(
                     imported_by__id=data.get("imported_by"),
