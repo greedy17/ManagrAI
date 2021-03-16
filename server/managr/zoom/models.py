@@ -253,6 +253,9 @@ class ZoomMeeting(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def __str__(self):
+        return f"{self.topic} meeting for user with email: {self.zoom_account.user.email} with id: {self.zoom_account.user.id}"
+
     @property
     def readable_score_message(self):
         if self.meeting_score_components:

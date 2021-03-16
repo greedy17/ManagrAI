@@ -7,7 +7,7 @@ from django.db.models.signals import post_save, pre_save
 from background_task.models import CompletedTask, Task
 from managr.opportunity.models import Opportunity
 
-from .models import SFSyncOperation, MeetingWorkflow
+from .models import SFSyncOperation, MeetingWorkflow, SFObjectFieldsOperation
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -23,6 +23,7 @@ def update_succesful_operations(sender, instance=None, created=False, **kwargs):
 
         if queue not in [
             sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE,
+            sf_consts.SALESFORCE_FIELD_SYNC_QUEUE,
             sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
         ]:
             return
@@ -30,6 +31,10 @@ def update_succesful_operations(sender, instance=None, created=False, **kwargs):
             # sf sync is second item
             sync_id = json.loads(instance.task_params)[0][1]
             operation = SFSyncOperation.objects.filter(id=sync_id).first()
+        elif queue == sf_consts.SALESFORCE_FIELD_SYNC_QUEUE:
+            # sf sync is second item
+            sync_id = json.loads(instance.task_params)[0][1]
+            operation = SFObjectFieldsOperation.objects.filter(id=sync_id).first()
         elif queue == sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE:
             sync_id = json.loads(instance.task_params)[0][0]
             operation = MeetingWorkflow.objects.filter(id=sync_id).first()
