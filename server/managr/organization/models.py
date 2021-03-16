@@ -148,83 +148,36 @@ class Account(TimeStampModel, IntegrationModel):
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.id))
 
-    @staticmethod
-    def generate_slack_form_config(user, type):
-        """Helper class to generate a slack form config for an org"""
-        sf_account = user.salesforce_account if user.has_salesforce_integration else None
-        if sf_account:
-            # return an object with creatable and required fields
-            fields = sf_account.object_fields.get("Account", {}).get("fields", {})
-            if type == "CREATE":
-
-                return dict(
-                    fields=list(
-                        filter(
-                            lambda field: field["required"]
-                            and field["createable"]
-                            and field["type"] != "Reference",
-                            fields.values(),
-                        )
-                    ),
-                )
-            if type == "UPDATE":
-                # no required fields for update
-                return dict(fields=list())
-
-            if type == "MEETING_REVIEW":
-                meeting_types = sf_account.user.organization.action_choices.all()
-                meeting_type_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Type",
-                    "meeting_type",
-                    type="Picklist",
-                    required=True,
-                    length=25,
-                    value=None,
-                    options=[m_type.as_sf_option for m_type in meeting_types],
-                )
-                meeting_comments_field = SalesforceAuthAccountAdapter.custom_field(
-                    "Meeting Comments",
-                    "meeting_comments",
-                    type="String",
-                    required=True,
-                    length=250,
-                    value=None,
-                )
-                meeting_sentiment_field = SalesforceAuthAccountAdapter.custom_field(
-                    "How did it go ?",
-                    "sentiment",
-                    type="Picklist",
-                    required=True,
-                    length=250,
-                    value=None,
-                    options=[
-                        *map(
-                            lambda opt: dict(
-                                attributes={}, label=opt[0], value=opt[1], validFor=[]
-                            ),
-                            slack_consts.ZOOM_MEETING__SENTIMENTS,
-                        )
-                    ],
-                )
-                return {
-                    "fields": [meeting_type_field, meeting_comments_field, meeting_sentiment_field],
-                }
-
-        return
-
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.salesforce_account.object_fields.get("Account", {}).get(
-                "fields", {}
-            )
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Account"
+            ).values_list("api_name", flat=True)
             res = AccountAdapter.update_account(
                 data, token, base_url, self.integration_id, object_fields
             )
             self.is_stale = True
             self.save()
             return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Account"
+            ).values_list("api_name", flat=True)
+            res = AccountAdapter.create_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            from managr.salesforce.routes import routes
+
+            serializer = routes["Account"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
 
 
 class ContactQuerySet(models.QuerySet):
@@ -286,31 +239,6 @@ class Contact(TimeStampModel, IntegrationModel):
             if existing:
                 raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
-
-    @staticmethod
-    def generate_slack_form_config(user, type):
-        """Helper class to generate a slack form config for an org"""
-        sf_account = user.salesforce_account if user.has_salesforce_integration else None
-        if sf_account:
-            # return an object with creatable and required fields
-            fields = sf_account.object_fields.get("Contact", {}).get("fields", {})
-            if type == "CREATE":
-
-                return dict(
-                    fields=list(
-                        filter(
-                            lambda field: field["required"]
-                            and field["createable"]
-                            and field["type"] != "Reference",
-                            fields.values(),
-                        )
-                    ),
-                )
-            if type == "UPDATE":
-                # no required fields for update
-                return dict(fields=list())
-
-        return
 
 
 class StageQuerySet(models.QuerySet):

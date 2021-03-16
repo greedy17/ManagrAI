@@ -1,6 +1,7 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import SlackAPI from './api'
+import { SObjectField } from '../salesforce'
 
 export class CustomSlackForm extends Model {
   static api = null
@@ -13,8 +14,17 @@ export class CustomSlackForm extends Model {
   static formType = new fields.Field({})
   static resource = new fields.Field({})
   static stage = new fields.CharField({})
+  static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
+  static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
 
-  static fromApi(obj) {
+  static fromAPI(obj) {
+    // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
+
+    let _refFields = obj['fields_ref'].map(ref => {
+      return { ...ref['field_ref'], order: ref['order'] }
+    })
+    obj['fields_ref'] = _refFields
+    console.log(_refFields)
     return CustomSlackForm.create(objectToCamelCase(obj))
   }
 }
@@ -35,20 +45,14 @@ const UPDATE = 'UPDATE'
 const OPPORTUNITY = 'Opportunity'
 const CONTACT = 'Contact'
 const ACCOUNT = 'Account'
+const LEAD = 'Lead'
 const STAGE_GATING = 'STAGE_GATING'
-const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT]
+const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT, LEAD]
 const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
-  [ACCOUNT]: ['meeting_type', 'meeting_comments', 'sentiment'],
-  [OPPORTUNITY]: [
-    'meeting_type',
-    'meeting_comments',
-    'sentiment',
-    'StageName',
-    'ForecastCategoryName',
-    'CloseDate',
-    'Amount',
-  ],
+  [ACCOUNT]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
+  [OPPORTUNITY]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
+  [LEAD]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
 }
 export {
   MEETING_REVIEW,

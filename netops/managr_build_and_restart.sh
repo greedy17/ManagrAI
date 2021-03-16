@@ -1,4 +1,4 @@
-cd /opt/managr/webapp
+cd /opt/managr/client
 
 echo "Removing managr webapp node_modules directory..."
 rm -rf node_modules

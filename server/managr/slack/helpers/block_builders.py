@@ -7,7 +7,7 @@ def text_block(value, text_type="plain_text"):
 
 def input_block(
     label,
-    initial_value=False,
+    initial_value=None,
     placeholder=False,
     multiline=False,
     placeholder_type="plain_text",
@@ -44,6 +44,7 @@ def input_block(
         obj["element"]["min_length"] = min_length
 
     if initial_value:
+        initial_value = str(initial_value)
         obj["element"]["initial_value"] = initial_value
 
     return obj
@@ -164,18 +165,6 @@ def datepicker(
     return block
 
 
-{
-    "type": "section",
-    "text": {"type": "mrkdwn", "text": "test"},
-    "block_id": "will work",
-    "accessory": {
-        "type": "button",
-        "text": {"type": "plain_text", "text": "sure will"},
-        "value": "cool",
-    },
-}
-
-
 def section_with_button_block(
     button_label,
     button_value,
@@ -208,7 +197,9 @@ def section_with_button_block(
     return block
 
 
-def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
+def simple_button_block(
+    label, value, url=None, style=None, confirm=False, action_id=None, block_id=None
+):
     # action ID must be unique
     block = {
         "type": "button",
@@ -254,4 +245,28 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
         block["accessory"]["initial_options"] = initial_options
 
     return block
+
+
+def section_with_accessory_block(
+    section_text, accessory, text_type="mrkdwn", block_id=None,
+):
+    """ Builds a section with an accessory (image/button) """
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": text_type, "text": section_text},
+        "block_id": block_id,
+        "accessory": accessory,
+    }
+
+    return block
+
+
+def simple_image_block(url, alt_text):
+    return {
+        "type": "image",
+        "image_url": url,
+        "alt_text": alt_text,
+    }
 

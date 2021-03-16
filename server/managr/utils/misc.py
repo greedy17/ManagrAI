@@ -1,5 +1,7 @@
 import random
 import re
+import boto3
+
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
@@ -15,21 +17,38 @@ def to_snake_case(val):
         return
     value = str(val)
     for index, char in enumerate(re.finditer(r"[A-Z]", value)):
-        value = (
-            value[: index + char.start()]
-            + "_"
-            + value[index + char.start()].lower()
-            + value[index + char.start() + 1 :]
-        )
+        if char.start() == 0:
+            value = value.lower()
+        else:
+            value = (
+                value[: index + char.start()]
+                + "_"
+                + value[index + char.start()].lower()
+                + value[index + char.start() + 1 :]
+            )
     return value
 
 
 def object_to_snake_case(obj):
-    if type(obj) != dict:
-        return
+    if type(obj) != dict and type(obj) != str:
+        return obj
+    elif type(obj) == str:
+        return to_snake_case(obj)
     new_obj = dict()
     for k, v in obj.items():
-        new_obj[to_snake_case(k)] = v
+        if type(v) == list:
+            new_obj[to_snake_case(k)] = []
+            for item in v:
+                if type(item) == dict:
+                    new_obj[to_snake_case(k)].append(object_to_snake_case(item))
+                else:
+                    new_obj[to_snake_case(k)].append(item)
+
+            list(map(lambda new_v: object_to_snake_case(new_v) if type(new_v) == dict else v, v))
+        elif type(v) == dict:
+            new_obj[to_snake_case(k)] = object_to_snake_case(v)
+        else:
+            new_obj[to_snake_case(k)] = v
     return new_obj
 
 
@@ -131,3 +150,11 @@ def query_debugger(func):
 
     return inner_func
 
+
+def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
+    AWS_ACCESS_KEY_ID = access_key_id
+    AWS_SECRET_ACCESS_KEY = secret
+    s3 = boto3.client(
+        "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
+    s3.upload_file(f, bucket_name, filename)

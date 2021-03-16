@@ -141,5 +141,6 @@ class CustomNotificationOption(admin.ModelAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
+
 # admin.site.register(NotificationOption, CustomNotificationOption)
 # admin.site.register(NotificationSelection, CustomNotificationSelection)

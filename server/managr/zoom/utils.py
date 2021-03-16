@@ -31,7 +31,7 @@ SCORE_LOOKUP = {
             "impact": "positive",
             "message_tpl": "The rep said they can't tell how well the meeting went.",
         },
-        slack_consts.ZOOM_MEETING__NOT_WELL: {
+        slack_consts.ZOOM_MEETING__FINE: {
             "type": "sentiment",
             "points": 0,
             "impact": "positive",

@@ -5,6 +5,8 @@ from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.management import call_command
@@ -13,6 +15,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     authentication,
     filters,
@@ -31,15 +34,32 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from managr.salesforce.background import emit_sf_sync, emit_gen_next_sync
+
 from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email
 
-
-from .models import SFSyncOperation
-from .serializers import SalesforceAuthSerializer
+from managr.slack.models import OrgCustomSlackForm
+from .models import (
+    SFSyncOperation,
+    SFObjectFieldsOperation,
+    SObjectField,
+    SObjectValidation,
+    SObjectPicklist,
+)
+from .serializers import (
+    SalesforceAuthSerializer,
+    SObjectFieldSerializer,
+    SObjectValidationSerializer,
+    SObjectPicklistSerializer,
+)
 from .adapter.models import SalesforceAuthAccountAdapter
-from .background import emit_sf_sync
+from .background import (
+    emit_sf_sync,
+    emit_gen_next_sync,
+    emit_gen_next_object_field_sync,
+    emit_generate_form_template,
+    emit_sync_sobject_picklist,
+)
 from . import constants as sf_consts
 
 
@@ -54,15 +74,47 @@ def authenticate(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # create sf sync object
+
         operations = [
-            sf_consts.RESOURCE_SYNC_CONTACT,
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
+            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+        ]
+        if serializer.instance.user.is_admin:
+            # we only need validations to show the user who is creating the forms
+
+            operations.extend(
+                [
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_LEAD}",
+                ]
+            )
+
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_object_field_sync(str(request.user.id), operations, formatted_time)
+        # generate forms
+        if serializer.instance.user.is_admin:
+            emit_generate_form_template(data.user)
+        # emit resource sync
+        operations = []
+        operations = [
             sf_consts.RESOURCE_SYNC_ACCOUNT,
+            sf_consts.RESOURCE_SYNC_CONTACT,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY,
+            sf_consts.RESOURCE_SYNC_LEAD,
         ]
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(request.user.id), operations, formatted_time)
-        # initiate process
+
         return Response(data={"success": True})
 
 
@@ -80,6 +132,10 @@ def revoke(request):
     if hasattr(user, "salesforce_account"):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
+        if user.is_admin:
+            OrgCustomSlackForm.objects.for_user(user).delete()
+            # admins remove the forms since they created them to avoid duplication
+
         user_context = dict(organization=user.organization.name)
         admin_context = dict(
             id=str(user.id),
@@ -108,3 +164,33 @@ def revoke(request):
             context={"data": admin_context},
         )
     return Response()
+
+
+class SObjectValidationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = SObjectValidationSerializer
+    filter_fields = ("salesforce_object",)
+
+    def get_queryset(self):
+        return SObjectValidation.objects.for_user(self.request.user)
+
+
+class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = SObjectFieldSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    filter_fields = ("salesforce_object", "createable", "updateable")
+    search_fields = ("label",)
+
+    def get_queryset(self):
+        return SObjectField.objects.for_user(self.request.user)
+
+
+class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = SObjectPicklistSerializer
+    filter_fields = ("salesforce_object", "picklist_for")
+
+    def get_queryset(self):
+        return SObjectPicklist.objects.for_user(self.request.user)
+

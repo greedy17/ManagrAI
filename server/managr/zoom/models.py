@@ -124,15 +124,18 @@ class ZoomAuthAccount(TimeStampModel):
         ## revoking a token is the same as deleting
         # - we no longer have a token to access data
         # - cannot refresh a token if it is also expired
-
-        if self.is_refresh_token_expired and self.is_token_expired:
+        try:
+            if self.is_refresh_token_expired and self.is_token_expired:
+                pass
+            elif self.is_token_expired and not self.is_refresh_token_expired:
+                # first refresh and then revoke
+                self.regenerate_token()
+                self.helper_class.revoke()
+            else:
+                self.helper_class.revoke()
+        except Exception as e:
+            print(e)
             pass
-        elif self.is_token_expired and not self.is_refresh_token_expired:
-            # first refresh and then revoke
-            self.regenerate_token()
-            self.helper_class.revoke()
-        else:
-            self.helper_class.revoke()
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
 
@@ -229,35 +232,9 @@ class ZoomMeeting(TimeStampModel):
         null=True,
         help_text="Json object of participants",
     )
-    opportunity = models.ForeignKey(
-        "opportunity.Opportunity",
-        on_delete=models.SET_NULL,
-        related_name="meetings",
-        null=True,
-        blank=True,
-    )
-    linked_account = models.ForeignKey(
-        "organization.Account",
-        on_delete=models.SET_NULL,
-        related_name="meetings",
-        null=True,
-        blank=True,
-    )
 
-    scoring_in_progress = models.BooleanField(
-        default=False, help_text="if an event is emitted to generate a score dont do it again",
-    )
-
-    is_closed = models.BooleanField(
-        default=False,
-        help_text="is closed is true when we expire attempts or a user has completed all steps",
-    )
     latest_attempt = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    interaction_status = models.CharField(
-        choices=zoom_consts.MEETING_INTERACTION_STATUSES,
-        max_length=255,
-        default=zoom_consts.MEETING_INTERACTION_STATUS_NOT_STARTED,
-    )
+
     participants_count = models.SmallIntegerField(null=True, blank=True)
     total_minutes = models.SmallIntegerField(null=True, blank=True)
 
@@ -270,69 +247,14 @@ class ZoomMeeting(TimeStampModel):
         help_text="Original duration is the duration sent from the meeting.end webhook, it is updated to the real duration when retrieving from the meetin endpoint so we save it for scoring",
     )
     #
-    slack_form = models.CharField(
-        blank=True,
-        max_length=255,
-        help_text="Id of slack form, we will use this id to delete/update the form when using an async flow",
-    )
-    slack_interaction = models.CharField(
-        blank=True,
-        max_length=255,
-        help_text="Id of current slack message interaction, we will use this id to delete/update the interaction with its status",
-    )
-    resource_id = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text="The id of the related resource unopinionated",
-    )
-    resource_type = models.CharField(
-        max_length=255, null=True, blank=True, help_text="The class name of the resource"
-    )
+
     objects = ZoomMeetingQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
 
-    @property
-    def meeting_resource(self):
-        if self.opportunity:
-            return "Opportunity"
-        elif self.linked_account and not self.opportunity:
-            return "Account"
-        else:
-            return None
-
-    @property
-    def resource(self):
-        from server.managr.salesforce.routes import routes
-
-        model_class = routes.get(self.resource_type, None)
-        if model_class and self.resource_id:
-            return model_class.get(id=self.resource_id)
-        return None
-
-    @property
-    def should_retry(self):
-        # is complete
-        # is_closed
-        # notification_attempts <=1
-        # latest_attempt > 2hrs
-        # if the latest attempt is 2 hours after the first attempt try again
-        two_hour_timeline = (timezone.now() - self.latest_attempt).seconds >= (60 * 3600)
-        return (
-            self.interaction_status != zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
-            or not self.is_closed
-            and (self.notification_attempts <= 1 and two_hour_timeline)
-        )
-
-    def retry_slack_integration(self):
-        # retries slack message at a step
-        from .background import _kick_off_slack_interaction
-
-        return _kick_off_slack_interaction(
-            str(self.zoom_account.user.id), str(self.id), self.current_interaction
-        )
+    def __str__(self):
+        return f"{self.topic} meeting for user with email: {self.zoom_account.user.email} with id: {self.zoom_account.user.id}"
 
     @property
     def readable_score_message(self):
@@ -360,6 +282,26 @@ class ZoomMeeting(TimeStampModel):
         return "This Meeting has not been scored yet"
 
     def delete(self, *args, **kwargs):
+        if hasattr(self, "workflow"):
+            if self.workflow.slack_interaction and len(self.workflow.slack_interaction):
+                from managr.slack.helpers import block_builders
+                from managr.slack.helpers import requests as slack_requests
+                from managr.slack.helpers.block_sets import get_block_set
+
+                slack_access_token = self.workflow.user.organization.slack_integration.access_token
+                ts, channel = self.workflow.slack_interaction.split("|")
+                res = slack_requests.update_channel_message(
+                    channel,
+                    ts,
+                    slack_access_token,
+                    block_set=[
+                        block_builders.simple_section(
+                            ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                        )
+                    ],
+                ).json()
+
+                self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(ZoomMeeting, self).delete(*args, **kwargs)
 
 
@@ -418,59 +360,10 @@ class MeetingReview(TimeStampModel):
         max_length=500,
     )
 
-    def get_event_data_salesforce(self):
-        user_timezone = self.meeting.zoom_account.timezone
-        start_time = self.meeting.start_time
-        end_time = self.meeting.end_time
-        formatted_start = (
-            datetime.strftime(
-                start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-            )
-            if start_time
-            else start_time
-        )
-        formatted_end = (
-            datetime.strftime(
-                end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-            )
-            if end_time
-            else end_time
-        )
-
-        data = dict(
-            Subject=f"Meeting - {self.meeting_type}",
-            Description=f"{self.meeting_comments}, this meeting started on {formatted_start} and ended on {formatted_end} ",
-            WhatId=self.meeting.opportunity.integration_id
-            if self.meeting.meeting_resource == "Opportunity"
-            else self.meeting.linked_account.integration_id,
-            ActivityDate=self.meeting.start_time.strftime("%Y-%m-%d"),
-            Status="Completed",
-            TaskSubType="Call",
-        )
-        return data
-
     @property
     def meeting_resource(self):
         """ determines whether this is a meeting review for a meeting with an opp or an acct"""
-        return self.meeting.meeting_resource
-
-    @property
-    def as_sf_update(self):
-        """ return data as an sf updateable object """
-        data = dict()
-        standard_fields = zoom_consts.STANDARD_MEETING_FIELDS[self.meeting_resource]
-        for field in self.__dict__:
-            if field in standard_fields:
-                if field == "amount":
-                    data["amount"] = str(self.amount)
-                elif field == "close_date":
-                    data["close_date"] = self.close_date.strftime("%Y-%m-%d")
-                else:
-                    data[field] = self.__dict__[field]
-
-        if self.custom_data:
-            data = {**data, **self.custom_data}
-        return data
+        return self.meeting.workflow.meeting_resource
 
     @property
     def stage_progress(self):
