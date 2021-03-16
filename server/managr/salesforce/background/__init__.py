@@ -103,7 +103,11 @@ def _process_gen_next_sync(user_id, operations_list):
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
-    return SFSyncOperation.objects.create(user=user, operations_list=operations_list).begin_tasks()
+    return SFSyncOperation.objects.create(
+        user=user,
+        operations_list=operations_list,
+        operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+    ).begin_tasks()
 
 
 @background(schedule=0)
@@ -114,7 +118,7 @@ def _process_gen_next_object_field_sync(user_id, operations_list):
         return logger.exception(f"User not found sync operation not created {user_id}")
 
     return SFObjectFieldsOperation.objects.create(
-        user=user, operations_list=operations_list
+        user=user, operations_list=operations_list, operation_type=sf_consts.SALESFORCE_FIELD_SYNC
     ).begin_tasks()
 
 
@@ -183,7 +187,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
 # SFFieldOperation Tasks
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_sobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
@@ -222,7 +226,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_picklist_values_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
@@ -261,7 +265,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_sobject_validations_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
