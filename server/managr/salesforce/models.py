@@ -422,7 +422,8 @@ class SFSyncOperation(TimeStampModel):
                 else:
                     self.operations = [str(t.task_hash)]
                 self.save()
-                break
+                if offset >= 2000:
+                    break
 
     def save(self, *args, **kwargs):
         from managr.salesforce.background import (
