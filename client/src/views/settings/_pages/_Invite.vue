@@ -44,7 +44,7 @@
         <PulseLoadingSpinnerButton
           @click="handleInvite"
           class="invite-button"
-          text="Inviate"
+          text="Invite"
           :loading="loading"
           >Invite</PulseLoadingSpinnerButton
         >
@@ -93,6 +93,7 @@ import CollectionManager from '@/services/collectionManager'
 import Pagination from '@/services/pagination'
 import Modal from '../../../components/Modal'
 import Button from '@thinknimble/button'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
   name: 'Invite',
@@ -100,6 +101,7 @@ export default {
     DropDownSelect,
     Modal,
     Button,
+    PulseLoadingSpinnerButton,
   },
   props: {
     inviteOpen: {
@@ -159,6 +161,7 @@ export default {
     },
     handleInvite() {
       // reset component data when submission begins, in case of prior request
+
       this.loading = true
       this.isFormValid = null
       this.success = null
@@ -167,6 +170,7 @@ export default {
       let validationResults = this.clientSideValidations()
       this.isFormValid = validationResults[0]
       this.errors = validationResults[1]
+
       if (!this.isFormValid) {
         this.loading = false
         return

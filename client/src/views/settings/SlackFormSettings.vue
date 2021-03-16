@@ -645,7 +645,7 @@ export default {
   &__list {
     display: flex;
     flex-direction: column;
-    text-align: center;
+    text-align: left;
     margin-bottom: 2rem;
 
     &__item {

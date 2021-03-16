@@ -42,8 +42,7 @@
         <div class="form-header">
           <div class="form-header__left">
             <h3>
-              Your Slack Form
-              {{ customForm.stage && customForm.stage.length ? `Stage: ${customForm.stage}` : '' }}
+              {{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}
             </h3>
           </div>
           <div class="form-header__right"></div>
