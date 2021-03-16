@@ -29,6 +29,12 @@ class RequiredFieldError(Exception):
         super().__init__(self.message)
 
 
+class SFQueryOffsetError(Exception):
+    def __init(self, message="OFFSET MAX IS 2000"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -61,6 +67,8 @@ class CustomAPIException:
             raise FieldValidationError(self.message)
         elif self.status_code == 400 and self.param == "REQUIRED_FIELD_MISSING":
             raise RequiredFieldError(self.message)
+        elif self.status_code == 400 and self.param == "NUMBER_OUTSIDE_VALID_RANGE":
+            raise SFQueryOffsetError(self.message)
         elif self.status_code == 400 and self.param == "INVALID_FIELD":
             # this error is a malformced query error we should log this (most likely from relationship feilds)
             logger.error(f"An error occured with a query sent to SF {self.message}")
