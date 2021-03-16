@@ -141,7 +141,7 @@ export default {
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
 
-      this.$router.push({ name: 'InviteUsers' })
+      this.$router.push({ name: 'Integrations' })
     },
   },
 }
