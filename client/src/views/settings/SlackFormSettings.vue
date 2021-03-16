@@ -143,7 +143,7 @@
                     >
                       {{ form.stage }}
                     </div>
-                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(i)">
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
                       x
                     </div>
                   </div>
@@ -388,10 +388,46 @@ export default {
       }
     },
 
-    async deleteForm(index) {
+    async deleteForm(form) {
       const forms = this.allFormsByType
 
-      console.log('hi')
+      if (form.id.length) {
+        const id = form.id
+
+        SlackOAuth.api
+          .delete(id)
+          .then(async res => {
+            this.$Alert.alert({
+              type: 'success',
+
+              message: 'Form deleted successfully',
+
+              duration: 4500,
+            })
+
+            const forms = this.formsByType.filter(f => {
+              return f.id !== form.id
+            })
+            this.formsByType = forms
+          })
+
+          .catch(e => {
+            this.$Alert.alert({
+              type: 'error',
+
+              message: 'There was an error, please try again',
+
+              duration: 4500,
+            })
+          })
+
+          .finally(() => {})
+      } else {
+        const forms = this.newForms.filter(f => {
+          return f.id !== form.id
+        })
+        this.newForms = forms
+      }
     },
 
     openStageDropDown() {
