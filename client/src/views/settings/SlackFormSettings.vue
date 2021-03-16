@@ -132,6 +132,10 @@
                     v-for="(form, i) in formStages"
                     :key="form"
                     class="stage__dropdown__stages__container"
+                    :class="{
+                      'stage__dropdown__stages__container--selected':
+                        `${form.id}.${form.stage}` === selectedTab,
+                    }"
                   >
                     <div
                       @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
@@ -717,6 +721,11 @@ export default {
         padding: 0.75rem;
         font-size: 0.75rem;
         cursor: pointer;
+
+        &--selected {
+          color: white !important;
+          background-color: #{$dark-green};
+        }
       }
       &__title {
         font-size: 12;
