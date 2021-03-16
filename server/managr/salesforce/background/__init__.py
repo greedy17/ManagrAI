@@ -159,7 +159,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, limit, attempts=1
     while True:
         sf = user.salesforce_account
         try:
-            res = sf.list_resource_data(resource, offset)
+            res = sf.list_resource_data(resource, offset,)
             break
         except TokenExpired:
             if attempts >= 5:
