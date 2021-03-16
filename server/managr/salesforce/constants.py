@@ -15,7 +15,7 @@ REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
-SALESFORCE_QUERY_LIMIT = 200
+SALESFORCE_QUERY_LIMIT = 300
 SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
