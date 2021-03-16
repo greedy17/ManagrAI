@@ -404,8 +404,18 @@ class SFSyncOperation(TimeStampModel):
             logger.info(f"{count} {key} {self.user.email}")
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
+                limit = sf_consts.SALESFORCE_QUERY_LIMIT
+                if offset > 2000:
+                    # sf limit on offset for 2000 if it is greater than 2k
+                    # we need to get the rest of the records
+                    # log a warning this may fail
+                    logger.warning(
+                        f"offset for sync for user {self.user.email} with id {self.user.id} was over 2000"
+                    )
+                    offset = 2000
+                    limit = count - offset
 
-                t = emit_sf_sync(str(self.user.id), str(self.id), key, offset)
+                t = emit_sf_sync(str(self.user.id), str(self.id), key, limit, offset)
                 if self.operations:
                     self.operations.append(str(t.task_hash))
                 else:

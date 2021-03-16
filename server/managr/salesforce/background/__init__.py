@@ -41,10 +41,10 @@ from .. import constants as sf_consts
 logger = logging.getLogger("managr")
 
 
-def emit_sf_sync(user_id, sync_id, resource, offset):
+def emit_sf_sync(user_id, sync_id, resource, limit, offset):
     user_id = str(user_id)
     sync_id = str(sync_id)
-    return _process_resource_sync(user_id, sync_id, resource, offset)
+    return _process_resource_sync(user_id, sync_id, resource, limit, offset)
 
 
 def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
@@ -146,7 +146,7 @@ def _generate_form_template(user_id):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
 @log_all_exceptions
-def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
+def _process_resource_sync(user_id, sync_id, resource, offset, limit, attempts=1):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return

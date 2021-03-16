@@ -336,7 +336,10 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships,)}"
         if offset:
             url = f"{url} offset {offset}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        limit = kwargs.get("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
+        res = client.get(
+            url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token), limit=limit
+        )
         res = self._handle_response(res)
         res = self._format_resource_response(res, resource)
         return res
