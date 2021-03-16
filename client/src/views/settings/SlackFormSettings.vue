@@ -138,14 +138,14 @@
                     }"
                   >
                     <div
-                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                       class="stage__dropdown__stages__title"
+                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                     >
                       {{ form.stage }}
                     </div>
-                    <!--                     <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(i)">
                       x
-                    </div> -->
+                    </div>
                   </div>
                 </div>
                 <div style="display: flex; justify-content: center;">
@@ -391,32 +391,7 @@ export default {
     async deleteForm(index) {
       const forms = this.allFormsByType
 
-      if (forms[index].id.length) {
-        const id = forms[index].id
-        console.log(this.formsByType)
-        SlackOAuth.api
-          .delete(id)
-          .then(async res => {
-            this.$Alert.alert({
-              type: 'success',
-              message: 'Form deleted successfully',
-              duration: 4500,
-            })
-            this.formsByType.splice(index, 1)
-            console.log(this.formsByType)
-          })
-          .catch(e => {
-            this.$Alert.alert({
-              type: 'error',
-              message: 'There was an error, please try again',
-              duration: 4500,
-            })
-          })
-          .finally(() => {})
-      } else {
-        const length = this.allFormsByType.length - this.formsByType
-        this.newForms.splice(length - 1, 1)
-      }
+      console.log('hi')
     },
 
     openStageDropDown() {
@@ -717,10 +692,12 @@ export default {
     &__stages {
       &__container {
         display: flex;
-        justify-content: space-between;
+
+        height: 2.5rem;
         padding: 0.75rem;
         font-size: 0.75rem;
         cursor: pointer;
+        align-items: center;
 
         &--selected {
           color: white !important;
@@ -731,8 +708,11 @@ export default {
         font-size: 12;
         font-family: #{$bold-font-family};
         cursor: pointer;
+
+        width: 100%;
       }
       &__x {
+        z-index: 1000;
       }
     }
   }
