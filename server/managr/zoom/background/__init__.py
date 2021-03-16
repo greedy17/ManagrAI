@@ -228,6 +228,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                         email__in=participant_emails, owner__organization__id=user.organization.id
                     ).first()
                     if lead:
+                        logger.info(f"{lead} found")
                         meeting_resource_data["resource_id"] = str(lead.id)
                         meeting_resource_data["resource_type"] = "Lead"
 
