@@ -148,20 +148,20 @@ class ZoomAcct:
                 return logger.error(f"An error occured with a zoom integration, {e}")
 
         else:
-            try:
-                error_code = response.status_code
-                error_data = response.json()
-                error_param = error_data.get("error", None)
-                error_message = error_data.get("reason", None)
-                kwargs = {
-                    "error_code": error_code,
-                    "error_param": error_param,
-                    "error_message": error_message,
-                }
-                # TODO: if the error is 401 with code 124, the token is expired and we need to refresh PB
-                raise HTTPError(kwargs)
-            except HTTPError as e:
-                ZoomAPIException(e, fn_name)
+
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            error_message = error_data.get("message", None)
+            error_code = error_data.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            ZoomAPIException(HTTPError(kwargs), fn_name)
         return data
 
     @staticmethod

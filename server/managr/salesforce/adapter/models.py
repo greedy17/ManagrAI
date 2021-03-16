@@ -157,17 +157,20 @@ class SalesforceAuthAccountAdapter:
                 CustomAPIException(e, fn_name)
         else:
 
-            error_code = response.status_code
+            status_code = response.status_code
             error_data = (
                 response.json()[0] if isinstance(response.json(), list) else response.json()
             )
-            if error_code == 400:
+            # sf does not use this field
+            error_code = None
+            if status_code == 400:
                 error_param = error_data.get("error", error_data.get("errorCode", None))
                 error_message = error_data.get("error_description", error_data.get("message", None))
             else:
                 error_param = error_data.get("errorCode", None)
                 error_message = error_data.get("message", None)
             kwargs = {
+                "status_code": status_code,
                 "error_code": error_code,
                 "error_param": error_param,
                 "error_message": error_message,
@@ -205,8 +208,12 @@ class SalesforceAuthAccountAdapter:
         self, sf_account_id, user_id, res_data=[],
     ):
         fields = res_data["fields"]
-        ### REMOVE CLONESOURCE ID THIS FIELD DOES NOT WORK IN QUERY
-        del fields["CloneSourceId"]
+        ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
+        if "CloneSourceId" in fields.keys():
+            del fields["CloneSourceId"]
+        if "OpportunityScoreId" in fields.keys():
+            del fields["CloneSourceId"]
+
         custom_additions = dict(
             salesforce_account=sf_account_id,
             salesforce_object=res_data["apiName"],

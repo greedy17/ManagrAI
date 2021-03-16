@@ -418,7 +418,7 @@ class SFSyncOperation(TimeStampModel):
         )
 
         logger.info(f"{self.progress}")
-        if self.progress == 100:
+        if self.progress == 100 and self.__class__.__name__ == "SFSyncOperation":
             logger.info("starting new process")
             scheduled_time = timezone.now() + timezone.timedelta(minutes=2.5)
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
