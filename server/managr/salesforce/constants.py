@@ -15,7 +15,7 @@ REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
-SALESFORCE_QUERY_LIMIT = 500
+SALESFORCE_QUERY_LIMIT = 300
 SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/{resource}"
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
@@ -51,7 +51,7 @@ def SF_COUNT_URI(resource, owner_id):
 
 
 SALESFORCE_VALIDATION_QUERY = (
-    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
+    lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage,EntityDefinition.DeveloperName From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
 )
 
 # SF HEADERS
@@ -93,10 +93,20 @@ SALESFORCE_BEARER_AUTH_HEADER = lambda x: dict(Authorization=f"Bearer {x}")
 RESOURCE_SYNC_ACCOUNT = "Account"
 RESOURCE_SYNC_OPPORTUNITY = "Opportunity"
 RESOURCE_SYNC_CONTACT = "Contact"
+RESOURCE_SYNC_LEAD = "Lead"
+
+
 SALESFORCE_RESOURCE_TASK = "Task"
 
+SALESFORCE_OBJECT_FIELDS = "OBJECT_FIELDS"
+SALESFORCE_PICKLIST_VALUES = "PICKLIST_VALUES"
+SALESFORCE_VALIDATIONS = "VALIDATIONS"
 
 SALESFORCE_RESOURCE_SYNC_QUEUE = "SALESFORCE_RESOURCE_SYNC"
+SALESFORCE_RESOURCE_SYNC = "SALESFORCE_RESOURCE_SYNC"
+SALESFORCE_FIELD_SYNC_QUEUE = "SALESFORCE_FIELD_SYNC"
+SALESFORCE_FIELD_SYNC = "SALESFORCE_FIELD_SYNC"
+SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE = "SALESFORCE_MEETING_REVIEW_WORKFLOW"
 
 
 SALESFORCE_USER_REQUEST_HEADERS = lambda token: dict(Authorization=f"Bearer {token}")
@@ -160,3 +170,7 @@ SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE = "OpportunityContactRole"
 
 SALESFORCE_CONTACT_VIEW_URI = lambda u, k: f"{u}/lightning/r/Contact/{k}/view"
 
+MEETING_REVIEW__UPDATE_RESOURCE = "MEETING_REVIEW_UPDATE_RESOURCE"
+MEETING_REVIEW__CREATE_CONTACTS = "MEETING_REVIEW_CREATE_CONTACTS"
+MEETING_REVIEW__UPDATE_CONTACTS = "MEETING_REVIEW_UPDATE_CONTACTS"
+MEETING_REVIEW__SAVE_CALL_LOG = "MEETING_REVIEW_SAVE_CALL_LOG"

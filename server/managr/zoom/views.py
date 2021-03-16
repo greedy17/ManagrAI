@@ -46,6 +46,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from managr.slack.models import UserSlackIntegration
+from managr.salesforce.models import MeetingWorkflow
 from .models import ZoomAuthAccount, ZoomMeeting
 from .serializers import (
     ZoomAuthRefSerializer,
@@ -149,7 +150,7 @@ def zoom_meetings_webhook(request):
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account"]
+    allowed_commands = ["opp", "acc", "lead"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -175,11 +176,14 @@ def init_fake_meeting(request):
         command_params = []
     meeting_resource = None
     if len(command_params):
+        logger.exception(f"{command_params[0]}")
         if command_params[0] not in allowed_commands:
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I don't know that option: {}".format(command_params[0]),
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
                 }
             )
         meeting_resource = command_params[0]
@@ -202,46 +206,40 @@ def init_fake_meeting(request):
 
     if zoom_account and not zoom_account.is_revoked:
         # emit the process
-        meeting = _get_past_zoom_meeting_details.now(
+        workflow = _get_past_zoom_meeting_details.now(
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         # get meeting
-        _kick_off_slack_interaction.now(str(user.id), str(meeting.id))
-        meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
-        if meeting_resource and meeting_resource.lower() == "account":
-
-            meeting.opportunity = None
+        workflow.begin_communication(now=True)
+        workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
+        if meeting_resource and meeting_resource.lower() == "acc":
             acc = user.accounts.first()
-            meeting.linked_account_id = acc.id
-            meeting.save()
+            workflow.resource_id = str(acc.id)
+            workflow.resource_type = "Account"
+            workflow.save()
         elif not meeting_resource:
+            workflow.resource_id = None
+            workflow.resource_type = ""
+            workflow.save()
+        elif meeting_resource == "lead":
+            l = user.owned_leads.first()
+            workflow.resource_id = str(l.id)
+            workflow.resource_type = "Lead"
+            workflow.save()
 
-            meeting.opportunity = None
-            meeting.linked_account = None
-            meeting.save()
-        if not meeting_resource or not meeting_resource.lower() == "opportunity":
-            access_token = user.organization.slack_integration.access_token
-            attempts = 0
-            while True:
+        access_token = user.organization.slack_integration.access_token
 
-                if not len(meeting.slack_interaction):
-
-                    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
-                    attempts += 1
-
-                else:
-                    break
-            ts, channel = meeting.slack_interaction.split("|")
-            res = slack_requests.update_channel_message(
-                channel,
-                ts,
-                access_token,
-                block_set=get_block_set(
-                    "initial_meeting_interaction", context={"m": str(meeting.id)},
-                ),
-            ).json()
-            meeting.slack_interaction = f"{res['ts']}|{res['channel']}"
-            meeting.save()
+        ts, channel = workflow.slack_interaction.split("|")
+        res = slack_requests.update_channel_message(
+            channel,
+            ts,
+            access_token,
+            block_set=get_block_set(
+                "initial_meeting_interaction", context={"w": str(workflow.id)},
+            ),
+        ).json()
+        workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+        workflow.save()
 
         # if commands has a type update meeting to that type
 

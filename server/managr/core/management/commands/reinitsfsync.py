@@ -18,9 +18,10 @@ class Command(BaseCommand):
             user = User.objects.filter(email=t).first()
 
             operations = [
-                sf_consts.RESOURCE_SYNC_CONTACT,
                 sf_consts.RESOURCE_SYNC_ACCOUNT,
+                sf_consts.RESOURCE_SYNC_CONTACT,
                 sf_consts.RESOURCE_SYNC_OPPORTUNITY,
+                sf_consts.RESOURCE_SYNC_LEAD,
             ]
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")

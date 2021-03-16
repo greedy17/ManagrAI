@@ -1,5 +1,6 @@
 from . import alert_blocksets as slack_alerts
 from . import meeting_review_block_sets
+from . import common_blocksets
 
 # Mockups, page 3: https://docs.google.com/document/d/1KIvznxOqPb7WuFOXsFcKMawxq8-8T2gpb2sYNdIqLL4/edit#heading=h.xa1nnwnl2is5
 # Slack Block-Builder: https://app.slack.com/block-kit-builder/
@@ -36,5 +37,10 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "show_lead_score_description": slack_alerts.lead_score_description_block_set,
         "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
         "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
+        "loading": common_blocksets.loading_block_set,
+        "error_modal": common_blocksets.error_modal_block_set,
+        "error_message": common_blocksets.error_message_block_set,
+        "coming_soon_modal": common_blocksets.coming_soon_modal_block_set,
+        "create_meeting_task": meeting_review_block_sets.create_meeting_task,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

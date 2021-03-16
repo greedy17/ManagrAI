@@ -6,4 +6,5 @@ class ManagrCoreConfig(AppConfig):
     name = "managr.core"
 
     def ready(self):
-        import managr.core.signals
+        return
+

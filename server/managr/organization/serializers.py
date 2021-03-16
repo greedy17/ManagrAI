@@ -23,7 +23,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         )
 
 
-class ActionChoiceRefSerializer(serializers.ModelSerializer):
+class ActionChoiceSerializer(serializers.ModelSerializer):
     """
     Read Only Ref Serializer for ActionChoices Tied to an Organization
     """
@@ -33,6 +33,7 @@ class ActionChoiceRefSerializer(serializers.ModelSerializer):
         fields = (
             "title",
             "description",
+            "organization",
         )
 
 

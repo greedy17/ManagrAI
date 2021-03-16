@@ -190,11 +190,7 @@ class UserViewSet(
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
         try:
             user = User.objects.get(pk=pk)
-            if (
-                str(user.magic_token) == str(magic_token)
-                and not user.magic_token_expired
-                and user.is_invited
-            ):
+            if str(user.magic_token) == str(magic_token) and user.is_invited:
                 user.set_password(password)
                 user.is_active = True
                 # expire old magic token and create a new one for other uses

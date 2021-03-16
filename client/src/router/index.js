@@ -59,11 +59,6 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
     },
     {
-      path: '/integrations',
-      name: 'Integrations',
-      component: IntegrationScreen,
-    },
-    {
       path: '/forms',
       component: SlackFormSettings,
 
@@ -77,31 +72,11 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       children: [
         {
-          path: '',
-          name: 'Profile',
-          components: {
-            'user-settings': Profile,
-          },
+          path: 'integrations',
+          name: 'Integrations',
+          component: () =>
+            import(/* webpackChunkName: "settings" */ '../views/auth/IntegrationScreen'),
         },
-        // NOTE (Bruno 6-18-2020) once we get password-reset-flow incorporated, we can add the Password page
-        // {
-        //   path: 'password',
-        //   name: 'Password',
-        //   components: {
-        //     'user-settings': Password,
-        //   },
-        // },
-        {
-          path: 'invite',
-          name: 'Invite',
-          components: { 'user-settings': Invite },
-          //beforeEnter: Auth.requireUserTypeManagerOrStaff,
-        },
-        // {
-        //   path: 'notification-settings',
-        //   name: 'NotificationSettings',
-        //   components: { 'user-settings': NotificationSettings },
-        // },
       ],
     },
     //

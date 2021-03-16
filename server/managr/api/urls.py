@@ -69,7 +69,11 @@ router.register("users", core_views.UserViewSet, "users")
 router.register("organizations", organization_views.OrganizationViewSet, "organizations")
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
-
+router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
+router.register(
+    "salesforce/validations", sf_views.SObjectValidationViewSet, "salesforce-validation"
+)
+router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesforce-picklists")
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")

@@ -25,63 +25,105 @@ client = HttpClient(timeout=20).client
 
 class SObjectFieldAdapter:
     def __init__(self, data):
-        self.api_name = data.get("apiName", None)
+        self.api_name = data.get("api_name", None)
         self.custom = data.get("custom", None)
         self.createable = data.get("createable", None)
         self.data_type = data.get("data_type", None)
-        self.label = data.get("label", None)
-        self.length = data.get("length", None)
+        self.label = data.get("label", "")
+        self.length = data.get("length", 0)
         self.reference = data.get("reference", None)
-        self.reference_to_infos = data.get("reference_to_infos", None)
+        self.reference_to_infos = data.get("reference_to_infos", [])
+        self.relationship_name = data.get("relationship_name", None)
         self.updateable = data.get("updateable", None)
         self.required = data.get("required", None)
         self.unique = data.get("unique", None)
-        self.updateable = data.get("updateable", None)
         self.value = data.get("value", None)
-        self.display_value = data.get("display_value", None)
+        self.display_value = data.get("display_value", "")
         self.options = data.get("options", [])
+        self.integration_source = data.get("integration_source", "")
+        self.integration_id = data.get("integration_id", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.salesforce_object = data.get("salesforce_object", None)
+        self.imported_by = data.get("imported_by", None)
 
     @staticmethod
     def from_api(data):
-        formatted_data = dict()
-        for key, val in data.items():
-            formatted_data[key] = object_to_snake_case(val)
+        data["integration_source"] = "SALESFORCE"
+        d = object_to_snake_case(data)
 
-        return formatted_data
+        return d
 
-    @property
-    def display_value_keys(self):
-        return
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
 
     @property
     def as_dict(self):
         return vars(self)
 
-    @property
-    def as_slack_block(self):
-        return self
-
-    def to_slack_field_type(self):
-        if self.data_type == "Picklist":
-            return block_builders.static_select
-        elif self.data_type == "Reference":
-            return block_builders.external_select
-
-        elif self.data_type == "Date":
-            return block_builders.datePicker
-
-        elif self.data_type == "MultiPicklist":
-            return block_builders.mulit_static_select
-
-        elif self.data_type == "Boolean":
-            return block_builders.checkbox_block
-        else:
-            return block_builders.input_block
-
 
 class SObjectValidationAdapter:
-    def __init__(self, *args, **kwargs):
-        self.stuff = stuff
+    def __init__(self, data):
+        self.id = data.get("id", None)
+        self.integration_id = data.get("integration_id", None)
+        self.description = data.get("description", "")
+        self.message = data.get("message", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.integration_source = data.get("integration_source", None)
+        self.salesforce_object = data.get("salesforce_object", None)
+        self.imported_by = data.get("imported_by", None)
+
+    @staticmethod
+    def from_api(data):
+        d = dict(
+            integration_id=data.get("Id", None),
+            description=data.get("Description", None),
+            message=data.get("ErrorMessage", None),
+            salesforce_object=data.get("EntityDefinition", {}).get("DeveloperName", None),
+            integration_source="SALESFORCE",
+            salesforce_account=data.get("salesforce_account", None),
+            imported_by=data.get("imported_by", None),
+        )
+
+        return d
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class SObjectPicklistAdapter:
+    def __init__(self, data):
+        # self.attributes = data.get("attributes", {})
+        # self.label = data.get("label", "")
+        # self.valid_for = data.get("valid_for", "")
+        # self.value = data.get("value", "")
+        self.values = data.get("values", [])
+        self.field = data.get("field", None)
+        self.picklist_for = data.get("picklist_for", "")
+        self.salesforce_account = data.get("salesforce_account", None)
+        self.integration_source = data.get("integration_source", "")
+        self.imported_by = data.get("imported_by", None)
+        self.salesforce_object = data.get("salesforce_object", None)
+
+    @staticmethod
+    def from_api(data):
+
+        d = object_to_snake_case(data)
+
+        return d
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
 
 
 class SalesforceAuthAccountAdapter:
@@ -97,7 +139,9 @@ class SalesforceAuthAccountAdapter:
         self.salesforce_account = kwargs.get("salesforce_account", None)
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
+        self.sobjects = kwargs.get("sobjects", None)
         self.object_fields = kwargs.get("object_fields", {})
+        self.default_record_id = kwargs.get("default_record_id", {})
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -112,27 +156,27 @@ class SalesforceAuthAccountAdapter:
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
-            try:
-                error_code = response.status_code
-                error_data = (
-                    response.json()[0] if isinstance(response.json(), list) else response.json()
-                )
-                if error_code == 400:
-                    error_param = error_data.get("error", error_data.get("errorCode", None))
-                    error_message = error_data.get(
-                        "error_description", error_data.get("message", None)
-                    )
-                else:
-                    error_param = error_data.get("errorCode", None)
-                    error_message = error_data.get("message", None)
-                kwargs = {
-                    "error_code": error_code,
-                    "error_param": error_param,
-                    "error_message": error_message,
-                }
-                raise HTTPError(kwargs)
-            except HTTPError as e:
-                CustomAPIException(e, fn_name)
+
+            status_code = response.status_code
+            error_data = (
+                response.json()[0] if isinstance(response.json(), list) else response.json()
+            )
+            # sf does not use this field
+            error_code = None
+            if status_code == 400:
+                error_param = error_data.get("error", error_data.get("errorCode", None))
+                error_message = error_data.get("error_description", error_data.get("message", None))
+            else:
+                error_param = error_data.get("errorCode", None)
+                error_message = error_data.get("message", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            CustomAPIException(HTTPError(kwargs), fn_name)
         return data
 
     @classmethod
@@ -160,77 +204,60 @@ class SalesforceAuthAccountAdapter:
 
         return formatted_data
 
-    @staticmethod
-    def custom_field(
-        label,
-        key,
-        type="String",
-        required=True,
-        updateable=True,
-        creatable=True,
-        options=[],
-        length=0,
-        value=None,
+    def format_field_options(
+        self, sf_account_id, user_id, res_data=[],
     ):
-        """ Helper method to convert custom fields we want to add to forms that we do not get from SF"""
-        return dict(
-            label=label,
-            key=key,
-            type=type,
-            required=required,  # is required to pass val on create
-            updateable=updateable,  # cannot be patched
-            createable=creatable,
-            options=options,
-            length=length,
-            value=value,
+        fields = res_data["fields"]
+        ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
+        if "CloneSourceId" in fields.keys():
+            del fields["CloneSourceId"]
+        if "OpportunityScoreId" in fields.keys():
+            del fields["CloneSourceId"]
+
+        custom_additions = dict(
+            salesforce_account=sf_account_id,
+            salesforce_object=res_data["apiName"],
+            imported_by=user_id,
         )
 
-    def format_field_options(self, res_data=[]):
-        fields = res_data["fields"]
-        data = {}
-        for key, val in fields.items():
-            if (
-                key == "CloneSourceId"
-            ):  # according to Teja CloneSourceId is returned as a field but is not queryable
-                continue
-            data[key] = dict(
-                label=val.get("label", None),
-                key=val.get("apiName", None),
-                type=val.get("dataType", None),
-                required=val.get("required", False),  # is required to pass val on create
-                updateable=val.get("updateable", False),  # cannot be patched
-                createable=val.get("createable", False),
-                reference=val.get("reference", False),  # if relational field
-                relationship_name=val.get("relationshipName", None),
-                relationship_details=val.get(
-                    "referenceToInfos", []
-                ),  # details of relationship used for get
-                length=val.get("length", 0),  # used to determine field size
-                options=[],
-                value=None,  # custom attribute used to add current value
-            )
+        data = [
+            SObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
+        ]
 
         return data
 
-    def format_validation_rules(self, res_data=[]):
+    def format_validation_rules(
+        self, sf_account_id, user_id, res_data=[],
+    ):
         records = res_data["records"]
         return list(
             map(
-                lambda rule: dict(
-                    id=rule.get("Id", None),
-                    description=rule.get("Description", None),
-                    message=rule.get("ErrorMessage", None),
+                lambda rule: SObjectValidationAdapter.create_from_api(
+                    {**rule, "salesforce_account": sf_account_id, "imported_by": user_id}
                 ),
                 records,
             )
         )
 
-    def format_picklist_values(self, res_data=[]):
+    def format_picklist_values(
+        self, sf_account_id, user_id, resource, res_data=[],
+    ):
         fields = res_data["picklistFieldValues"]
-        data = {}
-        for field, value in fields.items():
-            data[field] = value["values"]
-        return data
+        return list(
+            map(
+                lambda field: SObjectPicklistAdapter.create_from_api(
+                    {
+                        "values": field[1]["values"],
+                        "salesforce_account": sf_account_id,
+                        "picklist_for": field[0],
+                        "imported_by": user_id,
+                        "salesforce_object": resource,
+                        "integration_source": "SALESFORCE",
+                    }
+                ),
+                fields.items(),
+            )
+        )
 
     @staticmethod
     def from_api(data, user_id=None):
@@ -274,22 +301,21 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
+
         return {
-            "fields": self.format_field_options(res),
+            "fields": self.format_field_options(str(self.id), str(self.user), res),
             "record_type_id": res["defaultRecordTypeId"],  # required for the picklist options
         }
 
     def list_picklist_values(self, resource):
         """ Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to """
-        extra_fields_object = self.object_fields.get(resource, None)
-        if extra_fields_object:
-            record_type_id = extra_fields_object.get("record_type_id")
-            url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-            res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-            )
-            res = self._handle_response(res)
-            return self.format_picklist_values(res)
+
+        record_type_id = self.default_record_id
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+
+        return self.format_picklist_values(str(self.id), str(self.user), resource, res)
 
     def list_validations(self, resource):
         """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
@@ -297,21 +323,22 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
-        return self.format_validation_rules(res)
+
+        return self.format_validation_rules(str(self.id), str(self.user), res)
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
-        extra_fields = []
-        if extra_items:
-            extra_fields = extra_items.get("fields", [])
         from .routes import routes
 
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_fields, relationships,)}"
+        limit = kwargs.get("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
+        logger.info(f"{limit} was set on call")
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit)}"
         if offset:
             url = f"{url} offset {offset}"
+        logger.info(f"{url} was sent")
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
         res = self._format_resource_response(res, resource)
@@ -329,7 +356,7 @@ class SalesforceAuthAccountAdapter:
 
         filter_query_string = f"AND ({filter_query})"
         # always retreive id
-        fields.append("Id")
+        fields.insert(0, "Id")
         url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
@@ -441,7 +468,7 @@ class AccountAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create_account(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, custom_base, object_fields, user_id):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
         )
@@ -516,6 +543,105 @@ class ContactAdapter:
         for k, v in data.items():
             if k == "Id":
                 print(k)
+            key = mapping.get(k, None)
+            if key and key != "Id":
+                if v is not None:
+                    formatted_data[key] = v
+            else:
+
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields and k != "Id":
+                    if v is not None:
+                        formatted_data[k] = v
+
+        return formatted_data
+
+    @staticmethod
+    def create_new_contact(data, access_token, custom_base, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
+        logger.info(f"JSON_DATA Create Contact {json_data}")
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def update_contact(data, access_token, custom_base, integration_id, object_fields):
+        json_data = json.dumps(
+            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.patch(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class LeadAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.email = kwargs.get("email", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.name = kwargs.get("name", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        email="Email",
+        name="Name",
+        owner="OwnerId",  # overwritten (ignored in reverse)
+        account="AccountId",
+        external_account="AccountId",
+        external_owner="OwnerId",
+    )
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """ mapping of 'standard' data when sending from the SF API """
+        reverse = {}
+        for k, v in LeadAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = LeadAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return LeadAdapter(**formatted_data)
+
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        formatted_data = dict()
+        for k, v in data.items():
             key = mapping.get(k, None)
             if key and key != "Id":
                 if v is not None:
@@ -689,7 +815,7 @@ class OpportunityAdapter:
         return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create_opportunity(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, custom_base, object_fields, user_id):
         logger.info(f"UNFORMATED DATA: {data}")
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)

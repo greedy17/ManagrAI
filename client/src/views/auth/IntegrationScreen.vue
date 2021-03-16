@@ -1,9 +1,9 @@
 <template>
   <div class="integrations">
     <h2>Integrate your apps</h2>
-    <div
-      class="integrations__subtitle"
-    >Connect with the apps below to sync your sales data for managr to use.</div>
+    <div class="integrations__subtitle">
+      Connect with the apps below to sync your sales data for Managr to use.
+    </div>
 
     <div class="integrations__cards">
       <div class="card">
@@ -11,16 +11,17 @@
           <img class="card-img" src="@/assets/images/salesforce.png" />
           <h3 class="card__title">Salesforce</h3>
         </div>
-        <p
-          class="card-text"
-        >Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.</p>
+        <p class="card-text">
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.
+        </p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-        >Connect</PulseLoadingSpinnerButton>
+          >Connect</PulseLoadingSpinnerButton
+        >
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -36,7 +37,7 @@
           <h3 class="card__title">Zoom</h3>
         </div>
 
-        <p class="card-text">Connect Zoom to sync meeting data with managr.</p>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
@@ -121,24 +122,35 @@
         <p class="card-text">Coming Soon...</p>
       </div>
     </div>
-
-    <div v-if="user.isAdmin">
+    <div class="slack-form-builder">
       <PulseLoadingSpinnerButton
         v-if="hasSalesforceIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
         text="Slack Form Builder"
+        :disabled="!hasSalesforceIntegration"
+        :loading="false"
       ></PulseLoadingSpinnerButton>
-      <div
-        v-if="!hasSalesforceIntegration"
-        class="slack-button--disabled"
-        text="Slack Form Builder"
-      >Slack Form Builder</div>
+    </div>
+
+    <PulseLoadingSpinnerButton
+      v-if="hasSalesforceIntegration && user.isAdmin"
+      @click="goToSlackFormBuilder"
+      class="slack-button"
+      text="Slack Form Builder"
+    ></PulseLoadingSpinnerButton>
+    <div
+      v-if="!hasSalesforceIntegration && user.isAdmin"
+      class="slack-button slack-button--disabled"
+      text="Slack Form Builder"
+    >
+      Slack Form Builder
     </div>
     <img class="lock" src="@/assets/images/lockAsset.png" />
-    <div
-      class="privacy"
-    >We take your security and privacy very seriously. Your data is encrypted, and not being stored by Managr.</div>
+    <div class="privacy">
+      We take your security and privacy very seriously. Your data is encrypted, and not being stored
+      by Managr.
+    </div>
   </div>
 </template>
 
@@ -306,11 +318,14 @@ export default {
 }
 
 .card {
-  flex: 1;
-  min-width: 28rem;
-  max-width: 28rem;
-  margin-right: 2rem;
+  width: 10rem;
+  margin-right: 1rem;
   margin-bottom: 2rem;
+  @media only screen and (min-width: 768px) {
+    flex: 1 0 24%;
+    min-width: 21rem;
+    max-width: 30rem;
+  }
 
   &__header {
     display: flex;

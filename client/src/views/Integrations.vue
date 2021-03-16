@@ -6,42 +6,36 @@
       <div class="card">
         <img class="card-img" src="@/assets/images/salesforce.svg" />
         <h3>Salesforce</h3>
-        <p class="card-text">
-          Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
-        </p>
+        <p
+          class="card-text"
+        >Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-        >
-          Connect
-        </PulseLoadingSpinnerButton>
+        >Connect</PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
           @click="onRevoke('SALESFORCE')"
           v-else
           class="secondary-button"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           text="Show Forms"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
           @click="$router.push({ name: 'SlackFormSettings' })"
           v-if="hasSalesforceIntegration"
           class="secondary-button"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
         <img class="card-img" src="@/assets/images/zoom_logo.svg" />
         <h3>Zoom</h3>
-        <p class="card-text">
-          Connect Zoom to sync meeting data with managr.
-        </p>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
@@ -49,24 +43,20 @@
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'ZOOM'"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'ZOOM'"
           v-else
           @click="onRevoke('ZOOM')"
           class="secondary-button"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
         <img class="card-img" src="@/assets/images/slack.svg" />
         <h3>Slack</h3>
-        <p class="card-text">
-          Connect Slack to enable messaging between apps.
-        </p>
+        <p class="card-text">Connect Slack to enable messaging between apps.</p>
         <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -77,37 +67,28 @@
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           v-else-if="hasSlackIntegration && orgHasSlackIntegration"
           @click="onRevoke('SLACK')"
           class="secondary-button"
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
       </div>
 
       <div class="card">
-        <img
-          class="card-img"
-          src="@/assets/images/google-calendar.svg"
-          style="margin-right: 1rem"
-        />
+        <img class="card-img" src="@/assets/images/google-calendar.svg" style="margin-right: 1rem" />
         <img class="card-img" src="@/assets/images/outlook-icon.svg" />
         <h3>Calendar</h3>
-        <p class="card-text">
-          Connect Calendar to access upcoming meetings & attendees.
-        </p>
+        <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasNylasIntegration"
           @click="onGetAuthLink('NYLAS')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
-        >
-        </PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
@@ -193,6 +174,7 @@ export default {
     },
   },
   async created() {
+    console.log('here')
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true
