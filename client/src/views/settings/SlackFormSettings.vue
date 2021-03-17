@@ -113,7 +113,12 @@
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
               v-if="k.formType !== 'STAGE_GATING'"
             >
-              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              <div v-if="k.resource !== 'Contact'">
+                {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              </div>
+              <div v-else>
+                {{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}
+              </div>
             </div>
 
             <div class="stage__container">
@@ -132,16 +137,20 @@
                     v-for="(form, i) in formStages"
                     :key="form"
                     class="stage__dropdown__stages__container"
+                    :class="{
+                      'stage__dropdown__stages__container--selected':
+                        `${form.id}.${form.stage}` === selectedTab,
+                    }"
                   >
                     <div
-                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                       class="stage__dropdown__stages__title"
+                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                     >
                       {{ form.stage }}
                     </div>
-                    <!--                     <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
                       x
-                    </div> -->
+                    </div>
                   </div>
                 </div>
                 <div style="display: flex; justify-content: center;">
@@ -384,34 +393,45 @@ export default {
       }
     },
 
-    async deleteForm(index) {
+    async deleteForm(form) {
       const forms = this.allFormsByType
 
-      if (forms[index].id.length) {
-        const id = forms[index].id
-        console.log(this.formsByType)
+      if (form.id.length) {
+        const id = form.id
+
         SlackOAuth.api
           .delete(id)
           .then(async res => {
             this.$Alert.alert({
               type: 'success',
+
               message: 'Form deleted successfully',
+
               duration: 4500,
             })
-            this.formsByType.splice(index, 1)
-            console.log(this.formsByType)
+
+            const forms = this.formsByType.filter(f => {
+              return f.id !== form.id
+            })
+            this.formsByType = forms
           })
+
           .catch(e => {
             this.$Alert.alert({
               type: 'error',
+
               message: 'There was an error, please try again',
+
               duration: 4500,
             })
           })
+
           .finally(() => {})
       } else {
-        const length = this.allFormsByType.length - this.formsByType
-        this.newForms.splice(length - 1, 1)
+        const forms = this.newForms.filter(f => {
+          return f.id !== form.id
+        })
+        this.newForms = forms
       }
     },
 
@@ -545,6 +565,8 @@ export default {
 .box-updated__tab {
   display: flex;
   padding: 0;
+
+  justify-content: center;
 }
 .box-updated__tab-header {
   padding: 0 2rem;
@@ -645,7 +667,7 @@ export default {
   &__list {
     display: flex;
     flex-direction: column;
-    text-align: center;
+    text-align: left;
     margin-bottom: 2rem;
 
     &__item {
@@ -713,17 +735,27 @@ export default {
     &__stages {
       &__container {
         display: flex;
-        justify-content: space-between;
+
+        height: 2.5rem;
         padding: 0.75rem;
         font-size: 0.75rem;
         cursor: pointer;
+        align-items: center;
+
+        &--selected {
+          color: white !important;
+          background-color: #{$dark-green};
+        }
       }
       &__title {
         font-size: 12;
         font-family: #{$bold-font-family};
         cursor: pointer;
+
+        width: 100%;
       }
       &__x {
+        z-index: 1000;
       }
     }
   }
