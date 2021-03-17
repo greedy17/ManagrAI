@@ -25,6 +25,11 @@
           :collection="formFields"
           itemDisplayKey="referenceDisplayLabel"
           :showSubmitBtn="false"
+          @onClickItem="
+            e => {
+              onAddField(e)
+            }
+          "
           @onSearch="
             () => {
               formFields.pagination = new Pagination()
@@ -34,7 +39,7 @@
           <template v-slot:item="{ result }">
             <div class="slack-form-builder__container">
               <CheckBox :checked="addedFieldIds.includes(result.id)" />
-              <div class="slack-form-builder__sf-field" @click="() => onAddField(result)">
+              <div class="slack-form-builder__sf-field">
                 {{ result['referenceDisplayLabel'] }}
               </div>
             </div>
@@ -62,8 +67,7 @@
         <div class="form-header">
           <div class="form-header__left">
             <h3>
-              Your Slack Form
-              {{ customForm.stage && customForm.stage.length ? `Stage: ${customForm.stage}` : '' }}
+              {{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}
             </h3>
           </div>
           <div class="form-header__right"></div>
@@ -401,7 +405,7 @@ export default {
     font-display: #{$bold-font-family};
 
     &:hover {
-      background-color: $dark-gray-blue;
+      //ackground-color: $dark-gray-blue;
       cursor: pointer;
     }
   }

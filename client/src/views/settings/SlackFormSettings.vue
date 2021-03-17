@@ -132,12 +132,19 @@
                     v-for="(form, i) in formStages"
                     :key="form"
                     class="stage__dropdown__stages__container"
+                    :class="{
+                      'stage__dropdown__stages__container--selected':
+                        `${form.id}.${form.stage}` === selectedTab,
+                    }"
                   >
                     <div
-                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                       class="stage__dropdown__stages__title"
+                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                     >
                       {{ form.stage }}
+                    </div>
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
+                      x
                     </div>
                   </div>
                 </div>
@@ -319,33 +326,45 @@ export default {
       }
     },
 
-    async deleteForm(index) {
+    async deleteForm(form) {
       const forms = this.allFormsByType
 
-      if (forms[index].id.length) {
-        const id = forms[index].id
+      if (form.id.length) {
+        const id = form.id
 
         SlackOAuth.api
           .delete(id)
           .then(async res => {
             this.$Alert.alert({
               type: 'success',
+
               message: 'Form deleted successfully',
+
               duration: 4500,
             })
-            this.formsByType.splice(index, 1)
+
+            const forms = this.formsByType.filter(f => {
+              return f.id !== form.id
+            })
+            this.formsByType = forms
           })
+
           .catch(e => {
             this.$Alert.alert({
               type: 'error',
+
               message: 'There was an error, please try again',
+
               duration: 4500,
             })
           })
+
           .finally(() => {})
       } else {
-        const length = this.allFormsByType.length - this.formsByType
-        this.newForms.splice(length - 1, 1)
+        const forms = this.newForms.filter(f => {
+          return f.id !== form.id
+        })
+        this.newForms = forms
       }
     },
 
@@ -578,7 +597,7 @@ export default {
   &__list {
     display: flex;
     flex-direction: column;
-    text-align: center;
+    text-align: left;
     margin-bottom: 2rem;
 
     &__item {
@@ -646,17 +665,27 @@ export default {
     &__stages {
       &__container {
         display: flex;
-        justify-content: space-between;
+
+        height: 2.5rem;
         padding: 0.75rem;
         font-size: 0.75rem;
         cursor: pointer;
+        align-items: center;
+
+        &--selected {
+          color: white !important;
+          background-color: #{$dark-green};
+        }
       }
       &__title {
         font-size: 12;
         font-family: #{$bold-font-family};
         cursor: pointer;
+
+        width: 100%;
       }
       &__x {
+        z-index: 1000;
       }
     }
   }
