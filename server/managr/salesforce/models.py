@@ -181,7 +181,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "MultiPicklist":
             return block_builders.multi_static_select(
                 f"*{self.reference_display_label}*",
-                list(
+                self.picklist_options.as_slack_options,
+                initial_options=list(
                     map(
                         lambda value: block_builders.option(value["label"], value["value"]),
                         filter(
@@ -189,7 +190,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                         ),
                     ),
                 ),
-                initial_options=self.picklist_options.as_slack_options,
                 block_id=self.api_name,
             )
 
