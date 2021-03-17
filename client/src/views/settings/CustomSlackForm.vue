@@ -368,6 +368,18 @@ export default {
   .collection-search__result-item {
   border: none;
 }
+.slack-form-builder
+  ::v-deep
+  .collection-search
+  .collection-search__form
+  .collection-search__input
+  .search__input {
+  @include input-field();
+  height: 2.5rem !important;
+  width: 13rem;
+  padding: 0 0 0 1rem;
+  margin: 1rem;
+}
 
 .slack-form-builder {
   display: flex;

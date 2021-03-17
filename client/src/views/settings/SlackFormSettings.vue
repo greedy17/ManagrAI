@@ -302,7 +302,6 @@ export default {
       }
     },
     async listValidations(query_params = {}) {
-      console.log('hi')
       try {
         this.validations.filters = query_params
         this.validations.refresh()
@@ -325,7 +324,7 @@ export default {
 
       if (forms[index].id.length) {
         const id = forms[index].id
-        console.log(this.formsByType)
+
         SlackOAuth.api
           .delete(id)
           .then(async res => {
@@ -335,7 +334,6 @@ export default {
               duration: 4500,
             })
             this.formsByType.splice(index, 1)
-            console.log(this.formsByType)
           })
           .catch(e => {
             this.$Alert.alert({
@@ -433,7 +431,6 @@ export default {
       this.toggleSelectedTab(`${f.id}.${f.stage}`)
     },
     toggleSelectedTab(tab) {
-      console.log(tab)
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
