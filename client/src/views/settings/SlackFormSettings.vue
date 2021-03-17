@@ -113,7 +113,12 @@
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
               v-if="k.formType !== 'STAGE_GATING'"
             >
-              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              <div v-if="k.resource !== 'Contact'">
+                {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              </div>
+              <div v-else>
+                {{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}
+              </div>
             </div>
 
             <div class="stage__container">
@@ -497,6 +502,8 @@ export default {
 .box-updated__tab {
   display: flex;
   padding: 0;
+
+  justify-content: center;
 }
 .box-updated__tab-header {
   padding: 0 2rem;
