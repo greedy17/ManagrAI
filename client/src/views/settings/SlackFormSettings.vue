@@ -162,34 +162,9 @@
 
           <div class="box__tab-content">
             <template v-if="selectedForm">
-              <!-- <p>
-                <i>
-                  Required Fields have been pre-filled as part of the form, add or remove
-                  additional fields
-                </i>
-                <br />
-                <strong>Additional Validations may apply for your Salesforce Resources</strong>
-                <PulseLoadingSpinnerButton
-                  @click="showValidations = !showValidations"
-                  class="primary-button"
-                  text="Click Here"
-                  :loading="false"
-                />
-                <strong>to view them</strong>
-
-              </p>-->
               <div class="field-title field-title__bold">Available Fields</div>
 
               <div class="field-title">Add or remove additional tags</div>
-              <div>
-                <input
-                  type="text"
-                  class="search-bar"
-                  placeholder="Search for a field to add..."
-                  @input="searchFields"
-                  v-model="search"
-                />
-              </div>
 
               <CustomSlackForm
                 :fields="formFields.list"
@@ -201,21 +176,6 @@
                 :loading="formFields.refreshing"
               />
             </template>
-          </div>
-          <div
-            class="paginator__container"
-            v-if="formFields.pagination.next || formFields.pagination.previous"
-          >
-            <div class="paginator__text">View More</div>
-            <Paginator
-              :pagination="formFields.pagination"
-              @next-page="nextPage"
-              @previous-page="previousPage"
-              :loading="formFields.loadingNextPage"
-              arrows
-              size="small"
-              class="paginator"
-            />
           </div>
         </div>
       </template>
@@ -271,28 +231,7 @@ export default {
   watch: {
     selectedFormType: {
       immediate: true,
-      async handler(val, prev) {
-        console.log(val)
-        if (val && val != prev && this.resource) {
-          let fieldParam = {}
-          if (val == this.CREATE) {
-            fieldParam['createable'] = true
-          } else {
-            fieldParam['updateable'] = true
-          }
-          this.fieldParam = fieldParam
-          try {
-            this.formFields.filters = {
-              salesforceObject: this.resource,
-
-              ...fieldParam,
-            }
-            this.formFields.refresh()
-          } catch (e) {
-            console.log(e)
-          }
-        }
-      },
+      async handler(val, prev) {},
     },
   },
   async created() {
@@ -375,7 +314,6 @@ export default {
       }
     },
     async listValidations(query_params = {}) {
-      console.log('hi')
       try {
         this.validations.filters = query_params
         this.validations.refresh()
@@ -517,7 +455,6 @@ export default {
       this.toggleSelectedTab(`${f.id}.${f.stage}`)
     },
     toggleSelectedTab(tab) {
-      console.log(tab)
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
