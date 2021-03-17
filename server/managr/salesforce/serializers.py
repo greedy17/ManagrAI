@@ -70,10 +70,10 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
         )
 
     def to_internal_value(self, data):
-        if data.get("message", None) not in ["", None]:
+        if data.get("message", None) in ["", None]:
             data.update({"message": "No Message Provided"})
 
-        if data.get("description", None) not in ["", None]:
+        if data.get("description", None) in ["", None]:
             data.update({"message": "No Description Provided"})
 
         return super().to_internal_value(data)
