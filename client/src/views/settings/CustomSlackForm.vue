@@ -21,20 +21,40 @@
 
     <div style="display:flex;">
       <div>
-        <PulseLoadingSpinner v-if="loading" />
-
-        <div v-if="!loading" class="slack-form-builder__sf-fields">
-          <div
-            v-for="field in sfFieldsAvailableToAdd"
-            class="slack-form-builder__container"
-            @click="() => onAddField(field)"
-            :key="field.id"
-          >
-            <CheckBox :checked="addedFieldIds.includes(field.id)" />
-            <div :key="field.apiName" class="slack-form-builder__sf-field">
-              {{ field.referenceDisplayLabel }}
+        <CollectionSearch
+          :collection="formFields"
+          itemDisplayKey="referenceDisplayLabel"
+          :showSubmitBtn="false"
+          @onSearch="
+            () => {
+              formFields.pagination = new Pagination()
+            }
+          "
+        >
+          <template v-slot:item="{ result }">
+            <div class="slack-form-builder__container">
+              <CheckBox :checked="addedFieldIds.includes(result.id)" />
+              <div class="slack-form-builder__sf-field" @click="() => onAddField(result)">
+                {{ result['referenceDisplayLabel'] }}
+              </div>
             </div>
-          </div>
+          </template>
+        </CollectionSearch>
+        <div
+          class="paginator__container"
+          v-if="formFields.pagination.next || formFields.pagination.previous"
+        >
+          <div class="paginator__text">View More</div>
+
+          <Paginator
+            :pagination="formFields.pagination"
+            @next-page="nextPage"
+            @previous-page="previousPage"
+            :loading="formFields.loadingNextPage"
+            arrows
+            size="small"
+            class="paginator"
+          />
         </div>
       </div>
 
@@ -123,7 +143,8 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
-import { CollectionManager } from '@thinknimble/tn-models'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -137,6 +158,7 @@ export default {
     CheckBox,
     PulseLoadingSpinner,
     Paginator,
+    CollectionSearch,
   },
   props: {
     customForm: {
@@ -165,6 +187,7 @@ export default {
   },
   data() {
     return {
+      formFields: CollectionManager.create({ ModelClass: SObjectField }),
       salesforceFields,
       customSlackFormConfig: [],
       formHasChanges: false,
@@ -172,6 +195,7 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
+      Pagination,
     }
   },
   watch: {
@@ -181,6 +205,33 @@ export default {
       handler(val) {
         if (val && val.fields) {
           this.addedFields = [...val.fieldsRef]
+        }
+      },
+    },
+    selectedFormResourceType: {
+      immediate: true,
+
+      async handler(val) {
+        if (val) {
+          let searchParams = val.split('.')
+          if (searchParams.length) {
+            let fieldParam = {}
+            if (searchParams[0] == this.CREATE) {
+              fieldParam['createable'] = true
+            } else {
+              fieldParam['updateable'] = true
+            }
+            try {
+              this.formFields.filters = {
+                salesforceObject: searchParams[1],
+
+                ...fieldParam,
+              }
+              this.formFields.refresh()
+            } catch (e) {
+              console.log(e)
+            }
+          }
         }
       },
     },
@@ -197,9 +248,19 @@ export default {
         return field.id
       })
     },
+    selectedFormResourceType() {
+      return `${this.customForm.formType}.${this.resource}`
+    },
   },
   created() {},
   methods: {
+    nextPage() {
+      this.formFields.nextPage()
+    },
+    previousPage() {
+      this.formFields.prevPage()
+    },
+
     canRemoveField(field) {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
@@ -292,8 +353,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins/inputs.scss';
+@import '@/styles/variables';
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
+@import '@/styles/buttons';
+.slack-form-builder
+  ::v-deep
+  .collection-search
+  .collection-search__results
+  .collection-search__result-item {
+  border: none;
+}
 
 .slack-form-builder {
   display: flex;
@@ -336,7 +410,20 @@ export default {
     min-height: 70vh;
   }
 }
-
+.paginator {
+  @include paginator();
+  &__container {
+    border: none;
+    display: flex;
+    justify-content: flex-start;
+    width: 11rem;
+    font-size: 0.75rem;
+    margin-top: 1rem;
+  }
+  &__text {
+    width: 6rem;
+  }
+}
 .form-header {
   display: flex;
 
