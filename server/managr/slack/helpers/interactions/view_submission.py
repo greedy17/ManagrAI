@@ -26,6 +26,11 @@ from managr.zoom.background import _save_meeting_review_data
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import _process_create_new_resource
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 
 logger = logging.getLogger("managr")
 
@@ -157,10 +162,22 @@ def process_zoom_meeting_data(payload, context):
         get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
         get_block_set("create_meeting_task", {"w": str(workflow.id)}),
     ]
-
-    res = slack_requests.update_channel_message(
-        channel, ts, slack_access_token, block_set=block_set
-    ).json()
+    try:
+        res = slack_requests.update_channel_message(
+            channel, ts, slack_access_token, block_set=block_set
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
@@ -316,8 +333,20 @@ def process_update_meeting_contact(payload, context):
             "blocks": blocks,
         },
     }
-
-    res = slack_requests.generic_request(url, data, access_token=access_token)
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
     return
 
 

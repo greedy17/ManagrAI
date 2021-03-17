@@ -3,6 +3,7 @@ import re
 
 from rest_framework.exceptions import APIException
 from rest_framework.exceptions import ValidationError
+from managr.api import constants as api_consts
 
 logger = logging.getLogger("managr")
 
@@ -31,6 +32,18 @@ class InvalidBlocksFormatException(Exception):
         super().__init__(self.message)
 
 
+class UnHandeledBlocksException(Exception):
+    def __init(self, message="Error Generating Slack Modal"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class InvalidArgumentsException(Exception):
+    def __init(self, message="Error Generating Slack Modal"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -53,7 +66,10 @@ class CustomAPIException:
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
         if self.error_class_name == "JSONDecodeError":
-            logger.error(f"An error occured with a salesforce integration, {self.fn_name}")
+
+            logger.error(
+                f"{api_consts.SLACK_ERROR} ---An error occured with a slack integration, {self.fn_name}"
+            )
             raise Api500Error()
         elif self.code == 401:
             raise TokenExpired()
@@ -63,14 +79,24 @@ class CustomAPIException:
             # find the block_indexes
             blocks = [self._extract_block(error) for error in self.message]
             message = f"Invalid Blocks {'------'.join(blocks)}"
-            logger.error(f"An error occured building blocks {message}")
+            logger.error(f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}")
             raise InvalidBlocksException(message)
             # this error is a malformced query error we should log this (most likely from relationship feilds)
         elif self.code == 200 and self.param == "invalid_blocks_format":
             # find the block_indexes
-            logger.error(f"An error occured building blocks {self.message}")
+            logger.error(
+                f"{api_consts.SLACK_ERROR} An error occured building blocks {self.message}"
+            )
             raise InvalidBlocksFormatException(message)
             # this error is a malformced query error we should log this (most likely from relationship feilds)
+        elif self.code == 200 and self.param == "invalid_arguments":
+            # we may not have come accross this error yet
+
+            raise InvalidArgumentsException(f"{api_consts.SLACK_ERROR} ---{self.message}")
+        elif self.code == 200 and self.param:
+            # we may not have come accross this error yet
+
+            raise UnHandeledBlocksException(f"{api_consts.SLACK_ERROR} ---{self.message}")
 
         else:
             raise ValidationError(

@@ -13,6 +13,11 @@ from rest_framework.exceptions import ValidationError
 from managr.core.calendars import calendar_participants_from_zoom_meeting
 
 from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity, Lead
@@ -20,6 +25,7 @@ from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
+from managr.api import constants as api_consts
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
@@ -299,13 +305,25 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
-            res = slack_requests.send_channel_message(
-                user_slack_channel,
-                slack_org_access_token,
-                text=f"Your Meeting just ended {workflow.meeting.topic}",
-                block_set=block_set,
-            ).json()
-            print(res)
+            try:
+                res = slack_requests.send_channel_message(
+                    user_slack_channel,
+                    slack_org_access_token,
+                    text=f"Your Meeting just ended {workflow.meeting.topic}",
+                    block_set=block_set,
+                )
+            except InvalidBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except InvalidBlocksFormatException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except UnHandeledBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"

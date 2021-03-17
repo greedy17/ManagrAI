@@ -1,6 +1,7 @@
 import jwt
 import pytz
 import math
+import logging
 
 from datetime import datetime
 from django.db import models
@@ -20,6 +21,8 @@ from managr.salesforce.adapter.models import ActivityAdapter
 
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
+
+logger = logging.getLogger("managr")
 
 
 class ZoomAuthAccountQuerySet(models.QuerySet):
@@ -287,19 +290,37 @@ class ZoomMeeting(TimeStampModel):
                 from managr.slack.helpers import block_builders
                 from managr.slack.helpers import requests as slack_requests
                 from managr.slack.helpers.block_sets import get_block_set
+                from managr.slack.helpers.exceptions import (
+                    UnHandeledBlocksException,
+                    InvalidBlocksFormatException,
+                    InvalidBlocksException,
+                )
 
                 slack_access_token = self.workflow.user.organization.slack_integration.access_token
                 ts, channel = self.workflow.slack_interaction.split("|")
-                res = slack_requests.update_channel_message(
-                    channel,
-                    ts,
-                    slack_access_token,
-                    block_set=[
-                        block_builders.simple_section(
-                            ":garbage_fire: This meeting was removed from our records", "mrkdwn"
-                        )
-                    ],
-                ).json()
+                try:
+                    res = slack_requests.update_channel_message(
+                        channel,
+                        ts,
+                        slack_access_token,
+                        block_set=[
+                            block_builders.simple_section(
+                                ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                            )
+                        ],
+                    )
+                except InvalidBlocksException as e:
+                    return logger.exception(
+                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    )
+                except InvalidBlocksFormatException as e:
+                    return logger.exception(
+                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    )
+                except UnHandeledBlocksException as e:
+                    return logger.exception(
+                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    )
 
                 self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(ZoomMeeting, self).delete(*args, **kwargs)

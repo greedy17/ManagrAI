@@ -16,7 +16,11 @@ from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
-
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import TokenExpired
@@ -181,7 +185,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "MultiPicklist":
             return block_builders.multi_static_select(
                 f"*{self.reference_display_label}*",
-                list(
+                self.picklist_options.as_slack_options,
+                initial_options=list(
                     map(
                         lambda value: block_builders.option(value["label"], value["value"]),
                         filter(
@@ -189,7 +194,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                         ),
                     ),
                 ),
-                initial_options=self.picklist_options.as_slack_options,
                 block_id=self.api_name,
             )
 
@@ -626,10 +630,19 @@ class MeetingWorkflow(SFSyncOperation):
 
             slack_access_token = self.user.organization.slack_integration.access_token
             ts, channel = self.slack_interaction.split("|")
-            res = slack_requests.update_channel_message(
-                channel, ts, slack_access_token, block_set=block_set
-            ).json()
-            print(res)
+            try:
+                res = slack_requests.update_channel_message(
+                    channel, ts, slack_access_token, block_set=block_set
+                )
+            except InvalidBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                )
+            except UnHandeledBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                )
+
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
