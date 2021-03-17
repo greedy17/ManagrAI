@@ -1,6 +1,7 @@
 import logging
 import requests
 
+from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
@@ -182,7 +183,7 @@ class UserViewSet(
         detail=True,
         url_path="activate",
     )
-    def activate(self, request, *args, **kwargs): 
+    def activate(self, request, *args, **kwargs):
         # users should only be able to activate if they are in an invited state
         magic_token = request.data.get("token", None)
         password = request.data.get("password", None)
@@ -511,6 +512,71 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         return Response(response_data)
 
 
+class UserPasswordManagmentView(generics.GenericAPIView):
+    authentication_classes = ()
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """ endpoint to reset a password that is forgotten """
+        token = request.data.get("token", None)
+        if not token:
+            raise ValidationError(
+                {"detail": {"key": "field_error", "message": "Token is required", "field": "token"}}
+            )
+        user_id = request.data.get("user_id", None)
+        if not user_id:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "user id is required",
+                        "field": "user_id",
+                    }
+                }
+            )
+        password = request.data.get("password", None)
+        if not password:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "new password is required",
+                        "field": "password",
+                    }
+                }
+            )
+        user = User.objects.filter(id=user_id)
+        if not user.exists():
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "not_found",
+                        "message": f"User with {user_id} not found in system",
+                        "field": "user_id",
+                    }
+                }
+            )
+        else:
+
+            user_account = user.first()
+            token_valid = default_token_generator.check_token(user_account, token)
+            if not token_valid:
+                raise ValidationError(
+                    {
+                        "detail": {
+                            "key": "invalid_or_expired_token",
+                            "message": "The token is either invalid or expired",
+                            "field": "token",
+                        }
+                    }
+                )
+            user_account.set_password(password)
+            user_account.save()
+            UserLoginSerializer.login(user_account, request)
+
+            return Response({"detail": "password successfully reset"})
+
+
 @api_view(["POST"])
 @permission_classes(
     [permissions.AllowAny,]
@@ -526,13 +592,12 @@ def request_reset_link(request):
     # regardless of whether an email exists for a user return a 200 res
     # so that we can avoid phishing attempts
     user = User.objects.filter(email=email)
-    print(user)
     if user.exists():
         user_account = user.first()
         context = {
             "site_url": site_utils.get_site_url(),
             "user_id": user_account.id,
-            "token": user_account.magic_token,
+            "token": default_token_generator.make_token(user_account),
         }
         subject = render_to_string("registration/password_reset_subject.txt")
         send_html_email(
