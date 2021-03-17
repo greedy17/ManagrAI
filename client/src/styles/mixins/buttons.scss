@@ -64,3 +64,16 @@
     }
   }
 }
+
+@mixin paginator() {
+  --theme-border-color: #ececee;
+  --theme-background-color: #{$white};
+  --theme-font-family: #{$base-font-family};
+  --theme-hover-color: #{$theme-gray};
+  --theme-width: 1.8rem;
+  --theme-height: 1.25rem;
+  --theme-font-size: 1rem;
+  --theme-radius: 0.3rem;
+  --theme-border-width: 0.05rem;
+  --theme-arrow-length: 0.8rem;
+}

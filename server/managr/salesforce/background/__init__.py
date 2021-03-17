@@ -34,17 +34,22 @@ from ..serializers import (
     SObjectPicklistSerializer,
 )
 from ..adapter.models import AccountAdapter, OpportunityAdapter, ActivityAdapter, ContactAdapter
-from ..adapter.exceptions import TokenExpired, FieldValidationError, RequiredFieldError
+from ..adapter.exceptions import (
+    TokenExpired,
+    FieldValidationError,
+    RequiredFieldError,
+    SFQueryOffsetError,
+)
 
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
 
 
-def emit_sf_sync(user_id, sync_id, resource, offset):
+def emit_sf_sync(user_id, sync_id, resource, limit, offset):
     user_id = str(user_id)
     sync_id = str(sync_id)
-    return _process_resource_sync(user_id, sync_id, resource, offset)
+    return _process_resource_sync(user_id, sync_id, resource, limit, offset)
 
 
 def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
@@ -103,7 +108,11 @@ def _process_gen_next_sync(user_id, operations_list):
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
-    return SFSyncOperation.objects.create(user=user, operations_list=operations_list).begin_tasks()
+    return SFSyncOperation.objects.create(
+        user=user,
+        operations_list=operations_list,
+        operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+    ).begin_tasks()
 
 
 @background(schedule=0)
@@ -114,7 +123,7 @@ def _process_gen_next_object_field_sync(user_id, operations_list):
         return logger.exception(f"User not found sync operation not created {user_id}")
 
     return SFObjectFieldsOperation.objects.create(
-        user=user, operations_list=operations_list
+        user=user, operations_list=operations_list, operation_type=sf_consts.SALESFORCE_FIELD_SYNC
     ).begin_tasks()
 
 
@@ -142,7 +151,7 @@ def _generate_form_template(user_id):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
 @log_all_exceptions
-def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
+def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -155,7 +164,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
     while True:
         sf = user.salesforce_account
         try:
-            res = sf.list_resource_data(resource, offset)
+            res = sf.list_resource_data(resource, offset, limit=limit)
             break
         except TokenExpired:
             if attempts >= 5:
@@ -165,6 +174,10 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
             else:
                 sf.regenerate_token()
                 attempts += 1
+        except SFQueryOffsetError:
+            return logger.warning(
+                f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
+            )
 
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
@@ -183,7 +196,7 @@ def _process_resource_sync(user_id, sync_id, resource, offset, attempts=1):
 # SFFieldOperation Tasks
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_sobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
@@ -222,7 +235,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_picklist_values_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
@@ -261,7 +274,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
+@background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_sobject_validations_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()

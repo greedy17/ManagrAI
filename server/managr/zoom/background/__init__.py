@@ -22,7 +22,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 
 from .. import constants as zoom_consts
-from ..zoom_helper.exceptions import TokenExpired
+from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview
 from ..serializers import ZoomMeetingSerializer
 
@@ -94,7 +94,10 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         except TokenExpired:
             zoom_account.regenerate_token()
             return _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration)
-
+        except AccountSubscriptionLevel:
+            logger.info(
+                f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
+            )
         meeting.original_duration = original_duration
 
         #
@@ -104,7 +107,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 
         # Gather Meeting Participants from Zoom and Calendar
         logger.info("Gathering meeting participants...")
-        zoom_participants = meeting.as_dict.get("participants", None)
+        zoom_participants = meeting.as_dict.get("participants", [])
 
         logger.info(f"    Zoom Participants: {zoom_participants}")
 
@@ -223,8 +226,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 else:
                     lead = Lead.objects.filter(
                         email__in=participant_emails, owner__organization__id=user.organization.id
-                    )
+                    ).first()
                     if lead:
+                        logger.info(f"{lead} found")
                         meeting_resource_data["resource_id"] = str(lead.id)
                         meeting_resource_data["resource_type"] = "Lead"
 

@@ -10,6 +10,7 @@ import AdminRegistration from '@/views/auth/AdminRegistration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
 import InviteUsers from '@/views/auth/InviteUsers'
 import IntegrationScreen from '@/views/auth/IntegrationScreen'
+import Register from '@/views/auth/Register'
 
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
@@ -46,6 +47,11 @@ export default new Router({
       path: '/register',
       name: 'Register',
       component: LeadershipCode,
+    },
+    {
+      path: '/activation/:userId/:magicToken',
+      name: 'RepRegistration',
+      component: Register,
     },
     {
       path: '/activation/:uid/:token',

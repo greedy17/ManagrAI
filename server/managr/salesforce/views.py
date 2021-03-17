@@ -104,6 +104,7 @@ def authenticate(request):
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
         # emit resource sync
+        operations = []
         operations = [
             sf_consts.RESOURCE_SYNC_ACCOUNT,
             sf_consts.RESOURCE_SYNC_CONTACT,

@@ -2,7 +2,21 @@
   <div class="integrations">
     <h2>Integrate your apps</h2>
     <div class="integrations__subtitle">
-      Connect with the apps below to sync your sales data for managr to use.
+      Connect with the apps below to sync your sales data for Managr to use.
+    </div>
+
+    <PulseLoadingSpinnerButton
+      v-if="hasSalesforceIntegration && user.isAdmin"
+      @click="goToSlackFormBuilder"
+      class="slack-button"
+      text="Continue to Slack Form Builder"
+    ></PulseLoadingSpinnerButton>
+    <div
+      v-if="!hasSalesforceIntegration && user.isAdmin"
+      class="slack-button slack-button--disabled"
+      text="Continue to Slack Form Builder"
+    >
+      Slack Form Builder
     </div>
 
     <div class="integrations__cards">
@@ -12,7 +26,7 @@
           <h3 class="card__title">Salesforce</h3>
         </div>
         <p class="card-text">
-          Connect Salesforce to sync Accounts, Opportunities & Contacts with managr.
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.
         </p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
@@ -37,7 +51,7 @@
           <h3 class="card__title">Zoom</h3>
         </div>
 
-        <p class="card-text">Connect Zoom to sync meeting data with managr.</p>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
@@ -122,34 +136,11 @@
         <p class="card-text">Coming Soon...</p>
       </div>
     </div>
-    <div class="slack-form-builder">
-      <PulseLoadingSpinnerButton
-        v-if="hasSalesforceIntegration"
-        @click="goToSlackFormBuilder"
-        class="slack-button"
-        text="Slack Form Builder"
-        :disabled="!hasSalesforceIntegration"
-        :loading="false"
-      ></PulseLoadingSpinnerButton>
-    </div>
 
-    <PulseLoadingSpinnerButton
-      v-if="hasSalesforceIntegration && user.isAdmin"
-      @click="goToSlackFormBuilder"
-      class="slack-button"
-      text="Slack Form Builder"
-    ></PulseLoadingSpinnerButton>
-    <div
-      v-if="!hasSalesforceIntegration && user.isAdmin"
-      class="slack-button slack-button--disabled"
-      text="Slack Form Builder"
-    >
-      Slack Form Builder
-    </div>
     <img class="lock" src="@/assets/images/lockAsset.png" />
     <div class="privacy">
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
-      by managr.
+      by Managr.
     </div>
   </div>
 </template>
@@ -354,7 +345,7 @@ export default {
   @include primary-button();
   height: 2.5rem;
   width: 19rem;
-  margin: 6rem 0 5rem 0;
+  margin: 0rem 0 2rem 0;
 
   &--disabled {
     background-color: #{$gray} !important;

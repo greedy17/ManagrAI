@@ -31,10 +31,27 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     list_filter = ("user",)
 
 
+class CustomSObjectField(admin.ModelAdmin):
+    model = models.SObjectField
+    list_filter = (
+        "salesforce_account__user",
+        "salesforce_object",
+    )
+
+
+class CustomPicklistValue(admin.ModelAdmin):
+    model = models.SObjectPicklist
+    list_filter = (
+        "salesforce_account__user",
+        "salesforce_object",
+    )
+
+
 # Register your models here.
 admin.site.register(models.SalesforceAuthAccount)
-admin.site.register(models.SObjectField)
+admin.site.register(models.SObjectField, CustomSObjectField)
 admin.site.register(models.SObjectValidation)
-admin.site.register(models.SObjectPicklist)
+admin.site.register(models.SObjectPicklist, CustomPicklistValue)
+admin.site.register(models.SFObjectFieldsOperation)
 admin.site.register(models.SFSyncOperation, CustomSyncOperationAdmin)
 admin.site.register(models.MeetingWorkflow, CustomMeetingWorkflow)
