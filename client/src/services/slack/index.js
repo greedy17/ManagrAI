@@ -24,7 +24,7 @@ export class CustomSlackForm extends Model {
       return { ...ref['field_ref'], order: ref['order'] }
     })
     obj['fields_ref'] = _refFields
-    console.log(_refFields)
+
     return CustomSlackForm.create(objectToCamelCase(obj))
   }
 }
