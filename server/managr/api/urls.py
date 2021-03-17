@@ -2,11 +2,14 @@ from rest_framework import routers
 from django.urls import path
 from managr.core import views as core_views
 from managr.organization import views as organization_views
+from rest_auth import views as rest_auth_views
 
 # from managr.report import views as report_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
+
+from . import views
 
 
 app_name = "api"
@@ -61,6 +64,16 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),
+    path(r"api/users/password/reset/", views.UserPasswordManagmentView.as_view()),
+    path(r"api/users/password/reset/link/", views.request_reset_link, name="request-reset-link"),
+    path(
+        r"api/password/reset/confirm/",
+        rest_auth_views.PasswordResetConfirmView.as_view(),
+        # This URL must be named, because django.contrib.auth calls it via a reverse-lookup
+        name="password_reset_confirm",
+    ),
+    path(r"api/password/reset/", rest_auth_views.PasswordResetView.as_view()),
+    path(r"api/password/change/", rest_auth_views.PasswordChangeView.as_view()),
 ]
 
 

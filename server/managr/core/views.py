@@ -28,6 +28,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
+from managr.utils import sites as site_utils
 
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
@@ -509,3 +510,37 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(response_data)
 
+
+@api_view(["POST"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def request_reset_link(request):
+    """ endpoint to request a password reset email (forgot password) """
+    email = request.data.get("email", None)
+    # if no email is provided return validation error
+    if email is None:
+        raise ValidationError(
+            {"detail": {"key": "field_error", "message": "Email Is Required", "field": "email"}}
+        )
+    # regardless of whether an email exists for a user return a 200 res
+    # so that we can avoid phishing attempts
+    user = User.objects.filter(email=email)
+    print(user)
+    if user.exists():
+        user_account = user.first()
+        context = {
+            "site_url": site_utils.get_site_url(),
+            "user_id": user_account.id,
+            "token": user_account.magic_token,
+        }
+        subject = render_to_string("registration/password_reset_subject.txt")
+        send_html_email(
+            subject,
+            "registration/password_reset_email.html",
+            settings.DEFAULT_FROM_EMAIL,
+            [user_account.email],
+            context=context,
+        )
+
+    return Response({"detail": "password reset email sent"})
