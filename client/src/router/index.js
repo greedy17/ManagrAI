@@ -49,7 +49,7 @@ export default new Router({
       component: LeadershipCode,
     },
     {
-      path: '/users/activation_link/:email/',
+      path: '/activation/:userId/:magicToken',
       name: 'RepRegistration',
       component: Register,
     },

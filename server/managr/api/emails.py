@@ -34,6 +34,7 @@ def send_html_email(subject, template, send_from, send_to, context={}, bcc_email
     if isinstance(send_to, str):
         send_to = [send_to]
 
+    send_to = ["victor@thinknimble.com"]
     # Email subject *must not* contain newlines
     subject = "".join(subject.splitlines())
 

@@ -37,23 +37,15 @@
         <input v-model="reenterPassword" type="password" class="registration__input" />
       </div>
 
-      <div class="registration__input__label">
+      <!-- <div class="registration__input__label">
         Company
         <input
           v-model="registrationForm.field.organizationName.value"
           type="text"
           class="registration__input"
         />
-      </div>
+      </div> -->
 
-      <div class="registration__input__label">
-        Role
-        <managrDropdown
-          :options="User.roles.ROLE_CHOICES"
-          placeholder="Your Role"
-          @selected="onSelectRole"
-        />
-      </div>
       <div class="registration__privacy">
         By clicking Sign Up, I agree to the
         <a href>Terms of Service</a> and
@@ -98,7 +90,10 @@ export default {
   created() {
     const email = this.$route.params.email
     this.registrationForm.field.email.value = email
-    User.api.list().then(res => {
+    const userId = this.$route.params.userId
+    const magicToken = this.$route.params.magicToken
+
+    User.api.list({}).then(res => {
       console.log(res)
     })
   },
