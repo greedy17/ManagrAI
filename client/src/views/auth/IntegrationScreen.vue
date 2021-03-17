@@ -5,6 +5,20 @@
       Connect with the apps below to sync your sales data for Managr to use.
     </div>
 
+    <PulseLoadingSpinnerButton
+      v-if="hasSalesforceIntegration && user.isAdmin"
+      @click="goToSlackFormBuilder"
+      class="slack-button"
+      text="Continue to Slack Form Builder"
+    ></PulseLoadingSpinnerButton>
+    <div
+      v-if="!hasSalesforceIntegration && user.isAdmin"
+      class="slack-button slack-button--disabled"
+      text="Continue to Slack Form Builder"
+    >
+      Slack Form Builder
+    </div>
+
     <div class="integrations__cards">
       <div class="card">
         <div class="card__header">
@@ -123,19 +137,6 @@
       </div>
     </div>
 
-    <PulseLoadingSpinnerButton
-      v-if="hasSalesforceIntegration && user.isAdmin"
-      @click="goToSlackFormBuilder"
-      class="slack-button"
-      text="Slack Form Builder"
-    ></PulseLoadingSpinnerButton>
-    <div
-      v-if="!hasSalesforceIntegration && user.isAdmin"
-      class="slack-button slack-button--disabled"
-      text="Slack Form Builder"
-    >
-      Slack Form Builder
-    </div>
     <img class="lock" src="@/assets/images/lockAsset.png" />
     <div class="privacy">
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
@@ -344,7 +345,7 @@ export default {
   @include primary-button();
   height: 2.5rem;
   width: 19rem;
-  margin: 6rem 0 5rem 0;
+  margin: 0rem 0 2rem 0;
 
   &--disabled {
     background-color: #{$gray} !important;

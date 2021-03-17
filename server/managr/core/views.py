@@ -181,7 +181,7 @@ class UserViewSet(
         detail=True,
         url_path="activate",
     )
-    def activate(self, request, *args, **kwargs):
+    def activate(self, request, *args, **kwargs): 
         # users should only be able to activate if they are in an invited state
         magic_token = request.data.get("token", None)
         password = request.data.get("password", None)

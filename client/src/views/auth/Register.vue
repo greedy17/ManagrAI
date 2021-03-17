@@ -37,23 +37,15 @@
         <input v-model="reenterPassword" type="password" class="registration__input" />
       </div>
 
-      <div class="registration__input__label">
+      <!-- <div class="registration__input__label">
         Company
         <input
           v-model="registrationForm.field.organizationName.value"
           type="text"
           class="registration__input"
         />
-      </div>
+      </div> -->
 
-      <div class="registration__input__label">
-        Role
-        <managrDropdown
-          :options="User.roles.ROLE_CHOICES"
-          placeholder="Your Role"
-          @selected="onSelectRole"
-        />
-      </div>
       <div class="registration__privacy">
         By clicking Sign Up, I agree to the
         <a href>Terms of Service</a> and
@@ -71,7 +63,7 @@
 </template>
 
 <script>
-import User, { UserRegistrationForm } from '@/services/users'
+import User, { RepRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
 import TNDropdown from '@/components/TNDropdown'
@@ -79,7 +71,7 @@ import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
 
 export default {
-  name: 'Registration',
+  name: 'Register',
   components: {
     GoogleButton,
     TNDropdown,
@@ -90,22 +82,17 @@ export default {
     return {
       User,
       submitting: false,
-      registrationForm: new UserRegistrationForm(),
+      registrationForm: new RepRegistrationForm(),
       reenterPassword: '',
-      email: null,
+      userId: null,
+      token: null,
     }
   },
   created() {
-    const email = this.$route.params.email
-    this.registrationForm.field.email.value = email
-    User.api.list().then(res => {
-      console.log(res)
-    })
+    this.userId = this.$route.params.userId
+    this.token = this.$route.params.magicToken
   },
   methods: {
-    onSelectRole(role) {
-      this.registrationForm.field.role.value = role.key
-    },
     async onSubmit() {
       //
       this.registrationForm.validate()
@@ -129,7 +116,11 @@ export default {
 
       let user
       try {
-        user = await User.api.register(this.registrationForm)
+        user = await User.api.activate(
+          this.userId,
+          this.token,
+          this.registrationForm.field.password.value,
+        )
       } catch (error) {
         this.$Alert.alert({
           type: 'error',
