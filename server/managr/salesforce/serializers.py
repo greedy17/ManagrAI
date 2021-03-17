@@ -74,7 +74,7 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
             data.update({"message": "No Message Provided"})
 
         if data.get("description", None) in ["", None]:
-            data.update({"message": "No Description Provided"})
+            data.update({"description": "No Description Provided"})
 
         return super().to_internal_value(data)
 
