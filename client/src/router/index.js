@@ -10,6 +10,8 @@ import AdminRegistration from '@/views/auth/AdminRegistration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
 import InviteUsers from '@/views/auth/InviteUsers'
 import IntegrationScreen from '@/views/auth/IntegrationScreen'
+import ForgotPassword from '@/views/auth/ForgotPassword'
+import ResetPassword from '@/views/auth/ResetPassword'
 import Register from '@/views/auth/Register'
 
 // TODO: Add pages for Salesforce integration
@@ -57,6 +59,16 @@ export default new Router({
       path: '/activation/:uid/:token',
       name: 'Activation',
       component: Activation,
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+    },
+    {
+      path: '/resetpassword/:userId/:token',
+      name: 'ResetPassword',
+      component: ResetPassword,
     },
     {
       path: '/invite-users',

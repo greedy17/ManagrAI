@@ -1,4 +1,5 @@
 import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import store from '@/store'
 
 // API Endpoints
@@ -13,6 +14,8 @@ const CHECK_STATUS_ENDPOINT = '/account-status/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
+const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
+const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 
 export default class UserAPI {
   get client() {
@@ -182,5 +185,34 @@ export default class UserAPI {
     } catch {
       apiErrorHandler({ apiName: 'UserAPI.Messaging' })
     }
+  }
+
+  requestPasswordReset(email) {
+    const url = PASSWORD_RESET_EMAIL_ENDPOINT
+    const obj = {
+      email: email,
+    }
+
+    return this.client
+      .post(url, obj)
+      .then(response => objectToCamelCase(response))
+      .catch(
+        apiErrorHandler({
+          apiName: 'Request Password Reset API',
+        }),
+      )
+  }
+
+  resetPassword(newPassword, uid, token) {
+    const url = PASSWORD_RESET_ENDPOINT
+    const data = {
+      password: newPassword,
+      user_id: uid,
+      token,
+    }
+    return this.client
+      .post(url, data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 }
