@@ -28,5 +28,5 @@ npm-debug.log*
 .DS_Store
 
 # Ignore built and static files
-static
+server/static
 #client/dist
