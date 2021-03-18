@@ -39,9 +39,7 @@
           <template v-slot:item="{ result }">
             <div class="slack-form-builder__container">
               <CheckBox :checked="addedFieldIds.includes(result.id)" />
-              <div class="slack-form-builder__sf-field">
-                {{ result['referenceDisplayLabel'] }}
-              </div>
+              <div class="slack-form-builder__sf-field">{{ result['referenceDisplayLabel'] }}</div>
             </div>
           </template>
         </CollectionSearch>
@@ -66,9 +64,7 @@
       <div class="slack-form-builder__form">
         <div class="form-header">
           <div class="form-header__left">
-            <h3>
-              {{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}
-            </h3>
+            <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
           </div>
           <div class="form-header__right">
             <div class="save-button">
@@ -91,25 +87,21 @@
                 field.referenceDisplayLabel === 'How Did It go?'
             "
             class="form-field__label"
-          >
-            {{ field.referenceDisplayLabel }}
-          </div>
+          >{{ field.referenceDisplayLabel }}</div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
               <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
                 {{
-                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
-              >
-                {{ 'Logs the rep’s comments about the meeting' }}
-              </div>
+              >{{ 'Logs the rep’s comments about the meeting' }}</div>
               <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
                 {{
-                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
+                'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
                 }}
               </div>
 
@@ -120,9 +112,7 @@
                     field.referenceDisplayLabel !== 'Meeting Comments' &&
                     field.referenceDisplayLabel !== 'How Did It go?'
                 "
-              >
-                {{ field.referenceDisplayLabel }}
-              </div>
+              >{{ field.referenceDisplayLabel }}</div>
             </div>
 
             <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
@@ -414,7 +404,7 @@ export default {
   &__form {
     // flex: 10;
 
-    width: 50vw;
+    width: 60%;
     position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
