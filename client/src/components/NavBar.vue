@@ -26,6 +26,7 @@
             :items="[ { key: 'Integrations', value: 'Integrations' },
         { key: 'Slack Forms', value: 'SlackFormSettings' },
         { key: 'Invite Users', value: 'InviteUsers' },
+        { key: 'Notifications and Alerts', value: 'Notifications' },
         { key: 'Log Out', value: 'logout' },]"
             v-if="isAdmin"
           >
@@ -40,6 +41,7 @@
             @selectedItem="routeToSelected"
             :right="10"
             :items="[ { key: 'Integrations', value: 'Integrations' },
+            { key: 'Notifications and Alerts', value: 'Notifications' },
         
         
         { key: 'Log Out', value: 'logout' },]"

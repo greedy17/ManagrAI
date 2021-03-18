@@ -179,7 +179,8 @@ Display dropdown relative to the component it is triggered by
   position: absolute;
   flex-direction: column;
   justify-content: space-evenly;
-  min-width: 160px;
+  min-width: 200px;
+
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   background-color: white;
   top: 40px;
@@ -198,6 +199,7 @@ Display dropdown relative to the component it is triggered by
 .dd-item {
   display: inline-flex;
   overflow: hidden;
+
   white-space: nowrap;
   color: black;
   text-decoration: none;
