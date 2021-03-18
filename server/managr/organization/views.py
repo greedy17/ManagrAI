@@ -366,3 +366,6 @@ class ActionChoiceViewSet(
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ActionChoiceSerializer
 
+    def get_queryset(self):
+        return ActionChoice.objects.for_user(self.request.user)
+
