@@ -1,71 +1,98 @@
 <template>
-  <div class="register">
-    <form @submit.prevent="onSubmit">
-      <h2>Create Account</h2>
+  <div class="registration">
+    <img class="registration__logo" src="@/assets/images/logo.png" />
+    <h2>Register</h2>
 
-      <div>
-        <GoogleButton />
+    <div class="registration__text">Create and customize your Managr account within minutes.</div>
+    <!-- <form @submit.prevent="onSubmit"> -->
+    <div class="registration__form">
+      <div class="registration__input__label">
+        Your Name
+        <input
+          v-model="registrationForm.field.fullName.value"
+          type="text"
+          class="registration__input"
+        />
       </div>
-
-      <div class="divider"></div>
-
-      <input v-model="registrationForm.field.fullName.value" type="text" placeholder="Your Name" />
-      <input v-model="registrationForm.field.email.value" type="text" placeholder="Your Email" />
-      <input
-        v-model="registrationForm.field.password.value"
-        type="password"
-        placeholder="Set a Password"
-      />
-      <input
-        v-model="registrationForm.field.organizationName.value"
-        type="text"
-        placeholder="Company"
-      />
-
-      <div style="margin-top: 0.5rem;">
-        <TNDropdown
-          :options="User.roles.ROLE_CHOICES"
-          placeholder="Your Role"
-          @selected="onSelectRole"
+      <div class="registration__input__label">
+        Your Email
+        <input
+          v-model="registrationForm.field.email.value"
+          type="text"
+          class="registration__input"
         />
       </div>
 
-      <!-- TODO: Use LoadingSpinnerButton and indicate when working -->
-      <button type="submit">Submit</button>
-      <!-- END TODO -->
+      <div class="registration__input__label">
+        Set a Password
+        <input
+          v-model="registrationForm.field.password.value"
+          type="password"
+          class="registration__input"
+        />
+      </div>
+
+      <div class="registration__input__label">
+        Re-enter Password
+        <input v-model="reenterPassword" type="password" class="registration__input" />
+      </div>
+
+      <!-- <div class="registration__input__label">
+        Company
+        <input
+          v-model="registrationForm.field.organizationName.value"
+          type="text"
+          class="registration__input"
+        />
+      </div> -->
+
+      <div class="registration__privacy">
+        By clicking Sign Up, I agree to the
+        <a href>Terms of Service</a> and
+        <a href>Privacy Policy</a>
+      </div>
+
+      <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
 
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">
-          Have an account? Sign In
-        </router-link>
+        <router-link :to="{ name: 'Login' }">Back to Login</router-link>
       </div>
-    </form>
+      <!-- </form> -->
+    </div>
   </div>
 </template>
 
 <script>
-import User, { UserRegistrationForm } from '@/services/users'
+import User, { RepRegistrationForm } from '@/services/users'
 
 import GoogleButton from '@/components/GoogleButton'
 import TNDropdown from '@/components/TNDropdown'
+import managrDropdown from '@/components/managrDropdown'
+import Button from '@thinknimble/button'
 
 export default {
   name: 'Register',
   components: {
     GoogleButton,
     TNDropdown,
+    managrDropdown,
+    Button,
   },
   data() {
     return {
       User,
       submitting: false,
-      registrationForm: new UserRegistrationForm(),
+      registrationForm: new RepRegistrationForm(),
+      reenterPassword: '',
+      userId: null,
+      token: null,
     }
   },
+  created() {
+    this.userId = this.$route.params.userId
+    this.token = this.$route.params.magicToken
+  },
   methods: {
-    onSelectRole(role) {
-      this.registrationForm.field.role.value = role.key
-    },
     async onSubmit() {
       //
       this.registrationForm.validate()
@@ -76,12 +103,24 @@ export default {
         return
       }
 
+      if (this.registrationForm.field.password.value !== this.reenterPassword) {
+        this.$Alert.alert({
+          type: 'error',
+          message: 'Please make sure password and re-entered password match.',
+        })
+        return
+      }
+
       // Continue with user registration...
       this.submitting = true
 
       let user
       try {
-        user = await User.api.register(this.registrationForm)
+        user = await User.api.activate(
+          this.userId,
+          this.token,
+          this.registrationForm.field.password.value,
+        )
       } catch (error) {
         this.$Alert.alert({
           type: 'error',
@@ -108,14 +147,43 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.register {
+.registration {
   display: flex;
   padding: 2rem;
-  flex-flow: row;
+  flex-flow: column;
   justify-content: center;
   max-width: 24rem;
   margin: 0 auto;
-  background-color: white;
+
+  &__logo {
+    height: 5rem;
+    object-fit: contain;
+  }
+  &__text {
+    color: #{$mid-gray};
+    font-family: #{$base-font-family};
+    width: 100%;
+    max-width: 20rem;
+    margin-bottom: 4rem;
+    text-align: center;
+  }
+  &__input {
+    @include input-field-white();
+  }
+  &__input__label {
+    font-size: 14px;
+  }
+  &__privacy {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  &__button {
+    @include primary-button();
+    width: 19rem;
+    border-radius: 3px;
+    margin-top: 1rem;
+  }
 }
 
 .divider {
@@ -140,8 +208,8 @@ h2 {
   text-align: center;
 }
 
-form {
-  background-color: $white;
+.registration__form {
+  background-color: transparent !important;
   display: flex;
   flex-flow: column;
   align-items: center;

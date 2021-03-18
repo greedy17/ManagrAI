@@ -1,44 +1,17 @@
 <template>
-  <div class="login">
+  <div class="password-reset">
     <form @submit.prevent="handleSubmit">
-      <h2>Login</h2>
-      <div class="errors">
-        <!-- client side validations -->
-        <div
-          v-if="
-            isFormValid !== null && !isFormValid && (errors.emailIsBlank || errors.passwordIsBlank)
-          "
-        >
-          {{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.
-        </div>
-        <!-- server side validations -->
-        <div v-else-if="success !== null && !success && errors[500]">
-          Something went wrong, please retry later.
-        </div>
-        <div v-else-if="success !== null && !success && errors.invalidEmail">
-          Invalid or not-activated email.
-        </div>
-        <div v-else-if="success !== null && !success && errors.invalidPassword">
-          Incorrect password.
-        </div>
-      </div>
-      <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
-      <input
-        :class="{ hidden: currentStep < 2 }"
-        ref="passwordInput"
-        v-model="password"
-        type="password"
-        placeholder="password"
-      />
-      <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
+      <h2 class="password-reset__title">
+        Please enter your email address, and a link to reset your password will be sent to you
+        shortly.
+      </h2>
+
+      <input v-model="email" type="text" placeholder="email" />
+
+      <button type="submit">Send Link</button>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Register' }">
-          No account? Sign Up
-        </router-link>
-      </div>
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'ForgotPassword' }">
-          Forgot Password?
+        <router-link :to="{ name: 'Login' }">
+          Back to login
         </router-link>
       </div>
     </form>
@@ -49,25 +22,37 @@
 import User from '@/services/users'
 
 export default {
-  name: 'Login',
+  name: 'ForgotPassword',
   components: {},
   data() {
     return {
-      currentStep: 1,
       email: '', // step 1
-      password: '', // step 2
-      isFormValid: null, // client side validations
-      success: null, //server side validations
-      errors: {},
     }
   },
   methods: {
     handleSubmit() {
-      if (this.currentStep === 1) {
-        this.checkAccountStatus()
-      } else {
-        this.handleLoginAttempt()
-      }
+      this.loading = true
+      User.api
+        .requestPasswordReset(this.email)
+        .then(response => {
+          this.$Alert.alert({
+            type: 'success',
+            message: 'Please check your email for instructions on how to reset password',
+            timeout: 2000,
+          })
+
+          this.$router.push({ name: 'Login' })
+        })
+        .catch(error => {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'There was an error, please try again',
+            timeout: 2000,
+          })
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     checkAccountStatus() {
       // reset component data when submission begins, in case of prior request
@@ -180,10 +165,14 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.login {
+.password-reset {
   display: flex;
   flex-flow: row;
   justify-content: center;
+
+  &__title {
+    padding: 0 1rem 1rem 1rem;
+  }
 }
 
 h2 {
@@ -197,11 +186,12 @@ form {
   @include standard-border();
   margin-top: 3.125rem;
   width: 31.25rem;
-  height: 18.75rem;
+
   background-color: $white;
   display: flex;
   flex-flow: column;
   align-items: center;
+  padding: 2rem;
 }
 
 input {

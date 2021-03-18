@@ -2,9 +2,9 @@
   <div class="leadership-code">
     <img class="leadership-code__logo" src="@/assets/images/logo.png" />
     <h2>Welcome</h2>
-    <div
-      class="leadership-code__text"
-    >Please enter your Leadership code provided by the Managr team.</div>
+    <div class="leadership-code__text">
+      Please enter your Leadership code provided by the Managr team.
+    </div>
     <div class="input__container">
       Enter Code
       <input v-model="code" type="text" class="leadership-code__input" />
@@ -34,7 +34,7 @@ export default {
         this.$Alert.alert({
           type: 'error',
           message: 'Invalid Leadership Code, please try again.',
-          duration: '4500',
+          timeout: 2000,
         })
       }
     },

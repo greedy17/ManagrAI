@@ -10,6 +10,9 @@ import AdminRegistration from '@/views/auth/AdminRegistration'
 import LeadershipCode from '@/views/auth/LeadershipCode'
 import InviteUsers from '@/views/auth/InviteUsers'
 import IntegrationScreen from '@/views/auth/IntegrationScreen'
+import ForgotPassword from '@/views/auth/ForgotPassword'
+import ResetPassword from '@/views/auth/ResetPassword'
+import Register from '@/views/auth/Register'
 
 // TODO: Add pages for Salesforce integration
 // Settigns-related views
@@ -17,6 +20,7 @@ import Settings from '@/views/settings/Settings'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
 import SlackFormSettings from '../views/settings/SlackFormSettings'
+import Notifications from '@/views/settings/Notifications'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -48,9 +52,29 @@ export default new Router({
       component: LeadershipCode,
     },
     {
+      path: '/activation/:userId/:magicToken',
+      name: 'RepRegistration',
+      component: Register,
+    },
+    {
       path: '/activation/:uid/:token',
       name: 'Activation',
       component: Activation,
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+    },
+    {
+      path: '/notifications',
+      name: 'Notifications',
+      component: Notifications,
+    },
+    {
+      path: '/resetpassword/:userId/:token',
+      name: 'ResetPassword',
+      component: ResetPassword,
     },
     {
       path: '/invite-users',

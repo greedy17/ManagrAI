@@ -61,9 +61,7 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
-            >
-              Select
-            </button>
+            >Select</button>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -77,16 +75,14 @@
           1. Customize your Slack forms by picking from the fields on the left. Note required
           “Managr” fields have been preselected
         </div>
-        <div class="header__list__item">
-          2. Please make sure to fill out all the tabs for all Objects
-        </div>
+        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
         <div class="header__list__item">
           3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
           selecting each Stage that is gated
         </div>
-        <div class="header__list__item">
-          4. Make sure to double check that all your required fields are on the form
-        </div>
+        <div
+          class="header__list__item"
+        >4. Make sure to double check that all your required fields are on the form</div>
       </div>
     </div>
     <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
@@ -113,7 +109,12 @@
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
               v-if="k.formType !== 'STAGE_GATING'"
             >
-              {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              <div
+                v-if="k.resource !== 'Contact'"
+              >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
+              <div
+                v-else
+              >{{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}</div>
             </div>
 
             <div class="stage__container">
@@ -132,16 +133,16 @@
                     v-for="(form, i) in formStages"
                     :key="form"
                     class="stage__dropdown__stages__container"
+                    :class="{
+                      'stage__dropdown__stages__container--selected':
+                        `${form.id}.${form.stage}` === selectedTab,
+                    }"
                   >
                     <div
-                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
                       class="stage__dropdown__stages__title"
-                    >
-                      {{ form.stage }}
-                    </div>
-                    <!--                     <div class="stage__dropdown__stages__x" @click="deleteForm(i)">
-                      x
-                    </div> -->
+                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+                    >{{ form.stage }}</div>
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
                   </div>
                 </div>
                 <div style="display: flex; justify-content: center;">
@@ -153,34 +154,9 @@
 
           <div class="box__tab-content">
             <template v-if="selectedForm">
-              <!-- <p>
-                <i>
-                  Required Fields have been pre-filled as part of the form, add or remove
-                  additional fields
-                </i>
-                <br />
-                <strong>Additional Validations may apply for your Salesforce Resources</strong>
-                <PulseLoadingSpinnerButton
-                  @click="showValidations = !showValidations"
-                  class="primary-button"
-                  text="Click Here"
-                  :loading="false"
-                />
-                <strong>to view them</strong>
-
-              </p>-->
               <div class="field-title field-title__bold">Available Fields</div>
 
               <div class="field-title">Add or remove additional tags</div>
-              <div>
-                <input
-                  type="text"
-                  class="search-bar"
-                  placeholder="Search for a field to add..."
-                  @input="searchFields"
-                  v-model="search"
-                />
-              </div>
 
               <CustomSlackForm
                 :fields="formFields.list"
@@ -193,26 +169,9 @@
               />
             </template>
           </div>
-          <div
-            class="paginator__container"
-            v-if="formFields.pagination.next || formFields.pagination.previous"
-          >
-            <div class="paginator__text">View More</div>
-            <Paginator
-              :pagination="formFields.pagination"
-              @next-page="nextPage"
-              @previous-page="previousPage"
-              :loading="formFields.loadingNextPage"
-              arrows
-              size="small"
-              class="paginator"
-            />
-          </div>
         </div>
       </template>
-      <template v-else
-        >We are currently generating your forms please check back in a few minutes</template
-      >
+      <template v-else>We are currently generating your forms please check back in a few minutes</template>
     </div>
   </div>
 </template>
@@ -262,28 +221,7 @@ export default {
   watch: {
     selectedFormType: {
       immediate: true,
-      async handler(val, prev) {
-        console.log(val)
-        if (val && val != prev && this.resource) {
-          let fieldParam = {}
-          if (val == this.CREATE) {
-            fieldParam['createable'] = true
-          } else {
-            fieldParam['updateable'] = true
-          }
-          this.fieldParam = fieldParam
-          try {
-            this.formFields.filters = {
-              salesforceObject: this.resource,
-
-              ...fieldParam,
-            }
-            this.formFields.refresh()
-          } catch (e) {
-            console.log(e)
-          }
-        }
-      },
+      async handler(val, prev) {},
     },
   },
   async created() {
@@ -366,7 +304,6 @@ export default {
       }
     },
     async listValidations(query_params = {}) {
-      console.log('hi')
       try {
         this.validations.filters = query_params
         this.validations.refresh()
@@ -384,34 +321,45 @@ export default {
       }
     },
 
-    async deleteForm(index) {
+    async deleteForm(form) {
       const forms = this.allFormsByType
 
-      if (forms[index].id.length) {
-        const id = forms[index].id
-        console.log(this.formsByType)
+      if (form.id.length) {
+        const id = form.id
+
         SlackOAuth.api
           .delete(id)
           .then(async res => {
             this.$Alert.alert({
               type: 'success',
+
               message: 'Form deleted successfully',
-              duration: 4500,
+
+              timeout: 2000,
             })
-            this.formsByType.splice(index, 1)
-            console.log(this.formsByType)
+
+            const forms = this.formsByType.filter(f => {
+              return f.id !== form.id
+            })
+            this.formsByType = forms
           })
+
           .catch(e => {
             this.$Alert.alert({
               type: 'error',
+
               message: 'There was an error, please try again',
-              duration: 4500,
+
+              timeout: 2000,
             })
           })
+
           .finally(() => {})
       } else {
-        const length = this.allFormsByType.length - this.formsByType
-        this.newForms.splice(length - 1, 1)
+        const forms = this.newForms.filter(f => {
+          return f.id !== form.id
+        })
+        this.newForms = forms
       }
     },
 
@@ -497,7 +445,6 @@ export default {
       this.toggleSelectedTab(`${f.id}.${f.stage}`)
     },
     toggleSelectedTab(tab) {
-      console.log(tab)
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
@@ -532,8 +479,6 @@ export default {
 @import '@/styles/buttons';
 
 .container {
-  margin-left: 13rem;
-  margin-right: 5rem;
 }
 .box-updated__header {
   &:hover {
@@ -545,6 +490,8 @@ export default {
 .box-updated__tab {
   display: flex;
   padding: 0;
+
+  justify-content: center;
 }
 .box-updated__tab-header {
   padding: 0 2rem;
@@ -645,7 +592,7 @@ export default {
   &__list {
     display: flex;
     flex-direction: column;
-    text-align: center;
+    text-align: left;
     margin-bottom: 2rem;
 
     &__item {
@@ -713,17 +660,27 @@ export default {
     &__stages {
       &__container {
         display: flex;
-        justify-content: space-between;
+
+        height: 2.5rem;
         padding: 0.75rem;
         font-size: 0.75rem;
         cursor: pointer;
+        align-items: center;
+
+        &--selected {
+          color: white !important;
+          background-color: #{$dark-green};
+        }
       }
       &__title {
         font-size: 12;
         font-family: #{$bold-font-family};
         cursor: pointer;
+
+        width: 100%;
       }
       &__x {
+        z-index: 1000;
       }
     }
   }
