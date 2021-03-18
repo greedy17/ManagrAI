@@ -121,7 +121,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
     @property
     def reference_display_label(self):
         """ returns the reference object's name as a display label """
-        if self.data_type == "Reference" and self.reference:
+
+        if self.data_type == "Reference" and self.reference and self.relationship_name:
             return self.relationship_name
         return self.label
 
@@ -179,15 +180,18 @@ class SObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "MultiPicklist":
-            return block_builders.multi_static_select(
-                f"*{self.reference_display_label}*",
-                self.picklist_options.as_slack_options,
-                initial_options=list(
+            initial_options = None
+            if value:
+                initial_options = list(
                     filter(
                         lambda opt: opt.get("value", None) in value.split(";"),
                         self.get_slack_options,
                     )
-                ),
+                )
+            return block_builders.multi_static_select(
+                f"*{self.reference_display_label}*",
+                self.picklist_options.as_slack_options,
+                initial_options=initial_options,
                 block_id=self.api_name,
             )
 
