@@ -237,7 +237,7 @@ button {
   @include primary-button();
   margin-top: 1.25rem;
   height: 1.875rem;
-  width: 9.375rem;
+  min-width: 12rem;
 }
 
 .hidden {
