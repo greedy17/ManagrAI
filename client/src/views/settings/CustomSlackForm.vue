@@ -21,20 +21,45 @@
 
     <div style="display:flex;">
       <div>
-        <PulseLoadingSpinner v-if="loading" />
-
-        <div v-if="!loading" class="slack-form-builder__sf-fields">
-          <div
-            v-for="field in sfFieldsAvailableToAdd"
-            class="slack-form-builder__container"
-            @click="() => onAddField(field)"
-            :key="field.id"
-          >
-            <CheckBox :checked="addedFieldIds.includes(field.id)" />
-            <div :key="field.apiName" class="slack-form-builder__sf-field">
-              {{ field.referenceDisplayLabel }}
+        <CollectionSearch
+          :collection="formFields"
+          itemDisplayKey="referenceDisplayLabel"
+          :showSubmitBtn="false"
+          @onClickItem="
+            e => {
+              onAddField(e)
+            }
+          "
+          @onSearch="
+            () => {
+              formFields.pagination = new Pagination()
+            }
+          "
+        >
+          <template v-slot:item="{ result }">
+            <div class="slack-form-builder__container">
+              <CheckBox :checked="addedFieldIds.includes(result.id)" />
+              <div class="slack-form-builder__sf-field">
+                {{ result['referenceDisplayLabel'] }}
+              </div>
             </div>
-          </div>
+          </template>
+        </CollectionSearch>
+        <div
+          class="paginator__container"
+          v-if="formFields.pagination.next || formFields.pagination.previous"
+        >
+          <div class="paginator__text">View More</div>
+
+          <Paginator
+            :pagination="formFields.pagination"
+            @next-page="nextPage"
+            @previous-page="previousPage"
+            :loading="formFields.loadingNextPage"
+            arrows
+            size="small"
+            class="paginator"
+          />
         </div>
       </div>
 
@@ -42,11 +67,20 @@
         <div class="form-header">
           <div class="form-header__left">
             <h3>
-              Your Slack Form
-              {{ customForm.stage && customForm.stage.length ? `Stage: ${customForm.stage}` : '' }}
+              {{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}
             </h3>
           </div>
-          <div class="form-header__right"></div>
+          <div class="form-header__right">
+            <div class="save-button">
+              <PulseLoadingSpinnerButton
+                @click="onSave"
+                class="primary-button"
+                text="Save"
+                :loading="savingForm"
+                :disabled="!$store.state.user.isAdmin"
+              />
+            </div>
+          </div>
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -105,15 +139,6 @@
             </div>
           </div>
         </div>
-        <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -123,7 +148,8 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
-import { CollectionManager } from '@thinknimble/tn-models'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -137,6 +163,7 @@ export default {
     CheckBox,
     PulseLoadingSpinner,
     Paginator,
+    CollectionSearch,
   },
   props: {
     customForm: {
@@ -165,6 +192,7 @@ export default {
   },
   data() {
     return {
+      formFields: CollectionManager.create({ ModelClass: SObjectField }),
       salesforceFields,
       customSlackFormConfig: [],
       formHasChanges: false,
@@ -172,6 +200,7 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
+      Pagination,
     }
   },
   watch: {
@@ -181,6 +210,33 @@ export default {
       handler(val) {
         if (val && val.fields) {
           this.addedFields = [...val.fieldsRef]
+        }
+      },
+    },
+    selectedFormResourceType: {
+      immediate: true,
+
+      async handler(val) {
+        if (val) {
+          let searchParams = val.split('.')
+          if (searchParams.length) {
+            let fieldParam = {}
+            if (searchParams[0] == this.CREATE) {
+              fieldParam['createable'] = true
+            } else {
+              fieldParam['updateable'] = true
+            }
+            try {
+              this.formFields.filters = {
+                salesforceObject: searchParams[1],
+
+                ...fieldParam,
+              }
+              this.formFields.refresh()
+            } catch (e) {
+              console.log(e)
+            }
+          }
         }
       },
     },
@@ -197,9 +253,19 @@ export default {
         return field.id
       })
     },
+    selectedFormResourceType() {
+      return `${this.customForm.formType}.${this.resource}`
+    },
   },
   created() {},
   methods: {
+    nextPage() {
+      this.formFields.nextPage()
+    },
+    previousPage() {
+      this.formFields.prevPage()
+    },
+
     canRemoveField(field) {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
@@ -292,8 +358,33 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins/inputs.scss';
+@import '@/styles/variables';
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
+@import '@/styles/buttons';
+.slack-form-builder
+  ::v-deep
+  .collection-search
+  .collection-search__results
+  .collection-search__result-item {
+  border: none;
+}
+.slack-form-builder
+  ::v-deep
+  .collection-search
+  .collection-search__form
+  .collection-search__input
+  .search__input {
+  @include input-field();
+  height: 2.5rem !important;
+  width: 13rem;
+  padding: 0 0 0 1rem;
+  margin: 1rem;
+}
 
 .slack-form-builder {
   display: flex;
@@ -315,7 +406,7 @@ export default {
     font-display: #{$bold-font-family};
 
     &:hover {
-      background-color: $dark-gray-blue;
+      //ackground-color: $dark-gray-blue;
       cursor: pointer;
     }
   }
@@ -336,7 +427,20 @@ export default {
     min-height: 70vh;
   }
 }
-
+.paginator {
+  @include paginator();
+  &__container {
+    border: none;
+    display: flex;
+    justify-content: flex-start;
+    width: 11rem;
+    font-size: 0.75rem;
+    margin-top: 1rem;
+  }
+  &__text {
+    width: 6rem;
+  }
+}
 .form-header {
   display: flex;
 
@@ -430,10 +534,7 @@ export default {
 }
 
 .primary-button {
-  position: absolute;
-
   width: 10rem;
-  bottom: 1.5rem;
 }
 
 .search-bar {

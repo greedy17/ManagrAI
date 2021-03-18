@@ -1,6 +1,6 @@
 import User from './models'
-import { UserRegistrationForm } from './forms'
+import { UserRegistrationForm, RepRegistrationForm } from './forms'
 
 export default User
 
-export { UserRegistrationForm }
+export { UserRegistrationForm, RepRegistrationForm }

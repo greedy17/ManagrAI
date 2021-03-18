@@ -34,11 +34,7 @@
 
       <div class="registration__input__label">
         Re-enter Password
-        <input
-          v-model="reenterPassword"
-          type="password"
-          class="registration__input"
-        />
+        <input v-model="reenterPassword" type="password" class="registration__input" />
       </div>
 
       <div class="registration__input__label">
