@@ -756,6 +756,10 @@ class SalesforceAuthAccount(TimeStampModel):
     def list_resource_data(self, resource, offset, *args, **kwargs):
         return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
 
+    def get_stage_picklist_values(self, resource):
+        values = self.adapter_class.get_stage_picklist_values(resource)
+        return values
+
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
 

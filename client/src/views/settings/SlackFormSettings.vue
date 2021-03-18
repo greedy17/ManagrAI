@@ -51,7 +51,7 @@
             </div>
           </div>
 
-          <div class="box__footer">
+          <div class="modal-container__box__footer">
             <button
               class="modal-container__box__button"
               @click="
@@ -61,9 +61,24 @@
                     toggleSelectedTab(`.${this.selectedStage}`)
                 }
               "
+              :disabled="!this.selectedStage"
             >
               Select
             </button>
+            <div>
+              <span v-if="!stages.length">
+                Can't see your stages? Click below to try fetching them manually
+              </span>
+              <span>
+                Recently updated your stages? Click below to refresh them
+              </span>
+              <PulseLoadingSpinnerButton
+                @click="() => SObjectPicklist.api.getStagePicklistValues()"
+                :loading="false"
+                class="primary-button"
+                text="Refresh"
+              />
+            </div>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -276,6 +291,22 @@ export default {
     },
   },
   methods: {
+    async refreshFormStages() {
+      try {
+        res = await SObjectPicklist.api.getStagePicklistValues()
+        if (res) {
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 2000,
+            message: 'Successfully Retrieved Picklist Values please refresh your page',
+          })
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingStages = false
+      }
+    },
     nextPage() {
       this.formFields.nextPage()
     },
@@ -554,11 +585,18 @@ export default {
 
     &__content {
       display: flex;
+
       justify-content: center;
     }
     &__button {
       @include primary-button();
       margin-top: 1rem;
+      width: 20rem;
+    }
+    &__footer {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
   }
 }
