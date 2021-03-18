@@ -44,7 +44,7 @@
       "options": [
         { "label": "Great", "value": "GREAT" },
         { "label": "Fine", "value": "FINE" },
-        { "label": "Can't Tell", "value": "CANT_TELL" }
+        { "label": "Not Well", "value": "NOT_WELL" }
       ],
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
