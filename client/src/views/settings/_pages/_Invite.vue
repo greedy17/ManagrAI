@@ -160,7 +160,7 @@ export default {
     },
     handleInvite() {
       // reset component data when submission begins, in case of prior request
-      console.log('invite')
+      
       this.loading = true
       this.isFormValid = null
       this.success = null
@@ -169,14 +169,14 @@ export default {
       let validationResults = this.clientSideValidations()
       this.isFormValid = validationResults[0]
       this.errors = validationResults[1]
-      console.log(validationResults)
+      
 
       if (!this.isFormValid) {
         this.loading = false
         this.$Alert.alert({
           type: 'error',
           message: 'There was an error, please try again',
-          duration: 4500,
+          timeout: 2000,
         })
         return
       }

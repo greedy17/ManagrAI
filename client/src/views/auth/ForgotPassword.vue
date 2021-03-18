@@ -38,7 +38,7 @@ export default {
           this.$Alert.alert({
             type: 'success',
             message: 'Please check your email for instructions on how to reset password',
-            duration: 2000,
+            timeout: 2000,
           })
 
           this.$router.push({ name: 'Login' })
@@ -47,7 +47,7 @@ export default {
           this.$Alert.alert({
             type: 'error',
             message: 'There was an error, please try again',
-            duration: 2000,
+            timeout: 2000,
           })
         })
         .finally(() => {
