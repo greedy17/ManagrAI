@@ -52,28 +52,35 @@
           </div>
 
           <div class="modal-container__box__footer">
-            <button
-              class="modal-container__box__button"
-              @click="
-                () => {
-                  $modal.hide('add-stage-modal'),
-                    addForm(this.selectedStage),
-                    toggleSelectedTab(`.${this.selectedStage}`)
-                }
-              "
-              :disabled="!this.selectedStage"
-            >
-              Select
-            </button>
             <div>
-              <span v-if="!stages.length">
-                Can't see your stages? Click below to try fetching them manually
+              <button
+                class="modal-container__box__button"
+                @click="
+                  () => {
+                    $modal.hide('add-stage-modal'),
+                      addForm(this.selectedStage),
+                      toggleSelectedTab(`.${this.selectedStage}`)
+                  }
+                "
+                :disabled="!this.selectedStage"
+              >
+                Select
+              </button>
+            </div>
+
+            <div>
+              <span class="user-message" v-if="!stages.length">
+                <small>Can't see your stages?</small>
+                <br />
+                Click below to try fetching them manually
               </span>
-              <span>
-                Recently updated your stages? Click below to refresh them
+              <span class="user-message">
+                <small>Recently updated your stages?</small>
+                <br />
+                Click below to refresh them
               </span>
               <PulseLoadingSpinnerButton
-                @click="() => SObjectPicklist.api.getStagePicklistValues()"
+                @click="() => refreshFormStages()"
                 :loading="false"
                 class="primary-button"
                 text="Refresh"
@@ -293,8 +300,9 @@ export default {
   methods: {
     async refreshFormStages() {
       try {
-        res = await SObjectPicklist.api.getStagePicklistValues()
-        if (res) {
+        const res = await SObjectPicklist.api.getStagePicklistValues()
+
+        if (res.status == 200) {
           this.$Alert.alert({
             type: 'success',
             timeout: 2000,
@@ -595,6 +603,7 @@ export default {
     }
     &__footer {
       display: flex;
+      padding: 5rem;
       flex-direction: column;
       justify-content: center;
     }
