@@ -42,13 +42,14 @@ from managr.core.permissions import (
 )
 
 
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, Account, Contact, Stage, ActionChoice
 from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,
     AccountSerializer,
     ContactSerializer,
     StageSerializer,
+    ActionChoiceSerializer,
 )
 
 
@@ -352,3 +353,19 @@ class StageViewSet(
         serializer.save()
         response_data = serializer.data
         return Response(response_data)
+
+
+class ActionChoiceViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+):
+    """ endpoint to create Action Choice """
+
+    authentication_classes = (authentication.TokenAuthentication,)
+    serializer_class = ActionChoiceSerializer
+
+    def get_queryset(self):
+        return ActionChoice.objects.for_user(self.request.user)
+
