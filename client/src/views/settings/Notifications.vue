@@ -7,6 +7,13 @@
         <div class="notifications__header__text">Invite and Customize your Team</div>
       </div>
     </div>
+    <div class="notifications__body__container">
+      <div class="notifications__body">
+        <div class="notifications__body__section__left">
+          <div class="notifications__body__section__left__title">Automated Assistance</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -47,6 +54,27 @@ export default {
     }
     &__title {
       font-family: #{$bold-font-family};
+    }
+  }
+
+  &__body {
+    width: 60%;
+
+    margin: 45px 108px 1px 35px;
+    padding: 25px 17px 32px 39.6px;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
+    border: solid 2px #dcdddf;
+    background-color: #ffffff;
+    left: 13rem;
+    top: -6rem;
+    min-height: 70vh;
+    &__container {
+      display: flex;
+      justify-content: center;
+    }
+
+    &__section {
     }
   }
 }
