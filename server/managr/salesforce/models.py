@@ -183,12 +183,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 f"*{self.reference_display_label}*",
                 self.picklist_options.as_slack_options,
                 initial_options=list(
-                    map(
-                        lambda value: block_builders.option(value["label"], value["value"]),
-                        filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                        ),
-                    ),
+                    filter(
+                        lambda opt: opt.get("value", None) in value.split(";"),
+                        self.get_slack_options,
+                    )
                 ),
                 block_id=self.api_name,
             )
