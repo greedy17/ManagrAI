@@ -41,7 +41,7 @@ export default {
         this.$Alert.alert({
           type: 'error',
           message: 'Please enter a new password',
-          duration: 2000,
+          timeout: 2000,
         })
         this.loading = false
         return
@@ -51,7 +51,7 @@ export default {
         this.$Alert.alert({
           type: 'error',
           message: 'Please make sure you passwords match',
-          duration: 2000,
+          timeout: 2000,
         })
         this.loading = false
         return
@@ -237,7 +237,7 @@ button {
   @include primary-button();
   margin-top: 1.25rem;
   height: 1.875rem;
-  width: 9.375rem;
+  min-width: 12rem;
 }
 
 .hidden {

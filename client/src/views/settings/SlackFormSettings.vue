@@ -345,7 +345,7 @@ export default {
 
               message: 'Form deleted successfully',
 
-              duration: 4500,
+              timeout: 2000,
             })
 
             const forms = this.formsByType.filter(f => {
@@ -360,7 +360,7 @@ export default {
 
               message: 'There was an error, please try again',
 
-              duration: 4500,
+              timeout: 2000,
             })
           })
 
