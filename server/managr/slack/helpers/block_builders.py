@@ -134,7 +134,7 @@ def multi_static_select(
         },
     }
     if initial_options:
-        block["accessory"]["initial_option"] = initial_options
+        block["accessory"]["initial_options"] = initial_options
     if action_id:
         block["accessory"]["action_id"] = action_id
     return block

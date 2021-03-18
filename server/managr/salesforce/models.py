@@ -187,12 +187,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 f"*{self.reference_display_label}*",
                 self.picklist_options.as_slack_options,
                 initial_options=list(
-                    map(
-                        lambda value: block_builders.option(value["label"], value["value"]),
-                        filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                        ),
-                    ),
+                    filter(
+                        lambda opt: opt.get("value", None) in value.split(";"),
+                        self.get_slack_options,
+                    )
                 ),
                 block_id=self.api_name,
             )
@@ -205,6 +203,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 block_id=self.api_name,
             )
         else:
+            if self.data_type == "DateTime":
+                # currently we do not support date time instead make it into text field with format as placeholder
+                return block_builders.input_block(
+                    self.reference_display_label,
+                    multiline=False,
+                    optional=not self.required,
+                    initial_value=value,
+                    block_id=self.api_name,
+                    placeholder="MM-DD-YYYY HH:MM AM/PM",
+                )
+
             if self.data_type == "String" and self.length >= 250:
                 # set these fields to be multiline
 
