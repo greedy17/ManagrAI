@@ -221,6 +221,7 @@ def process_zoom_meeting_attach_resource(payload, context):
             form.save_form(state)
         try:
             resource = _process_create_new_resource.now(context.get("w"), meeting_resource)
+
         except FieldValidationError as e:
 
             return {
@@ -258,18 +259,31 @@ def process_zoom_meeting_attach_resource(payload, context):
 
     ts, channel = workflow.slack_interaction.split("|")
     # clear old forms (except contact forms)
-    logger.info(f'{workflow.forms.all().values_list("template__resource", "id")}')
+
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-    logger.info(f'{workflow.forms.all().values_list("template__resource", "id")}')
+
     workflow.add_form(
         meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
     )
-    res = slack_requests.update_channel_message(
-        channel,
-        ts,
-        slack_access_token,
-        block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
-    ).json()
+    try:
+        res = slack_requests.update_channel_message(
+            channel,
+            ts,
+            slack_access_token,
+            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()

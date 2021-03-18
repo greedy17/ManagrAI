@@ -645,11 +645,15 @@ class MeetingWorkflow(SFSyncOperation):
                 )
             except InvalidBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except InvalidBlocksFormatException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
                 )
             except UnHandeledBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
                 )
 
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
