@@ -3,11 +3,37 @@ import json
 import os
 import pdb
 from urllib.parse import urlencode
-
+from requests.exceptions import HTTPError
 from django.conf import settings
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.exceptions import CustomAPIException
+
+
+def _handle_response(response, fn_name=None, blocks=[]):
+    if not hasattr(response, "status_code"):
+        raise ValueError
+
+    else:
+        status_code = response.status_code
+        res_data = response.json()
+        if not res_data.get("ok"):
+            error_code = response.status_code
+            error_param = res_data.get("error")
+            error_message = res_data.get("response_metadata", {}).get("messages")
+
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            CustomAPIException(HTTPError(kwargs), fn_name, blocks=blocks)
+
+        return res_data
 
 
 def request_access_token(code, redirect_uri):
@@ -58,7 +84,9 @@ def send_channel_message(channel, access_token, text=None, block_set=None):
         data["text"] = text
     if block_set:
         data["blocks"] = block_set
-    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+
+    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return _handle_response(res, blocks=block_set if block_set else [])
 
 
 def update_channel_message(channel, message_timestamp, access_token, text=None, block_set=None):
@@ -73,14 +101,23 @@ def update_channel_message(channel, message_timestamp, access_token, text=None, 
         data["text"] = text
     if block_set:
         data["blocks"] = block_set
-    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return _handle_response(res, blocks=block_set if block_set else [])
 
 
 def generic_request(url, data, access_token=None):
-    return requests.post(
+    res = requests.post(
         url,
         data=json.dumps(data),
         headers=slack_auth.auth_headers(access_token)
         if access_token
         else slack_auth.json_headers(),
     )
+    return _handle_response(res, blocks=[])
+
+
+# * from managr.slack.helpers import requests
+# * from managr.slack.helpers import block_builders
+# * u = User.objects.get(email='pari@thinknimble.com')
+# * org = u.organization
+

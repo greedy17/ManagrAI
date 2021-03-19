@@ -135,7 +135,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
             # request the Slack Channel ID to DM this user
             response = slack_requests.request_user_dm_channel(user_slack.slack_id, access_token)
             # save Slack Channel ID
-            channel = response.json().get("channel").get("id")
+            channel = response.get("channel").get("id")
             user_slack.channel = channel
             user_slack.save()
 

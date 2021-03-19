@@ -42,6 +42,11 @@ from managr.core.permissions import (
 from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
@@ -230,14 +235,27 @@ def init_fake_meeting(request):
         access_token = user.organization.slack_integration.access_token
 
         ts, channel = workflow.slack_interaction.split("|")
-        res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            access_token,
-            block_set=get_block_set(
-                "initial_meeting_interaction", context={"w": str(workflow.id)},
-            ),
-        ).json()
+        try:
+            res = slack_requests.update_channel_message(
+                channel,
+                ts,
+                access_token,
+                block_set=get_block_set(
+                    "initial_meeting_interaction", context={"w": str(workflow.id)},
+                ),
+            )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
         workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         workflow.save()
 

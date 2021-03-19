@@ -85,22 +85,26 @@
                 field.referenceDisplayLabel === 'How Did It go?'
             "
             class="form-field__label"
-          >{{ field.referenceDisplayLabel }}</div>
+          >
+            {{ field.referenceDisplayLabel }}
+          </div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
               <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
                 {{
-                "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
 
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
-              >{{ 'Logs the rep’s comments about the meeting' }}</div>
+              >
+                {{ 'Logs the rep’s comments about the meeting' }}
+              </div>
               <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
                 {{
-                'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
+                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
                 }}
               </div>
 
@@ -111,7 +115,9 @@
                     field.referenceDisplayLabel !== 'Meeting Comments' &&
                     field.referenceDisplayLabel !== 'How Did It go?'
                 "
-              >{{ field.referenceDisplayLabel }}</div>
+              >
+                {{ field.referenceDisplayLabel }}
+              </div>
             </div>
 
             <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
@@ -138,7 +144,7 @@
             <br />
 
             <small>
-              <strong>{{actionChoices.map(action => action.title).join(', ' ) }}</strong>
+              <strong>{{ actionChoices.map(action => action.title).join(', ') }}</strong>
             </small>
           </div>
         </div>
@@ -347,7 +353,10 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      if (this.resource == 'Opportunity' || this.resource == 'Account') {
+      if (
+        (this.resource == 'Opportunity' || this.resource == 'Account') &&
+        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
         if (!this.meetingType.length) {
           this.$Alert.alert({
             type: 'error',

@@ -16,7 +16,11 @@ from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
-
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import TokenExpired
@@ -622,10 +626,23 @@ class MeetingWorkflow(SFSyncOperation):
 
             slack_access_token = self.user.organization.slack_integration.access_token
             ts, channel = self.slack_interaction.split("|")
-            res = slack_requests.update_channel_message(
-                channel, ts, slack_access_token, block_set=block_set
-            ).json()
-            print(res)
+            try:
+                res = slack_requests.update_channel_message(
+                    channel, ts, slack_access_token, block_set=block_set
+                )
+            except InvalidBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except InvalidBlocksFormatException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except UnHandeledBlocksException as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
@@ -721,6 +738,10 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
+
+    def get_stage_picklist_values(self, resource):
+        values = self.adapter_class.get_stage_picklist_values(resource)
+        return values
 
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
