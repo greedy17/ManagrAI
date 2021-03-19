@@ -4,6 +4,10 @@ from . import models as slack_models
 
 class CustomFormFieldInline(admin.StackedInline):
     model = slack_models.FormField
+    fields = (
+        "field",
+        "order",
+    )
 
 
 class CustomOrgSlackForms(admin.ModelAdmin):

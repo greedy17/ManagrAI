@@ -1,6 +1,9 @@
 import logging
+import re
+
 from rest_framework.exceptions import APIException
 from rest_framework.exceptions import ValidationError
+
 
 logger = logging.getLogger("managr")
 
@@ -31,6 +34,12 @@ class RequiredFieldError(Exception):
 
 class SFQueryOffsetError(Exception):
     def __init(self, message="OFFSET MAX IS 2000"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class InvalidFieldError(Exception):
+    def __init(self, message="Invalid/Duplicate Field in query"):
         self.message = message
         super().__init__(self.message)
 
@@ -70,8 +79,27 @@ class CustomAPIException:
         elif self.status_code == 400 and self.param == "NUMBER_OUTSIDE_VALID_RANGE":
             raise SFQueryOffsetError(self.message)
         elif self.status_code == 400 and self.param == "INVALID_FIELD":
-            # this error is a malformced query error we should log this (most likely from relationship feilds)
-            logger.error(f"An error occured with a query sent to SF {self.message}")
+            # invalid field could apply to a number of different errors
+            # we are trying to parse out duplicate field errors and non queryable errors
+            message_split = self.message.splitlines()
+            if len(message_split) == 5:
+                error_line = message_split[4]
+                # check if error is on column
+                no_column_match = re.match(r"(No such column)", error_line)
+                if no_column_match:
+                    field = re.match(r"\s+\'\w+\' ", error_line[no_column_match.end() :])
+                    field_str = (
+                        error_line[
+                            no_column_match.end()
+                            + field.start() : no_column_match.end()
+                            + field.end()
+                        ]
+                        .lstrip(" ")
+                        .rstrip(" ")
+                    )
+                    logger.info(f"Invalid Field {field_str}")
+                    raise InvalidFieldError(f"There was an invalid field in the query {field_str}")
+
             raise Api500Error()
         else:
             raise ValidationError(
