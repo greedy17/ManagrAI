@@ -42,7 +42,6 @@ export default class ActionChoiceAPI {
       .get(ACTION_CHOICES_ENDPOINT, options)
       .then(response => response.data)
       .then(data => {
-        console.log(data)
         return {
           ...data,
           results: data.results.map(this.cls.fromAPI),
