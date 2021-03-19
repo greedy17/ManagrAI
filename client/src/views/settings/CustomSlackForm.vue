@@ -127,12 +127,12 @@
               </div>
             </div>
           </div>
-          <!-- <input
+          <input
             v-if="field.referenceDisplayLabel === 'Meeting Type'"
             placeholder="Enter Meeting Type"
             class="meeting-type"
             v-model="meetingType"
-          />-->
+          />
         </div>
       </div>
     </div>
@@ -338,25 +338,25 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      // if ((this.resource = 'Opportunity')) {
-      //   if (!this.meetingType.length) {
-      //     this.$Alert.alert({
-      //       type: 'error',
-      //       message: 'Please enter a Meeting Type',
-      //       timeout: 2000,
-      //     })
-      //     return
-      //   } else {
-      //     const obj = {
-      //       title: this.meetingType,
-      //       organization: this.$store.state.user.organization,
-      //     }
+      if ((this.resource = 'Opportunity')) {
+        if (!this.meetingType.length) {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'Please enter a Meeting Type',
+            timeout: 2000,
+          })
+          return
+        } else {
+          const obj = {
+            title: this.meetingType,
+            organization: this.$store.state.user.organization,
+          }
 
-      //     await ActionChoice.api.create(obj).then(res => {
-      //       console.log(res)
-      //     })
-      //   }
-      // }
+          await ActionChoice.api.create(obj).then(res => {
+            console.log(res)
+          })
+        }
+      }
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
@@ -549,6 +549,7 @@ export default {
   }
 }
 .save-button {
+  margin-left: 1rem;
   // display: flex;
   // justify-content: flex-end;
 }
