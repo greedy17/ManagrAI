@@ -341,6 +341,7 @@ class SalesforceAuthAccountAdapter:
         logger.info(f"{url} was sent")
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
+        logger.info({res.get("totalSize")})
         res = self._format_resource_response(res, resource)
         return res
 
