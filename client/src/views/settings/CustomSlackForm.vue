@@ -133,6 +133,14 @@
             class="meeting-type"
             v-model="meetingType"
           />
+          <div v-if="field.referenceDisplayLabel === 'Meeting Type'">
+            <small>Meeting Types:</small>
+            <br />
+
+            <small>
+              <strong>{{actionChoices.map(action => action.title).join(', ' ) }}</strong>
+            </small>
+          </div>
         </div>
       </div>
     </div>
@@ -198,6 +206,7 @@ export default {
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
+      actionChoices: [],
     }
   },
   watch: {
@@ -256,7 +265,7 @@ export default {
   },
   created() {
     const action = ActionChoice.api.list({}).then(res => {
-      console.log(res)
+      this.actionChoices = res.results
     })
   },
   methods: {
@@ -353,7 +362,11 @@ export default {
           }
 
           await ActionChoice.api.create(obj).then(res => {
-            console.log(res)
+            this.$Alert.alert({
+              type: 'success',
+              message: 'New meeting type created',
+              timeout: 2000,
+            })
           })
         }
       }
