@@ -128,7 +128,7 @@
             </div>
           </div>
           <input
-            v-if="field.referenceDisplayLabel === 'Meeting Type'  "
+            v-if="field.referenceDisplayLabel === 'Meeting Type'"
             placeholder="Enter Meeting Type"
             class="meeting-type"
             v-model="meetingType"
