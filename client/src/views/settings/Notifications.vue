@@ -227,7 +227,6 @@ export default {
     background-color: #ffffff;
     left: 13rem;
     top: -6rem;
-    // min-height: 70vh;
 
     &__container {
       display: flex;
