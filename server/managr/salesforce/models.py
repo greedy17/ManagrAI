@@ -415,7 +415,7 @@ class SFSyncOperation(TimeStampModel):
                 # get counts to set offsets
             count = min(count, 10000)
             logger.info(f"{count} {key} {self.user.email}")
-            for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
+            for i in range(math.ceil((count / sf_consts.SALESFORCE_QUERY_LIMIT) + 1)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
                 limit = sf_consts.SALESFORCE_QUERY_LIMIT
                 logger.info(f"offset {offset} {key} {self.user.email}")
