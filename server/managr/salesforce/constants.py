@@ -31,6 +31,8 @@ def SALSFORCE_RESOURCE_QUERY_URI(
     additional_filters=[],
     limit=SALESFORCE_QUERY_LIMIT,
 ):
+    # make a set to remove duplicates
+    fields = set(fields)
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
