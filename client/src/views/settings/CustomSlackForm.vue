@@ -66,17 +66,15 @@
           <div class="form-header__left">
             <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
           </div>
-          <div class="form-header__right">
-            <div class="save-button">
-              <PulseLoadingSpinnerButton
-                @click="onSave"
-                class="primary-button"
-                text="Save"
-                :loading="savingForm"
-                :disabled="!$store.state.user.isAdmin"
-              />
-            </div>
-          </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -436,7 +434,7 @@ export default {
   &__form {
     // flex: 10;
 
-    width: 60%;
+    width: 80%;
     position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
@@ -551,8 +549,8 @@ export default {
   }
 }
 .save-button {
-  display: flex;
-  justify-content: flex-end;
+  // display: flex;
+  // justify-content: flex-end;
 }
 
 .primary-button {

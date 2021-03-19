@@ -479,6 +479,7 @@ export default {
 @import '@/styles/buttons';
 
 .container {
+  padding: 0 4rem;
 }
 .box-updated__header {
   &:hover {
@@ -650,6 +651,7 @@ export default {
     background-color: #f4f5f6;
     position: absolute;
     right: -7rem;
+
     z-index: 100;
 
     &__header {
