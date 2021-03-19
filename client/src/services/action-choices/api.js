@@ -22,6 +22,10 @@ export default class ActionChoiceAPI {
     return new ActionChoiceAPI(cls)
   }
 
+  get client() {
+    return apiClient()
+  }
+
   list({ pagination, filters }) {
     const filtersMap = {
       // Pagination
@@ -49,5 +53,16 @@ export default class ActionChoiceAPI {
         }),
       )
     return promise
+  }
+
+  create(obj, fields = [], excludeFields = []) {
+    const url = ACTION_CHOICES_ENDPOINT
+    const data = this.cls.toAPI(obj, fields, excludeFields)
+    const options = {}
+
+    return this.client
+      .post(url, data, options)
+      .then(response => response.data)
+      .then(data => this.cls.fromAPI(data))
   }
 }

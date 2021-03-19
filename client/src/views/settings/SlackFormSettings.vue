@@ -53,22 +53,6 @@
 
           <div class="modal-container__box__footer">
             <div>
-              <button
-                class="modal-container__box__button"
-                @click="
-                  () => {
-                    $modal.hide('add-stage-modal'),
-                      addForm(this.selectedStage),
-                      toggleSelectedTab(`.${this.selectedStage}`)
-                  }
-                "
-                :disabled="!this.selectedStage"
-              >
-                Select
-              </button>
-            </div>
-
-            <div>
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
                 <br />
@@ -85,6 +69,21 @@
                 class="primary-button"
                 text="Refresh"
               />
+            </div>
+            <div>
+              <button
+                class="modal-container__box__button"
+                @click="
+                  () => {
+                    $modal.hide('add-stage-modal'),
+                      addForm(this.selectedStage),
+                      toggleSelectedTab(`.${this.selectedStage}`)
+                  }
+                "
+                :disabled="!this.selectedStage"
+              >
+                Select
+              </button>
             </div>
           </div>
         </div>
@@ -528,8 +527,7 @@ export default {
 @import '@/styles/buttons';
 
 .container {
-  margin-left: 13rem;
-  margin-right: 5rem;
+  padding: 0 4rem;
 }
 .box-updated__header {
   &:hover {
@@ -595,17 +593,19 @@ export default {
       display: flex;
 
       justify-content: center;
+      min-height: 20rem;
     }
     &__button {
       @include primary-button();
       margin-top: 1rem;
-      width: 20rem;
+      width: 10rem;
     }
     &__footer {
       display: flex;
-      padding: 5rem;
-      flex-direction: column;
-      justify-content: center;
+      padding: 0rem 1rem;
+
+      justify-content: space-between;
+      border-top: 2px solid $dark-green;
     }
   }
 }
@@ -709,6 +709,7 @@ export default {
     background-color: #f4f5f6;
     position: absolute;
     right: -7rem;
+
     z-index: 100;
 
     &__header {

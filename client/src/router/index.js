@@ -20,6 +20,7 @@ import Settings from '@/views/settings/Settings'
 import Profile from '@/views/settings/_pages/_Profile'
 import Invite from '@/views/settings/_pages/_Invite'
 import SlackFormSettings from '../views/settings/SlackFormSettings'
+import Notifications from '@/views/settings/Notifications'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -64,6 +65,11 @@ export default new Router({
       path: '/forgot-password',
       name: 'ForgotPassword',
       component: ForgotPassword,
+    },
+    {
+      path: '/notifications',
+      name: 'Notifications',
+      component: Notifications,
     },
     {
       path: '/resetpassword/:userId/:token',

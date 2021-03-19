@@ -39,9 +39,7 @@
           <template v-slot:item="{ result }">
             <div class="slack-form-builder__container">
               <CheckBox :checked="addedFieldIds.includes(result.id)" />
-              <div class="slack-form-builder__sf-field">
-                {{ result['referenceDisplayLabel'] }}
-              </div>
+              <div class="slack-form-builder__sf-field">{{ result['referenceDisplayLabel'] }}</div>
             </div>
           </template>
         </CollectionSearch>
@@ -66,21 +64,17 @@
       <div class="slack-form-builder__form">
         <div class="form-header">
           <div class="form-header__left">
-            <h3>
-              {{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}
-            </h3>
+            <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
           </div>
-          <div class="form-header__right">
-            <div class="save-button">
-              <PulseLoadingSpinnerButton
-                @click="onSave"
-                class="primary-button"
-                text="Save"
-                :loading="savingForm"
-                :disabled="!$store.state.user.isAdmin"
-              />
-            </div>
-          </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -101,6 +95,7 @@
                   "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
+
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
@@ -138,6 +133,20 @@
               </div>
             </div>
           </div>
+          <input
+            v-if="field.referenceDisplayLabel === 'Meeting Type'"
+            placeholder="Enter Meeting Type"
+            class="meeting-type"
+            v-model="meetingType"
+          />
+          <div v-if="field.referenceDisplayLabel === 'Meeting Type'">
+            <small>Meeting Types:</small>
+            <br />
+
+            <small>
+              <strong>{{ actionChoices.map(action => action.title).join(', ') }}</strong>
+            </small>
+          </div>
         </div>
       </div>
     </div>
@@ -151,6 +160,7 @@ import CheckBox from '../../components/CheckBoxUpdated'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
+import ActionChoice from '@/services/action-choices'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations } from '@/services/salesforce'
@@ -201,6 +211,8 @@ export default {
       removedFields: [],
       ...FORM_CONSTS,
       Pagination,
+      meetingType: '',
+      actionChoices: [],
     }
   },
   watch: {
@@ -257,7 +269,11 @@ export default {
       return `${this.customForm.formType}.${this.resource}`
     },
   },
-  created() {},
+  created() {
+    const action = ActionChoice.api.list({}).then(res => {
+      this.actionChoices = res.results
+    })
+  },
   methods: {
     nextPage() {
       this.formFields.nextPage()
@@ -336,7 +352,30 @@ export default {
       // Apply update to the view model
       this.addedFields = newFields
     },
-    onSave() {
+    async onSave() {
+      if ((this.resource = 'Opportunity')) {
+        if (!this.meetingType.length) {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'Please enter a Meeting Type',
+            timeout: 2000,
+          })
+          return
+        } else {
+          const obj = {
+            title: this.meetingType,
+            organization: this.$store.state.user.organization,
+          }
+
+          await ActionChoice.api.create(obj).then(res => {
+            this.$Alert.alert({
+              type: 'success',
+              message: 'New meeting type created',
+              timeout: 2000,
+            })
+          })
+        }
+      }
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
@@ -414,7 +453,7 @@ export default {
   &__form {
     // flex: 10;
 
-    width: 50vw;
+    width: 80%;
     position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
@@ -529,8 +568,9 @@ export default {
   }
 }
 .save-button {
-  display: flex;
-  justify-content: flex-end;
+  margin-left: 1rem;
+  // display: flex;
+  // justify-content: flex-end;
 }
 
 .primary-button {
@@ -553,5 +593,11 @@ export default {
     font-family: #{$bold-font-family};
     margin: 2rem 0 0 1rem;
   }
+}
+
+.meeting-type {
+  @include input-field();
+  padding: 0.5rem;
+  width: 15rem;
 }
 </style>

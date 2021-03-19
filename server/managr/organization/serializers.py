@@ -8,7 +8,7 @@ from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
-from .models import Organization, Account, Contact, Stage
+from .models import Organization, Account, Contact, Stage, ActionChoice
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
