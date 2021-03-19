@@ -95,6 +95,7 @@
                 "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
+
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
@@ -128,6 +129,12 @@
               </div>
             </div>
           </div>
+          <!-- <input
+            v-if="field.referenceDisplayLabel === 'Meeting Type'"
+            placeholder="Enter Meeting Type"
+            class="meeting-type"
+            v-model="meetingType"
+          />-->
         </div>
       </div>
     </div>
@@ -141,6 +148,7 @@ import CheckBox from '../../components/CheckBoxUpdated'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
+import ActionChoice from '@/services/action-choices'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations } from '@/services/salesforce'
@@ -191,6 +199,7 @@ export default {
       removedFields: [],
       ...FORM_CONSTS,
       Pagination,
+      meetingType: '',
     }
   },
   watch: {
@@ -247,7 +256,11 @@ export default {
       return `${this.customForm.formType}.${this.resource}`
     },
   },
-  created() {},
+  created() {
+    const action = ActionChoice.api.list({}).then(res => {
+      console.log(res)
+    })
+  },
   methods: {
     nextPage() {
       this.formFields.nextPage()
@@ -326,7 +339,26 @@ export default {
       // Apply update to the view model
       this.addedFields = newFields
     },
-    onSave() {
+    async onSave() {
+      // if ((this.resource = 'Opportunity')) {
+      //   if (!this.meetingType.length) {
+      //     this.$Alert.alert({
+      //       type: 'error',
+      //       message: 'Please enter a Meeting Type',
+      //       timeout: 2000,
+      //     })
+      //     return
+      //   } else {
+      //     const obj = {
+      //       title: this.meetingType,
+      //       organization: this.$store.state.user.organization,
+      //     }
+
+      //     await ActionChoice.api.create(obj).then(res => {
+      //       console.log(res)
+      //     })
+      //   }
+      // }
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
@@ -543,5 +575,11 @@ export default {
     font-family: #{$bold-font-family};
     margin: 2rem 0 0 1rem;
   }
+}
+
+.meeting-type {
+  @include input-field();
+  padding: 0.5rem;
+  width: 15rem;
 }
 </style>
