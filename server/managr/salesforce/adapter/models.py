@@ -212,7 +212,7 @@ class SalesforceAuthAccountAdapter:
         if "CloneSourceId" in fields.keys():
             del fields["CloneSourceId"]
         if "OpportunityScoreId" in fields.keys():
-            del fields["CloneSourceId"]
+            del fields["OpportunityScoreId"]
 
         custom_additions = dict(
             salesforce_account=sf_account_id,
