@@ -66,17 +66,15 @@
           <div class="form-header__left">
             <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
           </div>
-          <div class="form-header__right">
-            <div class="save-button">
-              <PulseLoadingSpinnerButton
-                @click="onSave"
-                class="primary-button"
-                text="Save"
-                :loading="savingForm"
-                :disabled="!$store.state.user.isAdmin"
-              />
-            </div>
-          </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -129,12 +127,20 @@
               </div>
             </div>
           </div>
-          <!-- <input
+          <input
             v-if="field.referenceDisplayLabel === 'Meeting Type'"
             placeholder="Enter Meeting Type"
             class="meeting-type"
             v-model="meetingType"
-          />-->
+          />
+          <div v-if="field.referenceDisplayLabel === 'Meeting Type'">
+            <small>Meeting Types:</small>
+            <br />
+
+            <small>
+              <strong>{{actionChoices.map(action => action.title).join(', ' ) }}</strong>
+            </small>
+          </div>
         </div>
       </div>
     </div>
@@ -200,6 +206,7 @@ export default {
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
+      actionChoices: [],
     }
   },
   watch: {
@@ -258,7 +265,7 @@ export default {
   },
   created() {
     const action = ActionChoice.api.list({}).then(res => {
-      console.log(res)
+      this.actionChoices = res.results
     })
   },
   methods: {
@@ -340,25 +347,29 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      // if ((this.resource = 'Opportunity')) {
-      //   if (!this.meetingType.length) {
-      //     this.$Alert.alert({
-      //       type: 'error',
-      //       message: 'Please enter a Meeting Type',
-      //       timeout: 2000,
-      //     })
-      //     return
-      //   } else {
-      //     const obj = {
-      //       title: this.meetingType,
-      //       organization: this.$store.state.user.organization,
-      //     }
+      if ((this.resource = 'Opportunity')) {
+        if (!this.meetingType.length) {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'Please enter a Meeting Type',
+            timeout: 2000,
+          })
+          return
+        } else {
+          const obj = {
+            title: this.meetingType,
+            organization: this.$store.state.user.organization,
+          }
 
-      //     await ActionChoice.api.create(obj).then(res => {
-      //       console.log(res)
-      //     })
-      //   }
-      // }
+          await ActionChoice.api.create(obj).then(res => {
+            this.$Alert.alert({
+              type: 'success',
+              message: 'New meeting type created',
+              timeout: 2000,
+            })
+          })
+        }
+      }
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
@@ -436,7 +447,7 @@ export default {
   &__form {
     // flex: 10;
 
-    width: 60%;
+    width: 80%;
     position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
@@ -551,8 +562,9 @@ export default {
   }
 }
 .save-button {
-  display: flex;
-  justify-content: flex-end;
+  margin-left: 1rem;
+  // display: flex;
+  // justify-content: flex-end;
 }
 
 .primary-button {
