@@ -128,7 +128,7 @@
             </div>
           </div>
           <input
-            v-if="field.referenceDisplayLabel === 'Meeting Type'"
+            v-if="field.referenceDisplayLabel === 'Meeting Type'  "
             placeholder="Enter Meeting Type"
             class="meeting-type"
             v-model="meetingType"
@@ -347,7 +347,7 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      if ((this.resource = 'Opportunity')) {
+      if (this.resource == 'Opportunity' || this.resource == 'Account') {
         if (!this.meetingType.length) {
           this.$Alert.alert({
             type: 'error',
