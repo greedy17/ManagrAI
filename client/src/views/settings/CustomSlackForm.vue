@@ -347,7 +347,7 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      if ((this.resource = 'Opportunity')) {
+      if (this.resource == 'Opportunity' || this.resource == 'Account') {
         if (!this.meetingType.length) {
           this.$Alert.alert({
             type: 'error',
