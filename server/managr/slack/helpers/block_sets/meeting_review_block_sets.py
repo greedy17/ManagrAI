@@ -514,15 +514,26 @@ def create_modal_block_set(context, *args, **kwargs):
         slack_form = OrgCustomSlackFormInstance.objects.create(
             user=user, template=template, workflow=workflow
         )
-        blocks = [
-            block_builders.simple_section(
-                ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                "mrkdwn",
-            ),
-        ]
+        form_blocks = slack_form.generate_form()
+        if len(form_blocks):
+            blocks = [
+                block_builders.simple_section(
+                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                    "mrkdwn",
+                ),
+            ]
 
-        blocks.extend(slack_form.generate_form())
+            blocks = [*blocks, *form_blocks]
+        else:
 
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Forms",
+                    "form",
+                    f"Please add fields to your {context.get('resource')} create form",
+                    url=f"{get_site_url()}/forms",
+                )
+            ]
         return blocks
 
 

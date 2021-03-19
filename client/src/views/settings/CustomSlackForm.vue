@@ -353,7 +353,10 @@ export default {
       this.addedFields = newFields
     },
     async onSave() {
-      if (this.resource == 'Opportunity' || this.resource == 'Account') {
+      if (
+        (this.resource == 'Opportunity' || this.resource == 'Account') &&
+        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
         if (!this.meetingType.length) {
           this.$Alert.alert({
             type: 'error',

@@ -64,9 +64,8 @@ def process_meeting_review(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    view_id = res
+    view_id = res["view"]["id"]
     workflow.slack_view = view_id
-    # meeting.slack_form = view_id
     workflow.save()
 
 
@@ -76,7 +75,6 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
@@ -87,9 +85,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         # "view_id": view_id,
         "view": {
             "type": "modal",
-            # "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
             "title": {"type": "plain_text", "text": "Contacts"},
-            # "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
             "private_metadata": json.dumps(context),
         },
@@ -112,6 +108,8 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor(required_context=["m"])
@@ -253,6 +251,8 @@ def process_edit_meeting_contact(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    workflow.slack_view = res["view"]["id"]
+    workflow.save()
 
 
 @processor(required_context=[])
@@ -345,6 +345,8 @@ def process_stage_selected(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor(required_context=["w", "tracking_id"])
@@ -420,6 +422,9 @@ def process_update_search_or_create(payload, context):
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
+
 
 @processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
@@ -467,6 +472,8 @@ def process_meeting_selected_resource(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor()
@@ -587,9 +594,7 @@ def process_coming_soon(payload, context):
         },
     }
     try:
-        res = slack_requests.generic_request(
-            url, data, access_token=org.slack_integration.access_token
-        )
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
 
     except InvalidBlocksException as e:
         return logger.exception(

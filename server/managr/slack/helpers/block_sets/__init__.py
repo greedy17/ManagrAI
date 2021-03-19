@@ -42,5 +42,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "error_message": common_blocksets.error_message_block_set,
         "coming_soon_modal": common_blocksets.coming_soon_modal_block_set,
         "create_meeting_task": meeting_review_block_sets.create_meeting_task,
+        "success_modal": common_blocksets.success_modal_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
