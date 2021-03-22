@@ -418,7 +418,9 @@ class SFSyncOperation(TimeStampModel):
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
                 limit = sf_consts.SALESFORCE_QUERY_LIMIT
-                logger.info(f"offset {offset} {key} {self.user.email}")
+                logger.info(
+                    f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email}"
+                )
                 if offset > 2000:
                     # sf limit on offset for 2000 if it is greater than 2k
                     # we need to get the rest of the records
@@ -446,7 +448,7 @@ class SFSyncOperation(TimeStampModel):
 
         if self.progress == 100 and self.__class__.__name__ == "SFSyncOperation":
             logger.info("starting new process")
-            scheduled_time = timezone.now() + timezone.timedelta(minutes=2.5)
+            scheduled_time = timezone.now() + timezone.timedelta(minutes=10)
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
             emit_gen_next_sync(str(self.user.id), self.operations_list, formatted_time)
         return super(SFSyncOperation, self).save(*args, **kwargs)
