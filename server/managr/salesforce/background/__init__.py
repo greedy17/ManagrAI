@@ -432,6 +432,7 @@ def _process_create_new_contacts(workflow_id, *args):
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
+                data = form.saved_data
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
         while True:
