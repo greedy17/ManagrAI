@@ -237,13 +237,10 @@ def process_zoom_meeting_attach_resource(payload, context):
         workflow.resource_id = str(resource.id)
         workflow.resource_type = meeting_resource
 
-    workflow.save()
-
+        workflow.save()
     ts, channel = workflow.slack_interaction.split("|")
     # clear old forms (except contact forms)
-    logger.info(f'{workflow.forms.all().values_list("template__resource", "id")}')
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-    logger.info(f'{workflow.forms.all().values_list("template__resource", "id")}')
     workflow.add_form(
         meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
     )
