@@ -334,14 +334,15 @@ class SalesforceAuthAccountAdapter:
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
-        logger.info(f"{limit} was set on call")
         url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit)}"
         if offset:
             url = f"{url} offset {offset}"
         logger.info(f"{url} was sent")
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
-        logger.info({res.get("totalSize")})
+        logger.info(
+            f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
+        )
         res = self._format_resource_response(res, resource)
         return res
 
