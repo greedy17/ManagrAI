@@ -210,7 +210,7 @@ def process_zoom_meeting_attach_resource(payload, context):
             "value"
         ]
         workflow.resource_type = meeting_resource
-
+        workflow.save()
         # update the forms to the correct type
 
     elif selected_action == "CREATE":
