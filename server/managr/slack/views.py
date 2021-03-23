@@ -18,6 +18,7 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
+from managr.slack.helpers import block_builders
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
@@ -338,7 +339,7 @@ def update_resource(request):
                     ),
                 }
             )
-        resource_type = command_params[0][0].upper() + command_params[1:]
+        resource_type = command_params[0][0].upper() + command_params[0][1:]
 
         resource_id = command_params[1]
 
@@ -347,9 +348,9 @@ def update_resource(request):
         model_class = route["model"]
         serializer_class = route["serializer"]
 
-        resource = model_class.get(id=resource_id)
+        resource = model_class.objects.get(id=resource_id)
 
-        serializer = serializer_class
+        serializer = serializer_class(instance=resource)
 
         from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
@@ -367,8 +368,21 @@ def update_resource(request):
                 }
             )
 
-        OrgCustomSlackFormInstance.objects.create(
+        form = OrgCustomSlackFormInstance.objects.create(
             user=user, template=template, resource_id=resource_id,
         )
-        return None
+
+        return Response(
+            data={
+                "blocks": [
+                    block_builders.section_with_accessory_block(
+                        f"*{'hello'}*",
+                        block_builders.simple_image_block(
+                            "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif",
+                            "Loading...",
+                        ),
+                    )
+                ]
+            }
+        )
 
