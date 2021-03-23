@@ -83,12 +83,13 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 enterprise=enterprise,
             )
 
-            url = integration.incoming_webhook.get("url")
+            # url = integration.incoming_webhook.get("url")
 
-            text = {
-                "text": f"<!channel> your organization has enabled slack please integrate your account to receive notifications"
-            }
-            slack_requests.generic_request(url, text)
+            text = "<!channel> your organization has enabled slack please integrate your account to receive notifications"
+
+            slack_requests.send_channel_message(
+                integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
+            )
         else:
             team_id = data.get("team").get("id")
             if team_id != request.user.organization.slack_integration.team_id:
@@ -115,8 +116,12 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
 
-        data = {"text": "Testing, testing... 1, 2. Hello, World!"}
-        slack_requests.generic_request(url, data)
+        text = "Testing, testing... 1, 2. Hello, World!"
+        slack_requests.send_channel_message(
+            organization_slack.incoming_webhook.get("channel_id"),
+            organization_slack.access_token,
+            text=text,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -133,7 +138,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
         if not user_slack.channel:
             # request the Slack Channel ID to DM this user
-            response = slack_requests.request_user_dm_channel(user_slack.slack_id, access_token)
+            response = slack_requests.request_user_dm_channel(
+                user_slack.slack_id, access_token
+            ).json()
             # save Slack Channel ID
             channel = response.get("channel").get("id")
             user_slack.channel = channel
