@@ -1,5 +1,7 @@
 import json
 
+from django.db.models import Sum, Avg, Q
+
 from rest_framework import (
     permissions,
     status,
@@ -21,6 +23,14 @@ from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
+
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
+from managr.salesforce.routes import routes as model_routes
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -291,3 +301,74 @@ class SlackFormsViewSet(
         instance.save()
 
         return Response(serializer.data)
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def update_resource(request):
+    # list of accepted commands for this fake endpoint
+    allowed_commands = ["opportunity", "account", "lead", "contact"]
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = []
+    resource_type = None
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        resource_type = command_params[0][0].upper() + command_params[1:]
+
+        resource_id = command_params[1]
+
+        route = model_routes.get(resource_type)
+
+        model_class = route["model"]
+        serializer_class = route["serializer"]
+
+        resource = model_class.get(id=resource_id)
+
+        serializer = serializer_class
+
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource=resource_type, form_type="UPDATE",))
+            .first()
+        )
+        if not template:
+
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry, we are still generating your forms, please try again soon.",
+                }
+            )
+
+        OrgCustomSlackFormInstance.objects.create(
+            user=user, template=template, resource_id=resource_id,
+        )
+        return None
+
