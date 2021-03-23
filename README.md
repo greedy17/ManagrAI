@@ -1,12 +1,16 @@
 # Managr App #
 
+**All Passwords and secrets can be found in 1password**
+
 ## To Get Up and Running ##
 
-First, see the section below on setting up your .env files, the proceed with installing system dependencies.
+First, see the section below on setting up your .env files, the proceed with installing system dependencies. 
 
 ### With Virtual Environments ###
 
 [Follow the instructions in the ThinkNimble developer setup guide.](https://docs.google.com/document/d/1nRLCNbfoknrcb762cwgjSChzsbkTzr1MH4AyLgRLKQc/edit)
+
+[Note if you get a pillow error the fix is easy using this](https://aspireperks.atlassian.net/wiki/spaces/TNWIKI/pages/486932532/Developer+Setup+Guide#For-Django-developers%3A)
 
 This app depends on:
  - PostgreSQL 12
@@ -53,7 +57,7 @@ A .env file is required for development, but no configuration should be required
 Some data has been prepared as a fixture. Run the following to load it into your local database.
 
 ```bash
-./server/manage.py loaddata managr/core/fixtures/dev.json
+./server/manage.py loaddata fixture.json
 ```
 
 ## How to Generate favicons ##
@@ -65,3 +69,40 @@ Visit [favicon-generator.org](https://www.favicon-generator.org/) and upload a h
 Download the ZIP file of icons that the site generates for you and paste them in the `client/static/favicons/` directory (yes, it is OK to overwrite the default 'Aspire flame' icons in that directory).
 
 _Optional: Change theme color_ - Find the `<meta name="theme-color"...` tag in `client/src/index.html` and change the value of `content` to the HEX code of the color you want. The default color is 'Aspire Red' (HEX code `#d73126`).
+
+
+## Preparing your local environment
+
+After following the developer guide and creating your database you are ready to get started with your local environment. 
+
+Here are the steps to get you started:
+
+1. Set up ngrok (see below for instructions)
+2. Run your initial migrations `server/manage.py migrate`
+3. Create a super user `server/manage.py createsuperuser`
+4. Run your frontend and backend servers `server/manage.py runserver` & `npm run serve`
+5. Run the task processor `server/manage.py process_tasks`
+6. To refresh data every 5 mins (resource data) and 12 hours (object fields) run the cron jobs *(Only run this once and then end the cron job otherwise you will use up all the licenses we all share)*
+7. Create a new user through the user registration screen (remember you will need the code)
+8. Integrate Salesforce, zoom, slack and nylas
+9. Create your first zoom meeting and invite a user *(note we will use this meeting as your fake testable meeting in the future see below)*
+    
+
+
+### Setting up ngrok
+
+We use ngrok to direct traffic to localhost when developing locally, a number of our integrations do not allow redirects to localhost directly. 
+
+1. Download the [zip file](https://ngrok.com/download) 
+2. Unzip and copy to home directory 
+3. Install your authoken with this command: `ngrok authtoken <YOUR_AUTHTOKEN>`
+   
+`~/ngrok http [port]`
+
+If you have added your token you can initiate ngrok to a subdomain (note that ngrok is added to the list of allowed hosts in our settings.py)
+
+`~/ngrok http 8000 --subdomain thinknimble`
+
+## Staging Environment
+
+## Prod Environment 
