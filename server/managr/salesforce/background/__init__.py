@@ -542,13 +542,13 @@ def _process_create_new_resource(workflow_id, resource, *args):
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
     ).exclude(template__resource=slack_consts.FORM_RESOURCE_CONTACT)
-    sf = user.salesforce_account
     data = dict()
     for form in create_forms:
         data = {**data, **form.saved_data}
 
     attempts = 1
     while True:
+        sf = user.salesforce_account
         try:
 
             from managr.salesforce.adapter.routes import routes as adapter_routes

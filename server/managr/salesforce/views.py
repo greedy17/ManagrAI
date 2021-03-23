@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
 from rest_framework import (
     authentication,
     filters,
@@ -60,6 +61,13 @@ from .background import (
     emit_generate_form_template,
     emit_sync_sobject_picklist,
 )
+from managr.salesforce.adapter.exceptions import (
+    TokenExpired,
+    FieldValidationError,
+    RequiredFieldError,
+    SFQueryOffsetError,
+)
+
 from . import constants as sf_consts
 
 
@@ -194,3 +202,38 @@ class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         return SObjectPicklist.objects.for_user(self.request.user)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="refresh-stage",
+    )
+    def get_stage_picklist_values(self, request, *args, **kwargs):
+        user = self.request.user
+
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                res = sf.get_stage_picklist_values("Opportunity")
+                break
+            except TokenExpired:
+                if attempts >= 3:
+                    raise ValidationError()
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+
+        existing = SObjectPicklist.objects.filter(
+            picklist_for=res.picklist_for,
+            salesforce_account_id=res.salesforce_account,
+            salesforce_object="Opportunity",
+        ).first()
+        if existing:
+            serializer = SObjectPicklistSerializer(data=res.as_dict, instance=existing)
+        else:
+            serializer = SObjectPicklistSerializer(data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response()

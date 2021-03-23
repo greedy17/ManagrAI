@@ -69,6 +69,16 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
+  async getStagePicklistValues() {
+    // if the picklist values dont populate for some reason allow users to manually populate
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/refresh-stage/')
+      return res
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Picklist Values' })(e)
+    }
+  }
+
   async list({ filters = {}, pagination = {} } = {}) {
     // list method that works with collection manager for pagination
     let filtersMap = {

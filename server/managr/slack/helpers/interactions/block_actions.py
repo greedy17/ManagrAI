@@ -13,6 +13,11 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 
 
 logger = logging.getLogger("managr")
@@ -45,42 +50,23 @@ def process_meeting_review(payload, context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
-    view_id = res.json().get("view").get("id")
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    view_id = res["view"]["id"]
     workflow.slack_view = view_id
-    # meeting.slack_form = view_id
     workflow.save()
-
-
-@processor(required_context=["o", "u", "opp", "m"])
-def process_zoom_meeting_different_opportunity(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    access_token = (
-        Organization.objects.select_related("slack_integration")
-        .get(pk=context["o"])
-        .slack_integration.access_token
-    )
-
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    private_metadata.update(context)
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__DIFFERENT_OPPORTUNITY,
-            "title": {"type": "plain_text", "text": "Change Opportunity"},
-            "blocks": get_block_set("select_different_opportunity", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
 
 
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
@@ -89,7 +75,6 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
@@ -100,9 +85,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         # "view_id": view_id,
         "view": {
             "type": "modal",
-            # "callback_id": slack_const.ZOOM_MEETING__SAVE_CONTACTS,
             "title": {"type": "plain_text", "text": "Contacts"},
-            # "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
             "private_metadata": json.dumps(context),
         },
@@ -111,9 +94,22 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         data["view_id"] = payload["view"]["id"]
 
     # private_metadata.update(context)
-
-    res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor(required_context=["m"])
@@ -241,9 +237,22 @@ def process_edit_meeting_contact(payload, context):
 
     if submit_button_text:
         data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
-
-    res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_view = res["view"]["id"]
+    workflow.save()
 
 
 @processor(required_context=[])
@@ -322,10 +331,22 @@ def process_stage_selected(payload, context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-
-    res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
-    print(trigger_id)
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor(required_context=["w", "tracking_id"])
@@ -386,7 +407,23 @@ def process_update_search_or_create(payload, context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    res = slack_requests.generic_request(url, data, access_token=access_token)
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor(required_context=["w"])
@@ -421,8 +458,22 @@ def process_meeting_selected_resource(payload, context):
             "submit": {"type": "plain_text", "text": "Next"},
         },
     }
-    res = slack_requests.generic_request(url, data, access_token=access_token)
-    print(res.json())
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_view = res.get("view").get("id")
+    workflow.save()
 
 
 @processor()
@@ -442,13 +493,26 @@ def process_create_or_search_selected(payload, context):
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
+    try:
+        res = slack_requests.update_channel_message(
+            payload["channel"]["id"],
+            payload["message"]["ts"],
+            access_token,
+            block_set=[*previous_blocks, *block_sets],
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
-    res = slack_requests.update_channel_message(
-        payload["channel"]["id"],
-        payload["message"]["ts"],
-        access_token,
-        block_set=[*previous_blocks, *block_sets],
-    ).json()
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.meeting.save()
 
@@ -460,12 +524,25 @@ def process_restart_flow(payload, context):
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     ts, channel = workflow.slack_interaction.split("|")
-    res = slack_requests.update_channel_message(
-        channel,
-        ts,
-        access_token,
-        block_set=get_block_set("initial_meeting_interaction", context={"w": workflow_id}),
-    ).json()
+    try:
+        res = slack_requests.update_channel_message(
+            channel,
+            ts,
+            access_token,
+            block_set=get_block_set("initial_meeting_interaction", context={"w": workflow_id}),
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
@@ -477,12 +554,25 @@ def process_disregard_meeting_review(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-    res = slack_requests.update_channel_message(
-        payload["channel"]["id"],
-        payload["message"]["ts"],
-        access_token,
-        block_set=get_block_set("disregard_meeting_review", context={"w": workflow_id}),
-    ).json()
+    try:
+        res = slack_requests.update_channel_message(
+            payload["channel"]["id"],
+            payload["message"]["ts"],
+            access_token,
+            block_set=get_block_set("disregard_meeting_review", context={"w": workflow_id}),
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
 
@@ -503,8 +593,21 @@ def process_coming_soon(payload, context):
             "blocks": get_block_set("coming_soon_modal", {}),
         },
     }
-    res = slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
-    print(res.json())
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
 
 def handle_block_actions(payload):

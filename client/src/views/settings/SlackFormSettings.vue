@@ -51,17 +51,40 @@
             </div>
           </div>
 
-          <div class="box__footer">
-            <button
-              class="modal-container__box__button"
-              @click="
-                () => {
-                  $modal.hide('add-stage-modal'),
-                    addForm(this.selectedStage),
-                    toggleSelectedTab(`.${this.selectedStage}`)
-                }
-              "
-            >Select</button>
+          <div class="modal-container__box__footer">
+            <div>
+              <span class="user-message" v-if="!stages.length">
+                <small>Can't see your stages?</small>
+                <br />
+                Click below to try fetching them manually
+              </span>
+              <span class="user-message">
+                <small>Recently updated your stages?</small>
+                <br />
+                Click below to refresh them
+              </span>
+              <PulseLoadingSpinnerButton
+                @click="() => refreshFormStages()"
+                :loading="false"
+                class="primary-button"
+                text="Refresh"
+              />
+            </div>
+            <div>
+              <button
+                class="modal-container__box__button"
+                @click="
+                  () => {
+                    $modal.hide('add-stage-modal'),
+                      addForm(this.selectedStage),
+                      toggleSelectedTab(`.${this.selectedStage}`)
+                  }
+                "
+                :disabled="!this.selectedStage"
+              >
+                Select
+              </button>
+            </div>
           </div>
         </div>
         <div v-else>LOADING</div>
@@ -75,14 +98,16 @@
           1. Customize your Slack forms by picking from the fields on the left. Note required
           “Managr” fields have been preselected
         </div>
-        <div class="header__list__item">2. Please make sure to fill out all the tabs for all Objects</div>
+        <div class="header__list__item">
+          2. Please make sure to fill out all the tabs for all Objects
+        </div>
         <div class="header__list__item">
           3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
           selecting each Stage that is gated
         </div>
-        <div
-          class="header__list__item"
-        >4. Make sure to double check that all your required fields are on the form</div>
+        <div class="header__list__item">
+          4. Make sure to double check that all your required fields are on the form
+        </div>
       </div>
     </div>
     <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
@@ -109,12 +134,12 @@
               @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
               v-if="k.formType !== 'STAGE_GATING'"
             >
-              <div
-                v-if="k.resource !== 'Contact'"
-              >{{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}</div>
-              <div
-                v-else
-              >{{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}</div>
+              <div v-if="k.resource !== 'Contact'">
+                {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+              </div>
+              <div v-else>
+                {{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}
+              </div>
             </div>
 
             <div class="stage__container">
@@ -141,8 +166,12 @@
                     <div
                       class="stage__dropdown__stages__title"
                       @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
-                    >{{ form.stage }}</div>
-                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
+                    >
+                      {{ form.stage }}
+                    </div>
+                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
+                      x
+                    </div>
                   </div>
                 </div>
                 <div style="display: flex; justify-content: center;">
@@ -171,7 +200,9 @@
           </div>
         </div>
       </template>
-      <template v-else>We are currently generating your forms please check back in a few minutes</template>
+      <template v-else
+        >We are currently generating your forms please check back in a few minutes</template
+      >
     </div>
   </div>
 </template>
@@ -266,6 +297,23 @@ export default {
     },
   },
   methods: {
+    async refreshFormStages() {
+      try {
+        const res = await SObjectPicklist.api.getStagePicklistValues()
+
+        if (res.status == 200) {
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 2000,
+            message: 'Successfully Retrieved Picklist Values please refresh your page',
+          })
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingStages = false
+      }
+    },
     nextPage() {
       this.formFields.nextPage()
     },
@@ -479,6 +527,7 @@ export default {
 @import '@/styles/buttons';
 
 .container {
+  padding: 0 4rem;
 }
 .box-updated__header {
   &:hover {
@@ -542,11 +591,21 @@ export default {
 
     &__content {
       display: flex;
+
       justify-content: center;
+      min-height: 20rem;
     }
     &__button {
       @include primary-button();
       margin-top: 1rem;
+      width: 10rem;
+    }
+    &__footer {
+      display: flex;
+      padding: 0rem 1rem;
+
+      justify-content: space-between;
+      border-top: 2px solid $dark-green;
     }
   }
 }
@@ -650,6 +709,7 @@ export default {
     background-color: #f4f5f6;
     position: absolute;
     right: -7rem;
+
     z-index: 100;
 
     &__header {
