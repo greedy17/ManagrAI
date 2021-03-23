@@ -92,19 +92,34 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
+    user = zoom_account.user
     if zoom_account and not zoom_account.is_revoked:
         # emit the process
-        try:
-            meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-            meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
-        except TokenExpired:
-            zoom_account.regenerate_token()
-            return _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration)
-        except AccountSubscriptionLevel:
-            logger.info(
-                f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
-            )
-        meeting.original_duration = original_duration
+
+        while True:
+            attempts = 1
+            zoom_account = user.zoom_account
+            try:
+                meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
+                meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve meeeting data user zoom token is expired and we were unable to regenerate a new one {str(user.id)} email {user.email}"
+                    )
+                else:
+                    zoom_account.regenerate_token()
+                    attempts += 1
+            except AccountSubscriptionLevel:
+                logger.info(
+                    f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
+                )
+            meeting.original_duration = original_duration
+            logger.info(f"{meeting.original_duration}")
+            if meeting.original_duration < 0:
+                # zoom weired bug where instance meetings get a random -1324234234 negative big int
+                meeting.original_duration = 0
 
         #
         logger.info(f"    Got Meeting: {meeting} with ID: {meeting_uuid}")
