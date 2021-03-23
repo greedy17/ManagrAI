@@ -260,15 +260,10 @@ def process_zoom_meeting_attach_resource(payload, context):
         workflow.resource_id = str(resource.id)
         workflow.resource_type = meeting_resource
 
-        # there is a potential this may take longer than 3 seconds to complete
-        # in this case the form will show a timeout error but we will update the form when we are ready
-    # view_id = payload.get("view").get("id")
-    workflow.save()
+        workflow.save()
     ts, channel = workflow.slack_interaction.split("|")
     # clear old forms (except contact forms)
-
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-
     workflow.add_form(
         meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
     )
