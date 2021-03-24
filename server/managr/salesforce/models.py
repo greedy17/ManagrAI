@@ -262,6 +262,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def get_slack_options(self):
         # non sf fields are created with is_public = True and may take options directly
         if self.is_public and len(self.options):
+            options = self.options
+            if len(options) > 10:
+                options = options[:10]
+
             return list(
                 map(
                     lambda option: block_builders.option(option["label"], option["value"]),
@@ -321,8 +325,12 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_options(self):
+        values = self.values
+        if len(values) > 5 and self.picklist_for != "StageName":
+            # temporary hack do not limit stage name as we use this for stage gating forms
+            values = values[:5]
         return list(
-            map(lambda option: block_builders.option(option["label"], option["value"]), self.values)
+            map(lambda option: block_builders.option(option["label"], option["value"]), values)
         )
 
 
