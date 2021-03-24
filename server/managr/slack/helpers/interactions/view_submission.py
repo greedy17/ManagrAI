@@ -103,7 +103,7 @@ def process_stage_next_page(payload, context):
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "blocks": next_blocks,
                 "private_metadata": view["private_metadata"],
-                "callback_id": view.get("callback_id"),
+                "callback_id": context.get("callback_id"),
             },
         }
     return  # closes all views by default
@@ -283,6 +283,13 @@ def process_submit_resource_data(payload, context):
                 ),
             },
         }
+    # update the channel message to clear it
+    slack_requests.update_channel_message(
+        context.get("channel_id"),
+        context.get("ts"),
+        user.organization.slack_integration.access_token,
+        "Succesfully Updated",
+    )
     return {"response_action": "clear"}
 
 
