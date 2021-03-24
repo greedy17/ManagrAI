@@ -512,10 +512,18 @@ def _process_update_contacts(workflow_id, *args):
                 sf = user.salesforce_account
                 sf_adapter = sf.adapter_class
                 try:
-                    workflow.resource.add_contact_role(
-                        sf.access_token, sf.instance_url, form.resource_object.integration_id
+                    # check to see if it already has a contact role by checking linked_contacts
+                    is_linked = workflow.resource.contacts.filter(
+                        integration_id=form.resource_object.integration_id
+                    ).first()
+                    if not is_linked:
+                        workflow.resource.add_contact_role(
+                            sf.access_token, sf.instance_url, form.resource_object.integration_id
+                        )
+                        break
+                    return logger.info(
+                        f"Did not add contact role for contact with id {str(form.resource_object.id)} this contact already is attached"
                     )
-                    break
                 except TokenExpired:
                     if attempts >= 5:
                         logger.exception(
