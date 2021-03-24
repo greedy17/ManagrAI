@@ -19,6 +19,7 @@ from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
+from managr.slack.helpers.block_sets import get_block_set
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
@@ -341,48 +342,13 @@ def update_resource(request):
             )
         resource_type = command_params[0][0].upper() + command_params[0][1:]
 
-        resource_id = command_params[1]
-
-        route = model_routes.get(resource_type)
-
-        model_class = route["model"]
-        serializer_class = route["serializer"]
-
-        resource = model_class.objects.get(id=resource_id)
-
-        serializer = serializer_class(instance=resource)
-
-        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-
-        template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(Q(resource=resource_type, form_type="UPDATE",))
-            .first()
+        blocks = get_block_set(
+            "command_update_resource", {"resource_type": resource_type, "u": str(user.id)}
         )
-        if not template:
-
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry, we are still generating your forms, please try again soon.",
-                }
-            )
-
-        form = OrgCustomSlackFormInstance.objects.create(
-            user=user, template=template, resource_id=resource_id,
+        channel = user.slack_integration.channel
+        access_token = user.organization.slack_integration.access_token
+        slack_requests.send_channel_message(
+            channel, access_token, text=f"Select a {resource_type} to update", block_set=blocks
         )
-
-        return Response(
-            data={
-                "blocks": [
-                    block_builders.section_with_accessory_block(
-                        f"*{'hello'}*",
-                        block_builders.simple_image_block(
-                            "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif",
-                            "Loading...",
-                        ),
-                    )
-                ]
-            }
-        )
+        return Response()
 
