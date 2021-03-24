@@ -343,6 +343,7 @@ class MeetingReview(TimeStampModel):
     sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
+    # amount cannot be blank we are allowing blank to deal with django admin
     amount = models.DecimalField(
         max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
     )
