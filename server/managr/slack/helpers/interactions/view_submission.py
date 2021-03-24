@@ -94,7 +94,10 @@ def process_stage_next_page(payload, context):
         next_blocks = []
         for form in forms:
             next_blocks.extend(form.generate_form())
-
+        if context.get("form_type") == "CREATE":
+            callback_id = slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        else:
+            callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
         return {
             "response_action": "push",
             "view": {
@@ -103,7 +106,7 @@ def process_stage_next_page(payload, context):
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "blocks": next_blocks,
                 "private_metadata": view["private_metadata"],
-                "callback_id": context.get("callback_id"),
+                "callback_id": callback_id,
             },
         }
     return  # closes all views by default
@@ -302,9 +305,9 @@ def process_zoom_meeting_attach_resource(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     meeting_resource = context.get("resource")
     selected_action = context.get("action")
+    state = payload["view"]["state"]["values"]
 
     # get state - state contains the values based on the block_id
-    state = payload["view"]["state"]["values"]
 
     data = {
         "view_id": payload["view"]["id"],
@@ -325,14 +328,19 @@ def process_zoom_meeting_attach_resource(payload, context):
 
     elif selected_action == "CREATE":
         # this is a sync action
-        create_forms = workflow.forms.filter(
-            template__form_type__in=[
-                slack_const.FORM_TYPE_CREATE,
-                slack_const.FORM_TYPE_STAGE_GATING,
-            ]
+
+        stage_forms = workflow.forms.filter(
+            template__form_type=slack_const.FORM_TYPE_STAGE_GATING
         ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-        for form in create_forms:
-            form.save_form(state)
+        # if there are stage gating forms we need to save their data we already saved the main form's data
+        main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
+
+        if not len(stage_forms):
+            main_form.save_form(state)
+        else:
+            # assume we already saved the forms for create
+            for form in stage_forms:
+                form.save_form(state)
         try:
             resource = _process_create_new_resource.now(context.get("w"), meeting_resource)
 
