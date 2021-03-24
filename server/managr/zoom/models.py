@@ -402,12 +402,9 @@ class ZoomMeetingReview(MeetingReview):
 
         user = self.meeting.zoom_account.user
         sf_account = user.salesforce_account
-        stage_field = (
-            sf_account.object_fields.get("Opportunity", {}).get("fields", {}).get("StageName", None)
-        )
-        opts = []
-        if stage_field:
-            opts = stage_field.get("options", [])
+        stage_field = sf_account.picklist_values.filter(picklist_for="StageName").first()
+        opts = stage_field.values if stage_field else []
+
         # Check moving from any stage to another
         if self.prev_stage and self.stage:
             for index, stage in enumerate(opts):
@@ -438,14 +435,10 @@ class ZoomMeetingReview(MeetingReview):
             # fetch the picklist values and check ordering
             user = self.meeting.zoom_account.user
             sf_account = user.salesforce_account
-            forecast_field = (
-                sf_account.object_fields.get("Opportunity", {})
-                .get("fields", {})
-                .get("ForecastCategoryName", None)
-            )
-            opts = []
-            if forecast_field:
-                opts = forecast_field.get("options", [])
+            forecast_field = sf_account.picklist_values.filter(
+                picklist_for="ForecastCategoryName"
+            ).first()
+            opts = forecast_field.values if forecast_field else []
 
             for index, forecast in enumerate(opts):
                 if self.prev_forecast == forecast["value"]:
