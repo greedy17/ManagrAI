@@ -29,7 +29,7 @@ from managr.api import constants as api_consts
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
-from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview
+from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview, ZoomMeetingReview
 from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
@@ -65,8 +65,8 @@ def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
     return _kick_off_slack_interaction(user_id, managr_meeting_id)
 
 
-def emit_save_meeting_review_data(managr_meeting_id, data):
-    return _save_meeting_review_data(managr_meeting_id, data)
+def emit_save_meeting_review(managr_meeting_id, data):
+    return _save_meeting_review(managr_meeting_id, data)
 
 
 @background()
@@ -346,31 +346,41 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
 
 
 @background(schedule=0)
-def _save_meeting_review_data(managr_meeting_id, data):
-    data = json.loads(data)
+def _save_meeting_review(workflow_id):
 
-    meeting = ZoomMeeting.objects.filter(id=managr_meeting_id).first()
-    meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
-    meeting.is_closed = True
-    meeting.save()
-    if not hasattr(meeting, "meeting_review"):
-        date = data.get("close_date", None)
-        if date:
-            ## make it aware by adding utc
-            date = datetime.strptime(date, "%Y-%m-%d")
-            date = pytz.utc.localize(date)
-        obj = dict()
-        obj["meeting"] = meeting
-        obj["meeting_type"] = data.get("meeting_type", None)
-        obj["forecast_category"] = data.get("forecast_category", None)
-        obj["stage"] = data.get("stage", None)
-        obj["description"] = data.get("description", None)
-        obj["next_step"] = data.get("next_step", None)
-        obj["close_date"] = date
-        obj["sentiment"] = data.get("sentiment", None)
-        obj["amount"] = data.get("amount", None)
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # get the create form
+    meeting = workflow.meeting
+    print("before function")
+    if not hasattr(meeting, "zoom_meeting_review"):
 
-        return MeetingReview.objects.create(**obj)
+        print(meeting)
+        # format data appropriately
+        review_form = workflow.forms.filter(
+            template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
+        ).first()
 
+        print(review_form)
+        # get data
+        form_data = review_form.saved_data
+        # format data appropriately
+        data = {
+            "resource_type": workflow.resource_type,
+            "resource_id": workflow.resource_id,
+            "forecast_category": form_data.get("ForcastCategory", ""),
+            "stage": form_data.get("StageName", ""),
+            "meeting_comments": form_data.get("meeting_comments", ""),
+            "meeting_type": form_data.get("meeting_type", ""),
+            "meeting_sentiment": form_data.get("meeting_sentiment", ""),
+            "amount": form_data.get("Amount", None),
+            "close_date": pytz.utc.localize(
+                datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
+            )
+            if form_data.get("CloseDate", None) not in ["", None]
+            else None,
+            "next_step": form_data.get("NextStep", ""),
+        }
 
-# same method as _save_meeting_review_data but not as a task
+        return ZoomMeetingReview.objects.create(**data)
+

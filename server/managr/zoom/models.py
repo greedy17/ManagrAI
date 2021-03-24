@@ -340,7 +340,7 @@ class MeetingReview(TimeStampModel):
     forecast_category = models.CharField(blank=True, null=True, max_length=255)
     stage = models.CharField(blank=True, null=True, max_length=255,)
     meeting_comments = models.TextField(blank=True, null=True, max_length=255)
-    sentiment = models.CharField(
+    meeting_sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
     # amount cannot be blank we are allowing blank to deal with django admin
@@ -536,27 +536,23 @@ class ZoomMeetingReview(MeetingReview):
         return 0
 
     def save(self, *args, **kwargs):
-        opportunity = self.meeting.opportunity
+        resource_type = self.meeting.workflow.resource_type
 
-        # add conditional so that below are only checked if it is an oppotunity
-        # if meeting.workflow.resource_type == 'Opportunity'
+        if resource_type == "Opportunity":
+            opportunity = self.meeting.workflow.resource
+            if self.forecast_category:
+                current_forecast = opportunity.forecast_category
+                if current_forecast:
+                    self.prev_forecast = current_forecast
 
-        # sf has forceast_category and forecast_categoy_name
-
-        # fill previous values if the
-        if self.forecast_category:
-            current_forecast = opportunity.forecast_category
-            if current_forecast:
-                self.prev_forecast = current_forecast
-
-        if self.stage and opportunity.stage:
-            self.prev_stage = opportunity.stage
-            # update stage
-        # Update the opportunity with the new data
-        if self.close_date:
-            # Override previous close date with whatever is on the Opportunity
-            if opportunity.close_date:
-                self.prev_close_date = opportunity.close_date
-        if self.amount:
-            self.prev_amount = opportunity.amount
+            if self.stage and opportunity.stage:
+                self.prev_stage = opportunity.stage
+                # update stage
+            # Update the opportunity with the new data
+            if self.close_date:
+                # Override previous close date with whatever is on the Opportunity
+                if opportunity.close_date:
+                    self.prev_close_date = opportunity.close_date
+            if self.amount:
+                self.prev_amount = opportunity.amount
         return super(ZoomMeetingReview, self).save(*args, **kwargs)

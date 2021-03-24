@@ -24,11 +24,10 @@ from managr.slack.helpers.utils import action_with_params, NO_OP, processor, blo
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter
 from managr.zoom import constants as zoom_consts
-from managr.zoom.background import _save_meeting_review_data
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import _process_create_new_resource
-from managr.zoom.background import _save_meeting_review_data
+from managr.zoom.background import _save_meeting_review
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -186,7 +185,7 @@ def process_zoom_meeting_data(payload, context):
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
-    _save_meeting_review_data.now(str(workflow.id))    
+    _save_meeting_review.now(str(workflow.id))
     return {"response_action": "clear"}
 
 
