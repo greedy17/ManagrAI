@@ -46,5 +46,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "success_modal": common_blocksets.success_modal_block_set,
         "command_update_resource": command_views_blocksets.command_update_resource_interaction,
         "update_modal_block_set": command_views_blocksets.update_modal_block_set,
+        "command_meeting_summary": command_views_blocksets.command_meeting_summary,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

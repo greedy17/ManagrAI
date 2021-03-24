@@ -34,6 +34,19 @@ def command_update_resource_interaction(context):
     ]
 
 
+@block_set(required_context=["resource_type", "u"])
+def command_meeting_summary(context):
+    # form = OrgCustomSlackFormInstances.objects.get(id=context.get("f"))
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an {context.get('resource_type')}*",
+            f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
+            block_id="select_existing",
+        ),
+    ]
+
+
 @block_set(required_context=["form"])
 def update_modal_block_set(context, *args, **kwargs):
     """ Shows a modal to update a resource """

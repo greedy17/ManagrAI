@@ -5,8 +5,8 @@ from datetime import datetime
 import logging
 
 
-from rest_framework.response import Response
 from django.http import JsonResponse
+from rest_framework.response import Response
 
 from managr.api.decorators import log_all_exceptions
 from managr.salesforce.adapter.exceptions import FieldValidationError, RequiredFieldError
@@ -28,6 +28,7 @@ from managr.zoom.background import _save_meeting_review_data
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import _process_create_new_resource
+from managr.zoom.background import _save_meeting_review_data
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -185,6 +186,7 @@ def process_zoom_meeting_data(payload, context):
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
+    _save_meeting_review_data.now(str(workflow.id))    
     return {"response_action": "clear"}
 
 
