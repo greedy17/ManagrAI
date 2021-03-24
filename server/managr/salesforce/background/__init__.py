@@ -100,6 +100,7 @@ def emit_generate_form_template(user_id):
 
 def emit_save_meeting_review(workflow_id):
     # currently only creating zoom meeting reviews
+    # ignore this, and call _save_meeting_review directly
     return _save_meeting_review(workflow_id)
 
 
@@ -596,6 +597,8 @@ def _process_create_new_resource(workflow_id, resource, *args):
 @background(schedule=0)
 @log_all_exceptions
 def _save_meeting_review(workflow_id):
+    # _save_meeting_review.now(workflow_id)/ .now makes it happen now, not a backgound function
+
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     # get the create form

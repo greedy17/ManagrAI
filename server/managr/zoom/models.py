@@ -545,6 +545,11 @@ class ZoomMeetingReview(MeetingReview):
     def save(self, *args, **kwargs):
         opportunity = self.meeting.opportunity
 
+        # add conditional so that below are only checked if it is an oppotunity
+        # if meeting.workflow.resource_type == 'Opportunity'
+
+        # sf has forceast_category and forecast_categoy_name
+
         # fill previous values if the
         if self.forecast_category:
             current_forecast = opportunity.forecast_category
@@ -561,4 +566,4 @@ class ZoomMeetingReview(MeetingReview):
                 self.prev_close_date = opportunity.close_date
         if self.amount:
             self.prev_amount = opportunity.amount
-        return super(MeetingReview, self).save(*args, **kwargs)
+        return super(ZoomMeetingReview, self).save(*args, **kwargs)
