@@ -327,13 +327,10 @@ class ZoomMeeting(TimeStampModel):
 
 
 class MeetingReview(TimeStampModel):
-    meeting = models.OneToOneField(
-        "ZoomMeeting",
-        on_delete=models.CASCADE,
-        related_name="meeting_review",
-        blank=True,
-        null=True,
-    )
+    """ Parent Model in preparation for other meeting types (aka not zoom) """
+
+    resource_type = models.CharField(blank=True, max_length=255)
+    resource_id = models.CharField(blank=True, max_length=255)
     meeting_type = models.CharField(
         blank=True,
         null=True,
@@ -347,12 +344,10 @@ class MeetingReview(TimeStampModel):
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
     amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is editable",
-        null=True,
-        blank=True,
+        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
+    )
+    next_step = models.TextField(
+        blank=True, help_text="If user uses next step field this will be saved"
     )
     close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
@@ -367,18 +362,26 @@ class MeetingReview(TimeStampModel):
     prev_close_date = models.DateField(null=True, blank=True)
 
     prev_amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is editable",
-        null=True,
-        blank=True,
+        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
     )
-    custom_data = JSONField(
-        default=dict,
+
+    @property
+    def resource(self):
+        from managr.salesforce.routes import routes
+
+        model_route = routes.get(self.resource_type, None)
+        if model_route and self.resource_id:
+            return model_route["model"].objects.get(id=self.resource_id)
+        return None
+
+
+class ZoomMeetingReview(MeetingReview):
+    meeting = models.OneToOneField(
+        "ZoomMeeting",
+        on_delete=models.CASCADE,
+        related_name="zoom_meeting_review",
+        blank=True,
         null=True,
-        help_text="All data that is added to a form is saved as a json object for update",
-        max_length=500,
     )
 
     @property

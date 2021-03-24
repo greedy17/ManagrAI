@@ -98,6 +98,11 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
+def emit_save_meeting_review(workflow_id):
+    # currently only creating zoom meeting reviews
+    return _save_meeting_review(workflow_id)
+
+
 # SF Resource Sync Tasks
 
 
@@ -587,3 +592,28 @@ def _process_create_new_resource(workflow_id, resource, *args):
 
     return
 
+
+@background(schedule=0)
+@log_all_exceptions
+def _save_meeting_review(workflow_id):
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # get the create form
+    meeting = workflow.meeting
+    # format data appropriately
+    review_form = forms.filter(template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW).first()
+    # get data
+    form_data = review_form.saved_data
+    # format data appropriately
+    data = {
+        "resource_type": workflow.resource_type,
+        "resource_id": workflow.resource_id,
+        "forecast_category": form_data.get("ForcastCategory", ""),
+        "stage": form_data.get("StageName", ""),
+        "meeting_comments": form_data.get("meeting_comments", ""),
+        "meeting_type": form_data.get("meeting_type", ""),
+        "meeting_sentiment": form_data.get("meeting_sentiment", ""),
+        "amount": form_data.get("Amount", None),
+        "close_data": form_data.get("CloseDate", None),
+        "next_step": form_data.get("NextStep", ""),
+    }
