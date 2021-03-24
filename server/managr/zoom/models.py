@@ -11,6 +11,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 
 from background_task.models import Task
 
+from managr.zoom.utils import score_meeting
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
 from managr.organization.models import ActionChoice
@@ -386,6 +387,11 @@ class ZoomMeetingReview(MeetingReview):
     )
 
     @property
+    def meeting_review_summary(self):
+        meeting_score, score_components = score_meeting(self.meeting)
+        return score_components
+
+    @property
     def meeting_resource(self):
         """ determines whether this is a meeting review for a meeting with an opp or an acct"""
         return self.meeting.workflow.meeting_resource
@@ -473,6 +479,11 @@ class ZoomMeetingReview(MeetingReview):
         return zoom_consts.MEETING_REVIEW_UNCHANGED
 
     @property
+    def amount_progress(self):
+        """ amount progress here"""
+        return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
     def meeting_type_string(self):
         if self.meeting.type == 1:
             return "instant"
@@ -494,7 +505,7 @@ class ZoomMeetingReview(MeetingReview):
             elif duration >= 20 and duration < 30:
                 return "instant_over_20"
 
-        if self.meeting_type_string == "planned":
+        if self.meeting_type_string == "planned" and original_duration:
             diff = duration - original_duration
 
             if diff >= 15:

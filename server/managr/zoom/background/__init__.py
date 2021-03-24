@@ -69,6 +69,10 @@ def emit_save_meeting_review(managr_meeting_id, data):
     return _save_meeting_review(managr_meeting_id, data)
 
 
+def emit_send_meeting_summary(workflow_id):
+    return _send_meeting_summary(workflow_id)
+
+
 @background()
 def _refresh_zoom_token(zoom_account_id):
     zoom_account = ZoomAuthAccount.objects.filter(id=zoom_account_id).first()
@@ -364,11 +368,17 @@ def _save_meeting_review(workflow_id):
         print(review_form)
         # get data
         form_data = review_form.saved_data
+        forecast_category = ""
+        if form_data.get("ForecastCategoryName", None) not in ["", None]:
+            forecast_category = form_data.get("ForecastCategoryName")
+        elif form_data.get("ForecastCategory", None) not in ["", None]:
+            forecast_category = form_data.get("ForecastCategoryName")
         # format data appropriately
         data = {
+            "meeting": meeting,
             "resource_type": workflow.resource_type,
             "resource_id": workflow.resource_id,
-            "forecast_category": form_data.get("ForcastCategory", ""),
+            "forecast_category": forecast_category,
             "stage": form_data.get("StageName", ""),
             "meeting_comments": form_data.get("meeting_comments", ""),
             "meeting_type": form_data.get("meeting_type", ""),
@@ -383,4 +393,49 @@ def _save_meeting_review(workflow_id):
         }
 
         return ZoomMeetingReview.objects.create(**data)
+
+
+@background(schedule=0)
+def _send_meeting_summary(workflow_id):
+
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    slack_access_token = user.organization.slack_integration.access_token
+
+    user_list = (
+        user.organization.users.filter(user_level="Manager")
+        .exclude(id=user.id)
+        .select_related("slack_integration")
+    )
+    try:
+
+        slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            slack_access_token,
+            text=f"Meeting Review Summary For {user.email} from meeting",
+            block_set=get_block_set("meeting_summary", {"w": workflow_id}),
+        )
+
+        for u in user_list:
+            if hasattr(u,'slack_integration'):
+                slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Meeting Review Summary For {user.email} from meeting",
+                    block_set=get_block_set("meeting_summary", {"w": workflow_id}),
+                )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate  Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+
+    return
 
