@@ -140,6 +140,27 @@ def multi_static_select(
     return block
 
 
+def multi_external_select(
+    label, action_id, initial_options=None, placeholder="Select", block_id=None, min_query_length=0,
+):
+
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"{label}"},
+        "block_id": block_id,
+        "accessory": {
+            "type": "multi_external_select",
+            "placeholder": {"type": "plain_text", "text": placeholder},
+            "action_id": action_id,
+            "min_query_length": min_query_length,
+        },
+    }
+
+    return block
+
+
 def datepicker(
     initial_date=None,
     action_id=None,
