@@ -134,7 +134,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param
             action_id = None
-            if self.api_name == "StageName":
+            if self.api_name == "StageName" and kwargs.get("workflow") not in ["", None]:
                 action_id = (
                     slack_consts.ZOOM_MEETING__STAGE_SELECTED
                     + f"?w={str(kwargs.get('workflow').id)}"

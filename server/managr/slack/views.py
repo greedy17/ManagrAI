@@ -1,5 +1,7 @@
 import json
 
+from django.db.models import Sum, Avg, Q
+
 from rest_framework import (
     permissions,
     status,
@@ -16,11 +18,21 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
+from managr.slack.helpers import block_builders
+from managr.slack.helpers.block_sets import get_block_set
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
+
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
+from managr.salesforce.routes import routes as model_routes
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -291,3 +303,52 @@ class SlackFormsViewSet(
         instance.save()
 
         return Response(serializer.data)
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def update_resource(request):
+    # list of accepted commands for this fake endpoint
+    allowed_commands = ["opportunity", "account", "lead", "contact"]
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = []
+    resource_type = None
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        resource_type = command_params[0][0].upper() + command_params[0][1:]
+
+        blocks = get_block_set(
+            "command_update_resource", {"resource_type": resource_type, "u": str(user.id)}
+        )
+        channel = user.slack_integration.channel
+        access_token = user.organization.slack_integration.access_token
+        slack_requests.send_channel_message(
+            channel, access_token, text=f"Select a {resource_type} to update", block_set=blocks
+        )
+        return Response()
+
