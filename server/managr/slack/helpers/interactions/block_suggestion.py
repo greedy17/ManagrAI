@@ -10,6 +10,7 @@ from managr.salesforce import constants as sf_consts
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
+from managr.salesforce.models import SObjectPicklist
 
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
@@ -65,6 +66,26 @@ def process_get_local_resource_options(payload, context):
                 for l in user.organization.action_choices.filter(title__icontains=value)
             ],
         }
+
+
+@processor(required_context=["u", "resource"])
+def process_get_picklist_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    resource = context.get("resource_type")
+    picklist_for = context.get("picklist_for")
+    picklist = SObjectPicklist.objects.filter(
+        salesforce_account=user.salesforce_account,
+        picklist_for=picklist_for,
+        salesforce_object=resource,
+    ).first()
+    if picklist:
+        values = picklist.get_slack_options
+        if len(values > 10):
+            return values[:10]
+    elif not picklist and not len(values):
+        logger.exception(f"No values found for picklist {picklist_for}")
+        return None
 
 
 @processor(required_context=["u", "relationship", "fields"])
