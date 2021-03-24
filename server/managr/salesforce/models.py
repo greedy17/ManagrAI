@@ -156,9 +156,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     ),
                     block_id=self.api_name,
                 )
-            else:
-                initial_option = (
-                    dict(
+            elif self.is_public:
+                block = block_builders.static_select(
+                    f"*{self.reference_display_label}*",
+                    self.get_slack_options,
+                    initial_option=dict(
                         *map(
                             lambda value: block_builders.option(
                                 value["text"]["text"], value["value"]
@@ -168,9 +170,29 @@ class SObjectField(TimeStampModel, IntegrationModel):
                             ),
                         ),
                     ),
+                    block_id=self.api_name,
                 )
+
+            else:
+                initial_option = None
+                if value:
+                    initial_option = (
+                        dict(
+                            *map(
+                                lambda value: block_builders.option(
+                                    value["text"]["text"], value["value"]
+                                ),
+                                filter(
+                                    lambda opt: opt.get("value", None) == value,
+                                    self.get_slack_options,
+                                ),
+                            ),
+                        ),
+                    )
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&picklist_for={self.picklist_for}&resource_type={self.salesforce_object}"
+                action_query = (
+                    f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+                )
                 block = block_builders.external_select(
                     f"*{self.reference_display_label}*",
                     action_query,
@@ -216,9 +238,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
                         self.get_slack_options,
                     )
                 )
-            return block_builders.multi_static_select(
+            user_id = str(self.salesforce_account.user.id)
+            action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+            return block_builders.multi_external_select(
                 f"*{self.reference_display_label}*",
-                self.picklist_options.as_slack_options,
+                action_query,
                 initial_options=initial_options,
                 block_id=self.api_name,
             )
@@ -286,7 +310,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def get_slack_options(self):
         # non sf fields are created with is_public = True and may take options directly
         if self.is_public and len(self.options):
-            options = self.options
+
             return list(
                 map(
                     lambda option: block_builders.option(option["label"], option["value"]),

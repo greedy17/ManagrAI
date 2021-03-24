@@ -68,24 +68,22 @@ def process_get_local_resource_options(payload, context):
         }
 
 
-@processor(required_context=["u", "resource"])
+@processor(required_context=["u", "field"])
 def process_get_picklist_options(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    resource = context.get("resource_type")
-    picklist_for = context.get("picklist_for")
-    picklist = SObjectPicklist.objects.filter(
-        salesforce_account=user.salesforce_account,
-        picklist_for=picklist_for,
-        salesforce_object=resource,
-    ).first()
-    if picklist:
-        values = picklist.get_slack_options
-        if len(values > 10):
-            return values[:10]
-    elif not picklist and not len(values):
-        logger.exception(f"No values found for picklist {picklist_for}")
-        return None
+    field = user.salesforce_account.object_fields.filter(id=context.get("field")).first()
+    options = field.get_slack_options
+    if not len(options):
+        logger.exception(f"No values found for picklist {field.api_name}")
+        return {"options": []}
+    if value and len(value):
+        options = list(filter(lambda opt: value in opt["value"].lower(), options))
+
+    if len(options) and len(options) > 30:
+        return {"options": options[:30]}
+    else:
+        return {"options": options}
 
 
 @processor(required_context=["u", "relationship", "fields"])
@@ -127,6 +125,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
+        slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)
