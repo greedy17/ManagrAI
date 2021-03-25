@@ -349,6 +349,15 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             workflow.save()
 
 
+def to_float(amount):
+    if amount in ["", None]:
+        return None
+    try:
+        return "{:.2f}".format(float(amount))
+    except ValueError:
+        return None
+
+
 @background(schedule=0)
 def _save_meeting_review(workflow_id):
 
@@ -356,23 +365,22 @@ def _save_meeting_review(workflow_id):
     user = workflow.user
     # get the create form
     meeting = workflow.meeting
-    print("before function")
+
     if not hasattr(meeting, "zoom_meeting_review"):
 
-        print(meeting)
         # format data appropriately
         review_form = workflow.forms.filter(
             template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
         ).first()
 
-        print(review_form)
+        print(review_form.__dict__)
         # get data
         form_data = review_form.saved_data
         forecast_category = ""
         if form_data.get("ForecastCategoryName", None) not in ["", None]:
             forecast_category = form_data.get("ForecastCategoryName")
         elif form_data.get("ForecastCategory", None) not in ["", None]:
-            forecast_category = form_data.get("ForecastCategoryName")
+            forecast_category = form_data.get("ForecastCategory")
         # format data appropriately
         data = {
             "meeting": meeting,
@@ -383,7 +391,7 @@ def _save_meeting_review(workflow_id):
             "meeting_comments": form_data.get("meeting_comments", ""),
             "meeting_type": form_data.get("meeting_type", ""),
             "meeting_sentiment": form_data.get("meeting_sentiment", ""),
-            "amount": form_data.get("Amount", None),
+            "amount": to_float(form_data.get("Amount", None)),
             "close_date": pytz.utc.localize(
                 datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
             )
@@ -397,6 +405,7 @@ def _save_meeting_review(workflow_id):
 
 @background(schedule=0)
 def _send_meeting_summary(workflow_id):
+    print("here")
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -417,7 +426,7 @@ def _send_meeting_summary(workflow_id):
         )
 
         for u in user_list:
-            if hasattr(u,'slack_integration'):
+            if hasattr(u, "slack_integration"):
                 slack_requests.send_channel_message(
                     u.slack_integration.channel,
                     slack_access_token,

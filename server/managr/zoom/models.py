@@ -480,7 +480,21 @@ class ZoomMeetingReview(MeetingReview):
 
     @property
     def amount_progress(self):
-        """ amount progress here"""
+        if not self.prev_amount and not self.amount:
+            return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+        if not self.prev_amount and self.amount:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        if self.prev_amount and not self.amount:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        if self.prev_amount > self.amount:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        elif self.prev_amount < self.amount:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
         return zoom_consts.MEETING_REVIEW_UNCHANGED
 
     @property

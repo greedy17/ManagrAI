@@ -102,6 +102,20 @@ def meeting_score_description_block_set(context):
     return obj
 
 
+# @block_set(required_context=["score_paragraph"])
+# def meeting_score_description_block_set(context):
+
+#     # slack mentions format = <@slack_id>
+
+#     score_paragraph = context.get("score_paragraph")
+#     obj = {
+#         "type": "section",
+#         "text": {"type": "mrkdwn", "text": f"{score_paragraph}",},
+#     }
+
+#     return obj
+
+
 @block_set(required_context=["m"])
 def meeting_review_score(context):
     # Bruno created decorator required context l= lead, u= user m=message

@@ -103,19 +103,19 @@ SCORE_LOOKUP = {
             "type": "amount",
             "points": 5,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast close date improved. It is now: {new_amount}",
+            "message_tpl": "The opportunity's closing amount has increased. It is now: ${new_amount}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "amount",
             "points": 5,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast close date moved back. It is now: {new_amount}",
+            "message_tpl": "The opportunity's closing amount has decreased. It is now: ${new_amount}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "amount",
             "points": 0,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast close date didn't change.",
+            "message_tpl": "The opportunity's closing amount didn't change.",
         },
     },
     "attendance": {
@@ -218,11 +218,12 @@ class ScoreComponent:
         # HACK: Provide general-purpose context to the formatter
         new_stage_name = ""
         new_close_date = ""
+        new_amount = ""
         if self.meeting.zoom_meeting_review.stage:
             new_stage_name = self.meeting.zoom_meeting_review.stage
         if self.meeting.zoom_meeting_review.close_date:
             new_close_date = self.meeting.zoom_meeting_review.close_date.strftime("%m/%d/%Y")
-        if self.amount:
+        if self.meeting.zoom_meeting_review.amount:
             new_amount = self.meeting.zoom_meeting_review.amount
         # END HACK
 
@@ -262,7 +263,7 @@ def score_meeting(meeting):
         close_date_progress = zoom_meeting_review.close_date_progress
         participant_count_weighted = zoom_meeting_review.participant_count_weighted
         duration_score = zoom_meeting_review.duration_score
-        amount_progress = zoom_meeting_review.amount_progressed
+        amount_progress = zoom_meeting_review.amount_progress
 
         # Participation is treated differently, because it is a "raw" score.
         participation_score = zoom_meeting_review.participation_score

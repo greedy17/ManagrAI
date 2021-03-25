@@ -587,6 +587,10 @@ def meeting_summary_blockset(context):
     )
 
     blocks = [
+        block_builders.simple_section(
+            f"*Meeting Topic: {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
+            "mrkdwn",
+        ),
         block_builders.simple_section(f"*Meeting Type:*  {review.meeting_type}", "mrkdwn",),
         block_builders.simple_section(f"*Meeting Date:*  {formatted_start}", "mrkdwn",),
     ]
@@ -596,6 +600,7 @@ def meeting_summary_blockset(context):
     close_date_component = list(filter(lambda comp: comp.type == "close_date", summary))
     duration_component = list(filter(lambda comp: comp.type == "duration", summary))
     attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
+    amount_component = list(filter(lambda comp: comp.type == "amount", summary))
 
     blocks.append(
         block_builders.simple_section(
@@ -604,10 +609,16 @@ def meeting_summary_blockset(context):
     )
     blocks.append(
         block_builders.simple_section(
-            f"*Forcast:* {forecast_component[0].rendered_message}", "mrkdwn",
+            f"*Forecast:* {forecast_component[0].rendered_message}", "mrkdwn",
         )
     )
     # amount blockset
+    blocks.append(
+        block_builders.simple_section(
+            f"*Amount:* {amount_component[0].rendered_message}", "mrkdwn",
+        )
+    )
+
     blocks.append(
         block_builders.simple_section(
             f"*Close Date:* {close_date_component[0].rendered_message}", "mrkdwn",
