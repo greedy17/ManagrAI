@@ -93,6 +93,8 @@ Here are the steps to get you started:
 
 We use ngrok to direct traffic to localhost when developing locally, a number of our integrations do not allow redirects to localhost directly. 
 
+*Please Note Only One user can be using ngrok forwarded to the same subdomain at a time*
+
 1. Download the [zip file](https://ngrok.com/download) 
 2. Unzip and copy to home directory 
 3. Install your authoken with this command: `ngrok authtoken <YOUR_AUTHTOKEN>`
@@ -102,6 +104,8 @@ We use ngrok to direct traffic to localhost when developing locally, a number of
 If you have added your token you can initiate ngrok to a subdomain (note that ngrok is added to the list of allowed hosts in our settings.py)
 
 `~/ngrok http 8000 --subdomain thinknimble`
+
+*Please Note Only One user can be using ngrok forwarded to the same subdomain at a time*
 
 ## Staging Environment
 
