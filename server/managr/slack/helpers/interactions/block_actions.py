@@ -686,7 +686,7 @@ def process_show_update_resource_form(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-            "title": {"type": "plain_text", "text": "Here"},
+            "title": {"type": "plain_text", "text": "Update"},
             "blocks": block_set,
             "private_metadata": json.dumps(private_metadata),
             "submit": {"type": "plain_text", "text": "Update"},
