@@ -165,6 +165,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
         sf = user.salesforce_account
         try:
             res = sf.list_resource_data(resource, offset, limit=limit)
+            logger(f"Pulled total {len(res)} from request for {resource}")
             break
         except TokenExpired:
             if attempts >= 5:
