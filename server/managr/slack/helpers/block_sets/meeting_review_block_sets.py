@@ -626,7 +626,7 @@ def meeting_summary_blockset(context):
     )
 
     if review.next_step not in ["", None]:
-        blocks.append(block_builders.simple_section(f"*Next Step:* {review.next_step}"))
+        blocks.append(block_builders.simple_section(f"*Next Step:* {review.next_step}", "mrkdwn"))
 
     blocks.append(
         block_builders.simple_section(

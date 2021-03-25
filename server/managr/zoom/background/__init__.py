@@ -373,7 +373,6 @@ def _save_meeting_review(workflow_id):
             template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
         ).first()
 
-        print(review_form.__dict__)
         # get data
         form_data = review_form.saved_data
         forecast_category = ""
@@ -405,7 +404,6 @@ def _save_meeting_review(workflow_id):
 
 @background(schedule=0)
 def _send_meeting_summary(workflow_id):
-    print("here")
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
