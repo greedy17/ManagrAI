@@ -81,26 +81,22 @@ class CustomAPIException:
             message = f"Invalid Blocks {'------'.join(blocks)}"
             logger.error(f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}")
             raise InvalidBlocksException(message)
-            # this error is a malformced query error we should log this (most likely from relationship feilds)
         elif self.code == 200 and self.param == "invalid_blocks_format":
-            # find the block_indexes
             logger.error(
-                f"{api_consts.SLACK_ERROR} An error occured building blocks {self.message}"
+                f"{api_consts.SLACK_ERROR} An error occured building blocks because of an invalid format"
             )
             raise InvalidBlocksFormatException(message)
-            # this error is a malformced query error we should log this (most likely from relationship feilds)
         elif self.code == 200 and self.param == "invalid_arguments":
-            # we may not have come accross this error yet
 
-            raise InvalidArgumentsException(f"{api_consts.SLACK_ERROR} ---{self.message}")
-        elif self.code == 200 and self.param:
-            # we may not have come accross this error yet
-
-            raise UnHandeledBlocksException(f"{api_consts.SLACK_ERROR} ---{self.message}")
-
+            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
+            raise InvalidArgumentsException(
+                f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}"
+            )
         else:
-            raise ValidationError(
-                {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
+            # we may not have come accross this error yet
+            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
+            raise UnHandeledBlocksException(
+                f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}"
             )
 
     def _extract_block(self, error):
@@ -109,6 +105,4 @@ class CustomAPIException:
         if matches:
             block_index = int(error[matches.end() + 8])
             return f"{error[:matches.start()]} on block {self.blocks[block_index]}"
-        return None
-
-        return
+        return [error]
