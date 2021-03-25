@@ -127,13 +127,20 @@
               </div>
             </div>
           </div>
-          <input
-            v-if="field.referenceDisplayLabel === 'Meeting Type'"
-            placeholder="Enter Meeting Type"
-            class="meeting-type"
-            v-model="meetingType"
-          />
-          <div v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length ">
+          <div style="display: flex; align-items: center;">
+            <input
+              v-if="field.referenceDisplayLabel === 'Meeting Type'"
+              placeholder="Enter Meeting Type"
+              class="meeting-type"
+              v-model="meetingType"
+              @keypress="updateMeeting"
+            />
+            <small v-if="meetingType.length" style="margin-left: 1rem;">Press Enter to Save</small>
+          </div>
+          <div
+            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length "
+            class="meeting-type__list"
+          >
             <small>Meeting Types:</small>
             <br />
 
@@ -264,11 +271,14 @@ export default {
     },
   },
   created() {
-    const action = ActionChoice.api.list({}).then(res => {
-      this.actionChoices = res.results
-    })
+    this.getActionChoices()
   },
   methods: {
+    getActionChoices() {
+      const action = ActionChoice.api.list({}).then(res => {
+        this.actionChoices = res.results
+      })
+    },
     nextPage() {
       this.formFields.nextPage()
     },
@@ -346,33 +356,42 @@ export default {
       // Apply update to the view model
       this.addedFields = newFields
     },
-    async onSave() {
-      if (
-        (this.resource == 'Opportunity' || this.resource == 'Account') &&
-        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
-      ) {
-        if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$Alert.alert({
-            type: 'error',
-            message: 'Please enter a Meeting Type',
-            timeout: 2000,
-          })
-          return
-        } else {
-          const obj = {
-            title: this.meetingType,
-            organization: this.$store.state.user.organization,
-          }
 
-          await ActionChoice.api.create(obj).then(res => {
+    async updateMeeting(e) {
+      if (e.keyCode == 13) {
+        if (
+          (this.resource == 'Opportunity' || this.resource == 'Account') &&
+          this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+        ) {
+          if (!this.meetingType.length && !this.actionChoices.length) {
             this.$Alert.alert({
-              type: 'success',
-              message: 'New meeting type created',
+              type: 'error',
+              message: 'Please enter a Meeting Type',
               timeout: 2000,
             })
-          })
+            return
+          } else {
+            const obj = {
+              title: this.meetingType,
+              organization: this.$store.state.user.organization,
+            }
+
+            await ActionChoice.api.create(obj).then(res => {
+              this.$Alert.alert({
+                type: 'success',
+                message: 'New meeting type created',
+                timeout: 2000,
+              })
+            })
+
+            this.getActionChoices()
+            this.meetingType = ''
+          }
         }
       }
+    },
+
+    async onSave() {
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
@@ -596,5 +615,9 @@ export default {
   @include input-field();
   padding: 0.5rem;
   width: 15rem;
+
+  &__list {
+    margin: 0.5rem 0 0 1rem;
+  }
 }
 </style>
