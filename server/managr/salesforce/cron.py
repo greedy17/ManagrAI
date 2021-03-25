@@ -4,7 +4,8 @@ import datetime
 import logging
 
 from django.utils import timezone
-
+from django.db.models import Q, Sum, IntegerField, F, Func, DateField
+from django.db.models.functions import Cast
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
 from managr.salesforce.models import SFObjectFieldsOperation, SFSyncOperation, SalesforceAuthAccount
@@ -12,9 +13,13 @@ from managr.salesforce.models import SFObjectFieldsOperation, SFSyncOperation, S
 logger = logging.getLogger("managr")
 
 
-@kronos.register("*/5  * * * *")
+class ArrayLength(Func):
+    function = "CARDINALITY"
+
+
+@kronos.register("*/10  * * * *")
 def queue_users_sf_resource():
-    """ runs every five mins and initiates user sf syncs if their prev workflow is done """
+    """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow
