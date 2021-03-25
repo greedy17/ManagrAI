@@ -1,3 +1,18 @@
-#0 0 * * * bash -c 'source /opt/venv/bin/activate && /home/ubuntu/.pyenv/shims/pipenv run python /opt/managr/server/manage.py revoke_tokens' 2>&1
 
-10 * * * * bash -c 'source /opt/venv/bin/activate && /home/ubuntu/.pyenv/shims/pipenv run python /opt/managr/server/manage.py process_tasks --duration 3600' >> /opt/festi/logs/process_tasks.log 2>&1
+
+## processes all tasks
+
+*/10 * * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py process_tasks --duration 3600' >> /opt/managr/logs/process_tasks.log 2>&1
+
+## special processor to pick up sync queues 
+
+*/10 * * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600' >> /opt/managr/logs/process_tasks.log 2>&1
+
+## syncs resource data from sf every 10 mins (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
+
+*/10 * * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py initresourcesync --duration 3600' >> /opt/managr/logs/process_tasks.log 2>&1
+
+## syncs resource fields from sf every 0th minute of the 12th hour (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
+
+0 */12 * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py initobjectfieldsync --duration 3600' >> /opt/managr/logs/process_tasks.log 2>&1
+

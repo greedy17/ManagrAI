@@ -10,6 +10,7 @@ from managr.salesforce import constants as sf_consts
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
+from managr.salesforce.models import SObjectPicklist
 
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
@@ -67,6 +68,24 @@ def process_get_local_resource_options(payload, context):
         }
 
 
+@processor(required_context=["u", "field"])
+def process_get_picklist_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    field = user.salesforce_account.object_fields.filter(id=context.get("field")).first()
+    options = field.get_slack_options
+    if not len(options):
+        logger.exception(f"No values found for picklist {field.api_name}")
+        return {"options": []}
+    if value and len(value):
+        options = list(filter(lambda opt: value in opt["value"].lower(), options))
+
+    if len(options) and len(options) > 30:
+        return {"options": options[:30]}
+    else:
+        return {"options": options}
+
+
 @processor(required_context=["u", "relationship", "fields"])
 def process_get_external_relationship_options(payload, context):
     user = User.objects.get(pk=context["u"])
@@ -106,6 +125,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
+        slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)
