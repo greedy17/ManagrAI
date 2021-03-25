@@ -18,24 +18,24 @@ from managr.organization.models import Stage
 
 # Data structure defining how meeting scores are computed.
 SCORE_LOOKUP = {
-    "sentiment": {
+    "meeting_sentiment": {
         slack_consts.ZOOM_MEETING__GREAT: {
-            "type": "sentiment",
+            "type": "meeting_sentiment",
             "points": 50,
             "impact": "positive",
             "message_tpl": "The rep said the meeting went great!",
         },
-        slack_consts.ZOOM_MEETING__CANT_TELL: {
-            "type": "sentiment",
-            "points": 20,
-            "impact": "positive",
-            "message_tpl": "The rep said they can't tell how well the meeting went.",
-        },
-        slack_consts.ZOOM_MEETING__FINE: {
-            "type": "sentiment",
+        slack_consts.ZOOM_MEETING__NOT_WELL: {
+            "type": "meeting_sentiment",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The rep said the meeting did not go well.",
+        },
+        slack_consts.ZOOM_MEETING__FINE: {
+            "type": "meeting_sentiment",
+            "points": 20,
+            "impact": "positive",
+            "message_tpl": "The rep said the meeting went fine.",
         },
     },
     "stage": {
@@ -43,13 +43,13 @@ SCORE_LOOKUP = {
             "type": "stage",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity moved forward to a new stage: {new_stage_name}.",
+            "message_tpl": "The opportunity moved forward to a new stage: {meeting.zoom_meeting_review.stage}.",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "stage",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity moved backward to a previous stage: {new_stage_name}.",
+            "message_tpl": "The opportunity moved backward to a previous stage: {meeting.zoom_meeting_review.stage}.",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "stage",
@@ -63,13 +63,13 @@ SCORE_LOOKUP = {
             "type": "forecast",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast improved. It is now {meeting.meeting_review.forecast_category}.",
+            "message_tpl": "The opportunity's forecast improved. It is now {meeting.zoom_meeting_review.forecast_category}.",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "forecast",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.meeting_review.forecast_category}.",
+            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.zoom_meeting_review.forecast_category}.",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "forecast",
@@ -98,6 +98,26 @@ SCORE_LOOKUP = {
             "message_tpl": "The opportunity's forecast close date didn't change.",
         },
     },
+    "amount": {
+        zoom_consts.MEETING_REVIEW_PROGRESSED: {
+            "type": "amount",
+            "points": 5,
+            "impact": "positive",
+            "message_tpl": "The opportunity's closing amount has increased. It is now: ${new_amount}",
+        },
+        zoom_consts.MEETING_REVIEW_REGRESSED: {
+            "type": "amount",
+            "points": 5,
+            "impact": "negative",
+            "message_tpl": "The opportunity's closing amount has decreased. It is now: ${new_amount}",
+        },
+        zoom_consts.MEETING_REVIEW_UNCHANGED: {
+            "type": "amount",
+            "points": 0,
+            "impact": "positive",
+            "message_tpl": "The opportunity's closing amount didn't change.",
+        },
+    },
     "attendance": {
         0: {
             "type": "attendance",
@@ -121,13 +141,13 @@ SCORE_LOOKUP = {
             "type": "attendance",
             "points": 4,
             "impact": "positive",
-            "message_tpl": "The meeting had very good attendance.",
+            "message_tpl": "The meeting had very good attendance of at least 4 participants",
         },
         5: {
             "type": "attendance",
             "points": 5,
             "impact": "positive",
-            "message_tpl": "The meeting had very good attendance.",
+            "message_tpl": "The meeting had very good attendance of 5 or more participants",
         },
     },
     "duration": {
@@ -198,15 +218,20 @@ class ScoreComponent:
         # HACK: Provide general-purpose context to the formatter
         new_stage_name = ""
         new_close_date = ""
-        if self.meeting.meeting_review.stage:
-            stage = Stage.objects.get(id=self.meeting.meeting_review.stage)
-            new_stage_name = stage.label
-        if self.meeting.meeting_review.close_date:
-            new_close_date = self.meeting.meeting_review.close_date.strftime("%m/%d/%Y")
+        new_amount = ""
+        if self.meeting.zoom_meeting_review.stage:
+            new_stage_name = self.meeting.zoom_meeting_review.stage
+        if self.meeting.zoom_meeting_review.close_date:
+            new_close_date = self.meeting.zoom_meeting_review.close_date.strftime("%m/%d/%Y")
+        if self.meeting.zoom_meeting_review.amount:
+            new_amount = self.meeting.zoom_meeting_review.amount
         # END HACK
 
         return self.message_tpl.format(
-            meeting=self.meeting, new_stage_name=new_stage_name, new_close_date=new_close_date,
+            meeting=self.meeting,
+            new_stage_name=new_stage_name,
+            new_close_date=new_close_date,
+            new_amount=new_amount,
         )
 
     @property
@@ -228,19 +253,20 @@ def score_meeting(meeting):
 
     Returns a tuple of the score as an integer and a list of ScoreComponent instances.
     """
-    if hasattr(meeting, "meeting_review"):
-        meeting_review = meeting.meeting_review
+    if hasattr(meeting, "zoom_meeting_review"):
+        zoom_meeting_review = meeting.zoom_meeting_review
 
         # "Clean" the meeting review data
-        sentiment = meeting_review.sentiment or slack_consts.ZOOM_MEETING__CANT_TELL
-        stage_progress = meeting_review.stage_progress
-        forecast_progress = meeting_review.forecast_progress
-        close_date_progress = meeting_review.close_date_progress
-        participant_count_weighted = meeting_review.participant_count_weighted
-        duration_score = meeting_review.duration_score
+        meeting_sentiment = zoom_meeting_review.meeting_sentiment or slack_consts.ZOOM_MEETING__FINE
+        stage_progress = zoom_meeting_review.stage_progress
+        forecast_progress = zoom_meeting_review.forecast_progress
+        close_date_progress = zoom_meeting_review.close_date_progress
+        participant_count_weighted = zoom_meeting_review.participant_count_weighted
+        duration_score = zoom_meeting_review.duration_score
+        amount_progress = zoom_meeting_review.amount_progress
 
         # Participation is treated differently, because it is a "raw" score.
-        participation_score = meeting_review.participation_score
+        participation_score = zoom_meeting_review.participation_score
         participation_msg_tpl = ""
         if 0 < participation_score <= 5:
             participation_msg_tpl = "Most attendees participated for less than half of the meeting."
@@ -255,7 +281,7 @@ def score_meeting(meeting):
         score_components = [
             ScoreComponent(meeting, **i)
             for i in [
-                SCORE_LOOKUP["sentiment"][sentiment],
+                SCORE_LOOKUP["meeting_sentiment"][meeting_sentiment],
                 SCORE_LOOKUP["stage"][stage_progress],
                 SCORE_LOOKUP["forecast_category"][forecast_progress],
                 SCORE_LOOKUP["close_date"][close_date_progress],
@@ -267,6 +293,7 @@ def score_meeting(meeting):
                     "message_tpl": participation_msg_tpl,
                 },
                 SCORE_LOOKUP["duration"][duration_score],
+                SCORE_LOOKUP["amount"][amount_progress],
             ]
         ]
         score = sum(sc.points for sc in score_components)

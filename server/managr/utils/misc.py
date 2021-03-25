@@ -63,7 +63,7 @@ def snake_to_space(word):
         if matches:
             _matches.append(matches.end())
             word = re.sub("_", " ", word, 1)
-            print(word)
+
         else:
             break
 

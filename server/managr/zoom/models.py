@@ -11,6 +11,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 
 from background_task.models import Task
 
+from managr.zoom.utils import score_meeting
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
 from managr.organization.models import ActionChoice
@@ -327,13 +328,10 @@ class ZoomMeeting(TimeStampModel):
 
 
 class MeetingReview(TimeStampModel):
-    meeting = models.OneToOneField(
-        "ZoomMeeting",
-        on_delete=models.CASCADE,
-        related_name="meeting_review",
-        blank=True,
-        null=True,
-    )
+    """ Parent Model in preparation for other meeting types (aka not zoom) """
+
+    resource_type = models.CharField(blank=True, max_length=255)
+    resource_id = models.CharField(blank=True, max_length=255)
     meeting_type = models.CharField(
         blank=True,
         null=True,
@@ -343,16 +341,15 @@ class MeetingReview(TimeStampModel):
     forecast_category = models.CharField(blank=True, null=True, max_length=255)
     stage = models.CharField(blank=True, null=True, max_length=255,)
     meeting_comments = models.TextField(blank=True, null=True, max_length=255)
-    sentiment = models.CharField(
+    meeting_sentiment = models.CharField(
         max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
     )
+    # amount cannot be blank we are allowing blank to deal with django admin
     amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is editable",
-        null=True,
-        blank=True,
+        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
+    )
+    next_step = models.TextField(
+        blank=True, help_text="If user uses next step field this will be saved"
     )
     close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
@@ -367,19 +364,32 @@ class MeetingReview(TimeStampModel):
     prev_close_date = models.DateField(null=True, blank=True)
 
     prev_amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        help_text="This field is editable",
-        null=True,
+        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
+    )
+
+    @property
+    def resource(self):
+        from managr.salesforce.routes import routes
+
+        model_route = routes.get(self.resource_type, None)
+        if model_route and self.resource_id:
+            return model_route["model"].objects.get(id=self.resource_id)
+        return None
+
+
+class ZoomMeetingReview(MeetingReview):
+    meeting = models.OneToOneField(
+        "ZoomMeeting",
+        on_delete=models.CASCADE,
+        related_name="zoom_meeting_review",
         blank=True,
-    )
-    custom_data = JSONField(
-        default=dict,
         null=True,
-        help_text="All data that is added to a form is saved as a json object for update",
-        max_length=500,
     )
+
+    @property
+    def meeting_review_summary(self):
+        meeting_score, score_components = score_meeting(self.meeting)
+        return score_components
 
     @property
     def meeting_resource(self):
@@ -398,12 +408,9 @@ class MeetingReview(TimeStampModel):
 
         user = self.meeting.zoom_account.user
         sf_account = user.salesforce_account
-        stage_field = (
-            sf_account.object_fields.get("Opportunity", {}).get("fields", {}).get("StageName", None)
-        )
-        opts = []
-        if stage_field:
-            opts = stage_field.get("options", [])
+        stage_field = sf_account.picklist_values.filter(picklist_for="StageName").first()
+        opts = stage_field.values if stage_field else []
+
         # Check moving from any stage to another
         if self.prev_stage and self.stage:
             for index, stage in enumerate(opts):
@@ -434,14 +441,10 @@ class MeetingReview(TimeStampModel):
             # fetch the picklist values and check ordering
             user = self.meeting.zoom_account.user
             sf_account = user.salesforce_account
-            forecast_field = (
-                sf_account.object_fields.get("Opportunity", {})
-                .get("fields", {})
-                .get("ForecastCategoryName", None)
-            )
-            opts = []
-            if forecast_field:
-                opts = forecast_field.get("options", [])
+            forecast_field = sf_account.picklist_values.filter(
+                picklist_for="ForecastCategoryName"
+            ).first()
+            opts = forecast_field.values if forecast_field else []
 
             for index, forecast in enumerate(opts):
                 if self.prev_forecast == forecast["value"]:
@@ -476,6 +479,25 @@ class MeetingReview(TimeStampModel):
         return zoom_consts.MEETING_REVIEW_UNCHANGED
 
     @property
+    def amount_progress(self):
+        if not self.prev_amount and not self.amount:
+            return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+        if not self.prev_amount and self.amount:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        if self.prev_amount and not self.amount:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        if self.prev_amount > self.amount:
+            return zoom_consts.MEETING_REVIEW_REGRESSED
+
+        elif self.prev_amount < self.amount:
+            return zoom_consts.MEETING_REVIEW_PROGRESSED
+
+        return zoom_consts.MEETING_REVIEW_UNCHANGED
+
+    @property
     def meeting_type_string(self):
         if self.meeting.type == 1:
             return "instant"
@@ -497,7 +519,7 @@ class MeetingReview(TimeStampModel):
             elif duration >= 20 and duration < 30:
                 return "instant_over_20"
 
-        if self.meeting_type_string == "planned":
+        if self.meeting_type_string == "planned" and original_duration:
             diff = duration - original_duration
 
             if diff >= 15:
@@ -539,22 +561,23 @@ class MeetingReview(TimeStampModel):
         return 0
 
     def save(self, *args, **kwargs):
-        opportunity = self.meeting.opportunity
+        resource_type = self.meeting.workflow.resource_type
 
-        # fill previous values if the
-        if self.forecast_category:
-            current_forecast = opportunity.forecast_category
-            if current_forecast:
-                self.prev_forecast = current_forecast
+        if resource_type == "Opportunity":
+            opportunity = self.meeting.workflow.resource
+            if self.forecast_category:
+                current_forecast = opportunity.forecast_category
+                if current_forecast:
+                    self.prev_forecast = current_forecast
 
-        if self.stage and opportunity.stage:
-            self.prev_stage = opportunity.stage
-            # update stage
-        # Update the opportunity with the new data
-        if self.close_date:
-            # Override previous close date with whatever is on the Opportunity
-            if opportunity.close_date:
-                self.prev_close_date = opportunity.close_date
-        if self.amount:
-            self.prev_amount = opportunity.amount
-        return super(MeetingReview, self).save(*args, **kwargs)
+            if self.stage and opportunity.stage:
+                self.prev_stage = opportunity.stage
+                # update stage
+            # Update the opportunity with the new data
+            if self.close_date:
+                # Override previous close date with whatever is on the Opportunity
+                if opportunity.close_date:
+                    self.prev_close_date = opportunity.close_date
+            if self.amount:
+                self.prev_amount = opportunity.amount
+        return super(ZoomMeetingReview, self).save(*args, **kwargs)

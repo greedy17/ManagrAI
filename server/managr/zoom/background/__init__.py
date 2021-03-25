@@ -29,7 +29,7 @@ from managr.api import constants as api_consts
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
-from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview
+from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview, ZoomMeetingReview
 from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
@@ -65,8 +65,12 @@ def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
     return _kick_off_slack_interaction(user_id, managr_meeting_id)
 
 
-def emit_save_meeting_review_data(managr_meeting_id, data):
-    return _save_meeting_review_data(managr_meeting_id, data)
+def emit_save_meeting_review(managr_meeting_id, data):
+    return _save_meeting_review(managr_meeting_id, data)
+
+
+def emit_send_meeting_summary(workflow_id):
+    return _send_meeting_summary(workflow_id)
 
 
 @background()
@@ -345,32 +349,100 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             workflow.save()
 
 
+def to_float(amount):
+    if amount in ["", None]:
+        return None
+    try:
+        return "{:.2f}".format(float(amount))
+    except ValueError:
+        return None
+
+
 @background(schedule=0)
-def _save_meeting_review_data(managr_meeting_id, data):
-    data = json.loads(data)
+def _save_meeting_review(workflow_id):
 
-    meeting = ZoomMeeting.objects.filter(id=managr_meeting_id).first()
-    meeting.interaction_status = zoom_consts.MEETING_INTERACTION_STATUS_COMPLETE
-    meeting.is_closed = True
-    meeting.save()
-    if not hasattr(meeting, "meeting_review"):
-        date = data.get("close_date", None)
-        if date:
-            ## make it aware by adding utc
-            date = datetime.strptime(date, "%Y-%m-%d")
-            date = pytz.utc.localize(date)
-        obj = dict()
-        obj["meeting"] = meeting
-        obj["meeting_type"] = data.get("meeting_type", None)
-        obj["forecast_category"] = data.get("forecast_category", None)
-        obj["stage"] = data.get("stage", None)
-        obj["description"] = data.get("description", None)
-        obj["next_step"] = data.get("next_step", None)
-        obj["close_date"] = date
-        obj["sentiment"] = data.get("sentiment", None)
-        obj["amount"] = data.get("amount", None)
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # get the create form
+    meeting = workflow.meeting
 
-        return MeetingReview.objects.create(**obj)
+    if not hasattr(meeting, "zoom_meeting_review"):
+
+        # format data appropriately
+        review_form = workflow.forms.filter(
+            template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
+        ).first()
+
+        # get data
+        form_data = review_form.saved_data
+        forecast_category = ""
+        if form_data.get("ForecastCategoryName", None) not in ["", None]:
+            forecast_category = form_data.get("ForecastCategoryName")
+        elif form_data.get("ForecastCategory", None) not in ["", None]:
+            forecast_category = form_data.get("ForecastCategory")
+        # format data appropriately
+        data = {
+            "meeting": meeting,
+            "resource_type": workflow.resource_type,
+            "resource_id": workflow.resource_id,
+            "forecast_category": forecast_category,
+            "stage": form_data.get("StageName", ""),
+            "meeting_comments": form_data.get("meeting_comments", ""),
+            "meeting_type": form_data.get("meeting_type", ""),
+            "meeting_sentiment": form_data.get("meeting_sentiment", ""),
+            "amount": to_float(form_data.get("Amount", None)),
+            "close_date": pytz.utc.localize(
+                datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
+            )
+            if form_data.get("CloseDate", None) not in ["", None]
+            else None,
+            "next_step": form_data.get("NextStep", ""),
+        }
+
+        return ZoomMeetingReview.objects.create(**data)
 
 
-# same method as _save_meeting_review_data but not as a task
+@background(schedule=0)
+def _send_meeting_summary(workflow_id):
+
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    slack_access_token = user.organization.slack_integration.access_token
+
+    user_list = (
+        user.organization.users.filter(user_level="Manager")
+        .exclude(id=user.id)
+        .select_related("slack_integration")
+    )
+    try:
+
+        slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            slack_access_token,
+            text=f"Meeting Review Summary For {user.email} from meeting",
+            block_set=get_block_set("meeting_summary", {"w": workflow_id}),
+        )
+
+        for u in user_list:
+            if hasattr(u, "slack_integration"):
+                slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Meeting Review Summary For {user.email} from meeting",
+                    block_set=get_block_set("meeting_summary", {"w": workflow_id}),
+                )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate  Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+
+    return
+

@@ -186,7 +186,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                             ),
                         )
                     )
-                    print(initial_option)
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"

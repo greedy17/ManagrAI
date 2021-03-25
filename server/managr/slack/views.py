@@ -352,3 +352,54 @@ def update_resource(request):
         )
         return Response()
 
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def meeting_summary(request):
+    # list of accepted commands for this fake endpoint
+    allowed_commands = [
+        "opportunity",
+        "account",
+    ]
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = []
+    resource_type = None
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        resource_type = command_params[0][0].upper() + command_params[0][1:]
+
+        blocks = get_block_set(
+            "command_meeting_summary", {"resource_type": resource_type, "u": str(user.id)}
+        )
+        channel = user.slack_integration.channel
+        access_token = user.organization.slack_integration.access_token
+        slack_requests.send_channel_message(
+            channel, access_token, text=f"Select a {resource_type} to update", block_set=blocks
+        )
+        return Response()
+
