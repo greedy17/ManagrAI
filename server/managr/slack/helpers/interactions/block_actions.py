@@ -659,7 +659,13 @@ def process_show_update_resource_form(payload, context):
 
     context = {"form": form}
     block_set = get_block_set("update_modal_block_set", context=context)
-    index, block = block_finder("StageName", block_set)
+    try:
+        index, block = block_finder("StageName", block_set)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+
     if block:
         block = {
             **block,
@@ -668,7 +674,7 @@ def process_show_update_resource_form(payload, context):
                 "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}",
             },
         }
-    block_set = [*block_set[:index], block, *block_set[index + 1 :]]
+        block_set = [*block_set[:index], block, *block_set[index + 1 :]]
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
         "ts": payload.get("container").get("message_ts"),

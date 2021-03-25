@@ -175,19 +175,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 initial_option = None
                 if value:
-                    initial_option = (
-                        dict(
-                            *map(
-                                lambda value: block_builders.option(
-                                    value["text"]["text"], value["value"]
-                                ),
-                                filter(
-                                    lambda opt: opt.get("value", None) == value,
-                                    self.get_slack_options,
-                                ),
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
                             ),
-                        ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
                     )
+                    print(initial_option)
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
