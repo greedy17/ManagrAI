@@ -221,6 +221,7 @@ def section_with_button_block(
 def simple_button_block(
     label, value, url=None, style=None, confirm=False, action_id=None, block_id=None
 ):
+    ### this can only be used in action_blocks
     # action ID must be unique
     block = {
         "type": "button",

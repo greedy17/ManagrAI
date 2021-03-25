@@ -134,11 +134,12 @@ class SObjectField(TimeStampModel, IntegrationModel):
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
-            if self.api_name == "StageName" and kwargs.get("workflow") not in ["", None]:
-                action_id = (
-                    slack_consts.ZOOM_MEETING__STAGE_SELECTED
-                    + f"?w={str(kwargs.get('workflow').id)}"
-                )
+            if self.api_name == "StageName":
+                if kwargs.get("workflow") not in ["", None]:
+                    action_id = (
+                        slack_consts.ZOOM_MEETING__STAGE_SELECTED
+                        + f"?w={str(kwargs.get('workflow').id)}"
+                    )
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
@@ -175,19 +176,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 initial_option = None
                 if value:
-                    initial_option = (
-                        dict(
-                            *map(
-                                lambda value: block_builders.option(
-                                    value["text"]["text"], value["value"]
-                                ),
-                                filter(
-                                    lambda opt: opt.get("value", None) == value,
-                                    self.get_slack_options,
-                                ),
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
                             ),
-                        ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
                     )
+                    print(initial_option)
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
