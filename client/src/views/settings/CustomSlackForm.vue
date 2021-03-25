@@ -358,7 +358,7 @@ export default {
     },
 
     async updateMeeting(e) {
-      if (e.keyCode == 13) {
+      if (e.keyCode == 13 && this.meetingType.length) {
         if (
           (this.resource == 'Opportunity' || this.resource == 'Account') &&
           this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
