@@ -139,21 +139,20 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     slack_consts.ZOOM_MEETING__STAGE_SELECTED
                     + f"?w={str(kwargs.get('workflow').id)}"
                 )
+                initial_option = dict(
+                    *map(
+                        lambda value: block_builders.option(value["text"]["text"], value["value"]),
+                        filter(
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                        ),
+                    ),
+                )
 
                 block = block_builders.static_select(
                     f"*{self.reference_display_label}*",
                     self.get_slack_options,
                     action_id=action_id,
-                    initial_option=dict(
-                        *map(
-                            lambda value: block_builders.option(
-                                value["text"]["text"], value["value"]
-                            ),
-                            filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                            ),
-                        ),
-                    ),
+                    initial_option=initial_option,
                     block_id=self.api_name,
                 )
             elif self.is_public:
