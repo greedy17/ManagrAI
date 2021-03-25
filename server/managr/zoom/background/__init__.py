@@ -415,14 +415,6 @@ def _send_meeting_summary(workflow_id):
         .select_related("slack_integration")
     )
     try:
-
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            slack_access_token,
-            text=f"Meeting Review Summary For {user.email} from meeting",
-            block_set=get_block_set("meeting_summary", {"w": workflow_id}),
-        )
-
         for u in user_list:
             if hasattr(u, "slack_integration"):
                 slack_requests.send_channel_message(
