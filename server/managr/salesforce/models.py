@@ -132,28 +132,73 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
     def to_slack_field(self, value=None, **kwargs):
         if self.data_type == "Picklist":
-            # stage has a special function so we add the action param
+            # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name == "StageName":
                 action_id = (
                     slack_consts.ZOOM_MEETING__STAGE_SELECTED
                     + f"?w={str(kwargs.get('workflow').id)}"
                 )
-
-            block = block_builders.static_select(
-                f"*{self.reference_display_label}*",
-                self.get_slack_options,
-                action_id=action_id,
-                initial_option=dict(
+                initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
                             lambda opt: opt.get("value", None) == value, self.get_slack_options,
                         ),
                     ),
-                ),
-                block_id=self.api_name,
-            )
+                )
+
+                block = block_builders.static_select(
+                    f"*{self.reference_display_label}*",
+                    self.get_slack_options,
+                    action_id=action_id,
+                    initial_option=initial_option,
+                    block_id=self.api_name,
+                )
+            elif self.is_public:
+                block = block_builders.static_select(
+                    f"*{self.reference_display_label}*",
+                    self.get_slack_options,
+                    initial_option=dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
+                            ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        ),
+                    ),
+                    block_id=self.api_name,
+                )
+
+            else:
+                initial_option = None
+                if value:
+                    initial_option = (
+                        dict(
+                            *map(
+                                lambda value: block_builders.option(
+                                    value["text"]["text"], value["value"]
+                                ),
+                                filter(
+                                    lambda opt: opt.get("value", None) == value,
+                                    self.get_slack_options,
+                                ),
+                            ),
+                        ),
+                    )
+                user_id = str(self.salesforce_account.user.id)
+                action_query = (
+                    f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+                )
+                block = block_builders.external_select(
+                    f"*{self.reference_display_label}*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_option=initial_option,
+                )
+
             return block
 
         elif self.data_type == "Reference":
@@ -192,9 +237,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
                         self.get_slack_options,
                     )
                 )
-            return block_builders.multi_static_select(
+            user_id = str(self.salesforce_account.user.id)
+            action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+            return block_builders.multi_external_select(
                 f"*{self.reference_display_label}*",
-                self.picklist_options.as_slack_options,
+                action_query,
                 initial_options=initial_options,
                 block_id=self.api_name,
             )
@@ -262,6 +309,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def get_slack_options(self):
         # non sf fields are created with is_public = True and may take options directly
         if self.is_public and len(self.options):
+
             return list(
                 map(
                     lambda option: block_builders.option(option["label"], option["value"]),
@@ -321,8 +369,9 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_options(self):
+        values = self.values
         return list(
-            map(lambda option: block_builders.option(option["label"], option["value"]), self.values)
+            map(lambda option: block_builders.option(option["label"], option["value"]), values)
         )
 
 
