@@ -3,13 +3,21 @@ import kronos
 import datetime
 import logging
 
+from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils import timezone
-
+from django.db.models import Q, F, Func, IntegerField, DateField, Sum
+from django.db.models.functions import Cast
+from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
 from managr.salesforce.models import SFObjectFieldsOperation, SFSyncOperation, SalesforceAuthAccount
 
 logger = logging.getLogger("managr")
+
+
+class ArrayLength(Func):
+    function = "CARDINALITY"
 
 
 @kronos.register("*/5  * * * *")
@@ -26,6 +34,59 @@ def queue_users_sf_resource():
             init_sf_resource_sync(latest_flow.user.id)
             continue
         # if latest workflow is at 100 emit sf resource sync
+    return
+
+
+@kronos.register("*/10  * * * *")
+def report_sf_data_sync():
+    """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
+    # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
+    flows_report = []
+    sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
+    for account in sf_accounts:
+        # get latest workflow
+        workflows = SFSyncOperation.objects.filter(user=account.user)
+        total_workflows = workflows.count()
+        total_incomplete_flows = workflows.annotate(
+            progress_l=Sum(
+                ArrayLength("completed_operations")
+                + ArrayLength("failed_operations")
+                - ArrayLength("operations"),
+                output_field=IntegerField(),
+            )
+        ).filter(progress_l__lt=0)
+        todays_flows = (
+            workflows.annotate(creation_date=Cast("datetime_created", DateField()))
+            .values_list("creation_date", flat=True)
+            .order_by("-creation_date")
+        )
+        todays_failed_flows = (
+            workflows.annotate(
+                progress_l=Sum(
+                    ArrayLength("completed_operations")
+                    + ArrayLength("failed_operations")
+                    - ArrayLength("operations"),
+                    output_field=IntegerField(),
+                )
+            )
+            .filter(progress_l__lt=0)
+            .annotate(creation_date=Cast("datetime_created", DateField()))
+            .values_list("creation_date", flat=True)
+            .order_by("-creation_date")
+        )
+        latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+
+    subject = render_to_string("salesforce/admin_access_token_revoked-subject.txt")
+    recipient = [settings.STAFF_EMAIL]
+    send_html_email(
+        subject,
+        "salesforce/admin_access_token_revoked.html",
+        settings.SERVER_EMAIL,
+        recipient,
+        context={"data": {}},
+    )
+
+    # if latest workflow is at 100 emit sf resource sync
     return
 
 
