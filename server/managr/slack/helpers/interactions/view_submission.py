@@ -211,7 +211,7 @@ def process_next_page_slack_commands_form(payload, context):
     # currently only for update
     blocks = []
     for form in stage_forms:
-        blocks.append(*form.generate_form())
+        blocks.extend(form.generate_form())
 
     if len(blocks):
 
