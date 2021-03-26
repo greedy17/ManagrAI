@@ -47,6 +47,10 @@ def report_sf_data_sync(sf_account=None):
         sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
         for account in sf_accounts:
             report = get_report_data(account)
+            reports.append(report)
+    else:
+        report = get_report_data(sf_account)
+        reports.append(report)
 
     subject = render_to_string("salesforce/sync_report-subject.txt")
     recipient = [settings.STAFF_EMAIL]
@@ -93,12 +97,12 @@ def get_report_data(account):
                 output_field=IntegerField(),
             )
         )
-        .filter(progress_l__lt=100)
+        .filter(progress_l__lt=0)
         .count()
     )
     todays_flows = (
         workflows.annotate(creation_date=Cast("datetime_created", DateField()))
-        .values_list("creation_date", flat=True)
+        .filter(creation_date=datetime.datetime.now().date())
         .order_by("-creation_date")
     ).count()
     todays_failed_flows = (
@@ -110,14 +114,14 @@ def get_report_data(account):
                 output_field=IntegerField(),
             )
         )
-        .filter(progress_l__lt=0)
         .annotate(creation_date=Cast("datetime_created", DateField()))
+        .filter(creation_date=datetime.datetime.now().date(), progress_l__lt=0)
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()
-    latest_flow = (
-        SFSyncOperation.objects.filter(user=account.user).latest("datetime_created").first().id
-    )
+    latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+    if latest_flow:
+        latest_flow = latest_flow.datetime_created
 
     return {
         "user": f"{account.user.email}-{account.user.id}",

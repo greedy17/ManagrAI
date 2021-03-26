@@ -9,7 +9,13 @@ Hello!
 
 <ul>
   <strong>User Data</strong>
-  {% for key,value in data.items %}
-  <li><strong>{{ key }} : {{ value }}</strong></li>
+
+  {% for value in data %}
+  <p>
+    {% for key,value in value.items %}
+    <li><strong>{{ key }} : {{ value }}</strong></li>
+    {% endfor %}
+  </p>
+
   {% endfor %}
 </ul>
