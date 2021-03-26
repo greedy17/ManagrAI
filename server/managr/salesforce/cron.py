@@ -38,52 +38,75 @@ def queue_users_sf_resource():
 
 
 @kronos.register("*/10  * * * *")
-def report_sf_data_sync():
+def report_sf_data_sync(sf_account=None):
     """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
-    flows_report = []
+    if not sf_account:
+        return
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow
-        workflows = SFSyncOperation.objects.filter(user=account.user)
-        total_workflows = workflows.count()
-        total_incomplete_flows = workflows.annotate(
-            progress_l=Sum(
-                ArrayLength("completed_operations")
-                + ArrayLength("failed_operations")
-                - ArrayLength("operations"),
-                output_field=IntegerField(),
-            )
-        ).filter(progress_l__lt=0)
-        todays_flows = (
-            workflows.annotate(creation_date=Cast("datetime_created", DateField()))
-            .values_list("creation_date", flat=True)
-            .order_by("-creation_date")
-        )
-        todays_failed_flows = (
-            workflows.annotate(
-                progress_l=Sum(
-                    ArrayLength("completed_operations")
-                    + ArrayLength("failed_operations")
-                    - ArrayLength("operations"),
-                    output_field=IntegerField(),
+        def get_workflow_data(account):
+            flows_report = []
+            workflows = SFSyncOperation.objects.filter(user=account.user)
+            total_workflows = workflows.count()
+            total_incomplete_flows = (
+                workflows.annotate(
+                    progress_l=Sum(
+                        ArrayLength("completed_operations")
+                        + ArrayLength("failed_operations")
+                        - ArrayLength("operations"),
+                        output_field=IntegerField(),
+                    )
                 )
+                .filter(progress_l__lt=100)
+                .count()
             )
-            .filter(progress_l__lt=0)
-            .annotate(creation_date=Cast("datetime_created", DateField()))
-            .values_list("creation_date", flat=True)
-            .order_by("-creation_date")
-        )
-        latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+            todays_flows = (
+                workflows.annotate(creation_date=Cast("datetime_created", DateField()))
+                .values_list("creation_date", flat=True)
+                .order_by("-creation_date")
+            ).count()
+            todays_failed_flows = (
+                workflows.annotate(
+                    progress_l=Sum(
+                        ArrayLength("completed_operations")
+                        + ArrayLength("failed_operations")
+                        - ArrayLength("operations"),
+                        output_field=IntegerField(),
+                    )
+                )
+                .filter(progress_l__lt=0)
+                .annotate(creation_date=Cast("datetime_created", DateField()))
+                .values_list("creation_date", flat=True)
+                .order_by("-creation_date")
+            ).count()
+            latest_flow = (
+                SFSyncOperation.objects.filter(user=account.user)
+                .latest("datetime_created")
+                .first()
+                .id
+            )
+            flows_report.append(
+                {
+                    "user": f"{account.user.email}-{account.user.id}",
+                    "total_workflows": total_workflows,
+                    "total_incomplete_workflows": total_incomplete_flows,
+                    "todays_workflows": todays_flows,
+                    "todays_failed_flows": todays_failed_flows,
+                    "latest_flow": latest_flow,
+                }
+            )
+            return flows_report
 
-    subject = render_to_string("salesforce/admin_access_token_revoked-subject.txt")
+    subject = render_to_string("salesforce/sync_report-subject.txt")
     recipient = [settings.STAFF_EMAIL]
     send_html_email(
         subject,
-        "salesforce/admin_access_token_revoked.html",
+        "salesforce/sync_report.html",
         settings.SERVER_EMAIL,
         recipient,
-        context={"data": {}},
+        context={"data": flows_report},
     )
 
     # if latest workflow is at 100 emit sf resource sync
