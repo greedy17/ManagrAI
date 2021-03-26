@@ -117,26 +117,26 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
 
 ### Commands
 
-**server/manage.py reinitsfsync <user email>**
+`server/manage.py reinitsfsync <user email>`
 - this will init a bg task to resync resource (saleslforce object rows)
 
   
-**server/manage.py reinitsffieldsync <user email>**
+`server/manage.py reinitsffieldsync <user email>`
 - this will init a bg task to resync resource fields (saleslforce object fields)
   
-**server/manage.py initresourcesync <user email>**
+`server/manage.py initresourcesync <user email>`
 - this comand is an automated cron job in prod it initiates the sync for all users every 10 mins ***as long as their previous flow has reached 100%***
 
-**server/manage.py initobjectfieldsync <user email>**
+`server/manage.py initobjectfieldsync <user email>`
 - this comand is an automated cron job in prod it initiates the sync for all users every 12 hours ***as long as their previous flow has reached 100%***
 
-**server/manage.py manuallyrefreshsftoken <user email>**
+`server/manage.py manuallyrefreshsftoken <user email>`
 - this comand can be used to manually refresh an sf token if for some reasone the while loop in functions cannot do it 
 
-**server/manage.recreateslackforms <user email>**
+`server/manage.recreateslackforms <user email>`
 - this comand can be used to manually recreate slack forms ***USE THIS COMMAND SPARINGLY AS IT WILL CLEAR ORG FORMS AND WILL BREAK THE REVIEW CONTACTS BUTTON FOR ALL EXISTING USER SLACKS THAT HAVE NOT BEEN COMPLETED SINCE THAT FORM SAVES DATA ON WORKFLOWS***
 
-**server/manage.py sfsynclogs <user email>**
+`server/manage.py sfsynclogs <user email>`
 - this comand can will email a report (to whomever is the staff email in your .env) of a users resource sync flows we can use this to check on whether a user has failed their latest sync. If they have then the automated resync will not work 
 
             user : email@email-2ccd88a1-b19a-40de-96ed-d003c07f0a1e
@@ -150,5 +150,11 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
 
 
 ## Staging Environment
+
+Our Staging Environment is hosted on heroku, the app name is Managr Staging 2, merging to develop should kick off the automatic deployment to staging. 
+
+`heroku logs --tail --app managr-staging-2`
+
+
 
 ## Prod Environment 
