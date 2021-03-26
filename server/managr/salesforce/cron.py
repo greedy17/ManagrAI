@@ -41,11 +41,12 @@ def queue_users_sf_resource():
 def report_sf_data_sync(sf_account=None):
     """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
+    reports = []
     if not sf_account:
-        
+        # get all reports
         sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
         for account in sf_accounts:
-        # get latest workflow
+            report = get_report_data(account)
 
     subject = render_to_string("salesforce/sync_report-subject.txt")
     recipient = [settings.STAFF_EMAIL]
@@ -54,7 +55,7 @@ def report_sf_data_sync(sf_account=None):
         "salesforce/sync_report.html",
         settings.SERVER_EMAIL,
         recipient,
-        context={"data": flows_report},
+        context={"data": reports},
     )
 
     # if latest workflow is at 100 emit sf resource sync
@@ -80,8 +81,7 @@ def queue_users_sf_fields():
     return
 
 
-def get_workflow_data(account):
-    flows_report = []
+def get_report_data(account):
     workflows = SFSyncOperation.objects.filter(user=account.user)
     total_workflows = workflows.count()
     total_incomplete_flows = (
@@ -116,22 +116,17 @@ def get_workflow_data(account):
         .order_by("-creation_date")
     ).count()
     latest_flow = (
-        SFSyncOperation.objects.filter(user=account.user)
-        .latest("datetime_created")
-        .first()
-        .id
+        SFSyncOperation.objects.filter(user=account.user).latest("datetime_created").first().id
     )
-    flows_report.append(
-        {
-            "user": f"{account.user.email}-{account.user.id}",
-            "total_workflows": total_workflows,
-            "total_incomplete_workflows": total_incomplete_flows,
-            "todays_workflows": todays_flows,
-            "todays_failed_flows": todays_failed_flows,
-            "latest_flow": latest_flow,
-        }
-    )
-    return flows_report
+
+    return {
+        "user": f"{account.user.email}-{account.user.id}",
+        "total_workflows": total_workflows,
+        "total_incomplete_workflows": total_incomplete_flows,
+        "todays_workflows": todays_flows,
+        "todays_failed_flows": todays_failed_flows,
+        "latest_flow": latest_flow,
+    }
 
 
 def init_sf_resource_sync(user_id):
