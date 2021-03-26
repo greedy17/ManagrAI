@@ -135,10 +135,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name == "StageName":
-                action_id = (
-                    slack_consts.ZOOM_MEETING__STAGE_SELECTED
-                    + f"?w={str(kwargs.get('workflow').id)}"
-                )
+                if kwargs.get("workflow") not in ["", None]:
+                    action_id = (
+                        slack_consts.ZOOM_MEETING__STAGE_SELECTED
+                        + f"?w={str(kwargs.get('workflow').id)}"
+                    )
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
@@ -175,18 +176,15 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 initial_option = None
                 if value:
-                    initial_option = (
-                        dict(
-                            *map(
-                                lambda value: block_builders.option(
-                                    value["text"]["text"], value["value"]
-                                ),
-                                filter(
-                                    lambda opt: opt.get("value", None) == value,
-                                    self.get_slack_options,
-                                ),
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
                             ),
-                        ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
                     )
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (
