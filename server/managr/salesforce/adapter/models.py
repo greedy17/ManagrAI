@@ -578,8 +578,6 @@ class ContactAdapter:
     def to_api(data, mapping, object_fields):
         formatted_data = dict()
         for k, v in data.items():
-            if k == "Id":
-                print(k)
             key = mapping.get(k, None)
             if key and key != "Id":
                 if v is not None:
