@@ -20,9 +20,9 @@ class ArrayLength(Func):
     function = "CARDINALITY"
 
 
-@kronos.register("*/5  * * * *")
+@kronos.register("*/10  * * * *")
 def queue_users_sf_resource():
-    """ runs every five mins and initiates user sf syncs if their prev workflow is done """
+    """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow

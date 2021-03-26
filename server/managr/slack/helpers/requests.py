@@ -72,7 +72,7 @@ def request_user_dm_channel(slack_id, access_token):
     return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
 
 
-def send_channel_message(channel, access_token, text=None, block_set=None):
+def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     """
     Posts a message to a public channel, private channel, or DM channel.
     Initial context for block_set goes here!
@@ -80,16 +80,14 @@ def send_channel_message(channel, access_token, text=None, block_set=None):
     url = slack_const.SLACK_API_ROOT + slack_const.POST_MESSAGE
     data = {}
     data["channel"] = channel
-    if text:
-        data["text"] = text
-    if block_set:
-        data["blocks"] = block_set
+    data["text"] = text
+    data["blocks"] = block_set
 
     res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
-    return _handle_response(res, blocks=block_set if block_set else [])
+    return _handle_response(res, blocks=block_set)
 
 
-def update_channel_message(channel, message_timestamp, access_token, text=None, block_set=None):
+def update_channel_message(channel, message_timestamp, access_token, text="Managr", block_set=[]):
     """
     Updates a message.
     """
@@ -97,15 +95,15 @@ def update_channel_message(channel, message_timestamp, access_token, text=None, 
     data = {}
     data["channel"] = channel
     data["ts"] = message_timestamp
-    if text:
-        data["text"] = text
-    if block_set:
-        data["blocks"] = block_set
+
+    data["text"] = text
+    data["blocks"] = block_set
     res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
     return _handle_response(res, blocks=block_set if block_set else [])
 
 
 def generic_request(url, data, access_token=None):
+    original_data = data
     res = requests.post(
         url,
         data=json.dumps(data),
@@ -113,7 +111,7 @@ def generic_request(url, data, access_token=None):
         if access_token
         else slack_auth.json_headers(),
     )
-    return _handle_response(res, blocks=[])
+    return _handle_response(res, blocks=original_data.get("blocks"))
 
 
 # * from managr.slack.helpers import requests

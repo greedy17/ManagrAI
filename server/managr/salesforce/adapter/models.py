@@ -359,10 +359,26 @@ class SalesforceAuthAccountAdapter:
         logger.info(f"{url} was sent")
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
+        saved_response = res
         logger.info(
             f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
         )
-        res = self._format_resource_response(res, resource)
+        # regardless of the offset if the data is too large Salesforce will paginate
+        while True:
+            has_next_page = res.get("nextRecordsUrl", None)
+            if has_next_page:
+                logger.info(f"Request returned a next page {has_next_page}")
+                next_page_url = self.instance_url + has_next_page
+                res = client.get(
+                    next_page_url,
+                    headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                )
+                res = self._handle_response(res)
+                saved_response["records"] = [*saved_response["records"], *res["records"]]
+            else:
+                break
+
+        res = self._format_resource_response(saved_response, resource)
         return res
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
@@ -562,8 +578,6 @@ class ContactAdapter:
     def to_api(data, mapping, object_fields):
         formatted_data = dict()
         for k, v in data.items():
-            if k == "Id":
-                print(k)
             key = mapping.get(k, None)
             if key and key != "Id":
                 if v is not None:

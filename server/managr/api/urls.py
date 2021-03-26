@@ -73,6 +73,7 @@ urlpatterns = [
     path("users/salesforce/authenticate", sf_views.authenticate, name="salesforce-authentication",),
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
+    path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),
 ]
 
