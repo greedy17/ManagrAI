@@ -36,9 +36,7 @@ class ArrayLength(models.Func):
 class SObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(
-                salesforce_account__user__organization__id=user.organization_id, is_public=False
-            )
+            return self.filter(salesforce_account__user__id=user.id, is_public=False)
         else:
             return self.none()
 
@@ -71,7 +69,7 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(salesforce_account__user__organization__id=user.organization_id)
+            return self.filter(salesforce_account__user__id=user.id)
         else:
             return self.none()
 
@@ -135,25 +133,25 @@ class SObjectField(TimeStampModel, IntegrationModel):
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name == "StageName":
-                action_id = (
-                    slack_consts.ZOOM_MEETING__STAGE_SELECTED
-                    + f"?w={str(kwargs.get('workflow').id)}"
+                if kwargs.get("workflow") not in ["", None]:
+                    action_id = (
+                        slack_consts.ZOOM_MEETING__STAGE_SELECTED
+                        + f"?w={str(kwargs.get('workflow').id)}"
+                    )
+                initial_option = dict(
+                    *map(
+                        lambda value: block_builders.option(value["text"]["text"], value["value"]),
+                        filter(
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                        ),
+                    ),
                 )
 
                 block = block_builders.static_select(
                     f"*{self.reference_display_label}*",
                     self.get_slack_options,
                     action_id=action_id,
-                    initial_option=dict(
-                        *map(
-                            lambda value: block_builders.option(
-                                value["text"]["text"], value["value"]
-                            ),
-                            filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                            ),
-                        ),
-                    ),
+                    initial_option=initial_option,
                     block_id=self.api_name,
                 )
             elif self.is_public:
@@ -176,18 +174,15 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 initial_option = None
                 if value:
-                    initial_option = (
-                        dict(
-                            *map(
-                                lambda value: block_builders.option(
-                                    value["text"]["text"], value["value"]
-                                ),
-                                filter(
-                                    lambda opt: opt.get("value", None) == value,
-                                    self.get_slack_options,
-                                ),
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
                             ),
-                        ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
                     )
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (

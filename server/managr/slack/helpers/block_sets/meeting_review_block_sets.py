@@ -569,3 +569,74 @@ def final_meeting_interaction_block_set(context):
 
     return blocks
 
+
+@block_set(required_context=["w"])
+def meeting_summary_blockset(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+
+    meeting = workflow.meeting
+    review = meeting.zoom_meeting_review
+    summary = meeting.zoom_meeting_review.meeting_review_summary
+    user_timezone = meeting.zoom_account.timezone
+    start_time = meeting.start_time
+
+    formatted_start = (
+        datetime.strftime(start_time.astimezone(pytz.timezone(user_timezone)), "%m/%d/%Y")
+        if start_time
+        else start_time
+    )
+
+    blocks = [
+        block_builders.simple_section(
+            f"*Meeting Topic: {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
+            "mrkdwn",
+        ),
+        block_builders.simple_section(f"*Meeting Type:*  {review.meeting_type}", "mrkdwn",),
+        block_builders.simple_section(f"*Meeting Date:*  {formatted_start}", "mrkdwn",),
+    ]
+
+    stage_component = list(filter(lambda comp: comp.type == "stage", summary))
+    forecast_component = list(filter(lambda comp: comp.type == "forecast", summary))
+    close_date_component = list(filter(lambda comp: comp.type == "close_date", summary))
+    duration_component = list(filter(lambda comp: comp.type == "duration", summary))
+    attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
+    amount_component = list(filter(lambda comp: comp.type == "amount", summary))
+
+    blocks.append(
+        block_builders.simple_section(
+            f"*Stage Update:* {stage_component[0].rendered_message}", "mrkdwn",
+        )
+    )
+    blocks.append(
+        block_builders.simple_section(
+            f"*Forecast:* {forecast_component[0].rendered_message}", "mrkdwn",
+        )
+    )
+    # amount blockset
+    blocks.append(
+        block_builders.simple_section(
+            f"*Amount:* {amount_component[0].rendered_message}", "mrkdwn",
+        )
+    )
+
+    blocks.append(
+        block_builders.simple_section(
+            f"*Close Date:* {close_date_component[0].rendered_message}", "mrkdwn",
+        )
+    )
+
+    if review.next_step not in ["", None]:
+        blocks.append(block_builders.simple_section(f"*Next Step:* {review.next_step}", "mrkdwn"))
+
+    blocks.append(
+        block_builders.simple_section(
+            f"*Helpful Hints:* {attendance_component[0].rendered_message}, {duration_component[0].rendered_message} ",
+            "mrkdwn",
+        )
+    )
+    blocks.append(
+        block_builders.simple_section(f"*Meeting Comments:* {review.meeting_comments}", "mrkdwn",)
+    )
+
+    return blocks
+

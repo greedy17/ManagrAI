@@ -33,5 +33,5 @@ class CustomZoomMeeting(admin.ModelAdmin):
 
 
 admin.site.register(models.ZoomAuthAccount)
-admin.site.register(models.MeetingReview)
+admin.site.register(models.ZoomMeetingReview)
 admin.site.register(models.ZoomMeeting, CustomZoomMeeting)

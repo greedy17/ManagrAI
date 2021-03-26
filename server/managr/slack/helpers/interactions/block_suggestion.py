@@ -125,6 +125,8 @@ def handle_block_suggestion(payload):
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
+        slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
+        slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
     }
     action_query_string = payload["action_id"]
