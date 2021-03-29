@@ -155,6 +155,9 @@
                 <span
                   @click.prevent="removeMeetingType(val.id)"
                   class="meeting-type__list__item-remove"
+                  :class="{
+                    'meeting-type__list__item-remove--disabled': !$store.state.user.isAdmin,
+                  }"
                   >x</span
                 >
               </div>
@@ -415,6 +418,9 @@ export default {
       }
     },
     async removeMeetingType(id) {
+      if (!this.$store.state.user.isAdmin) {
+        return
+      }
       try {
         await ActionChoice.api.delete(id)
         await this.getActionChoices()
@@ -680,6 +686,9 @@ export default {
         margin-left: 0.5rem;
         &:hover {
           cursor: pointer;
+        }
+        &--disabled:hover {
+          cursor: not-allowed;
         }
       }
       &-label {
