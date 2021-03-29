@@ -466,9 +466,9 @@ class SFSyncOperation(TimeStampModel):
                         sf_account.regenerate_token()
                         attempts += 1
                 # get counts to set offsets
-                # Limit to 2000 salesforce has a 2000 offset limit as it is previously we would just get the rest which was too big
-                # we now only get a max of 2000 (note for Leads mike says to just get 500)
-            max_count = 500 if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
+                # has a 2000 offset limit as it is previously we would just get the rest which was too big
+                # we now only get a max of 500
+            max_count = 500  # if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
