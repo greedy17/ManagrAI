@@ -358,7 +358,7 @@ export default {
     },
 
     async updateMeeting(e) {
-      if (e.keyCode == 13) {
+      if (e.keyCode == 13 && this.meetingType.length) {
         if (
           (this.resource == 'Opportunity' || this.resource == 'Account') &&
           this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -392,6 +392,19 @@ export default {
     },
 
     async onSave() {
+      if (
+        (this.resource == 'Opportunity' || this.resource == 'Account') &&
+        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
+        if (!this.meetingType.length && !this.actionChoices.length) {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'Please enter a Meeting Type',
+            timeout: 2000,
+          })
+          return
+        }
+      }
       this.savingForm = true
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))

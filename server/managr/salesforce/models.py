@@ -36,9 +36,7 @@ class ArrayLength(models.Func):
 class SObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(
-                salesforce_account__user__organization__id=user.organization_id, is_public=False
-            )
+            return self.filter(salesforce_account__user__id=user.id, is_public=False)
         else:
             return self.none()
 
@@ -71,7 +69,7 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(salesforce_account__user__organization__id=user.organization_id)
+            return self.filter(salesforce_account__user__id=user.id)
         else:
             return self.none()
 
@@ -186,7 +184,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                             ),
                         )
                     )
-                    print(initial_option)
                 user_id = str(self.salesforce_account.user.id)
                 action_query = (
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"

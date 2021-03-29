@@ -3,9 +3,12 @@ import kronos
 import datetime
 import logging
 
+from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils import timezone
-from django.db.models import Q, Sum, IntegerField, F, Func, DateField
+from django.db.models import Q, F, Func, IntegerField, DateField, Sum
 from django.db.models.functions import Cast
+from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
 from managr.salesforce.models import SFObjectFieldsOperation, SFSyncOperation, SalesforceAuthAccount
@@ -34,6 +37,35 @@ def queue_users_sf_resource():
     return
 
 
+@kronos.register("*/10  * * * *")
+def report_sf_data_sync(sf_account=None):
+    """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
+    # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
+    reports = []
+    if not sf_account:
+        # get all reports
+        sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
+        for account in sf_accounts:
+            report = get_report_data(account)
+            reports.append(report)
+    else:
+        report = get_report_data(sf_account)
+        reports.append(report)
+
+    subject = render_to_string("salesforce/sync_report-subject.txt")
+    recipient = [settings.STAFF_EMAIL]
+    send_html_email(
+        subject,
+        "salesforce/sync_report.html",
+        settings.SERVER_EMAIL,
+        recipient,
+        context={"data": reports},
+    )
+
+    # if latest workflow is at 100 emit sf resource sync
+    return
+
+
 @kronos.register("0 */12 * * *")
 def queue_users_sf_fields():
     """ runs every 12 hours and initiates user sf syncs if their prev workflow is done """
@@ -51,6 +83,54 @@ def queue_users_sf_fields():
             continue
         # if latest workflow is at 100 emit sf resource sync
     return
+
+
+def get_report_data(account):
+    workflows = SFSyncOperation.objects.filter(user=account.user)
+    total_workflows = workflows.count()
+    total_incomplete_flows = (
+        workflows.annotate(
+            progress_l=Sum(
+                ArrayLength("completed_operations")
+                + ArrayLength("failed_operations")
+                - ArrayLength("operations"),
+                output_field=IntegerField(),
+            )
+        )
+        .filter(progress_l__lt=0)
+        .count()
+    )
+    todays_flows = (
+        workflows.annotate(creation_date=Cast("datetime_created", DateField()))
+        .filter(creation_date=datetime.datetime.now().date())
+        .order_by("-creation_date")
+    ).count()
+    todays_failed_flows = (
+        workflows.annotate(
+            progress_l=Sum(
+                ArrayLength("completed_operations")
+                + ArrayLength("failed_operations")
+                - ArrayLength("operations"),
+                output_field=IntegerField(),
+            )
+        )
+        .annotate(creation_date=Cast("datetime_created", DateField()))
+        .filter(creation_date=datetime.datetime.now().date(), progress_l__lt=0)
+        .values_list("creation_date", flat=True)
+        .order_by("-creation_date")
+    ).count()
+    latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+    if latest_flow:
+        latest_flow = latest_flow.datetime_created
+
+    return {
+        "user": f"{account.user.email}-{account.user.id}",
+        "total_workflows": total_workflows,
+        "total_incomplete_workflows": total_incomplete_flows,
+        "todays_workflows": todays_flows,
+        "todays_failed_flows": todays_failed_flows,
+        "latest_flow": latest_flow,
+    }
 
 
 def init_sf_resource_sync(user_id):
