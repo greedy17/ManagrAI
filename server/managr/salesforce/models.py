@@ -403,10 +403,14 @@ class SFSyncOperation(TimeStampModel):
     def status(self):
         if not len(self.operations_list):
             return "No Operations"
-        if len(self.operations_list) and not len(self.operations):
+        elif len(self.operations_list) and not len(self.operations):
             return "Not Started"
-        else:
+        elif len(self.operations_list) and not self.progress == 100:
             return "In Progress"
+        elif len(self.operations_list) and self.progress == 100:
+            return "Completed"
+        else:
+            return "Can't determine progress"
 
     @property
     def failed_count(self):
