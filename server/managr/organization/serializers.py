@@ -34,6 +34,7 @@ class ActionChoiceSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "organization",
+            "id",
         )
 
 

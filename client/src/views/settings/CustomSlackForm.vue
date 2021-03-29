@@ -85,22 +85,26 @@
                 field.referenceDisplayLabel === 'How Did It go?'
             "
             class="form-field__label"
-          >{{ field.referenceDisplayLabel }}</div>
+          >
+            {{ field.referenceDisplayLabel }}
+          </div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
               <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
                 {{
-                "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
 
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
-              >{{ 'Logs the rep’s comments about the meeting' }}</div>
+              >
+                {{ 'Logs the rep’s comments about the meeting' }}
+              </div>
               <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
                 {{
-                'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
+                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
                 }}
               </div>
 
@@ -111,7 +115,9 @@
                     field.referenceDisplayLabel !== 'Meeting Comments' &&
                     field.referenceDisplayLabel !== 'How Did It go?'
                 "
-              >{{ field.referenceDisplayLabel }}</div>
+              >
+                {{ field.referenceDisplayLabel }}
+              </div>
             </div>
 
             <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
@@ -138,15 +144,24 @@
             <small v-if="meetingType.length" style="margin-left: 1rem;">Press Enter to Save</small>
           </div>
           <div
-            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length "
+            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length"
             class="meeting-type__list"
           >
-            <small>Meeting Types:</small>
-            <br />
-
-            <small>
-              <strong>{{ actionChoices.map(action => action.title).join(', ') }}</strong>
-            </small>
+            <template v-if="!loadingMeetingTypes">
+              <div :key="key" v-for="(val, key) in actionChoices" class="meeting-type__list__item">
+                <span class="meeting-type__list__item-label">
+                  {{ val.title }}
+                </span>
+                <span
+                  @click.prevent="removeMeetingType(val.id)"
+                  class="meeting-type__list__item-remove"
+                  >x</span
+                >
+              </div>
+            </template>
+            <template v-else>
+              <PulseLoadingSpinner :loading="loadingMeetingTypes" />
+            </template>
           </div>
         </div>
       </div>
@@ -214,6 +229,7 @@ export default {
       Pagination,
       meetingType: '',
       actionChoices: [],
+      loadingMeetingTypes: false,
     }
   },
   watch: {
@@ -275,9 +291,13 @@ export default {
   },
   methods: {
     getActionChoices() {
-      const action = ActionChoice.api.list({}).then(res => {
-        this.actionChoices = res.results
-      })
+      this.loadingMeetingTypes = true
+      const action = ActionChoice.api
+        .list({})
+        .then(res => {
+          this.actionChoices = res.results
+        })
+        .finally((this.loadingMeetingTypes = false))
     },
     nextPage() {
       this.formFields.nextPage()
@@ -359,6 +379,7 @@ export default {
 
     async updateMeeting(e) {
       if (e.keyCode == 13 && this.meetingType.length) {
+        this.loadingMeetingTypes = true
         if (
           (this.resource == 'Opportunity' || this.resource == 'Account') &&
           this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -376,18 +397,31 @@ export default {
               organization: this.$store.state.user.organization,
             }
 
-            await ActionChoice.api.create(obj).then(res => {
-              this.$Alert.alert({
-                type: 'success',
-                message: 'New meeting type created',
-                timeout: 2000,
+            await ActionChoice.api
+              .create(obj)
+              .then(res => {
+                this.$Alert.alert({
+                  type: 'success',
+                  message: 'New meeting type created',
+                  timeout: 2000,
+                })
               })
-            })
+              .finally((this.loadingMeetingTypes = false))
 
             this.getActionChoices()
             this.meetingType = ''
           }
         }
+      }
+    },
+    async removeMeetingType(id) {
+      try {
+        await ActionChoice.api.delete(id)
+        await this.getActionChoices()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingMeetingTypes = false
       }
     },
 
@@ -631,6 +665,30 @@ export default {
 
   &__list {
     margin: 0.5rem 0 0 1rem;
+    display: flex;
+    flex-direction: row;
+    width: 40rem;
+    overflow-x: scroll;
+    &__item {
+      display: flex;
+      width: 15rem;
+
+      &-remove {
+        position: relative;
+        right: 0.5rem;
+        width: 0.5rem;
+        margin-left: 0.5rem;
+        &:hover {
+          cursor: pointer;
+        }
+      }
+      &-label {
+        width: 8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
   }
 }
 </style>
