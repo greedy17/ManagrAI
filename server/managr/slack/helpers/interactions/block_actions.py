@@ -763,6 +763,41 @@ def process_coming_soon(payload, context):
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
+@processor(requried_context="u")
+def process_create_task(payload, context):
+    print('payload')
+    print(payload)
+    print('context')
+    print(context)
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
+            "title": {"type": "plain_text", "text": f"Coming Soon"},
+            "blocks": get_block_set("create_task_modal", context={"u": payload}),
+        },
+    }
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
 def handle_block_actions(payload):
     """
@@ -781,11 +816,11 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
-        slack_const.ZOOM_MEETING__CREATE_TASK: process_coming_soon,
+        slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
-    }
+    } 
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
