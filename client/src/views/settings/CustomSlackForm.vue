@@ -2,7 +2,6 @@
   <div class="slack-form-builder">
     <div>
       <div class="slack-from-builder__sf-validations">
-        <!-- <h4>Validations</h4> -->
         <template v-if="showValidations">
           <template v-if="sfValidations.length">
             <ul :key="val.id" v-for="val in sfValidations">
@@ -143,24 +142,22 @@
             />
             <small v-if="meetingType.length" style="margin-left: 1rem;">Press Enter to Save</small>
           </div>
+
           <div
             v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length"
             class="meeting-type__list"
           >
             <template v-if="!loadingMeetingTypes">
-              <div :key="key" v-for="(val, key) in actionChoices" class="meeting-type__list__item">
-                <span class="meeting-type__list__item-label">
-                  {{ val.title }}
-                </span>
-                <span
-                  @click.prevent="removeMeetingType(val.id)"
-                  class="meeting-type__list__item-remove"
-                  :class="{
-                    'meeting-type__list__item-remove--disabled': !$store.state.user.isAdmin,
-                  }"
-                  >x</span
-                >
-              </div>
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    @item-selected="removeMeetingType(val.id)"
+                    :key="key"
+                    v-for="(val, key) in actionChoices"
+                    :item="val.title"
+                  />
+                </template>
+              </ListContainer>
             </template>
             <template v-else>
               <PulseLoadingSpinner :loading="loadingMeetingTypes" />
@@ -176,6 +173,9 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
+import ListItem from '@/components/ListItem'
+import ListContainer from '@/components/ListContainer'
+
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
@@ -193,6 +193,8 @@ export default {
     PulseLoadingSpinner,
     Paginator,
     CollectionSearch,
+    ListItem,
+    ListContainer,
   },
   props: {
     customForm: {
@@ -670,34 +672,9 @@ export default {
   width: 15rem;
 
   &__list {
-    margin: 0.5rem 0 0 1rem;
-    display: flex;
-    flex-direction: row;
-    width: 40rem;
-    overflow-x: scroll;
-    &__item {
-      display: flex;
-      width: 15rem;
-
-      &-remove {
-        position: relative;
-        right: 0.5rem;
-        width: 0.5rem;
-        margin-left: 0.5rem;
-        &:hover {
-          cursor: pointer;
-        }
-        &--disabled:hover {
-          cursor: not-allowed;
-        }
-      }
-      &-label {
-        width: 8rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
+    margin: 0.5rem;
+    width: 80%;
+    overflow: hidden;
   }
 }
 </style>
