@@ -104,11 +104,17 @@
         </div>
 
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
+        <GoogleButton
+          @click="onGetAuthLink('NYLAS')"
+          :loading="generatingToken && selectedIntegration == 'NYLAS'"
+          v-if="!hasNylasIntegration"
+        />
+
         <PulseLoadingSpinnerButton
           v-if="!hasNylasIntegration"
           @click="onGetAuthLink('NYLAS')"
           class="primary-button"
-          text="Connect"
+          text="Connect Other Provider"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
         ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
@@ -155,10 +161,11 @@ import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import GoogleButton from '@/components/GoogleButton'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton },
+  components: { PulseLoadingSpinnerButton, GoogleButton },
   data() {
     return {
       generatingToken: false,
