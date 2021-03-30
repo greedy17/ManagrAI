@@ -106,6 +106,12 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             try:
                 meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
                 meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+                meeting.original_duration = original_duration
+                logger.info(f"{meeting.original_duration}")
+                if meeting.original_duration < 0:
+                    # zoom weired bug where instance meetings get a random -1324234234 negative big int
+                    meeting.original_duration = 0
+
                 break
             except TokenExpired:
                 if attempts >= 5:
@@ -119,11 +125,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 logger.info(
                     f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
                 )
-            meeting.original_duration = original_duration
-            logger.info(f"{meeting.original_duration}")
-            if meeting.original_duration < 0:
-                # zoom weired bug where instance meetings get a random -1324234234 negative big int
-                meeting.original_duration = 0
 
         #
         logger.info(f"    Got Meeting: {meeting} with ID: {meeting_uuid}")
