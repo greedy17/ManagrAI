@@ -120,8 +120,13 @@ def get_report_data(account):
         .order_by("-creation_date")
     ).count()
     latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+    latest_flow_data = {}
     if latest_flow:
-        latest_flow = latest_flow.datetime_created
+        latest_flow_data = {
+            "date_time": latest_flow.datetime_created.strftime("%m/%d/%Y, %H:%M"),
+            "progress": latest_flow.progress,
+            "status": latest_flow.status,
+        }
 
     return {
         "user": f"{account.user.email}-{account.user.id}",
@@ -129,7 +134,7 @@ def get_report_data(account):
         "total_incomplete_workflows": total_incomplete_flows,
         "todays_workflows": todays_flows,
         "todays_failed_flows": todays_failed_flows,
-        "latest_flow": latest_flow,
+        "latest_flow": latest_flow_data,
     }
 
 

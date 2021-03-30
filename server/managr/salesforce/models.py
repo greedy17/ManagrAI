@@ -403,10 +403,14 @@ class SFSyncOperation(TimeStampModel):
     def status(self):
         if not len(self.operations_list):
             return "No Operations"
-        if len(self.operations_list) and not len(self.operations):
+        elif len(self.operations_list) and not len(self.operations):
             return "Not Started"
-        else:
+        elif len(self.operations_list) and not self.progress == 100:
             return "In Progress"
+        elif len(self.operations_list) and self.progress == 100:
+            return "Completed"
+        else:
+            return "Can't determine progress"
 
     @property
     def failed_count(self):
@@ -462,7 +466,10 @@ class SFSyncOperation(TimeStampModel):
                         sf_account.regenerate_token()
                         attempts += 1
                 # get counts to set offsets
-            count = min(count, 10000)
+                # has a 2000 offset limit as it is previously we would just get the rest which was too big
+                # we now only get a max of 500
+            max_count = 500  # if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
+            count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
                 limit = sf_consts.SALESFORCE_QUERY_LIMIT
@@ -667,7 +674,8 @@ class MeetingWorkflow(SFSyncOperation):
             if len(self.failed_task_description):
                 for i, m in enumerate(self.failed_task_description):
                     block_set.insert(
-                        i + 1, *get_block_set("error_message", {"message": f"{m}"}),
+                        i + 1,
+                        *get_block_set("error_message", {"message": f":no_entry_sign: _{m}_"}),
                     )
 
             slack_access_token = self.user.organization.slack_integration.access_token
@@ -678,15 +686,15 @@ class MeetingWorkflow(SFSyncOperation):
                 )
             except InvalidBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
             except InvalidBlocksFormatException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
             except UnHandeledBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
 
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
