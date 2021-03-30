@@ -409,10 +409,8 @@ def _send_meeting_summary(workflow_id):
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
 
-    user_list = (
-        user.organization.users.filter(user_level="MANAGER")
-        .exclude(id=user.id)
-        .select_related("slack_integration")
+    user_list = user.organization.users.filter(user_level="MANAGER").select_related(
+        "slack_integration"
     )
     try:
         for u in user_list:
