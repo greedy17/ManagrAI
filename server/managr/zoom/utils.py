@@ -155,31 +155,31 @@ SCORE_LOOKUP = {
             "type": "duration",
             "points": 0,
             "impact": "positive",
-            "message_tpl": "Could not determine the meeting duration.",
+            "message_tpl": "The meeting lasted {duration} minutes, we could not determine whether meeting lasted longer than planned or ended sooner.",
         },
         "planned_over_15": {
             "type": "duration",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The meeting went over time by more than 15 minutes.",
+            "message_tpl": "The meeting lasted {duration} minutes, it went over time by more than 15 minutes.",
         },
         "planned_under_15": {
             "type": "duration",
             "points": 5,
             "impact": "negative",
-            "message_tpl": "The meeting was cut short by more than 15 minutes.",
+            "message_tpl": "The meeting lasted {duration} minutes, it was cut short by more than 15 minutes.",
         },
         "planned_over_5": {
             "type": "duration",
             "points": 6,
             "impact": "positive",
-            "message_tpl": "The meeting went over time by about 5 minutes.",
+            "message_tpl": "The meeting lasted {duration} minutes, it went over time by about 5 minutes.",
         },
         "planned_over_2": {
             "type": "duration",
             "points": 3,
             "impact": "positive",
-            "message_tpl": "The meeting went over time by about 2 minutes.",
+            "message_tpl": "The meeting lasted {duration} minutes, it went over time by about 2 minutes.",
         },
         "instant_over_60": {
             "type": "duration",
@@ -232,6 +232,7 @@ class ScoreComponent:
             new_stage_name=new_stage_name,
             new_close_date=new_close_date,
             new_amount=new_amount,
+            duration=self.meeting.duration,
         )
 
     @property
