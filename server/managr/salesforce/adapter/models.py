@@ -336,6 +336,25 @@ class SalesforceAuthAccountAdapter:
             }
         )
 
+    def get_individual_picklist_values(self, resource, field_name=None):
+        """ Sync method to get picklist values for resources not saved in our db """
+        record_type_id = self.default_record_id
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+        url = f"{url}/{field_name}" if field_name else url
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+
+        return SObjectPicklistAdapter.create_from_api(
+            {
+                "values": res["values"],
+                "salesforce_account": str(self.id),
+                "picklist_for": field_name,
+                "imported_by": str(self.user),
+                "salesforce_object": resource,
+                "integration_source": "SALESFORCE",
+            }
+        )
+
     def list_validations(self, resource):
         """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
 

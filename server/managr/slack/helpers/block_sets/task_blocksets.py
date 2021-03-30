@@ -74,6 +74,11 @@ def create_task_modal_block_set(context):
             ),
         )
     )
+    action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={context.get('u')}&resource=Task&field=Status"
+
+    blocks.append(
+        block_builders.external_select("Status", action_query, block_id="managr_task_status")
+    )
 
     return blocks
 
