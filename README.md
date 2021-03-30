@@ -86,11 +86,13 @@ Here are the steps to get you started:
 4. Run your frontend and backend servers `server/manage.py runserver` & `npm run serve`
 5. Run the task processor `server/manage.py process_tasks`
 6. To refresh data every 10 mins (resource data) and 12 hours (object fields) run the cron jobs *(Only run this once and then end the cron job otherwise you will use up all the licenses we all share)*
-7. Create a new user through the user registration screen (remember you will need the code)
-8. Integrate Salesforce, zoom, slack and nylas
-9. Create your first zoom meeting and invite a user *(note we will use this meeting as your fake testable meeting)*
-10. Navigate to the admin pannel and find your meeting in the ZoomMeetings tab copy the unique id for this meeting 
-11. In your environment variables (managr/server/.env) paste the meeting uuid in ZOOM_FAKE_MEETING_UUID
+7. Make sure to loadfixtures for custom fields `server/manage.py loaddata fixture`
+8. Create a new user through the user registration screen (remember you will need the code)
+9. Integrate Salesforce, zoom, slack and nylas
+10. Create your first zoom meeting and invite a user *(note we will use this meeting as your fake testable meeting)*
+11. Navigate to the admin pannel and find your meeting in the ZoomMeetings tab copy the unique id for this meeting 
+12. In your environment variables (managr/server/.env) paste the meeting uuid in ZOOM_FAKE_MEETING_UUID
+13. If you correctly followed the instructions for getting set up in the previous section then you have NVM it is best to switch to 14.15.4 when developing to match prod (since we build locally before deploying)
 
 ### Setting up ngrok
 
@@ -144,7 +146,7 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
             total_incomplete_workflows : 2
             todays_workflows : 46
             todays_failed_flows : 0
-            latest_flow : March 26, 2021, 6 p.m. // if the latest flow here is not recent and it has todays_failed_flows assume it wont auto resync init a new flow manually
+            latest_flow : March 26, 2021, 6 p.m. progress: 100 // if the latest flow here is not recent and it has todays_failed_flows assume it wont auto resync init a new flow manually
 
 
 
@@ -155,6 +157,94 @@ Our Staging Environment is hosted on heroku, the app name is Managr Staging 2, m
 
 `heroku logs --tail --app managr-staging-2`
 
+***!!!!! NOTE CURRENTLY THE APP WILL NOT AUTO DEPLOY BECAUSE TESTS ARE FAILING !!!!***
+
+To deploy the app manually 
+
+`git push <heroku-remote-name> branch:master`
+
+*remember to run any migrations*
 
 
 ## Prod Environment 
+
+Prod is built on AWS, we have to ec2 instances running. One instance is a t2.micro, this one only serves the app. The other instance is a t2.medium this also serves the app but also runs cron jobs (it has a larger memory and is an 8 core). Note that in order to serve the asgi app both run a process for handling incoming asgi requests. We use sticky sessions to distribute traffic between the app, which instance the user is on depends on this and is cleared every 24hrs. When ether instance is unhealthy traffic is directed to the other instance (currently both fail health checks due to improper nginx setup). The RDS is served by AWS on its own instance as well. 
+
+To SSH into the instance you must first set up your ssh access:
+1. first login to the console (you should have your own credentials, reach out to William if not).
+2. Navigate to the [instances page](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:)
+3. On the side bar select [security groups](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:) (both share the same sg)
+4. Select the correct [instance  id: sg-0d14e11db1aa9ec1c	label: production_ec2](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroup:groupId=sg-0d14e11db1aa9ec1c)
+5. Select Edit *Inbound Rules* and then *Add Rule*
+6. In the type dropdown select *ssh*
+7. In the source fropdown select *My Ip* and then *save rules*
+
+On your computer you can now add your identity file:
+1. open or create a config file (note this is for ease of access) `code ~/.ssh/config` or `vim ~/.ssh/config`
+2. Paste the details for the two instances 
+
+```
+      Host *
+      UseKeychain yes
+      AddKeysToAgent yes
+
+      Host AWS-Managr
+      HostName 3.228.14.6
+      user ubuntu 
+      IdentityFile ~/.ssh/mgr_prod.pem
+
+      Host AWS-Managr-2
+      HostName 3.234.251.11
+      user ubuntu
+      IdentityFile ~/.ssh/mgr_prod.pem
+```
+3. Copy the pem file to your ssh directory this file can be found in [1 password](https://start.1password.com/open/i?a=QDUDXTQK4ZAJRBIRDQLLXXIMGE&v=y46ltqijnoyhqahtqhm5lb7jba&i=s4y3wu6qtpn3vakac3f7qtbjmi&h=aspire.1password.com) 
+   
+   `sudo echo -e <"PEM-FILE-DATE"> >> ~/.ssh/mgr_prod.pem` or `code ~/.ssh/mgr_prod.pem` 
+   
+   and paste data
+4. to ssh `ssh AWS-Managr` or `ssh AWS-Managr-2` (2 is the t2.medium) 
+  *you may be prompted about saving the fingerprint which you can do*
+
+## Logs
+
+### Papertrail logs 
+We use [papertrail](https://papertrailapp.com/dashboard) to aggregate logs, this makes them easier to search. Some common search terms that may be helpful are program:<log> to show only data in the process_tasks.log, see bellow for the different log options. 
+
+[Staging PaperTrail Group](https://my.papertrailapp.com/groups/23969332/events)
+[Prod PaperTrail Group](https://my.papertrailapp.com/groups/23950522/events)
+
+### Viewing on the server
+
+Both instances have logs located in main managr directory `managr/logs` directory. Both will have the `asgi.log` which is the main directory for incoming requests. The logs for any of the async tasks will be found in `logs/process_tasks.log` which are all handled by the `AWS-Managr-2` instance (the t2.medium), there are also the nginx logs that record incoming requests before they are channeled to the `asgi.log`
+
+See all data in log file
+
+`cat logs/<log-file>.log`
+
+Tail only last 100 lines 
+
+`tail logs/<log-file>.log`
+
+
+
+### Async Logs
+Data from bg tasks are recorded in the process_tasks.log:
+1. SFSyncOperation - syncs all sf data
+2. SFFieldSync - syncs all sf object fields 
+3. MeetingWorkflow - the async meeting workflow tasks 
+
+*Note when creating a new resource for a meeting we use sync functions that are logged in both instance `asgi.logs`*
+
+*Note when updating a resource from a command we use sync functions that are logged in both instance `asgi.logs`*
+
+Cron jobs are handled by supervisor, you can see the cron jobs by running 
+
+`crontab -l`
+
+you can edit cron jobs by running 
+
+`crontab -e`
+
+
+
