@@ -104,13 +104,21 @@
         </div>
 
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
-        <PulseLoadingSpinnerButton
+        <GoogleButton
+          @click="onGetAuthLink('NYLAS')"
+          :loading="generatingToken && selectedIntegration == 'NYLAS'"
+          v-if="!hasNylasIntegration"
+        />
+        <!--       
+          Temporarily using sign in with google button instead to pass google verification   
+          
+          <PulseLoadingSpinnerButton
           v-if="!hasNylasIntegration"
           @click="onGetAuthLink('NYLAS')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
-        ></PulseLoadingSpinnerButton>
+        ></PulseLoadingSpinnerButton> -->
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
@@ -155,10 +163,11 @@ import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import GoogleButton from '@/components/GoogleButton'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton },
+  components: { PulseLoadingSpinnerButton, GoogleButton },
   data() {
     return {
       generatingToken: false,
