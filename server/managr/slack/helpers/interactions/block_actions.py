@@ -765,10 +765,7 @@ def process_coming_soon(payload, context):
 
 @processor(requried_context="u")
 def process_create_task(payload, context):
-    print('payload')
-    print(payload)
-    print('context')
-    print(context)
+    
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -779,8 +776,9 @@ def process_create_task(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
-            "title": {"type": "plain_text", "text": f"Coming Soon"},
-            "blocks": get_block_set("create_task_modal", context={"u": payload}),
+            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "blocks": get_block_set("create_task_modal", context={"u": context.get('u'), "w": context.get('w')}),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},            
         },
     }
     try:
