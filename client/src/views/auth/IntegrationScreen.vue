@@ -109,16 +109,14 @@
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
           v-if="!hasNylasIntegration"
         />
-        <!--       
-          Temporarily using sign in with google button instead to pass google verification   
-          
-          <PulseLoadingSpinnerButton
+
+        <PulseLoadingSpinnerButton
           v-if="!hasNylasIntegration"
           @click="onGetAuthLink('NYLAS')"
           class="primary-button"
-          text="Connect"
+          text="Connect Other Provider"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
-        ></PulseLoadingSpinnerButton> -->
+        ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
