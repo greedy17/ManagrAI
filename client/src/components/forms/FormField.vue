@@ -1,162 +1,114 @@
 <template>
-  <div class="form-field-container">
-    <div class="field">
-      <slot name="input"> </slot>
-      <label :for="binding">{{ labelText }}</label>
-    </div>
-    <div v-if="this.showErrors" class="error">
-      <span
-        ><b>{{ errors.length > 0 ? errors.map(e => e.message).join(' ') : '' }}</b></span
-      >
+  <div class="tn-input">
+    <label :for="labelRelation" class="tn-input__label"
+      >{{ label }} {{ required ? '*' : '' }}</label
+    >
+    <!-- v-bind="$attrs" loads attributes from parent -->
+    <!-- v-on="$listeners" loads listeners from parent -->
+    <slot name="input">
+      <InputField
+        class="tn-input__input"
+        :id="labelRelation"
+        :class="{
+          'tn-input__input--small': isSmall,
+          'tn-input__input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
+          'tn-input__input--large': isLarge,
+          'tn-input__input--bordered': isBordered,
+        }"
+        v-bind="$attrs"
+        v-on="$listeners"
+      />
+    </slot>
+    <div v-if="errors.length" class="tn-input__errors">
+      <span :key="`${error.code}-${i}`" v-for="(error, i) in errors">{{ error.message }}</span>
     </div>
   </div>
 </template>
 
 <script>
+import InputField from '@thinknimble/input-field'
+
 export default {
-  name: 'FormField',
+  components: {
+    InputField,
+  },
   props: {
-    binding: {
-      type: String,
-    },
-    labelText: {
-      type: String,
-    },
     errors: {
       type: Array,
+      default: () => [],
+    },
+    label: {
+      type: String,
+      default: '',
+    },
+    labelRelation: {
+      type: String,
+      required: false,
+    },
+    inputType: {
+      type: String,
+      default: 'text',
+    },
+    required: {
+      type: Boolean,
+      default: false,
     },
   },
-  data() {
-    return {
-      showErrors: false,
-      error: {},
-    }
-  },
-  watch: {
-    // TODO find out why it shows one by one or null
-    // TODO may switch this back to the old way so as to handle server side form field errors as well or use class setter
-    errors: function() {
-      // this.error = this.errors.find(error => error.fieldName === this.binding)
-      if (this.errors.length > 0) {
-        this.showErrors = true
-      } else {
-        this.showErrors = false
-      }
+  computed: {
+    isSmall() {
+      return this.$attrs.hasOwnProperty('small')
+    },
+    isMedium() {
+      return this.$attrs.hasOwnProperty('medium')
+    },
+    isLarge() {
+      return this.$attrs.hasOwnProperty('large')
+    },
+    isAutoSize() {
+      return this.$attrs.hasOwnProperty('autoSize')
+    },
+    isBordered() {
+      return this.$attrs.hasOwnProperty('bordered')
     },
   },
 }
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/mixins/inputs';
-.form-field-container {
+@import '@/styles/variables.scss';
+
+.tn-input {
   width: 100%;
-}
-.error > span > b {
-  color: red;
-}
-.field {
+  margin-bottom: 1.3rem;
   display: flex;
-  flex-flow: column-reverse;
-  margin-bottom: 0.5rem;
-  width: 100%;
-  justify-content: space-around;
-}
-label,
-input,
-textarea {
-  transition: all 0.2s;
-}
-label {
-  opacity: 0.5;
-  transition: inherit;
-  font-size: 14px;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-  @include base-font-styles();
-}
-
-input {
-  @include input-field();
-  cursor: text;
-  &::-webkit-input-placeholder {
-    opacity: 0;
-    transition: inherit;
-    font-size: 14px;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: $base-gray;
-    @include base-font-styles();
+  flex-direction: column;
+  align-items: center;
+  ::v-deep .primary {
+    --active-opacity: 1;
   }
-}
-textarea {
-  @include input-field();
-  cursor: text;
-  &::-webkit-input-placeholder {
-    opacity: 0;
-    transition: inherit;
-    resize: none;
-    height: 94%;
-    flex-grow: 1;
-    margin: 2% 0;
-    font-size: 14px;
-    @include base-font-styles();
+
+  &__input {
+    margin: 0.5rem 0;
+    &--small {
+      width: 7.4375rem;
+    }
+    &--medium {
+      width: 13rem;
+    }
+    &--large {
+      width: 19.6875rem;
+    }
+    &--bordered {
+      border: lightgray 1px solid;
+    }
   }
-}
 
-/**
-* By default, the placeholder should be transparent. Also, it should 
-* inherit the transition.
-*/
-::-webkit-input-placeholder {
-  opacity: 0;
-  transition: inherit;
-}
-::placeholder {
-  opacity: 0;
-}
-
-input:focus,
-textarea:focus {
-  outline: 0;
-  border-bottom: 1px solid gray;
-}
-
-/**
-* Translate down and scale the label up to cover the placeholder,
-* when following an input (with placeholder-shown support).
-* Also make sure the label is only on one row, at max 2/3rds of the
-* field—to make sure it scales properly and doesn't wrap.
-*/
-input:placeholder-shown + label,
-textarea:placeholder-shown + label {
-  cursor: text;
-  max-width: 30.66%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transform-origin: left bottom;
-  transform: translate(1rem, 2.6rem) scale(1);
-}
-
-/**
-* Show the placeholder when the input is focused.
-*/
-input:focus::-webkit-input-placeholder,
-textarea:focus::-webkit-input-placeholder {
-  opacity: 1;
-}
-/**
-* When the element is focused, remove the label transform.
-* Also, do this when the placeholder is _not_ shown, i.e. when 
-* there's something in the input at all.
-*/
-input:not(:placeholder-shown) + label,
-textarea:not(:placeholder-shown) + label,
-input:focus + label,
-textarea:focus + label {
-  transform: translate(0, 0) scale(1);
-  cursor: pointer;
+  &__errors {
+    display: flex;
+    flex-direction: column;
+    color: red;
+    font-size: 0.75rem;
+    font-family: $base-font-family;
+  }
 }
 </style>

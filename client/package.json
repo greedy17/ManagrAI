@@ -17,6 +17,7 @@
     "@thinknimble/button": "^0.4.0",
     "@thinknimble/collection-search": "^0.5.2",
     "@thinknimble/dropdownselect": "0.0.4",
+    "@thinknimble/input-field": "^0.1.3",
     "@thinknimble/paginator": "^0.3.0",
     "@thinknimble/pulse-loading-spinner-button": "^0.1.1",
     "@thinknimble/tn-forms": "^1.0.5",

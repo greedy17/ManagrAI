@@ -478,11 +478,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         u = request.user
-
-        # in order to invite a user django needs a user to be registered as a service account
-        # use server/manage.py createserviceaccount and supply an email
-        # for now we will only need one email (ex no-reply@) but in the future we will have more
-        # therefore selecting the first email that is of type service_account
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
@@ -494,7 +489,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
-        # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
 
         subject = render_to_string("registration/invitation-subject.txt")
         recipient = [response_data["email"]]

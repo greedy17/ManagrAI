@@ -1,6 +1,6 @@
 import Form, { FormField } from '@thinknimble/tn-forms'
 import Model, { fields } from '@thinknimble/tn-models'
-import { RequiredValidator } from '@thinknimble/tn-validators'
+import { RequiredValidator, MustMatchValidator } from '@thinknimble/tn-validators'
 
 export class UserRegistrationForm extends Form {
   static fullName = new FormField({ validators: [new RequiredValidator()] })
@@ -17,12 +17,13 @@ export class UserRegistrationForm extends Form {
       .slice(1)
       .join(' ')
     return {
-      first_name: firstName,
-      last_name: lastName,
-      email: this.field.email.value,
+      firstName: firstName,
+      lastName: lastName,
+      ...this.value,
+      /* email: this.field.email.value,
       password: this.field.password.value,
       organization_name: this.field.organizationName.value,
-      role: this.field.role.value,
+      role: this.field.role.value, */
     }
   }
 }
@@ -40,10 +41,38 @@ export class RepRegistrationForm extends Form {
       .slice(1)
       .join(' ')
     return {
-      first_name: firstName,
-      last_name: lastName,
-      email: this.field.email.value,
-      password: this.field.password.value,
+      firstName: firstName,
+      lastName: lastName,
+      ...this.value,
     }
   }
 }
+
+export class UserInviteForm extends Form {
+  static email = new FormField({ validators: [new RequiredValidator()] })
+  static confirmEmail = new FormField({ validators: [new RequiredValidator()] })
+  static role = new FormField({ validators: [] })
+  static userLevel = new FormField({ validators: [new RequiredValidator()] })
+  static organization = new FormField({ validators: [new RequiredValidator()] })
+
+  dynamicValidators() {
+    /**
+     * helper method to add dynamic validators
+     *
+     * */
+
+    this.addValidator(
+      'confirmEmail',
+      new MustMatchValidator({
+        matcher: this.field['email'],
+        message: 'Emails do not match',
+      }),
+    )
+  }
+  reset() {
+    this.field.email.value = ''
+    this.field.confirmEmail.value = ''
+  }
+}
+
+export { MustMatchValidator }
