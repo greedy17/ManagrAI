@@ -284,3 +284,118 @@ def score_meetings(request):
 
     return Response(data="Scoring Meeting...")
 
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def create_task(request):
+
+    print("create task")
+    # # list of accepted commands for this fake endpoint
+    # allowed_commands = ["opp", "acc", "lead"]
+    # slack_id = request.data.get("user_id", None)
+    # if slack_id:
+    #     slack = (
+    #         UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+    #     )
+    #     if not slack:
+    #         return Response(
+    #             data={
+    #                 "response_type": "ephemeral",
+    #                 "text": "Sorry I cant find your managr account",
+    #             }
+    #         )
+    # user = slack.user
+    # if not user.has_zoom_integration:
+    #     return Response(
+    #         data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+    #     )
+    # host_id = user.zoom_account.zoom_id
+    # text = request.data.get("text", "")
+    # if len(text):
+    #     command_params = text.split(" ")
+    # else:
+    #     command_params = []
+    # meeting_resource = None
+    # if len(command_params):
+    #     logger.exception(f"{command_params[0]}")
+    #     if command_params[0] not in allowed_commands:
+    #         return Response(
+    #             data={
+    #                 "response_type": "ephemeral",
+    #                 "text": "Sorry I don't know that : {},only allowed{}".format(
+    #                     command_params[0], allowed_commands
+    #                 ),
+    #             }
+    #         )
+    #     meeting_resource = command_params[0]
+
+    # meeting_uuid = settings.ZOOM_FAKE_MEETING_UUID
+    # if not meeting_uuid:
+    #     return Response(
+    #         data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
+    #     )
+    # host_id = host_id
+    # meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    # if meeting:
+    #     meeting.delete()
+    # original_duration = None
+
+    # if not original_duration or original_duration < 0:
+    #     original_duration = 0
+    # ### move all this to a background task, zoom requires response in 60s
+    # zoom_account = user.zoom_account
+
+    # if zoom_account and not zoom_account.is_revoked:
+    #     # emit the process
+    #     workflow = _get_past_zoom_meeting_details.now(
+    #         str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
+    #     )
+    #     # get meeting
+    #     workflow.begin_communication(now=True)
+    #     workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
+    #     if meeting_resource and meeting_resource.lower() == "acc":
+    #         acc = user.accounts.first()
+    #         workflow.resource_id = str(acc.id)
+    #         workflow.resource_type = "Account"
+    #         workflow.save()
+    #     elif not meeting_resource:
+    #         workflow.resource_id = None
+    #         workflow.resource_type = ""
+    #         workflow.save()
+    #     elif meeting_resource == "lead":
+    #         l = user.owned_leads.first()
+    #         workflow.resource_id = str(l.id)
+    #         workflow.resource_type = "Lead"
+    #         workflow.save()
+
+    #     access_token = user.organization.slack_integration.access_token
+
+    #     ts, channel = workflow.slack_interaction.split("|")
+    #     try:
+    #         res = slack_requests.update_channel_message(
+    #             channel,
+    #             ts,
+    #             access_token,
+    #             block_set=get_block_set(
+    #                 "initial_meeting_interaction", context={"w": str(workflow.id)},
+    #             ),
+    #         )
+    #     except InvalidBlocksException as e:
+    #         return logger.exception(
+    #             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+    #         )
+    #     except InvalidBlocksFormatException as e:
+    #         return logger.exception(
+    #             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+    #         )
+    #     except UnHandeledBlocksException as e:
+    #         return logger.exception(
+    #             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+    #         )
+    #     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    #     workflow.save()
+
+    #     # if commands has a type update meeting to that type
+
+    # return Response(data="Done")

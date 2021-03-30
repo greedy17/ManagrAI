@@ -118,6 +118,7 @@ def process_stage_next_page(payload, context):
     required_context=["w", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_data(payload, context):
+    print("process zoom meeting data")
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user

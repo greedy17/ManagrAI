@@ -97,7 +97,12 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     user = zoom_account.user
+    meeting = {}
+    print(user_id)
+    print(meeting_uuid)
+    print(original_duration)
     if zoom_account and not zoom_account.is_revoked:
+
         # emit the process
 
         while True:

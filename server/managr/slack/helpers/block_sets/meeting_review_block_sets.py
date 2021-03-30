@@ -98,6 +98,8 @@ def generate_contact_group(index, contact, instance_url):
 @block_set(required_context=["w"])
 def create_meeting_task(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    print("create meeting task")
+    print(workflow.__dict__)
 
     return block_builders.section_with_button_block(
         "Create Task",

@@ -655,6 +655,8 @@ class MeetingWorkflow(SFSyncOperation):
 
     def save(self, *args, **kwargs):
         """ sets the loading to done """
+
+        print('save models salesforce')
         if self.progress == 100 and self.slack_interaction:
             from managr.slack.helpers import requests as slack_requests
             from managr.slack.helpers.block_sets import get_block_set
