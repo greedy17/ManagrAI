@@ -929,3 +929,26 @@ class ActivityAdapter:
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
+
+
+class TaskAdapter:
+    """ Two types of activities Task (includes calls, emails) and Events"""
+
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.type = kwargs.get("type", None)
+        self.category = kwargs.get("category", None)
+        self.subject = kwargs.get("subject", None)
+        self.description = kwargs.get("description", None)
+        self.created_date = kwargs.get("created_date", None)
+
+    @staticmethod
+    def save_task_to_salesforce(data, access_token, custom_base):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        print(r.json())
+        return SalesforceAuthAccountAdapter._handle_response(r)

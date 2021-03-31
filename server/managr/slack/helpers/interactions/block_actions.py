@@ -763,39 +763,66 @@ def process_coming_soon(payload, context):
             f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
-@processor(requried_context="u")
-def process_create_task(payload, context):
-    
+@processor(required_context="u")
+def process_create_task(payload, context):      
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
 
+    print(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
             "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set("create_task_modal", context={"u": context.get('u'), "w": context.get('w')}),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},            
+            "blocks": get_block_set("create_task_modal", context={"u": context.get('u'), "resource_type": context.get("resource_type"), "resource_id": context.get("resource_id")}),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(context)              
         },
     }
-    try:
+    try:        
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except:
+        print('except')
+    
+    
+     
+@processor(required_context="u")
+def process_resource_selected_for_task(payload, context):
+       
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+    selected_value = None
+    if len(payload["actions"]):
+        action = payload["actions"][0]
+        blocks = payload["view"]["blocks"]
+        selected_value = action["selected_option"]["value"]
+        # blockfinder returns a tuple of its index in the block and the object
+        # index, action_block = block_finder("managr_task_related_to", blocks)   
+              
+ 
 
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
+    # private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "blocks": get_block_set("create_task_modal", context={"u": context.get('u'), "resource_type": selected_value}),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(context)              
+        },
+    }
+    try:        
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except:
+        print('except')
+
 
 def handle_block_actions(payload):
     """
@@ -818,6 +845,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
+        slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task
     } 
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

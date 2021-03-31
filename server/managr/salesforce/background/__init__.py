@@ -19,6 +19,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 
+
 from ..routes import routes
 from ..models import (
     SFSyncOperation,
@@ -630,3 +631,38 @@ def _save_meeting_review(workflow_id):
         "next_step": form_data.get("NextStep", ""),
     }
 
+
+@background(schedule=0)
+def _process_create_task(user_id, data, *args):
+
+    user = User.objects.get(id=user_id)
+    # get the create form
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        from managr.salesforce.adapter.models import TaskAdapter
+
+        try:
+            TaskAdapter.save_task_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+        except FieldValidationError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise FieldValidationError(e)
+        except RequiredFieldError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise RequiredFieldError(e)
+
+    return

@@ -104,7 +104,12 @@ def create_meeting_task(context):
         "CREATE_A_TASK",
         "Would you like to create a task from this meeting?",
         action_id=action_with_params(
-            slack_const.ZOOM_MEETING__CREATE_TASK, params=[f"u={str(workflow.user.id)}"],
+            slack_const.ZOOM_MEETING__CREATE_TASK,
+            params=[
+                f"u={str(workflow.user.id)}",
+                f"resource_type={workflow.resource_type}",
+                f"resource_id={workflow.resource_id}",
+            ],
         ),
     )
 

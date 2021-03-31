@@ -19,6 +19,7 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.salesforce.routes import routes as model_routes
 
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
@@ -41,8 +42,20 @@ def coming_soon_modal_block_set(context):
 
 @block_set(required_context=["u"])
 def create_task_modal_block_set(context):
-
+    resource = context.get("resource_id")
+    resource_type = context.get("resource_type")
     user = User.objects.get(id=context.get("u"))
+
+    related_type_initial_option = (
+        block_builders.option(resource_type, resource_type) if resource_type else None
+    )
+    related_to = None
+    if resource and resource_type:
+        related_to = model_routes.get(resource_type).get("model").objects.get(id=resource).name
+
+    related_to_initial_option = (
+        block_builders.option(related_to, resource) if resource and related_to else None
+    )
 
     blocks = [
         block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
@@ -55,10 +68,15 @@ def create_task_modal_block_set(context):
                 block_builders.option("Contact", "Contact"),
                 block_builders.option("Lead", "Lead"),
             ],
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={context.get('u')}",
+            block_id="managr_task_related_to_resource",
+            initial_option=related_type_initial_option,
         ),
         block_builders.external_select(
             "Related To",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource=Opportunity",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource={resource_type}",
+            block_id="managr_task_related_to",
+            initial_option=related_to_initial_option,
         ),
     ]
 
