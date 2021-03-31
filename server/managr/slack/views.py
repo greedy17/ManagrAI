@@ -467,6 +467,20 @@ def create_task(request):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    slack_requests.generic_request(url, data, access_token=access_token)
+    print(user.__dict__)
+    try:
+        slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
     return Response()
 
