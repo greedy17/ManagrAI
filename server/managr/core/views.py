@@ -178,6 +178,41 @@ class UserViewSet(
         return False
 
     @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="retrieve-email",
+    )
+    def retrieve_email(self, request, *args, **kwargs):
+        """ retrieve's a users email to display in field on activation """
+        params = request.query_params
+        pk = params.get("id")
+        magic_token = params.get("token")
+
+        try:
+            user = User.objects.get(pk=pk)
+            if str(user.magic_token) == str(magic_token) and user.is_invited:
+                if user.is_active:
+                    raise ValidationError(
+                        {
+                            "detail": [
+                                (
+                                    "It looks like you have already activate your account, click forgot password to reset it"
+                                )
+                            ]
+                        }
+                    )
+                return Response({"email": user.email, "organization": user.organization.name})
+
+            else:
+                return Response(
+                    {"non_field_errors": ("Invalid Link or Token")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(
         methods=["post"],
         permission_classes=[permissions.AllowAny],
         detail=True,
@@ -193,6 +228,16 @@ class UserViewSet(
         try:
             user = User.objects.get(pk=pk)
             if str(user.magic_token) == str(magic_token) and user.is_invited:
+                if user.is_active:
+                    raise ValidationError(
+                        {
+                            "detail": [
+                                (
+                                    "It looks like you have already activate your account, click forgot password to reset it"
+                                )
+                            ]
+                        }
+                    )
                 user.set_password(password)
                 user.is_active = True
                 # expire old magic token and create a new one for other uses

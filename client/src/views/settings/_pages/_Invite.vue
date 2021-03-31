@@ -18,6 +18,7 @@
           placeholder=""
           large
           bordered
+          active
         />
 
         <FormField
@@ -235,6 +236,20 @@ export default {
   // height: 80vh;
 
   width: 80%;
+}
+
+/*
+Override dropdown select input field
+*/
+.dropdown {
+  ::v-deep .tn-dropdown__selection-container {
+    border-radius: 4px;
+    background-color: $white;
+    border: 1px solid #eaebed;
+    box-sizing: border-box;
+    line-height: 1.29;
+    letter-spacing: 0.5px;
+  }
 }
 
 h2 {

@@ -3,7 +3,9 @@
     <img class="registration__logo" src="@/assets/images/logo.png" />
     <h2>Register</h2>
 
-    <div class="registration__text">Create and customize your Managr account within minutes.</div>
+    <div class="registration__text">
+      Create and customize your Managr account with {{ organization }} within minutes.
+    </div>
     <!-- <form @submit.prevent="onSubmit"> -->
     <div class="registration__form">
       <div class="registration__input__label">
@@ -20,6 +22,7 @@
           v-model="registrationForm.field.email.value"
           type="text"
           class="registration__input"
+          :disabled="true"
         />
       </div>
 
@@ -86,13 +89,29 @@ export default {
       reenterPassword: '',
       userId: null,
       token: null,
+      email: null,
+      isLoading: false,
+      organization: null,
     }
   },
-  created() {
+  async created() {
     this.userId = this.$route.params.userId
     this.token = this.$route.params.magicToken
+    await this.retrieveEmail(this.userId, this.token)
   },
   methods: {
+    async retrieveEmail(id, token) {
+      try {
+        const res = await User.api.retrieveEmail(id, token)
+        console.log(res)
+        this.registrationForm.field.email.value = res.data.email
+        this.organization = res.data.organization
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.isLoading = false
+      }
+    },
     async onSubmit() {
       //
       this.registrationForm.validate()

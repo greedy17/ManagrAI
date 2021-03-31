@@ -76,19 +76,40 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+@import '@/styles/mixins/inputs';
 
 .tn-input {
   width: 100%;
   margin-bottom: 1.3rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  &__label {
+    font-size: 14px;
+    margin-bottom: 0.3rem;
+  }
   ::v-deep .primary {
     --active-opacity: 1;
   }
+  /*   ::v-deep .input-content__active {
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
+    outline: none;
+    background-color: $white;
+  } */
+  ::v-deep .input-form__active {
+    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
+    outline: none;
+    background-color: $white;
+  }
 
   &__input {
-    margin: 0.5rem 0;
+    border-radius: 4px;
+    background-color: $white;
+    border: 1px solid #eaebed;
+    box-sizing: border-box;
+    line-height: 1.29;
+    letter-spacing: 0.5px;
+    color: red;
     &--small {
       width: 7.4375rem;
     }
@@ -99,7 +120,7 @@ export default {
       width: 19.6875rem;
     }
     &--bordered {
-      border: lightgray 1px solid;
+      border: 1px solid #eaebed;
     }
   }
 
@@ -109,6 +130,7 @@ export default {
     color: red;
     font-size: 0.75rem;
     font-family: $base-font-family;
+    margin-top: 0.3rem;
   }
 }
 </style>

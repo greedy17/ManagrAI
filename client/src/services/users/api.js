@@ -128,6 +128,22 @@ export default class UserAPI {
       )
     return promise
   }
+  retrieveEmail(uid, token) {
+    /**
+     * Checks user email from id to add to form
+     */
+    let q = { id: uid, token: token }
+    const promise = apiClient()
+      .get(USERS_ENDPOINT + 'retrieve-email/', { params: q })
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
 
   checkStatus(email) {
     const data = { email }
