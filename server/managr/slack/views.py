@@ -442,13 +442,31 @@ def create_task(request):
         resource_type = command_params[0][0].upper() + command_params[0][1:]
     else:
         resource_type = "Opportunity"
-    blocks = get_block_set(
-        "command_create_task", {"resource_type": resource_type, "u": str(user.id)}
-    )
-    channel = user.slack_integration.channel
+    context = {"resource_type": resource_type, "u": str(user.id)}
+    # channel = user.slack_integration.channel
     access_token = user.organization.slack_integration.access_token
-    slack_requests.send_channel_message(
-        channel, access_token, text=f"Create a task with managr", block_set=blocks
-    )
+    # slack_requests.send_channel_message(
+    #    channel, access_token, text=f"Create a task with managr", block_set=blocks
+    # )
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = request.data.get("trigger_id")
+
+    private_metadata = {
+        "original_message_channel": request.data.get("channel_id"),
+    }
+
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "blocks": get_block_set("create_task_modal", context=context,),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
 
