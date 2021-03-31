@@ -154,6 +154,7 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
 ## Staging Environment
 
 Our Staging Environment is hosted on heroku, the app name is Managr Staging 2, merging to develop should kick off the automatic deployment to staging. 
+*Note the managr app can be accessed from `https://staging-2.managr.ai` it can also be accessed from `https://managr-staging-2.herokuapp.com`  PLEASE ONLY USE THE `managr.ai` endpoint as our redirects for the integrations redirect to that url. 
 
 `heroku logs --tail --app managr-staging-2`
 
@@ -165,6 +166,7 @@ To deploy the app manually
 
 *remember to run any migrations*
 
+Most of the integrations will not work outside of the managr org when using staging, staging should be used more to assist Mike in debugging when he is demoing. See the below section on logs for information on logging with papertrail. 
 
 ## Prod Environment 
 
