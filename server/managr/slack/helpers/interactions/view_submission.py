@@ -692,6 +692,7 @@ def process_create_task(payload, context):
             },
         }
 
+    # TODO: [MGR-830] Change this to be api.update method instead PB 03/31/21
     return {
         "response_action": "update",
         "view": {
