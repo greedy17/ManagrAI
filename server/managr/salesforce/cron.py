@@ -11,7 +11,7 @@ from django.db.models.functions import Cast
 from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
-from managr.salesforce.models import SFObjectFieldsOperation, SFSyncOperation, SalesforceAuthAccount
+from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, SalesforceAuthAccount
 
 logger = logging.getLogger("managr")
 
@@ -26,7 +26,7 @@ def queue_users_sf_resource():
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow
-        latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+        latest_flow = SFResourceSync.objects.filter(user=account.user).latest("datetime_created")
         if latest_flow and latest_flow.progress == 100:
             logger.info(
                 f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
@@ -86,7 +86,7 @@ def queue_users_sf_fields():
 
 
 def get_report_data(account):
-    workflows = SFSyncOperation.objects.filter(user=account.user)
+    workflows = SFResourceSync.objects.filter(user=account.user)
     total_workflows = workflows.count()
     total_incomplete_flows = (
         workflows.annotate(
@@ -119,9 +119,14 @@ def get_report_data(account):
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()
-    latest_flow = SFSyncOperation.objects.filter(user=account.user).latest("datetime_created")
+    latest_flow = SFResourceSync.objects.filter(user=account.user).latest("datetime_created")
+    latest_flow_data = {}
     if latest_flow:
-        latest_flow = latest_flow.datetime_created
+        latest_flow_data = {
+            "date_time": latest_flow.datetime_created.strftime("%m/%d/%Y, %H:%M"),
+            "progress": latest_flow.progress,
+            "status": latest_flow.status,
+        }
 
     return {
         "user": f"{account.user.email}-{account.user.id}",
@@ -129,7 +134,7 @@ def get_report_data(account):
         "total_incomplete_workflows": total_incomplete_flows,
         "todays_workflows": todays_flows,
         "todays_failed_flows": todays_failed_flows,
-        "latest_flow": latest_flow,
+        "latest_flow": latest_flow_data,
     }
 
 

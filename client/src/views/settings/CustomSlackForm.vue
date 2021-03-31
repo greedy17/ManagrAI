@@ -2,7 +2,6 @@
   <div class="slack-form-builder">
     <div>
       <div class="slack-from-builder__sf-validations">
-        <!-- <h4>Validations</h4> -->
         <template v-if="showValidations">
           <template v-if="sfValidations.length">
             <ul :key="val.id" v-for="val in sfValidations">
@@ -85,22 +84,26 @@
                 field.referenceDisplayLabel === 'How Did It go?'
             "
             class="form-field__label"
-          >{{ field.referenceDisplayLabel }}</div>
+          >
+            {{ field.referenceDisplayLabel }}
+          </div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
               <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
                 {{
-                "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
 
               <div
                 v-if="field.referenceDisplayLabel === 'Meeting Comments'"
                 class="form-field__body"
-              >{{ 'Logs the rep’s comments about the meeting' }}</div>
+              >
+                {{ 'Logs the rep’s comments about the meeting' }}
+              </div>
               <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
                 {{
-                'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
+                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
                 }}
               </div>
 
@@ -111,7 +114,9 @@
                     field.referenceDisplayLabel !== 'Meeting Comments' &&
                     field.referenceDisplayLabel !== 'How Did It go?'
                 "
-              >{{ field.referenceDisplayLabel }}</div>
+              >
+                {{ field.referenceDisplayLabel }}
+              </div>
             </div>
 
             <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
@@ -137,16 +142,26 @@
             />
             <small v-if="meetingType.length" style="margin-left: 1rem;">Press Enter to Save</small>
           </div>
+
           <div
-            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length "
+            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length"
             class="meeting-type__list"
           >
-            <small>Meeting Types:</small>
-            <br />
-
-            <small>
-              <strong>{{ actionChoices.map(action => action.title).join(', ') }}</strong>
-            </small>
+            <template v-if="!loadingMeetingTypes">
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    @item-selected="removeMeetingType(val.id)"
+                    :key="key"
+                    v-for="(val, key) in actionChoices"
+                    :item="val.title"
+                  />
+                </template>
+              </ListContainer>
+            </template>
+            <template v-else>
+              <PulseLoadingSpinner :loading="loadingMeetingTypes" />
+            </template>
           </div>
         </div>
       </div>
@@ -158,6 +173,9 @@
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
+import ListItem from '@/components/ListItem'
+import ListContainer from '@/components/ListContainer'
+
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import Paginator from '@thinknimble/paginator'
@@ -175,6 +193,8 @@ export default {
     PulseLoadingSpinner,
     Paginator,
     CollectionSearch,
+    ListItem,
+    ListContainer,
   },
   props: {
     customForm: {
@@ -214,6 +234,7 @@ export default {
       Pagination,
       meetingType: '',
       actionChoices: [],
+      loadingMeetingTypes: false,
     }
   },
   watch: {
@@ -275,9 +296,13 @@ export default {
   },
   methods: {
     getActionChoices() {
-      const action = ActionChoice.api.list({}).then(res => {
-        this.actionChoices = res.results
-      })
+      this.loadingMeetingTypes = true
+      const action = ActionChoice.api
+        .list({})
+        .then(res => {
+          this.actionChoices = res.results
+        })
+        .finally((this.loadingMeetingTypes = false))
     },
     nextPage() {
       this.formFields.nextPage()
@@ -359,6 +384,7 @@ export default {
 
     async updateMeeting(e) {
       if (e.keyCode == 13 && this.meetingType.length) {
+        this.loadingMeetingTypes = true
         if (
           (this.resource == 'Opportunity' || this.resource == 'Account') &&
           this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -376,18 +402,34 @@ export default {
               organization: this.$store.state.user.organization,
             }
 
-            await ActionChoice.api.create(obj).then(res => {
-              this.$Alert.alert({
-                type: 'success',
-                message: 'New meeting type created',
-                timeout: 2000,
+            await ActionChoice.api
+              .create(obj)
+              .then(res => {
+                this.$Alert.alert({
+                  type: 'success',
+                  message: 'New meeting type created',
+                  timeout: 2000,
+                })
               })
-            })
+              .finally((this.loadingMeetingTypes = false))
 
             this.getActionChoices()
             this.meetingType = ''
           }
         }
+      }
+    },
+    async removeMeetingType(id) {
+      if (!this.$store.state.user.isAdmin) {
+        return
+      }
+      try {
+        await ActionChoice.api.delete(id)
+        await this.getActionChoices()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingMeetingTypes = false
       }
     },
 
@@ -630,7 +672,9 @@ export default {
   width: 15rem;
 
   &__list {
-    margin: 0.5rem 0 0 1rem;
+    margin: 0.5rem;
+    width: 80%;
+    overflow: hidden;
   }
 }
 </style>
