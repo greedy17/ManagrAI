@@ -26,13 +26,17 @@ def queue_users_sf_resource():
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow
-        latest_flow = SFResourceSync.objects.filter(user=account.user).latest("datetime_created")
+        flows = SFResourceSync.objects.filter(user=account.user)
+
+        latest_flow = flows.latest("datetime_created") if flows else None
         if latest_flow and latest_flow.progress == 100:
             logger.info(
                 f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
             )
             init_sf_resource_sync(latest_flow.user.id)
             continue
+        if not flows:
+            init_sf_resource_sync(account.user.id)
         # if latest workflow is at 100 emit sf resource sync
     return
 
@@ -72,15 +76,16 @@ def queue_users_sf_fields():
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
         # get latest workflow
-        latest_flow = SFObjectFieldsOperation.objects.filter(user=account.user).latest(
-            "datetime_created"
-        )
+        flows = SFObjectFieldsOperation.objects.filter(user=account.user)
+        latest_flow = flows.latest("datetime_created") if flows else None
         if latest_flow and latest_flow.progress == 100:
             logger.info(
                 f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
             )
             init_sf_field_sync(latest_flow.user)
             continue
+        if not flows:
+            init_sf_field_sync(account.user)
         # if latest workflow is at 100 emit sf resource sync
     return
 
@@ -119,14 +124,16 @@ def get_report_data(account):
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()
-    latest_flow = SFResourceSync.objects.filter(user=account.user).latest("datetime_created")
-    latest_flow_data = {}
+    latest_flow = SFResourceSync.objects.filter(user=account.user)
     if latest_flow:
-        latest_flow_data = {
-            "date_time": latest_flow.datetime_created.strftime("%m/%d/%Y, %H:%M"),
-            "progress": latest_flow.progress,
-            "status": latest_flow.status,
-        }
+        latest_flow = latest_flow.latest("datetime_created")
+        latest_flow_data = {}
+        if latest_flow:
+            latest_flow_data = {
+                "date_time": latest_flow.datetime_created.strftime("%m/%d/%Y, %H:%M"),
+                "progress": latest_flow.progress,
+                "status": latest_flow.status,
+            }
 
     return {
         "user": f"{account.user.email}-{account.user.id}",
@@ -134,7 +141,7 @@ def get_report_data(account):
         "total_incomplete_workflows": total_incomplete_flows,
         "todays_workflows": todays_flows,
         "todays_failed_flows": todays_failed_flows,
-        "latest_flow": latest_flow_data,
+        "latest_flow": latest_flow_data if latest_flow else None,
     }
 
 
