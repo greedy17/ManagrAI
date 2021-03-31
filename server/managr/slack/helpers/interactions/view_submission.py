@@ -14,6 +14,7 @@ from managr.salesforce.adapter.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     TokenExpired,
+    UnhandledSalesforceError,
 )
 from managr.organization.models import Organization
 from managr.core.models import User
@@ -123,7 +124,6 @@ def process_stage_next_page(payload, context):
     required_context=["w", "original_message_channel", "original_message_timestamp",]
 )
 def process_zoom_meeting_data(payload, context):
-    print("process zoom meeting data")
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
@@ -279,7 +279,7 @@ def process_submit_resource_data(payload, context):
                     "blocks": get_block_set(
                         "error_modal",
                         {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -294,7 +294,22 @@ def process_submit_resource_data(payload, context):
                     "blocks": get_block_set(
                         "error_modal",
                         {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except UnHandeledBlocksException as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -600,45 +615,91 @@ def process_create_task(payload, context):
     status = [
         value.get("selected_option") for value in state.get("managr_task_status", {}).values()
     ]
+    related_to_type = [
+        value.get("selected_option")
+        for value in state.get("managr_task_related_to_resource", {}).values()
+    ]
     related_to = [
         value.get("selected_option") for value in state.get("managr_task_related_to", {}).values()
     ]
-    if len(related_to):
-        related_to = model_routes.get("Opportunity").get('model').objects.get(id=related_to[0].get("value")).integration_id
+    if len(related_to) and len(related_to_type):
+        related_to = (
+            model_routes.get(related_to_type[0].get("value"))
+            .get("model")
+            .objects.get(id=related_to[0].get("value"))
+            .integration_id
+        )
     data = {
         "Subject": state.get("managr_task_subject", {}).get("plain_input", {}).get("value"),
         "ActivityDate": activity_date[0] if len(activity_date) else None,
         "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
         "Status": status[0].get("value") if len(status) else None,
-        "WhatId": related_to,
     }
+    if related_to and related_to_type:
 
-    _process_create_task.now(context.get("u"), data)
+        if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
+            data["WhatId"] = related_to
+        else:
+            data["WhoId"] = related_to
 
-    # try:
-    #     res = slack_requests.update_channel_message(
-    #         channel, ts, slack_access_token, block_set=block_set
-    #     )
-    # except InvalidBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
-    # except InvalidBlocksFormatException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
-    # except UnHandeledBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
+    try:
 
-    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-    # workflow.save()
-    # workflow.begin_tasks()
-    # _save_meeting_review.now(str(workflow.id))
-    # emit_send_meeting_summary(str(workflow.id))
+        _process_create_task.now(context.get("u"), data)
 
-    return {"response_action": "clear"}
+    except FieldValidationError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occured"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except RequiredFieldError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except UnhandledSalesforceError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Task Created"},
+            "blocks": [*get_block_set("success_modal"),],
+        },
+    }
 
 
 def handle_view_submission(payload):

@@ -809,6 +809,7 @@ def process_resource_selected_for_task(payload, context):
     # private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
+        "view_id":payload.get('view').get('id'),
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
