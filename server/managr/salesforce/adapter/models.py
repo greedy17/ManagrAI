@@ -98,10 +98,6 @@ class SObjectValidationAdapter:
 
 class SObjectPicklistAdapter:
     def __init__(self, data):
-        # self.attributes = data.get("attributes", {})
-        # self.label = data.get("label", "")
-        # self.valid_for = data.get("valid_for", "")
-        # self.value = data.get("value", "")
         self.values = data.get("values", [])
         self.field = data.get("field", None)
         self.picklist_for = data.get("picklist_for", "")
@@ -367,12 +363,14 @@ class SalesforceAuthAccountAdapter:
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
+
         from .routes import routes
 
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
+        additional_filters = resource_class.additional_filters()
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
-        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit)}"
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit, additional_filters=additional_filters)}"
         if offset:
             url = f"{url} offset {offset}"
         logger.info(f"{url} was sent")
@@ -474,6 +472,11 @@ class AccountAdapter:
         return {}
 
     @staticmethod
+    def additional_filters():
+        """ pass custom additional filters to the url """
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
     def to_api(data, mapping, object_fields):
         """ data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
         formatted_data = dict()
@@ -569,6 +572,11 @@ class ContactAdapter:
     @staticmethod
     def get_child_rels():
         return {}
+
+    @staticmethod
+    def additional_filters():
+        """ pass custom additional filters to the url """
+        return ["AND IsDeleted = false"]
 
     @staticmethod
     def reverse_integration_mapping():
@@ -670,6 +678,11 @@ class LeadAdapter:
         return {}
 
     @staticmethod
+    def additional_filters():
+        """ pass custom additional filters to the url """
+        return ["AND IsDeleted = false", "AND IsConverted = false"]
+
+    @staticmethod
     def reverse_integration_mapping():
         """ mapping of 'standard' data when sending from the SF API """
         reverse = {}
@@ -708,32 +721,6 @@ class LeadAdapter:
                         formatted_data[k] = v
 
         return formatted_data
-
-    @staticmethod
-    def create_new_contact(data, access_token, custom_base, object_fields):
-        json_data = json.dumps(
-            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
-        )
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
-        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
-        )
-        return SalesforceAuthAccountAdapter._handle_response(r)
-
-    @staticmethod
-    def update_contact(data, access_token, custom_base, integration_id, object_fields):
-        json_data = json.dumps(
-            ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
-        )
-        url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
-        )
-        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.patch(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
-        )
-        return SalesforceAuthAccountAdapter._handle_response(r)
 
     @property
     def as_dict(self):
@@ -778,6 +765,7 @@ class OpportunityAdapter:
 
     @staticmethod
     def get_child_rels():
+        """ Builds sub query for resource """
         return {
             sf_consts.OPPORTUNITY_CONTACT_ROLES: {
                 "fields": sf_consts.OPPORTUNITY_CONTACT_ROLE_FIELDS,
@@ -788,6 +776,11 @@ class OpportunityAdapter:
                 "attrs": sf_consts.OPPORTUNITY_HISTORY_ATTRS,
             },
         }
+
+    @staticmethod
+    def additional_filters():
+        """ pass custom additional filters to the url """
+        return ["AND IsDeleted = false", "AND IsClosed = false"]
 
     @staticmethod
     def reverse_integration_mapping():

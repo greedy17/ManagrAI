@@ -635,7 +635,7 @@ def meeting_summary_blockset(context):
 
     blocks.append(
         block_builders.simple_section(
-            f"*Helpful Hints:* {attendance_component[0].rendered_message}, {duration_component[0].rendered_message} ",
+            f"*Helpful Hints:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message} ",
             "mrkdwn",
         )
     )

@@ -22,7 +22,7 @@ from managr.slack.helpers.block_sets import get_block_set
 
 from ..routes import routes
 from ..models import (
-    SFSyncOperation,
+    SFResourceSync,
     SFObjectFieldsOperation,
     SObjectField,
     SObjectValidation,
@@ -115,7 +115,7 @@ def _process_gen_next_sync(user_id, operations_list):
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
-    return SFSyncOperation.objects.create(
+    return SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
         operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
@@ -328,7 +328,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     meeting = workflow.meeting
-    sf = user.salesforce_account
+
     # collect forms for resource meeting_review and if stages any stages related forms
     update_forms = workflow.forms.filter(
         template__form_type__in=[
@@ -343,16 +343,19 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
     attempts = 1
 
-    try:
-        return workflow.resource.update_in_salesforce(data)
-    except TokenExpired:
-        if attempts >= 5:
-            return logger.exception(
-                f"Failed to sync STAGE data for user {str(user.id)} after {attempts} tries"
-            )
-        else:
-            sf.regenerate_token()
-            attempts += 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            workflow.resource.update_in_salesforce(data)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync Update data for user {str(user.id)} after {attempts} tries from workflow {workflow.id}"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
 
     # push to sf
     return
@@ -367,8 +370,6 @@ def _process_add_call_to_sf(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-
-    sf = user.salesforce_account
 
     attempts = 1
     review_form = workflow.forms.filter(
@@ -399,18 +400,21 @@ def _process_add_call_to_sf(workflow_id, *args):
         Status="Completed",
         TaskSubType="Call",
     )
-    try:
-        return ActivityAdapter.save_zoom_meeting_to_salesforce(
-            data, sf.access_token, sf.instance_url
-        )
-    except TokenExpired:
-        if attempts >= 5:
-            return logger.exception(
-                f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
-            )
-        else:
-            sf.regenerate_token()
-            attempts += 1
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+    return
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)

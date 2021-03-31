@@ -41,7 +41,7 @@ from managr.api.emails import send_html_email
 
 from managr.slack.models import OrgCustomSlackForm
 from .models import (
-    SFSyncOperation,
+    SFResourceSync,
     SFObjectFieldsOperation,
     SObjectField,
     SObjectValidation,
