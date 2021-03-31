@@ -206,6 +206,38 @@ On your computer you can now add your identity file:
 4. to ssh `ssh AWS-Managr` or `ssh AWS-Managr-2` (2 is the t2.medium) 
   *you may be prompted about saving the fingerprint which you can do*
 
+5. Activate the environment - `source /opt/venv/bin/activate`
+6. cd into the managr directory - `cd managr`
+
+Releasing to production 
+
+When releasing to production we currently follow a manual process.
+For BACKEND CODE ONLY:
+1. Merge from develop to master
+2. ssh into both instances
+3. Activate the environment - `source /opt/venv/bin/activate`
+4. cd into the managr directory - `cd managr`
+5. pull master - `git pull master`
+6. Run any migrations 
+7. restart task nunners with `sudo supervisorctl restart all`
+
+for FRONTEND w or w/o backend
+1. Merge into develop 
+2. checkout new branch with deploy keyword `git checkout -b deploy/<name>`
+3. Remove old dist files in client folder 
+4. ***Make sure you are using node 14.15.4 as is on prod*** `cd client && npm run build`
+5. add newly built files to branch, commit and make a PR into develop
+6. Merge deploy branch into develop
+7. Merge develop into master
+8. ssh into both instances
+9. Activate the environment - `source /opt/venv/bin/activate`
+10. cd into the managr directory - `cd managr`
+11. pull master - `git pull master`
+12. Collect static files `server/manage.py collectstatic --noinput`
+13. Run any migrations `server/manage.py migrate`
+14. restart task nunners with `sudo supervisorctl restart all`
+   
+
 ## Logs
 
 ### Papertrail logs 
