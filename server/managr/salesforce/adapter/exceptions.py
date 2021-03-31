@@ -44,6 +44,12 @@ class InvalidFieldError(Exception):
         super().__init__(self.message)
 
 
+class UnhandledSalesforceError(Exception):
+    def __init(self, message="Invalid/Duplicate Field in query"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -100,8 +106,15 @@ class CustomAPIException:
                     logger.info(f"Invalid Field {field_str}")
                     raise InvalidFieldError(f"There was an invalid field in the query {field_str}")
 
-            raise Api500Error()
-        else:
-            raise ValidationError(
-                {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
+            raise InvalidFieldError(
+                f"There was an error in the data sent to salesforce but we could not determine what field caused this {e}"
             )
+
+        elif self.status_code == 400 and self.param == "NOT_FOUND":
+            raise UnhandledSalesforceError(
+                f"The selected object does not exist in salesforce {self.message}"
+            )
+
+        else:
+
+            raise UnhandledSalesforceError(f"salesforce returned {self.param} {self.message}")

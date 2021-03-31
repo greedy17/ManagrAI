@@ -1,13 +1,31 @@
 <template>
-  <div class="google-btn">
-    <img class="google-btn__img" src="@/assets/images/google-btn/btn_google_light_normal_ios.svg" />
-    SIGN IN WITH GOOGLE
+  <div @click="$emit('click')" :class="{ 'google-btn': !loading }">
+    <template v-if="!loading">
+      <img
+        class="google-btn__img"
+        src="@/assets/images/google-btn/btn_google_light_normal_ios.svg"
+      />
+      SIGN IN WITH GOOGLE
+    </template>
+    <template v-else>
+      <PulseLoadingSpinnerButton :loading="loading"></PulseLoadingSpinnerButton>
+    </template>
   </div>
 </template>
 
 <script>
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 export default {
   name: 'GoogleButton',
+  props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  components: {
+    PulseLoadingSpinnerButton,
+  },
 }
 </script>
 

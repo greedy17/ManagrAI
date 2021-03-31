@@ -5,19 +5,20 @@ from managr.slack.models import OrgCustomSlackFormInstance
 from . import models as models
 
 
-class SyncOperationForm(forms.ModelForm):
+class SyncResourceForm(forms.ModelForm):
     class Meta:
-        model = models.SFSyncOperation
+        model = models.SFResourceSync
         fields = (
             "user",
             "operations",
             "completed_operations",
             "failed_operations",
+            "operation_type",
         )
 
 
 class CustomSyncOperationAdmin(admin.ModelAdmin):
-    form = SyncOperationForm
+    form = SyncResourceForm
     list_filter = ("user",)
 
 
@@ -53,5 +54,5 @@ admin.site.register(models.SObjectField, CustomSObjectField)
 admin.site.register(models.SObjectValidation)
 admin.site.register(models.SObjectPicklist, CustomPicklistValue)
 admin.site.register(models.SFObjectFieldsOperation)
-admin.site.register(models.SFSyncOperation, CustomSyncOperationAdmin)
+admin.site.register(models.SFResourceSync, CustomSyncOperationAdmin)
 admin.site.register(models.MeetingWorkflow, CustomMeetingWorkflow)
