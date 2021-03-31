@@ -72,7 +72,7 @@ class Lead(TimeStampModel, IntegrationModel):
             object_fields = self.owner.salesforce_account.object_fields.filter(
                 salesforce_object="Lead"
             ).values_list("api_name", flat=True)
-            res = OpportunityAdapter.update_lead(
+            res = LeadAdapter.update_lead(
                 data, token, base_url, self.integration_id, object_fields
             )
             self.is_stale = True

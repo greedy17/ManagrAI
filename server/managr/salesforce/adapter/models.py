@@ -706,10 +706,10 @@ class LeadAdapter:
     @staticmethod
     def update_lead(data, access_token, custom_base, salesforce_id, object_fields):
         json_data = json.dumps(
-            OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
+            LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
         )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, salesforce_id
+            custom_base, sf_consts.RESOURCE_SYNC_LEAD, salesforce_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
