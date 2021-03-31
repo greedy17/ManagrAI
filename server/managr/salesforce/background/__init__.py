@@ -21,7 +21,7 @@ from managr.slack.helpers.block_sets import get_block_set
 
 from ..routes import routes
 from ..models import (
-    SFSyncOperation,
+    SFResourceSync,
     SFObjectFieldsOperation,
     SObjectField,
     SObjectValidation,
@@ -114,7 +114,7 @@ def _process_gen_next_sync(user_id, operations_list):
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
-    return SFSyncOperation.objects.create(
+    return SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
         operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,

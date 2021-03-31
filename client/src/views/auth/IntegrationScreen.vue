@@ -104,11 +104,13 @@
         </div>
 
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
-        <GoogleButton
-          @click="onGetAuthLink('NYLAS')"
-          :loading="generatingToken && selectedIntegration == 'NYLAS'"
-          v-if="!hasNylasIntegration"
-        />
+        <div style="margin-bottom:0.5rem;width:15rem;">
+          <GoogleButton
+            @click="onGetAuthLink('NYLAS')"
+            :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            v-if="!hasNylasIntegration"
+          />
+        </div>
 
         <PulseLoadingSpinnerButton
           v-if="!hasNylasIntegration"

@@ -447,6 +447,11 @@ class SFSyncOperation(TimeStampModel):
         self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
         self.save()
 
+    def save(self, *args, **kwargs):
+        return super(SFSyncOperation, self).save(*args, **kwargs)
+
+
+class SFResourceSync(SFSyncOperation):
     def begin_tasks(self, attempts=1):
         from managr.salesforce.background import emit_sf_sync
 
@@ -496,7 +501,7 @@ class SFSyncOperation(TimeStampModel):
                     break
 
     def save(self, *args, **kwargs):
-        return super(SFSyncOperation, self).save(*args, **kwargs)
+        return super(SFResourceSync, self).save(*args, **kwargs)
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
