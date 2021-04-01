@@ -223,6 +223,19 @@ class Contact(TimeStampModel, IntegrationModel):
         data["owner"] = str(self.owner.id)
         return ContactAdapter(**data)
 
+    @property
+    def name(self):
+        """ returns full name for use with blocksets """
+
+        if self.secondary_data.get("Email", None) not in ["", None]:
+            return self.secondary_data.get("Email")
+        elif self.secondary_data.get("FirstName", None) not in ["", None]:
+            return self.secondary_data.get("FirstName")
+        elif self.secondary_data.get("LastName", None) not in ["", None]:
+            return self.secondary_data.get("LastName")
+        else:
+            return "N/A"
+
     def __str__(self):
         return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
 
