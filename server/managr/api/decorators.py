@@ -1,9 +1,11 @@
 import functools
 import logging
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
+    UnhandledSalesforceError,
 )
 from managr.utils.misc import snake_to_space
 
@@ -30,30 +32,50 @@ def sf_api_exceptions(error_key):
         @functools.wraps(func)
         def wrapper_sf_api_exceptions(*args, **kwargs):
             # only retries for token expired errors
-            operation_key = f"Failed on operation {snake_to_space(error_key)}"
             try:
                 return func(*args, **kwargs)
             except RequiredFieldError as e:
                 from managr.salesforce.models import MeetingWorkflow
 
+                operation_key = f"Failed to {snake_to_space(error_key)}"
+
                 workflow_id = args[0]
                 w = MeetingWorkflow.objects.filter(id=workflow_id).first()
                 if not w:
-                    LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+                    return LOGGER.exception(
+                        f"Function wrapped in sfw logger but cannot find workflow {e}"
+                    )
                 w.failed_task_description.append(f"{operation_key} {str(e)}")
                 w.save()
             except FieldValidationError as e:
                 from managr.salesforce.models import MeetingWorkflow
 
+                operation_key = f"Failed to {snake_to_space(error_key)}"
+
                 workflow_id = args[0]
                 w = MeetingWorkflow.objects.filter(id=workflow_id).first()
                 if not w:
-                    LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+                    return LOGGER.exception(
+                        f"Function wrapped in sfw logger but cannot find workflow {e}"
+                    )
                 w.failed_task_description.append(f"{operation_key} {str(e)}")
                 w.save()
+            except UnhandledSalesforceError as e:
+                from managr.salesforce.models import MeetingWorkflow
 
+                operation_key = f"Failed to {snake_to_space(error_key)}"
+                workflow_id = args[0]
+                w = MeetingWorkflow.objects.filter(id=workflow_id).first()
+                if not w:
+                    return LOGGER.exception(
+                        f"Function wrapped in sfw logger but cannot find workflow {e}"
+                    )
+                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                w.save()
             except Exception as e:
-                LOGGER.exception(e)
+                return LOGGER.exception(
+                    f"Function wrapped in sfw logger but cannot find workflow {e}"
+                )
 
         return wrapper_sf_api_exceptions
 

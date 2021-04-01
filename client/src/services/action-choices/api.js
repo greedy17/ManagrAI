@@ -65,4 +65,14 @@ export default class ActionChoiceAPI {
       .then(response => response.data)
       .then(data => this.cls.fromAPI(data))
   }
+  delete(id) {
+    const url = ACTION_CHOICES_ENDPOINT + id
+    const options = {}
+    console.log(id)
+
+    return this.client
+      .delete(url, options)
+      .then(response => response.data)
+      .then(data => this.cls.fromAPI(data))
+  }
 }

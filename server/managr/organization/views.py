@@ -360,6 +360,7 @@ class ActionChoiceViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """ endpoint to create Action Choice """
 

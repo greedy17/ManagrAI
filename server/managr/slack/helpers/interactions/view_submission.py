@@ -10,7 +10,12 @@ from rest_framework.response import Response
 
 
 from managr.api.decorators import log_all_exceptions
-from managr.salesforce.adapter.exceptions import FieldValidationError, RequiredFieldError
+from managr.salesforce.adapter.exceptions import (
+    FieldValidationError,
+    RequiredFieldError,
+    TokenExpired,
+    UnhandledSalesforceError,
+)
 from managr.organization.models import Organization
 from managr.core.models import User
 from managr.opportunity.models import Opportunity
@@ -256,41 +261,68 @@ def process_submit_resource_data(payload, context):
     # get state - state contains the values based on the block_id
     # if we had a next page the form data for the review was already saved
     # currently only for update
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            main_form.resource_object.update_in_salesforce(data)
+            break
 
-    try:
-        main_form.resource_object.update_in_salesforce(data)
+        except FieldValidationError as e:
 
-    except FieldValidationError as e:
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occured"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except RequiredFieldError as e:
 
-        return {
-            "response_action": "push",
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "An Error Occured"},
-                "blocks": get_block_set(
-                    "error_modal",
-                    {
-                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
-                    },
-                ),
-            },
-        }
-    except RequiredFieldError as e:
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except UnhandledSalesforceError as e:
 
-        return {
-            "response_action": "push",
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "An Error Occurred"},
-                "blocks": get_block_set(
-                    "error_modal",
-                    {
-                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
-                    },
-                ),
-            },
-        }
-    # update the channel message to clear it
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+
+        # update the channel message to clear it
     slack_requests.update_channel_message(
         context.get("channel_id"),
         context.get("ts"),
@@ -574,7 +606,6 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE: process_search_or_create_next_page,
         slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA: process_update_meeting_contact,
         slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
-        slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
     }
