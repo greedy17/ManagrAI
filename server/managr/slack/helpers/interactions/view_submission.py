@@ -719,10 +719,8 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
     }
-    print("switcher")
 
     callback_id = payload["view"]["callback_id"]
-    print(payload["view"]["private_metadata"])
     view_context = json.loads(payload["view"]["private_metadata"])
     return switcher.get(callback_id, NO_OP)(payload, view_context)
 
