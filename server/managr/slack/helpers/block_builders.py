@@ -157,6 +157,8 @@ def multi_external_select(
             "min_query_length": min_query_length,
         },
     }
+    if initial_options:
+        block["accessory"]["initial_options"] = initial_options
 
     return block
 
