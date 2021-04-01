@@ -84,7 +84,7 @@ def queue_users_sf_fields():
             )
             init_sf_field_sync(latest_flow.user)
             continue
-        if not flows:
+        if not flows.count():
             init_sf_field_sync(account.user)
         # if latest workflow is at 100 emit sf resource sync
     return
