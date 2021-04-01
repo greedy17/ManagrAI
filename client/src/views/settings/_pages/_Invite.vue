@@ -10,28 +10,35 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <FormField
-          label="Email"
-          @blur="userInviteForm.field.email.validate()"
-          :errors="userInviteForm.field.email.errors"
-          v-model="userInviteForm.field.email.value"
-          placeholder=""
-          large
-          bordered
-          active
-        />
+        <div class="invite-form__title">
+          Invite Users
+        </div>
+        <div class="form_field">
+          <FormField
+            label="Email"
+            @blur="userInviteForm.field.email.validate()"
+            :errors="userInviteForm.field.email.errors"
+            v-model="userInviteForm.field.email.value"
+            placeholder=""
+            large
+            bordered
+            active
+          />
+        </div>
+        <div class="form_field">
+          <FormField
+            label="Confirm Email"
+            @blur="userInviteForm.field.confirmEmail.validate()"
+            :errors="userInviteForm.field.confirmEmail.errors"
+            v-model="userInviteForm.field.confirmEmail.value"
+            large
+            placeholder=""
+            bordered
+          />
+        </div>
 
-        <FormField
-          label="Confirm Email"
-          @blur="userInviteForm.field.confirmEmail.validate()"
-          :errors="userInviteForm.field.confirmEmail.errors"
-          v-model="userInviteForm.field.confirmEmail.value"
-          large
-          placeholder=""
-          bordered
-        />
         <div class="dropdown">
-          <FormField :errors="userInviteForm.field.userLevel.errors">
+          <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level">
             <template v-slot:input>
               <DropDownSelect
                 :items="userTypes"
@@ -39,12 +46,13 @@
                 class="invite-form__dropdown"
                 nullDisplay="Select user level"
                 :itemsRef="userTypes"
+                @input="userInviteForm.field.userLevel.validate()"
               />
             </template>
           </FormField>
         </div>
         <div class="dropdown">
-          <FormField>
+          <FormField :errors="userInviteForm.field.role.errors" label="Role">
             <template v-slot:input>
               <DropDownSelect
                 :items="userRoles"
@@ -54,6 +62,7 @@
                 :itemsRef="userRoles"
                 class="invite-form__dropdown"
                 nullDisplay="Select user role"
+                @input="userInviteForm.field.role.validate()"
               />
             </template>
           </FormField>
@@ -96,11 +105,10 @@
 
 <script>
 import User from '@/services/users'
-import { UserInviteForm, MustMatchValidator } from '@/services/users/forms'
+import { UserInviteForm } from '@/services/users/forms'
 import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
-import Pagination from '@/services/pagination'
 import Modal from '../../../components/Modal'
 import Button from '@thinknimble/button'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
@@ -111,7 +119,6 @@ export default {
   components: {
     DropDownSelect,
     Modal,
-    Button,
     PulseLoadingSpinnerButton,
     FormField,
   },
@@ -296,19 +303,28 @@ button {
   border: none;
   width: 100%;
   height: 70vh;
+  min-height: 30rem;
   display: flex;
+  align-items: center;
   flex-direction: column;
-  justify-content: space-evenly;
+  > .form_field {
+    flex: 0 0 auto;
+  }
+
   > .tn-input {
   }
   > .invite-form__dropdown {
     color: red;
   }
   &__title {
-    width: 19rem;
-    text-align: left;
+    @include base-font-styles();
+    padding: 1rem 1rem;
     font-size: 14px;
-    margin: 1rem 0 0.5rem 0;
+    font-weight: 700;
+    line-height: 1.14;
+    color: $main-font-gray;
+    text-transform: uppercase;
+    text-align: left;
   }
   &__actions {
     display: flex;
