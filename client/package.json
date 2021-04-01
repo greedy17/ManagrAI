@@ -23,7 +23,7 @@
     "@thinknimble/tn-forms": "^1.0.5",
     "@thinknimble/tn-models": "^1.1.34",
     "@thinknimble/tn-utils": "^1.4.0",
-    "@thinknimble/tn-validators": "^1.0.7",
+    "@thinknimble/tn-validators": "^1.0.9",
     "axios": "^0.18.0",
     "email-validator": "^2.0.4",
     "js-cookie": "^2.2.0",
