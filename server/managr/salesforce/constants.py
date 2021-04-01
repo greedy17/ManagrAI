@@ -2,7 +2,7 @@ from django.conf import settings
 from urllib.parse import urlencode
 
 
-SF_API_VERSION = settings.SALESFORCE_API_VERSION
+SF_API_VERSION = settings.SALESFORCE_API_VERSION if settings.USE_SALESFORCE else None
 
 # SF COMMON URIS - Mostly Used for Auth
 
