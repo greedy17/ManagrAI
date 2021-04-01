@@ -2,11 +2,11 @@ from django.conf import settings
 from urllib.parse import urlencode
 
 
-SF_API_VERSION = settings.SALESFORCE_API_VERSION
+SF_API_VERSION = settings.SALESFORCE_API_VERSION if settings.USE_SALESFORCE else None
 
 # SF COMMON URIS - Mostly Used for Auth
 
-BASE_URL = settings.SALESFORCE_BASE_URL
+BASE_URL = settings.SALESFORCE_BASE_URL if settings.USE_SALESFORCE else None
 AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
 AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
 REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
@@ -57,10 +57,10 @@ SALESFORCE_VALIDATION_QUERY = (
 )
 
 # SF HEADERS
-CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY
-CLIENT_SECRET = settings.SALESFORCE_SECRET
-SCOPES = settings.SALESFORCE_SCOPES
-REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL
+CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if settings.USE_SALESFORCE else None
+CLIENT_SECRET = settings.SALESFORCE_SECRET if settings.USE_SALESFORCE else None
+SCOPES = settings.SALESFORCE_SCOPES if settings.USE_SALESFORCE else None
+REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL if settings.USE_SALESFORCE else None
 
 AUTHENTICATION_BODY = lambda code: {
     "grant_type": "authorization_code",
