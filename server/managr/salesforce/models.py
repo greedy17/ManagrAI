@@ -278,6 +278,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 initial_value=value,
                 block_id=self.api_name,
             )
+            # use this one.
 
     @property
     def display_value_keys(self):
@@ -455,10 +456,10 @@ class SFResourceSync(SFSyncOperation):
     def begin_tasks(self, attempts=1):
         from managr.salesforce.background import emit_sf_sync
 
-        sf_account = self.user.salesforce_account
-        adapter = self.user.salesforce_account.adapter_class
         for key in self.operations_list:
             while True:
+                sf_account = self.user.salesforce_account
+                adapter = self.user.salesforce_account.adapter_class
                 try:
                     count = adapter.get_resource_count(key)["totalSize"]
                     break
@@ -667,6 +668,8 @@ class MeetingWorkflow(SFSyncOperation):
 
     def save(self, *args, **kwargs):
         """ sets the loading to done """
+
+        print("save models salesforce")
         if self.progress == 100 and self.slack_interaction:
             from managr.slack.helpers import requests as slack_requests
             from managr.slack.helpers.block_sets import get_block_set
@@ -800,6 +803,10 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_stage_picklist_values(self, resource):
         values = self.adapter_class.get_stage_picklist_values(resource)
+        return values
+
+    def get_individual_picklist_values(self, resource, field=None):
+        values = self.adapter_class.get_individual_picklist_values(resource, field_name=field)
         return values
 
     def update_opportunity(self, data):

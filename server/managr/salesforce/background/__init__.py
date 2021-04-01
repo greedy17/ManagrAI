@@ -19,6 +19,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 
+
 from ..routes import routes
 from ..models import (
     SFResourceSync,
@@ -606,3 +607,66 @@ def _process_create_new_resource(workflow_id, resource, *args):
 
     return
 
+
+@background(schedule=0)
+@log_all_exceptions
+def _save_meeting_review(workflow_id):
+    # _save_meeting_review.now(workflow_id)/ .now makes it happen now, not a backgound function
+
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # get the create form
+    meeting = workflow.meeting
+    # format data appropriately
+    review_form = forms.filter(template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW).first()
+    # get data
+    form_data = review_form.saved_data
+    # format data appropriately
+    data = {
+        "resource_type": workflow.resource_type,
+        "resource_id": workflow.resource_id,
+        "forecast_category": form_data.get("ForcastCategory", ""),
+        "stage": form_data.get("StageName", ""),
+        "meeting_comments": form_data.get("meeting_comments", ""),
+        "meeting_type": form_data.get("meeting_type", ""),
+        "meeting_sentiment": form_data.get("meeting_sentiment", ""),
+        "amount": form_data.get("Amount", None),
+        "close_data": form_data.get("CloseDate", None),
+        "next_step": form_data.get("NextStep", ""),
+    }
+
+
+@background(schedule=0)
+def _process_create_task(user_id, data, *args):
+
+    user = User.objects.get(id=user_id)
+    # get the create form
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        from managr.salesforce.adapter.models import TaskAdapter
+
+        try:
+            TaskAdapter.save_task_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+        except FieldValidationError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise FieldValidationError(e)
+        except RequiredFieldError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise RequiredFieldError(e)
+
+    return
