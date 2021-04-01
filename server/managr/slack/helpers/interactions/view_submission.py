@@ -14,6 +14,7 @@ from managr.salesforce.adapter.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     TokenExpired,
+    UnhandledSalesforceError,
 )
 from managr.organization.models import Organization
 from managr.core.models import User
@@ -277,7 +278,7 @@ def process_submit_resource_data(payload, context):
                     "blocks": get_block_set(
                         "error_modal",
                         {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -292,7 +293,22 @@ def process_submit_resource_data(payload, context):
                     "blocks": get_block_set(
                         "error_modal",
                         {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except UnhandledSalesforceError as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -307,13 +323,13 @@ def process_submit_resource_data(payload, context):
                 attempts += 1
 
         # update the channel message to clear it
-        slack_requests.update_channel_message(
-            context.get("channel_id"),
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            "Succesfully Updated",
-        )
-        return {"response_action": "clear"}
+    slack_requests.update_channel_message(
+        context.get("channel_id"),
+        context.get("ts"),
+        user.organization.slack_integration.access_token,
+        "Succesfully Updated",
+    )
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions
