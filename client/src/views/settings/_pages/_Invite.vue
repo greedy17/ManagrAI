@@ -11,7 +11,10 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <div class="invite-form__title">
-          Invite Users
+          Invite Users to Managr
+        </div>
+        <div class="invite-form__subtitle">
+          {{ $store.state.user.organizationRef.name }}
         </div>
         <div class="form_field">
           <FormField
