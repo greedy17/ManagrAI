@@ -88,7 +88,7 @@ export default class UserAPI {
     const data = registerForm.toAPI()
 
     return this.client
-      .post(REGISTRATION_ENDPOINT, data)
+      .post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
       .then(response => response.data)
       .then(data => this.cls.fromAPI(data))
       .catch(
@@ -100,10 +100,11 @@ export default class UserAPI {
       )
   }
 
-  invite(email, type, organization) {
-    const data = { email, type, organization }
+  invite(userDetails) {
+    const data = userDetails
+
     const promise = apiClient()
-      .post(INVITE_ENDPOINT, data)
+      .post(INVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.invite',
@@ -114,10 +115,27 @@ export default class UserAPI {
     return promise
   }
 
-  activate(uid, token, password) {
-    const data = { token, password }
+  activate(uid, token, form) {
+    const formData = this.cls.toAPI(form.toAPI())
+    const data = { token, ...formData }
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+  retrieveEmail(uid, token) {
+    /**
+     * Checks user email from id to add to form
+     */
+    let q = { id: uid, token: token }
+    const promise = apiClient()
+      .get(USERS_ENDPOINT + 'retrieve-email/', { params: q })
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.activate',

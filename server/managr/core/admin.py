@@ -66,6 +66,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_staff",
                     "organization",
                     "user_level",
+                    "role",
                 )
             },
         ),

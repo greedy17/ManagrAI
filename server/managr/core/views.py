@@ -178,6 +178,41 @@ class UserViewSet(
         return False
 
     @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="retrieve-email",
+    )
+    def retrieve_email(self, request, *args, **kwargs):
+        """ retrieve's a users email to display in field on activation """
+        params = request.query_params
+        pk = params.get("id")
+        magic_token = params.get("token")
+
+        try:
+            user = User.objects.get(pk=pk)
+            if str(user.magic_token) == str(magic_token) and user.is_invited:
+                if user.is_active:
+                    raise ValidationError(
+                        {
+                            "detail": [
+                                (
+                                    "It looks like you have already activate your account, click forgot password to reset it"
+                                )
+                            ]
+                        }
+                    )
+                return Response({"email": user.email, "organization": user.organization.name})
+
+            else:
+                return Response(
+                    {"non_field_errors": ("Invalid Link or Token")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(
         methods=["post"],
         permission_classes=[permissions.AllowAny],
         detail=True,
@@ -187,13 +222,27 @@ class UserViewSet(
         # users should only be able to activate if they are in an invited state
         magic_token = request.data.get("token", None)
         password = request.data.get("password", None)
+        first_name = request.data.get("first_name", None)
+        last_name = request.data.get("last_name", None)
         pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
         try:
             user = User.objects.get(pk=pk)
             if str(user.magic_token) == str(magic_token) and user.is_invited:
+                if user.is_active:
+                    raise ValidationError(
+                        {
+                            "detail": [
+                                (
+                                    "It looks like you have already activate your account, click forgot password to reset it"
+                                )
+                            ]
+                        }
+                    )
                 user.set_password(password)
+                user.first_name = first_name
+                user.last_name = last_name
                 user.is_active = True
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
@@ -478,11 +527,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         u = request.user
-
-        # in order to invite a user django needs a user to be registered as a service account
-        # use server/manage.py createserviceaccount and supply an email
-        # for now we will only need one email (ex no-reply@) but in the future we will have more
-        # therefore selecting the first email that is of type service_account
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
@@ -494,7 +538,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
-        # TODO: PB 05/14/20 sending plain text for now, but will replace with template email
 
         subject = render_to_string("registration/invitation-subject.txt")
         recipient = [response_data["email"]]
