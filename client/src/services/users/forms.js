@@ -53,7 +53,12 @@ export class UserRegistrationForm extends Form {
 export class RepRegistrationForm extends Form {
   static fullName = new FormField({ validators: [new RequiredValidator()] })
   static email = new FormField({ validators: [new RequiredValidator(), new EmailValidator()] })
-  static password = new FormField({ validators: [new RequiredValidator()] })
+  static password = new FormField({
+    validators: [
+      new RequiredValidator(),
+      new MinLengthValidator({ minLength: 10, message: 'Minimum Length of 10 required' }),
+    ],
+  })
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
 
   dynamicValidators() {

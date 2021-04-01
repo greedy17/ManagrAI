@@ -126,6 +126,7 @@ export default {
     this.userId = this.$route.params.userId
     this.token = this.$route.params.magicToken
     await this.retrieveEmail(this.userId, this.token)
+    this.registrationForm.dynamicValidators()
   },
   methods: {
     async retrieveEmail(id, token) {
