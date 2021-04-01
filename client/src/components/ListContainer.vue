@@ -39,7 +39,7 @@ export default {
   color: white;
   width: 100%;
   padding: 0.5rem 1rem;
-  height: 2rem;
+  height: 2.5rem;
   &__list {
     &--horizontal {
       width: 100%;

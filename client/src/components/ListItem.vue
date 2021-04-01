@@ -1,5 +1,5 @@
 <template>
-  <div @click="$emit('item-selected', item)" class="item-container">
+  <div @click="$emit('item-selected', item)" v-tooltip="'Click To Delete'" class="item-container">
     <span class="item-container__label">{{ item }}</span>
   </div>
 </template>
@@ -21,8 +21,8 @@ export default {
   border-radius: 2px;
   color: white;
   width: 10rem;
-  padding: 0rem 1rem;
-  font-size: 12px;
+  padding: 0.2rem 1rem;
+  font-size: 13px;
   font-weight: bold;
   margin: 0rem 0.2rem;
   &:hover {
