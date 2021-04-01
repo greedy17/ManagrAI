@@ -1,5 +1,6 @@
 from . import alert_blocksets as slack_alerts
 from . import meeting_review_block_sets
+from . import task_blocksets
 from . import common_blocksets
 from . import command_views_blocksets
 
@@ -18,6 +19,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
     Returns array of Slack UI blocks
     """
     switcher = {
+        "create_task_modal": task_blocksets.create_task_modal_block_set,
         "initial_meeting_interaction": meeting_review_block_sets.initial_meeting_interaction_block_set,
         "meeting_review_modal": meeting_review_block_sets.meeting_review_modal_block_set,
         "attach_resource_interaction": meeting_review_block_sets.attach_resource_interaction_block_set,
@@ -48,5 +50,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "update_modal_block_set": command_views_blocksets.update_modal_block_set,
         "command_meeting_summary": command_views_blocksets.command_meeting_summary,
         "meeting_summary": meeting_review_block_sets.meeting_summary_blockset,
+        "command_create_task": command_views_blocksets.command_create_task_interaction,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

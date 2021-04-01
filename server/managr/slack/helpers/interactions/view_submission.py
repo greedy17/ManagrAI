@@ -28,17 +28,18 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import action_with_params, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
-from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter
+from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
 from managr.zoom import constants as zoom_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
-from managr.salesforce.background import _process_create_new_resource
+from managr.salesforce.background import _process_create_new_resource, _process_create_task
 from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
 )
+
 
 logger = logging.getLogger("managr")
 
@@ -594,6 +595,114 @@ def process_save_contact_data(payload, context):
     return
 
 
+@log_all_exceptions
+@processor(required_context=[])
+def process_create_task(payload, context):
+
+    user = User.objects.get(id=context.get("u"))
+
+    slack_access_token = user.organization.slack_integration.access_token
+    # get state - state contains the values based on the block_id
+
+    state = payload["view"]["state"]["values"]
+
+    activity_date = [
+        value.get("selected_date") for value in state.get("managr_task_datetime", {}).values()
+    ]
+    owner_id = [
+        value.get("selected_option") for value in state.get("managr_task_assign_to", {}).values()
+    ]
+    status = [
+        value.get("selected_option") for value in state.get("managr_task_status", {}).values()
+    ]
+    related_to_type = [
+        value.get("selected_option")
+        for value in state.get("managr_task_related_to_resource", {}).values()
+    ]
+    related_to = [
+        value.get("selected_option") for value in state.get("managr_task_related_to", {}).values()
+    ]
+    if len(related_to) and len(related_to_type):
+        related_to = (
+            model_routes.get(related_to_type[0].get("value"))
+            .get("model")
+            .objects.get(id=related_to[0].get("value"))
+            .integration_id
+        )
+    data = {
+        "Subject": state.get("managr_task_subject", {}).get("plain_input", {}).get("value"),
+        "ActivityDate": activity_date[0] if len(activity_date) else None,
+        "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
+        "Status": status[0].get("value") if len(status) else None,
+    }
+    if related_to and related_to_type:
+
+        if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
+            data["WhatId"] = related_to
+        else:
+            data["WhoId"] = related_to
+
+    try:
+
+        _process_create_task.now(context.get("u"), data)
+
+    except FieldValidationError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occured"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except RequiredFieldError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except UnhandledSalesforceError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
+    # TODO: [MGR-830] Change this to be api.update method instead PB 03/31/21
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Task Created"},
+            "blocks": [*get_block_set("success_modal"),],
+        },
+    }
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -608,7 +717,10 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
+        slack_const.COMMAND_CREATE_TASK: process_create_task,
     }
+
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
     return switcher.get(callback_id, NO_OP)(payload, view_context)
+

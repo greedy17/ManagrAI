@@ -34,6 +34,24 @@ def command_update_resource_interaction(context):
     ]
 
 
+@block_set(required_context=["u"])
+def command_create_task_interaction(context):
+    # form = OrgCustomSlackFormInstances.objects.get(id=context.get("f"))
+    user = User.objects.get(id=context.get("u"))
+    resource_type = context.get("resource_type")
+    return [
+        block_builders.section_with_button_block(
+            "Create Task",
+            "CREATE_A_TASK",
+            "Create A New Task",
+            action_id=action_with_params(
+                slack_const.ZOOM_MEETING__CREATE_TASK,
+                params=[f"u={str(user.id)}", f"resource_type={resource_type}"],
+            ),
+        )
+    ]
+
+
 @block_set(required_context=["resource_type", "u"])
 def command_meeting_summary(context):
     # form = OrgCustomSlackFormInstances.objects.get(id=context.get("f"))
