@@ -22,7 +22,6 @@
             placeholder=""
             large
             bordered
-            active
           />
         </div>
         <div class="form_field">

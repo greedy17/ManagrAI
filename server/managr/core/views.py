@@ -222,6 +222,8 @@ class UserViewSet(
         # users should only be able to activate if they are in an invited state
         magic_token = request.data.get("token", None)
         password = request.data.get("password", None)
+        first_name = request.data.get("first_name", None)
+        last_name = request.data.get("last_name", None)
         pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
@@ -239,6 +241,8 @@ class UserViewSet(
                         }
                     )
                 user.set_password(password)
+                user.first_name = first_name
+                user.last_name = last_name
                 user.is_active = True
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()

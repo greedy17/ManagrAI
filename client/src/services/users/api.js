@@ -115,8 +115,9 @@ export default class UserAPI {
     return promise
   }
 
-  activate(uid, token, password) {
-    const data = { token, password }
+  activate(uid, token, form) {
+    const formData = this.cls.toAPI(form.toAPI())
+    const data = { token, ...formData }
     const promise = apiClient()
       .post(GENERATE_ACTIVATE_ENDPOINT(uid), data)
       .catch(

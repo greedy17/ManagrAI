@@ -5,55 +5,81 @@
 
     <div class="registration__text">Create and customize your Managr account within minutes.</div>
     <!-- <form @submit.prevent="onSubmit"> -->
+
     <div class="registration__form">
-      <div class="registration__input__label">
-        Your Name
-        <input
-          v-model="registrationForm.field.fullName.value"
-          type="text"
-          class="registration__input"
-        />
+      <FormField
+        label="Your Name"
+        @blur="registrationForm.field.fullName.validate()"
+        :errors="registrationForm.field.fullName.errors"
+        v-model="registrationForm.field.fullName.value"
+        large
+        bordered
+        placeholder=""
+      />
+      <FormField
+        label="Your Email"
+        @blur="registrationForm.field.email.validate()"
+        :errors="registrationForm.field.email.errors"
+        v-model="registrationForm.field.email.value"
+        large
+        bordered
+        placeholder=""
+      />
+      <FormField
+        id="password"
+        label="Set a Password"
+        @blur="registrationForm.field.password.validate()"
+        :errors="registrationForm.field.password.errors"
+        v-model="registrationForm.field.password.value"
+        placeholder=""
+        type="password"
+        large
+        bordered
+      />
+      <FormField
+        id="confirm-password"
+        label="Re-Enter Password"
+        @blur="registrationForm.field.confirmPassword.validate()"
+        :errors="registrationForm.field.confirmPassword.errors"
+        v-model="registrationForm.field.confirmPassword.value"
+        placeholder=""
+        type="password"
+        large
+        bordered
+      />
+      <FormField
+        label="Company"
+        @blur="registrationForm.field.organizationName.validate()"
+        :errors="registrationForm.field.organizationName.errors"
+        v-model="registrationForm.field.organizationName.value"
+        placeholder=""
+        large
+        bordered
+      />
+      <div class="dropdown">
+        <FormField :errors="registrationForm.field.role.errors" label="Role">
+          <template v-slot:input>
+            <DropDownSelect
+              :items="userRoles"
+              valueKey="key"
+              displayKey="name"
+              v-model="registrationForm.field.role.value"
+              :itemsRef="userRoles"
+              class="invite-form__dropdown"
+              nullDisplay="Select user role"
+              @input="registrationForm.field.role.validate()"
+            />
+          </template>
+        </FormField>
       </div>
-      <div class="registration__input__label">
-        Your Email
-        <input
-          v-model="registrationForm.field.email.value"
-          type="text"
-          class="registration__input"
-        />
-      </div>
-
-      <div class="registration__input__label">
-        Set a Password
-        <input
-          v-model="registrationForm.field.password.value"
-          type="password"
-          class="registration__input"
-        />
-      </div>
-
-      <div class="registration__input__label">
-        Re-enter Password
-        <input v-model="reenterPassword" type="password" class="registration__input" />
-      </div>
-
-      <div class="registration__input__label">
+      <!-- <div class="registration__input__label">
         Company
         <input
           v-model="registrationForm.field.organizationName.value"
           type="text"
           class="registration__input"
         />
-      </div>
-
-      <div class="registration__input__label">
-        Role
-        <managrDropdown
-          :options="User.roles.ROLE_CHOICES"
-          placeholder="Your Role"
-          @selected="onSelectRole"
-        />
-      </div>
+      </div> -->
       <div class="registration__privacy">
         By clicking Sign Up, I agree to the
         <a href>Terms of Service</a> and
@@ -77,10 +103,14 @@ import GoogleButton from '@/components/GoogleButton'
 import TNDropdown from '@/components/TNDropdown'
 import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
+import FormField from '@/components/forms/FormField'
+import DropDownSelect from '@thinknimble/dropdownselect'
 
 export default {
   name: 'Registration',
   components: {
+    FormField,
+    DropDownSelect,
     GoogleButton,
     TNDropdown,
     managrDropdown,
@@ -91,10 +121,11 @@ export default {
       User,
       submitting: false,
       registrationForm: new UserRegistrationForm(),
-      reenterPassword: '',
+      userRoles: User.roleChoices,
     }
   },
   created() {
+    this.registrationForm.dynamicValidators()
     const validCode = this.$route.params.validCode
 
     if (!validCode) {
@@ -105,27 +136,15 @@ export default {
     }
   },
   methods: {
-    onSelectRole(role) {
-      this.registrationForm.field.role.value = role.key
-    },
     async onSubmit() {
       //
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
-      if (this.registrationForm.errors.length > 0) {
+      if (!this.registrationForm.isValid) {
         this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
         return
       }
-
-      if (this.registrationForm.field.password.value !== this.reenterPassword) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please make sure password and re-entered password match.',
-        })
-        return
-      }
-
       // Continue with user registration...
       this.submitting = true
 
@@ -194,6 +213,16 @@ export default {
     width: 19rem;
     border-radius: 3px;
     margin-top: 1rem;
+  }
+}
+.dropdown {
+  ::v-deep .tn-dropdown__selection-container {
+    border-radius: 4px;
+    background-color: $white;
+    border: 1px solid #eaebed;
+    box-sizing: border-box;
+    line-height: 1.29;
+    letter-spacing: 0.5px;
   }
 }
 
