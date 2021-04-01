@@ -456,10 +456,10 @@ class SFResourceSync(SFSyncOperation):
     def begin_tasks(self, attempts=1):
         from managr.salesforce.background import emit_sf_sync
 
-        sf_account = self.user.salesforce_account
-        adapter = self.user.salesforce_account.adapter_class
         for key in self.operations_list:
             while True:
+                sf_account = self.user.salesforce_account
+                adapter = self.user.salesforce_account.adapter_class
                 try:
                     count = adapter.get_resource_count(key)["totalSize"]
                     break
