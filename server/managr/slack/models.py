@@ -281,7 +281,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         if value.get("selected_option", {})
                         else None
                     )
-                elif value["type"] == "multi_static_select":
+                elif (
+                    value["type"] == "multi_static_select"
+                    or value["type"] == "multi_external_select"
+                ):
                     current_value = (
                         ";".join(
                             list(map(lambda val: val["value"], value.get("selected_options", [])))
