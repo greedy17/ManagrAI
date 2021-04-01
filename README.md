@@ -81,18 +81,19 @@ After following the developer guide and creating your database you are ready to 
 Here are the steps to get you started:
 
 1. Set up ngrok (see below for instructions)
-2. Run your initial migrations `server/manage.py migrate`
-3. Create a super user `server/manage.py createsuperuser`
-4. Run your frontend and backend servers `server/manage.py runserver` & `npm run serve`
-5. Run the task processor `server/manage.py process_tasks`
-6. To refresh data every 10 mins (resource data) and 12 hours (object fields) run the cron jobs *(Only run this once and then end the cron job otherwise you will use up all the licenses we all share)*
-7. Make sure to loadfixtures for custom fields `server/manage.py loaddata fixture`
-8. Create a new user through the user registration screen (remember you will need the code)
-9. Integrate Salesforce, zoom, slack and nylas
-10. Create your first zoom meeting and invite a user *(note we will use this meeting as your fake testable meeting)*
-11. Navigate to the admin pannel and find your meeting in the ZoomMeetings tab copy the unique id for this meeting 
-12. In your environment variables (managr/server/.env) paste the meeting uuid in ZOOM_FAKE_MEETING_UUID
-13. If you correctly followed the instructions for getting set up in the previous section then you have NVM it is best to switch to 14.15.4 when developing to match prod (since we build locally before deploying)
+2. Add a .env.local file and point the backend to your local server `VUE_APP_DEV_SERVER_BACKEND="http://localhost:8000"`
+3. Run your initial migrations `server/manage.py migrate`
+4. Create a super user `server/manage.py createsuperuser`
+5. Run your frontend and backend servers `server/manage.py runserver` & `npm run serve`
+6. Run the task processor `server/manage.py process_tasks`
+7. To refresh data every 10 mins (resource data) and 12 hours (object fields) run the cron jobs *(Only run this once and then end the cron job otherwise you will use up all the licenses we all share)*
+8. Make sure to loadfixtures for custom fields `server/manage.py loaddata fixture`
+9. Create a new user through the user registration screen (remember you will need the code)
+10. Integrate Salesforce, zoom, slack and nylas
+11. Create your first zoom meeting and invite a user *(note we will use this meeting as your fake testable meeting)*
+12. Navigate to the admin pannel and find your meeting in the ZoomMeetings tab copy the unique id for this meeting 
+13. In your environment variables (managr/server/.env) paste the meeting uuid in ZOOM_FAKE_MEETING_UUID
+14. If you correctly followed the instructions for getting set up in the previous section then you have NVM it is best to switch to 14.15.4 when developing to match prod (since we build locally before deploying)
 
 ### Setting up ngrok
 
@@ -205,6 +206,8 @@ On your computer you can now add your identity file:
    `sudo echo -e <"PEM-FILE-DATE"> >> ~/.ssh/mgr_prod.pem` or `code ~/.ssh/mgr_prod.pem` 
    
    and paste data
+4. chmod 400 my-key-pair.pem
+
 4. to ssh `ssh AWS-Managr` or `ssh AWS-Managr-2` (2 is the t2.medium) 
   *you may be prompted about saving the fingerprint which you can do*
 
