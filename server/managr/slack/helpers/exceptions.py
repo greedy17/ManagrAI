@@ -85,7 +85,7 @@ class CustomAPIException:
             logger.error(
                 f"{api_consts.SLACK_ERROR} An error occured building blocks because of an invalid format"
             )
-            raise InvalidBlocksFormatException(message)
+            raise InvalidBlocksFormatException(self.message)
         elif self.code == 200 and self.param == "invalid_arguments":
 
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")

@@ -278,6 +278,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 initial_value=value,
                 block_id=self.api_name,
             )
+            # use this one.
 
     @property
     def display_value_keys(self):
@@ -800,6 +801,10 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def get_stage_picklist_values(self, resource):
         values = self.adapter_class.get_stage_picklist_values(resource)
+        return values
+
+    def get_individual_picklist_values(self, resource, field=None):
+        values = self.adapter_class.get_individual_picklist_values(resource, field_name=field)
         return values
 
     def update_opportunity(self, data):

@@ -332,6 +332,25 @@ class SalesforceAuthAccountAdapter:
             }
         )
 
+    def get_individual_picklist_values(self, resource, field_name=None):
+        """ Sync method to get picklist values for resources not saved in our db """
+        record_type_id = self.default_record_id
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+        url = f"{url}/{field_name}" if field_name else url
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+
+        return SObjectPicklistAdapter.create_from_api(
+            {
+                "values": res["values"],
+                "salesforce_account": str(self.id),
+                "picklist_for": field_name,
+                "imported_by": str(self.user),
+                "salesforce_object": resource,
+                "integration_source": "SALESFORCE",
+            }
+        )
+
     def list_validations(self, resource):
         """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
 
@@ -910,6 +929,28 @@ class ActivityAdapter:
 
     @staticmethod
     def save_zoom_meeting_to_salesforce(data, access_token, custom_base):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+        return SalesforceAuthAccountAdapter._handle_response(r)
+
+
+class TaskAdapter:
+    """ Two types of activities Task (includes calls, emails) and Events"""
+
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.type = kwargs.get("type", None)
+        self.category = kwargs.get("category", None)
+        self.subject = kwargs.get("subject", None)
+        self.description = kwargs.get("description", None)
+        self.created_date = kwargs.get("created_date", None)
+
+    @staticmethod
+    def save_task_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)

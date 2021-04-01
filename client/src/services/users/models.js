@@ -2,11 +2,12 @@ import Model, { fields } from '@thinknimble/tn-models'
 import { objectToCamelCase } from '@thinknimble/tn-utils'
 
 import UserAPI from './api'
-import { roles, types } from './constants'
+import { roles, ROLE_CHOICES, types } from './constants'
 
 export default class User extends Model {
   static api = UserAPI.create(User)
   static roles = roles
+  static roleChoices = ROLE_CHOICES
   static types = types
 
   static id = new fields.CharField()
@@ -34,6 +35,7 @@ export default class User extends Model {
   static hasZoomIntegration = new fields.Field({ readOnly: true })
   static hasSalesforceIntegration = new fields.Field({ readOnly: true })
   static userLevel = new fields.Field({})
+  static role = new fields.Field({})
 
   static fromAPI(json = {}) {
     return new User(objectToCamelCase(json))
