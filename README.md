@@ -165,6 +165,7 @@ Most of the integrations will not work outside of the managr org when using stag
 Prod is built on AWS, we have to ec2 instances running. One instance is a t2.micro, this one only serves the app. The other instance is a t2.medium this also serves the app but also runs cron jobs (it has a larger memory and is an 8 core). Note that in order to serve the asgi app both run a process for handling incoming asgi requests. We use sticky sessions to distribute traffic between the app, which instance the user is on depends on this and is cleared every 24hrs. When ether instance is unhealthy traffic is directed to the other instance (currently both fail health checks due to improper nginx setup). The RDS is served by AWS on its own instance as well. 
 
 To SSH into the instance you must first set up your ssh access:
+
 1. first login to the console (you should have your own credentials, reach out to William if not).
 2. Navigate to the [instances page](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:)
 3. On the side bar select [security groups](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:) (both share the same sg)
