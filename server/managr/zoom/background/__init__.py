@@ -240,7 +240,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             ]
             meeting_resource_data = dict(resource_id="", resource_type="")
             opportunity = Opportunity.objects.filter(
-                contacts__email__in=participant_emails, owner__organization__id=user.organization.id
+                contacts__email__in=participant_emails, owner__id=user.id
             ).first()
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
@@ -248,18 +248,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 
             else:
                 account = Account.objects.filter(
-                    contacts__email__in=participant_emails,
-                    owner__organization__id=user.organization.id,
+                    contacts__email__in=participant_emails, owner__id=user.id,
                 ).first()
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = "Account"
                 else:
                     lead = Lead.objects.filter(
-                        email__in=participant_emails, owner__organization__id=user.organization.id
+                        email__in=participant_emails, owner__id=user.id
                     ).first()
                     if lead:
-                        logger.info(f"{lead} found")
                         meeting_resource_data["resource_id"] = str(lead.id)
                         meeting_resource_data["resource_type"] = "Lead"
 
