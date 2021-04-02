@@ -41,7 +41,7 @@ def queue_users_sf_resource(force_all=False):
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
-                init_sf_resource_sync(latest_flow.user.id)
+                return init_sf_resource_sync(latest_flow.user.id)
             elif latest_flow and latest_flow.progress != 100:
                 # check to see if the tasks were completed but not recorded
                 completed_tasks = set(latest_flow.completed_operations)
@@ -58,7 +58,7 @@ def queue_users_sf_resource(force_all=False):
                     return init_sf_resource_sync(account.user.id)
 
         else:
-            init_sf_resource_sync(account.user.id)
+            return init_sf_resource_sync(account.user.id)
 
     return
 
@@ -81,7 +81,7 @@ def queue_users_sf_fields(force_all=False):
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
-                init_sf_field_sync(latest_flow.user)
+                return init_sf_field_sync(latest_flow.user)
             elif latest_flow and latest_flow.progress != 100:
                 # check to see if the tasks were completed but not recorded
                 completed_tasks = set(latest_flow.completed_operations)
@@ -103,9 +103,9 @@ def queue_users_sf_fields(force_all=False):
     return
 
 
-@kronos.register("*/10  * * * *")
+@kronos.register("*/60  * * * *")
 def report_sf_data_sync(sf_account=None):
-    """ runs every 10 mins and initiates user sf syncs if their prev workflow is done """
+    """ runs every 60 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
     reports = []
     if not sf_account:
