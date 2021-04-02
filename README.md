@@ -197,7 +197,7 @@ On your computer you can now add your identity file:
 ```
 3. Copy the pem file to your ssh directory this file can be found in [1 password](https://start.1password.com/open/i?a=QDUDXTQK4ZAJRBIRDQLLXXIMGE&v=y46ltqijnoyhqahtqhm5lb7jba&i=s4y3wu6qtpn3vakac3f7qtbjmi&h=aspire.1password.com) 
    
-   `sudo echo -e <"PEM-FILE-DATE"> >> ~/.ssh/mgr_prod.pem` or `code ~/.ssh/mgr_prod.pem` 
+    `sudo echo -e <"PEM-FILE-DATE"> >> ~/.ssh/mgr_prod.pem` or `code ~/.ssh/mgr_prod.pem` 
    
    and paste data
 
