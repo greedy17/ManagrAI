@@ -175,6 +175,7 @@ To SSH into the instance you must first set up your ssh access:
 7. In the source fropdown select *My Ip* and then *save rules*
 
 On your computer you can now add your identity file:
+
 1. open or create a config file (note this is for ease of access) `code ~/.ssh/config` or `vim ~/.ssh/config`
 2. Paste the details for the two instances 
 
