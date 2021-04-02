@@ -166,6 +166,7 @@ Prod is built on AWS, we have to ec2 instances running. One instance is a t2.mic
 
 To SSH into the instance you must first set up your ssh access:
 
+
 1. first login to the console (you should have your own credentials, reach out to William if not).
 2. Navigate to the [instances page](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:)
 3. On the side bar select [security groups](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:) (both share the same sg)
