@@ -1,65 +1,85 @@
 <template>
   <div class="invite-container">
-    <Modal v-if="inviteOpen" dimmed @close-modal="() => (inviteOpen = false)">
-      <form class="invite-form" v-if="!success" @submit.prevent="handleInvite">
-        <div class="errors">
-          <!-- client side validations -->
-
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailIsBlank">
-            Fields may not be blank.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.emailsDontMatch">
-            Fields must match.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.invalidEmail">
-            Must be a valid email address.
-          </div>
-          <div v-if="isFormValid !== null && !isFormValid && errors.invalidUserType">
-            Must be a valid user type
-          </div>
-          <!-- server side validations -->
-          <div v-if="success !== null && !success && errors[500]">
-            Something went wrong. Please try again later.
-          </div>
-          <div v-if="success !== null && !success && errors[400]">
-            The provided email is associated with an existing account.
-          </div>
+    <Modal
+      v-if="inviteOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetData()
+        }
+      "
+    >
+      <form class="invite-form" @submit.prevent="handleInvite">
+        <div class="invite-form__title">
+          Invite Users to Managr
         </div>
-
-        <!-- type="text" instead of type="email" so we can control UI when invalid -->
-        <div class="invite-form__title">Email</div>
-        <input class="invite-form__form-input" v-model="email" type="text" />
-
-        <div class="invite-form__title">Confirm Email</div>
-        <input class="invite-form__form-input" v-model="emailConfirmation" type="text" />
-
-        <div class="invite-form__title">Role</div>
-        <div class="group">
-          <DropDownSelect
-            :items="userTypes"
-            v-model="selectedUserType"
-            class="invite-form__dropdown"
+        <div class="invite-form__subtitle">
+          {{ $store.state.user.organizationRef.name }}
+        </div>
+        <div class="form_field">
+          <FormField
+            label="Email"
+            @blur="userInviteForm.field.email.validate()"
+            :errors="userInviteForm.field.email.errors"
+            v-model="userInviteForm.field.email.value"
+            placeholder=""
+            large
+            bordered
           />
         </div>
-        <PulseLoadingSpinnerButton
-          @click="handleInvite"
-          class="invite-button"
-          text="Invite"
-          :loading="loading"
-          >Invite</PulseLoadingSpinnerButton
-        >
-        <div class="cancel-button" @click="handleCancel">Cancel</div>
+        <div class="form_field">
+          <FormField
+            label="Confirm Email"
+            @blur="userInviteForm.field.confirmEmail.validate()"
+            :errors="userInviteForm.field.confirmEmail.errors"
+            v-model="userInviteForm.field.confirmEmail.value"
+            large
+            placeholder=""
+            bordered
+          />
+        </div>
+
+        <div class="dropdown">
+          <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level">
+            <template v-slot:input>
+              <DropDownSelect
+                :items="userTypes"
+                v-model="userInviteForm.field.userLevel.value"
+                class="invite-form__dropdown"
+                nullDisplay="Select user level"
+                :itemsRef="userTypes"
+                @input="userInviteForm.field.userLevel.validate()"
+              />
+            </template>
+          </FormField>
+        </div>
+        <div class="dropdown">
+          <FormField :errors="userInviteForm.field.role.errors" label="Role">
+            <template v-slot:input>
+              <DropDownSelect
+                :items="userRoles"
+                valueKey="key"
+                displayKey="name"
+                v-model="userInviteForm.field.role.value"
+                :itemsRef="userRoles"
+                class="invite-form__dropdown"
+                nullDisplay="Select user role"
+                @input="userInviteForm.field.role.validate()"
+              />
+            </template>
+          </FormField>
+        </div>
+        <div class="invite-form__actions">
+          <PulseLoadingSpinnerButton
+            @click="handleInvite"
+            class="invite-button"
+            text="Invite"
+            :loading="loading"
+            >Invite</PulseLoadingSpinnerButton
+          >
+          <div class="cancel-button" @click="handleCancel">Cancel</div>
+        </div>
       </form>
-      <div v-if="success" class="success-prompt">
-        <h2>Success</h2>
-        <p>
-          An invitation will be sent to:
-          <span :style="{ fontWeight: 'bold' }">{{ email }}</span
-          >.
-        </p>
-        <button @click="resetData">Send Another</button>
-        <div class="cancel-button" @click="handleCancel">Close</div>
-      </div>
     </Modal>
     <div class="invite-list__container">
       <div class="invite-list__title">Your Team</div>
@@ -87,21 +107,22 @@
 
 <script>
 import User from '@/services/users'
+import { UserInviteForm } from '@/services/users/forms'
 import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
-import Pagination from '@/services/pagination'
 import Modal from '../../../components/Modal'
 import Button from '@thinknimble/button'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import FormField from '@/components/forms/FormField'
 
 export default {
   name: 'Invite',
   components: {
     DropDownSelect,
     Modal,
-    Button,
     PulseLoadingSpinnerButton,
+    FormField,
   },
   props: {
     inviteOpen: {
@@ -111,12 +132,6 @@ export default {
   },
   data() {
     return {
-      email: '',
-      emailConfirmation: '', // TODO(Bruno 4-9-20): Make this dynamic
-      isFormValid: null,
-      errors: {},
-      success: null,
-      link: '', // NOTE(Bruno 4-20-20): temporary, for staging purposes
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
@@ -126,15 +141,20 @@ export default {
         { key: 'Representative', value: User.types.REP },
       ],
       showInvited: true,
-
       team: CollectionManager.create({ ModelClass: User }),
-
       user: null,
+      userRoles: User.roleChoices,
       loading: false,
+      userInviteForm: new UserInviteForm({
+        role: User.roleChoices[0].key,
+        userLevel: User.types.REP,
+        organization: this.$store.state.user.organization,
+      }),
     }
   },
   watch: {},
   async created() {
+    this.userInviteForm.dynamicValidators()
     this.refresh()
   },
 
@@ -154,110 +174,59 @@ export default {
       this.team.refresh()
     },
 
-    handleCancel() {
-      this.refresh()
+    async handleCancel() {
+      await this.refresh()
+      this.resetData()
+
       this.$emit('cancel')
     },
-    handleInvite() {
+    async handleInvite() {
       // reset component data when submission begins, in case of prior request
-      
-      this.loading = true
-      this.isFormValid = null
-      this.success = null
-      this.errors = {}
-      // check form data for this request
-      let validationResults = this.clientSideValidations()
-      this.isFormValid = validationResults[0]
-      this.errors = validationResults[1]
-      
 
-      if (!this.isFormValid) {
+      this.loading = true
+      this.userInviteForm.validate()
+      if (!this.userInviteForm.isValid) {
         this.loading = false
         this.$Alert.alert({
           type: 'error',
-          message: 'There was an error, please try again',
+          message: 'Please check form errors',
           timeout: 2000,
         })
         return
       }
+      // check form data for this request
+      try {
+        const res = await User.api.invite(this.userInviteForm.value)
 
-      let invitePromise = User.api.invite(this.email, this.selectedUserType, this.organization)
-
-      invitePromise
-        .then(response => {
-          this.link = response.data.activation_link // NOTE(Bruno 4-20-20): this line is temporary, for staging purposes
-          this.success = true
+        this.$Alert.alert({
+          message: `<h3 style="color:white;"> An invitation was sent to ${res.data.email}</h3>`,
+          type: 'success',
+          timeout: 3000,
         })
-        .catch(error => {
-          // NOTE: all form field-error validations are completed client side
-          this.success = false
-          let { status } = error.response
-          if (status >= 500) {
-            this.errors = { 500: true }
-          } else if (status >= 400) {
-            // The email already belongs to account, be its state INVITED or otherwise
-            this.errors = { 400: true }
-          }
-        })
-      this.loading = false
-      this.refresh()
-    },
-    clientSideValidations() {
-      let formErrors = {
-        emailIsBlank: this.emailIsBlank,
-        emailsDontMatch: this.emailsDontMatch,
-        invalidEmail: this.invalidEmail,
-        invalidOrganization: this.invalidOrganization,
-        invalidUserType: this.invalidUserType,
+        await this.refresh()
+        this.resetData()
+      } catch (e) {
+        let err = e.response.data
+        if (err.email) {
+          this.$Alert.alert({
+            type: 'error',
+            message: `Looks like a ${err.email}`,
+            timeout: 2000,
+          })
+        }
+      } finally {
+        this.loading = false
       }
-      let isFormValid =
-        !this.emailIsBlank &&
-        !this.emailsDontMatch &&
-        !this.invalidEmail &&
-        !this.invalidOrganization &&
-        !this.invalidUserType
-
-      return [isFormValid, formErrors]
     },
-    resetData() {
-      this.email = ''
-      this.emailConfirmation = ''
-      this.type = User.USER_TYPE_MANAGER // TODO(Bruno 4-9-20): Make this dynamic
-      this.isFormValid = null
-      this.errors = {}
-      this.success = null
-      this.link = '' // NOTE(Bruno 4-20-20): temporary, for staging purposes
-      this.isIntegrationAccount = false
-      this.organization = null
-      this.selectedUserType = User.USER_TYPE_REP
 
-      this.refresh()
+    resetData() {
+      this.userInviteForm.reset()
+      this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
   },
   computed: {
     isStaff() {
-      // checking isStaff to see if they can create organizations or invite special users
-      // on the backend only superusers can do this
       return this.$store.state.user.isStaff
-    },
-
-    emailIsBlank() {
-      return !this.email.length
-    },
-    emailsDontMatch() {
-      return this.email !== this.emailConfirmation
-    },
-    invalidEmail() {
-      // NOTE: this was taken from http://emailregex.com/
-      // eslint-disable-next-line no-useless-escape
-      let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      return !regex.test(this.email)
-    },
-    invalidOrganization() {
-      return !this.organization
-    },
-    invalidUserType() {
-      return !this.selectedUserType
     },
   },
 }
@@ -278,6 +247,20 @@ export default {
   width: 80%;
 }
 
+/*
+Override dropdown select input field
+*/
+.dropdown {
+  ::v-deep .tn-dropdown__selection-container {
+    border-radius: 4px;
+    background-color: $white;
+    border: 1px solid #eaebed;
+    box-sizing: border-box;
+    line-height: 1.29;
+    letter-spacing: 0.5px;
+  }
+}
+
 h2 {
   @include base-font-styles();
   font-weight: bold;
@@ -291,19 +274,12 @@ form,
   width: 100%;
 
   background-color: $white;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
+
   height: 50vh;
 
   justify-content: space-evenly;
 }
 
-.invite-form__form-input {
-  width: 20rem;
-  height: 2.5rem;
-  @include input-field-white();
-}
 .checkbox {
   width: auto;
   height: auto;
@@ -324,38 +300,38 @@ button {
   width: 19rem;
   font-size: 14px;
 }
-.group {
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: center;
-  align-items: center;
-  > * {
-    margin: 0.5rem;
-  }
-}
 
 .invite-form {
   border: none;
   width: 100%;
   height: 70vh;
+  min-height: 30rem;
   display: flex;
+  align-items: center;
   flex-direction: column;
-  justify-content: space-evenly;
-
-  > * {
+  > .form_field {
+    flex: 0 0 auto;
   }
 
+  > .tn-input {
+  }
+  > .invite-form__dropdown {
+    color: red;
+  }
   &__title {
-    width: 19rem;
-    text-align: left;
+    @include base-font-styles();
+    padding: 1rem 1rem;
     font-size: 14px;
-    margin: 1rem 0 0.5rem 0;
+    font-weight: 700;
+    line-height: 1.14;
+    color: $main-font-gray;
+    text-transform: uppercase;
+    text-align: left;
   }
-
-  &__dropdown {
-    @include input-field-white();
-    padding: 0;
-    border: 1px solid #eaebed !important;
+  &__actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 .invite-form__organization {
@@ -412,6 +388,8 @@ button {
 .cancel-button {
   width: 19rem;
   margin-top: 0.5rem;
+  position: relative;
+  right: 1px;
   &:hover {
     cursor: pointer;
   }

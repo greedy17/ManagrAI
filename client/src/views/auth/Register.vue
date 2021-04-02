@@ -3,41 +3,69 @@
     <img class="registration__logo" src="@/assets/images/logo.png" />
     <h2>Register</h2>
 
-    <div class="registration__text">Create and customize your Managr account within minutes.</div>
-    <!-- <form @submit.prevent="onSubmit"> -->
-    <div class="registration__form">
-      <div class="registration__input__label">
-        Your Name
-        <input
-          v-model="registrationForm.field.fullName.value"
-          type="text"
-          class="registration__input"
-        />
-      </div>
-      <div class="registration__input__label">
-        Your Email
-        <input
-          v-model="registrationForm.field.email.value"
-          type="text"
-          class="registration__input"
-        />
-      </div>
+    <template v-if="!isLoading">
+      <template v-if="errorValidatingEmail">
+        <!-- Displays if there was an error loading the user's data -->
+        <div class="box" style="display:flex;flex-direction:column;align-items:center;">
+          <span>
+            <small class="muted"
+              >You're have already activated your account, if you forgot your password you can reset
+              it here
+            </small>
+          </span>
+          <br />
+          <router-link :to="{ name: 'ForgotPassword' }">
+            Forgot Password ?
+          </router-link>
+        </div>
+      </template>
+      <template v-else>
+        <div class="registration__text">
+          Create and customize your Managr account with {{ organization }} within minutes.
+        </div>
+        <!-- <form @submit.prevent="onSubmit"> -->
+        <div class="registration__form">
+          <FormField
+            label="Your Name"
+            @blur="registrationForm.field.fullName.validate()"
+            :errors="registrationForm.field.fullName.errors"
+            v-model="registrationForm.field.fullName.value"
+            large
+            bordered
+            placeholder=""
+          />
+          <FormField
+            label="Your Email"
+            @blur="registrationForm.field.email.validate()"
+            :errors="registrationForm.field.email.errors"
+            v-model="registrationForm.field.email.value"
+            large
+            bordered
+            :disabled="true"
+            placeholder=""
+          />
+          <FormField
+            label="Set a Password"
+            @blur="registrationForm.field.password.validate()"
+            :errors="registrationForm.field.password.errors"
+            v-model="registrationForm.field.password.value"
+            placeholder=""
+            type="password"
+            large
+            bordered
+          />
+          <FormField
+            label="Re-Enter Password"
+            @blur="registrationForm.field.confirmPassword.validate()"
+            :errors="registrationForm.field.confirmPassword.errors"
+            v-model="registrationForm.field.confirmPassword.value"
+            placeholder=""
+            type="password"
+            large
+            bordered
+          />
 
-      <div class="registration__input__label">
-        Set a Password
-        <input
-          v-model="registrationForm.field.password.value"
-          type="password"
-          class="registration__input"
-        />
-      </div>
-
-      <div class="registration__input__label">
-        Re-enter Password
-        <input v-model="reenterPassword" type="password" class="registration__input" />
-      </div>
-
-      <!-- <div class="registration__input__label">
+          <!-- <div class="registration__input__label">
         Company
         <input
           v-model="registrationForm.field.organizationName.value"
@@ -46,37 +74,39 @@
         />
       </div> -->
 
-      <div class="registration__privacy">
-        By clicking Sign Up, I agree to the
-        <a href>Terms of Service</a> and
-        <a href>Privacy Policy</a>
-      </div>
+          <div class="registration__privacy">
+            By clicking Sign Up, I agree to the
+            <a href>Terms of Service</a> and
+            <a href>Privacy Policy</a>
+          </div>
 
-      <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
+          <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
 
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">Back to Login</router-link>
-      </div>
-      <!-- </form> -->
-    </div>
+          <div style="margin-top: 1rem">
+            <router-link :to="{ name: 'Login' }">Back to Login</router-link>
+          </div>
+          <!-- </form> -->
+        </div>
+      </template>
+    </template>
+    <template v-else>
+      <ComponentLoadingSVG />
+    </template>
   </div>
 </template>
 
 <script>
 import User, { RepRegistrationForm } from '@/services/users'
-
-import GoogleButton from '@/components/GoogleButton'
-import TNDropdown from '@/components/TNDropdown'
-import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
+import FormField from '@/components/forms/FormField'
+import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 
 export default {
   name: 'Register',
   components: {
-    GoogleButton,
-    TNDropdown,
-    managrDropdown,
     Button,
+    FormField,
+    ComponentLoadingSVG,
   },
   data() {
     return {
@@ -86,28 +116,43 @@ export default {
       reenterPassword: '',
       userId: null,
       token: null,
+      email: null,
+      isLoading: false,
+      organization: null,
+      errorValidatingEmail: false,
     }
   },
-  created() {
+  async created() {
     this.userId = this.$route.params.userId
     this.token = this.$route.params.magicToken
+    await this.retrieveEmail(this.userId, this.token)
+    this.registrationForm.dynamicValidators()
   },
   methods: {
+    async retrieveEmail(id, token) {
+      this.isLoading = true
+      try {
+        const res = await User.api.retrieveEmail(id, token)
+        this.registrationForm.field.email.value = res.data.email
+        this.organization = res.data.organization
+      } catch (e) {
+        this.errorValidatingEmail = true
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 3000,
+          message: 'Unable to retrieve email',
+        })
+      } finally {
+        this.isLoading = false
+      }
+    },
     async onSubmit() {
       //
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
-      if (this.registrationForm.errors.length > 0) {
+      if (!this.registrationForm.isValid) {
         this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
-        return
-      }
-
-      if (this.registrationForm.field.password.value !== this.reenterPassword) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please make sure password and re-entered password match.',
-        })
         return
       }
 
@@ -116,11 +161,7 @@ export default {
 
       let user
       try {
-        user = await User.api.activate(
-          this.userId,
-          this.token,
-          this.registrationForm.field.password.value,
-        )
+        user = await User.api.activate(this.userId, this.token, this.registrationForm)
       } catch (error) {
         this.$Alert.alert({
           type: 'error',
