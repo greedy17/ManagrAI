@@ -8,6 +8,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q, F, Func, IntegerField, DateField, Sum
 from django.db.models.functions import Cast
+
+from background_task.models import CompletedTask
+
 from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
@@ -31,16 +34,29 @@ def queue_users_sf_resource(force_all=False):
         # get latest workflow
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)
-
+            if not flows.count():
+                return init_sf_resource_sync(account.user.id)
             latest_flow = flows.latest("datetime_created") if flows else None
             if latest_flow and latest_flow.progress == 100:
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
                 init_sf_resource_sync(latest_flow.user.id)
+            elif latest_flow and latest_flow.progress != 100:
+                # check to see if the tasks were completed but not recorded
+                completed_tasks = set(latest_flow.completed_operations)
+                all_tasks = set(latest_flow.operations)
+                tasks_diff = list(all_tasks - completed_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                    if task:
+                        latest_flow.completed_operations.append(task_hash)
 
-            if not flows.count():
-                init_sf_resource_sync(account.user.id)
+                latest_flow.save()
+                if latest_flow.progress == 100:
+                    return init_sf_resource_sync(account.user.id)
+
         else:
             init_sf_resource_sync(account.user.id)
 
@@ -58,15 +74,29 @@ def queue_users_sf_fields(force_all=False):
         # get latest workflow
         if not force_all:
             flows = SFObjectFieldsOperation.objects.filter(user=account.user)
+            if not flows.count():
+                return init_sf_field_sync(account.user)
             latest_flow = flows.latest("datetime_created") if flows else None
             if latest_flow and latest_flow.progress == 100:
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
                 init_sf_field_sync(latest_flow.user)
-                continue
-            if not flows.count():
-                init_sf_field_sync(account.user)
+            elif latest_flow and latest_flow.progress != 100:
+                # check to see if the tasks were completed but not recorded
+                completed_tasks = set(latest_flow.completed_operations)
+                all_tasks = set(latest_flow.operations)
+                tasks_diff = list(all_tasks - completed_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                    if task:
+                        latest_flow.completed_operations.append(task_hash)
+
+                latest_flow.save()
+                if latest_flow.progress == 100:
+                    return init_sf_field_sync(account.user)
+
         else:
             init_sf_field_sync(account.user)
         # if latest workflow is at 100 emit sf resource sync
