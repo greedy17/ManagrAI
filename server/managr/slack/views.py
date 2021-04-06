@@ -490,9 +490,10 @@ def create_task(request):
 @permission_classes([permissions.AllowAny])
 def list_tasks(request):
     # list of accepted commands for this fake endpoint
-    print(request)
-    allowed_commands = ["opportunity", "account", "lead"]
+
+    # allowed_commands = ["opportunity", "account", "lead"]
     slack_id = request.data.get("user_id", None)
+
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -505,26 +506,27 @@ def list_tasks(request):
                 }
             )
     user = slack.user
-    text = request.data.get("text", "")
-    if len(text):
-        command_params = text.split(" ")
-    else:
-        command_params = []
-    resource_type = None
-    if len(command_params):
-        if command_params[0] not in allowed_commands:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry I don't know that : {},only allowed{}".format(
-                        command_params[0], allowed_commands
-                    ),
-                }
-            )
-        resource_type = command_params[0][0].upper() + command_params[0][1:]
-    else:
-        resource_type = "Opportunity"
-    context = {"resource_type": resource_type, "u": str(user.id)}
+    # text = request.data.get("text", "")
+    # if len(text):
+    #     command_params = text.split(" ")
+    # else:
+    #     command_params = []
+    # resource_type = None
+    # if len(command_params):
+    #     if command_params[0] not in allowed_commands:
+    #         return Response(
+    #             data={
+    #                 "response_type": "ephemeral",
+    #                 "text": "Sorry I don't know that : {},only allowed{}".format(
+    #                     command_params[0], allowed_commands
+    #                 ),
+    #             }
+    #         )
+    #     resource_type = command_params[0][0].upper() + command_params[0][1:]
+    # else:
+    #     resource_type = "Opportunity"
+    # context = {"resource_type": resource_type, "u": str(user.id)}
+    context = { "u": str(user.id)}
     # channel = user.slack_integration.channel
     access_token = user.organization.slack_integration.access_token
     # slack_requests.send_channel_message(
@@ -538,30 +540,30 @@ def list_tasks(request):
     }
 
     private_metadata.update(context)
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.COMMAND_CREATE_TASK,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set("create_task_modal", context=context,),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    print(user.__dict__)
-    try:
-        slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
-    return Response()
+    # data = {
+    #     "trigger_id": trigger_id,
+    #     "view": {
+    #         "type": "modal",
+    #         "callback_id": slack_const.COMMAND_CREATE_TASK,
+    #         "title": {"type": "plain_text", "text": f"Create a Task"},
+    #         "blocks": get_block_set("create_task_modal", context=context,),
+    #         "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+    #         "private_metadata": json.dumps(private_metadata),
+    #     },
+    # }
+    # print(user.__dict__)
+    # try:
+    #     slack_requests.generic_request(url, data, access_token=access_token)
+    # except InvalidBlocksException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    # except InvalidBlocksFormatException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    # except UnHandeledBlocksException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    # return Response()
