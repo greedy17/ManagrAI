@@ -703,6 +703,115 @@ def process_create_task(payload, context):
     }
 
 
+@log_all_exceptions
+@processor(required_context=[])
+def process_list_tasks(payload, context):
+    pass
+
+    # user = User.objects.get(id=context.get("u"))
+
+    # slack_access_token = user.organization.slack_integration.access_token
+    # # get state - state contains the values based on the block_id
+
+    # state = payload["view"]["state"]["values"]
+
+    # activity_date = [
+    #     value.get("selected_date") for value in state.get("managr_task_datetime", {}).values()
+    # ]
+    # owner_id = [
+    #     value.get("selected_option") for value in state.get("managr_task_assign_to", {}).values()
+    # ]
+    # status = [
+    #     value.get("selected_option") for value in state.get("managr_task_status", {}).values()
+    # ]
+    # related_to_type = [
+    #     value.get("selected_option")
+    #     for value in state.get("managr_task_related_to_resource", {}).values()
+    # ]
+    # related_to = [
+    #     value.get("selected_option") for value in state.get("managr_task_related_to", {}).values()
+    # ]
+    # if len(related_to) and len(related_to_type):
+    #     related_to = (
+    #         model_routes.get(related_to_type[0].get("value"))
+    #         .get("model")
+    #         .objects.get(id=related_to[0].get("value"))
+    #         .integration_id
+    #     )
+    # data = {
+    #     "Subject": state.get("managr_task_subject", {}).get("plain_input", {}).get("value"),
+    #     "ActivityDate": activity_date[0] if len(activity_date) else None,
+    #     "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
+    #     "Status": status[0].get("value") if len(status) else None,
+    # }
+    # if related_to and related_to_type:
+
+    #     if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
+    #         data["WhatId"] = related_to
+    #     else:
+    #         data["WhoId"] = related_to
+
+    # try:
+
+    #     _process_create_task.now(context.get("u"), data)
+
+    # except FieldValidationError as e:
+
+    #     return {
+    #         "response_action": "push",
+    #         "view": {
+    #             "type": "modal",
+    #             "title": {"type": "plain_text", "text": "An Error Occured"},
+    #             "blocks": get_block_set(
+    #                 "error_modal",
+    #                 {
+    #                     "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+    #                 },
+    #             ),
+    #         },
+    #     }
+    # except RequiredFieldError as e:
+
+    #     return {
+    #         "response_action": "push",
+    #         "view": {
+    #             "type": "modal",
+    #             "title": {"type": "plain_text", "text": "An Error Occurred"},
+    #             "blocks": get_block_set(
+    #                 "error_modal",
+    #                 {
+    #                     "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+    #                 },
+    #             ),
+    #         },
+    #     }
+    # except UnhandledSalesforceError as e:
+
+    #     return {
+    #         "response_action": "push",
+    #         "view": {
+    #             "type": "modal",
+    #             "title": {"type": "plain_text", "text": "An Error Occurred"},
+    #             "blocks": get_block_set(
+    #                 "error_modal",
+    #                 {
+    #                     "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us\n *Error* : _{e}_"
+    #                 },
+    #             ),
+    #         },
+    #     }
+
+    # # TODO: [MGR-830] Change this to be api.update method instead PB 03/31/21
+    # return {
+    #     "response_action": "update",
+    #     "view": {
+    #         "type": "modal",
+    #         "title": {"type": "plain_text", "text": "Task Created"},
+    #         "blocks": [*get_block_set("success_modal"),],
+    #     },
+    # }
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -718,6 +827,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
+        slack_const.COMMAND_LIST_TASKS: process_list_tasks,
     }
 
     callback_id = payload["view"]["callback_id"]
