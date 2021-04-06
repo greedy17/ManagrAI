@@ -75,6 +75,7 @@ urlpatterns = [
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
+    path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
     path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),
 ]
 
