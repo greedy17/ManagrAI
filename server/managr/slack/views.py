@@ -33,6 +33,11 @@ from rest_framework.decorators import (
 )
 
 from managr.salesforce.routes import routes as model_routes
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -543,27 +548,29 @@ def list_tasks(request):
     data = {
         "trigger_id": trigger_id,
         "view": {
-            "type": "modal",
+            "type": "section",
             "callback_id": slack_const.COMMAND_LIST_TASKS,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set("create_task_modal", context=context,),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "title": {"type": "plain_text", "text": f"List Tasks"},
+            "blocks": get_block_set("list_tasks", context=context,),
+            # "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
         },
     }
 
     try:
         slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-        )
+    # except InvalidBlocksException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    # except InvalidBlocksFormatException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    # except UnHandeledBlocksException as e:
+    #     return logger.exception(
+    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+    #     )
+    except:
+        pass
     return Response()
