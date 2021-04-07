@@ -472,7 +472,7 @@ def create_task(request):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    print(user.__dict__)
+
     try:
         slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -548,9 +548,9 @@ def list_tasks(request):
     data = {
         "trigger_id": trigger_id,
         "view": {
-            "type": "section",
+            "type": "modal",
             "callback_id": slack_const.COMMAND_LIST_TASKS,
-            "title": {"type": "plain_text", "text": f"List Tasks"},
+            "title": {"type": "plain_text", "text": f"Tasks"},
             "blocks": get_block_set("list_tasks", context=context,),
             # "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
@@ -558,6 +558,7 @@ def list_tasks(request):
     }
 
     try:
+        pass
         slack_requests.generic_request(url, data, access_token=access_token)
     # except InvalidBlocksException as e:
     #     return logger.exception(
