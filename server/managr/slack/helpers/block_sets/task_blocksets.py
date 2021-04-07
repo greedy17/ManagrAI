@@ -150,8 +150,9 @@ def meeting_review_modal_block_set(context):
 def list_tasks_block_set(context):
 
     user = User.objects.get(id=context.get("u"))
-    print(user.__dict__)
 
+    # sf = User.objects.filter(id=user.id).select_related("salesforce_account").first()
+    print(user.salesforce_account.__dict__)
     blocks = []
     # blocks = [
     #     block_builders.section_with_button_block(
