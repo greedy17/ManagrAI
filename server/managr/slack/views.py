@@ -551,8 +551,7 @@ def list_tasks(request):
             "type": "modal",
             "callback_id": slack_const.COMMAND_LIST_TASKS,
             "title": {"type": "plain_text", "text": f"Tasks"},
-            "blocks": get_block_set("list_tasks", context=context,),
-            # "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "blocks": get_block_set("list_tasks", context=context,),            
             "private_metadata": json.dumps(private_metadata),
         },
     }
