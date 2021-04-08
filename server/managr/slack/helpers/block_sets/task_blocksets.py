@@ -150,9 +150,11 @@ def meeting_review_modal_block_set(context):
 def list_tasks_block_set(context):
 
     user = User.objects.get(id=context.get("u"))
-    print(user.__dict__)
+    # print(user.__dict__)
 
-    blocks = []
+    # TODO: Update this to render list of tasks as text once
+    # tasks are coming from the API
+    blocks = [block_builders.simple_section("Hello world")]
     # blocks = [
     #     block_builders.section_with_button_block(
     #         "Create Task",
@@ -172,57 +174,5 @@ def list_tasks_block_set(context):
     # resource = context.get("resource_id")
     # resource_type = context.get("resource_type")
     # user = User.objects.get(id=context.get("u"))
-
-    # related_type_initial_option = (
-    #     block_builders.option(resource_type, resource_type) if resource_type else None
-    # )
-    # related_to = None
-    # if resource and resource_type:
-    #     related_to = model_routes.get(resource_type).get("model").objects.get(id=resource).name
-
-    # related_to_initial_option = (
-    #     block_builders.option(related_to, resource) if resource and related_to else None
-    # )
-
-    # blocks = [
-    #     block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
-    #     block_builders.datepicker(block_id="managr_task_datetime", label="Due Date"),
-    #     block_builders.static_select(
-    #         "Related to type",
-    #         [
-    #             block_builders.option("Opportunity", "Opportunity"),
-    #             block_builders.option("Account", "Account"),
-    #             # block_builders.option("Contact", "Contact"),
-    #             block_builders.option("Lead", "Lead"),
-    #         ],
-    #         action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={context.get('u')}",
-    #         block_id="managr_task_related_to_resource",
-    #         initial_option=related_type_initial_option,
-    #     ),
-    #     block_builders.external_select(
-    #         "Related To",
-    #         f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource={resource_type}",
-    #         block_id="managr_task_related_to",
-    #         initial_option=related_to_initial_option,
-    #     ),
-    # ]
-
-    # action_query = f"{slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={context.get('u')}&relationship=User&fields=name"
-
-    # blocks.append(
-    #     block_builders.external_select(
-    #         "Assign To",
-    #         action_query,
-    #         block_id="managr_task_assign_to",
-    #         initial_option=block_builders.option(
-    #             user.full_name, user.salesforce_account.salesforce_id
-    #         ),
-    #     )
-    # )
-    # action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={context.get('u')}&resource=Task&field=Status"
-
-    # blocks.append(
-    #     block_builders.external_select("Status", action_query, block_id="managr_task_status")
-    # )
 
     return blocks

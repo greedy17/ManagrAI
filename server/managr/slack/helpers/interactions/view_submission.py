@@ -706,6 +706,7 @@ def process_create_task(payload, context):
 @log_all_exceptions
 @processor(required_context=[])
 def process_list_tasks(payload, context):
+    print("Hello from process_list_tasks")
     pass
 
     # user = User.objects.get(id=context.get("u"))

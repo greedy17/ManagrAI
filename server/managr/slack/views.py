@@ -413,6 +413,7 @@ def meeting_summary(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def create_task(request):
+    print("in create_task")
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead"]
     slack_id = request.data.get("user_id", None)
@@ -511,6 +512,14 @@ def list_tasks(request):
                 }
             )
     user = slack.user
+
+    # Pulls tasks from Salesforce
+    tasks = user.salesforce_account.list_resource_data("Task", 0)
+
+    message = "".join([f"* {task.description}\n" for task in tasks])
+
+    return Response(data={"response_type": "ephemeral", "text": message,})
+
     # text = request.data.get("text", "")
     # if len(text):
     #     command_params = text.split(" ")
@@ -551,26 +560,25 @@ def list_tasks(request):
             "type": "modal",
             "callback_id": slack_const.COMMAND_LIST_TASKS,
             "title": {"type": "plain_text", "text": f"Tasks"},
-            "blocks": get_block_set("list_tasks", context=context,),            
+            "blocks": get_block_set("list_tasks", context=context,),
             "private_metadata": json.dumps(private_metadata),
         },
     }
 
     try:
-        pass
         slack_requests.generic_request(url, data, access_token=access_token)
-    # except InvalidBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-    #     )
-    # except InvalidBlocksFormatException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-    #     )
-    # except UnHandeledBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
-    #     )
-    except:
         pass
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+
     return Response()

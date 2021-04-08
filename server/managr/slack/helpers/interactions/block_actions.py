@@ -765,7 +765,6 @@ def process_create_task(payload, context):
     u = User.objects.get(id=context.get("u"))
     org = u.organization
 
-    
     data = {
         "trigger_id": trigger_id,
         "view": {

@@ -950,6 +950,25 @@ class TaskAdapter:
         self.created_date = kwargs.get("created_date", None)
 
     @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """ pass custom additional filters to the url """
+        return []
+
+# formatted_data.append(resource_class.from_api(result, self.user, *args))
+    @staticmethod
+    def from_api(result, user):
+        """ pass custom additional filters to the url """
+        return TaskAdapter(
+            description=result['Description'],
+            subject=result['Subject'],
+            created_date=result['CreatedDate'],
+        )
+
+    @staticmethod
     def save_task_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
