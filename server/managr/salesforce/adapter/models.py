@@ -977,3 +977,9 @@ class TaskAdapter:
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
+    
+    @staticmethod
+    def list_salesforce_tasks(data, access_token, custom_base):
+        print(data)
+        # this needs to hit the url to get the saales force tasks
+        pass
