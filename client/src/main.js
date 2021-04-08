@@ -1,3 +1,17 @@
+import { datadogRum } from '@datadog/browser-rum';
+
+datadogRum.init({
+    applicationId: 'e6a47571-8b90-4db3-9e97-769e35b5d4b5',
+    clientToken: 'pubed0c63fbf52c694a22bc3655182fc3e8',
+    site: 'datadoghq.com',
+    service:'managr-client',
+    env:'local',
+    // Specify a version number to identify the deployed version of your application in Datadog 
+    // version: '1.0.0',
+    sampleRate: 100,
+    trackInteractions: true
+});
+
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import 'babel-polyfill'
