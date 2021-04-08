@@ -2,11 +2,11 @@ from django.conf import settings
 from urllib.parse import urlencode
 
 
-SF_API_VERSION = settings.SALESFORCE_API_VERSION if settings.USE_SALESFORCE else None
+SF_API_VERSION = settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
 
 # SF COMMON URIS - Mostly Used for Auth
 
-BASE_URL = settings.SALESFORCE_BASE_URL if settings.USE_SALESFORCE else None
+BASE_URL = settings.SALESFORCE_BASE_URL if hasattr(settings, "SALESFORCE_BASE_URL") else ""
 AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
 AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
 REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
@@ -79,10 +79,10 @@ SALESFORCE_VALIDATION_QUERY = (
 )
 
 # SF HEADERS
-CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if settings.USE_SALESFORCE else None
-CLIENT_SECRET = settings.SALESFORCE_SECRET if settings.USE_SALESFORCE else None
-SCOPES = settings.SALESFORCE_SCOPES if settings.USE_SALESFORCE else None
-REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL if settings.USE_SALESFORCE else None
+CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if hasattr(settings, "SALESFORCE_CONSUMER_KEY") else ""
+CLIENT_SECRET = settings.SALESFORCE_SECRET if hasattr(settings, "SALESFORCE_SECRET") else ""
+SCOPES = settings.SALESFORCE_SCOPES if hasattr(settings, "SALESFORCE_SCOPES") else ""
+REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL if hasattr(settings, "SALESFORCE_REDIRECT_URL") else ""
 
 AUTHENTICATION_BODY = lambda code: {
     "grant_type": "authorization_code",
