@@ -145,34 +145,3 @@ def meeting_review_modal_block_set(context):
 
     return blocks
 
-
-@block_set(required_context=["u"])
-def list_tasks_block_set(context):
-
-    user = User.objects.get(id=context.get("u"))
-    # print(user.__dict__)
-
-    # TODO: Update this to render list of tasks as text once
-    # tasks are coming from the API
-    blocks = [block_builders.simple_section("Hello world")]
-    # blocks = [
-    #     block_builders.section_with_button_block(
-    #         "Create Task",
-    #         "CREATE_A_TASK",
-    #         "Would you like to create a task from this meeting?",
-    #         action_id=action_with_params(
-    #             slack_const.ZOOM_MEETING__LIST_TASKS,
-    #             params=[
-    #                 f"u={str(user.id)}",
-    #                 # f"resource_type={workflow.resource_type}",
-    #                 # f"resource_id={workflow.resource_id}",
-    #             ],
-    #         ),
-    #     )
-    # ]
-
-    # resource = context.get("resource_id")
-    # resource_type = context.get("resource_type")
-    # user = User.objects.get(id=context.get("u"))
-
-    return blocks

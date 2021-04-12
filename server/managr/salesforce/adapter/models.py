@@ -337,6 +337,7 @@ class SalesforceAuthAccountAdapter:
         record_type_id = self.default_record_id
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/{field_name}" if field_name else url
+        print(url)
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
 
@@ -368,7 +369,7 @@ class SalesforceAuthAccountAdapter:
 
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
-        additional_filters = resource_class.additional_filters()
+        additional_filters = resource_class.additional_filters() 
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
         url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit, additional_filters=additional_filters)}"
         if offset:
@@ -948,24 +949,29 @@ class TaskAdapter:
         self.subject = kwargs.get("subject", None)
         self.description = kwargs.get("description", None)
         self.created_date = kwargs.get("created_date", None)
+        self.activity_date = kwargs.get("activity_date", None)
 
     @staticmethod
     def get_child_rels():
         return {}
 
     @staticmethod
-    def additional_filters():
+    def additional_filters(**kwargs):
         """ pass custom additional filters to the url """
-        return []
+        time_zone= datetime.now().date().strftime("%Y-%m-%d")
+        return [f"AND ActivityDate >= {time_zone} "]
 
 # formatted_data.append(resource_class.from_api(result, self.user, *args))
     @staticmethod
     def from_api(result, user):
         """ pass custom additional filters to the url """
+        print(result)
         return TaskAdapter(
             description=result['Description'],
             subject=result['Subject'],
             created_date=result['CreatedDate'],
+            activity_date=result['ActivityDate'],
+            
         )
 
     @staticmethod

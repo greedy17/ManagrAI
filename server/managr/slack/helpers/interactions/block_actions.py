@@ -799,53 +799,6 @@ def process_create_task(payload, context):
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
     
-@processor(required_context="u")
-def process_list_tasks(payload, context):
-    pass
-    # url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    # trigger_id = payload["trigger_id"]
-    # u = User.objects.get(id=context.get("u"))
-    # org = u.organization
-
-    
-    # data = {
-    #     "trigger_id": trigger_id,
-    #     "view": {
-    #         "type": "modal",
-    #         "callback_id": slack_const.COMMAND_CREATE_TASK,
-    #         "title": {"type": "plain_text", "text": f"Create a Task"},
-    #         "blocks": get_block_set(
-    #             "create_task_modal",
-    #             context={
-    #                 "u": context.get("u"),
-    #                 "resource_type": context.get("resource_type"),
-    #                 "resource_id": context.get("resource_id"),
-    #             },
-    #         ),
-    #         "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-    #         "private_metadata": json.dumps(context),
-    #     },
-    # }
-
-    # try:
-    #     slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
-    # except InvalidBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-    #     )
-    # except InvalidBlocksFormatException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-    #     )
-    # except UnHandeledBlocksException as e:
-    #     return logger.exception(
-    #         f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-    #     )
-    
-    
-    
-    
-    
     
 
 

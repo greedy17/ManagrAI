@@ -671,8 +671,8 @@ def _process_create_task(user_id, data, *args):
 
     return
 
-    @background(schedule=0)
-    def _process_list_tasks(user_id, data, *args):
+@background(schedule=0)
+def _process_list_tasks(user_id, data, *args):
 
     user = User.objects.get(id=user_id)
     # get the create form

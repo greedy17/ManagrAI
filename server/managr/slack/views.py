@@ -413,10 +413,11 @@ def meeting_summary(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def create_task(request):
-    print("in create_task")
+
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead"]
     slack_id = request.data.get("user_id", None)
+    print(slack_id)
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -516,36 +517,22 @@ def list_tasks(request):
     # Pulls tasks from Salesforce
     tasks = user.salesforce_account.list_resource_data("Task", 0)
 
-    message = "".join([f"* {task.description}\n" for task in tasks])
 
-    return Response(data={"response_type": "ephemeral", "text": message,})
+    blocks = [
+        block_builders.simple_section(f"Task: {task.subject} Due on: {task.activity_date}")
+        for task in tasks
+    ]
+    if not len(tasks):
+        message = "Congratulations. You have no future tasks at this time."
 
-    # text = request.data.get("text", "")
-    # if len(text):
-    #     command_params = text.split(" ")
-    # else:
-    #     command_params = []
-    # resource_type = None
-    # if len(command_params):
-    #     if command_params[0] not in allowed_commands:
-    #         return Response(
-    #             data={
-    #                 "response_type": "ephemeral",
-    #                 "text": "Sorry I don't know that : {},only allowed{}".format(
-    #                     command_params[0], allowed_commands
-    #                 ),
-    #             }
-    #         )
-    #     resource_type = command_params[0][0].upper() + command_params[0][1:]
-    # else:
-    #     resource_type = "Opportunity"
-    # context = {"resource_type": resource_type, "u": str(user.id)}
+        return Response(data={"response_type": "ephemeral", "text": message,})
+
+    return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
+
     context = {"u": str(user.id)}
-    # channel = user.slack_integration.channel
+
     access_token = user.organization.slack_integration.access_token
-    # slack_requests.send_channel_message(
-    #    channel, access_token, text=f"Create a task with managr", block_set=blocks
-    # )
+
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = request.data.get("trigger_id")
 
