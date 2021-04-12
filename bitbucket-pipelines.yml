@@ -49,6 +49,94 @@ herokuStagingDeployment: &herokuStagingDeployment
   script:
     - git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git develop:master -f
 
+fargateStagingDeployment: &fargateStagingDeployment
+  name: Deploy Staging to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: andrew
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install jq and the AWS CLI
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Dynamically update Fargate task definition
+    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
+    # Deploy to Fargate
+    - pipe: atlassian/aws-ecs-deploy:1.5.0
+      variables:
+        CLUSTER_NAME: managr-cluster
+        SERVICE_NAME: managr-service-staging
+        TASK_DEFINITION: 'task-definition.json' # Optional
+        FORCE_NEW_DEPLOYMENT: 'true' # Optional
+        WAIT: 'true' # Optional 
+        # DEBUG: '<string>' # Optional
+
+fargateProdDeployment: &fargateProdDeployment
+  name: Deploy Prod to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: andrew
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install jq and the AWS CLI
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Dynamically update Fargate task definition
+    - TASK_FAMILY="managr-app-task-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
+    # Deploy to Fargate
+    - pipe: atlassian/aws-ecs-deploy:1.5.0
+      variables:
+        CLUSTER_NAME: managr-cluster
+        SERVICE_NAME: managr-service-prod
+        TASK_DEFINITION: 'task-definition.json' # Optional
+        FORCE_NEW_DEPLOYMENT: 'true' # Optional
+        WAIT: 'true' # Optional 
+        # DEBUG: '<string>' # Optional
+
 pipelines:
   # Insert other test or build pipelines here as appropriate.
   # NOTE: If this is not a Vue app, then disable the 'vueAppBuild' and 'e2eTests' steps in the pipelines below.
@@ -58,12 +146,16 @@ pipelines:
           - step: *vueAppBuild
           - step: *e2eTests
           - step: *djangoTests
+      - step: *fargateStagingDeployment
+      # - step: *fargateProdDeployment
   branches:
     develop:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      - step: *herokuStagingDeployment
+      - parallel:
+          - step: *herokuStagingDeployment
+          - step: *fargateStagingDeployment
 
 definitions:
   caches:
@@ -77,3 +169,5 @@ definitions:
         POSTGRES_DB: test_db
         POSTGRES_USER: managr
         POSTGRES_PASSWORD: manager
+    docker:
+      memory: 2048
