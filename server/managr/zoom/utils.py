@@ -19,19 +19,19 @@ from managr.organization.models import Stage
 # Data structure defining how meeting scores are computed.
 SCORE_LOOKUP = {
     "meeting_sentiment": {
-        slack_consts.ZOOM_MEETING__GREAT: {
+        zoom_consts.MEETING_SENTIMENT_GREAT: {
             "type": "meeting_sentiment",
             "points": 50,
             "impact": "positive",
             "message_tpl": "The rep said the meeting went great!",
         },
-        slack_consts.ZOOM_MEETING__NOT_WELL: {
+        zoom_consts.MEETING_SENTIMENT_FINE: {
             "type": "meeting_sentiment",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The rep said the meeting did not go well.",
         },
-        slack_consts.ZOOM_MEETING__FINE: {
+        zoom_consts.MEETING_SENTIMENT_FINE: {
             "type": "meeting_sentiment",
             "points": 20,
             "impact": "positive",
