@@ -417,7 +417,7 @@ def create_task(request):
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead"]
     slack_id = request.data.get("user_id", None)
-    print(slack_id)
+
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -516,7 +516,6 @@ def list_tasks(request):
 
     # Pulls tasks from Salesforce
     tasks = user.salesforce_account.list_resource_data("Task", 0)
-
 
     blocks = [
         block_builders.simple_section(f"Task: {task.subject} Due on: {task.activity_date}")

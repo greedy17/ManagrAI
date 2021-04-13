@@ -615,13 +615,12 @@ def process_create_task(payload, context):
     status = [
         value.get("selected_option") for value in state.get("managr_task_status", {}).values()
     ]
-    print(status)
+    
     if status[0] == None:
         status = "Not Started"
     else:
         status = status[0].get("value")
-    print(status)
-
+    
     related_to_type = [
         value.get("selected_option")
         for value in state.get("managr_task_related_to_resource", {}).values()
@@ -644,7 +643,7 @@ def process_create_task(payload, context):
         "Status": status,
     }
 
-    print(data)
+    
     if related_to and related_to_type:
 
         if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
