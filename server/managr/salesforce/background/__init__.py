@@ -40,6 +40,7 @@ from ..adapter.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     SFQueryOffsetError,
+    SFNotFoundError,
 )
 
 from .. import constants as sf_consts
@@ -259,12 +260,15 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                    f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
                 sf.regenerate_token()
                 attempts += 1
-
+        except SFNotFoundError:
+            logger.exception(
+                f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email}"
+            )
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
     for value in values:
