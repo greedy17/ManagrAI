@@ -15,6 +15,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     TokenExpired,
     UnhandledSalesforceError,
+    SFNotFoundError,
 )
 from managr.organization.models import Organization
 from managr.core.models import User
@@ -310,6 +311,21 @@ def process_submit_resource_data(payload, context):
                         "error_modal",
                         {
                             "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except SFNotFoundError as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -685,6 +701,22 @@ def process_create_task(payload, context):
                 ),
             },
         }
+    except SFNotFoundError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
     except UnhandledSalesforceError as e:
 
         return {

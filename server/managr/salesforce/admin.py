@@ -20,6 +20,7 @@ class SyncResourceForm(forms.ModelForm):
 class CustomSyncOperationAdmin(admin.ModelAdmin):
     form = SyncResourceForm
     list_filter = ("user",)
+    ordering = ("-datetime_created",)
 
 
 class CustomFormInstanceInline(admin.StackedInline):
@@ -30,6 +31,7 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
     list_filter = ("user",)
+    ordering = ("-datetime_created",)
 
 
 class CustomSObjectField(admin.ModelAdmin):

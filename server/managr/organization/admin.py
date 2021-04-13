@@ -18,6 +18,11 @@ class CustomOrganization(admin.ModelAdmin):
 class CustomAccount(admin.ModelAdmin):
     model = Account
     list_display = ("name",)
+    list_filter = ("owner",)
+    list_display = (
+        "name",
+        "last_edited",
+    )
 
 
 class CustomContact(admin.ModelAdmin):
@@ -39,6 +44,11 @@ class CustomContact(admin.ModelAdmin):
         ),
     )
     list_filter = ("owner",)
+    list_display = (
+        "email",
+        "imported_by",
+        "last_edited",
+    )
 
 
 admin.site.register(Organization, CustomOrganization)

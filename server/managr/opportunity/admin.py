@@ -35,7 +35,20 @@ class OpportunityForm(forms.ModelForm):
 class CustomOpportunityAdmin(admin.ModelAdmin):
     form = OpportunityForm
     list_filter = ("owner",)
+    list_display = (
+        "name",
+        "last_edited",
+    )
+
+
+class CustomLeadAdmin(admin.ModelAdmin):
+    model = Lead
+    list_filter = ("owner",)
+    list_display = (
+        "name",
+        "last_edited",
+    )
 
 
 admin.site.register(Opportunity, CustomOpportunityAdmin)
-admin.site.register(Lead)
+admin.site.register(Lead, CustomLeadAdmin)

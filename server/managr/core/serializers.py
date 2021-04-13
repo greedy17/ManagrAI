@@ -41,7 +41,6 @@ class UserSerializer(serializers.ModelSerializer):
     superusers can update email"""
 
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
-    accounts_ref = AccountSerializer(many=True, source="organization.accounts", read_only=True)
     nylas_ref = NylasAuthAccountSerializer(source="nylas", read_only=True)
     salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
@@ -58,7 +57,6 @@ class UserSerializer(serializers.ModelSerializer):
             # org info
             "organization",
             "organization_ref",
-            "accounts_ref",
             # user info
             "is_active",
             "is_invited",
