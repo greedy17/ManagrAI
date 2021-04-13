@@ -382,6 +382,7 @@ def _save_meeting_review(workflow_id):
         elif form_data.get("ForecastCategory", None) not in ["", None]:
             forecast_category = form_data.get("ForecastCategory")
         # format data appropriately
+        print(form_data.get("meeting_sentiment"))
         data = {
             "meeting": meeting,
             "resource_type": workflow.resource_type,
@@ -407,33 +408,39 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
-    slack_access_token = user.organization.slack_integration.access_token
+    if (
+        hasattr(workflow.meeting, "zoom_meeting_review")
+        and workflow.meeting.zoom_meeting_review.meeting_sentiment
+        == zoom_consts.MEETING_SENTIMENT_GREAT
+    ):
 
-    user_list = user.organization.users.filter(user_level="MANAGER").select_related(
-        "slack_integration"
-    )
-    try:
-        for u in user_list:
-            if hasattr(u, "slack_integration"):
-                slack_requests.send_channel_message(
-                    u.slack_integration.channel,
-                    slack_access_token,
-                    text=f"Meeting Review Summary For {user.email} from meeting",
-                    block_set=get_block_set("meeting_summary", {"w": workflow_id}),
-                )
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate  Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
+        user = workflow.user
+        slack_access_token = user.organization.slack_integration.access_token
 
+        user_list = user.organization.users.filter(user_level="MANAGER").select_related(
+            "slack_integration"
+        )
+        try:
+            for u in user_list:
+                if hasattr(u, "slack_integration"):
+                    slack_requests.send_channel_message(
+                        u.slack_integration.channel,
+                        slack_access_token,
+                        text=f"Meeting Review Summary For {user.email} from meeting",
+                        block_set=get_block_set("meeting_summary", {"w": workflow_id}),
+                    )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed To Generate  Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+
+        return
     return
-

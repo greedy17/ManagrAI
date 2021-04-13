@@ -10,6 +10,7 @@
       @click="goToSlackFormBuilder"
       class="slack-button"
       text="Continue to Slack Form Builder"
+      :loading="false"
     ></PulseLoadingSpinnerButton>
     <div
       v-if="!hasSalesforceIntegration && user.isAdmin"

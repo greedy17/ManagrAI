@@ -23,12 +23,12 @@ class Command(BaseCommand):
 
         operations = [
             f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
             f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
             f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
             f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
+            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
             f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
         ]
         if user.is_admin:
@@ -43,13 +43,11 @@ class Command(BaseCommand):
                 ]
             )
 
-            scheduled_time = timezone.now()
-            formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-            emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
-            self.stdout.write(
-                self.style.SUCCESS(
-                    "Successfully initiated the object field sync for the user {}".format(
-                        user.email,
-                    )
-                )
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully initiated the object field sync for the user {}".format(user.email,)
             )
+        )
