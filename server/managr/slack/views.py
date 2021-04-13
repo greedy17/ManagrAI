@@ -543,7 +543,7 @@ def list_tasks(request):
             if t.what_id:
                 # first check for opp
                 obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-                if not resource:
+                if not obj:
                     obj = user.imported_account.filter(integration_id=t.what_id).first()
                 if obj:
                     resource = f"*{obj.name}*"
@@ -556,7 +556,7 @@ def list_tasks(request):
                 )
 
             elif t.who_id:
-                obj = user.imported_lead.filter(integration_id=t.who_id)
+                obj = user.imported_lead.filter(integration_id=t.who_id).first()
                 if obj:
                     resource = f"*{obj.name}*"
 
