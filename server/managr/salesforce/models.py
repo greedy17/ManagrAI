@@ -767,7 +767,7 @@ class SalesforceAuthAccount(TimeStampModel):
             # Controls the fields returned from SalesForce API
             # https://developer.salesforce.com/docs/atlas.en-us.sfFieldRef.meta/sfFieldRef/salesforce_field_reference_Task.htm
             # TODO: Make this dynamic, like the other four object_field types above
-            Task=["Description", "Subject", "CreatedDate", 'ActivityDate']
+            Task=["Description", "Subject", "CreatedDate", "ActivityDate", "WhatId", "WhoId"]
             # Task=self.object_fields.filter(salesforce_object="Task").values_list(
             #     "api_name", flat=True
             # ),
