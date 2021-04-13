@@ -508,7 +508,7 @@ def list_tasks(request):
         if not date:
             return "n/a"
         d = datetime.strptime(date, "%Y-%m-%d")
-        return d.strftime("%a, %B, %Y %I:%M %p")
+        return d.strftime("%a, %B %d, %Y %I:%M %p")
 
     slack_id = request.data.get("user_id", None)
 
@@ -526,7 +526,7 @@ def list_tasks(request):
     user = slack.user
 
     # Pulls tasks from Salesforce
-    tasks = user.salesforce_account.list_resource_data("Task", 0)
+    tasks = user.salesforce_account.adapter_class.list_tasks()
     blocks = []
 
     try:
@@ -550,7 +550,7 @@ def list_tasks(request):
 
                 blocks.append(
                     block_builders.simple_section(
-                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
+                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} is `{t.status}`",
                         "mrkdwn",
                     )
                 )
