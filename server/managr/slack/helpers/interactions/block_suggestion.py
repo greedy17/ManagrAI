@@ -163,5 +163,4 @@ def handle_block_suggestion(payload):
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
     action_params = processed_string.get("params")
-    
     return switcher.get(action_id, NO_OP)(payload, action_params)
