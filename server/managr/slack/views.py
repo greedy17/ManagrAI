@@ -544,7 +544,7 @@ def list_tasks(request):
                 # first check for opp
                 obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
                 if not resource:
-                    obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                    obj = user.imported_account.filter(integration_id=t.what_id).first()
                 if obj:
                     resource = f"*{obj.name}*"
 
