@@ -948,6 +948,32 @@ class TaskAdapter:
         self.subject = kwargs.get("subject", None)
         self.description = kwargs.get("description", None)
         self.created_date = kwargs.get("created_date", None)
+        self.activity_date = kwargs.get("activity_date", None)
+        self.what_id = kwargs.get("what_id", None)
+        self.who_id = kwargs.get("who_id", None)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters(**kwargs):
+        """ pass custom additional filters to the url """
+        time_zone = datetime.now().date().strftime("%Y-%m-%d")
+        return [f"AND ActivityDate >= {time_zone} "]
+
+    # formatted_data.append(resource_class.from_api(result, self.user, *args))
+    @staticmethod
+    def from_api(result, user):
+        """ pass custom additional filters to the url """
+        return TaskAdapter(
+            description=result["Description"],
+            subject=result["Subject"],
+            created_date=result["CreatedDate"],
+            activity_date=result["ActivityDate"],
+            what_id=result["WhatId"],
+            who_id=result["WhoId"],
+        )
 
     @staticmethod
     def save_task_to_salesforce(data, access_token, custom_base):
@@ -958,3 +984,4 @@ class TaskAdapter:
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
+

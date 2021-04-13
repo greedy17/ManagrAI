@@ -115,7 +115,7 @@ class CustomAPIException:
                     raise InvalidFieldError(f"There was an invalid field in the query {field_str}")
 
             raise InvalidFieldError(
-                f"There was an error in the data sent to salesforce but we could not determine what field caused this {e}"
+                f"There was an error in the data sent to salesforce but we could not determine what field caused this {self.message}"
             )
 
         elif self.status_code == 400 and self.param == "NOT_FOUND":

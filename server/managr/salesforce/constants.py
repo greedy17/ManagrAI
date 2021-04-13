@@ -166,6 +166,7 @@ k = resource id
 
 """
 SALESFORCE_WRITE_URI = lambda u, r, k: f"{u}{CUSTOM_BASE_URI}/sobjects/{r}/{k}"
+SALESFORCE_EDIT_URI = ""
 
 
 SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE = "OpportunityContactRole"

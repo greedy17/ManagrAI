@@ -750,6 +750,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
+        slack_const.COMMAND_LIST_TASKS: process_list_tasks,
     }
 
     callback_id = payload["view"]["callback_id"]
