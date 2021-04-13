@@ -334,6 +334,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_individual_picklist_values(self, resource, field_name=None):
         """ Sync method to get picklist values for resources not saved in our db """
+        
         record_type_id = self.default_record_id
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/{field_name}" if field_name else url

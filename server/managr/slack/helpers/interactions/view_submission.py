@@ -631,6 +631,12 @@ def process_create_task(payload, context):
     status = [
         value.get("selected_option") for value in state.get("managr_task_status", {}).values()
     ]
+    
+    if status[0] == None:
+        status = "Not Started"
+    else:
+        status = status[0].get("value")
+    
     related_to_type = [
         value.get("selected_option")
         for value in state.get("managr_task_related_to_resource", {}).values()
@@ -645,12 +651,15 @@ def process_create_task(payload, context):
             .objects.get(id=related_to[0].get("value"))
             .integration_id
         )
+
     data = {
         "Subject": state.get("managr_task_subject", {}).get("plain_input", {}).get("value"),
         "ActivityDate": activity_date[0] if len(activity_date) else None,
         "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
-        "Status": status[0].get("value") if len(status) else None,
+        "Status": status,
     }
+
+    
     if related_to and related_to_type:
 
         if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
@@ -750,7 +759,6 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
-        slack_const.COMMAND_LIST_TASKS: process_list_tasks,
     }
 
     callback_id = payload["view"]["callback_id"]
