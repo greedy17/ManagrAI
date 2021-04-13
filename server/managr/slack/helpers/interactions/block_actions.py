@@ -876,6 +876,5 @@ def handle_block_actions(payload):
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
-    action_params = processed_string.get("params")
-    print(f"ID: {action_query_string}")
+    action_params = processed_string.get("params")    
     return switcher.get(action_id, NO_OP)(payload, action_params)

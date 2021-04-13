@@ -336,8 +336,7 @@ class SalesforceAuthAccountAdapter:
         """ Sync method to get picklist values for resources not saved in our db """
         record_type_id = self.default_record_id
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-        url = f"{url}/{field_name}" if field_name else url
-        print(url)
+        url = f"{url}/{field_name}" if field_name else url        
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
 
@@ -964,8 +963,7 @@ class TaskAdapter:
 # formatted_data.append(resource_class.from_api(result, self.user, *args))
     @staticmethod
     def from_api(result, user):
-        """ pass custom additional filters to the url """
-        print(result)
+        """ pass custom additional filters to the url """        
         return TaskAdapter(
             description=result['Description'],
             subject=result['Subject'],
@@ -984,8 +982,4 @@ class TaskAdapter:
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
     
-    @staticmethod
-    def list_salesforce_tasks(data, access_token, custom_base):
-        print(data)
-        # this needs to hit the url to get the saales force tasks
-        pass
+    

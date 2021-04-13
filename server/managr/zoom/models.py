@@ -137,8 +137,7 @@ class ZoomAuthAccount(TimeStampModel):
                 self.helper_class.revoke()
             else:
                 self.helper_class.revoke()
-        except Exception as e:
-            print(e)
+        except Exception as e:            
             pass
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
