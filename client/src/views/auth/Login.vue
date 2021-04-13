@@ -127,7 +127,6 @@ export default {
           delete userData.token
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
-          this.$store.dispatch('updateStages')
           if (this.$route.query.redirect) {
             this.$router.push(this.$route.query.redirect)
           } else {
@@ -136,6 +135,13 @@ export default {
           this.success = true
         })
         .catch(error => {
+          if (!error.response || !error.response.status) {
+            this.$Alert.alert({
+              message: 'An Unknown Error occured please reach out to support',
+              timeout: 3000,
+              type: 'error',
+            })
+          }
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false
