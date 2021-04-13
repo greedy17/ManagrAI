@@ -1,4 +1,7 @@
 import json
+import logging
+
+from datetime import datetime
 
 from django.db.models import Sum, Avg, Q
 
@@ -38,6 +41,8 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksFormatException,
     InvalidBlocksException,
 )
+
+logger = logging.getLogger("managr")
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -333,8 +338,9 @@ def update_resource(request):
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = []
+        command_params = ["opportunity"]
     resource_type = None
+
     if len(command_params):
         if command_params[0] not in allowed_commands:
             return Response(
@@ -496,9 +502,14 @@ def create_task(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def list_tasks(request):
-    # list of accepted commands for this fake endpoint
 
-    # allowed_commands = ["opportunity", "account", "lead"]
+    ## helper to make datetime longform
+    def to_date_string(date):
+        if not date:
+            return "n/a"
+        d = datetime.strptime(date, "%Y-%m-%d")
+        return d.strftime("%a, %B, %Y %I:%M %p")
+
     slack_id = request.data.get("user_id", None)
 
     if slack_id:
@@ -516,55 +527,80 @@ def list_tasks(request):
 
     # Pulls tasks from Salesforce
     tasks = user.salesforce_account.list_resource_data("Task", 0)
-
-    blocks = [
-        block_builders.simple_section(f"Task: {task.subject} Due on: {task.activity_date}")
-        for task in tasks
-    ]
-    if not len(tasks):
-        message = "Congratulations. You have no future tasks at this time."
-
-        return Response(data={"response_type": "ephemeral", "text": message,})
-
-    return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
-
-    context = {"u": str(user.id)}
-
-    access_token = user.organization.slack_integration.access_token
-
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = request.data.get("trigger_id")
-
-    private_metadata = {
-        "original_message_channel": request.data.get("channel_id"),
-    }
-
-    private_metadata.update(context)
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.COMMAND_LIST_TASKS,
-            "title": {"type": "plain_text", "text": f"Tasks"},
-            "blocks": get_block_set("list_tasks", context=context,),
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
+    blocks = []
 
     try:
-        slack_requests.generic_request(url, data, access_token=access_token)
-        pass
+
+        if not len(tasks):
+            message = "Congratulations. You have no future tasks at this time."
+
+            return Response(data={"response_type": "ephemeral", "text": message,})
+
+        for t in tasks:
+            resource = "_information n/a_"
+            # get the resource if it is what_id is for account/opp
+            # get the resource if it is who_id is for lead
+            if t.what_id:
+                # first check for opp
+                obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                if not resource:
+                    obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                if obj:
+                    resource = f"*{obj.name}*"
+
+                blocks.append(
+                    block_builders.simple_section(
+                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
+                        "mrkdwn",
+                    )
+                )
+
+            elif t.who_id:
+                obj = user.imported_lead.filter(integration_id=t.who_id)
+                if obj:
+                    resource = f"*{obj.name}*"
+
+                blocks.append(
+                    block_builders.simple_section(
+                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
+                        "mrkdwn",
+                    )
+                )
+
+            else:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
+                        "mrkdwn",
+                    )
+                )
+
+        return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
     except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
         )
     except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
         )
     except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
         )
 
-    return Response()
