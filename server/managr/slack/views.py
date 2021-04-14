@@ -541,7 +541,7 @@ def list_tasks(request):
                 block_builders.simple_section(
                     f"You have *{len(tasks)}* upcoming tasks to do", "mrkdwn"
                 ),
-                {"type": "divider"},
+                block_builders.divider_block(),
             ]
         )
         for t in tasks:
@@ -567,11 +567,11 @@ def list_tasks(request):
                         f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
                         "mrkdwn",
                     ),
-                    {"type": "divider"},
+                    block_builders.divider_block(),
                     block_builders.section_with_button_block(
                         "View Task",
                         "view_task",
-                        "*View task in salesforce*",
+                        "_*View task in salesforce*_",
                         url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
                     ),
                 ]
