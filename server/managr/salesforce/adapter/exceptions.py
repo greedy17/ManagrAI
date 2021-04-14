@@ -32,6 +32,12 @@ class RequiredFieldError(Exception):
         super().__init__(self.message)
 
 
+class SFNotFoundError(Exception):
+    def __init(self, message="Error Generating Slack Modal"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class SFQueryOffsetError(Exception):
     def __init(self, message="OFFSET MAX IS 2000"):
         self.message = message
@@ -76,6 +82,8 @@ class CustomAPIException:
             raise Api500Error()
         elif self.status_code == 401:
             raise TokenExpired()
+        elif self.status_code == 404:
+            raise SFNotFoundError()
         elif self.status_code == 403:
             raise ApiRateLimitExceeded()
         elif self.status_code == 400 and self.param == "FIELD_CUSTOM_VALIDATION_EXCEPTION":
@@ -107,7 +115,7 @@ class CustomAPIException:
                     raise InvalidFieldError(f"There was an invalid field in the query {field_str}")
 
             raise InvalidFieldError(
-                f"There was an error in the data sent to salesforce but we could not determine what field caused this {e}"
+                f"There was an error in the data sent to salesforce but we could not determine what field caused this {self.message}"
             )
 
         elif self.status_code == 400 and self.param == "NOT_FOUND":

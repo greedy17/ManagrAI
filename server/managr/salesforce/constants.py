@@ -45,6 +45,28 @@ def SALSFORCE_RESOURCE_QUERY_URI(
     return f"{url} order by CreatedDate limit {limit}"
 
 
+def SALSFORCE_TASK_QUERY_URI(
+    owner_id,
+    resource,
+    fields,
+    childRelationshipFields=[],
+    additional_filters=[],
+    limit=SALESFORCE_QUERY_LIMIT,
+):
+    # make a set to remove duplicates
+    fields = set(fields)
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+    if len(childRelationshipFields):
+        for rel, v in childRelationshipFields.items():
+            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+    url = f"{url} FROM {resource} WHERE OwnerId = '{owner_id}'"
+    if len(additional_filters):
+        for f in additional_filters:
+            url = f"{url} {f} "
+
+    return f"{url} order by ActivityDate limit {limit}"
+
+
 def SF_COUNT_URI(resource, owner_id):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from {resource}"
     if owner_id:
@@ -121,6 +143,16 @@ OPPORTUNITY_CONTACT_ROLE_FIELDS = [
     "Role",
     "ContactId",
 ]
+TASK_QUERY_FIELDS = [
+    "Id",
+    "Description",
+    "Subject",
+    "CreatedDate",
+    "ActivityDate",
+    "WhatId",
+    "WhoId",
+    "Status",
+]
 
 OPPORTUNITY_HISTORY_FIELDS = ["Id", "CreatedDate"]
 OPPORTUNITY_HISTORY_ATTRS = ["LIMIT 1"]
@@ -166,6 +198,7 @@ k = resource id
 
 """
 SALESFORCE_WRITE_URI = lambda u, r, k: f"{u}{CUSTOM_BASE_URI}/sobjects/{r}/{k}"
+SALESFORCE_EDIT_URI = ""
 
 
 SALESFORCE_RESOURCE_OPPORTUNITY_CONTACT_ROLE = "OpportunityContactRole"

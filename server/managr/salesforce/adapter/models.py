@@ -334,6 +334,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_individual_picklist_values(self, resource, field_name=None):
         """ Sync method to get picklist values for resources not saved in our db """
+
         record_type_id = self.default_record_id
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/{field_name}" if field_name else url
@@ -416,6 +417,15 @@ class SalesforceAuthAccountAdapter:
         res = self._handle_response(res)
         # no need to format to any adapter
         res = self._format_resource_response(res, None)
+        return res
+
+    def list_tasks(self):
+        additional_filters = TaskAdapter.additional_filters()
+        url = f"{self.instance_url}{sf_consts.SALSFORCE_TASK_QUERY_URI(self.salesforce_id, sf_consts.SALESFORCE_RESOURCE_TASK,sf_consts.TASK_QUERY_FIELDS, additional_filters=additional_filters)}"
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+        # no need to format to any adapter
+        res = self._format_resource_response(res, "Task")
         return res
 
     def get_resource_count(self, resource):
@@ -948,6 +958,35 @@ class TaskAdapter:
         self.subject = kwargs.get("subject", None)
         self.description = kwargs.get("description", None)
         self.created_date = kwargs.get("created_date", None)
+        self.activity_date = kwargs.get("activity_date", None)
+        self.what_id = kwargs.get("what_id", None)
+        self.who_id = kwargs.get("who_id", None)
+        self.status = kwargs.get("status", None)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters(**kwargs):
+        """ pass custom additional filters to the url """
+        time_zone = datetime.now().date().strftime("%Y-%m-%d")
+        return [f"AND ActivityDate >= {time_zone}", "AND (NOT Status LIKE '%Completed%') "]
+
+    # formatted_data.append(resource_class.from_api(result, self.user, *args))
+    @staticmethod
+    def from_api(result, user):
+        """ pass custom additional filters to the url """
+        return TaskAdapter(
+            id=result["Id"],
+            description=result["Description"],
+            subject=result["Subject"],
+            created_date=result["CreatedDate"],
+            activity_date=result["ActivityDate"],
+            what_id=result["WhatId"],
+            who_id=result["WhoId"],
+            status=result["Status"],
+        )
 
     @staticmethod
     def save_task_to_salesforce(data, access_token, custom_base):
@@ -958,3 +997,7 @@ class TaskAdapter:
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @property
+    def as_dict(self):
+        return vars(self)

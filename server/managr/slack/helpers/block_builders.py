@@ -74,6 +74,16 @@ def option(text, value):
     }
 
 
+def divider_block():
+    return {"type": "divider"}
+
+
+def header_block(text, block_id=None):
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    return {"type": "header", "text": {"type": "plain_text", "text": text}, "block_id": block_id}
+
+
 def external_select(
     label, action_id, initial_option=None, block_id=None, min_query_length=0, placeholder="Select",
 ):

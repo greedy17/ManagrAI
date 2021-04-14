@@ -15,6 +15,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     TokenExpired,
     UnhandledSalesforceError,
+    SFNotFoundError,
 )
 from managr.organization.models import Organization
 from managr.core.models import User
@@ -310,6 +311,21 @@ def process_submit_resource_data(payload, context):
                         "error_modal",
                         {
                             "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                        },
+                    ),
+                },
+            }
+        except SFNotFoundError as e:
+
+            return {
+                "response_action": "push",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "An Error Occurred"},
+                    "blocks": get_block_set(
+                        "error_modal",
+                        {
+                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
                         },
                     ),
                 },
@@ -615,6 +631,12 @@ def process_create_task(payload, context):
     status = [
         value.get("selected_option") for value in state.get("managr_task_status", {}).values()
     ]
+    
+    if status[0] == None:
+        status = "Not Started"
+    else:
+        status = status[0].get("value")
+    
     related_to_type = [
         value.get("selected_option")
         for value in state.get("managr_task_related_to_resource", {}).values()
@@ -629,12 +651,15 @@ def process_create_task(payload, context):
             .objects.get(id=related_to[0].get("value"))
             .integration_id
         )
+
     data = {
         "Subject": state.get("managr_task_subject", {}).get("plain_input", {}).get("value"),
         "ActivityDate": activity_date[0] if len(activity_date) else None,
         "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
-        "Status": status[0].get("value") if len(status) else None,
+        "Status": status,
     }
+
+    
     if related_to and related_to_type:
 
         if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
@@ -676,6 +701,22 @@ def process_create_task(payload, context):
                 ),
             },
         }
+    except SFNotFoundError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
     except UnhandledSalesforceError as e:
 
         return {

@@ -31,17 +31,18 @@ def queue_users_sf_resource(force_all=False):
     """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
+        logger.info(f"syncing data for {account.user.email}")
         # get latest workflow
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)
             if not flows.count():
-                return init_sf_resource_sync(account.user.id)
+                init_sf_resource_sync(account.user.id)
             latest_flow = flows.latest("datetime_created") if flows else None
             if latest_flow and latest_flow.progress == 100:
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
-                return init_sf_resource_sync(latest_flow.user.id)
+                init_sf_resource_sync(latest_flow.user.id)
             elif latest_flow and latest_flow.progress != 100:
                 # check to see if the tasks were completed but not recorded
                 completed_tasks = set(latest_flow.completed_operations)
@@ -55,10 +56,10 @@ def queue_users_sf_resource(force_all=False):
 
                 latest_flow.save()
                 if latest_flow.progress == 100:
-                    return init_sf_resource_sync(account.user.id)
+                    init_sf_resource_sync(account.user.id)
 
         else:
-            return init_sf_resource_sync(account.user.id)
+            init_sf_resource_sync(account.user.id)
 
     return
 
@@ -75,13 +76,13 @@ def queue_users_sf_fields(force_all=False):
         if not force_all:
             flows = SFObjectFieldsOperation.objects.filter(user=account.user)
             if not flows.count():
-                return init_sf_field_sync(account.user)
+                init_sf_field_sync(account.user)
             latest_flow = flows.latest("datetime_created") if flows else None
             if latest_flow and latest_flow.progress == 100:
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
-                return init_sf_field_sync(latest_flow.user)
+                init_sf_field_sync(latest_flow.user)
             elif latest_flow and latest_flow.progress != 100:
                 # check to see if the tasks were completed but not recorded
                 completed_tasks = set(latest_flow.completed_operations)
@@ -95,7 +96,7 @@ def queue_users_sf_fields(force_all=False):
 
                 latest_flow.save()
                 if latest_flow.progress == 100:
-                    return init_sf_field_sync(account.user)
+                    init_sf_field_sync(account.user)
 
         else:
             init_sf_field_sync(account.user)
@@ -145,14 +146,15 @@ def init_sf_resource_sync(user_id):
 
 
 def init_sf_field_sync(user):
+    logger.info(f"Initiating Object Field Sync for User {str(user.id)} with email {user.email}")
     operations = [
         f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
         f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
         f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
         f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
+        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
+        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
         f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
     ]
     if user.is_admin:

@@ -40,6 +40,7 @@ from ..adapter.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     SFQueryOffsetError,
+    SFNotFoundError,
 )
 
 from .. import constants as sf_consts
@@ -259,12 +260,15 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                    f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
                 sf.regenerate_token()
                 attempts += 1
-
+        except SFNotFoundError:
+            logger.exception(
+                f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email}"
+            )
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
     for value in values:
@@ -638,6 +642,41 @@ def _save_meeting_review(workflow_id):
 
 @background(schedule=0)
 def _process_create_task(user_id, data, *args):
+
+    user = User.objects.get(id=user_id)
+    # get the create form
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        from managr.salesforce.adapter.models import TaskAdapter
+
+        try:
+            TaskAdapter.save_task_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+        except FieldValidationError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise FieldValidationError(e)
+        except RequiredFieldError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise RequiredFieldError(e)
+
+    return
+
+@background(schedule=0)
+def _process_list_tasks(user_id, data, *args):
 
     user = User.objects.get(id=user_id)
     # get the create form

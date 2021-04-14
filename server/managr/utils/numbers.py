@@ -77,8 +77,7 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
     return empty_str
 
 
-# print(format_phone_number('+18572056014',
-#                          format="+1(%d%d%d)%w%d%d%d-%d%d%d%d"))
+
 
 
 def validate_phone_number(value, country="US"):

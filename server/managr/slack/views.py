@@ -1,4 +1,7 @@
 import json
+import logging
+
+from datetime import datetime
 
 from django.db.models import Sum, Avg, Q
 
@@ -33,6 +36,13 @@ from rest_framework.decorators import (
 )
 
 from managr.salesforce.routes import routes as model_routes
+from managr.slack.helpers.exceptions import (
+    UnHandeledBlocksException,
+    InvalidBlocksFormatException,
+    InvalidBlocksException,
+)
+
+logger = logging.getLogger("managr")
 
 
 class SlackViewSet(viewsets.GenericViewSet,):
@@ -328,8 +338,9 @@ def update_resource(request):
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = []
+        command_params = ["opportunity"]
     resource_type = None
+
     if len(command_params):
         if command_params[0] not in allowed_commands:
             return Response(
@@ -408,9 +419,11 @@ def meeting_summary(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def create_task(request):
+
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead"]
     slack_id = request.data.get("user_id", None)
+
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -467,7 +480,7 @@ def create_task(request):
             "private_metadata": json.dumps(private_metadata),
         },
     }
-    print(user.__dict__)
+
     try:
         slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -483,4 +496,111 @@ def create_task(request):
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
         )
     return Response()
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def list_tasks(request):
+
+    ## helper to make datetime longform
+    def to_date_string(date):
+        if not date:
+            return "n/a"
+        d = datetime.strptime(date, "%Y-%m-%d")
+        return d.strftime("%a, %B %d, %Y")
+
+    slack_id = request.data.get("user_id", None)
+
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+
+    # Pulls tasks from Salesforce
+    tasks = user.salesforce_account.adapter_class.list_tasks()
+    blocks = []
+
+    try:
+
+        if not len(tasks):
+            message = "Congratulations. You have no future tasks at this time."
+
+            return Response(data={"response_type": "ephemeral", "text": message,})
+        blocks.extend(
+            [
+                block_builders.header_block("View Tasks"),
+                block_builders.simple_section(f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"),
+                block_builders.divider_block(),
+            ]
+        )
+        for t in tasks:
+            resource = "_salesforce object n/a_"
+            # get the resource if it is what_id is for account/opp
+            # get the resource if it is who_id is for lead
+            if t.what_id:
+                # first check for opp
+                obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                if not obj:
+                    obj = user.imported_account.filter(integration_id=t.what_id).first()
+                if obj:
+                    resource = f"*{obj.name}*"
+
+            elif t.who_id:
+                obj = user.imported_lead.filter(integration_id=t.who_id).first()
+                if obj:
+                    resource = f"*{obj.name}*"
+
+            blocks.extend(
+                [
+                    block_builders.simple_section(
+                        f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                        "mrkdwn",
+                    ),
+                    block_builders.divider_block(),
+                    block_builders.section_with_button_block(
+                        "View Task",
+                        "view_task",
+                        "_*View task in salesforce*_",
+                        url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                    ),
+                ]
+            )
+
+        return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
+    except InvalidBlocksException as e:
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
+        )
+    except InvalidBlocksFormatException as e:
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
+        )
+    except UnHandeledBlocksException as e:
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
+        )
 

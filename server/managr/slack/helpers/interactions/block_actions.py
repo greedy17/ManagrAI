@@ -765,7 +765,6 @@ def process_create_task(payload, context):
     u = User.objects.get(id=context.get("u"))
     org = u.organization
 
-    
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -799,8 +798,6 @@ def process_create_task(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
-    
-    
     
     
 
@@ -869,7 +866,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
-        slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
+        slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,        
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
@@ -878,6 +875,5 @@ def handle_block_actions(payload):
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
-    action_params = processed_string.get("params")
-    print(f"ID: {action_query_string}")
+    action_params = processed_string.get("params")    
     return switcher.get(action_id, NO_OP)(payload, action_params)
