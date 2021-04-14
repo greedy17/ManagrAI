@@ -35,13 +35,13 @@ def queue_users_sf_resource(force_all=False):
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)
             if not flows.count():
-                return init_sf_resource_sync(account.user.id)
+                init_sf_resource_sync(account.user.id)
             latest_flow = flows.latest("datetime_created") if flows else None
             if latest_flow and latest_flow.progress == 100:
                 logger.info(
                     f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                 )
-                return init_sf_resource_sync(latest_flow.user.id)
+                init_sf_resource_sync(latest_flow.user.id)
             elif latest_flow and latest_flow.progress != 100:
                 # check to see if the tasks were completed but not recorded
                 completed_tasks = set(latest_flow.completed_operations)
@@ -55,7 +55,7 @@ def queue_users_sf_resource(force_all=False):
 
                 latest_flow.save()
                 if latest_flow.progress == 100:
-                    return init_sf_resource_sync(account.user.id)
+                    init_sf_resource_sync(account.user.id)
 
         else:
             return init_sf_resource_sync(account.user.id)
