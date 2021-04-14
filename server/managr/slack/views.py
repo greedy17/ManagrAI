@@ -535,7 +535,15 @@ def list_tasks(request):
             message = "Congratulations. You have no future tasks at this time."
 
             return Response(data={"response_type": "ephemeral", "text": message,})
-
+        blocks.extend(
+            [
+                block_builders.header_block("Your Upcoming Tasks"),
+                block_builders.simple_section(
+                    f"You have *{len(tasks)}* upcoming tasks to do", "mrkdwn"
+                ),
+                {"type": "divider"},
+            ]
+        )
         for t in tasks:
             resource = "_information n/a_"
             # get the resource if it is what_id is for account/opp
@@ -548,32 +556,26 @@ def list_tasks(request):
                 if obj:
                     resource = f"*{obj.name}*"
 
-                blocks.append(
-                    block_builders.simple_section(
-                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} is `{t.status}`",
-                        "mrkdwn",
-                    )
-                )
-
             elif t.who_id:
                 obj = user.imported_lead.filter(integration_id=t.who_id).first()
                 if obj:
                     resource = f"*{obj.name}*"
 
-                blocks.append(
+            blocks.extend(
+                [
                     block_builders.simple_section(
-                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
+                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
                         "mrkdwn",
-                    )
-                )
-
-            else:
-                blocks.append(
-                    block_builders.simple_section(
-                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject}",
-                        "mrkdwn",
-                    )
-                )
+                    ),
+                    {"type": "divider"},
+                    block_builders.section_with_button_block(
+                        "View Task",
+                        "view_task",
+                        "*View task in salesforce*",
+                        url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                    ),
+                ]
+            )
 
         return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
     except InvalidBlocksException as e:

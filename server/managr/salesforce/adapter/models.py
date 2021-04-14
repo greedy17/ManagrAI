@@ -971,13 +971,14 @@ class TaskAdapter:
     def additional_filters(**kwargs):
         """ pass custom additional filters to the url """
         time_zone = datetime.now().date().strftime("%Y-%m-%d")
-        return [f"AND ActivityDate >= {time_zone} "]
+        return [f"AND ActivityDate >= {time_zone}", "AND (NOT Status LIKE '%Completed%') "]
 
     # formatted_data.append(resource_class.from_api(result, self.user, *args))
     @staticmethod
     def from_api(result, user):
         """ pass custom additional filters to the url """
         return TaskAdapter(
+            id=result["Id"],
             description=result["Description"],
             subject=result["Subject"],
             created_date=result["CreatedDate"],
@@ -997,3 +998,6 @@ class TaskAdapter:
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
+    @property
+    def as_dict(self):
+        return vars(self)
