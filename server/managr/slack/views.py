@@ -537,7 +537,7 @@ def list_tasks(request):
             return Response(data={"response_type": "ephemeral", "text": message,})
         blocks.extend(
             [
-                block_builders.header_block("Your Upcoming Tasks"),
+                block_builders.header_block("View Tasks"),
                 block_builders.simple_section(f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"),
                 block_builders.divider_block(),
             ]
