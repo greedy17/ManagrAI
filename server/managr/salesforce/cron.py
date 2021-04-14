@@ -31,6 +31,7 @@ def queue_users_sf_resource(force_all=False):
     """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
+        logger.info(f"syncing data for {account.user.email}")
         # get latest workflow
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)

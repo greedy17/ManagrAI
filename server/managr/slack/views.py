@@ -508,7 +508,7 @@ def list_tasks(request):
         if not date:
             return "n/a"
         d = datetime.strptime(date, "%Y-%m-%d")
-        return d.strftime("%a, %B %d, %Y %I:%M %p")
+        return d.strftime("%a, %B %d, %Y")
 
     slack_id = request.data.get("user_id", None)
 
@@ -538,14 +538,12 @@ def list_tasks(request):
         blocks.extend(
             [
                 block_builders.header_block("Your Upcoming Tasks"),
-                block_builders.simple_section(
-                    f"You have *{len(tasks)}* upcoming tasks to do", "mrkdwn"
-                ),
+                block_builders.simple_section(f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"),
                 block_builders.divider_block(),
             ]
         )
         for t in tasks:
-            resource = "_information n/a_"
+            resource = "_salesforce object n/a_"
             # get the resource if it is what_id is for account/opp
             # get the resource if it is who_id is for lead
             if t.what_id:
@@ -564,7 +562,7 @@ def list_tasks(request):
             blocks.extend(
                 [
                     block_builders.simple_section(
-                        f"Task for {resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                        f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
                         "mrkdwn",
                     ),
                     block_builders.divider_block(),
