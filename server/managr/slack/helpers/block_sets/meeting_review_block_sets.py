@@ -593,7 +593,7 @@ def meeting_summary_blockset(context):
 
     blocks = [
         block_builders.simple_section(
-            f"Review for {workflow.user.first_name} {workflow.user.last_name}'s <{workflow.user.email}> meeting with *Meeting Topic {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
+            f"Review for {workflow.user.first_name} {workflow.user.last_name}'s meeting with *Meeting Topic {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
             "mrkdwn",
         ),
         block_builders.simple_section(f"*Meeting Type:*  {review.meeting_type}", "mrkdwn",),
