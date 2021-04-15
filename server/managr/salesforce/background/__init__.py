@@ -4,9 +4,15 @@ import pytz
 from datetime import datetime
 from background_task import background
 
+
 from django.utils import timezone
+from django.conf import settings
+from django.template.loader import render_to_string
+
+from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from managr.api.decorators import log_all_exceptions, sf_api_exceptions
+from managr.api.emails import send_html_email
 
 from managr.core.models import User
 from managr.organization.models import Account, Stage
@@ -187,7 +193,6 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
-
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
@@ -195,8 +200,24 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
         else:
             serializer = serializer_class(data=item.as_dict)
         # check if already exists and update
-
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
+            context = dict(email=user.email, error=error_str)
+            subject = render_to_string("salesforce/error_saving_resource_data.txt")
+            recipient = [settings.STAFF_EMAIL]
+            if not settings.IN_DEV:
+                recipient.append("mike@mymanagr.com")
+            send_html_email(
+                subject,
+                "salesforce/error_saving_resource_data.html",
+                settings.SERVER_EMAIL,
+                recipient,
+                context={**context},
+            )
+            logger.exception(error_str)
+            continue
         serializer.save()
 
     return
@@ -674,6 +695,7 @@ def _process_create_task(user_id, data, *args):
             raise RequiredFieldError(e)
 
     return
+
 
 @background(schedule=0)
 def _process_list_tasks(user_id, data, *args):
