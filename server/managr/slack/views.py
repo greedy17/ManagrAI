@@ -26,6 +26,7 @@ from managr.slack.helpers.block_sets import get_block_set
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
+from managr.core.models import User
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
 
@@ -502,6 +503,9 @@ def create_task(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def list_tasks(request):
+    
+    
+    
 
     ## helper to make datetime longform
     def to_date_string(date):
@@ -511,6 +515,7 @@ def list_tasks(request):
         return d.strftime("%a, %B %d, %Y")
 
     slack_id = request.data.get("user_id", None)
+    
 
     if slack_id:
         slack = (
