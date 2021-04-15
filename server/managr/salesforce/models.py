@@ -736,6 +736,12 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="The default record id should be the same for all objects and is used for picklist values",
     )
+    default_record_ids = JSONField(
+        default=dict,
+        null=True,
+        help_text="Default Record Id's are obtained when initially getting fields we need this default record it to gather picklist values",
+        max_length=500,
+    )
 
     is_busy = models.BooleanField(default=False)
 
@@ -794,6 +800,9 @@ class SalesforceAuthAccount(TimeStampModel):
     def get_fields(self, resource):
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
         self.default_record_id = record_type_id
+        current_record_ids = self.default_record_ids if self.default_record_ids else {}
+        current_record_ids[resource] = record_type_id
+        self.default_record_ids = current_record_ids
         self.save()
         return fields
 

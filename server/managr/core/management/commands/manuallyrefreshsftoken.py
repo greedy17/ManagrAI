@@ -11,11 +11,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for t in options["users"]:
             sf = SalesforceAuthAccount.objects.filter(user__email=t).first()
-            sf.regenerate_token()
-            self.stdout.write(
-                self.style.SUCCESS(
-                    "Successfully closed refreshed token for user {} their token now is {}".format(
-                        sf.user.email, sf.access_token
+            if sf:
+                sf.regenerate_token()
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        "Successfully closed refreshed token for user {} their token now is {}".format(
+                            sf.user.email, sf.access_token
+                        )
                     )
                 )
-            )
+            else:
+                self.stdout(self.style.ERROR(f"User with email {t} not found"))
