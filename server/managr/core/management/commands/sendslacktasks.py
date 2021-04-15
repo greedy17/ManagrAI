@@ -11,11 +11,8 @@ from managr.salesforce.cron import send_daily_tasks
 class Command(BaseCommand):
     help = "Helper for sending task list to slack at 7am every morning"
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument(
-    #         "--user", action="store_true", help="Delete poll instead of closing it",
-    #     )
+    
 
     def handle(self, *args, **options):
         send_daily_tasks()
-        # queue_users_sf_fields(force_all=options.get("force", None))
+       

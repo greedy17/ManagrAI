@@ -1,6 +1,6 @@
 import logging
 import kronos
-import datetime
+from datetime import datetime
 import logging
 
 from django.conf import settings
@@ -21,7 +21,7 @@ from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, Sa
 from managr.core.models import User
 from managr.slack.helpers import block_builders
 
-from managr.slack.models import UserSlackIntegration, 
+from managr.slack.models import UserSlackIntegration 
 
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -155,11 +155,11 @@ def send_daily_tasks():
     
     
     for account in accounts:
-        def to_date_string(date):
-        if not date:
-            return "n/a"
-        d = datetime.strptime(date, "%Y-%m-%d")
-        return d.strftime("%a, %B %d, %Y")
+        def to_date_string(date):            
+            if not date:
+                return "n/a"
+            d = datetime.strptime(date, "%Y-%m-%d")
+            return d.strftime("%a, %B %d, %Y")
 
     slack_id = account.slack_integration.slack_id
 
