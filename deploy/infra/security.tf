@@ -11,6 +11,14 @@ resource "aws_security_group" "lb" {
     cidr_blocks = ["${var.local_ip}/32"]
   }
 
+  ingress {
+    protocol    = "tcp"
+    from_port   = var.app_port_https
+    to_port     = var.app_port_https
+    cidr_blocks = ["${var.local_ip}/32"]
+  }
+
+
   egress {
     protocol    = "-1"
     from_port   = 0

@@ -110,6 +110,14 @@ resource "aws_vpc_endpoint" "vpc_endpoint" {
   }
 }
 
+resource "aws_vpc_endpoint" "s3_vpc_endpoint" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = lower(format("com.amazonaws.%s.s3", var.aws_region))
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = aws_route_table.private.*.id
+}
+
+
 resource "aws_security_group" "vpc_endpoint" {
   name   = "vpc-endpoint-security-group"
   vpc_id = aws_vpc.main.id

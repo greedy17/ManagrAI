@@ -1,5 +1,9 @@
 output "managr_app_url" {
-  value = "${aws_alb.main.dns_name}:${var.app_port}"
+  value = "http://${aws_alb.main.dns_name}:${var.app_port}"
+}
+
+output "managr_app_https_url" {
+  value = "https://${aws_alb.main.dns_name}:${var.app_port_https}"
 }
 
 output "ecs_cluster_name" {

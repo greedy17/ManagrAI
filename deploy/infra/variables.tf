@@ -18,8 +18,12 @@ variable "app_port" {
   default = 8000
 }
 
+variable "app_port_https" {
+  default = 8443
+}
+
 variable "app_count" {
-  default = 3
+  default = 1
 }
 
 variable "health_check_path" {
@@ -55,4 +59,260 @@ variable "rds_db_name" {
 
 variable "local_ip" {
   type = string
+}
+
+variable "secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "staff_email" {
+  type      = string
+  sensitive = true
+}
+
+variable "debug" {
+  type = bool
+}
+
+variable "use_rollbar" {
+  type = bool
+}
+
+variable "use_custom_smtp" {
+  type = bool
+}
+
+variable "smtp_use_tls" {
+  type = bool
+}
+
+variable "rollbar_access_token" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+variable "smtp_user" {
+  type      = string
+  sensitive = true
+}
+
+variable "smtp_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "smtp_host" {
+  type      = string
+  sensitive = true
+}
+
+variable "smtp_port" {
+  type    = string
+  default = "587"
+}
+
+variable "smtp_valid_testing_domains" {
+  type = string
+}
+
+variable "use_aws_storage" {
+  type = bool
+}
+
+variable "aws_storage_bucket_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_location" {
+  type = string
+}
+
+variable "aws_location_dev" {
+  type = string
+}
+
+variable "aws_location_staging" {
+  type = string
+}
+
+variable "aws_location_prod" {
+  type = string
+}
+
+variable "use_nylas" {
+  type = bool
+}
+
+variable "nylas_client_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "nylas_client_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "use_twilio" {
+  type = bool
+}
+
+variable "twilio_account_sid" {
+  type      = string
+  sensitive = true
+}
+
+variable "twilio_auth_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "twilio_base_callback_url" {
+  type      = string
+  sensitive = true
+}
+
+variable "use_zoom" {
+  type = bool
+}
+
+variable "zoom_redirect_uri" {
+  type      = string
+  sensitive = true
+}
+
+variable "zoom_client_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "zoom_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "zoom_webhook_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "zoom_fake_meeting_uuid" {
+  type      = string
+  sensitive = true
+}
+
+variable "use_slack" {
+  type = bool
+}
+
+variable "slack_client_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_signing_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_app_version" {
+  type      = string
+  sensitive = true
+}
+
+variable "test_slack" {
+  type = bool
+}
+
+variable "slack_test_team_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_team_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_bot_user_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_access_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_incoming_webhook_url" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_incoming_webhook_channel" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_incoming_webhook_channel_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "slack_test_incoming_webhook_configuration_url" {
+  type      = string
+  sensitive = true
+}
+
+variable "use_salesforce" {
+  type      = bool
+  sensitive = true
+}
+
+variable "salesforce_base_url" {
+  type      = string
+  sensitive = true
+}
+
+variable "salesforce_consumer_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "salesforce_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "salesforce_scopes" {
+  type      = list(string)
+  sensitive = true
+}
+
+variable "salesforce_redirect_uri" {
+  type      = string
+  sensitive = true
+}
+
+variable "salesforce_api_version" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_access_key_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_secret_access_key" {
+  type      = string
+  sensitive = true
 }
