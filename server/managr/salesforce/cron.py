@@ -19,14 +19,26 @@ from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
 from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, SalesforceAuthAccount
 from managr.core.models import User
-from managr.slack.helpers import block_builders
 
-from managr.slack.models import UserSlackIntegration 
+from managr.slack import constants as slack_const
+from managr.slack.helpers import auth as slack_auth
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import interactions as slack_interactions
+from managr.slack.helpers import block_builders
+from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.models import UserSlackIntegration
 
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+)
+from managr.salesforce.adapter.exceptions import (
+    TokenExpired,
+    FieldValidationError,
+    RequiredFieldError,
+    SFQueryOffsetError,
+    SFNotFoundError,
 )
 
 logger = logging.getLogger("managr")
@@ -144,32 +156,42 @@ def report_sf_data_sync(sf_account=None):
 
     # if latest workflow is at 100 emit sf resource sync
     return
-def to_date_string(date):            
+
+
+def to_date_string(date):
     if not date:
         return "n/a"
     d = datetime.strptime(date, "%Y-%m-%d")
     return d.strftime("%a, %B %d, %Y")
+
 
 @kronos.register("0 7 * * *")
 def send_daily_tasks():
     """ 
         runs every day at 7am 
     """
-    accounts = SalesforceAuthAccount.objects.filter(user__is_active=True).select_related('user')
-    
-    
-
+    accounts = SalesforceAuthAccount.objects.filter(user__is_active=True).select_related("user")
     for account in accounts:
-        
-
-
         user = account.user
-
         # Pulls tasks from Salesforce
-        tasks = user.salesforce_account.adapter_class.list_tasks()
-        blocks = []
+        attempts = 0
+        while True:
+            ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
+            sf = user.salesforce_account
+            try:
+                tasks = sf.adapter_class.list_tasks()
+                break
 
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(f"Failed to gather tasks after 5 tries")
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
         try:
+            blocks = []
+            channel = user.slack_integration.channel
+            access_token = user.organization.slack_integration.access_token
 
             if not len(tasks):
                 message = "Congratulations. You have no future tasks at this time."
@@ -178,7 +200,9 @@ def send_daily_tasks():
             blocks.extend(
                 [
                     block_builders.header_block("View Tasks"),
-                    block_builders.simple_section(f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"),
+                    block_builders.simple_section(
+                        f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
+                    ),
                     block_builders.divider_block(),
                 ]
             )
@@ -215,34 +239,21 @@ def send_daily_tasks():
                     ]
                 )
 
-            return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
+            slack_requests.send_ephemeral_message(
+                channel,
+                access_token,
+                user.slack_integration.slack_id,
+                text="Tasks",
+                block_set=blocks,
+            )
         except InvalidBlocksException as e:
             logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Your Tasks",
-                    "blocks": "Failed to list tasks",
-                }
-            )
+
         except InvalidBlocksFormatException as e:
             logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Your Tasks",
-                    "blocks": "Failed to list tasks",
-                }
-            )
+
         except UnHandeledBlocksException as e:
             logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Your Tasks",
-                    "blocks": "Failed to list tasks",
-                }
-            )
 
     return
 
@@ -342,6 +353,4 @@ def get_report_data(account):
         "todays_failed_flows": todays_failed_flows,
         "latest_flow": latest_flow_data if latest_flow else None,
     }
-
-
 

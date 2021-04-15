@@ -16,6 +16,8 @@ CONVERSATIONS_OPEN = "conversations.open"
 # https://api.slack.com/methods/chat.postMessage
 POST_MESSAGE = "chat.postMessage"
 
+POST_EPHEMERAL = "chat.postEphemeral"
+
 # https://api.slack.com/methods/views.open
 
 VIEWS_OPEN = "views.open"
