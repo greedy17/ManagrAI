@@ -207,8 +207,6 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             context = dict(email=user.email, error=error_str)
             subject = render_to_string("salesforce/error_saving_resource_data.txt")
             recipient = [settings.STAFF_EMAIL]
-            if not settings.IN_DEV:
-                recipient.append("mike@mymanagr.com")
             send_html_email(
                 subject,
                 "salesforce/error_saving_resource_data.html",
