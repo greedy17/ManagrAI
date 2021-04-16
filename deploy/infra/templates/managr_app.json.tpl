@@ -1,5 +1,66 @@
 [
   {
+    "name": "managr-app-proxy",
+    "image": "nginx",
+    "essential": true,
+    "dependsOn": [
+      {
+        "containerName": "managr-app",
+        "condition": "START"
+      },
+      {
+        "containerName": "nginx-config",
+        "condition": "COMPLETE"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "mountPoints": [
+      {
+        "containerPath": "/etc/nginx",
+        "sourceVolume": "nginx-conf-vol"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  },
+  {
+    "name": "nginx-config",
+    "image": "bash",
+    "essential": false,
+    "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
+    "environment": [
+      {
+        "name": "DATA",
+        "value": "${nginx_config}"
+      }
+    ],
+    "mountPoints": [
+      {
+        "containerPath": "/etc/nginx",
+        "sourceVolume": "nginx-conf-vol"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  },
+  {
     "name": "managr-app",
     "image": "${app_image}",
     "cpu": ${fargate_cpu},
@@ -224,8 +285,7 @@
     },
     "portMappings": [
       {
-        "containerPort": ${app_port},
-        "hostPort": ${app_port}
+        "containerPort": 8000
       }
     ]
   },
@@ -246,6 +306,24 @@
       { "name": "DD_ENV", "value": "fargate" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" }
     ],
+    "secrets": [
+      {
+        "name": "DB_HOST",
+        "valueFrom": "${config_secret_arn}:dbHost::"
+      },
+      {
+        "name": "DB_USER",
+        "valueFrom": "${config_secret_arn}:dbUser::"
+      },
+      {
+        "name": "DB_PASS",
+        "valueFrom": "${config_secret_arn}:dbPass::"
+      },
+      {
+        "name": "DB_NAME",
+        "valueFrom": "${config_secret_arn}:dbName::"
+      }
+    ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
@@ -253,7 +331,12 @@
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
-    }
+    },
+    "portMappings": [
+      {
+        "containerPort": 8001
+      }
+    ]
   },
   {
     "name": "datadog-agent",
@@ -287,6 +370,14 @@
         "containerPort": 8126,
         "protocol": "tcp"
       }
-    ]
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
   }
 ]

@@ -10,12 +10,22 @@ resource "aws_ecs_cluster" "main" {
   }
 }
 
+data "template_file" "nginx_config" {
+  template = file("${path.module}/templates/nginx.conf.tpl")
+
+  vars = {
+    dns_name = aws_alb.main.dns_name
+    app_url  = local.app_url
+  }
+}
+
 data "template_file" "managr_app" {
   template = file("${path.module}/templates/managr_app.json.tpl")
 
   vars = {
+    nginx_config = base64encode(data.template_file.nginx_config.rendered)
+
     app_image         = var.app_image
-    app_port          = var.app_port
     fargate_cpu       = var.fargate_cpu
     fargate_memory    = var.fargate_memory
     aws_region        = var.aws_region
@@ -54,6 +64,9 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.managr_app.rendered
+  volume {
+    name = "nginx-conf-vol"
+  }
 
   tags = {
     "app" = "managr"
@@ -80,8 +93,8 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = aws_alb_target_group.app.id
-    container_name   = "managr-app"
-    container_port   = var.app_port
+    container_name   = "managr-app-proxy"
+    container_port   = 80
   }
 
   depends_on = [aws_alb_listener.front_end, aws_iam_role_policy_attachment.ecs_task_execution_role, aws_db_instance.managrdb, aws_vpc_endpoint.vpc_endpoint]

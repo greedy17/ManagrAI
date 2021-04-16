@@ -17,7 +17,7 @@ resource "random_string" "alb_prefix" {
 
 resource "aws_alb_target_group" "app" {
   name        = "managr-target-group-${random_string.alb_prefix.result}"
-  port        = 8000
+  port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
