@@ -138,6 +138,7 @@ class SalesforceAuthAccountAdapter:
         self.sobjects = kwargs.get("sobjects", None)
         self.object_fields = kwargs.get("object_fields", {})
         self.default_record_id = kwargs.get("default_record_id", {})
+        self.default_record_ids = kwargs.get("default_record_ids", {})
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -306,7 +307,7 @@ class SalesforceAuthAccountAdapter:
     def list_picklist_values(self, resource):
         """ Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to """
 
-        record_type_id = self.default_record_id
+        record_type_id = self.default_record_ids[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
@@ -315,7 +316,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_stage_picklist_values(self, resource):
         """ Sync method to help users whose stages are not populated """
-        record_type_id = self.default_record_id
+        record_type_id = self.default_record_id[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/StageName"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -335,7 +336,7 @@ class SalesforceAuthAccountAdapter:
     def get_individual_picklist_values(self, resource, field_name=None):
         """ Sync method to get picklist values for resources not saved in our db """
 
-        record_type_id = self.default_record_id
+        record_type_id = self.default_record_id[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/{field_name}" if field_name else url
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)

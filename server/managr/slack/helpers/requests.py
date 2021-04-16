@@ -87,6 +87,22 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     return _handle_response(res, blocks=block_set)
 
 
+def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block_set=[]):
+    """
+    Posts a message to a public channel, private channel, or DM channel.
+    Initial context for block_set goes here!
+    """
+    url = slack_const.SLACK_API_ROOT + slack_const.POST_EPHEMERAL
+    data = {}
+    data["channel"] = channel
+    data["text"] = text
+    data["blocks"] = block_set
+    data["user"] = slack_id
+
+    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return _handle_response(res, blocks=block_set)
+
+
 def update_channel_message(channel, message_timestamp, access_token, text="Managr", block_set=[]):
     """
     Updates a message.
