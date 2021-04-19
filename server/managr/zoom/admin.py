@@ -18,11 +18,11 @@ class CustomZoomMeetingForm(ModelForm):
             "topic",
             "type",
             "start_time",
+            "end_time",
             "duration",
             "participants",
             "participants_count",
             "total_minutes",
-            "meeting_score_components",
             "original_duration",
         )
 
