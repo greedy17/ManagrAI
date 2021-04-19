@@ -13,3 +13,11 @@ output "ecs_cluster_name" {
 output "ecs_service_name" {
   value = aws_ecs_service.main.name
 }
+
+output "managr_server_ecr_repo_url" {
+  value = aws_ecr_repository.managr["thinknimble/managr/server"].repository_url
+}
+
+output "managr_server_scheduled_tasks_ecr_repo_url" {
+  value = aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url
+}

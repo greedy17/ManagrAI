@@ -4,6 +4,7 @@ compose/
 config/
 deploy/
 !deploy/server/
+!deploy/tasks/
 netops/
 planning/
 **/README.md

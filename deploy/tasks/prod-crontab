@@ -1,0 +1,15 @@
+## processes all tasks
+
+*/10 * * * * bash -c '/usr/local/bin/python /app/server/manage.py process_tasks --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2
+
+## special processor to pick up sync queues 
+
+*/10 * * * * bash -c '/usr/local/bin/python /app/server/manage.py process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2
+
+## syncs resource data from sf every 10 mins (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
+
+*/10 * * * * bash -c '/usr/local/bin/python /app/server/manage.py initresourcesync --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2
+
+## syncs resource fields from sf every 0th minute of the 12th hour (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
+
+0 */12 * * * bash -c '/usr/local/bin/python /app/server/manage.py initobjectfieldsync --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2

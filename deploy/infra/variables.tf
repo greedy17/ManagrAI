@@ -14,6 +14,10 @@ variable "app_image" {
   type = string
 }
 
+variable "app_image_scheduled_tasks" {
+  type = string
+}
+
 variable "app_port" {
   default = 8000
 }

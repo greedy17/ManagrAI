@@ -301,7 +301,6 @@
     "entryPoint": ["ddtrace-run", "python3", "server/manage.py", "process_tasks"],
     "networkMode": "awsvpc",
     "environment": [
-      { "name": "ALLOWED_HOSTS", "value": "*" },
       { "name": "DD_SERVICE", "value": "managr-server-worker" },
       { "name": "DD_ENV", "value": "fargate" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" }
@@ -337,6 +336,48 @@
         "containerPort": 8001
       }
     ]
+  },
+  {
+    "name": "managr-app-scheduled-tasks",
+    "dependsOn": [
+      {
+        "containerName": "managr-app",
+        "condition": "START"
+      }
+    ],
+    "image": "${app_image_scheduled_tasks}",
+    "networkMode": "awsvpc",
+    "environment": [
+      { "name": "DD_SERVICE", "value": "managr-server-scheduled-tasks" },
+      { "name": "DD_ENV", "value": "fargate" },
+      { "name": "DD_PROFILING_ENABLED", "value": "true" }
+    ],
+    "secrets": [
+      {
+        "name": "DB_HOST",
+        "valueFrom": "${config_secret_arn}:dbHost::"
+      },
+      {
+        "name": "DB_USER",
+        "valueFrom": "${config_secret_arn}:dbUser::"
+      },
+      {
+        "name": "DB_PASS",
+        "valueFrom": "${config_secret_arn}:dbPass::"
+      },
+      {
+        "name": "DB_NAME",
+        "valueFrom": "${config_secret_arn}:dbName::"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
   },
   {
     "name": "datadog-agent",

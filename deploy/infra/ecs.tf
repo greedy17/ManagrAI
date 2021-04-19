@@ -1,5 +1,16 @@
 locals {
-  app_url = "http://${aws_alb.main.dns_name}:${var.app_port}"
+  app_url   = "http://${aws_alb.main.dns_name}:${var.app_port}"
+  ecr_repos = toset(["thinknimble/managr/server", "thinknimble/managr/server-tasks"])
+}
+
+resource "aws_ecr_repository" "managr" {
+  for_each             = local.ecr_repos
+  name                 = each.value
+  image_tag_mutability = "MUTABLE"
+
+  tags = {
+    "app" = "managr"
+  }
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -25,14 +36,15 @@ data "template_file" "managr_app" {
   vars = {
     nginx_config = base64encode(data.template_file.nginx_config.rendered)
 
-    app_image         = var.app_image
-    fargate_cpu       = var.fargate_cpu
-    fargate_memory    = var.fargate_memory
-    aws_region        = var.aws_region
-    config_secret_arn = aws_secretsmanager_secret.managr_config.arn
-    current_domain    = aws_alb.main.dns_name
-    current_port      = var.app_port
-    debug             = title(var.debug)
+    app_image                 = var.app_image
+    app_image_scheduled_tasks = var.app_image_scheduled_tasks
+    fargate_cpu               = var.fargate_cpu
+    fargate_memory            = var.fargate_memory
+    aws_region                = var.aws_region
+    config_secret_arn         = aws_secretsmanager_secret.managr_config.arn
+    current_domain            = aws_alb.main.dns_name
+    current_port              = var.app_port
+    debug                     = title(var.debug)
 
     use_rollbar = title(var.use_rollbar)
 
