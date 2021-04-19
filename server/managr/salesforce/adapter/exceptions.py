@@ -112,7 +112,7 @@ class CustomAPIException:
                         .rstrip(" ")
                     )
                     logger.info(f"Invalid Field {field_str}")
-                    raise InvalidFieldError(f"There was an invalid field in the query {field_str}")
+                    raise InvalidFieldError(f"{field_str}")
 
             raise InvalidFieldError(
                 f"There was an error in the data sent to salesforce but we could not determine what field caused this {self.message}"

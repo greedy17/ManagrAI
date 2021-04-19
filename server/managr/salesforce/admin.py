@@ -40,6 +40,13 @@ class CustomSObjectField(admin.ModelAdmin):
         "salesforce_account__user",
         "salesforce_object",
     )
+    list_display = (
+        "label",
+        "salesforce_object",
+        "last_edited",
+        "salesforce_account",
+    )
+    ordering = ("-last_edited",)
 
 
 class CustomPicklistValue(admin.ModelAdmin):
