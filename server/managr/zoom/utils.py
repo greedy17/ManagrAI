@@ -167,6 +167,12 @@ SCORE_LOOKUP = {
             "type": "duration",
             "points": 5,
             "impact": "negative",
+            "message_tpl": "The meeting lasted {duration} minutes, it was cut short by less than 15 minutes.",
+        },
+        "planned_under_15_plus": {
+            "type": "duration",
+            "points": 10,
+            "impact": "negative",
             "message_tpl": "The meeting lasted {duration} minutes, it was cut short by more than 15 minutes.",
         },
         "planned_over_5": {
@@ -180,6 +186,12 @@ SCORE_LOOKUP = {
             "points": 3,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, it went over time by about 2 minutes.",
+        },
+        "planned_on_time": {
+            "type": "duration",
+            "points": 0,
+            "impact": "positive",
+            "message_tpl": "The meeting lasted {duration} minutes, it ended on time.",
         },
         "instant_over_60": {
             "type": "duration",
