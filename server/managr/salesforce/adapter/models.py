@@ -356,19 +356,19 @@ class SalesforceAuthAccountAdapter:
             # TODO: Take this one level up and save the record id so we only have to do this once
 
             url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
-            print(url)
+
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
 
             res = self._handle_response(res)
-            print(res)
+
             if res.get("totalSize", 0) > 0:
                 record_type_id = res.get("Id")
             else:
                 record_type_id = self.default_record_ids.get("Opportunity",)
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-        print(url)
+
         url = f"{url}/{field_name}" if field_name else url
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
