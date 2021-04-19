@@ -184,7 +184,8 @@ def send_daily_tasks():
 
             except TokenExpired:
                 if attempts >= 5:
-                    return logger.exception(f"Failed to gather tasks after 5 tries")
+                    logger.exception(f"Failed to gather tasks after 5 tries")
+                    continue
                 else:
                     sf.regenerate_token()
                     attempts += 1
@@ -195,8 +196,10 @@ def send_daily_tasks():
 
             if not len(tasks):
                 message = "Congratulations. You have no future tasks at this time."
-
-                return Response(data={"response_type": "ephemeral", "text": message,})
+                # this wont work need to update to send request
+                Response(
+                    data={"response_type": "ephemeral", "text": message,}
+                )
             blocks.extend(
                 [
                     block_builders.header_block("View Tasks"),
