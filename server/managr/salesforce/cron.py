@@ -27,7 +27,7 @@ from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import UserSlackIntegration
-
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -166,6 +166,7 @@ def to_date_string(date):
 
 
 @kronos.register("0 7 * * *")
+@log_all_exceptions
 def send_daily_tasks():
     """ 
         runs every day at 7am 
