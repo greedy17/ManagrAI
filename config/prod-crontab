@@ -16,7 +16,7 @@
 
 0 */12 * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py initobjectfieldsync --duration 3600' >> /opt/managr/logs/process_tasks.log 2>&1
 
-## Automatically sends a task list at 7 am to users
+## Automatically sends a task list at 7 am UTC (3 am EST) to users
 
 0 7 * * * bash -c 'source /opt/venv/bin/activate && /opt/venv/bin/python /opt/managr/server/manage.py sendslacktasks' >> /opt/managr/logs/process_tasks.log 2>&1
 
