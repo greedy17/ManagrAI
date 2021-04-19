@@ -137,7 +137,7 @@ class ZoomAuthAccount(TimeStampModel):
                 self.helper_class.revoke()
             else:
                 self.helper_class.revoke()
-        except Exception as e:            
+        except Exception as e:
             pass
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
@@ -523,12 +523,16 @@ class ZoomMeetingReview(MeetingReview):
 
             if diff >= 15:
                 return "planned_over_15"
-            elif 5 < diff < 15:
+            elif 5 <= diff < 15:
                 return "planned_over_5"
-            elif -15 < diff <= 5:
+            elif 2 <= diff < 5:
                 return "planned_over_2"
-            elif diff < -15:
+            elif 0 <= diff < 1:
+                return "planned_on_time"
+            elif diff > -15:
                 return "planned_under_15"
+            elif diff < -15:
+                return "planned_under_15_plus"
 
         # The above logic should capture all possiblities
         return "unknown"
