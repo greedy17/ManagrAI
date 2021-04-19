@@ -822,7 +822,22 @@ class SalesforceAuthAccount(TimeStampModel):
         return values
 
     def get_individual_picklist_values(self, resource, field=None):
-        values = self.adapter_class.get_individual_picklist_values(resource, field_name=field)
+        attempts = 1
+        while True:
+            try:
+                values = self.adapter_class.get_individual_picklist_values(
+                    resource, field_name=field
+                )
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve picklist values data for user {str(self.user.id)}-{self.user.email} after {attempts} tries"
+                    )
+                else:
+                    self.regenerate_token()
+                    attempts += 1
+
         return values
 
     def update_opportunity(self, data):
