@@ -189,75 +189,85 @@ def send_daily_tasks():
                 else:
                     sf.regenerate_token()
                     attempts += 1
-        try:
-            blocks = []
-            channel = user.slack_integration.channel
-            access_token = user.organization.slack_integration.access_token
+        if hasattr(user, "slack_integration"):
+            try:
+                blocks = []
+                channel = user.slack_integration.channel
+                access_token = user.organization.slack_integration.access_token
 
-            if not len(tasks):
-                message = "Congratulations. You have no future tasks at this time."
-                # this wont work need to update to send request
-                Response(
-                    data={"response_type": "ephemeral", "text": message,}
-                )
-            blocks.extend(
-                [
-                    block_builders.header_block("View Tasks"),
-                    block_builders.simple_section(
-                        f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
-                    ),
-                    block_builders.divider_block(),
-                ]
-            )
-            for t in tasks:
-                resource = "_salesforce object n/a_"
-                # get the resource if it is what_id is for account/opp
-                # get the resource if it is who_id is for lead
-                if t.what_id:
-                    # first check for opp
-                    obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-                    if not obj:
-                        obj = user.imported_account.filter(integration_id=t.what_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
-
-                elif t.who_id:
-                    obj = user.imported_lead.filter(integration_id=t.who_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
-
+                if not len(tasks):
+                    message = "Congratulations. You have no future tasks at this time."
+                    # this wont work need to update to send request
+                    Response(
+                        data={"response_type": "ephemeral", "text": message,}
+                    )
                 blocks.extend(
                     [
+                        block_builders.header_block("View Tasks"),
                         block_builders.simple_section(
-                            f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
-                            "mrkdwn",
+                            f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
                         ),
                         block_builders.divider_block(),
-                        block_builders.section_with_button_block(
-                            "View Task",
-                            "view_task",
-                            "_*View task in salesforce*_",
-                            url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
-                        ),
                     ]
                 )
+                for t in tasks:
+                    resource = "_salesforce object n/a_"
+                    # get the resource if it is what_id is for account/opp
+                    # get the resource if it is who_id is for lead
+                    if t.what_id:
+                        # first check for opp
+                        obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                        if not obj:
+                            obj = user.imported_account.filter(integration_id=t.what_id).first()
+                        if obj:
+                            resource = f"*{obj.name}*"
 
-            slack_requests.send_ephemeral_message(
-                channel,
-                access_token,
-                user.slack_integration.slack_id,
-                text="Tasks",
-                block_set=blocks,
+                    elif t.who_id:
+                        obj = user.imported_lead.filter(integration_id=t.who_id).first()
+                        if obj:
+                            resource = f"*{obj.name}*"
+
+                    blocks.extend(
+                        [
+                            block_builders.simple_section(
+                                f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                                "mrkdwn",
+                            ),
+                            block_builders.divider_block(),
+                            block_builders.section_with_button_block(
+                                "View Task",
+                                "view_task",
+                                "_*View task in salesforce*_",
+                                url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                            ),
+                        ]
+                    )
+
+                slack_requests.send_ephemeral_message(
+                    channel,
+                    access_token,
+                    user.slack_integration.slack_id,
+                    text="Tasks",
+                    block_set=blocks,
+                )
+            except InvalidBlocksException as e:
+                logger.exception(
+                    f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                )
+
+            except InvalidBlocksFormatException as e:
+                logger.exception(
+                    f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                )
+
+            except UnHandeledBlocksException as e:
+                logger.exception(
+                    f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                )
+        else:
+            logger.info(
+                f"did not send user {user.email} a slack with tasks as they do not have slack integrated"
             )
-        except InvalidBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except InvalidBlocksFormatException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except UnHandeledBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
     return
 
 
