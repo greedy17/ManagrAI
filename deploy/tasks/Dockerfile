@@ -1,18 +1,13 @@
 FROM python:3.7-slim-buster
 
 # These environment values help with watching for file changes
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-
-ENV DB_NAME managr
-ENV DB_USER managr
-ENV DB_PASS managr
-ENV DB_HOST localhost
+ENV PYTHONUNBUFFERED=1 \
+  PYTHONDONTWRITEBYTECODE=1
 
 # Install system-level dependencies.
-RUN apt-get update && \
+RUN apt-get update && apt-get install -y \
   # dependencies for building Python packages
-  apt-get install -y build-essential \
+  build-essential \
   gcc \
   # psycopg2 dependencies
   libpq-dev \
@@ -20,6 +15,11 @@ RUN apt-get update && \
   libjpeg-dev zlib1g-dev \
   python3-pip \
   cron
+
+ENV DB_NAME=managr \
+  DB_USER=managr \
+  DB_PASS=managr \
+  DB_HOST=localhost
 
 # Set the name of the working directory inside the docker container
 WORKDIR /app
@@ -39,7 +39,7 @@ RUN crontab /etc/cron.d/prod-crontab
 RUN touch /var/log/cron.log
 
 # Copy app source
-COPY . .
+COPY ./server ./server
 
 COPY ./deploy/tasks/start /start
 RUN sed -i 's/\r$//g' /start

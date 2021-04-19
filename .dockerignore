@@ -18,3 +18,4 @@ initialize.sh
 install-ubuntu.sh
 **/node_modules
 env.txt
+*.env

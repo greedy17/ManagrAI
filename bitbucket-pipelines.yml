@@ -53,11 +53,17 @@ prDeployment: &prDeployment
   name: Deploy PR to AWS Fargate
   deployment: test
   script:
-    - docker build -f deploy/server/Dockerfile -t $MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
 
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: pr-$BITBUCKET_PR_ID # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
         TAGS: pr-$BITBUCKET_PR_ID # Optional
         # DEBUG: "<boolean>" # Optional
 
@@ -76,11 +82,17 @@ fargateStagingDeployment: &fargateStagingDeployment
   name: Deploy Staging to AWS Fargate
   deployment: staging
   script:
-    - docker build -f deploy/server/Dockerfile -t $MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
 
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: staging-$BITBUCKET_COMMIT # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
         TAGS: staging-$BITBUCKET_COMMIT # Optional
         # DEBUG: "<boolean>" # Optional
 
