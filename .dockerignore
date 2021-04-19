@@ -1,6 +1,7 @@
 .vscode/
 .git/
 compose/
+!compose/server/start
 config/
 deploy/
 !deploy/server/

@@ -41,4 +41,7 @@ RUN touch /var/log/cron.log
 # Copy app source
 COPY . .
 
-ENTRYPOINT cron -f
+COPY ./deploy/tasks/start /start
+RUN sed -i 's/\r$//g' /start
+RUN chmod +x /start
+ENTRYPOINT [ "/start" ]
