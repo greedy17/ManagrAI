@@ -92,7 +92,6 @@ def process_get_external_picklist_options(payload, context):
     # pass in limit for query
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-
     data = user.salesforce_account.get_individual_picklist_values(
         context.get("resource"), field=context.get("field")
     )
