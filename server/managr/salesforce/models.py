@@ -541,9 +541,6 @@ class SFObjectFieldsOperation(SFSyncOperation):
             self.save()
 
     def save(self, *args, **kwargs):
-        # overriding to make sure super does not call parent
-
-        logger.info(f"{self.progress}")
         return super(SFObjectFieldsOperation, self).save(*args, **kwargs)
 
 
