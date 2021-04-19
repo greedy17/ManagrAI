@@ -316,7 +316,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_stage_picklist_values(self, resource):
         """ Sync method to help users whose stages are not populated """
-        record_type_id = self.default_record_id[resource]
+        record_type_id = self.default_record_ids[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/StageName"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -336,8 +336,27 @@ class SalesforceAuthAccountAdapter:
     def get_individual_picklist_values(self, resource, field_name=None):
         """ Sync method to get picklist values for resources not saved in our db """
 
-        record_type_id = self.default_record_id[resource]
+        record_type_id = self.default_record_ids.get("resource", None)
+        if not record_type_id:
+            # a record type id is required so we may get picklist values these are saved on the sf auth object
+            # some orgs will have custom record id's if this is the case we can retrieve using this method lines 353-356
+            # if the user profile does not have access and all records have the same default id then we can use that
+            # TODO: Take this one level up and save the record id so we only have to do this once
+
+            url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
+            print(url)
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+
+            res = self._handle_response(res)
+            print(res)
+            if res.get("totalSize", 0) > 0:
+                record_type_id = res.get("Id")
+            else:
+                record_type_id = self.default_record_ids.get("Opportunity",)
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+        print(url)
         url = f"{url}/{field_name}" if field_name else url
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
