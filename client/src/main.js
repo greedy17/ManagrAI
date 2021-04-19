@@ -1,16 +1,17 @@
 import { datadogRum } from '@datadog/browser-rum';
 
-datadogRum.init({
-    applicationId: 'e6a47571-8b90-4db3-9e97-769e35b5d4b5',
-    clientToken: 'pubed0c63fbf52c694a22bc3655182fc3e8',
-    site: 'datadoghq.com',
-    service:'managr-client',
-    env:'local',
-    // Specify a version number to identify the deployed version of your application in Datadog 
-    // version: '1.0.0',
-    sampleRate: 100,
-    trackInteractions: true
-});
+// Datadog front-end monitoring config
+// datadogRum.init({
+//     applicationId: '<app_id>',
+//     clientToken: '<client_token>',
+//     site: 'datadoghq.com',
+//     service:'<service_name>',
+//     env:'<environment>',
+//     // Specify a version number to identify the deployed version of your application in Datadog 
+//     // version: '1.0.0',
+//     sampleRate: 100,
+//     trackInteractions: true
+// });
 
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
@@ -76,7 +77,7 @@ Vue.filter('dateShortWithTime', formatDateShortWithTime)
 Vue.filter('constantToCapitalized', constantToCapitalized)
 Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
 Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
-Vue.filter('pluralize', function(value, number) {
+Vue.filter('pluralize', function (value, number) {
   return pluralize(value, number)
 })
 
