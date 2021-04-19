@@ -23,7 +23,7 @@ from managr.slack.helpers.exceptions import (
 )
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
-from .adapter.exceptions import TokenExpired, InvalidFieldError
+from .adapter.exceptions import TokenExpired, InvalidFieldError, UnhandledSalesforceError
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -781,7 +781,12 @@ class SalesforceAuthAccount(TimeStampModel):
         data["id"] = str(data.get("id"))
 
         helper = SalesforceAuthAccountAdapter(**data)
-        res = helper.refresh()
+        try:
+            res = helper.refresh()
+        except UnhandledSalesforceError:
+            # currently this catch all will catch expired refresh tokens as well
+            return
+
         self.token_generated_date = timezone.now()
         self.access_token = res.get("access_token", None)
         self.signature = res.get("signature", None)
