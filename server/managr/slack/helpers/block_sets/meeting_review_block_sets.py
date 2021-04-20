@@ -462,7 +462,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 
 
 @block_set(required_context=["w", "resource"])
-def create_or_search_modal_block_set(context):
+def create_or_search_modal_block_set1(context):
     options = [
         block_builders.option("Search", "SEARCH"),
     ]
@@ -479,6 +479,25 @@ def create_or_search_modal_block_set(context):
     ]
 
     return blocks
+
+
+@block_set(required_context=["w", "resource"])
+def create_or_search_modal_block_set(context):
+    additional_opts = [
+        {
+            "label": f'NEW {context.get("resource", None)} (create)',
+            "value": f'CREATE_NEW.{context.get("resource")}',
+        }
+    ]
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    return [
+        block_builders.external_select(
+            f"*Search for an {context.get('resource')}*",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&additional_options={json.dumps(additional_opts)}",
+            block_id="select_existing",
+        )
+    ]
 
 
 @block_set(required_context=["w", "resource"])
@@ -604,11 +623,11 @@ def meeting_summary_blockset(context):
     duration_component = list(filter(lambda comp: comp.type == "duration", summary))
     attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
     amount_component = list(filter(lambda comp: comp.type == "amount", summary))
-    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_component[0].rendered_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_component[0].rendered_message}\n*Close Date:* {close_date_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}\n"
+    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_component[0].rendered_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_component[0].rendered_message}\n*Close Date:* {close_date_component[0].rendered_message}\n"
     if review.next_step not in ["", None]:
-        review_str = f"{review_str}*Next Step:* {review.next_step}\n"
+        review_str = f"{review_str}*Next Step:* {review.next_step}\n*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}\n"
 
-    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n"
+    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}"
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks

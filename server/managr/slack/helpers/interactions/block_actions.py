@@ -557,7 +557,7 @@ def process_meeting_selected_resource(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
+            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
             "title": {"type": "plain_text", "text": f"{selected_option}"},
             "blocks": get_block_set("create_or_search_modal", context=context),
             "private_metadata": json.dumps(private_metadata),

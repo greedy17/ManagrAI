@@ -357,13 +357,36 @@ def process_submit_resource_data(payload, context):
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
+    ##steps
+    # User submits
+    # push loading screen
+    # ether create or existing
+    # existing
+    # attach resource
+    # push success
+    # update interaction
+    # clear all
+    # new
+    # update main modal
+    # clear top stack
+    ## user submit
+    # call create new
+    # push next page
+    # push loading page
+    # push success or error
+    # close stack
+
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     meeting_resource = context.get("resource")
-    selected_action = context.get("action")
-    state = payload["view"]["state"]["values"]
+    state_values = payload["view"]["state"]["values"]
+    selected_action = [
+        val.get("selected_option", {}).get("value", [])
+        for val in state_values["select_existing"].values()
+    ]
+    selected_action = selected_action[0] if len(selected_action) else None
 
     # get state - state contains the values based on the block_id
 
@@ -375,104 +398,62 @@ def process_zoom_meeting_attach_resource(payload, context):
             "blocks": get_block_set("success_modal", {}),
         },
     }
-    if selected_action == "SEARCH":
-        # the key is the action id which is a query string so we just use values instead
-        workflow.resource_id = list(state["select_existing"].values())[0]["selected_option"][
-            "value"
-        ]
-        workflow.resource_type = meeting_resource
-        workflow.save()
-        # update the forms to the correct type
-
-    elif selected_action == "CREATE":
-        # this is a sync action
-
-        stage_forms = workflow.forms.filter(
-            template__form_type=slack_const.FORM_TYPE_STAGE_GATING
-        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-        # if there are stage gating forms we need to save their data we already saved the main form's data
-        main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
-
-        if not len(stage_forms):
-            main_form.save_form(state)
-        else:
-            # assume we already saved the forms for create
-            for form in stage_forms:
-                form.save_form(state)
+    # splits the CREATE.{resource} currently this is not being used anywhere but will be part of further optimizations
+    # we will remove the attachment addition to the initial interaction where a user selects a resource
+    if selected_action:
         try:
-            resource = _process_create_new_resource.now(context.get("w"), meeting_resource)
+            resource, action = selected_action.split(".")
+        except ValueError:
+            resource = selected_action
+            action = None
+            pass
+        if not action:
 
-        except FieldValidationError as e:
+            workflow.resource_id = resource
+            workflow.resource_type = meeting_resource
+            workflow.save()
+            # update the forms to the correct type
 
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occured"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
-                        },
-                    ),
-                },
-            }
-        except RequiredFieldError as e:
+        else:
+            # this is a sync action
+            return
 
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occurred"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
-                        },
-                    ),
-                },
-            }
+        ts, channel = workflow.slack_interaction.split("|")
+        # clear old forms (except contact forms)
+        workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
+        workflow.add_form(
+            meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
+        )
+        try:
+            res = slack_requests.update_channel_message(
+                channel,
+                ts,
+                slack_access_token,
+                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+            )
+            workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+            res = slack_requests.generic_request(url, data, access_token=slack_access_token)
 
-        workflow.resource_id = str(resource.id)
-        workflow.resource_type = meeting_resource
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
 
+        workflow.slack_view = res.get("view").get("id")
         workflow.save()
-    ts, channel = workflow.slack_interaction.split("|")
-    # clear old forms (except contact forms)
-    workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-    workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
-    )
-    try:
-        res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            slack_access_token,
-            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
-        )
-        workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-        res = slack_requests.generic_request(url, data, access_token=slack_access_token)
-
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
-    return {"response_action": "clear"}
+        return {"response_action": "clear"}
 
 
 @processor()
