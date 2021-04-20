@@ -335,16 +335,13 @@ class SObjectValidation(TimeStampModel, IntegrationModel):
 
 
 class SObjectPicklist(TimeStampModel, IntegrationModel):
-    # label = models.CharField(blank=True, max_length=255)
-    # attributes = JSONField(default=dict, max_length=255)
 
-    # valid_for = models.CharField(blank=True, max_length=255)
     picklist_for = models.CharField(
         blank=True,
         max_length=255,
         help_text="the name of the field this picklist is for, serializer will translate to actual field",
     )
-    # value = models.CharField(blank=True, max_length=255)
+
     values = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -508,8 +505,6 @@ class SFResourceSync(SFSyncOperation):
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
-    """ May no Longer need to use this """
-
     @property
     def operations_map(self):
         from managr.salesforce.background import (
@@ -779,14 +774,8 @@ class SalesforceAuthAccount(TimeStampModel):
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
-
         helper = SalesforceAuthAccountAdapter(**data)
-        try:
-            res = helper.refresh()
-        except UnhandledSalesforceError:
-            # currently this catch all will catch expired refresh tokens as well
-            return
-
+        res = helper.refresh()
         self.token_generated_date = timezone.now()
         self.access_token = res.get("access_token", None)
         self.signature = res.get("signature", None)

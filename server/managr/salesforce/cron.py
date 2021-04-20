@@ -39,6 +39,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     SFQueryOffsetError,
     SFNotFoundError,
+    InvalidRefreshToken,
 )
 
 logger = logging.getLogger("managr")
@@ -166,7 +167,6 @@ def to_date_string(date):
 
 
 @kronos.register("0 7 * * *")
-@log_all_exceptions
 def send_daily_tasks():
     """ 
         runs every day at 7am 
@@ -175,7 +175,8 @@ def send_daily_tasks():
     for account in accounts:
         user = account.user
         # Pulls tasks from Salesforce
-        attempts = 0
+        has_error = False
+        attempts = 1
         while True:
             ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
             sf = user.salesforce_account
@@ -186,10 +187,19 @@ def send_daily_tasks():
             except TokenExpired:
                 if attempts >= 5:
                     logger.exception(f"Failed to gather tasks after 5 tries")
-                    continue
+                    has_error = True
+                    break
                 else:
-                    sf.regenerate_token()
+                    try:
+                        sf.regenerate_token()
+                    except InvalidRefreshToken:
+                        logger.exception(f"Failed to refresh token due to an invalid refresh token")
+                        has_error = True
+                        break
+
                     attempts += 1
+        if has_error:
+            continue
         if hasattr(user, "slack_integration"):
             try:
                 blocks = []
