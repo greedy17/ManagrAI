@@ -41,6 +41,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 logger = logging.getLogger("managr")
@@ -497,6 +498,7 @@ def create_task(request):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
         )
+
     except InvalidBlocksFormatException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
@@ -504,6 +506,10 @@ def create_task(request):
     except UnHandeledBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
         )
     return Response()
 
@@ -604,6 +610,15 @@ def list_tasks(request):
             }
         )
     except UnHandeledBlocksException as e:
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
+        )
+    except InvalidAccessToken as e:
         logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
         return Response(
             data={

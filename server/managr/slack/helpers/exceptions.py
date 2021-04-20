@@ -44,6 +44,12 @@ class InvalidArgumentsException(Exception):
         super().__init__(self.message)
 
 
+class InvalidAccessToken(Exception):
+    def __init(self, message="Slack Token Invalid"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -81,6 +87,11 @@ class CustomAPIException:
             message = f"Invalid Blocks {'------'.join(blocks)}"
             logger.error(f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}")
             raise InvalidBlocksException(message)
+        elif self.code == 200 and self.param == "invalid_auth":
+            logger.error(
+                f"{api_consts.SLACK_ERROR} ---An error occured with the access token this access token is org level {self.message}"
+            )
+            raise InvalidAccessToken(self.message)
         elif self.code == 200 and self.param == "invalid_blocks_format":
             logger.error(
                 f"{api_consts.SLACK_ERROR} An error occured building blocks because of an invalid format"
