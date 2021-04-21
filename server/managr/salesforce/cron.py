@@ -17,7 +17,11 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
+from managr.salesforce.background import (
+    emit_gen_next_sync,
+    emit_gen_next_object_field_sync,
+    _process_stale_data_for_delete,
+)
 from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, SalesforceAuthAccount
 from managr.core.models import User
 
@@ -192,8 +196,6 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
 
     for i in range(0, pages):
         users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
-        batch = []
-        batch_resource_count = 0
         for user in users:
             # only run this for users with a successful latest flow
             flows = SFResourceSync.objects.filter(user=user)
@@ -206,46 +208,40 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     f"skipping clear data for user {user.email} with id {user.id} because the latest flow was not successful"
                 )
                 continue
-            current_user_batch_resource = []
-            current_user_batch_count = 0
             for r in resource_items:
 
                 try:
-                    resource_count = (
-                        getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff).count()
-                    )
-                    if resource_count:
-                        future_count = (
-                            batch_resource_count + current_user_batch_count + resource_count
+                    qs = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
+                    resource_count = qs.count()
+
+                    if resource_count and resource_count <= 500:
+                        # emit current batch to delete queue and start new
+                        _process_stale_data_for_delete.now(
+                            [
+                                {
+                                    "user_id": str(user.id),
+                                    "resource": {r: qs.values_list("id", flat=True)},
+                                }
+                            ],
                         )
-                        if future_count > 500:
-                            # add current items to batch
-                            batch.append(
-                                {"user_id": str(user.id), "resources": current_user_batch_resource}
+                    elif resource_count and resource_count > 500:
+                        # create make into batches of 500 and send
+                        resource_pages = 1
+                        resource_pages = math.ceil(resource_count / 500)
+                        for i in range(0, resource_pages):
+                            resource_items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
+                            _process_stale_data_for_delete.now(
+                                [
+                                    {
+                                        "user_id": str(user.id),
+                                        "resource": {r: qs.values_list("id", flat=True)},
+                                    }
+                                ],
                             )
-                            # emit current batch to delete queue and start new
-
-                            emit_stale_data_for_delete(batch, cutoff)
-                            # set batch to empty
-                            batch = []
-                            # reset count
-                            batch_resource_count = 0
-                            # reset current user batch  and count
-                            current_user_batch_resource = []
-                            current_user_batch_count = 0
-
-                        current_user_batch_resource.append(r)
-                        current_user_batch_count += resource_count
 
                 except AttributeError as e:
                     logger.info(f"{user.email} does not have {r} to delete {e}")
                     continue
-        batch.append({"user_id": str(user.id), "resources": current_user_batch_resource})
-        batch_resource_count += current_user_batch_count
-
-        # if it never reaches 500 then we send the last batch
-        if len(batch):
-            emit_stale_data_for_delete(batch, cutoff)
 
 
 def to_date_string(date):
@@ -477,23 +473,4 @@ def get_report_data(account):
         "todays_failed_flows": todays_failed_flows,
         "latest_flow": latest_flow_data if latest_flow else None,
     }
-
-
-def emit_stale_data_for_delete(batch, cutoff, schedule_for=timezone.now()):
-    for record in batch:
-        # running this as for loop instead of bulk delete to keep track of records deleted
-        try:
-            u = User.objects.filter(id=record["user_id"]).first()
-            if u:
-                for resource in record["resources"]:
-                    qs = getattr(u, f"imported_{resource}").filter(last_edited__lt=cutoff)
-                    logger.info(
-                        f"deleting {qs.count()} {resource} for user {u.email} with id {str(u.id)}"
-                    )
-                    qs.delete()
-
-        except Exception as e:
-            logger.exception(e)
-            pass
-    return
 
