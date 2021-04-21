@@ -618,7 +618,7 @@ class ContactAdapter:
     @staticmethod
     def additional_filters():
         """ pass custom additional filters to the url """
-        return ["AND IsDeleted = false"]
+        return ["AND IsDeleted = false", "AND AccountId != null"]
 
     @staticmethod
     def reverse_integration_mapping():

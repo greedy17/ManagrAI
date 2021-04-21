@@ -20,10 +20,15 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
-from .adapter.exceptions import TokenExpired, InvalidFieldError
+from .adapter.exceptions import (
+    TokenExpired,
+    InvalidFieldError,
+    UnhandledSalesforceError,
+)
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -335,16 +340,13 @@ class SObjectValidation(TimeStampModel, IntegrationModel):
 
 
 class SObjectPicklist(TimeStampModel, IntegrationModel):
-    # label = models.CharField(blank=True, max_length=255)
-    # attributes = JSONField(default=dict, max_length=255)
 
-    # valid_for = models.CharField(blank=True, max_length=255)
     picklist_for = models.CharField(
         blank=True,
         max_length=255,
         help_text="the name of the field this picklist is for, serializer will translate to actual field",
     )
-    # value = models.CharField(blank=True, max_length=255)
+
     values = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -476,7 +478,8 @@ class SFResourceSync(SFSyncOperation):
                 # get counts to set offsets
                 # has a 2000 offset limit as it is previously we would just get the rest which was too big
                 # we now only get a max of 500
-            max_count = 500  # if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
+                # TODO:- Move this to the adapter classes aka limit
+            max_count = 500 if key != sf_consts.RESOURCE_SYNC_CONTACT else 1000
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
@@ -508,8 +511,6 @@ class SFResourceSync(SFSyncOperation):
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
-    """ May no Longer need to use this """
-
     @property
     def operations_map(self):
         from managr.salesforce.background import (
@@ -701,7 +702,10 @@ class MeetingWorkflow(SFSyncOperation):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
-
+            except InvalidAccessToken as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                )
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
@@ -779,7 +783,6 @@ class SalesforceAuthAccount(TimeStampModel):
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
-
         helper = SalesforceAuthAccountAdapter(**data)
         res = helper.refresh()
         self.token_generated_date = timezone.now()

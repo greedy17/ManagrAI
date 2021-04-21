@@ -14,6 +14,12 @@ class TokenExpired(Exception):
         super().__init__(self.message)
 
 
+class InvalidRefreshToken(Exception):
+    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class ApiRateLimitExceeded(Exception):
     def __init(self, message="Token Expired"):
         self.message = message
@@ -51,7 +57,7 @@ class InvalidFieldError(Exception):
 
 
 class UnhandledSalesforceError(Exception):
-    def __init(self, message="Invalid/Duplicate Field in query"):
+    def __init(self, message="A new error occured"):
         self.message = message
         super().__init__(self.message)
 
@@ -92,6 +98,8 @@ class CustomAPIException:
             raise RequiredFieldError(self.message)
         elif self.status_code == 400 and self.param == "NUMBER_OUTSIDE_VALID_RANGE":
             raise SFQueryOffsetError(self.message)
+        elif self.status_code == 400 and self.param == "invalid_grant":
+            raise InvalidRefreshToken(self.message)
         elif self.status_code == 400 and self.param == "INVALID_FIELD":
             # invalid field could apply to a number of different errors
             # we are trying to parse out duplicate field errors and non queryable errors
