@@ -162,13 +162,13 @@ def report_sf_data_sync(sf_account=None):
 
 
 @kronos.register("0 */24 * * *")
-def queue_stale_sf_data_for_delete():
+def queue_stale_sf_data_for_delete(cutoff=1440):
     """ 
         This should queue stale data for delete, it should only do this for users who are active and who have an sf account 
         In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
         or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
     """
-    resource_items = {
+    resource_items = [
         "sobjectfield",
         "sobjectvalidation",
         "sobjectpicklist",
@@ -176,7 +176,7 @@ def queue_stale_sf_data_for_delete():
         "account",
         "contact",
         "lead",
-    }
+    ]
     limit = 0
     pages = 1
     # get users who are active and have a salesforce_account
@@ -186,9 +186,9 @@ def queue_stale_sf_data_for_delete():
     # set limit of 100 or less
     limit = max(100, user_count)
     # divide into pages
-    pages = math.floor(user_count / limit)
+    pages = math.ceil(user_count / limit)
     # cutoff of 1 day
-    cutoff = timezone.now() - timezone.timedelta(days=1)
+    cutoff = timezone.now() - timezone.timedelta(minutes=cutoff)
 
     for i in range(0, pages):
         users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
@@ -196,20 +196,42 @@ def queue_stale_sf_data_for_delete():
         batch_resource_count = 0
         for user in users:
             current_user_batch_resource = []
+            current_user_batch_count = 0
             for r in resource_items:
                 try:
-                    resource_count = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
-                    future_count = batch_resource_count + resource_count
+                    resource_count = (
+                        getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff).count()
+                    )
+                    future_count = batch_resource_count + current_user_batch_count + resource_count
                     if future_count > 500:
+                        # add current items to batch
+                        batch.append(
+                            {"user_id": str(user.id), "resources": current_user_batch_resource}
+                        )
                         # emit current batch to delete queue and start new
-                        print(batch)
-                    else:
-                        current_user_batch_resource.append(r)
-                        print(batch)
 
-                    batch_resource_count = future_count
+                        emit_stale_data_for_delete(batch, cutoff)
+                        # set batch to empty
+                        batch = []
+                        # reset count
+                        batch_resource_count = 0
+                        # reset current user batch  and count
+                        current_user_batch_resource = []
+                        current_user_batch_count = 0
+
+                    current_user_batch_resource.append(r)
+                    current_user_batch_count += resource_count
+
                 except AttributeError as e:
                     logger.info(f"{user.email} does not have {r} to delete {e}")
+                    continue
+
+            batch.append({"user_id": str(user.id), "resources": current_user_batch_resource})
+            batch_resource_count += current_user_batch_count
+
+        # if it never reaches 500 then we send the last batch
+        if len(batch):
+            emit_stale_data_for_delete(batch, cutoff)
 
 
 def to_date_string(date):
@@ -441,4 +463,23 @@ def get_report_data(account):
         "todays_failed_flows": todays_failed_flows,
         "latest_flow": latest_flow_data if latest_flow else None,
     }
+
+
+def emit_stale_data_for_delete(batch, cutoff, schedule_for=timezone.now()):
+    for record in batch:
+        # running this as for loop instead of bulk delete to keep track of records deleted
+        try:
+            u = User.objects.filter(id=record["user_id"]).first()
+            if u:
+                for resource in record["resources"]:
+                    qs = getattr(u, f"imported_{resource}").filter(last_edited__lt=cutoff)
+                    logger.info(
+                        f"deleting {qs.count()} {resource} for user {u.email} with id {str(u.id)}"
+                    )
+                    qs.delete()
+
+        except Exception as e:
+            logger.exception(e)
+            pass
+    return
 
