@@ -46,6 +46,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
@@ -246,15 +247,19 @@ def init_fake_meeting(request):
             )
         except InvalidBlocksException as e:
             return logger.exception(
-                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
             )
         except InvalidBlocksFormatException as e:
             return logger.exception(
-                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
             )
         except UnHandeledBlocksException as e:
             return logger.exception(
-                f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
             )
         workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         workflow.save()

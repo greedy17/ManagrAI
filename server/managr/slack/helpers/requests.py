@@ -22,7 +22,12 @@ def _handle_response(response, fn_name=None, blocks=[]):
         if not res_data.get("ok"):
             error_code = response.status_code
             error_param = res_data.get("error")
-            error_message = res_data.get("response_metadata", {}).get("messages")
+            if res_data.get("response_metadata", None):
+                error_message = res_data.get("response_metadata", {}).get("messages")
+            elif res_data.get("error", None):
+                error_message = res_data.get("error")
+            else:
+                error_message = response.text
 
             kwargs = {
                 "status_code": status_code,
@@ -76,6 +81,7 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     """
     Posts a message to a public channel, private channel, or DM channel.
     Initial context for block_set goes here!
+    **Channel Id required to send DM's or Channel
     """
     url = slack_const.SLACK_API_ROOT + slack_const.POST_MESSAGE
     data = {}
@@ -90,7 +96,7 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
 def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block_set=[]):
     """
     Posts a message to a public channel, private channel, or DM channel.
-    Initial context for block_set goes here!
+    *Channel and User are required for ephemeral messages
     """
     url = slack_const.SLACK_API_ROOT + slack_const.POST_EPHEMERAL
     data = {}
