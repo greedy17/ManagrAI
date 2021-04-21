@@ -478,7 +478,8 @@ class SFResourceSync(SFSyncOperation):
                 # get counts to set offsets
                 # has a 2000 offset limit as it is previously we would just get the rest which was too big
                 # we now only get a max of 500
-            max_count = 500  # if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
+                # TODO:- Move this to the adapter classes aka limit
+            max_count = 500 if key != sf_consts.RESOURCE_SYNC_CONTACTS else 1000
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
