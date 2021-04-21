@@ -195,6 +195,14 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
         batch = []
         batch_resource_count = 0
         for user in users:
+            # only run this for users with a successful latest flow
+            flows = SFResourceSync.objects.filter(user=user)
+            latest_flow = None
+            if flows:
+                latest_flow = flows.latest("datetime_created")
+                # HACK if a flow hasnt completed assume the next flow won't occur
+            if not latest_flow or latest_flow.in_progress:
+                continue
             current_user_batch_resource = []
             current_user_batch_count = 0
             for r in resource_items:
@@ -224,10 +232,10 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
 
                         current_user_batch_resource.append(r)
                         current_user_batch_count += resource_count
-                    batch.append(
-                        {"user_id": str(user.id), "resources": current_user_batch_resource}
-                    )
-                    batch_resource_count += current_user_batch_count
+                        batch.append(
+                            {"user_id": str(user.id), "resources": current_user_batch_resource}
+                        )
+                        batch_resource_count += current_user_batch_count
 
                 except AttributeError as e:
                     logger.info(f"{user.email} does not have {r} to delete {e}")
@@ -431,7 +439,7 @@ def get_report_data(account):
     )
     todays_flows = (
         workflows.annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date())
+        .filter(creation_date=datetime.now().date())
         .order_by("-creation_date")
     ).count()
     todays_failed_flows = (
@@ -444,7 +452,7 @@ def get_report_data(account):
             )
         )
         .annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date(), progress_l__lt=0)
+        .filter(creation_date=datetime.now().date(), progress_l__lt=0)
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()
