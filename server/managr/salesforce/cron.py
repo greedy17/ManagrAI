@@ -202,10 +202,14 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                 latest_flow = flows.latest("datetime_created")
                 # HACK if a flow hasnt completed assume the next flow won't occur
             if not latest_flow or latest_flow.in_progress:
+                logger.info(
+                    f"skipping clear data for user {user.email} with id {user.id} because the latest flow was not successful"
+                )
                 continue
             current_user_batch_resource = []
             current_user_batch_count = 0
             for r in resource_items:
+
                 try:
                     resource_count = (
                         getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff).count()
@@ -232,14 +236,12 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
 
                         current_user_batch_resource.append(r)
                         current_user_batch_count += resource_count
-                        batch.append(
-                            {"user_id": str(user.id), "resources": current_user_batch_resource}
-                        )
-                        batch_resource_count += current_user_batch_count
 
                 except AttributeError as e:
                     logger.info(f"{user.email} does not have {r} to delete {e}")
                     continue
+        batch.append({"user_id": str(user.id), "resources": current_user_batch_resource})
+        batch_resource_count += current_user_batch_count
 
         # if it never reaches 500 then we send the last batch
         if len(batch):
