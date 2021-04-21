@@ -161,23 +161,53 @@ def report_sf_data_sync(sf_account=None):
 
 @kronos.register("0 */24 * * *")
 def queue_stale_sf_data_for_delete():
-    # get salesforce accounts for users is_active group by organization
-    # collect each resource count in groups 1. fields/picklists/validations 2. opps/contacts/accounts/leads
-    # send for chunck remove
+    """ 
+        This should queue stale data for delete, it should only do this for users who are active and who have an sf account 
+        In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
+        or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
+    """
+    resource_items = {
+        "sobjectfield",
+        "sobjectvalidation",
+        "sobjectpicklist",
+        "opportunity",
+        "account",
+        "contact",
+        "lead",
+    }
     limit = 0
-    pages = 0
+    pages = 1
+    # get users who are active and have a salesforce_account
     qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
+    # count them to paginate the response
     user_count = qs.count()
+    # set limit of 100 or less
     limit = max(100, user_count)
+    # divide into pages
     pages = math.floor(user_count / limit)
+    # cutoff of 1 day
     cutoff = timezone.now() - timezone.timedelta(days=1)
 
-    for i in range(0, pages + 1):
-        users = qs.select_related("salesforce_account")
+    for i in range(0, pages):
+        users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
         batch = []
         batch_resource_count = 0
         for user in users:
-            data_count = user.imported_sobjectfield.filter(last_edited__lte=cutoff).count()
+            current_user_batch_resource = []
+            for r in resource_items:
+                try:
+                    resource_count = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
+                    future_count = batch_resource_count + resource_count
+                    if future_count > 500:
+                        # emit current batch to delete queue and start new
+                        print(batch)
+                    else:
+                        current_user_batch_resource.append(r)
+                        print(batch)
+
+                    batch_resource_count = future_count
+                except AttributeError as e:
+                    logger.info(f"{user.email} does not have {r} to delete {e}")
 
 
 def to_date_string(date):
