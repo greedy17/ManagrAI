@@ -294,6 +294,7 @@ class ZoomMeeting(TimeStampModel):
                     UnHandeledBlocksException,
                     InvalidBlocksFormatException,
                     InvalidBlocksException,
+                    InvalidAccessToken,
                 )
 
                 slack_access_token = self.workflow.user.organization.slack_integration.access_token
@@ -311,15 +312,19 @@ class ZoomMeeting(TimeStampModel):
                     )
                 except InvalidBlocksException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
                 except InvalidBlocksFormatException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
                 except UnHandeledBlocksException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
+                    )
+                except InvalidAccessToken as e:
+                    return logger.exception(
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
 
                 self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"

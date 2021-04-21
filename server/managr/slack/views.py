@@ -41,6 +41,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 logger = logging.getLogger("managr")
@@ -105,11 +106,20 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 incoming_webhook=incoming_webhook,
                 enterprise=enterprise,
             )
-
-            # url = integration.incoming_webhook.get("url")
-
+            # TODO: Investigate option to not workspace integration pb 04/20/21 Mike ok'd
             text = "<!channel> your organization has enabled slack please integrate your account to receive notifications"
-
+            channel = integration.incoming_webhook.get("channel_id", None)
+            if not channel:
+                integration.delete()
+                raise ValidationError(
+                    {
+                        "detail": {
+                            "key": "non_field_error",
+                            "message": "No Channel Selected, please select a group channel for Managr to connect to",
+                            "field": "email",
+                        }
+                    }
+                )
             slack_requests.send_channel_message(
                 integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
             )
@@ -488,6 +498,7 @@ def create_task(request):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
         )
+
     except InvalidBlocksFormatException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
@@ -496,6 +507,10 @@ def create_task(request):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
         )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+        )
     return Response()
 
 
@@ -503,10 +518,6 @@ def create_task(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def list_tasks(request):
-    
-    
-    
-
     ## helper to make datetime longform
     def to_date_string(date):
         if not date:
@@ -515,7 +526,6 @@ def list_tasks(request):
         return d.strftime("%a, %B %d, %Y")
 
     slack_id = request.data.get("user_id", None)
-    
 
     if slack_id:
         slack = (
@@ -600,6 +610,15 @@ def list_tasks(request):
             }
         )
     except UnHandeledBlocksException as e:
+        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        return Response(
+            data={
+                "response_type": "ephemeral",
+                "text": "Your Tasks",
+                "blocks": "Failed to list tasks",
+            }
+        )
+    except InvalidAccessToken as e:
         logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
         return Response(
             data={

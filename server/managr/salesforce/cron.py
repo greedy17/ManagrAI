@@ -32,6 +32,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
@@ -279,6 +280,10 @@ def send_daily_tasks():
                 except UnHandeledBlocksException as e:
                     logger.exception(
                         f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                    )
+                except InvalidAccessToken as e:
+                    logger.exception(
+                        f"Failed to list tasks for user due to invalid access token {user.name} email {user.email} {e}"
                     )
             else:
                 logger.info(

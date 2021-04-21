@@ -20,10 +20,15 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
-from .adapter.exceptions import TokenExpired, InvalidFieldError, UnhandledSalesforceError
+from .adapter.exceptions import (
+    TokenExpired,
+    InvalidFieldError,
+    UnhandledSalesforceError,
+)
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -696,7 +701,10 @@ class MeetingWorkflow(SFSyncOperation):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
-
+            except InvalidAccessToken as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                )
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
