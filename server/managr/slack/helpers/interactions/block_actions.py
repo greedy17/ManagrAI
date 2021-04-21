@@ -470,43 +470,34 @@ def process_remove_contact_from_meeting(payload, context):
 
 
 @processor(required_context=["w"])
-def process_update_search_or_create(payload, context):
-    """ Updates the form view to either a create form or a search box what is currently selected """
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+def process_meeting_selected_resource(payload, context):
+    """ opens a modal with the options to search or create """
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
-    select = payload["actions"][0]["selected_option"]
-    selected_option = select["value"]
 
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    select = payload["actions"][0]["selected_option"]
+    selected_option = select["value"]
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-    c = {
-        "w": context.get("w"),
-        "resource": str(context.get("resource")),
-        "selected_option": select,
-    }
-    current_block_sets = get_block_set("create_or_search_modal", context=c)
-    if selected_option == "SEARCH":
-        blocks = get_block_set("search_modal_block_set", context=c)
-    elif selected_option == "CREATE":
-        blocks = get_block_set("create_modal_block_set", context=c)
-    ts, channel = workflow.slack_interaction.split("|")
     private_metadata = {
-        "original_message_timestamp": ts,
-        "original_message_channel": channel,
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+
+    context = {
+        "w": context.get("w"),
+        "resource": str(selected_option),
     }
 
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
-        "view_id": view_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
-            "title": {"type": "plain_text", "text": c.get("resource")},
-            "blocks": [*current_block_sets, *blocks],
-            "submit": {"type": "plain_text", "text": "Attach"},
+            "title": {"type": "plain_text", "text": f"{selected_option}"},
+            "blocks": get_block_set("create_or_search_modal", context=context),
             "private_metadata": json.dumps(private_metadata),
         },
     }
@@ -532,36 +523,50 @@ def process_update_search_or_create(payload, context):
     workflow.save()
 
 
-@processor(required_context=["w"])
-def process_meeting_selected_resource(payload, context):
-    """ opens a modal with the options to search or create """
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+@processor(required_context=[])
+def process_meeting_selected_resource_option(payload, context):
+    """ depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
+    workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    select = payload["actions"][0]["selected_option"]["value"]
+    resource_type = context.get("resource")
+    action = None
 
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    select = payload["actions"][0]["selected_option"]
-    selected_option = select["value"]
+    try:
+        action, resource_type = select.split(".")
+    except ValueError:
+
+        pass
+    context = {
+        "w": workflow_id,
+        "resource": resource_type,
+    }
+    if not action:
+        blocks = [block_finder("select_existing", payload["view"]["blocks"])[1]]
+    else:
+
+        blocks = [
+            block_finder("select_existing", payload["view"]["blocks"])[1],
+            *get_block_set("create_modal_block_set", context,),
+        ]
+
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
-    context = {
-        "w": context.get("w"),
-        "resource": str(selected_option),
-    }
 
-    private_metadata.update(context)
     data = {
-        "trigger_id": trigger_id,
+        "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
-            "title": {"type": "plain_text", "text": f"{selected_option}"},
-            "blocks": get_block_set("create_or_search_modal", context=context),
-            "private_metadata": json.dumps(private_metadata),
-            "submit": {"type": "plain_text", "text": "Next"},
+            "title": {"type": "plain_text", "text": f"{resource_type}"},
+            "blocks": blocks,
+            "private_metadata": payload["view"]["private_metadata"],
+            "submit": {
+                "type": "plain_text",
+                "text": f'{ "Create & Change" if action else "Change"}',
+            },
         },
     }
     try:
@@ -909,7 +914,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
-        slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH: process_update_search_or_create,
+        slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
         slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
@@ -924,4 +929,8 @@ def handle_block_actions(payload):
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
     action_params = processed_string.get("params")
+    # added special key __block_action to allow us to override the defaults since the action_id is used for both the suggestions and the actions
+    if action_params.get("__block_action", None):
+        action_id = action_params.get("__block_action")
+
     return switcher.get(action_id, NO_OP)(payload, action_params)

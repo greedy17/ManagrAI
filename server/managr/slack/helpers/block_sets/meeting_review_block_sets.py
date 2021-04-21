@@ -462,39 +462,22 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 
 
 @block_set(required_context=["w", "resource"])
-def create_or_search_modal_block_set1(context):
-    options = [
-        block_builders.option("Search", "SEARCH"),
-    ]
-    if context.get("resource") != sf_consts.RESOURCE_SYNC_LEAD:
-        options.append(block_builders.option("Create", "CREATE"),)
-    blocks = [
-        block_builders.static_select(
-            "Would you like to create a new item or search for an existing option",
-            options,
-            # action_id=f"{slack_const.ZOOM_MEETING__SELECTED_CREATE_OR_SEARCH}?w={context.get('w')}&resource={context.get('resource')}",
-            block_id="create_or_search",
-            action_id="selected_option",
-        ),
-    ]
-
-    return blocks
-
-
-@block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
-    additional_opts = [
-        {
-            "label": f'NEW {context.get("resource", None)} (create)',
-            "value": f'CREATE_NEW.{context.get("resource")}',
-        }
-    ]
+    if not context.get("resource") == "Lead":
+        additional_opts = [
+            {
+                "label": f'NEW {context.get("resource", None)} (create)',
+                "value": f'CREATE_NEW.{context.get("resource")}',
+            }
+        ]
+    else:
+        additional_opts = []
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     return [
         block_builders.external_select(
             f"*Search for an {context.get('resource')}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&additional_options={json.dumps(additional_opts)}",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
         )
     ]

@@ -68,7 +68,7 @@ def process_get_local_resource_options(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource")
-    additional_opts = json.loads(context.get("additional_options", []))
+    additional_opts = json.loads(context.get("add_opts", []))
 
     # conver type to make sure it follows {label:str|num, values:str|num}
 
@@ -118,7 +118,7 @@ def process_get_picklist_options(payload, context):
         Using the external picklist means we can avoid the slack 50 block limit since each option counts as a limit
         Only stages use the static select block because we require the ordering to retrieve the linked stage forms in order
     """
-    additional_opts = json.loads(context.get("additional_options", []))
+    additional_opts = json.loads(context.get("add_opts", []))
 
     # conver type to make sure it follows {label:str|num, values:str|num}
 

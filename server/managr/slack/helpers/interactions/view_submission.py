@@ -357,36 +357,10 @@ def process_submit_resource_data(payload, context):
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
-    ##steps
-    # User submits
-    # push loading screen
-    # ether create or existing
-    # existing
-    # attach resource
-    # push success
-    # update interaction
-    # clear all
-    # new
-    # update main modal
-    # clear top stack
-    ## user submit
-    # call create new
-    # push next page
-    # push loading page
-    # push success or error
-    # close stack
-
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    meeting_resource = context.get("resource")
-    state_values = payload["view"]["state"]["values"]
-    selected_action = [
-        val.get("selected_option", {}).get("value", [])
-        for val in state_values["select_existing"].values()
-    ]
-    selected_action = selected_action[0] if len(selected_action) else None
 
     # get state - state contains the values based on the block_id
 
@@ -398,11 +372,18 @@ def process_zoom_meeting_attach_resource(payload, context):
             "blocks": get_block_set("success_modal", {}),
         },
     }
-    # splits the CREATE.{resource} currently this is not being used anywhere but will be part of further optimizations
-    # we will remove the attachment addition to the initial interaction where a user selects a resource
+
+    meeting_resource = context.get("resource")
+    state_values = payload["view"]["state"]["values"]
+    selected_action = [
+        val.get("selected_option", {}).get("value", [])
+        for val in state_values["select_existing"].values()
+    ]
+    selected_action = selected_action[0] if len(selected_action) else None
+
     if selected_action:
         try:
-            resource, action = selected_action.split(".")
+            action, resource = selected_action.split(".")
         except ValueError:
             resource = selected_action
             action = None
@@ -415,8 +396,62 @@ def process_zoom_meeting_attach_resource(payload, context):
             # update the forms to the correct type
 
         else:
-            # this is a sync action
-            return
+            # check to see if it already has the create form added and save that instead
+            main_form = (
+                workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE,)
+                .exclude(template__resource="Contact")
+                .first()
+            )
+            if main_form:
+                stage_forms = workflow.forms.filter(
+                    template__form_type=slack_const.FORM_TYPE_STAGE_GATING
+                ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+                # if there are stage gating forms we need to save their data we already saved the main form's data
+
+                if not len(stage_forms):
+                    main_form.save_form(state_values)
+                else:
+                    # assume we already saved the forms for create
+                    for form in stage_forms:
+                        form.save_form(state_values)
+                try:
+                    resource = _process_create_new_resource.now(context.get("w"), meeting_resource)
+
+                except FieldValidationError as e:
+
+                    return {
+                        "response_action": "push",
+                        "view": {
+                            "type": "modal",
+                            "title": {"type": "plain_text", "text": "An Error Occured"},
+                            "blocks": get_block_set(
+                                "error_modal",
+                                {
+                                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org for {meeting_resource} objects\n *Error* : _{e}_"
+                                },
+                            ),
+                        },
+                    }
+                except RequiredFieldError as e:
+
+                    return {
+                        "response_action": "push",
+                        "view": {
+                            "type": "modal",
+                            "title": {"type": "plain_text", "text": "An Error Occurred"},
+                            "blocks": get_block_set(
+                                "error_modal",
+                                {
+                                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce for {meeting_resource} objects\n *Error* : _{e}_"
+                                },
+                            ),
+                        },
+                    }
+
+                workflow.resource_id = str(resource.id)
+                workflow.resource_type = meeting_resource
+
+                workflow.save()
 
         ts, channel = workflow.slack_interaction.split("|")
         # clear old forms (except contact forms)
@@ -425,6 +460,7 @@ def process_zoom_meeting_attach_resource(payload, context):
             meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
         )
         try:
+            # update initial interaction workflow with new resource
             res = slack_requests.update_channel_message(
                 channel,
                 ts,
@@ -434,6 +470,7 @@ def process_zoom_meeting_attach_resource(payload, context):
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
             res = slack_requests.generic_request(url, data, access_token=slack_access_token)
 
+        # add a message for user's if this failed
         except InvalidBlocksException as e:
             return logger.exception(
                 f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
