@@ -23,7 +23,7 @@ from managr.slack.helpers.exceptions import (
 )
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
-from .adapter.exceptions import TokenExpired, InvalidFieldError
+from .adapter.exceptions import TokenExpired, InvalidFieldError, UnhandledSalesforceError
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -335,16 +335,13 @@ class SObjectValidation(TimeStampModel, IntegrationModel):
 
 
 class SObjectPicklist(TimeStampModel, IntegrationModel):
-    # label = models.CharField(blank=True, max_length=255)
-    # attributes = JSONField(default=dict, max_length=255)
 
-    # valid_for = models.CharField(blank=True, max_length=255)
     picklist_for = models.CharField(
         blank=True,
         max_length=255,
         help_text="the name of the field this picklist is for, serializer will translate to actual field",
     )
-    # value = models.CharField(blank=True, max_length=255)
+
     values = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -508,8 +505,6 @@ class SFResourceSync(SFSyncOperation):
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
-    """ May no Longer need to use this """
-
     @property
     def operations_map(self):
         from managr.salesforce.background import (
@@ -779,7 +774,6 @@ class SalesforceAuthAccount(TimeStampModel):
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
-
         helper = SalesforceAuthAccountAdapter(**data)
         res = helper.refresh()
         self.token_generated_date = timezone.now()
