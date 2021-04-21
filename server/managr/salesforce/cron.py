@@ -202,32 +202,36 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     resource_count = (
                         getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff).count()
                     )
-                    future_count = batch_resource_count + current_user_batch_count + resource_count
-                    if future_count > 500:
-                        # add current items to batch
-                        batch.append(
-                            {"user_id": str(user.id), "resources": current_user_batch_resource}
+                    if resource_count:
+                        future_count = (
+                            batch_resource_count + current_user_batch_count + resource_count
                         )
-                        # emit current batch to delete queue and start new
+                        if future_count > 500:
+                            # add current items to batch
+                            batch.append(
+                                {"user_id": str(user.id), "resources": current_user_batch_resource}
+                            )
+                            # emit current batch to delete queue and start new
 
-                        emit_stale_data_for_delete(batch, cutoff)
-                        # set batch to empty
-                        batch = []
-                        # reset count
-                        batch_resource_count = 0
-                        # reset current user batch  and count
-                        current_user_batch_resource = []
-                        current_user_batch_count = 0
+                            emit_stale_data_for_delete(batch, cutoff)
+                            # set batch to empty
+                            batch = []
+                            # reset count
+                            batch_resource_count = 0
+                            # reset current user batch  and count
+                            current_user_batch_resource = []
+                            current_user_batch_count = 0
 
-                    current_user_batch_resource.append(r)
-                    current_user_batch_count += resource_count
+                        current_user_batch_resource.append(r)
+                        current_user_batch_count += resource_count
+                    batch.append(
+                        {"user_id": str(user.id), "resources": current_user_batch_resource}
+                    )
+                    batch_resource_count += current_user_batch_count
 
                 except AttributeError as e:
                     logger.info(f"{user.email} does not have {r} to delete {e}")
                     continue
-
-            batch.append({"user_id": str(user.id), "resources": current_user_batch_resource})
-            batch_resource_count += current_user_batch_count
 
         # if it never reaches 500 then we send the last batch
         if len(batch):
