@@ -39,6 +39,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 
@@ -179,15 +180,19 @@ def process_zoom_meeting_data(payload, context):
         )
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
@@ -450,15 +455,19 @@ def process_zoom_meeting_attach_resource(payload, context):
 
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
     workflow.slack_view = res.get("view").get("id")
@@ -527,15 +536,19 @@ def process_update_meeting_contact(payload, context):
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
     return
@@ -631,12 +644,12 @@ def process_create_task(payload, context):
     status = [
         value.get("selected_option") for value in state.get("managr_task_status", {}).values()
     ]
-    
+
     if status[0] == None:
         status = "Not Started"
     else:
         status = status[0].get("value")
-    
+
     related_to_type = [
         value.get("selected_option")
         for value in state.get("managr_task_related_to_resource", {}).values()
@@ -659,7 +672,6 @@ def process_create_task(payload, context):
         "Status": status,
     }
 
-    
     if related_to and related_to_type:
 
         if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:

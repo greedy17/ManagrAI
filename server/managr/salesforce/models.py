@@ -20,10 +20,15 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
-from .adapter.exceptions import TokenExpired
+from .adapter.exceptions import (
+    TokenExpired,
+    InvalidFieldError,
+    UnhandledSalesforceError,
+)
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -335,16 +340,13 @@ class SObjectValidation(TimeStampModel, IntegrationModel):
 
 
 class SObjectPicklist(TimeStampModel, IntegrationModel):
-    # label = models.CharField(blank=True, max_length=255)
-    # attributes = JSONField(default=dict, max_length=255)
 
-    # valid_for = models.CharField(blank=True, max_length=255)
     picklist_for = models.CharField(
         blank=True,
         max_length=255,
         help_text="the name of the field this picklist is for, serializer will translate to actual field",
     )
-    # value = models.CharField(blank=True, max_length=255)
+
     values = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -476,7 +478,8 @@ class SFResourceSync(SFSyncOperation):
                 # get counts to set offsets
                 # has a 2000 offset limit as it is previously we would just get the rest which was too big
                 # we now only get a max of 500
-            max_count = 500  # if key == sf_consts.RESOURCE_SYNC_LEAD else 2000
+                # TODO:- Move this to the adapter classes aka limit
+            max_count = 500 if key != sf_consts.RESOURCE_SYNC_CONTACTS else 1000
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
@@ -508,8 +511,6 @@ class SFResourceSync(SFSyncOperation):
 
 
 class SFObjectFieldsOperation(SFSyncOperation):
-    """ May no Longer need to use this """
-
     @property
     def operations_map(self):
         from managr.salesforce.background import (
@@ -541,9 +542,6 @@ class SFObjectFieldsOperation(SFSyncOperation):
             self.save()
 
     def save(self, *args, **kwargs):
-        # overriding to make sure super does not call parent
-
-        logger.info(f"{self.progress}")
         return super(SFObjectFieldsOperation, self).save(*args, **kwargs)
 
 
@@ -704,7 +702,10 @@ class MeetingWorkflow(SFSyncOperation):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
-
+            except InvalidAccessToken as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+                )
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
@@ -742,6 +743,12 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="Default Record Id's are obtained when initially getting fields we need this default record it to gather picklist values",
         max_length=500,
     )
+    exclude_fields = JSONField(
+        default=dict,
+        null=True,
+        help_text="Certain Fields are not available for query are retreived as part of the user's fields, these are tracked here and excluded on resyncs",
+        max_length=1000,
+    )
 
     is_busy = models.BooleanField(default=False)
 
@@ -770,20 +777,12 @@ class SalesforceAuthAccount(TimeStampModel):
             Lead=self.object_fields.filter(salesforce_object="Lead").values_list(
                 "api_name", flat=True
             ),
-            # Controls the fields returned from SalesForce API
-            # https://developer.salesforce.com/docs/atlas.en-us.sfFieldRef.meta/sfFieldRef/salesforce_field_reference_Task.htm
-            # TODO: Make this dynamic, like the other four object_field types above
-            Task=["Description", "Subject", "CreatedDate", "ActivityDate", "WhatId", "WhoId"]
-            # Task=self.object_fields.filter(salesforce_object="Task").values_list(
-            #     "api_name", flat=True
-            # ),
         )
         return SalesforceAuthAccountAdapter(**data)
 
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
-
         helper = SalesforceAuthAccountAdapter(**data)
         res = helper.refresh()
         self.token_generated_date = timezone.now()
@@ -798,7 +797,9 @@ class SalesforceAuthAccount(TimeStampModel):
         self.delete()
 
     def get_fields(self, resource):
+
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
+
         self.default_record_id = record_type_id
         current_record_ids = self.default_record_ids if self.default_record_ids else {}
         current_record_ids[resource] = record_type_id
@@ -815,7 +816,42 @@ class SalesforceAuthAccount(TimeStampModel):
         return values
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
-        return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
+        attempts = 1
+        while True:
+            try:
+                return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
+
+            except InvalidFieldError as e:
+                # catch all invalid fields on sync remove them from self and retry up to 20 times
+                # this is done here rather than on the bg task to make it task agnostic
+                # re raise the error for the decorator on the bg tasks to catch as well
+                if attempts < 20:
+                    attempts += 1
+                    # remove the field from self
+                    # get the field and make it into a string
+                    try:
+                        field_str = e.args[0].replace("'", "")
+                        fields = self.object_fields.filter(
+                            salesforce_object=resource, api_name=field_str
+                        )
+                        if fields.count():
+                            fields.delete()
+                        exclude_fields = self.exclude_fields if not None else {}
+                        # add field to exclude fields for next sync
+                        exclude_fields[resource] = [*exclude_fields.get(resource, []), field_str]
+                        self.exclude_fields = exclude_fields
+                        self.save()
+
+                    except IndexError:
+                        logger.exception(f"failed to parse invalid field {e}")
+                        raise e
+                else:
+                    logger.exception(
+                        f"Too many invalid fields for query, retry was ended at {attempts} for user {self.user.email} with id {self.user.id} current field {e}"
+                    )
+                    # re raise error for bg task to also handle
+                    raise e
+        return
 
     def get_stage_picklist_values(self, resource):
         values = self.adapter_class.get_stage_picklist_values(resource)

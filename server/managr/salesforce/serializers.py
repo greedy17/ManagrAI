@@ -21,6 +21,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "login_link",
             "user",
             "sobjects",
+            "exclude_fields",
             "is_busy",
         )
 

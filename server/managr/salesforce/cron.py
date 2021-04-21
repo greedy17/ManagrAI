@@ -27,11 +27,12 @@ from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import UserSlackIntegration
-
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
@@ -39,6 +40,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     SFQueryOffsetError,
     SFNotFoundError,
+    InvalidRefreshToken,
 )
 
 logger = logging.getLogger("managr")
@@ -172,89 +174,123 @@ def send_daily_tasks():
     """
     accounts = SalesforceAuthAccount.objects.filter(user__is_active=True).select_related("user")
     for account in accounts:
-        user = account.user
-        # Pulls tasks from Salesforce
-        attempts = 0
-        while True:
-            ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
-            sf = user.salesforce_account
-            try:
-                tasks = sf.adapter_class.list_tasks()
-                break
-
-            except TokenExpired:
-                if attempts >= 5:
-                    return logger.exception(f"Failed to gather tasks after 5 tries")
-                else:
-                    sf.regenerate_token()
-                    attempts += 1
         try:
-            blocks = []
-            channel = user.slack_integration.channel
-            access_token = user.organization.slack_integration.access_token
+            # all fail catcher to continue for other users
+            user = account.user
+            # track if this has an error here since we do not want to return on failuer but pass to the next user
+            # note continue and pass here will keep retrying the same while loop
+            has_error = False
+            attempts = 1
+            while True:
+                ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
+                sf = user.salesforce_account
+                try:
+                    tasks = sf.adapter_class.list_tasks()
+                    break
 
-            if not len(tasks):
-                message = "Congratulations. You have no future tasks at this time."
+                except TokenExpired:
+                    if attempts >= 5:
+                        logger.exception(f"Failed to gather tasks after 5 tries")
+                        has_error = True
+                        break
+                    else:
+                        try:
+                            sf.regenerate_token()
+                        except InvalidRefreshToken:
+                            logger.exception(
+                                f"Failed to refresh token due to an invalid refresh token"
+                            )
+                            has_error = True
+                            break
 
-                return Response(data={"response_type": "ephemeral", "text": message,})
-            blocks.extend(
-                [
-                    block_builders.header_block("View Tasks"),
-                    block_builders.simple_section(
-                        f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
-                    ),
-                    block_builders.divider_block(),
-                ]
-            )
-            for t in tasks:
-                resource = "_salesforce object n/a_"
-                # get the resource if it is what_id is for account/opp
-                # get the resource if it is who_id is for lead
-                if t.what_id:
-                    # first check for opp
-                    obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-                    if not obj:
-                        obj = user.imported_account.filter(integration_id=t.what_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
+                        attempts += 1
+            if has_error:
+                continue
+            if hasattr(user, "slack_integration"):
+                try:
+                    blocks = []
+                    channel = user.slack_integration.channel
+                    access_token = user.organization.slack_integration.access_token
 
-                elif t.who_id:
-                    obj = user.imported_lead.filter(integration_id=t.who_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
+                    if not len(tasks):
+                        message = "Congratulations. You have no future tasks at this time."
+                        # this wont work need to update to send request
+                        Response(
+                            data={"response_type": "ephemeral", "text": message,}
+                        )
+                    blocks.extend(
+                        [
+                            block_builders.header_block("View Tasks"),
+                            block_builders.simple_section(
+                                f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
+                            ),
+                            block_builders.divider_block(),
+                        ]
+                    )
+                    for t in tasks:
+                        resource = "_salesforce object n/a_"
+                        # get the resource if it is what_id is for account/opp
+                        # get the resource if it is who_id is for lead
+                        if t.what_id:
+                            # first check for opp
+                            obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                            if not obj:
+                                obj = user.imported_account.filter(integration_id=t.what_id).first()
+                            if obj:
+                                resource = f"*{obj.name}*"
 
-                blocks.extend(
-                    [
-                        block_builders.simple_section(
-                            f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
-                            "mrkdwn",
-                        ),
-                        block_builders.divider_block(),
-                        block_builders.section_with_button_block(
-                            "View Task",
-                            "view_task",
-                            "_*View task in salesforce*_",
-                            url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
-                        ),
-                    ]
+                        elif t.who_id:
+                            obj = user.imported_lead.filter(integration_id=t.who_id).first()
+                            if obj:
+                                resource = f"*{obj.name}*"
+
+                        blocks.extend(
+                            [
+                                block_builders.simple_section(
+                                    f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                                    "mrkdwn",
+                                ),
+                                block_builders.divider_block(),
+                                block_builders.section_with_button_block(
+                                    "View Task",
+                                    "view_task",
+                                    "_*View task in salesforce*_",
+                                    url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                                ),
+                            ]
+                        )
+
+                    slack_requests.send_ephemeral_message(
+                        channel,
+                        access_token,
+                        user.slack_integration.slack_id,
+                        text="Tasks",
+                        block_set=blocks,
+                    )
+                except InvalidBlocksException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                    )
+
+                except InvalidBlocksFormatException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                    )
+
+                except UnHandeledBlocksException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                    )
+                except InvalidAccessToken as e:
+                    logger.exception(
+                        f"Failed to list tasks for user due to invalid access token {user.name} email {user.email} {e}"
+                    )
+            else:
+                logger.info(
+                    f"did not send user {user.email} a slack with tasks as they do not have slack integrated"
                 )
-
-            slack_requests.send_ephemeral_message(
-                channel,
-                access_token,
-                user.slack_integration.slack_id,
-                text="Tasks",
-                block_set=blocks,
-            )
-        except InvalidBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except InvalidBlocksFormatException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except UnHandeledBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
+        except Exception as e:
+            logger.exception(f"failed to fetch tasks for user {user.email} for reason {str(e)}")
     return
 
 
