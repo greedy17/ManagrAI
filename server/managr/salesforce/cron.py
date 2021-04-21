@@ -2,6 +2,7 @@ import logging
 import kronos
 from datetime import datetime
 import logging
+import math
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -129,7 +130,7 @@ def queue_users_sf_fields(force_all=False):
     return
 
 
-@kronos.register("*/60  * * * *")
+@kronos.register("*/60 * * * *")
 def report_sf_data_sync(sf_account=None):
     """ runs every 60 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
@@ -156,6 +157,27 @@ def report_sf_data_sync(sf_account=None):
 
     # if latest workflow is at 100 emit sf resource sync
     return
+
+
+@kronos.register("0 */24 * * *")
+def queue_stale_sf_data_for_delete():
+    # get salesforce accounts for users is_active group by organization
+    # collect each resource count in groups 1. fields/picklists/validations 2. opps/contacts/accounts/leads
+    # send for chunck remove
+    limit = 0
+    pages = 0
+    qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
+    user_count = qs.count()
+    limit = max(100, user_count)
+    pages = math.floor(user_count / limit)
+    cutoff = timezone.now() - timezone.timedelta(days=1)
+
+    for i in range(0, pages + 1):
+        users = qs.select_related("salesforce_account")
+        batch = []
+        batch_resource_count = 0
+        for user in users:
+            data_count = user.imported_sobjectfield.filter(last_edited__lte=cutoff).count()
 
 
 def to_date_string(date):
