@@ -47,47 +47,6 @@ logger = logging.getLogger("managr")
 
 
 @log_all_exceptions
-@processor(
-    required_context=["w", "resource", "original_message_channel", "original_message_timestamp",]
-)
-def process_search_or_create_next_page(payload, context):
-
-    # check state for selected option
-    view = payload["view"]
-    private_metadata = json.loads(view["private_metadata"])
-    state = payload["view"]["state"]["values"]
-    selected_option = state["create_or_search"]["selected_option"]["selected_option"]["value"]
-    private_metadata.update({"action": selected_option})
-    private_metadata.update({"resource": context.get("resource")})
-
-    # push the next view depending on selected option
-    if selected_option == "SEARCH":
-        blocks = get_block_set(
-            "search_modal_block_set", {"w": context.get("w"), "resource": context.get("resource")}
-        )
-    elif selected_option == "CREATE":
-        blocks = get_block_set(
-            "create_modal_block_set", {"w": context.get("w"), "resource": context.get("resource")}
-        )
-    title_text = (
-        f"Search {context.get('resource')}"
-        if selected_option == "SEARCH"
-        else f"Create {context.get('resource')}"
-    )
-    return {
-        "response_action": "push",
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": title_text},
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
-            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
-        },
-    }
-
-
-@log_all_exceptions
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
@@ -783,7 +742,6 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE: process_stage_next_page,
-        slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE: process_search_or_create_next_page,
         slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA: process_update_meeting_contact,
         slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,

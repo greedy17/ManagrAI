@@ -787,7 +787,7 @@ def process_coming_soon(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SEARCH_OR_CREATE_NEXT_PAGE,
+            "callback_id": "NEXT",
             "title": {"type": "plain_text", "text": f"Coming Soon"},
             "blocks": get_block_set("coming_soon_modal", {}),
         },
