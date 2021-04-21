@@ -123,65 +123,6 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     workflow.save()
 
 
-@processor(required_context=["m"])
-def process_get_meeting_score_components(payload, context):
-    try:
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-        trigger_id = payload["trigger_id"]
-        meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-        org = meeting.zoom_account.user.organization
-        access_token = org.slack_integration.access_token
-        sentiment = ""
-        stage = ""
-        forecast = ""
-        close_date = ""
-        attendance = ""
-        duration = ""
-
-        for comp in meeting.meeting_score_components:
-            if comp["type"] == "sentiment":
-                sentiment = comp.get("message", "N/A")
-            if comp["type"] == "stage":
-                stage = comp.get("message", "N/A")
-            if comp["type"] == "forecast":
-                forecast = comp.get("message", "N/A")
-            if comp["type"] == "close_date":
-                close_date = comp.get("message", "N/A")
-            if comp["type"] == "attendance":
-                attendance = comp.get("message", "N/A")
-            if comp["type"] == "duration":
-                duration = comp.get("message", "N/A")
-
-        paragraph = f"{sentiment} \n {stage} {forecast} {close_date} \n {attendance} {duration}"
-
-        private_metadata = {
-            "original_message_channel": payload["channel"]["id"],
-            "original_message_timestamp": payload["message"]["ts"],
-        }
-        empty_block = [
-            {"type": "section", "text": {"type": "mrkdwn", "text": "No Scoring Data to show"},}
-        ]
-        blocks = [get_block_set("show_meeting_score_description", {"score_paragraph": paragraph})]
-
-        data = {
-            "trigger_id": trigger_id,
-            "view": {
-                "type": "modal",
-                "callback_id": slack_const.SHOW_MEETING_SCORE_COMPONENTS,
-                "title": {"type": "plain_text", "text": "Summary"},
-                "blocks": blocks if len(blocks) else empty_block,
-                "private_metadata": json.dumps(private_metadata),
-            },
-        }
-
-        private_metadata.update(context)
-
-        slack_requests.generic_request(url, data, access_token=access_token)
-    except Exception as e:
-        logger.warning(e)
-        pass
-
-
 @processor(required_context=["w", "tracking_id"])
 def process_edit_meeting_contact(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -908,7 +849,6 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.SHOW_MEETING_SCORE_COMPONENTS: process_get_meeting_score_components,
         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,

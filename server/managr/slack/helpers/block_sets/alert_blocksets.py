@@ -116,42 +116,6 @@ def meeting_score_description_block_set(context):
 #     return obj
 
 
-@block_set(required_context=["m"])
-def meeting_review_score(context):
-    # Bruno created decorator required context l= lead, u= user m=message
-    # slack mentions format = <@slack_id>
-
-    meeting = ZoomMeeting.objects.filter(id=context.get("m")).first()
-    user = meeting.zoom_account.user
-    meeting_param = "m=" + context["m"]
-    meeting_type = meeting.meeting_review.meeting_type
-    action_choice = (
-        user.organization.action_choices.filter(id=meeting_type).first() if meeting_type else "N/A"
-    )
-    if meeting:
-        return [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f":heavy_check_mark: *{meeting.zoom_account.user.full_name}* meeting with *{meeting.opportunity.name}* scored *{meeting.meeting_score}*, it was a {action_choice.title}. Click below to see the summary.",
-                },
-            },
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "View Meeting Score Summary",},
-                        "action_id": action_with_params(
-                            slack_const.SHOW_MEETING_SCORE_COMPONENTS, params=[meeting_param],
-                        ),
-                    },
-                ],
-            },
-        ]
-
-
 @block_set(required_context=["ls"])
 def lead_score_block_set(context):
     # Bruno created decorator required context l= lead, u= user m=message
