@@ -159,4 +159,17 @@ http {
         # what to serve if upstream is not available or crashes
         error_page 500 502 503 504 /50x;
     }
+
+    server {
+        listen 81;
+        server_name localhost;
+
+        access_log off;
+
+        location /nginx_status {
+            stub_status;
+
+            server_tokens on;
+        }
+    }
 }

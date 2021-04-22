@@ -336,7 +336,19 @@
       {
         "containerPort": 80,
         "hostPort": 80
+      },
+      {
+        "containerPort": 81
       }
+    ],
+    "dockerLabels": {
+      "com.datadoghq.ad.instances": "[{\"nginx_status_url\": \"http://%%host%%:81/nginx_status/\"}]",
+      "com.datadoghq.ad.check_names": "[\"nginx\"]",
+      "com.datadoghq.ad.init_configs": "[{}]"
+    },
+    "environment": [
+      { "name": "DD_SERVICE", "value": "managr-app-proxy" },
+      { "name": "DD_ENV", "value": "fargate" }
     ],
     "mountPoints": [
       {
@@ -404,12 +416,20 @@
       {
         "name": "DD_APM_NON_LOCAL_TRAFFIC",
         "value": "true"
+      },
+      {
+        "name": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+        "value": "true"
       }
     ],
     "portMappings": [
       {
         "containerPort": 8126,
         "protocol": "tcp"
+      },
+      {
+        "containerPort": 8125,
+        "protocol": "udp"
       }
     ],
     "logConfiguration": {

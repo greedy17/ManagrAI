@@ -15,6 +15,10 @@ resource "aws_ecr_repository" "managr" {
 
 resource "aws_ecs_cluster" "main" {
   name = "managr-cluster"
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 
   tags = {
     "app" = "managr"
