@@ -28,7 +28,8 @@ REMOVE_OWNER_ID = {
     # some fields do not support owner id as a filter therefore we need to remove them
     # since we also do not have all the fields we can potentially query for (depends on users/orgs) we cannot apply the owner id
     # as we do with additional filters instead we remove it from the query for objects documented here for now
-    "User"
+    "User",
+    "RecordType",
 }
 
 
