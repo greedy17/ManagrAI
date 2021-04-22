@@ -2,7 +2,7 @@ import logging
 import json
 import pytz
 from datetime import datetime
-from background_task import background
+from background_task import background, CompletedTask
 
 
 from django.utils import timezone
@@ -110,6 +110,12 @@ def emit_save_meeting_review(workflow_id):
     # currently only creating zoom meeting reviews
     # ignore this, and call _save_meeting_review directly
     return _save_meeting_review(workflow_id)
+
+
+def emit_meeting_workflow_tracker(workflow_id):
+    """ Checks the workflow after 5 mins to ensure completion """
+    schedule = timezone.now() + timezone.timedelta(minutes=5)
+    return _process_workflow_tracker(workflow_id, schedule)
 
 
 # SF Resource Sync Tasks
@@ -729,3 +735,19 @@ def _process_list_tasks(user_id, data, *args):
             raise RequiredFieldError(e)
 
     return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_workflow_tracker(workflow_id):
+    """ gets workflow and check's if all tasks are completed and manually completes if not already completed """
+    workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    if workflow and workflow.in_progress:
+        completed_tasks = set(workflow.completed_operations)
+        all_tasks = set(workflow.operations)
+        tasks_diff = list(all_tasks - completed_tasks)
+        for task_hash in tasks_diff:
+            # check to see if there was a problem completing the flow but all tasks are ready
+            task = CompletedTask.objects.filter(task_hash=task_hash).count()
+            if task:
+                workflow.completed_operations.append(task_hash)

@@ -33,7 +33,11 @@ from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter,
 from managr.zoom import constants as zoom_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
-from managr.salesforce.background import _process_create_new_resource, _process_create_task
+from managr.salesforce.background import (
+    _process_create_new_resource,
+    _process_create_task,
+    emit_meeting_workflow_tracker,
+)
 from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -157,6 +161,7 @@ def process_zoom_meeting_data(payload, context):
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
+    emit_meeting_workflow_tracker(str(workflow.id))
     _save_meeting_review.now(str(workflow.id))
     emit_send_meeting_summary(str(workflow.id))
 
