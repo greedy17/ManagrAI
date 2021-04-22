@@ -2,6 +2,7 @@ import logging
 import kronos
 from datetime import datetime
 import logging
+import math
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -16,7 +17,11 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
+from managr.salesforce.background import (
+    emit_gen_next_sync,
+    emit_gen_next_object_field_sync,
+    _process_stale_data_for_delete,
+)
 from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, SalesforceAuthAccount
 from managr.core.models import User
 
@@ -131,7 +136,7 @@ def queue_users_sf_fields(force_all=False):
     return
 
 
-@kronos.register("*/60  * * * *")
+@kronos.register("*/60 * * * *")
 def report_sf_data_sync(sf_account=None):
     """ runs every 60 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
@@ -158,6 +163,108 @@ def report_sf_data_sync(sf_account=None):
 
     # if latest workflow is at 100 emit sf resource sync
     return
+
+
+@kronos.register("0 */24 * * *")
+def queue_stale_sf_data_for_delete(cutoff=1440):
+    """ 
+        This should queue stale data for delete, it should only do this for users who are active and who have an sf account 
+        In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
+        or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
+    """
+    resource_items = []
+    limit = 0
+    pages = 1
+    # get users who are active and have a salesforce_account
+    qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
+    # count them to paginate the response
+    user_count = qs.count()
+    # set limit of 100 or less
+    limit = max(100, user_count)
+    # divide into pages
+    pages = math.ceil(user_count / limit)
+    # cutoff of 1 day
+    cutoff = timezone.now() - timezone.timedelta(minutes=cutoff)
+
+    for i in range(0, pages):
+        users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
+        for user in users:
+            # only run this for users with a successful latest flow
+            flows = SFResourceSync.objects.filter(user=user)
+            latest_flow = not flows.latest("datetime_created").in_progress if flows else False
+            field_flows = SFObjectFieldsOperation.objects.filter(user=user)
+            latest_field_flow = (
+                not field_flows.latest("datetime_created").in_progress if field_flows else False
+            )
+
+            if not latest_flow and not latest_field_flow:
+                logger.info(
+                    f"skipping clear data for user {user.email} with id {str(user.id)} because the latest field and resource flow were not successful"
+                )
+                continue
+
+            elif not latest_flow and latest_field_flow:
+
+                logger.info(
+                    f"skipping clear resource data (fields only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["sobjectfield", "sobjectvalidation", "sobjectpicklist",]
+                )
+            elif latest_flow and not latest_field_flow:
+                logger.info(
+                    f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["opportunity", "account", "contact", "lead",]
+                )
+            else:
+                resource_items.extend(
+                    [
+                        "sobjectfield",
+                        "sobjectvalidation",
+                        "sobjectpicklist",
+                        "opportunity",
+                        "account",
+                        "contact",
+                        "lead",
+                    ]
+                )
+
+            for r in resource_items:
+
+                try:
+                    qs = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
+                    resource_count = qs.count()
+
+                    if resource_count and resource_count <= 500:
+                        # emit current batch to delete queue and start new
+                        _process_stale_data_for_delete.now(
+                            [
+                                {
+                                    "user_id": str(user.id),
+                                    "resource": {r: qs.values_list("id", flat=True)},
+                                }
+                            ],
+                        )
+                    elif resource_count and resource_count > 500:
+                        # create make into batches of 500 and send
+                        resource_pages = 1
+                        resource_pages = math.ceil(resource_count / 500)
+                        for i in range(0, resource_pages):
+                            resource_items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
+                            _process_stale_data_for_delete.now(
+                                [
+                                    {
+                                        "user_id": str(user.id),
+                                        "resource": {r: qs.values_list("id", flat=True)},
+                                    }
+                                ],
+                            )
+
+                except AttributeError as e:
+                    logger.info(f"{user.email} does not have {r} to delete {e}")
+                    continue
 
 
 def to_date_string(date):
@@ -353,7 +460,7 @@ def get_report_data(account):
     )
     todays_flows = (
         workflows.annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date())
+        .filter(creation_date=datetime.now().date())
         .order_by("-creation_date")
     ).count()
     todays_failed_flows = (
@@ -366,7 +473,7 @@ def get_report_data(account):
             )
         )
         .annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date(), progress_l__lt=0)
+        .filter(creation_date=datetime.now().date(), progress_l__lt=0)
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()
