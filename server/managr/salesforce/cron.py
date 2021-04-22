@@ -172,15 +172,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
         In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
         or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
     """
-    resource_items = [
-        "sobjectfield",
-        "sobjectvalidation",
-        "sobjectpicklist",
-        "opportunity",
-        "account",
-        "contact",
-        "lead",
-    ]
+    resource_items = []
     limit = 0
     pages = 1
     # get users who are active and have a salesforce_account
@@ -199,15 +191,46 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
         for user in users:
             # only run this for users with a successful latest flow
             flows = SFResourceSync.objects.filter(user=user)
-            latest_flow = None
-            if flows:
-                latest_flow = flows.latest("datetime_created")
-                # HACK if a flow hasnt completed assume the next flow won't occur
-            if not latest_flow or latest_flow.in_progress:
+            latest_flow = not flows.latest("datetime_created").in_progress if flows else False
+            field_flows = SFObjectFieldsOperation.objects.filter(user=user)
+            latest_field_flow = (
+                not field_flows.latest("datetime_created").in_progress if field_flows else False
+            )
+
+            if not latest_flow and not latest_field_flow:
                 logger.info(
-                    f"skipping clear data for user {user.email} with id {user.id} because the latest flow was not successful"
+                    f"skipping clear data for user {user.email} with id {str(user.id)} because the latest field and resource flow were not successful"
                 )
                 continue
+
+            elif not latest_flow and latest_field_flow:
+
+                logger.info(
+                    f"skipping clear resource data (fields only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["sobjectfield", "sobjectvalidation", "sobjectpicklist",]
+                )
+            elif latest_flow and not latest_field_flow:
+                logger.info(
+                    f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["opportunity", "account", "contact", "lead",]
+                )
+            else:
+                resource_items.extend(
+                    [
+                        "sobjectfield",
+                        "sobjectvalidation",
+                        "sobjectpicklist",
+                        "opportunity",
+                        "account",
+                        "contact",
+                        "lead",
+                    ]
+                )
+
             for r in resource_items:
 
                 try:
