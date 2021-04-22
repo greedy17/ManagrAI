@@ -269,21 +269,21 @@ def send_daily_tasks():
                     )
                 except InvalidBlocksException as e:
                     logger.exception(
-                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
                     )
 
                 except InvalidBlocksFormatException as e:
                     logger.exception(
-                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
                     )
 
                 except UnHandeledBlocksException as e:
                     logger.exception(
-                        f"Failed to list tasks for user {user.name} email {user.email} {e}"
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
                     )
                 except InvalidAccessToken as e:
                     logger.exception(
-                        f"Failed to list tasks for user due to invalid access token {user.name} email {user.email} {e}"
+                        f"Failed to list tasks for user due to invalid access token {str(user.id)} email {user.email} {e}"
                     )
             else:
                 logger.info(
