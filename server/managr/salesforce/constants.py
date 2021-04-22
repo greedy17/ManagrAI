@@ -42,7 +42,7 @@ def SALSFORCE_RESOURCE_QUERY_URI(
         for f in additional_filters:
             url = f"{url} {f} "
     # TODO: [MGR-917] make ordering dynamic
-    return f"{url} order by LastActivityDate DESC limit {limit}"
+    return f"{url} order by LastModifiedDate DESC limit {limit}"
 
 
 def SALSFORCE_TASK_QUERY_URI(
