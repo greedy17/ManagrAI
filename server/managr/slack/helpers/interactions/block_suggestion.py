@@ -68,7 +68,7 @@ def process_get_local_resource_options(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource")
-    additional_opts = json.loads(context.get("add_opts", []))
+    additional_opts = json.loads(context.get("add_opts", json.dumps([])))
 
     # conver type to make sure it follows {label:str|num, values:str|num}
 
@@ -77,7 +77,7 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.accounts.filter(name__icontains=value)],
+                *[l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
             ],
         }
 
@@ -85,7 +85,7 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.owned_leads.filter(name__icontains=value)],
+                *[l.as_slack_option for l in user.owned_leads.filter(name__icontains=value)[:50]],
             ],
         }
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
@@ -94,7 +94,7 @@ def process_get_local_resource_options(payload, context):
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in user.owned_opportunities.filter(name__icontains=value)
+                    for l in user.owned_opportunities.filter(name__icontains=value)[:50]
                 ],
             ],
         }
@@ -105,7 +105,7 @@ def process_get_local_resource_options(payload, context):
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in user.organization.action_choices.filter(title__icontains=value)
+                    for l in user.organization.action_choices.filter(title__icontains=value)[:50]
                 ],
             ],
         }

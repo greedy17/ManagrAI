@@ -130,7 +130,7 @@ def process_zoom_meeting_data(payload, context):
 
     ts, channel = workflow.slack_interaction.split("|")
     block_set = [
-        get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
         get_block_set("create_meeting_task", {"w": str(workflow.id)}),
     ]
     try:

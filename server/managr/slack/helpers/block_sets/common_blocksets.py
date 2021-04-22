@@ -24,12 +24,14 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 @block_set()
 def loading_block_set(context):
     message = context.get("message", "Saving Data")
-    return block_builders.section_with_accessory_block(
-        f"*{message}*",
-        block_builders.simple_image_block(
-            "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif", "Loading..."
-        ),
-    )
+    return [
+        block_builders.section_with_accessory_block(
+            f"*{message}*",
+            block_builders.simple_image_block(
+                "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif", "Loading..."
+            ),
+        )
+    ]
 
 
 @block_set()

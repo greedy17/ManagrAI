@@ -32,7 +32,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "opp_inactive_block_set": slack_alerts.opp_inactive_block_set,
         "opp_closed_report_generated": slack_alerts.opp_closed_report_generated,
         "reminder_contact_block_set": slack_alerts.reminder_contact_block_set,
-        "meeting_review_score": slack_alerts.meeting_review_score,
         "show_lead_contacts": slack_alerts.lead_contacts_block_set,
         "show_lead_logs": slack_alerts.lead_activity_log_block_set,
         "show_meeting_score_description": slack_alerts.meeting_score_description_block_set,

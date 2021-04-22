@@ -463,6 +463,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
+    additional_opts = []
     if not context.get("resource") == "Lead":
         additional_opts = [
             {
@@ -470,8 +471,7 @@ def create_or_search_modal_block_set(context):
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
-    else:
-        additional_opts = []
+
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     return [
