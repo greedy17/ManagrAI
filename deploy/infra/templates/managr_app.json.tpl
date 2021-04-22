@@ -1,66 +1,5 @@
 [
   {
-    "name": "managr-app-proxy",
-    "image": "nginx",
-    "essential": true,
-    "dependsOn": [
-      {
-        "containerName": "managr-app",
-        "condition": "START"
-      },
-      {
-        "containerName": "nginx-config",
-        "condition": "COMPLETE"
-      }
-    ],
-    "portMappings": [
-      {
-        "containerPort": 80,
-        "hostPort": 80
-      }
-    ],
-    "mountPoints": [
-      {
-        "containerPath": "/etc/nginx",
-        "sourceVolume": "nginx-conf-vol"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "/ecs/managr-app",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "ecs"
-      }
-    }
-  },
-  {
-    "name": "nginx-config",
-    "image": "bash",
-    "essential": false,
-    "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
-    "environment": [
-      {
-        "name": "DATA",
-        "value": "${nginx_config}"
-      }
-    ],
-    "mountPoints": [
-      {
-        "containerPath": "/etc/nginx",
-        "sourceVolume": "nginx-conf-vol"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "/ecs/managr-app",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "ecs"
-      }
-    }
-  },
-  {
     "name": "managr-app",
     "image": "${app_image}",
     "cpu": ${fargate_cpu},
@@ -368,6 +307,67 @@
       {
         "name": "DB_NAME",
         "valueFrom": "${config_secret_arn}:dbName::"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  },
+  {
+    "name": "managr-app-proxy",
+    "image": "nginx",
+    "essential": true,
+    "dependsOn": [
+      {
+        "containerName": "managr-app",
+        "condition": "START"
+      },
+      {
+        "containerName": "nginx-config",
+        "condition": "COMPLETE"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "mountPoints": [
+      {
+        "containerPath": "/etc/nginx",
+        "sourceVolume": "nginx-conf-vol"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/managr-app",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  },
+  {
+    "name": "nginx-config",
+    "image": "bash",
+    "essential": false,
+    "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
+    "environment": [
+      {
+        "name": "DATA",
+        "value": "${nginx_config}"
+      }
+    ],
+    "mountPoints": [
+      {
+        "containerPath": "/etc/nginx",
+        "sourceVolume": "nginx-conf-vol"
       }
     ],
     "logConfiguration": {

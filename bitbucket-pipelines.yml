@@ -67,7 +67,7 @@ prDeployment: &prDeployment
         TAGS: pr-$BITBUCKET_PR_ID # Optional
         # DEBUG: "<boolean>" # Optional
 
-    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID" ./deploy/update-task.sh
+    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID" SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr-$BITBUCKET_PR_ID" ./deploy/update-task.sh
 
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
@@ -96,7 +96,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         TAGS: staging-$BITBUCKET_COMMIT # Optional
         # DEBUG: "<boolean>" # Optional
 
-    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT" SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:

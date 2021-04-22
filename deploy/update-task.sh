@@ -12,9 +12,14 @@ if [ "$AWS_DEFAULT_REGION" = "" ]; then
 fi
 
 if [ "$IMAGE_NAME" = "" ]; then
-    echo "Missing variable IMAGE_TAG" >&2
+    echo "Missing variable IMAGE_NAME" >&2
+    exit 1
+fi
+
+if [ "$SCHEDULED_TASKS_IMAGE_NAME" = "" ]; then
+    echo "Missing variable SCHEDULED_TASKS_IMAGE_NAME" >&2
     exit 1
 fi
 
 TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_FAMILY")
-echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities)' >task-definition.json
+echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | .containerDefinitions[1].image = $IMAGE | .containerDefinitions[2].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities)' >task-definition.json
