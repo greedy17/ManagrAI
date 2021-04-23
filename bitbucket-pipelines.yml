@@ -52,6 +52,8 @@ herokuStagingDeployment: &herokuStagingDeployment
 prDeployment: &prDeployment
   name: Deploy PR to AWS Fargate
   deployment: andrew
+  services:
+    - docker
   caches:
     - docker
   script:
@@ -84,6 +86,8 @@ fargateStagingDeployment: &fargateStagingDeployment
   name: Deploy Staging to AWS Fargate
   deployment: andrew
   deployment: andrew
+  services:
+    - docker
   caches:
     - docker
   script:
