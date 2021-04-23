@@ -51,7 +51,7 @@ herokuStagingDeployment: &herokuStagingDeployment
 
 prDeployment: &prDeployment
   name: Deploy PR to AWS Fargate
-  deployment: test
+  deployment: andrew
   script:
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
@@ -80,7 +80,7 @@ prDeployment: &prDeployment
 
 fargateStagingDeployment: &fargateStagingDeployment
   name: Deploy Staging to AWS Fargate
-  deployment: staging
+  deployment: andrew
   script:
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
