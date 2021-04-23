@@ -52,22 +52,24 @@ herokuStagingDeployment: &herokuStagingDeployment
 prDeployment: &prDeployment
   name: Deploy PR to AWS Fargate
   deployment: andrew
+  caches:
+    - docker
   script:
-    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
-    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr-$BITBUCKET_PR_ID .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:pr .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr .
 
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
-        TAGS: pr-$BITBUCKET_PR_ID # Optional
+        TAGS: pr # Optional
         # DEBUG: "<boolean>" # Optional
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
-        TAGS: pr-$BITBUCKET_PR_ID # Optional
+        TAGS: pr # Optional
         # DEBUG: "<boolean>" # Optional
 
-    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:pr-$BITBUCKET_PR_ID" SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr-$BITBUCKET_PR_ID" ./deploy/update-task.sh
+    - IMAGE_NAME="$MANAGR_SERVER_IMAGE_NAME:pr" SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:pr" ./deploy/update-task.sh
 
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
@@ -81,6 +83,9 @@ prDeployment: &prDeployment
 fargateStagingDeployment: &fargateStagingDeployment
   name: Deploy Staging to AWS Fargate
   deployment: andrew
+  deployment: andrew
+  caches:
+    - docker
   script:
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:staging-$BITBUCKET_COMMIT .
