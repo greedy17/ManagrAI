@@ -93,6 +93,7 @@
                   v-for="(val, key) in form.fieldsRef"
                   :item="val.referenceDisplayLabel"
                   :active="addedFieldIds.includes(val.id)"
+                  showIcon
                 />
               </template>
             </ListContainer>
