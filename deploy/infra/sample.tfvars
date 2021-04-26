@@ -1,18 +1,25 @@
 dd_api_key = ""
 environments = [
   {
+    name                      = "prod"
+    app_image                 = ""
+    app_image_scheduled_tasks = ""
+    lb_http_port              = 8000
+    lb_https_port             = 8443
+  },
+  {
     name                      = "staging"
-    app_image                 = "529218094138.dkr.ecr.us-east-2.amazonaws.com/thinknimble/managr/server:latest"
-    app_image_scheduled_tasks = "529218094138.dkr.ecr.us-east-2.amazonaws.com/thinknimble/managr/server:latest"
+    app_image                 = ""
+    app_image_scheduled_tasks = ""
     lb_http_port              = 8001
     lb_https_port             = 8444
   },
   {
-    name                      = "prod"
-    app_image                 = "529218094138.dkr.ecr.us-east-2.amazonaws.com/thinknimble/managr/server:latest"
-    app_image_scheduled_tasks = "529218094138.dkr.ecr.us-east-2.amazonaws.com/thinknimble/managr/server:latest"
-    lb_http_port              = 8000
-    lb_https_port             = 8443
+    name                      = "demo"
+    app_image                 = ""
+    app_image_scheduled_tasks = ""
+    lb_http_port              = 8002
+    lb_https_port             = 8445
   }
 ]
 debug        = true
