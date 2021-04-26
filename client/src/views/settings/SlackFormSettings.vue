@@ -41,27 +41,24 @@
           <div class="modal-container__box__content">
             <div class="box__content-select">
               <DropDownSearch
-                :items="stages"
+                :items.sync="stages"
                 v-model="selectedStage"
                 displayKey="label"
                 valueKey="value"
                 nullDisplay="Select a Stage"
                 searchable
+                local
               />
             </div>
           </div>
 
           <div class="modal-container__box__footer">
-            <div>
+            <div style="display:flex;align-items:center;flex-direction:column">
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
-                <br />
-                Click below to try fetching them manually
               </span>
-              <span class="user-message">
+              <span v-else class="user-message">
                 <small>Recently updated your stages?</small>
-                <br />
-                Click below to refresh them
               </span>
               <PulseLoadingSpinnerButton
                 @click="() => refreshFormStages()"

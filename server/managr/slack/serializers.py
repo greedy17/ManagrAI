@@ -54,6 +54,7 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "form_type",
             "resource",
             "stage",
+            "stage_order",
             "fields",
             "fields_ref",
         )

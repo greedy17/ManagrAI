@@ -208,9 +208,11 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                 logger.info(
                     f"skipping clear resource data (fields only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
                 )
-                resource_items.extend(
-                    ["sobjectfield", "sobjectvalidation", "sobjectpicklist",]
-                )
+                resource_items = [
+                    "sobjectfield",
+                    "sobjectvalidation",
+                    "sobjectpicklist",
+                ]
             elif latest_flow and not latest_field_flow:
                 logger.info(
                     f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"

@@ -75,6 +75,24 @@
             :disabled="!$store.state.user.isAdmin"
           />
         </div>
+        <div>
+          Fields From Previous Stages will be automatically Added to your Form as well
+          <template v-if="customForm.stage">
+            <ListContainer horizontal>
+              <template v-slot:list>
+                <ListItem
+                  @item-selected="true"
+                  :key="key"
+                  v-for="(val, key) in stage"
+                  :item="val.title"
+                />
+              </template>
+            </ListContainer>
+          </template>
+          <template v-else>
+            <PulseLoadingSpinner :loading="loadingMeetingTypes" />
+          </template>
+        </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div
@@ -182,7 +200,8 @@ import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
-import { SObjectField, SObjectValidations } from '@/services/salesforce'
+import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
+
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -230,6 +249,7 @@ export default {
       savingForm: false,
       addedFields: [],
       removedFields: [],
+      stages: [],
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
@@ -295,6 +315,15 @@ export default {
     this.getActionChoices()
   },
   methods: {
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
@@ -523,9 +552,7 @@ export default {
 
   &__form {
     // flex: 10;
-
     width: 80%;
-    position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
     border-radius: 5px;
@@ -672,7 +699,7 @@ export default {
   width: 15rem;
 
   &__list {
-    margin: 0.5rem;
+    margin: 0.5rem 0;
     width: 80%;
     overflow: hidden;
   }

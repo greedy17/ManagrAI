@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
 from managr.salesforce.models import SObjectField
@@ -148,6 +148,13 @@ class OrgCustomSlackForm(TimeStampModel):
         null=True,
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
+    )
+    stage_order = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Stage Forms will be ordered based on the order defined here",
     )
     fields = models.ManyToManyField("salesforce.SObjectField", through="FormField")
 
