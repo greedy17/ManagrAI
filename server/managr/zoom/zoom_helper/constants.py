@@ -18,6 +18,7 @@ if settings.USE_ZOOM:
     AUTHORIZATION_URI = "https://zoom.us/oauth/authorize"
     AUTHENTICATION_URI = "https://zoom.us/oauth/token"
     ZOOM_API_ENDPOINT = "https://api.zoom.us/v2"
+    ZOOM_COMPLIANCE_API = "https://zoom.us/oauth/data/compliance"
     ZOOM_WEBHOOK_TOKEN = settings.ZOOM_WEBHOOK_TOKEN
     uri = get_site_url()
     # must be same as on zoom app
