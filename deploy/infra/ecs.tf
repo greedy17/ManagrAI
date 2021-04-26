@@ -44,6 +44,7 @@ data "template_file" "managr_app" {
   vars = {
     nginx_config = base64encode(data.template_file.nginx_config[each.key].rendered)
 
+    environment               = each.value["name"]
     app_image                 = each.value["app_image"]
     app_image_scheduled_tasks = each.value["app_image_scheduled_tasks"]
     fargate_cpu               = var.fargate_cpu

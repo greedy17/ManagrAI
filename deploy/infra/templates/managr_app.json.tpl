@@ -407,7 +407,7 @@
       },
       {
         "name": "DD_TAGS",
-        "value": "env:fargate"
+        "value": "env:fargate:${environment}"
       },
       {
         "name": "DD_APM_ENABLED",
