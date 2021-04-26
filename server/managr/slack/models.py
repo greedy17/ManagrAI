@@ -149,14 +149,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
-    stage_order = ArrayField(
-        models.CharField(max_length=255),
-        default=list,
-        blank=True,
-        null=True,
-        help_text="Stage Forms will be ordered based on the order defined here",
-    )
-    fields = models.ManyToManyField("salesforce.SObjectField", through="FormField")
+    fields = models.ManyToManyField("salesforce.SObjectField", through="slack.FormField")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 

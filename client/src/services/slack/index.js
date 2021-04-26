@@ -16,7 +16,6 @@ export class CustomSlackForm extends Model {
   static stage = new fields.CharField({})
   static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
   static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
-  static stage_order = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
 
   static fromAPI(obj) {
     // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG

@@ -75,23 +75,28 @@
             :disabled="!$store.state.user.isAdmin"
           />
         </div>
-        <div>
-          Fields From Previous Stages will be automatically Added to your Form as well
-          <template v-if="customForm.stage">
+        <div class="slack-form-builder__form-meta" v-if="customForm.stage">
+          <h5>Previous stage specific forms</h5>
+          <small v-if="!orderedStageForm.length">
+            This is your first stage specific form
+          </small>
+
+          <div :key="key" v-for="(form, key) in orderedStageForm">
+            <i style="text-transform:uppercase;"
+              >Fields from <strong>{{ form.stage }}</strong> stage</i
+            >
             <ListContainer horizontal>
               <template v-slot:list>
                 <ListItem
-                  @item-selected="true"
+                  @item-selected="onAddField(val)"
                   :key="key"
-                  v-for="(val, key) in stage"
-                  :item="val.title"
+                  v-for="(val, key) in form.fieldsRef"
+                  :item="val.referenceDisplayLabel"
+                  :active="addedFieldIds.includes(val.id)"
                 />
               </template>
             </ListContainer>
-          </template>
-          <template v-else>
-            <PulseLoadingSpinner :loading="loadingMeetingTypes" />
-          </template>
+          </div>
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -173,6 +178,8 @@
                     :key="key"
                     v-for="(val, key) in actionChoices"
                     :item="val.title"
+                    :active="true"
+                    showIcon
                   />
                 </template>
               </ListContainer>
@@ -216,6 +223,10 @@ export default {
     ListContainer,
   },
   props: {
+    stageForms: {
+      type: Array,
+      default: () => [],
+    },
     customForm: {
       type: Object,
     },
@@ -249,7 +260,6 @@ export default {
       savingForm: false,
       addedFields: [],
       removedFields: [],
-      stages: [],
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
@@ -296,6 +306,16 @@ export default {
     },
   },
   computed: {
+    orderedStageForm() {
+      let forms = []
+      if (this.customForm.stage) {
+        let index = this.stageForms.findIndex(f => f.stage == this.customForm.stage)
+        if (~index) {
+          forms = this.stageForms.slice(0, index)
+        }
+      }
+      return forms
+    },
     sfFieldsAvailableToAdd() {
       return this.fields
     },
@@ -315,15 +335,6 @@ export default {
     this.getActionChoices()
   },
   methods: {
-    async listPicklists(query_params = {}) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.stages = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api

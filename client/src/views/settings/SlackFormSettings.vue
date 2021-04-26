@@ -14,7 +14,7 @@
           your Salesforce Resources
         </div>
         <div class="required__content__container">
-          <div v-for="validation in validations.list" :key="validation.id">
+          <div v-for="(validation, k) in validations.list" :key="k">
             <div class="required__title">{{ validation.description }}</div>
             <div class="required__content">{{ validation.message }}</div>
           </div>
@@ -153,7 +153,7 @@
                   <div class="stage__dropdown__header">Your Stage Gate Forms</div>
                   <div
                     v-for="(form, i) in formStages"
-                    :key="form"
+                    :key="i"
                     class="stage__dropdown__stages__container"
                     :class="{
                       'stage__dropdown__stages__container--selected':
@@ -192,6 +192,7 @@
                 :resource="resource"
                 v-on:update:selectedForm="updateForm($event)"
                 :loading="formFields.refreshing"
+                :stageForms="formStages"
               />
             </template>
           </div>
@@ -256,6 +257,10 @@ export default {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
     } catch (error) {
       console.log(error)
     }
@@ -286,11 +291,20 @@ export default {
       return []
     },
     formStages() {
-      // users can only create one form for the stage
+      // users can only create one form for the stage orderd by stage
+      let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING)
+        this.stages.forEach(s => {
+          this.allFormsByType
+            .filter(f => f.formType == this.STAGE_GATING)
+            .forEach(sf => {
+              if (sf.stage == s.value) {
+                forms.push(sf)
+              }
+            })
+        })
       }
-      return []
+      return forms
     },
   },
   methods: {
@@ -433,16 +447,19 @@ export default {
           timeout: 5000,
         })
       }
-      this.newForms = [
-        ...this.newForms,
-        SlackOAuth.customSlackForm.create({
-          resource: this.OPPORTUNITY,
-          formType: this.STAGE_GATING,
-          stage: stage,
-          fields: [],
-          fieldsRef: [],
-        }),
-      ]
+      this.formStages.forEach(f => {
+        console.log(f)
+      })
+      let newForm = SlackOAuth.customSlackForm.create({
+        resource: this.OPPORTUNITY,
+        formType: this.STAGE_GATING,
+        stage: stage,
+      })
+      newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
+        acc = [...acc, ...curr.fieldsRef]
+        return acc
+      }, [])
+      this.newForms = [...this.newForms, newForm]
     },
     async toggleSelectedFormResource(resource) {
       this.isVisible = !this.isVisible
