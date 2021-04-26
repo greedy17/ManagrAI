@@ -1,0 +1,47 @@
+<br />
+<h3>Usage Statistics for the week of {{start_date}} - {{end_date}}</h3>
+<br />
+
+<table>
+  <tbody>
+    <tr>
+      <th>Week Start Date</th>
+      <th># of meetings logged (Per Rep)</th>
+      <th># SFDC Fields (Per Rep)</th>
+      <th># SFDC Fields (Total)</th>
+    </tr>
+    <tr>
+      <td>{{start_date}}</td>
+      <td>{{ meetings_per_rep }}</td>
+      <td>{{ fields_per_rep }}</td>
+      <td>{{ fields.total }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<br />
+
+<table>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Increase</th>
+      <th>Total</th>
+    </tr>
+    <tr>
+      <th>Users:</th>
+      <td>{{users.past_week}}</td>
+      <td>{{users.total}}</td>
+    </tr>
+    <tr>
+      <th>Meetings:</th>
+      <td>{{meetings.past_week}}</td>
+      <td>{{meetings.total}}</td>
+    </tr>
+    <tr>
+      <th>Fields:</th>
+      <td>{{fields.past_week}}</td>
+      <td>{{fields.total}}</td>
+    </tr>
+  </tbody>
+</table>
