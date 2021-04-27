@@ -17,6 +17,12 @@ class AccountSubscriptionLevel(Exception):
         super().__init__(self.message)
 
 
+class InvalidRequest(Exception):
+    def __init(self, message="Invalid Request Sent"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Zoom500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -45,6 +51,8 @@ class ZoomAPIException:
             raise TokenExpired()
         elif self.status_code == 400 and self.code == 200:
             raise AccountSubscriptionLevel(self.message)
+        elif self.status_code == 400 and not self.code:
+            raise InvalidRequest(f"The request was invalid {self.param}")
         else:
             raise ValidationError(
                 {"detail": {"key": self.code, "message": self.message, "field": self.param,}}

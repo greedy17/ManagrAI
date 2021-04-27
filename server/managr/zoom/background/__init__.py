@@ -17,6 +17,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact, Account
@@ -30,6 +31,7 @@ from managr.api import constants as api_consts
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview, ZoomMeetingReview
+from ..zoom_helper.models import ZoomAcct
 from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
@@ -129,7 +131,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 )
 
         #
-        logger.info(f"    Got Meeting: {meeting} with ID: {meeting_uuid}")
+        logger.info(
+            f"    Got Meeting: {meeting} with ID: {meeting_uuid} for user {user.email} with user_id {str(user.id)}"
+        )
         logger.info(f"    Meeting Start: {meeting.start_time}")
         logger.info(f"    Meeting End: {meeting.end_time}")
 
@@ -334,15 +338,19 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 )
             except InvalidBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
                 )
             except InvalidBlocksFormatException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
                 )
             except UnHandeledBlocksException as e:
                 return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                    f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except InvalidAccessToken as e:
+                return logger.exception(
+                    f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
                 )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
@@ -431,16 +439,28 @@ def _send_meeting_summary(workflow_id):
                     )
         except InvalidBlocksException as e:
             return logger.exception(
-                f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
             )
         except InvalidBlocksFormatException as e:
             return logger.exception(
-                f"Failed To Generate  Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
             )
         except UnHandeledBlocksException as e:
             return logger.exception(
-                f"Failed To Generate Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
             )
 
         return
     return
+
+
+@background(schedule=0)
+def _process_confirm_compliance(obj):
+    """ Sends Compliance verification on app deauth to zoom """
+    ZoomAcct.compliance_api(json.loads(obj))
+    return
+

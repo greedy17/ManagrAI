@@ -353,7 +353,7 @@ def initial_meeting_interaction_block_set(context):
     # action button blocks
     action_blocks = [
         block_builders.simple_button_block(
-            "Attach/Change",
+            "Find/Change",
             str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             style="primary",
@@ -372,7 +372,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks = [
             block_builders.simple_button_block(
-                "Review",
+                "Update",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
@@ -578,7 +578,6 @@ def final_meeting_interaction_block_set(context):
 @block_set(required_context=["w"])
 def meeting_summary_blockset(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-
     meeting = workflow.meeting
     review = meeting.zoom_meeting_review
     summary = meeting.zoom_meeting_review.meeting_review_summary
@@ -596,52 +595,21 @@ def meeting_summary_blockset(context):
             f"Review for {workflow.user.first_name} {workflow.user.last_name}'s meeting with *Meeting Topic {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
             "mrkdwn",
         ),
-        block_builders.simple_section(f"*Meeting Type:*  {review.meeting_type}", "mrkdwn",),
-        block_builders.simple_section(f"*Meeting Date:*  {formatted_start}", "mrkdwn",),
     ]
-
+    meeting_type = review.meeting_type
+    meeting_start = formatted_start
     stage_component = list(filter(lambda comp: comp.type == "stage", summary))
     forecast_component = list(filter(lambda comp: comp.type == "forecast", summary))
     close_date_component = list(filter(lambda comp: comp.type == "close_date", summary))
     duration_component = list(filter(lambda comp: comp.type == "duration", summary))
     attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
     amount_component = list(filter(lambda comp: comp.type == "amount", summary))
-
-    blocks.append(
-        block_builders.simple_section(
-            f"*Stage Update:* {stage_component[0].rendered_message}", "mrkdwn",
-        )
-    )
-    blocks.append(
-        block_builders.simple_section(
-            f"*Forecast:* {forecast_component[0].rendered_message}", "mrkdwn",
-        )
-    )
-    # amount blockset
-    blocks.append(
-        block_builders.simple_section(
-            f"*Amount:* {amount_component[0].rendered_message}", "mrkdwn",
-        )
-    )
-
-    blocks.append(
-        block_builders.simple_section(
-            f"*Close Date:* {close_date_component[0].rendered_message}", "mrkdwn",
-        )
-    )
-
+    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_component[0].rendered_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_component[0].rendered_message}\n*Close Date:* {close_date_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}\n"
     if review.next_step not in ["", None]:
-        blocks.append(block_builders.simple_section(f"*Next Step:* {review.next_step}", "mrkdwn"))
+        review_str = f"{review_str}*Next Step:* {review.next_step}\n"
 
-    blocks.append(
-        block_builders.simple_section(
-            f"*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message} ",
-            "mrkdwn",
-        )
-    )
-    blocks.append(
-        block_builders.simple_section(f"*Meeting Comments:* {review.meeting_comments}", "mrkdwn",)
-    )
+    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n"
+    blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
 

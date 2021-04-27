@@ -135,10 +135,15 @@ class SalesforceAuthAccountAdapter:
         self.salesforce_account = kwargs.get("salesforce_account", None)
         self.login_link = kwargs.get("login_link", None)
         self.user = kwargs.get("user", None)
-        self.sobjects = kwargs.get("sobjects", None)
+        self.sobjects = kwargs.get(
+            "sobjects", None
+        )  # NB: Currently Made obsolete will use this in future pb 04/19/21
         self.object_fields = kwargs.get("object_fields", {})
-        self.default_record_id = kwargs.get("default_record_id", {})
+        self.default_record_id = kwargs.get(
+            "default_record_id", {}
+        )  # TODO: Obsolete ready for delete pb 04/19/21 - default_record_id
         self.default_record_ids = kwargs.get("default_record_ids", {})
+        self.exclude_fields = kwargs.get("exclude_fields", {})
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -202,7 +207,7 @@ class SalesforceAuthAccountAdapter:
         return formatted_data
 
     def format_field_options(
-        self, sf_account_id, user_id, res_data=[],
+        self, sf_account_id, user_id, resource, res_data=[],
     ):
         fields = res_data["fields"]
         ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
@@ -211,6 +216,11 @@ class SalesforceAuthAccountAdapter:
         if "OpportunityScoreId" in fields.keys():
             del fields["OpportunityScoreId"]
 
+        for exclude in self.exclude_fields.get(resource, []):
+            # remove any exclude fields we have already caught in previous requests
+            # in addition to the static ones above
+            if exclude in fields.keys():
+                del fields[exclude]
         custom_additions = dict(
             salesforce_account=sf_account_id,
             salesforce_object=res_data["apiName"],
@@ -300,7 +310,9 @@ class SalesforceAuthAccountAdapter:
         res = self._handle_response(res)
 
         return {
-            "fields": self.format_field_options(str(self.id), str(self.user), res),
+            "fields": self.format_field_options(
+                str(self.id), str(self.user), resource, res_data=res
+            ),
             "record_type_id": res["defaultRecordTypeId"],  # required for the picklist options
         }
 
@@ -316,7 +328,7 @@ class SalesforceAuthAccountAdapter:
 
     def get_stage_picklist_values(self, resource):
         """ Sync method to help users whose stages are not populated """
-        record_type_id = self.default_record_id[resource]
+        record_type_id = self.default_record_ids[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/StageName"
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
@@ -336,8 +348,27 @@ class SalesforceAuthAccountAdapter:
     def get_individual_picklist_values(self, resource, field_name=None):
         """ Sync method to get picklist values for resources not saved in our db """
 
-        record_type_id = self.default_record_id[resource]
+        record_type_id = self.default_record_ids.get("resource", None)
+        if not record_type_id:
+            # a record type id is required so we may get picklist values these are saved on the sf auth object
+            # some orgs will have custom record id's if this is the case we can retrieve using this method lines 353-356
+            # if the user profile does not have access and all records have the same default id then we can use that
+            # TODO: Take this one level up and save the record id so we only have to do this once
+
+            url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
+
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+
+            res = self._handle_response(res)
+
+            if res.get("totalSize", 0) > 0:
+                record_type_id = res.get("Id")
+            else:
+                record_type_id = self.default_record_ids.get("Opportunity",)
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
+
         url = f"{url}/{field_name}" if field_name else url
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
@@ -587,7 +618,7 @@ class ContactAdapter:
     @staticmethod
     def additional_filters():
         """ pass custom additional filters to the url """
-        return ["AND IsDeleted = false"]
+        return ["AND IsDeleted = false", "AND AccountId != null"]
 
     @staticmethod
     def reverse_integration_mapping():

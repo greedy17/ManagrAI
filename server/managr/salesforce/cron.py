@@ -2,6 +2,7 @@ import logging
 import kronos
 from datetime import datetime
 import logging
+import math
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -16,7 +17,11 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.background import emit_gen_next_sync, emit_gen_next_object_field_sync
+from managr.salesforce.background import (
+    emit_gen_next_sync,
+    emit_gen_next_object_field_sync,
+    _process_stale_data_for_delete,
+)
 from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, SalesforceAuthAccount
 from managr.core.models import User
 
@@ -27,11 +32,12 @@ from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import UserSlackIntegration
-
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
+    InvalidAccessToken,
 )
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
@@ -39,6 +45,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     SFQueryOffsetError,
     SFNotFoundError,
+    InvalidRefreshToken,
 )
 
 logger = logging.getLogger("managr")
@@ -129,7 +136,7 @@ def queue_users_sf_fields(force_all=False):
     return
 
 
-@kronos.register("*/60  * * * *")
+@kronos.register("*/60 * * * *")
 def report_sf_data_sync(sf_account=None):
     """ runs every 60 mins and initiates user sf syncs if their prev workflow is done """
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
@@ -158,6 +165,110 @@ def report_sf_data_sync(sf_account=None):
     return
 
 
+@kronos.register("0 */24 * * *")
+def queue_stale_sf_data_for_delete(cutoff=1440):
+    """ 
+        This should queue stale data for delete, it should only do this for users who are active and who have an sf account 
+        In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
+        or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
+    """
+    resource_items = []
+    limit = 0
+    pages = 1
+    # get users who are active and have a salesforce_account
+    qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
+    # count them to paginate the response
+    user_count = qs.count()
+    # set limit of 100 or less
+    limit = max(100, user_count)
+    # divide into pages
+    pages = math.ceil(user_count / limit)
+    # cutoff of 1 day
+    cutoff = timezone.now() - timezone.timedelta(minutes=cutoff)
+
+    for i in range(0, pages):
+        users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
+        for user in users:
+            # only run this for users with a successful latest flow
+            flows = SFResourceSync.objects.filter(user=user)
+            latest_flow = not flows.latest("datetime_created").in_progress if flows else False
+            field_flows = SFObjectFieldsOperation.objects.filter(user=user)
+            latest_field_flow = (
+                not field_flows.latest("datetime_created").in_progress if field_flows else False
+            )
+
+            if not latest_flow and not latest_field_flow:
+                logger.info(
+                    f"skipping clear data for user {user.email} with id {str(user.id)} because the latest field and resource flow were not successful"
+                )
+                continue
+
+            elif not latest_flow and latest_field_flow:
+
+                logger.info(
+                    f"skipping clear resource data (fields only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["sobjectfield", "sobjectvalidation", "sobjectpicklist",]
+                )
+            elif latest_flow and not latest_field_flow:
+                logger.info(
+                    f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
+                )
+                resource_items.extend(
+                    ["opportunity", "account", "contact", "lead",]
+                )
+            else:
+                resource_items.extend(
+                    [
+                        "sobjectfield",
+                        "sobjectvalidation",
+                        "sobjectpicklist",
+                        "opportunity",
+                        "account",
+                        "contact",
+                        "lead",
+                    ]
+                )
+
+            for r in resource_items:
+
+                try:
+                    qs = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
+                    resource_count = qs.count()
+
+                    if resource_count and resource_count <= 500:
+                        # emit current batch to delete queue and start new
+                        # TODO - Eventually remove the .now to make async
+                        _process_stale_data_for_delete.now(
+                            [
+                                {
+                                    "user_id": str(user.id),
+                                    "resource": {r: qs.values_list("id", flat=True)},
+                                }
+                            ],
+                        )
+                    elif resource_count and resource_count > 500:
+                        # create make into batches of 500 and send
+                        resource_pages = 1
+                        resource_pages = math.ceil(resource_count / 500)
+                        for i in range(0, resource_pages):
+                            items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
+                            # TODO - Eventually remove the .now to make async
+                            _process_stale_data_for_delete.now(
+                                [
+                                    {
+                                        "user_id": str(user.id),
+                                        "resource": {r: items.values_list("id", flat=True)},
+                                    }
+                                ],
+                            )
+
+                except AttributeError as e:
+                    logger.info(f"{user.email} does not have {r} to delete {e}")
+                    continue
+
+
 def to_date_string(date):
     if not date:
         return "n/a"
@@ -172,89 +283,123 @@ def send_daily_tasks():
     """
     accounts = SalesforceAuthAccount.objects.filter(user__is_active=True).select_related("user")
     for account in accounts:
-        user = account.user
-        # Pulls tasks from Salesforce
-        attempts = 0
-        while True:
-            ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
-            sf = user.salesforce_account
-            try:
-                tasks = sf.adapter_class.list_tasks()
-                break
-
-            except TokenExpired:
-                if attempts >= 5:
-                    return logger.exception(f"Failed to gather tasks after 5 tries")
-                else:
-                    sf.regenerate_token()
-                    attempts += 1
         try:
-            blocks = []
-            channel = user.slack_integration.channel
-            access_token = user.organization.slack_integration.access_token
+            # all fail catcher to continue for other users
+            user = account.user
+            # track if this has an error here since we do not want to return on failuer but pass to the next user
+            # note continue and pass here will keep retrying the same while loop
+            has_error = False
+            attempts = 1
+            while True:
+                ## TODO this is repetitive we need to get the new sf info after update maybe move this to the bottom within the except
+                sf = user.salesforce_account
+                try:
+                    tasks = sf.adapter_class.list_tasks()
+                    break
 
-            if not len(tasks):
-                message = "Congratulations. You have no future tasks at this time."
+                except TokenExpired:
+                    if attempts >= 5:
+                        logger.exception(f"Failed to gather tasks after 5 tries")
+                        has_error = True
+                        break
+                    else:
+                        try:
+                            sf.regenerate_token()
+                        except InvalidRefreshToken:
+                            logger.exception(
+                                f"Failed to refresh token due to an invalid refresh token"
+                            )
+                            has_error = True
+                            break
 
-                return Response(data={"response_type": "ephemeral", "text": message,})
-            blocks.extend(
-                [
-                    block_builders.header_block("View Tasks"),
-                    block_builders.simple_section(
-                        f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
-                    ),
-                    block_builders.divider_block(),
-                ]
-            )
-            for t in tasks:
-                resource = "_salesforce object n/a_"
-                # get the resource if it is what_id is for account/opp
-                # get the resource if it is who_id is for lead
-                if t.what_id:
-                    # first check for opp
-                    obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-                    if not obj:
-                        obj = user.imported_account.filter(integration_id=t.what_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
+                        attempts += 1
+            if has_error:
+                continue
+            if hasattr(user, "slack_integration"):
+                try:
+                    blocks = []
+                    channel = user.slack_integration.channel
+                    access_token = user.organization.slack_integration.access_token
 
-                elif t.who_id:
-                    obj = user.imported_lead.filter(integration_id=t.who_id).first()
-                    if obj:
-                        resource = f"*{obj.name}*"
+                    if not len(tasks):
+                        message = "Congratulations. You have no future tasks at this time."
+                        # this wont work need to update to send request
+                        Response(
+                            data={"response_type": "ephemeral", "text": message,}
+                        )
+                    blocks.extend(
+                        [
+                            block_builders.header_block("View Tasks"),
+                            block_builders.simple_section(
+                                f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"
+                            ),
+                            block_builders.divider_block(),
+                        ]
+                    )
+                    for t in tasks:
+                        resource = "_salesforce object n/a_"
+                        # get the resource if it is what_id is for account/opp
+                        # get the resource if it is who_id is for lead
+                        if t.what_id:
+                            # first check for opp
+                            obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                            if not obj:
+                                obj = user.imported_account.filter(integration_id=t.what_id).first()
+                            if obj:
+                                resource = f"*{obj.name}*"
 
-                blocks.extend(
-                    [
-                        block_builders.simple_section(
-                            f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
-                            "mrkdwn",
-                        ),
-                        block_builders.divider_block(),
-                        block_builders.section_with_button_block(
-                            "View Task",
-                            "view_task",
-                            "_*View task in salesforce*_",
-                            url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
-                        ),
-                    ]
+                        elif t.who_id:
+                            obj = user.imported_lead.filter(integration_id=t.who_id).first()
+                            if obj:
+                                resource = f"*{obj.name}*"
+
+                        blocks.extend(
+                            [
+                                block_builders.simple_section(
+                                    f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                                    "mrkdwn",
+                                ),
+                                block_builders.divider_block(),
+                                block_builders.section_with_button_block(
+                                    "View Task",
+                                    "view_task",
+                                    "_*View task in salesforce*_",
+                                    url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                                ),
+                            ]
+                        )
+
+                    slack_requests.send_ephemeral_message(
+                        channel,
+                        access_token,
+                        user.slack_integration.slack_id,
+                        text="Tasks",
+                        block_set=blocks,
+                    )
+                except InvalidBlocksException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
+                    )
+
+                except InvalidBlocksFormatException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
+                    )
+
+                except UnHandeledBlocksException as e:
+                    logger.exception(
+                        f"Failed to list tasks for user {str(user.id)} email {user.email} {e}"
+                    )
+                except InvalidAccessToken as e:
+                    logger.exception(
+                        f"Failed to list tasks for user due to invalid access token {str(user.id)} email {user.email} {e}"
+                    )
+            else:
+                logger.info(
+                    f"did not send user {user.email} a slack with tasks as they do not have slack integrated"
                 )
-
-            slack_requests.send_ephemeral_message(
-                channel,
-                access_token,
-                user.slack_integration.slack_id,
-                text="Tasks",
-                block_set=blocks,
-            )
-        except InvalidBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except InvalidBlocksFormatException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
-        except UnHandeledBlocksException as e:
-            logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
-
+        except Exception as e:
+            logger.exception(f"failed to fetch tasks for user {user.email} for reason {str(e)}")
     return
 
 
@@ -317,7 +462,7 @@ def get_report_data(account):
     )
     todays_flows = (
         workflows.annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date())
+        .filter(creation_date=datetime.now().date())
         .order_by("-creation_date")
     ).count()
     todays_failed_flows = (
@@ -330,7 +475,7 @@ def get_report_data(account):
             )
         )
         .annotate(creation_date=Cast("datetime_created", DateField()))
-        .filter(creation_date=datetime.datetime.now().date(), progress_l__lt=0)
+        .filter(creation_date=datetime.now().date(), progress_l__lt=0)
         .values_list("creation_date", flat=True)
         .order_by("-creation_date")
     ).count()

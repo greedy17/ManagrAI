@@ -137,7 +137,7 @@ class ZoomAuthAccount(TimeStampModel):
                 self.helper_class.revoke()
             else:
                 self.helper_class.revoke()
-        except Exception as e:            
+        except Exception as e:
             pass
 
         return super(ZoomAuthAccount, self).delete(*args, **kwargs)
@@ -294,6 +294,7 @@ class ZoomMeeting(TimeStampModel):
                     UnHandeledBlocksException,
                     InvalidBlocksFormatException,
                     InvalidBlocksException,
+                    InvalidAccessToken,
                 )
 
                 slack_access_token = self.workflow.user.organization.slack_integration.access_token
@@ -311,15 +312,19 @@ class ZoomMeeting(TimeStampModel):
                     )
                 except InvalidBlocksException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
                 except InvalidBlocksFormatException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
                 except UnHandeledBlocksException as e:
                     return logger.exception(
-                        f"Failed To Generate Slack Workflow Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
+                    )
+                except InvalidAccessToken as e:
+                    return logger.exception(
+                        f"Failed To Generate Slack Workflow Interaction for user with workflow {str(self.workflow.id)} email {self.workflow.user.email} {e}"
                     )
 
                 self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
@@ -523,12 +528,16 @@ class ZoomMeetingReview(MeetingReview):
 
             if diff >= 15:
                 return "planned_over_15"
-            elif 5 < diff < 15:
+            elif 5 <= diff < 15:
                 return "planned_over_5"
-            elif -15 < diff <= 5:
+            elif 2 <= diff < 5:
                 return "planned_over_2"
-            elif diff < -15:
+            elif 0 <= diff < 1:
+                return "planned_on_time"
+            elif diff > -15:
                 return "planned_under_15"
+            elif diff < -15:
+                return "planned_under_15_plus"
 
         # The above logic should capture all possiblities
         return "unknown"
