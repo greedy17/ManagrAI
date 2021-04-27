@@ -447,16 +447,14 @@ export default {
           timeout: 5000,
         })
       }
-      this.formStages.forEach(f => {
-        console.log(f)
-      })
       let newForm = SlackOAuth.customSlackForm.create({
         resource: this.OPPORTUNITY,
         formType: this.STAGE_GATING,
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        acc = [...acc, ...curr.fieldsRef]
+        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        acc = [...acc, ...fields]
         return acc
       }, [])
       this.newForms = [...this.newForms, newForm]
