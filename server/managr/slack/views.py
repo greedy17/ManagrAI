@@ -496,20 +496,20 @@ def create_task(request):
         slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
         )
 
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {user.name} email {user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {self.user.email} {e}"
         )
     return Response()
 
@@ -592,7 +592,7 @@ def list_tasks(request):
 
         return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
     except InvalidBlocksException as e:
-        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
         return Response(
             data={
                 "response_type": "ephemeral",
@@ -601,7 +601,7 @@ def list_tasks(request):
             }
         )
     except InvalidBlocksFormatException as e:
-        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
         return Response(
             data={
                 "response_type": "ephemeral",
@@ -610,7 +610,7 @@ def list_tasks(request):
             }
         )
     except UnHandeledBlocksException as e:
-        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
         return Response(
             data={
                 "response_type": "ephemeral",
@@ -619,7 +619,7 @@ def list_tasks(request):
             }
         )
     except InvalidAccessToken as e:
-        logger.exception(f"Failed to list tasks for user {user.name} email {user.email} {e}")
+        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
         return Response(
             data={
                 "response_type": "ephemeral",

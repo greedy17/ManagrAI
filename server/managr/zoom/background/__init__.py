@@ -31,6 +31,7 @@ from managr.api import constants as api_consts
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview, ZoomMeetingReview
+from ..zoom_helper.models import ZoomAcct
 from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
@@ -130,7 +131,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 )
 
         #
-        logger.info(f"    Got Meeting: {meeting} with ID: {meeting_uuid}")
+        logger.info(
+            f"    Got Meeting: {meeting} with ID: {meeting_uuid} for user {user.email} with user_id {str(user.id)}"
+        )
         logger.info(f"    Meeting Start: {meeting.start_time}")
         logger.info(f"    Meeting End: {meeting.end_time}")
 
@@ -453,3 +456,11 @@ def _send_meeting_summary(workflow_id):
 
         return
     return
+
+
+@background(schedule=0)
+def _process_confirm_compliance(obj):
+    """ Sends Compliance verification on app deauth to zoom """
+    ZoomAcct.compliance_api(json.loads(obj))
+    return
+

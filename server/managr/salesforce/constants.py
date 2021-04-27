@@ -1,5 +1,7 @@
-from django.conf import settings
+import re
 from urllib.parse import urlencode
+
+from django.conf import settings
 
 
 SF_API_VERSION = settings.SALESFORCE_API_VERSION if settings.USE_SALESFORCE else None
@@ -21,6 +23,15 @@ SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
 
+REMOVE_OWNER_ID = {
+    # we automatically add owner id as a filter to be most restrictive and not have cross account issues
+    # some fields do not support owner id as a filter therefore we need to remove them
+    # since we also do not have all the fields we can potentially query for (depends on users/orgs) we cannot apply the owner id
+    # as we do with additional filters instead we remove it from the query for objects documented here for now
+    "User",
+    "RecordType",
+}
+
 
 # SF CUSTOM URI QUERIES
 def SALSFORCE_RESOURCE_QUERY_URI(
@@ -37,10 +48,21 @@ def SALSFORCE_RESOURCE_QUERY_URI(
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
             url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
-    url = f"{url} FROM {resource} WHERE OwnerId = '{owner_id}'"
-    if len(additional_filters):
-        for f in additional_filters:
-            url = f"{url} {f} "
+    url = f"{url} FROM {resource}"
+    if resource not in REMOVE_OWNER_ID:
+        additional_filters.insert(0, f"OwnerId = '{owner_id}'")
+    for i, f in enumerate(additional_filters):
+        if i == 0:
+            # check to see if additional query is AND/OR and remove from the start
+            #  it since it is the first option
+            # note it must remove from the start only so it does not remove from LIKE searches
+            # all additional queries should be added to the classes if available with AND/OR
+            # or on the fly with AND/OR
+
+            f = re.sub(r"^(AND|OR)", "", f)
+            f = f"WHERE {f}"
+
+        url = f"{url} {f} "
     # TODO: [MGR-917] make ordering dynamic
     return f"{url} order by LastModifiedDate DESC limit {limit}"
 

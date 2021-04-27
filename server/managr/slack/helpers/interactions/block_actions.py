@@ -226,41 +226,26 @@ def process_stage_selected(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-        # blockfinder returns a tuple of its index in the block and the object
-        index, action_block = block_finder(action["block_id"], blocks)
-        # forecast_block =
-        block_options = list(map(lambda opt: opt["value"], action_block["accessory"]["options"]))
-        # find all stages previous to it
+
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
-        new_forms_count = 0
-        for opt in block_options:
-            if opt == selected_value:
+        stage_form = org.custom_slack_forms.filter(
+            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
+        ).first()
 
-                f = workflow.add_form(
-                    slack_const.FORM_RESOURCE_OPPORTUNITY,
-                    slack_const.FORM_TYPE_STAGE_GATING,
-                    stage=opt,
-                )
-                if f:
-                    new_forms_count += 1
-                break
-            else:
-
-                f = workflow.add_form(
-                    slack_const.FORM_RESOURCE_OPPORTUNITY,
-                    slack_const.FORM_TYPE_STAGE_GATING,
-                    stage=opt,
-                )
-                if f:
-                    new_forms_count += 1
+        if stage_form:
+            workflow.add_form(
+                slack_const.FORM_RESOURCE_OPPORTUNITY,
+                slack_const.FORM_TYPE_STAGE_GATING,
+                stage=selected_value,
+            )
         # gather and attach all forms
 
-    submit_text = "Submit" if new_forms_count == 0 else "Next"
-
-    if new_forms_count == 0:
+    if not stage_form:
+        submit_text = "Submit"
         callback_id = payload["view"]["callback_id"]
     else:
+        submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
         if payload["view"]["callback_id"] == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
             context = {
@@ -325,41 +310,25 @@ def process_stage_selected_command_form(payload, context):
     # delete any existing stage forms
     current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).delete()
     main_form = current_forms.first()
-
+    added_form_ids = []
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
         # blockfinder returns a tuple of its index in the block and the object
         index, action_block = block_finder(action["block_id"], blocks)
-        block_options = list(map(lambda opt: opt["value"], action_block["accessory"]["options"]))
+
         # find all stages previous to it
-        stage_forms = org.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage__in=block_options
-        )
-        added_form_ids = []
-        for opt in block_options:
-            if opt == selected_value:
-                f = stage_forms.filter(stage=opt).first()
+        stage_form = org.custom_slack_forms.filter(
+            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
+        ).first()
 
-                if f:
+        if stage_form:
+            new_form = OrgCustomSlackFormInstance.objects.create(
+                user=user, template=stage_form, resource_id=main_form.resource_id
+            )
+            added_form_ids.append(str(new_form.id))
 
-                    form = OrgCustomSlackFormInstance.objects.create(
-                        user=user, template=f, resource_id=main_form.resource_id
-                    )
-                    if form:
-                        added_form_ids.append(str(form.id))
-
-                break
-            else:
-                f = stage_forms.filter(stage=opt).first()
-                if f:
-                    # hack this is an uninitiated form
-                    form = OrgCustomSlackFormInstance.objects.create(
-                        user=user, template=f, resource_id=main_form.resource_id
-                    )
-                    if form:
-                        added_form_ids.append(str(form.id))
         # gather and attach all forms
     context = {**context, "f": ",".join([str(main_form.id), *added_form_ids])}
     private_metadata.update(context)
