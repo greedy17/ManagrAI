@@ -118,7 +118,7 @@ def process_get_picklist_options(payload, context):
         Using the external picklist means we can avoid the slack 50 block limit since each option counts as a limit
         Only stages use the static select block because we require the ordering to retrieve the linked stage forms in order
     """
-    additional_opts = json.loads(context.get("add_opts", []))
+    additional_opts = json.loads(context.get("add_opts", json.dumps([])))
 
     # conver type to make sure it follows {label:str|num, values:str|num}
 

@@ -2,7 +2,9 @@ import logging
 import json
 import pytz
 from datetime import datetime
-from background_task import background, CompletedTask
+
+from background_task import background
+from background_task.models import CompletedTask, Task
 
 
 from django.utils import timezone
