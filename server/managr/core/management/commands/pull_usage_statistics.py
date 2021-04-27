@@ -48,7 +48,11 @@ class Command(BaseCommand):
         # Email Settings
         email_subject = f"Managr: Usage statistics for week of {start.strftime('%B %d, %Y')}"
         superusers = User.objects.filter(is_superuser=True)
-        recipients = [user.email for user in superusers]
+        recipients = [user.email for user in superusers] + [
+            "mike@mymanagr.com",
+            "pari@thinknimble.com",
+            "zakk@thinknimble.com",
+        ]
         context = {
             "start_date": start.strftime("%B %d, %Y"),
             "end_date": end.strftime("%B %d, %Y"),
