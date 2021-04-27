@@ -58,7 +58,10 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "fields_ref",
         )
 
-        read_only_fields = ("fields", "fields_ref", "child_related_forms")
+        read_only_fields = (
+            "fields",
+            "fields_ref",
+        )
 
     def get_fields_ref(self, obj):
         fields = obj.formfield_set.all().order_by("order")
