@@ -1,6 +1,6 @@
 provider "aws" {
   shared_credentials_file = "$HOME/.aws/credentials"
-  profile                 = "default"
+  profile                 = "managr-terraform"
   region                  = var.aws_region
 }
 

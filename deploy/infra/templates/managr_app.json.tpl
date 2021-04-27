@@ -31,7 +31,6 @@
       { "name": "USE_TWILIO", "value": "${use_twilio}" },
       { "name": "USE_ZOOM", "value": "${use_zoom}" },
       { "name": "USE_SLACK", "value": "${use_slack}" },
-      { "name": "TEST_SLACK", "value": "${test_slack}" },
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" }
     ],
     "secrets": [
@@ -154,39 +153,6 @@
       {
         "name": "SLACK_APP_VERSION",
         "valueFrom": "${config_secret_arn}:slackAppVersion::"
-      },
-
-      {
-        "name": "SLACK_TEST_TEAM_NAME",
-        "valueFrom": "${config_secret_arn}:slackTestTeamName::"
-      },
-      {
-        "name": "SLACK_TEST_TEAM_ID",
-        "valueFrom": "${config_secret_arn}:slackTestTeamId::"
-      },
-      {
-        "name": "SLACK_TEST_BOT_USER_ID",
-        "valueFrom": "${config_secret_arn}:slackTestBotUserId::"
-      },
-      {
-        "name": "SLACK_TEST_ACCESS_TOKEN",
-        "valueFrom": "${config_secret_arn}:slackTestAccessToken::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_URL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookUrl::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookChannel::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookChannelId::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookConfigurationUrl::"
       },
       
       {
@@ -229,54 +195,6 @@
     ]
   },
   {
-    "name": "managr-app-worker",
-    "dependsOn": [
-      {
-        "containerName": "managr-app",
-        "condition": "START"
-      }
-    ],
-    "image": "${app_image}",
-    "entryPoint": ["ddtrace-run", "python3", "server/manage.py", "process_tasks"],
-    "networkMode": "awsvpc",
-    "environment": [
-      { "name": "DD_SERVICE", "value": "managr-server-worker" },
-      { "name": "DD_ENV", "value": "fargate" },
-      { "name": "DD_PROFILING_ENABLED", "value": "true" }
-    ],
-    "secrets": [
-      {
-        "name": "DB_HOST",
-        "valueFrom": "${config_secret_arn}:dbHost::"
-      },
-      {
-        "name": "DB_USER",
-        "valueFrom": "${config_secret_arn}:dbUser::"
-      },
-      {
-        "name": "DB_PASS",
-        "valueFrom": "${config_secret_arn}:dbPass::"
-      },
-      {
-        "name": "DB_NAME",
-        "valueFrom": "${config_secret_arn}:dbName::"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "/ecs/managr-app",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "ecs"
-      }
-    },
-    "portMappings": [
-      {
-        "containerPort": 8001
-      }
-    ]
-  },
-  {
     "name": "managr-app-scheduled-tasks",
     "dependsOn": [
       {
@@ -312,7 +230,6 @@
       { "name": "USE_TWILIO", "value": "${use_twilio}" },
       { "name": "USE_ZOOM", "value": "${use_zoom}" },
       { "name": "USE_SLACK", "value": "${use_slack}" },
-      { "name": "TEST_SLACK", "value": "${test_slack}" },
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" }
     ],
     "secrets": [
@@ -436,40 +353,6 @@
         "name": "SLACK_APP_VERSION",
         "valueFrom": "${config_secret_arn}:slackAppVersion::"
       },
-
-      {
-        "name": "SLACK_TEST_TEAM_NAME",
-        "valueFrom": "${config_secret_arn}:slackTestTeamName::"
-      },
-      {
-        "name": "SLACK_TEST_TEAM_ID",
-        "valueFrom": "${config_secret_arn}:slackTestTeamId::"
-      },
-      {
-        "name": "SLACK_TEST_BOT_USER_ID",
-        "valueFrom": "${config_secret_arn}:slackTestBotUserId::"
-      },
-      {
-        "name": "SLACK_TEST_ACCESS_TOKEN",
-        "valueFrom": "${config_secret_arn}:slackTestAccessToken::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_URL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookUrl::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookChannel::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookChannelId::"
-      },
-      {
-        "name": "SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL",
-        "valueFrom": "${config_secret_arn}:slackTestIncomingWebhookConfigurationUrl::"
-      },
-      
       {
         "name": "SALESFORCE_BASE_URL",
         "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"

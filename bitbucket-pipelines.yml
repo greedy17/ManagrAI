@@ -81,13 +81,13 @@ fargateStagingDeployment: &fargateStagingDeployment
         # DEBUG: "<boolean>" # Optional
 
     # Dynamically update Fargate task definition
-    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - TASK_FAMILY="$TASK_FAMILY-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
-        CLUSTER_NAME: managr-cluster
-        SERVICE_NAME: managr-service-staging
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
@@ -125,13 +125,13 @@ fargateDemoDeployment: &fargateDemoDeployment
         # DEBUG: "<boolean>" # Optional
 
     # Dynamically update Fargate task definition
-    - TASK_FAMILY="managr-app-task-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - TASK_FAMILY="$TASK_FAMILY-prod" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
-        CLUSTER_NAME: managr-cluster
-        SERVICE_NAME: managr-service-demo
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
@@ -169,13 +169,13 @@ fargateProdDeployment: &fargateProdDeployment
         # DEBUG: "<boolean>" # Optional
 
     # Dynamically update Fargate task definition
-    - TASK_FAMILY="managr-app-task-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - TASK_FAMILY="$TASK_FAMILY-prod" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
-        CLUSTER_NAME: managr-cluster
-        SERVICE_NAME: managr-service-prod
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
@@ -190,8 +190,8 @@ pipelines:
           - step: *vueAppBuild
           - step: *e2eTests
           - step: *djangoTests
-      # - step: *fargateDemoDeployment
-      - step: *fargateStagingDeployment
+      - step: *fargateDemoDeployment
+      #- step: *fargateStagingDeployment
       # - step: *fargateProdDeployment
   branches:
     develop:

@@ -72,7 +72,6 @@ data "template_file" "managr_app" {
     use_twilio     = title(var.use_twilio)
     use_zoom       = title(var.use_zoom)
     use_slack      = title(var.use_slack)
-    test_slack     = title(var.test_slack)
     use_salesforce = title(var.use_salesforce)
   }
 }
@@ -178,15 +177,6 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     slackSecret        = var.slack_secret
     slackSigningSecret = var.slack_signing_secret
     slackAppVersion    = var.slack_app_version
-
-    slackTestTeamName                        = var.slack_test_team_name
-    slackTestTeamId                          = var.slack_test_team_id
-    slackTestBotUserId                       = var.slack_test_bot_user_id
-    slackTestAccessToken                     = var.slack_test_access_token
-    slackTestIncomingWebhookUrl              = var.slack_test_incoming_webhook_url
-    slackTestIncomingWebhookChannel          = var.slack_test_incoming_webhook_channel
-    slackTestIncomingWebhookChannelId        = var.slack_test_incoming_webhook_channel_id
-    slackTestIncomingWebhookConfigurationUrl = var.slack_test_incoming_webhook_configuration_url
 
     salesforceBaseUrl     = var.salesforce_base_url
     salesforceConsumerKey = var.salesforce_consumer_key

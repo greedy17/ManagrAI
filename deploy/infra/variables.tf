@@ -1,5 +1,5 @@
 variable "aws_region" {
-  default = "us-east-2"
+  default = "us-east-1"
 }
 
 variable "ecs_task_execution_role_name" {
@@ -212,50 +212,6 @@ variable "slack_signing_secret" {
 }
 
 variable "slack_app_version" {
-  type      = string
-  sensitive = true
-}
-
-variable "test_slack" {
-  type = bool
-}
-
-variable "slack_test_team_name" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_team_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_bot_user_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_access_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_incoming_webhook_url" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_incoming_webhook_channel" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_incoming_webhook_channel_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_test_incoming_webhook_configuration_url" {
   type      = string
   sensitive = true
 }
