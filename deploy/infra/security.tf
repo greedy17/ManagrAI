@@ -4,20 +4,15 @@ resource "aws_security_group" "lb" {
   description = "controls access to the ALB"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    protocol    = "tcp"
-    from_port   = var.app_port
-    to_port     = var.app_port
-    cidr_blocks = ["${var.local_ip}/32"]
+  dynamic "ingress" {
+    for_each = concat(var.environments.*.lb_http_port, var.environments.*.lb_https_port)
+    content {
+      protocol    = "tcp"
+      from_port   = ingress.value
+      to_port     = ingress.value
+      cidr_blocks = ["${var.local_ip}/32"]
+    }
   }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = var.app_port_https
-    to_port     = var.app_port_https
-    cidr_blocks = ["${var.local_ip}/32"]
-  }
-
 
   egress {
     protocol    = "-1"

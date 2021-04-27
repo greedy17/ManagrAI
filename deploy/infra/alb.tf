@@ -9,14 +9,16 @@ resource "aws_alb" "main" {
 }
 
 resource "random_string" "alb_prefix" {
-  length  = 4
-  upper   = false
-  special = false
+  for_each = { for e in var.environments : e.name => e }
+  length   = 4
+  upper    = false
+  special  = false
 
 }
 
 resource "aws_alb_target_group" "app" {
-  name        = "managr-target-group-${random_string.alb_prefix.result}"
+  for_each    = { for e in var.environments : e.name => e }
+  name        = "managr-target-group-${lower(each.value["name"])}-${random_string.alb_prefix[each.key].result}"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
@@ -44,24 +46,26 @@ resource "aws_alb_target_group" "app" {
 }
 
 resource "aws_alb_listener" "front_end" {
+  for_each          = { for e in var.environments : e.name => e }
   load_balancer_arn = aws_alb.main.id
-  port              = var.app_port
+  port              = each.value["lb_http_port"]
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_alb_target_group.app.id
+    target_group_arn = aws_alb_target_group.app[each.key].id
     type             = "forward"
   }
 }
 
 resource "aws_alb_listener" "front_end_https" {
+  for_each          = { for e in var.environments : e.name => e }
   load_balancer_arn = aws_alb.main.id
-  port              = var.app_port_https
+  port              = each.value["lb_https_port"]
   protocol          = "HTTPS"
   certificate_arn   = aws_acm_certificate.managr.arn
 
   default_action {
-    target_group_arn = aws_alb_target_group.app.id
+    target_group_arn = aws_alb_target_group.app[each.key].id
     type             = "forward"
   }
 }

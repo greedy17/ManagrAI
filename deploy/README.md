@@ -46,7 +46,7 @@ The following AWS resources are required:
 
 ### Terraform (optional)
 
-The [`infra/`](infra/) directory includes a Terraform module that can be optionally used as an infrastructure bootstrapping and deployment mechanism.
+The [`infra/`](infra/) directory includes a Terraform module that can be optionally used as an infrastructure bootstrapping and deployment mechanism. The `sample.tfvars` file can be used for creating separate staging and prod variable input files.
 
 ### Fargate
 
@@ -61,7 +61,8 @@ The following Bitbucket variables are required for deployment:
 | `MANAGR_SERVER_IMAGE_NAME`                 | Image name. e.g. `<ecr_endpoint>/thinknimble/managr/server`                           |
 | `MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME` | Image name for scheduled tasks. e.g. `<ecr_endpoint>/thinknimble/managr/server-tasks` |
 | `AWS_ECS_CLUSTER_NAME`                     | AWS ECS cluster name                                                                  |
-| `AWS_SERVICE_NAME`                         | AWS ECS service name                                                                  |
+| `AWS_ECS_SERVICE_NAME`                     | AWS ECS service name                                                                  |
+| `AWS_ECS_TASK_NAME`                        | AWS ECS task name. e.g. `managr-app-task`                                             |
 | `AWS_ACCESS_KEY_ID`                        | AWS access key id                                                                     |
 | `AWS_SECRET_ACCESS_KEY`                    | AWS secret access key                                                                 |
 

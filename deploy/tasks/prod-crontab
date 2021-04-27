@@ -11,7 +11,7 @@ BASH_ENV=/container.env
 
 ## syncs resource data from sf every 10 mins (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
 
-*/10 * * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py initresourcesync --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2
+*/10 * * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py initresourcesync' > /proc/1/fd/1 2>/proc/1/fd/2
 
 ## syncs resource fields from sf every 0th minute of the 12th hour (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
 

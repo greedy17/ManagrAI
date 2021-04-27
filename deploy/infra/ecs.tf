@@ -1,6 +1,8 @@
 locals {
-  app_url   = "http://${aws_alb.main.dns_name}:${var.app_port}"
-  ecr_repos = toset(["thinknimble/managr/server", "thinknimble/managr/server-tasks"])
+  http_app_urls      = { for e in var.environments : e.name => "http://${aws_alb.main.dns_name}:${e.lb_http_port}" }
+  https_app_urls     = { for e in var.environments : e.name => "http://${aws_alb.main.dns_name}:${e.lb_https_port}" }
+  nylas_callback_url = "http://${aws_alb.main.dns_name}:${tolist(var.environments)[0].lb_http_port}"
+  ecr_repos          = toset(["thinknimble/managr/server", "thinknimble/managr/server-tasks"])
 }
 
 resource "aws_ecr_repository" "managr" {
@@ -26,28 +28,31 @@ resource "aws_ecs_cluster" "main" {
 }
 
 data "template_file" "nginx_config" {
+  for_each = { for e in var.environments : e.name => e }
   template = file("${path.module}/templates/nginx.conf.tpl")
 
   vars = {
     dns_name = aws_alb.main.dns_name
-    app_url  = local.app_url
+    app_url  = local.http_app_urls[each.key]
   }
 }
 
 data "template_file" "managr_app" {
+  for_each = { for e in var.environments : e.name => e }
   template = file("${path.module}/templates/managr_app.json.tpl")
 
   vars = {
-    nginx_config = base64encode(data.template_file.nginx_config.rendered)
+    nginx_config = base64encode(data.template_file.nginx_config[each.key].rendered)
 
-    app_image                 = var.app_image
-    app_image_scheduled_tasks = var.app_image_scheduled_tasks
+    environment               = each.value["name"]
+    app_image                 = each.value["app_image"]
+    app_image_scheduled_tasks = each.value["app_image_scheduled_tasks"]
     fargate_cpu               = var.fargate_cpu
     fargate_memory            = var.fargate_memory
     aws_region                = var.aws_region
     config_secret_arn         = aws_secretsmanager_secret.managr_config.arn
     current_domain            = aws_alb.main.dns_name
-    current_port              = var.app_port
+    current_port              = 8000
     debug                     = title(var.debug)
 
     use_rollbar = title(var.use_rollbar)
@@ -73,13 +78,14 @@ data "template_file" "managr_app" {
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                   = "managr-app-task"
+  for_each                 = { for e in var.environments : e.name => e }
+  family                   = "managr-app-task-${lower(each.value["name"])}"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
-  container_definitions    = data.template_file.managr_app.rendered
+  container_definitions    = data.template_file.managr_app[each.key].rendered
   volume {
     name = "nginx-conf-vol"
   }
@@ -90,9 +96,10 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "main" {
-  name             = "managr-service-tf-testing"
+  for_each         = { for e in var.environments : e.name => e }
+  name             = "managr-service-${lower(each.value["name"])}"
   cluster          = aws_ecs_cluster.main.id
-  task_definition  = aws_ecs_task_definition.app.arn
+  task_definition  = aws_ecs_task_definition.app[each.key].arn
   desired_count    = var.app_count
   launch_type      = "FARGATE"
   platform_version = "1.4.0"
@@ -108,7 +115,7 @@ resource "aws_ecs_service" "main" {
   }
 
   load_balancer {
-    target_group_arn = aws_alb_target_group.app.id
+    target_group_arn = aws_alb_target_group.app[each.key].id
     container_name   = "managr-app-proxy"
     container_port   = 80
   }
@@ -155,7 +162,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
 
     nylasClientId         = var.nylas_client_id
     nylasClientSecret     = var.nylas_client_secret
-    nylasOauthCallbackUrl = "${local.app_url}/settings/integrations"
+    nylasOauthCallbackUrl = "${local.nylas_callback_url}/settings/integrations"
 
     twilioAccountSid      = var.twilio_account_sid
     twilioAuthToken       = var.twilio_auth_token

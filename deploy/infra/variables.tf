@@ -10,22 +10,6 @@ variable "az_count" {
   default = "2"
 }
 
-variable "app_image" {
-  type = string
-}
-
-variable "app_image_scheduled_tasks" {
-  type = string
-}
-
-variable "app_port" {
-  default = 8000
-}
-
-variable "app_port_https" {
-  default = 8443
-}
-
 variable "app_count" {
   default = 1
 }
@@ -319,4 +303,14 @@ variable "aws_access_key_id" {
 variable "aws_secret_access_key" {
   type      = string
   sensitive = true
+}
+
+variable "environments" {
+  type = set(object({
+    name                      = string
+    app_image                 = string
+    app_image_scheduled_tasks = string
+    lb_http_port              = number
+    lb_https_port             = number
+  }))
 }
