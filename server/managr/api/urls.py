@@ -59,11 +59,7 @@ urlpatterns = [
     path(
         "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
-    path(
-        "users/zoom/revoke/direct",
-        zoom_views.revoke_zoom_access_token,
-        name="revoke_zoom_access_token",
-    ),
+    path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(
         "users/salesforce/authorization",

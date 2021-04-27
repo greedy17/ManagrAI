@@ -51,6 +51,7 @@ from managr.slack.helpers.exceptions import (
 from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
+from managr.zoom.zoom_helper.exceptions import InvalidRequest
 from managr.slack.models import UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from .models import ZoomAuthAccount, ZoomMeeting
@@ -61,7 +62,11 @@ from .serializers import (
     ZoomMeetingSerializer,
 )
 from . import constants as zoom_consts
-from .background import _get_past_zoom_meeting_details, _kick_off_slack_interaction
+from .background import (
+    _get_past_zoom_meeting_details,
+    _kick_off_slack_interaction,
+    _process_confirm_compliance,
+)
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -100,6 +105,11 @@ def get_zoom_authentication(request):
 def revoke_zoom_access_token(request):
     if hasattr(request.user, "zoom_account"):
         zoom = request.user.zoom_account
+        try:
+            zoom.helper_class.revoke()
+        except Exception:
+            # revoke token will fail if ether token is expired
+            pass
         zoom.is_revoked = True
         zoom.access_token = ""
         zoom.refresh_token = ""
@@ -109,7 +119,55 @@ def revoke_zoom_access_token(request):
                 task.delete()
         zoom.save()
 
-    return Response(data={"message": "success"}, status=status.HTTP_204_NO_CONTENT)
+    return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
+def zoom_deauth_webhook(request):
+    """ 
+        When a user uninstalls the zoom app directly from their apps we will be notified here 
+        We must complete the steps provided in this document 
+        https://marketplace.zoom.us/docs/guides/publishing/data-compliance
+    """
+    event = request.data.get("event", None)
+    obj = request.data.get("payload", None)
+    if event == "app_deauthorized":
+        # get user if exists
+        zoom = ZoomAuthAccount.objects.filter(zoom_id=obj.get("user_id", None)).first()
+        if not zoom:
+            logger.warning(f"Did not find user in our system to deauthorize {json.dumps(obj)}")
+            # emit delete event
+
+        elif obj.get("user_data_retention", False):
+            # user has authorized us to save their data
+            try:
+                zoom.helper_class.revoke()
+            except Exception:
+                # revoke token will fail if ether token is expired
+                pass
+            zoom.is_revoked = True
+            zoom.access_token = ""
+            zoom.refresh_token = ""
+
+            if zoom.refresh_token_task:
+                task = Task.objects.filter(id=zoom.refresh_token_task).first()
+                if task:
+                    task.delete()
+            zoom.save()
+        else:
+            zoom.delete()
+
+        try:
+            _process_confirm_compliance.now(json.dumps(obj))
+        except InvalidRequest:
+            logger.exception(
+                f'There was a problem informing zoom of compliance you may try this manually - {json.dumps({"event":event,"payload":obj})}, if this is in dev you may ignore this message'
+            )
+        return Response()
+
+    # check for host_id
 
 
 def redirect_from_zoom(request):

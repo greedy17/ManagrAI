@@ -241,6 +241,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
 
                     if resource_count and resource_count <= 500:
                         # emit current batch to delete queue and start new
+                        # TODO - Eventually remove the .now to make async
                         _process_stale_data_for_delete.now(
                             [
                                 {
@@ -254,12 +255,13 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                         resource_pages = 1
                         resource_pages = math.ceil(resource_count / 500)
                         for i in range(0, resource_pages):
-                            resource_items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
+                            items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
+                            # TODO - Eventually remove the .now to make async
                             _process_stale_data_for_delete.now(
                                 [
                                     {
                                         "user_id": str(user.id),
-                                        "resource": {r: qs.values_list("id", flat=True)},
+                                        "resource": {r: items.values_list("id", flat=True)},
                                     }
                                 ],
                             )
