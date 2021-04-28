@@ -105,7 +105,10 @@ class UserSlackIntegration(TimeStampModel):
         related_name="user_slack_integrations",
     )
     is_revoked = models.BooleanField(default=True)
-
+    is_onboarded = models.BooleanField(
+        default=False,
+        help_text="When a user opens the home tab it will notifiy us (or messages tab) slack requires an 'onboarding' interaction to be sent, since this event is recurring we only do it once",
+    )
     objects = UserSlackIntegrationQuerySet.as_manager()
 
     def __str__(self):
