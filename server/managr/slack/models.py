@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
 from managr.salesforce.models import SObjectField
@@ -152,7 +152,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
-    fields = models.ManyToManyField("salesforce.SObjectField", through="FormField")
+    fields = models.ManyToManyField("salesforce.SObjectField", through="slack.FormField")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
