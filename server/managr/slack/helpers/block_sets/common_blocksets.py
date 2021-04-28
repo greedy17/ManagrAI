@@ -176,6 +176,7 @@ def tasks_block_set(context={}):
                 ),
             ]
         )
+    return task_blocks
 
 
 @block_set()
