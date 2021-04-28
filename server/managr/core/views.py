@@ -550,7 +550,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             recipient,
             context=context,
         )
-        text = f"{user.full_name}, {u.full_name} has invited you to join the managr app, check your email for your invitation {user.email}"
+        text = f"{user.full_name}, {u.full_name} has invited {user.full_name} to join the managr app, check your email for your invitation {user.email}"
         if send_slack and hasattr(u.organization, "slack_integration"):
             slack_requests.send_channel_message(
                 u.organization.slack_integration.incoming_webhook.get("channel"),

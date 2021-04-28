@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <modal name="required-modal" heading="Select a Stage" height="500" adaptive>
+    <modal name="required-modal" heading="Select a Stage">
       <div class="required__container">
         <img
           class="tooltip image"
@@ -32,7 +32,7 @@
         />
       </div>
     </modal>
-    <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
+    <modal name="add-stage-modal" heading="Select a Stage" height="auto" :scrollable="true">
       <div class="modal-container">
         <div v-if="!loadingStages" class="modal-container__box">
           <div class="modal-container__box__header">
@@ -156,7 +156,7 @@
                   <div class="stage__dropdown__header">Your Stage Gate Forms</div>
                   <div
                     v-for="(form, i) in formStages"
-                    :key="form"
+                    :key="form.id"
                     class="stage__dropdown__stages__container"
                     :class="{
                       'stage__dropdown__stages__container--selected':
@@ -593,7 +593,7 @@ export default {
       display: flex;
 
       justify-content: center;
-      min-height: 20rem;
+      min-height: 35rem;
     }
     &__button {
       @include primary-button();

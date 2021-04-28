@@ -74,18 +74,21 @@
             @click="
               userInviteForm.field.slackInvite.value = !userInviteForm.field.slackInvite.value
             "
-            style="display:flex;align-items:center;"
+            style="display:flex;align-items:center;align-self:flex-start;"
           >
-            <CheckBox :checked="userInviteForm.field.slackInvite.value" /> Send Slack Invite
+            <CheckBox :checked="userInviteForm.field.slackInvite.value" />
+            <span style="margin-left:1rem;">Send Slack Invite</span>
           </div>
-          <PulseLoadingSpinnerButton
-            @click="handleInvite"
-            class="invite-button"
-            text="Invite"
-            :loading="loading"
-            >Invite</PulseLoadingSpinnerButton
-          >
-          <div class="cancel-button" @click="handleCancel">Cancel</div>
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="handleInvite"
+              class="invite-button"
+              text="Invite"
+              :loading="loading"
+              >Invite</PulseLoadingSpinnerButton
+            >
+            <div class="cancel-button" @click="handleCancel">Cancel</div>
+          </template>
         </div>
       </form>
     </Modal>
@@ -341,7 +344,7 @@ button {
   }
   &__actions {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
   }
 }

@@ -5,6 +5,7 @@ import {
   EmailValidator,
   RequiredValidator,
   MinLengthValidator,
+  Validator,
 } from '@thinknimble/tn-validators'
 
 export class UserRegistrationForm extends Form {
