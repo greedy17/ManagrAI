@@ -30,7 +30,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-
+from managr.slack.helpers import requests as slack_requests
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
@@ -531,6 +531,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
+        send_slack = request.data.pop("slack_invite", False)
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -549,6 +550,13 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             recipient,
             context=context,
         )
+        text = f"{user.full_name}, {u.full_name} has invited you to join the managr app, check your email for your invitation {user.email}"
+        if send_slack and hasattr(u.organization, "slack_integration"):
+            slack_requests.send_channel_message(
+                u.organization.slack_integration.incoming_webhook.get("channel"),
+                u.organization.slack_integration.access_token,
+                text=text,
+            )
 
         response_data["activation_link"] = user.activation_link
 

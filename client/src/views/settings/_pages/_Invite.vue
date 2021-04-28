@@ -70,6 +70,14 @@
           </FormField>
         </div>
         <div class="invite-form__actions">
+          <div
+            @click="
+              userInviteForm.field.slackInvite.value = !userInviteForm.field.slackInvite.value
+            "
+            style="display:flex;align-items:center;"
+          >
+            <CheckBox :checked="userInviteForm.field.slackInvite.value" /> Send Slack Invite
+          </div>
           <PulseLoadingSpinnerButton
             @click="handleInvite"
             class="invite-button"
@@ -113,6 +121,7 @@ import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/Modal'
 import Button from '@thinknimble/button'
+import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 
@@ -123,6 +132,7 @@ export default {
     Modal,
     PulseLoadingSpinnerButton,
     FormField,
+    CheckBox,
   },
   props: {
     inviteOpen: {
@@ -132,6 +142,7 @@ export default {
   },
   data() {
     return {
+      sendSlackInvite: false,
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,

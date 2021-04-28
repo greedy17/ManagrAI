@@ -2,6 +2,7 @@ import json
 import logging
 
 from datetime import datetime
+from managr.utils import sites as site_utils
 
 from django.db.models import Sum, Avg, Q
 
@@ -107,7 +108,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 enterprise=enterprise,
             )
             # TODO: Investigate option to not workspace integration pb 04/20/21 Mike ok'd
-            text = "<!channel> your organization has enabled slack please integrate your account to receive notifications"
+
+            text = f"<!here> your organization has enabled slack for managr!\nYou can now integrate your account navigate to the integrations setings in the portal here {site_utils.get_site_url()}/settings/integrations"
+
             channel = integration.incoming_webhook.get("channel_id", None)
             if not channel:
                 integration.delete()

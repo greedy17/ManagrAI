@@ -99,6 +99,7 @@ export class UserInviteForm extends Form {
   static role = new FormField({ validators: [new RequiredValidator()] })
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
+  static slackInvite = new FormField({ value: false })
 
   dynamicValidators() {
     /**
@@ -117,6 +118,7 @@ export class UserInviteForm extends Form {
   reset() {
     this.field.email.value = ''
     this.field.confirmEmail.value = ''
+    this.field.slackInvite.value = false
   }
 }
 
