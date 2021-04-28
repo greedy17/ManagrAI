@@ -236,8 +236,12 @@ def process_submit_resource_data(payload, context):
     while True:
         sf = user.salesforce_account
         try:
-            main_form.resource_object.update_in_salesforce(data)
-            break
+            if main_form.template.form_type == "UPDATE":
+                main_form.resource_object.update_in_salesforce(data)
+                break
+            else:
+                resource = _process_create_new_resource.now(current_form_ids)
+                break
 
         except FieldValidationError as e:
 
@@ -308,13 +312,38 @@ def process_submit_resource_data(payload, context):
                 sf.regenerate_token()
                 attempts += 1
 
+    if context.get("w"):
+        # return the same view with a submit button and the correct resource selected
+        # find the select block
+        index, select_block = block_finder("select_existing", payload["view"]["blocks"])
+        select_block["accessory"]["initial_option"] = block_builders.option(
+            resource.name, resource.id
+        )
+        blocks = [
+            *payload["view"]["blocks"][:index],
+            select_block,
+            *payload["view"]["blocks"][:index],
+        ]
+
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "callback_id": "test",
+                "title": payload["view"]["title"],
+                "blocks": blocks,
+                "private_metadata": payload["view"]["private_metadata"],
+                "submit": {"type": "plain_text", "text": "sub"},
+            },
+        }
+    else:
         # update the channel message to clear it
-    slack_requests.update_channel_message(
-        context.get("channel_id"),
-        context.get("ts"),
-        user.organization.slack_integration.access_token,
-        "Successfully Updated",
-    )
+        slack_requests.update_channel_message(
+            context.get("channel_id"),
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            "Successfully Updated",
+        )
     return {"response_action": "clear"}
 
 

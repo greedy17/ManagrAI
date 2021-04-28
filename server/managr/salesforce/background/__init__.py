@@ -22,7 +22,7 @@ from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
-from managr.slack.models import OrgCustomSlackForm
+from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
@@ -582,17 +582,14 @@ def _process_update_contacts(workflow_id, *args):
 
 ### This is currently run as async so dont catch the errors in the same way
 @background(schedule=0)
-def _process_create_new_resource(workflow_id, resource, *args):
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
+def _process_create_new_resource(form_ids, *args):
+
+    create_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    if not create_forms.count():
+        return logger.exception(f"An error occured no form was found")
+    user = create_forms.first().user
+    resource = create_forms.first().resource_type
     # get the create form
-    meeting = workflow.meeting
-    create_forms = workflow.forms.filter(
-        template__form_type__in=[
-            slack_consts.FORM_TYPE_CREATE,
-            slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
-    ).exclude(template__resource=slack_consts.FORM_RESOURCE_CONTACT)
     data = dict()
     for form in create_forms:
         data = {**data, **form.saved_data}
@@ -611,7 +608,7 @@ def _process_create_new_resource(workflow_id, resource, *args):
                 sf.access_token,
                 sf.instance_url,
                 sf.adapter_class.object_fields.get(resource),
-                str(workflow.user.id),
+                str(user.id),
             )
             serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)

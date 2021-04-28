@@ -242,7 +242,7 @@ def process_stage_selected(payload, context):
         # gather and attach all forms
 
     if not stage_form:
-        submit_text = "Submit"
+        submit_text = payload["view"]["submit"]["text"]
         callback_id = payload["view"]["callback_id"]
     else:
         submit_text = "Next"
@@ -257,7 +257,7 @@ def process_stage_selected(payload, context):
             context = {
                 **context,
                 "form_type": slack_const.FORM_TYPE_CREATE,
-                "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
             }
     private_metadata.update(context)
     data = {
@@ -464,19 +464,35 @@ def process_meeting_selected_resource_option(payload, context):
 
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-
+    # change variables based on selection
+    private_metadata = json.loads(payload["view"]["private_metadata"])
+    if action:
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        private_metadata = json.loads(payload["view"]["private_metadata"])
+        private_metadata = {
+            **private_metadata,
+            "u": str(workflow.user.id),
+            "f": str(
+                workflow.forms.filter(
+                    template__form_type="CREATE", template__resource=resource_type
+                )
+                .first()
+                .id
+            ),
+        }
+        submit_text = "Create & Change"
+    else:
+        callback_id = slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        submit_text = "Change"
     data = {
         "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": f"{resource_type}"},
             "blocks": blocks,
-            "private_metadata": payload["view"]["private_metadata"],
-            "submit": {
-                "type": "plain_text",
-                "text": f'{ "Create & Change" if action else "Change"}',
-            },
+            "private_metadata": json.dumps(private_metadata),
+            "submit": {"type": "plain_text", "text": submit_text,},
         },
     }
     try:
