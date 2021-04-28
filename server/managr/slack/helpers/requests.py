@@ -93,6 +93,20 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     return _handle_response(res, blocks=block_set)
 
 
+def publish_view(slack_id, access_token, view):
+    """
+    Publishes a view to the user's home tab
+    slack_id: user slack id
+    """
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUBLISH
+    data = {}
+    data["user_id"] = slack_id
+    data["view"] = view
+
+    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return _handle_response(res, data)
+
+
 def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block_set=[]):
     """
     Posts a message to a public channel, private channel, or DM channel.
@@ -134,10 +148,4 @@ def generic_request(url, data, access_token=None):
         else slack_auth.json_headers(),
     )
     return _handle_response(res, blocks=original_data.get("blocks"))
-
-
-# * from managr.slack.helpers import requests
-# * from managr.slack.helpers import block_builders
-# * u = User.objects.get(email='pari@thinknimble.com')
-# * org = u.organization
 

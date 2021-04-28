@@ -26,6 +26,8 @@ VIEWS_UPDATE = "views.update"
 
 VIEWS_PUSH = "views.push"
 
+VIEWS_PUBLISH = "views.publish"
+
 # https://api.slack.com/methods/chat.getPermalink
 CHAT_GET_PERMALINK = "chat.getPermalink"
 
