@@ -1,17 +1,16 @@
 import { datadogRum } from '@datadog/browser-rum';
 
-// Datadog front-end monitoring config
-// datadogRum.init({
-//     applicationId: '<app_id>',
-//     clientToken: '<client_token>',
-//     site: 'datadoghq.com',
-//     service:'<service_name>',
-//     env:'<environment>',
-//     // Specify a version number to identify the deployed version of your application in Datadog 
-//     // version: '1.0.0',
-//     sampleRate: 100,
-//     trackInteractions: true
-// });
+datadogRum.init({
+  applicationId: process.env.VUE_APP_DD_APP_ID,
+  clientToken: process.env.VUE_APP_DD_CLIENT_TOKEN,
+  site: 'datadoghq.com',
+  service: 'managr',
+  env: process.env.VUE_APP_DD_ENV,
+  // Specify a version number to identify the deployed version of your application in Datadog 
+  // version: '1.0.0',
+  sampleRate: 100,
+  trackInteractions: true
+});
 
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.

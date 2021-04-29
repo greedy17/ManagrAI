@@ -1,5 +1,8 @@
 FROM node:14 AS build-client
 ARG NPM_PRIVATE_TOKEN
+ARG VUE_APP_DD_APP_ID=35ea3d99-bcca-4bb4-a524-e5286670d24f
+ARG VUE_APP_DD_CLIENT_TOKEN=pubb6721f7da3995916ac146e3fefc18ad6
+ARG VUE_APP_DD_ENV
 WORKDIR /app
 COPY ./client/package.json ./client/package-lock.json ./client/.npmrc ./
 RUN npm install

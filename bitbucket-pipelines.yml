@@ -65,7 +65,7 @@ fargateStagingDeployment: &fargateStagingDeployment
     - ./aws/install
   
     # Build Docker images
-    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
 
     # Push to ECR
@@ -109,7 +109,7 @@ fargateDemoDeployment: &fargateDemoDeployment
     - ./aws/install
   
     # Build Docker images
-    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:demo" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
 
     # Push to ECR
@@ -153,7 +153,7 @@ fargateProdDeployment: &fargateProdDeployment
     - ./aws/install
   
     # Build Docker images
-    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:prod" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
 
     # Push to ECR
