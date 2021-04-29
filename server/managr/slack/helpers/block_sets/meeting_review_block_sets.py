@@ -588,7 +588,7 @@ def meeting_summary_blockset(context):
     amount_component = list(filter(lambda comp: comp.type == "amount", summary))
     review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_component[0].rendered_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_component[0].rendered_message}\n*Close Date:* {close_date_component[0].rendered_message}\n"
     if review.next_step not in ["", None]:
-        review_str = f"{review_str}*Next Step:* {review.next_step}\n*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}\n"
+        review_str = f"{review_str}*Next Step:* {review.next_step}\n"
 
     review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}"
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
