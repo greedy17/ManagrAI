@@ -22,24 +22,6 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.salesforce.routes import routes as model_routes
 
 
-def _initial_interaction_message(resource_name=None, resource_type=None):
-    if not resource_type:
-        return "I've noticed your meeting just ended but couldn't find an Opportunity or Account or Lead to link what would you like to do?"
-
-    # replace opp, review disregard
-    return f"I've noticed your meeting with {resource_type} *{resource_name}* just ended would you like to log this meeting?"
-
-
-@block_set()
-def coming_soon_modal_block_set(context):
-    blocks = [
-        block_builders.simple_section(
-            ":clock1: *This feature is in the works* :exclamation:", "mrkdwn"
-        )
-    ]
-    return blocks
-
-
 @block_set(required_context=["u"])
 def create_task_modal_block_set(context):
     resource = context.get("resource_id")
@@ -97,51 +79,6 @@ def create_task_modal_block_set(context):
     blocks.append(
         block_builders.external_select("Status", action_query, block_id="managr_task_status")
     )
-
-    return blocks
-
-
-@block_set(required_context=["w"])
-def meeting_review_modal_block_set(context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    user = workflow.user
-    slack_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
-
-    blocks = [
-        block_builders.simple_section(
-            ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-            "mrkdwn",
-        ),
-    ]
-
-    # additional validations
-    validations = None
-    if validations:
-
-        blocks.extend(
-            [
-                block_builders.simple_section(
-                    ":warning: *_Additional Validations required to avoid errors_*", "mrkdwn"
-                ),
-                block_builders.simple_section_multiple(
-                    list(
-                        map(
-                            lambda validation: block_builders.text_block(
-                                f'_{validation[0]+1}. {validation[1]["message"]}_', "mrkdwn"
-                            ),
-                            enumerate(validations),
-                        )
-                    )
-                ),
-            ]
-        )
-
-    blocks.extend(slack_form.generate_form())
-    # static blocks
-
-    # make params here
 
     return blocks
 
