@@ -9,6 +9,15 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
+from managr.slack.helpers.exceptions import (
+    TokenExpired,
+    ApiRateLimitExceeded,
+    InvalidBlocksException,
+    InvalidBlocksFormatException,
+    UnHandeledBlocksException,
+    InvalidArgumentsException,
+    InvalidAccessToken,
+)
 from managr.utils.misc import snake_to_space
 
 LOGGER = logging.getLogger("managr")
@@ -108,3 +117,30 @@ def sf_api_exceptions(error_key):
 
     return error_fn
 
+
+def slack_api_exceptions(rethrow=False):
+    """ Decorator for cathcing common slack errors """
+
+    def error_fn(func):
+        @functools.wraps(func)
+        def wrapper_slack_api_exceptions(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except TokenExpired as e:
+                pass
+            except ApiRateLimitExceeded as e:
+                pass
+            except InvalidAccessToken as e:
+                pass
+            except InvalidBlocksException as e:
+                pass
+            except InvalidBlocksFormatException as e:
+                pass
+            except InvalidArgumentsException as e:
+                pass
+            except Exception as e:
+                LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+
+        return wrapper_slack_api_exceptions
+
+    return error_fn

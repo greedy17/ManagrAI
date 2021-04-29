@@ -28,6 +28,8 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
+from managr.api.decorators import slack_api_exceptions
+
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
 
@@ -346,6 +348,7 @@ class SlackFormsViewSet(
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
+@slack_api_exceptions(rethrow=False)
 def update_resource(request):
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead", "contact"]
@@ -384,6 +387,7 @@ def update_resource(request):
         blocks = get_block_set(
             "command_update_resource", {"resource_type": resource_type, "u": str(user.id)}
         )
+        blocks = ["ssf"]
         channel = user.slack_integration.channel
         access_token = user.organization.slack_integration.access_token
         slack_requests.send_channel_message(
