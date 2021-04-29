@@ -35,4 +35,4 @@ IMAGE_NAME="$MANAGR_ECR_REPO_URL/$MANAGR_SERVER_IMAGE_NAME:$IMAGE_TAG"
 SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_ECR_REPO_URL/$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:$IMAGE_TAG"
 
 TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_FAMILY")
-echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | .containerDefinitions[1].image = $IMAGE | .containerDefinitions[2].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)' >task-definition.json
+echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | .containerDefinitions[1].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)' >task-definition.json
