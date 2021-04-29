@@ -84,8 +84,8 @@ def onboarding_interaction_block_set(context):
         block_builders.simple_section(
             (
                 f"Welcome <@{slack.slack_id}> I’m the Managr bot design to help you streamline your sales process :clap:\n"
-                "- *I’ll send you messages when your meetings end so you can easily update Salesforce* :handshake:\n"
-                "- *Make sure to check out Managr commands, listed in my _'about'_ tab* :white_check_mark:\n"
+                "- *I’ll send you messages when your meetings end so you can easily update Salesforce* :raised_hands:\n"
+                "- *Make sure to check out Managr commands, listed in my _'about'_ tab* :thought_balloon:\n"
                 "Happy selling! :moneybag:"
             ),
             "mrkdwn",
