@@ -199,7 +199,7 @@ def home_modal_block_set(context):
             text_type="mrkdwn",
         ),
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/settings/integrations|Nylas>* will help us gather additional metadata about your meetings",
+            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/settings/integrations|Email>* will help us gather additional metadata about your meetings",
             text_type="mrkdwn",
         ),
     ]
