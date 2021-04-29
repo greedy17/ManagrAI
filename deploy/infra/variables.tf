@@ -1,264 +1,46 @@
-variable "aws_region" {
-  default = "us-east-1"
-}
-
 variable "ecs_task_execution_role_name" {
   default = "ManagrEcsTaskExecutionRole"
 }
 
 variable "az_count" {
-  default = "2"
+  type    = number
+  default = 2
 }
 
 variable "app_count" {
+  type    = number
   default = 1
 }
 
 variable "health_check_path" {
+  type    = string
   default = "/"
 }
 
 variable "fargate_cpu" {
+  type    = string
   default = "1024"
 }
 
 variable "fargate_memory" {
+  type    = string
   default = "2048"
 }
 
 variable "dd_api_key" {
   type      = string
   sensitive = true
-}
-
-variable "rds_username" {
-  type      = string
-  sensitive = true
-}
-
-variable "rds_password" {
-  type      = string
-  sensitive = true
-}
-
-variable "rds_db_name" {
-  type = string
-}
-
-variable "local_ip" {
-  type = string
-}
-
-variable "secret_key" {
-  type      = string
-  sensitive = true
-}
-
-variable "staff_email" {
-  type      = string
-  sensitive = true
-}
-
-variable "debug" {
-  type = bool
-}
-
-variable "use_rollbar" {
-  type = bool
-}
-
-variable "use_custom_smtp" {
-  type = bool
-}
-
-variable "smtp_use_tls" {
-  type = bool
-}
-
-variable "rollbar_access_token" {
-  type      = string
   default   = ""
-  sensitive = true
 }
 
-variable "smtp_user" {
-  type      = string
-  sensitive = true
-}
-
-variable "smtp_password" {
-  type      = string
-  sensitive = true
-}
-
-variable "smtp_host" {
-  type      = string
-  sensitive = true
-}
-
-variable "smtp_port" {
+variable "s3_bucket_name" {
   type    = string
-  default = "587"
+  default = ""
 }
 
-variable "smtp_valid_testing_domains" {
-  type = string
-}
-
-variable "use_aws_storage" {
-  type = bool
-}
-
-variable "aws_storage_bucket_name" {
-  type      = string
-  sensitive = true
-}
-
-variable "aws_location" {
-  type = string
-}
-
-variable "aws_location_dev" {
-  type = string
-}
-
-variable "aws_location_staging" {
-  type = string
-}
-
-variable "aws_location_prod" {
-  type = string
-}
-
-variable "use_nylas" {
-  type = bool
-}
-
-variable "nylas_client_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "nylas_client_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "use_twilio" {
-  type = bool
-}
-
-variable "twilio_account_sid" {
-  type      = string
-  sensitive = true
-}
-
-variable "twilio_auth_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "twilio_base_callback_url" {
-  type      = string
-  sensitive = true
-}
-
-variable "use_zoom" {
-  type = bool
-}
-
-variable "zoom_redirect_uri" {
-  type      = string
-  sensitive = true
-}
-
-variable "zoom_client_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "zoom_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "zoom_webhook_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "zoom_fake_meeting_uuid" {
-  type      = string
-  sensitive = true
-}
-
-variable "use_slack" {
-  type = bool
-}
-
-variable "slack_client_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_signing_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "slack_app_version" {
-  type      = string
-  sensitive = true
-}
-
-variable "use_salesforce" {
-  type      = bool
-  sensitive = true
-}
-
-variable "salesforce_base_url" {
-  type      = string
-  sensitive = true
-}
-
-variable "salesforce_consumer_key" {
-  type      = string
-  sensitive = true
-}
-
-variable "salesforce_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "salesforce_scopes" {
-  type      = list(string)
-  sensitive = true
-}
-
-variable "salesforce_redirect_uri" {
-  type      = string
-  sensitive = true
-}
-
-variable "salesforce_api_version" {
-  type      = string
-  sensitive = true
-}
-
-variable "aws_access_key_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "aws_secret_access_key" {
-  type      = string
-  sensitive = true
+variable "ecr_repo_names" {
+  type    = set(string)
+  default = ["thinknimble/managr/server", "thinknimble/managr/server-tasks"]
 }
 
 variable "environments" {
@@ -268,5 +50,68 @@ variable "environments" {
     app_image_scheduled_tasks = string
     lb_http_port              = number
     lb_https_port             = number
+    debug                     = bool
+    rds_username              = string
+    rds_password              = string
+    rds_db_name               = string
+    secret_key                = string
+    staff_email               = string
+
+    use_custom_smtp            = bool
+    smtp_use_tls               = bool
+    smtp_user                  = string
+    smtp_password              = string
+    smtp_host                  = string
+    smtp_port                  = string
+    smtp_valid_testing_domains = string
+
+    use_rollbar          = bool
+    rollbar_access_token = string
+
+    use_aws_storage                 = bool
+    s3_bucket_aws_access_key_id     = string
+    s3_bucket_aws_secret_access_key = string
+    s3_bucket_name                  = string
+    s3_bucket_location              = string
+    s3_bucket_location_dev          = string
+    s3_bucket_location_staging      = string
+    s3_bucket_location_prod         = string
+
+    use_nylas                = bool
+    nylas_client_id          = string
+    nylas_client_secret      = string
+    nylas_oauth_callback_url = string
+
+    use_twilio               = bool
+    twilio_account_sid       = string
+    twilio_auth_token        = string
+    twilio_base_callback_url = string
+
+    use_zoom               = bool
+    zoom_redirect_uri      = string
+    zoom_client_id         = string
+    zoom_secret            = string
+    zoom_webhook_token     = string
+    zoom_fake_meeting_uuid = string
+
+    use_slack            = bool
+    slack_client_id      = string
+    slack_secret         = string
+    slack_signing_secret = string
+    slack_app_version    = string
+
+    use_salesforce          = bool
+    salesforce_base_url     = string
+    salesforce_consumer_key = string
+    salesforce_secret       = string
+    salesforce_scopes       = set(string)
+    salesforce_redirect_uri = string
+    salesforce_api_version  = string
   }))
+}
+
+variable "local_workstation_public_ip" {
+  type        = string
+  description = "This is the public IP address associated with your local workstation. You can retrieve this from https://www.whatismyip.com/. This value is used to configure the AWS Security Group ingress rule to only allow traffic to managr from your local workstation for testing purposes."
+  default     = ""
 }

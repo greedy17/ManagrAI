@@ -1,12 +1,13 @@
 locals {
-  http_app_urls      = { for e in var.environments : e.name => "http://${aws_alb.main.dns_name}:${e.lb_http_port}" }
-  https_app_urls     = { for e in var.environments : e.name => "http://${aws_alb.main.dns_name}:${e.lb_https_port}" }
-  nylas_callback_url = "http://${aws_alb.main.dns_name}:${tolist(var.environments)[0].lb_http_port}"
-  ecr_repos          = toset(["thinknimble/managr/server", "thinknimble/managr/server-tasks"])
+  app_urls = { for e in var.environments : e.name => {
+    http  = "http://${aws_alb.main.dns_name}:${e.lb_http_port}"
+    https = "https://${aws_alb.main.dns_name}:${e.lb_https_port}"
+    }
+  }
 }
 
 resource "aws_ecr_repository" "managr" {
-  for_each             = local.ecr_repos
+  for_each             = var.ecr_repo_names
   name                 = each.value
   image_tag_mutability = "MUTABLE"
 
@@ -33,7 +34,7 @@ data "template_file" "nginx_config" {
 
   vars = {
     dns_name = aws_alb.main.dns_name
-    app_url  = local.http_app_urls[each.key]
+    app_url  = local.app_urls[each.key].http
   }
 }
 
@@ -44,41 +45,41 @@ data "template_file" "managr_app" {
   vars = {
     nginx_config = base64encode(data.template_file.nginx_config[each.key].rendered)
 
-    environment               = each.value["name"]
-    app_image                 = each.value["app_image"]
-    app_image_scheduled_tasks = each.value["app_image_scheduled_tasks"]
+    environment               = each.value.name
+    app_image                 = each.value.app_image
+    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks
     fargate_cpu               = var.fargate_cpu
     fargate_memory            = var.fargate_memory
-    aws_region                = var.aws_region
-    config_secret_arn         = aws_secretsmanager_secret.managr_config.arn
+    aws_region                = data.aws_region.current.name
+    config_secret_arn         = aws_secretsmanager_secret.managr_config[each.key].arn
     current_domain            = aws_alb.main.dns_name
     current_port              = 8000
-    debug                     = title(var.debug)
+    debug                     = title(each.value.debug)
 
-    use_rollbar = title(var.use_rollbar)
+    use_rollbar = title(each.value.use_rollbar)
 
-    use_custom_smtp            = title(var.use_custom_smtp)
-    smtp_use_tls               = title(var.smtp_use_tls)
-    smtp_port                  = var.smtp_port
-    smtp_valid_testing_domains = var.smtp_valid_testing_domains
+    use_custom_smtp            = title(each.value.use_custom_smtp)
+    smtp_use_tls               = title(each.value.smtp_use_tls)
+    smtp_port                  = each.value.smtp_port
+    smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
 
-    use_aws_storage      = title(var.use_aws_storage)
-    aws_location         = var.aws_location
-    aws_location_dev     = var.aws_location_dev
-    aws_location_staging = var.aws_location_staging
-    aws_location_prod    = var.aws_location_prod
+    use_aws_storage      = title(each.value.use_aws_storage)
+    aws_location         = each.value.s3_bucket_location
+    aws_location_dev     = each.value.s3_bucket_location_dev
+    aws_location_staging = each.value.s3_bucket_location_staging
+    aws_location_prod    = each.value.s3_bucket_location_prod
 
-    use_nylas      = title(var.use_nylas)
-    use_twilio     = title(var.use_twilio)
-    use_zoom       = title(var.use_zoom)
-    use_slack      = title(var.use_slack)
-    use_salesforce = title(var.use_salesforce)
+    use_nylas      = title(each.value.use_nylas)
+    use_twilio     = title(each.value.use_twilio)
+    use_zoom       = title(each.value.use_zoom)
+    use_slack      = title(each.value.use_slack)
+    use_salesforce = title(each.value.use_salesforce)
   }
 }
 
 resource "aws_ecs_task_definition" "app" {
   for_each                 = { for e in var.environments : e.name => e }
-  family                   = "managr-app-task-${lower(each.value["name"])}"
+  family                   = "managr-app-task-${lower(each.value.name)}"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -96,7 +97,7 @@ resource "aws_ecs_task_definition" "app" {
 
 resource "aws_ecs_service" "main" {
   for_each         = { for e in var.environments : e.name => e }
-  name             = "managr-service-${lower(each.value["name"])}"
+  name             = "managr-service-${lower(each.value.name)}"
   cluster          = aws_ecs_cluster.main.id
   task_definition  = aws_ecs_task_definition.app[each.key].arn
   desired_count    = var.app_count
@@ -127,7 +128,8 @@ resource "aws_ecs_service" "main" {
 }
 
 resource "aws_secretsmanager_secret" "managr_config" {
-  name                    = "ManagerConfig"
+  for_each                = { for e in var.environments : e.name => e }
+  name                    = "ManagerConfig-${each.value.name}"
   recovery_window_in_days = 0
 
   tags = {
@@ -136,53 +138,54 @@ resource "aws_secretsmanager_secret" "managr_config" {
 }
 
 resource "aws_secretsmanager_secret_version" "managr_config" {
-  secret_id = aws_secretsmanager_secret.managr_config.id
+  for_each  = { for e in var.environments : e.name => e }
+  secret_id = aws_secretsmanager_secret.managr_config[each.key].id
   secret_string = jsonencode({
     ddApiKey = var.dd_api_key
 
-    dbHost = aws_db_instance.managrdb.address
-    dbUser = var.rds_username
-    dbPass = var.rds_password
-    dbName = var.rds_db_name
+    dbHost = aws_db_instance.managrdb[each.key].address
+    dbUser = each.value.rds_username
+    dbPass = each.value.rds_password
+    dbName = each.value.rds_db_name
 
-    secretKey = var.secret_key
+    secretKey = each.value.secret_key
 
-    staffEmail = var.staff_email
+    staffEmail = each.value.staff_email
 
-    rollbarAccessToken = var.rollbar_access_token
+    rollbarAccessToken = each.value.rollbar_access_token
 
-    smtpUser     = var.smtp_user
-    smtpPassword = var.smtp_password
-    smtpHost     = var.smtp_host
+    smtpUser     = each.value.smtp_user
+    smtpPassword = each.value.smtp_password
+    smtpHost     = each.value.smtp_host
 
-    awsAccessKeyId       = var.aws_access_key_id
-    awsSecretAccessKey   = var.aws_secret_access_key
-    awsStorageBucketName = var.aws_storage_bucket_name
+    awsAccessKeyId       = each.value.s3_bucket_aws_access_key_id
+    awsSecretAccessKey   = each.value.s3_bucket_aws_secret_access_key
+    awsStorageBucketName = each.value.s3_bucket_name
 
-    nylasClientId         = var.nylas_client_id
-    nylasClientSecret     = var.nylas_client_secret
-    nylasOauthCallbackUrl = "${local.nylas_callback_url}/settings/integrations"
+    nylasClientId         = each.value.nylas_client_id
+    nylasClientSecret     = each.value.nylas_client_secret
+    nylasOauthCallbackUrl = each.value.nylas_oauth_callback_url
 
-    twilioAccountSid      = var.twilio_account_sid
-    twilioAuthToken       = var.twilio_auth_token
-    twilioBaseCallbackUrl = var.twilio_base_callback_url
+    twilioAccountSid      = each.value.twilio_account_sid
+    twilioAuthToken       = each.value.twilio_auth_token
+    twilioBaseCallbackUrl = each.value.twilio_base_callback_url
 
-    zoomRedirectUri     = var.zoom_redirect_uri
-    zoomClientId        = var.zoom_client_id
-    zoomSecret          = var.zoom_secret
-    zoomWebhookToken    = var.zoom_webhook_token
-    zoomFakeMeetingUuid = var.zoom_fake_meeting_uuid
+    zoomRedirectUri     = each.value.zoom_redirect_uri
+    zoomClientId        = each.value.zoom_client_id
+    zoomSecret          = each.value.zoom_secret
+    zoomWebhookToken    = each.value.zoom_webhook_token
+    zoomFakeMeetingUuid = each.value.zoom_fake_meeting_uuid
 
-    slackClientId      = var.slack_client_id
-    slackSecret        = var.slack_secret
-    slackSigningSecret = var.slack_signing_secret
-    slackAppVersion    = var.slack_app_version
+    slackClientId      = each.value.slack_client_id
+    slackSecret        = each.value.slack_secret
+    slackSigningSecret = each.value.slack_signing_secret
+    slackAppVersion    = each.value.slack_app_version
 
-    salesforceBaseUrl     = var.salesforce_base_url
-    salesforceConsumerKey = var.salesforce_consumer_key
-    salesforceSecret      = var.salesforce_secret
-    salesforceScopes      = join(" ", var.salesforce_scopes)
-    salesforceRedirectUri = var.salesforce_redirect_uri
-    salesforceApiVersion  = var.salesforce_api_version
+    salesforceBaseUrl     = each.value.salesforce_base_url
+    salesforceConsumerKey = each.value.salesforce_consumer_key
+    salesforceSecret      = each.value.salesforce_secret
+    salesforceScopes      = join(" ", each.value.salesforce_scopes)
+    salesforceRedirectUri = each.value.salesforce_redirect_uri
+    salesforceApiVersion  = each.value.salesforce_api_version
   })
 }

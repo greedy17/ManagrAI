@@ -8,14 +8,15 @@ resource "aws_db_subnet_group" "managrdb" {
 }
 
 resource "aws_db_instance" "managrdb" {
-  identifier                 = var.rds_db_name
+  for_each                   = { for e in var.environments : e.name => e }
+  identifier                 = "${each.value.rds_db_name}-${each.value.name}"
   allocated_storage          = 20
   engine                     = "postgres"
   engine_version             = "12.5"
   instance_class             = "db.t2.micro"
-  name                       = var.rds_db_name
-  username                   = var.rds_username
-  password                   = var.rds_password
+  name                       = each.value.rds_db_name
+  username                   = each.value.rds_username
+  password                   = each.value.rds_password
   storage_type               = "gp2"
   skip_final_snapshot        = true
   port                       = 5432

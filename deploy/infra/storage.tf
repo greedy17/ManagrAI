@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "managr" {
-  bucket        = var.aws_storage_bucket_name
+  bucket        = var.s3_bucket_name
   acl           = "private"
   force_destroy = true
   versioning {
@@ -8,7 +8,9 @@ resource "aws_s3_bucket" "managr" {
 }
 
 resource "aws_s3_bucket_public_access_block" "managr" {
-  bucket              = aws_s3_bucket.managr.id
-  block_public_acls   = true
-  block_public_policy = true
+  bucket                  = aws_s3_bucket.managr.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }

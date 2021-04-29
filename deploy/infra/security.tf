@@ -1,4 +1,3 @@
-# ALB Security Group: Edit to restrict access to the application
 resource "aws_security_group" "lb" {
   name        = "managr-load-balancer-security-group"
   description = "controls access to the ALB"
@@ -10,7 +9,7 @@ resource "aws_security_group" "lb" {
       protocol    = "tcp"
       from_port   = ingress.value
       to_port     = ingress.value
-      cidr_blocks = ["${var.local_ip}/32"]
+      cidr_blocks = ["${var.local_workstation_public_ip}/32"]
     }
   }
 
