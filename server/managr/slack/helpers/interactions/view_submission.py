@@ -349,7 +349,7 @@ def process_submit_resource_data(payload, context):
         context.get("channel_id"),
         context.get("ts"),
         user.organization.slack_integration.access_token,
-        "Succesfully Updated",
+        "Successfully Updated",
     )
     return {"response_action": "clear"}
 

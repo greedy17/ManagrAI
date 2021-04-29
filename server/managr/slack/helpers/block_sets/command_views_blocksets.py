@@ -91,3 +91,4 @@ def update_modal_block_set(context, *args, **kwargs):
             )
         ]
     return blocks
+

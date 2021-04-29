@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <modal name="required-modal" heading="Select a Stage" height="500" adaptive>
+    <modal name="required-modal" heading="Select a Stage">
       <div class="required__container">
         <img
           class="tooltip image"
@@ -14,7 +14,7 @@
           your Salesforce Resources
         </div>
         <div class="required__content__container">
-          <div v-for="validation in validations.list" :key="validation.id">
+          <div v-for="(validation, k) in validations.list" :key="k">
             <div class="required__title">{{ validation.description }}</div>
             <div class="required__content">{{ validation.message }}</div>
           </div>
@@ -32,7 +32,7 @@
         />
       </div>
     </modal>
-    <modal name="add-stage-modal" heading="Select a Stage" height="500" adaptive>
+    <modal name="add-stage-modal" heading="Select a Stage" height="auto" :scrollable="true">
       <div class="modal-container">
         <div v-if="!loadingStages" class="modal-container__box">
           <div class="modal-container__box__header">
@@ -41,27 +41,24 @@
           <div class="modal-container__box__content">
             <div class="box__content-select">
               <DropDownSearch
-                :items="stages"
+                :items.sync="stages"
                 v-model="selectedStage"
                 displayKey="label"
                 valueKey="value"
                 nullDisplay="Select a Stage"
                 searchable
+                local
               />
             </div>
           </div>
 
           <div class="modal-container__box__footer">
-            <div>
+            <div style="display:flex;align-items:center;flex-direction:column">
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
-                <br />
-                Click below to try fetching them manually
               </span>
-              <span class="user-message">
+              <span v-else class="user-message">
                 <small>Recently updated your stages?</small>
-                <br />
-                Click below to refresh them
               </span>
               <PulseLoadingSpinnerButton
                 @click="() => refreshFormStages()"
@@ -156,7 +153,7 @@
                   <div class="stage__dropdown__header">Your Stage Gate Forms</div>
                   <div
                     v-for="(form, i) in formStages"
-                    :key="form"
+                    :key="form.id"
                     class="stage__dropdown__stages__container"
                     :class="{
                       'stage__dropdown__stages__container--selected':
@@ -195,6 +192,7 @@
                 :resource="resource"
                 v-on:update:selectedForm="updateForm($event)"
                 :loading="formFields.refreshing"
+                :stageForms="formStages"
               />
             </template>
           </div>
@@ -259,6 +257,10 @@ export default {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
     } catch (error) {
       console.log(error)
     }
@@ -289,11 +291,20 @@ export default {
       return []
     },
     formStages() {
-      // users can only create one form for the stage
+      // users can only create one form for the stage orderd by stage
+      let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING)
+        this.stages.forEach(s => {
+          this.allFormsByType
+            .filter(f => f.formType == this.STAGE_GATING)
+            .forEach(sf => {
+              if (sf.stage == s.value) {
+                forms.push(sf)
+              }
+            })
+        })
       }
-      return []
+      return forms
     },
   },
   methods: {
@@ -436,16 +447,17 @@ export default {
           timeout: 5000,
         })
       }
-      this.newForms = [
-        ...this.newForms,
-        SlackOAuth.customSlackForm.create({
-          resource: this.OPPORTUNITY,
-          formType: this.STAGE_GATING,
-          stage: stage,
-          fields: [],
-          fieldsRef: [],
-        }),
-      ]
+      let newForm = SlackOAuth.customSlackForm.create({
+        resource: this.OPPORTUNITY,
+        formType: this.STAGE_GATING,
+        stage: stage,
+      })
+      newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
+        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        acc = [...acc, ...fields]
+        return acc
+      }, [])
+      this.newForms = [...this.newForms, newForm]
     },
     async toggleSelectedFormResource(resource) {
       this.isVisible = !this.isVisible
@@ -593,7 +605,7 @@ export default {
       display: flex;
 
       justify-content: center;
-      min-height: 20rem;
+      min-height: 35rem;
     }
     &__button {
       @include primary-button();

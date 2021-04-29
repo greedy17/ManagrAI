@@ -31,6 +31,7 @@ export default {
 
 <style scoped lang="scss">
 .list-container {
+  position: inherit;
   background-color: white;
   -moz-box-shadow: inset 0 0 10px lightgray;
   -webkit-box-shadow: inset 0 0 10px lightgray;
