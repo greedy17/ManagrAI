@@ -359,7 +359,7 @@ def initial_meeting_interaction_block_set(context):
             style="primary",
         ),
         block_builders.simple_button_block(
-            "Disregard",
+            "Hide",
             str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
             style="danger",

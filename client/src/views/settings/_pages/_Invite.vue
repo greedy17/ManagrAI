@@ -70,14 +70,25 @@
           </FormField>
         </div>
         <div class="invite-form__actions">
-          <PulseLoadingSpinnerButton
-            @click="handleInvite"
-            class="invite-button"
-            text="Invite"
-            :loading="loading"
-            >Invite</PulseLoadingSpinnerButton
+          <div
+            @click="
+              userInviteForm.field.slackInvite.value = !userInviteForm.field.slackInvite.value
+            "
+            style="display:flex;align-items:center;align-self:flex-start;"
           >
-          <div class="cancel-button" @click="handleCancel">Cancel</div>
+            <CheckBox :checked="userInviteForm.field.slackInvite.value" />
+            <span style="margin-left:1rem;">Send Slack Invite</span>
+          </div>
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="handleInvite"
+              class="invite-button"
+              text="Invite"
+              :loading="loading"
+              >Invite</PulseLoadingSpinnerButton
+            >
+            <div class="cancel-button" @click="handleCancel">Cancel</div>
+          </template>
         </div>
       </form>
     </Modal>
@@ -113,6 +124,7 @@ import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/Modal'
 import Button from '@thinknimble/button'
+import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 
@@ -123,6 +135,7 @@ export default {
     Modal,
     PulseLoadingSpinnerButton,
     FormField,
+    CheckBox,
   },
   props: {
     inviteOpen: {
@@ -132,6 +145,7 @@ export default {
   },
   data() {
     return {
+      sendSlackInvite: false,
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
@@ -330,7 +344,7 @@ button {
   }
   &__actions {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
   }
 }

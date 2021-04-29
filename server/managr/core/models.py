@@ -9,7 +9,7 @@ from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
-from managr.utils.misc import datetime_appended_filepath 
+from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 
@@ -216,6 +216,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_salesforce_integration(self):
         return hasattr(self, "salesforce_account")
+
+    @property
+    def has_nylas_integration(self):
+        return hasattr(self, "nylas")
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"

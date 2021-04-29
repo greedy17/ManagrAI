@@ -67,12 +67,6 @@ class Organization(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
-    @property
-    def has_stages_integrated(self):
-        """ if an org already has stages assume we already synced and dont try again """
-
-        return self.stages.count() > 0
-
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
