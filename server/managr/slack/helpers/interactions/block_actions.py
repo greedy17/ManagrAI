@@ -39,7 +39,10 @@ def process_meeting_review(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    context = {"w": workflow_id}
+    context = {
+        "w": workflow_id,
+        "f": str(workflow.forms.filter(template__form_type="MEETING_REVIEW").first().id),
+    }
 
     private_metadata.update(context)
     data = {
@@ -242,7 +245,7 @@ def process_stage_selected(payload, context):
         # gather and attach all forms
 
     if not stage_form:
-        submit_text = payload["view"]["submit"]["text"]
+        submit_text = "Submit"
         callback_id = payload["view"]["callback_id"]
     else:
         submit_text = "Next"
@@ -266,7 +269,7 @@ def process_stage_selected(payload, context):
         "view": {
             "type": "modal",
             "callback_id": callback_id,
-            "title": {"type": "plain_text", "text": "Log Meeting"},
+            "title": {"type": "plain_text", "text": payload["view"]["title"]["text"]},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
@@ -455,8 +458,9 @@ def process_meeting_selected_resource_option(payload, context):
     }
     if not action:
         blocks = [block_finder("select_existing", payload["view"]["blocks"])[1]]
+        context["action"] = "EXISTING"
     else:
-
+        context["action"] = "CREATE_NEW"
         blocks = [
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
@@ -466,7 +470,8 @@ def process_meeting_selected_resource_option(payload, context):
     access_token = organization.slack_integration.access_token
     # change variables based on selection
     private_metadata = json.loads(payload["view"]["private_metadata"])
-    if action:
+    private_metadata.update({**context})
+    if action == "CREATE_NEW":
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
         private_metadata = json.loads(payload["view"]["private_metadata"])
         private_metadata = {
@@ -480,10 +485,10 @@ def process_meeting_selected_resource_option(payload, context):
                 .id
             ),
         }
-        submit_text = "Create & Change"
+
     else:
         callback_id = slack_const.ZOOM_MEETING__SELECTED_RESOURCE
-        submit_text = "Change"
+
     data = {
         "view_id": payload["view"]["id"],
         "view": {
@@ -492,7 +497,7 @@ def process_meeting_selected_resource_option(payload, context):
             "title": {"type": "plain_text", "text": f"{resource_type}"},
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),
-            "submit": {"type": "plain_text", "text": submit_text,},
+            "submit": {"type": "plain_text", "text": "Submit",},
         },
     }
     try:

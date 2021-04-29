@@ -39,7 +39,7 @@ def loading_block_set(context):
         block_builders.section_with_accessory_block(
             f"*{message}*",
             block_builders.simple_image_block(
-                "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif", "Loading..."
+                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
             ),
         )
     ]
