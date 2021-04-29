@@ -387,7 +387,7 @@ def update_resource(request):
         blocks = get_block_set(
             "command_update_resource", {"resource_type": resource_type, "u": str(user.id)}
         )
-        #blocks = ["ssf"]
+        # blocks = ["ssf"]
         channel = user.slack_integration.channel
         access_token = user.organization.slack_integration.access_token
         slack_requests.send_channel_message(
