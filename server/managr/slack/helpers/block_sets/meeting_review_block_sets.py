@@ -114,13 +114,6 @@ def create_meeting_task(context):
     )
 
 
-@block_set()
-def convert_lead_block_set(context):
-    from .common_blocksets import coming_soon_modal_block_set
-
-    return coming_soon_modal_block_set()
-
-
 @block_set(required_context=["w"])
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
@@ -478,19 +471,6 @@ def create_or_search_modal_block_set(context):
         block_builders.external_select(
             f"*Search for an {context.get('resource')}*",
             f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
-            block_id="select_existing",
-        )
-    ]
-
-
-@block_set(required_context=["w", "resource"])
-def search_modal_block_set(context, *args, **kwargs):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    user = workflow.user
-    return [
-        block_builders.external_select(
-            f"*Search for an {context.get('resource')}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}",
             block_id="select_existing",
         )
     ]
