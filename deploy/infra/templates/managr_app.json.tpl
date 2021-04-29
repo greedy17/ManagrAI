@@ -7,7 +7,7 @@
     "networkMode": "awsvpc",
     "environment": [
       { "name": "DD_SERVICE", "value": "managr-server" },
-      { "name": "DD_ENV", "value": "fargate" },
+      { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
 
       { "name": "ALLOWED_HOSTS", "value": "*" },
@@ -205,7 +205,7 @@
     "networkMode": "awsvpc",
     "environment": [
       { "name": "DD_SERVICE", "value": "managr-server-scheduled-tasks" },
-      { "name": "DD_ENV", "value": "fargate" },
+      { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
 
       { "name": "ALLOWED_HOSTS", "value": "*" },
@@ -415,7 +415,7 @@
     },
     "environment": [
       { "name": "DD_SERVICE", "value": "managr-app-proxy" },
-      { "name": "DD_ENV", "value": "fargate" }
+      { "name": "DD_ENV", "value": "fargate:${environment}" }
     ],
     "mountPoints": [
       {
