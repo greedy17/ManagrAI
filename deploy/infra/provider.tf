@@ -12,7 +12,7 @@ data "aws_region" "current" {}
 terraform {
   backend "s3" {
     bucket = "managr-app-tfstate"
-    key    = "tfstate"
+    key    = "AKIA6LMLCWFDPMEMHJHU"
     region = "us-east-1"
   }
 }
