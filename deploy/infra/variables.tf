@@ -38,6 +38,30 @@ variable "s3_bucket_name" {
   default = ""
 }
 
+variable "s3_bucket_aws_access_key_id" {
+  type    = string
+  default = ""
+}
+
+variable "s3_bucket_aws_secret_access_key" {
+  type = string
+}
+
+variable "s3_bucket_location" {
+  type = string
+}
+
+variable "s3_bucket_location_dev" {
+  type = string
+}
+
+variable "s3_bucket_location_staging" {
+  type = string
+}
+variable "s3_bucket_location_prod" {
+  type = string
+}
+
 variable "ecr_repo_names" {
   type    = set(string)
   default = ["thinknimble/managr/server", "thinknimble/managr/server-tasks"]
@@ -67,15 +91,6 @@ variable "environments" {
 
     use_rollbar          = bool
     rollbar_access_token = string
-
-    use_aws_storage                 = bool
-    s3_bucket_aws_access_key_id     = string
-    s3_bucket_aws_secret_access_key = string
-    s3_bucket_name                  = string
-    s3_bucket_location              = string
-    s3_bucket_location_dev          = string
-    s3_bucket_location_staging      = string
-    s3_bucket_location_prod         = string
 
     use_nylas                = bool
     nylas_client_id          = string

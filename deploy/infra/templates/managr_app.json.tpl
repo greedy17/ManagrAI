@@ -20,7 +20,6 @@
       { "name": "SMTP_PORT", "value": "${smtp_port}" },
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
-      { "name": "USE_AWS_STORAGE", "value": "${use_aws_storage}" },
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
       { "name": "AWS_LOCATION_DEV", "value": "${aws_location_dev}" },
       { "name": "AWS_LOCATION_STAGING", "value": "${aws_location_staging}" },
@@ -219,7 +218,6 @@
       { "name": "SMTP_PORT", "value": "${smtp_port}" },
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
-      { "name": "USE_AWS_STORAGE", "value": "${use_aws_storage}" },
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
       { "name": "AWS_LOCATION_DEV", "value": "${aws_location_dev}" },
       { "name": "AWS_LOCATION_STAGING", "value": "${aws_location_staging}" },

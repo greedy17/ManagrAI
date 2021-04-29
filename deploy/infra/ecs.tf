@@ -63,11 +63,10 @@ data "template_file" "managr_app" {
     smtp_port                  = each.value.smtp_port
     smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
 
-    use_aws_storage      = title(each.value.use_aws_storage)
-    aws_location         = each.value.s3_bucket_location
-    aws_location_dev     = each.value.s3_bucket_location_dev
-    aws_location_staging = each.value.s3_bucket_location_staging
-    aws_location_prod    = each.value.s3_bucket_location_prod
+    aws_location         = var.s3_bucket_location
+    aws_location_dev     = var.s3_bucket_location_dev
+    aws_location_staging = var.s3_bucket_location_staging
+    aws_location_prod    = var.s3_bucket_location_prod
 
     use_nylas      = title(each.value.use_nylas)
     use_twilio     = title(each.value.use_twilio)
@@ -158,9 +157,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     smtpPassword = each.value.smtp_password
     smtpHost     = each.value.smtp_host
 
-    awsAccessKeyId       = each.value.s3_bucket_aws_access_key_id
-    awsSecretAccessKey   = each.value.s3_bucket_aws_secret_access_key
-    awsStorageBucketName = each.value.s3_bucket_name
+    awsAccessKeyId       = var.s3_bucket_aws_access_key_id
+    awsSecretAccessKey   = var.s3_bucket_aws_secret_access_key
+    awsStorageBucketName = var.s3_bucket_name
 
     nylasClientId         = each.value.nylas_client_id
     nylasClientSecret     = each.value.nylas_client_secret

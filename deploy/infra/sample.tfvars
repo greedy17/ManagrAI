@@ -1,5 +1,11 @@
-dd_api_key     = ""
-s3_bucket_name = ""
+dd_api_key                      = ""
+s3_bucket_name                  = ""
+s3_bucket_aws_access_key_id     = ""
+s3_bucket_aws_secret_access_key = ""
+s3_bucket_location              = ""
+s3_bucket_location_dev          = ""
+s3_bucket_location_staging      = ""
+s3_bucket_location_prod         = ""
 environments = [
   {
     name                      = "prod"
@@ -24,15 +30,6 @@ environments = [
     smtp_valid_testing_domains = ""
 
     use_rollbar = false
-
-    use_aws_storage                 = true
-    s3_bucket_aws_access_key_id     = ""
-    s3_bucket_aws_secret_access_key = ""
-    s3_bucket_name                  = ""
-    s3_bucket_location              = ""
-    s3_bucket_location_dev          = ""
-    s3_bucket_location_staging      = ""
-    s3_bucket_location_prod         = ""
 
     use_nylas                = true
     nylas_client_id          = ""
