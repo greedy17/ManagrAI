@@ -117,7 +117,6 @@ def emit_save_meeting_review(workflow_id):
 def emit_meeting_workflow_tracker(workflow_id):
     """ Checks the workflow after 5 mins to ensure completion """
     schedule = timezone.now() + timezone.timedelta(minutes=5)
-    schedule = datetime.strftime(schedule, "%Y-%m-%dT%H:%M%Z")
     return _process_workflow_tracker(workflow_id, schedule=schedule)
 
 
