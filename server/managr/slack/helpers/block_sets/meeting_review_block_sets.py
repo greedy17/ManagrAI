@@ -586,11 +586,27 @@ def meeting_summary_blockset(context):
     duration_component = list(filter(lambda comp: comp.type == "duration", summary))
     attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
     amount_component = list(filter(lambda comp: comp.type == "amount", summary))
-    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_component[0].rendered_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_component[0].rendered_message}\n*Close Date:* {close_date_component[0].rendered_message}\n"
+    stage_message = (
+        stage_component[0].rendered_message_delta
+        if stage_component[0].rendered_message_delta
+        else stage_component[0].rendered_message
+    )
+    amount_message = (
+        amount_component[0].rendered_message_delta
+        if amount_component[0].rendered_message_delta
+        else amount_component[0].rendered_message
+    )
+    close_date_message = (
+        close_date_component[0].rendered_message_delta
+        if close_date_component[0].rendered_message_delta
+        else close_date_component[0].rendered_message
+    )
+
+    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_message} \n*Close Date:* {close_date_message}\n"
     if review.next_step not in ["", None]:
         review_str = f"{review_str}*Next Step:* {review.next_step}\n"
 
-    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:* {review.meeting_comments}"
+    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:*\n {review.meeting_comments}"
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks

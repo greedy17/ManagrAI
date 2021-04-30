@@ -55,6 +55,7 @@ def process_meeting_review(payload, context):
             "blocks": get_block_set("meeting_review_modal", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": "meeting_review_modal",
         },
     }
     try:
@@ -247,7 +248,10 @@ def process_stage_selected(payload, context):
 
     if not stage_form:
         submit_text = "Submit"
-        callback_id = payload["view"]["callback_id"]
+        if payload["view"]["external_id"] == "create_modal_block_set":
+            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        else:
+            callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
@@ -447,6 +451,7 @@ def process_meeting_selected_resource_option(payload, context):
     select = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource")
     action = None
+    external_id = ""
 
     try:
         action, resource_type = select.split(".")
@@ -466,6 +471,7 @@ def process_meeting_selected_resource_option(payload, context):
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
         ]
+        external_id = "create_modal_block_set"
 
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
@@ -499,6 +505,7 @@ def process_meeting_selected_resource_option(payload, context):
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),
             "submit": {"type": "plain_text", "text": "Submit",},
+            "external_id": external_id,
         },
     }
     try:
