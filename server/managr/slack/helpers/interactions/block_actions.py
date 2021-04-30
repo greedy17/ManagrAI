@@ -21,6 +21,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.api.decorators import slack_api_exceptions
 
 
 logger = logging.getLogger("managr")
@@ -602,6 +603,7 @@ def process_restart_flow(payload, context):
     workflow.save()
 
 
+@slack_api_exceptions(rethrow=True)
 @processor(required_context=["resource", "u"])
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -669,16 +671,7 @@ def process_show_update_resource_form(payload, context):
         },
     }
 
-    try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(f"Failed {e}")
-    except InvalidBlocksFormatException as e:
-        return logger.exception(f"Failed {e}")
-    except UnHandeledBlocksException as e:
-        return logger.exception(f"Failed {e}")
-    except InvalidAccessToken as e:
-        return logger.exception(f"Failed {e}")
+    slack_requests.generic_request(url, data, access_token=access_token)
 
 
 @processor()
