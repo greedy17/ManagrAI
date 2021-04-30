@@ -41,6 +41,7 @@ export function apiErrorHandler({
     if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
       // Handle 4xx errors (probably bad user input)
       const { data } = response
+
       let message = '<div>Error...</div>'
       // Handle common error structures
       if (data.detail) {

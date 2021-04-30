@@ -223,6 +223,7 @@ export default {
             if (res.link) {
               window.location.href = res.link
             }
+          } catch (e) {
           } finally {
             this.generatingToken = false
           }
@@ -250,7 +251,17 @@ export default {
           params: {},
         })
       } catch (e) {
-        console.log(e)
+        let { response } = e
+        if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
+          let { data } = response
+          if (data.timezone) {
+            this.$Alert.alert({
+              type: 'error',
+              message:
+                '<h3>We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate</h3>',
+            })
+          }
+        }
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
