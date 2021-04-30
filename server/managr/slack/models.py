@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
 from managr.salesforce.models import SObjectField
@@ -105,7 +105,10 @@ class UserSlackIntegration(TimeStampModel):
         related_name="user_slack_integrations",
     )
     is_revoked = models.BooleanField(default=True)
-
+    is_onboarded = models.BooleanField(
+        default=False,
+        help_text="When a user opens the home tab it will notifiy us (or messages tab) slack requires an 'onboarding' interaction to be sent, since this event is recurring we only do it once",
+    )
     objects = UserSlackIntegrationQuerySet.as_manager()
 
     def __str__(self):
@@ -149,7 +152,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
-    fields = models.ManyToManyField("salesforce.SObjectField", through="FormField")
+    fields = models.ManyToManyField("salesforce.SObjectField", through="slack.FormField")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
 

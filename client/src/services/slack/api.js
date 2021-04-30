@@ -25,17 +25,18 @@ export default class SlackAPI {
     const promise = this.client
       .post(GET_OAUTH_LINK_ENDPOINT, objectToSnakeCase(payload))
       .then(r => objectToCamelCase(r.data))
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.getOAuthLink' }))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.getOAuthLink', rethrowErrors: true }))
     return promise
   }
 
   generateAccessToken = code => {
     const payload = { code, redirectUri: this.cls.redirectURI }
-    const promise = this.client
-      .post(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
-      .then(r => new User(objectToCamelCase(r.data)))
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.generateAccessToken' }))
-    return promise
+    try {
+      const res = this.client.get(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
+      return new User(objectToCamelCase(res.data))
+    } catch (e) {
+      apiErrorHandler({ apiName: 'SlackAPI.getOAuthLink', rethrowErrors: true })
+    }
   }
 
   testChannel = () => {

@@ -26,6 +26,8 @@ VIEWS_UPDATE = "views.update"
 
 VIEWS_PUSH = "views.push"
 
+VIEWS_PUBLISH = "views.publish"
+
 # https://api.slack.com/methods/chat.getPermalink
 CHAT_GET_PERMALINK = "chat.getPermalink"
 
@@ -33,23 +35,13 @@ CHAT_GET_PERMALINK = "chat.getPermalink"
 CHAT_UPDATE = "chat.update"
 
 WORKSPACE_SCOPES = [
-    "app_mentions:read",
-    "channels:join",
-    "channels:read",
     "chat:write",
     "chat:write.public",
     "commands",
     "im:history",
     "im:write",
     "incoming-webhook",
-    "links:read",
-    "links:write",
-    "mpim:history",
-    "mpim:read",
     "mpim:write",
-    "team:read",
-    "users:read",
-    "users:read.email",
 ]
 
 USER_SCOPES = ["identity.basic"]

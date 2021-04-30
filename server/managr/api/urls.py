@@ -59,11 +59,7 @@ urlpatterns = [
     path(
         "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
-    path(
-        "users/zoom/revoke/direct",
-        zoom_views.revoke_zoom_access_token,
-        name="revoke_zoom_access_token",
-    ),
+    path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(
         "users/salesforce/authorization",
@@ -74,6 +70,7 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
     path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),

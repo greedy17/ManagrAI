@@ -150,7 +150,7 @@ def meeting_contacts_block_set(context):
                     "mrkdwn",
                 ),
                 block_builders.simple_section(
-                    f":ballot_box_with_check: _These contacts will be added to Salesforce and attached to the {workflow.resource_type}_",
+                    f":ballot_box_with_check: _These contacts will be added to Salesforce and attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
                     "mrkdwn",
                 ),
             ]
@@ -194,7 +194,7 @@ def meeting_contacts_block_set(context):
                     ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
                 ),
                 block_builders.simple_section(
-                    f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type}_",
+                    f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
                     "mrkdwn",
                 ),
             ]
@@ -334,7 +334,7 @@ def initial_meeting_interaction_block_set(context):
         block_builders.section_with_button_block(
             "Review Meeting Participants",
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-            "Review the people who joined your meeting before saving them to Salesforce",
+            "Add Contacts to Salesforce",
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
             ),
@@ -359,7 +359,7 @@ def initial_meeting_interaction_block_set(context):
             style="primary",
         ),
         block_builders.simple_button_block(
-            "Disregard",
+            "Hide",
             str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
             style="danger",

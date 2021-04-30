@@ -75,6 +75,30 @@
             :disabled="!$store.state.user.isAdmin"
           />
         </div>
+        <div class="slack-form-builder__form-meta" v-if="customForm.stage">
+          <h5>Previous stage specific forms</h5>
+          <small v-if="!orderedStageForm.length">
+            This is your first stage specific form
+          </small>
+
+          <div :key="key" v-for="(form, key) in orderedStageForm">
+            <i style="text-transform:uppercase;"
+              >Fields from <strong>{{ form.stage }}</strong> stage</i
+            >
+            <ListContainer horizontal>
+              <template v-slot:list>
+                <ListItem
+                  @item-selected="onAddField(val)"
+                  :key="key"
+                  v-for="(val, key) in form.fieldsRef"
+                  :item="val.referenceDisplayLabel"
+                  :active="addedFieldIds.includes(val.id)"
+                  showIcon
+                />
+              </template>
+            </ListContainer>
+          </div>
+        </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div
@@ -155,6 +179,8 @@
                     :key="key"
                     v-for="(val, key) in actionChoices"
                     :item="val.title"
+                    :active="true"
+                    showIcon
                   />
                 </template>
               </ListContainer>
@@ -182,7 +208,8 @@ import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
-import { SObjectField, SObjectValidations } from '@/services/salesforce'
+import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
+
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -197,6 +224,10 @@ export default {
     ListContainer,
   },
   props: {
+    stageForms: {
+      type: Array,
+      default: () => [],
+    },
     customForm: {
       type: Object,
     },
@@ -276,6 +307,16 @@ export default {
     },
   },
   computed: {
+    orderedStageForm() {
+      let forms = []
+      if (this.customForm.stage) {
+        let index = this.stageForms.findIndex(f => f.stage == this.customForm.stage)
+        if (~index) {
+          forms = this.stageForms.slice(0, index)
+        }
+      }
+      return forms
+    },
     sfFieldsAvailableToAdd() {
       return this.fields
     },
@@ -523,9 +564,7 @@ export default {
 
   &__form {
     // flex: 10;
-
     width: 80%;
-    position: absolute;
     margin: 45px 108px 1px 35px;
     padding: 25px 17px 32px 39.6px;
     border-radius: 5px;
@@ -672,7 +711,7 @@ export default {
   width: 15rem;
 
   &__list {
-    margin: 0.5rem;
+    margin: 0.5rem 0;
     width: 80%;
     overflow: hidden;
   }
