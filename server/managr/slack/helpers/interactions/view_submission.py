@@ -336,11 +336,17 @@ def process_submit_resource_data(payload, context):
         }
     else:
         # update the channel message to clear it
-        slack_requests.update_channel_message(
-            context.get("channel_id"),
-            context.get("ts"),
+        slack_requests.send_ephemeral_message(
+            user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            "Successfully Updated",
+            user.slack_integration.slack_id,
+            text=f"Managr updated {main_form.resource_type}",
+            block_set=get_block_set(
+                "success_modal",
+                {
+                    "message": f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+                },
+            ),
         )
     return {"response_action": "clear"}
 

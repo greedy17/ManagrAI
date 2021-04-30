@@ -606,62 +606,69 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
     resource_id = selected_option
     resource_type = context.get("resource")
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-    template = (
-        OrgCustomSlackForm.objects.for_user(user)
-        .filter(Q(resource=resource_type, form_type="UPDATE",))
-        .first()
-    )
-    if not template:
-        return
 
-    form = OrgCustomSlackFormInstance.objects.create(
-        user=user, template=template, resource_id=resource_id,
-    )
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
+    if resource_id:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource=resource_type, form_type="UPDATE"))
+            .first()
+        )
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template, resource_id=resource_id, user=user,
+        )
+        if slack_form:
+            context.update({"f": str(slack_form.id)})
 
-    context = {"form": form}
-    block_set = get_block_set("update_modal_block_set", context=context)
-    try:
-        index, block = block_finder("StageName", block_set)
-    except ValueError:
-        # did not find the block
-        block = None
-        pass
+    blocks = get_block_set(
+        "update_modal_block_set",
+        context={**context, "resource_type": resource_type, "resource_id": resource_id},
+    )
+    if slack_form:
+        try:
+            index, block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
 
-    if block:
-        block = {
-            **block,
-            "accessory": {
-                **block["accessory"],
-                "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}",
-            },
-        }
-        block_set = [*block_set[:index], block, *block_set[index + 1 :]]
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
-        "ts": payload.get("container").get("message_ts"),
     }
-    context = {"f": str(form.id), "u": str(user.id)}
+
     private_metadata.update(context)
     data = {
-        "trigger_id": payload.get("trigger_id"),
+        "trigger_id": payload["trigger_id"],
+        "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-            "title": {"type": "plain_text", "text": "Update"},
-            "blocks": block_set,
+            "title": {"type": "plain_text", "text": f"Update {resource_type}"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Update", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "submit": {"type": "plain_text", "text": "Update"},
+            "external_id": "update_modal_block_set",
         },
     }
+
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -794,10 +801,6 @@ def process_resource_selected_for_task(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-        # blockfinder returns a tuple of its index in the block and the object
-        # index, action_block = block_finder("managr_task_related_to", blocks)
-
-    # private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
@@ -806,11 +809,11 @@ def process_resource_selected_for_task(payload, context):
             "callback_id": slack_const.COMMAND_CREATE_TASK,
             "title": {"type": "plain_text", "text": f"Create a Task"},
             "blocks": get_block_set(
-                "create_task_modal",
-                context={"u": context.get("u"), "resource_type": selected_value},
+                payload["view"]["external_id"], {**context, "resource_type": selected_value}
             ),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
+            "external_id": payload["view"]["external_id"],
         },
     }
     try:

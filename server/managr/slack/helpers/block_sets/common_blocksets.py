@@ -97,7 +97,7 @@ def onboarding_interaction_block_set(context):
 
 
 @block_set()
-def tasks_block_set(context={}):
+def tasks_list_block_set(context={}):
     def to_date_string(date):
         if not date:
             return "n/a"
@@ -213,7 +213,7 @@ def home_modal_block_set(context):
         *integration_blocks,
         block_builders.divider_block(),
         block_builders.simple_section("*Today's Tasks*", "mrkdwn"),
-        *tasks_block_set(context),
+        *tasks_list_block_set(context),
         block_builders.divider_block(),
         block_builders.simple_section("*Alerts*", "mrkdwn"),
         *coming_soon_modal_block_set({}),
