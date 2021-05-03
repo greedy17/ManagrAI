@@ -32,7 +32,7 @@ export default class SlackAPI {
   generateAccessToken = code => {
     const payload = { code, redirectUri: this.cls.redirectURI }
     try {
-      const res = this.client.get(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
+      const res = this.client.post(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
       return new User(objectToCamelCase(res.data))
     } catch (e) {
       apiErrorHandler({ apiName: 'SlackAPI.getOAuthLink', rethrowErrors: true })
