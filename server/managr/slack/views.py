@@ -2,6 +2,7 @@ import json
 import logging
 
 from datetime import datetime
+from managr.utils import sites as site_utils
 
 from django.db.models import Sum, Avg, Q
 
@@ -107,7 +108,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 enterprise=enterprise,
             )
             # TODO: Investigate option to not workspace integration pb 04/20/21 Mike ok'd
-            text = "<!channel> your organization has enabled slack please integrate your account to receive notifications"
+
+            text = f"<!here> your organization has enabled slack for managr!\nYou can now integrate your account navigate to the integrations setings in the portal here {site_utils.get_site_url()}/settings/integrations"
+
             channel = integration.incoming_webhook.get("channel_id", None)
             if not channel:
                 integration.delete()
@@ -135,6 +138,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
             UserSlackIntegration.objects.create(
                 user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
             )
+
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -180,9 +184,22 @@ class SlackViewSet(viewsets.GenericViewSet,):
             user_slack.save()
 
         # DM user
-        test_text = "Testing, testing... 1, 2. Hello, Friend!"
+        if not user_slack.is_onboarded:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                text="Welcome to Managr!",
+                block_set=get_block_set("onboarding_interaction", {"u": str(user.id)}),
+            )
+
+            user_slack.is_onboarded = True
+            user_slack.save()
+
         # NOTE: For DEV_PURPOSES: swap below requests to trigger the initial zoom_meeting UI in a DM
-        slack_requests.send_channel_message(user_slack.channel, access_token, text=test_text)
+        else:
+            slack_requests.send_channel_message(
+                user_slack.channel, access_token, text="Hello Friend!"
+            )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -627,4 +644,47 @@ def list_tasks(request):
                 "blocks": "Failed to list tasks",
             }
         )
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+def slack_events(request):
+    if request.data.get("type") == "url_verification":
+        # respond to challenge (should only happen once)
+        return Response(request.data.get("challenge"))
+    slack_event = request.data.get("event", None)
+    if slack_event:
+        if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
+            slack_id = slack_event.get("user")
+            user = User.objects.filter(slack_integration__slack_id=slack_id).first()
+            if user:
+                slack_requests.publish_view(
+                    slack_id,
+                    user.organization.slack_integration.access_token,
+                    get_block_set("home_modal", {"u": str(user.id)}),
+                )
+            if user and user.slack_integration.is_onboarded:
+
+                return Response()
+            elif user and not user.slack_integration.is_onboarded:
+                slack_requests.send_channel_message(
+                    user.slack_integration.channel,
+                    user.organization.slack_integration.access_token,
+                    text="Welcome to Managr!",
+                    block_set=get_block_set("onboarding_interaction", {"u": str(user.id)}),
+                )
+                user_slack = user.slack_integration
+                user_slack.is_onboarded = True
+                user_slack.save()
+
+                return Response()
+            else:
+                return Response()
+        else:
+            return Response()
+    else:
+        return Response()
+
+        # check if they exist in managr
 

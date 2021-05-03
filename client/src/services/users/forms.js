@@ -5,6 +5,7 @@ import {
   EmailValidator,
   RequiredValidator,
   MinLengthValidator,
+  Validator,
 } from '@thinknimble/tn-validators'
 
 export class UserRegistrationForm extends Form {
@@ -99,6 +100,7 @@ export class UserInviteForm extends Form {
   static role = new FormField({ validators: [new RequiredValidator()] })
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
+  static slackInvite = new FormField({ value: false })
 
   dynamicValidators() {
     /**
@@ -117,6 +119,7 @@ export class UserInviteForm extends Form {
   reset() {
     this.field.email.value = ''
     this.field.confirmEmail.value = ''
+    this.field.slackInvite.value = false
   }
 }
 
