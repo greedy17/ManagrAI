@@ -10,7 +10,7 @@
       { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
 
-      { "name": "ALLOWED_HOSTS", "value": "*" },
+      { "name": "ALLOWED_HOSTS", "value": "${allowed_hosts}" },
       { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
       { "name": "CURRENT_PORT", "value": "${current_port}" },
       { "name": "DEBUG", "value": "${debug}" },
@@ -21,9 +21,6 @@
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
-      { "name": "AWS_LOCATION_DEV", "value": "${aws_location_dev}" },
-      { "name": "AWS_LOCATION_STAGING", "value": "${aws_location_staging}" },
-      { "name": "AWS_LOCATION_PROD", "value": "${aws_location_prod}" },
 
       { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
       { "name": "USE_NYLAS", "value": "${use_nylas}" },
@@ -208,7 +205,7 @@
       { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
 
-      { "name": "ALLOWED_HOSTS", "value": "*" },
+      { "name": "ALLOWED_HOSTS", "value": "${allowed_hosts}" },
       { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
       { "name": "CURRENT_PORT", "value": "${current_port}" },
       { "name": "DEBUG", "value": "${debug}" },
@@ -219,9 +216,6 @@
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
-      { "name": "AWS_LOCATION_DEV", "value": "${aws_location_dev}" },
-      { "name": "AWS_LOCATION_STAGING", "value": "${aws_location_staging}" },
-      { "name": "AWS_LOCATION_PROD", "value": "${aws_location_prod}" },
 
       { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
       { "name": "USE_NYLAS", "value": "${use_nylas}" },

@@ -2,10 +2,6 @@ dd_api_key                      = ""
 s3_bucket_name                  = ""
 s3_bucket_aws_access_key_id     = ""
 s3_bucket_aws_secret_access_key = ""
-s3_bucket_location              = ""
-s3_bucket_location_dev          = ""
-s3_bucket_location_staging      = ""
-s3_bucket_location_prod         = ""
 environments = [
   {
     name                      = "prod"
@@ -13,6 +9,11 @@ environments = [
     app_image_scheduled_tasks = ""
     lb_http_port              = 8000
     lb_https_port             = 8443
+
+    s3_bucket_location = "prod"
+
+    allowed_hosts = ""
+    current_domain = ""
 
     debug        = true
     rds_username = ""
@@ -66,6 +67,12 @@ environments = [
     name                      = "staging"
     app_image                 = ""
     app_image_scheduled_tasks = ""
+
+    s3_bucket_location = "staging"
+
+    allowed_hosts = ""
+    current_domain = ""
+
     lb_http_port              = 8001
     lb_https_port             = 8444
 
@@ -130,6 +137,12 @@ environments = [
     name                      = "demo"
     app_image                 = ""
     app_image_scheduled_tasks = ""
+
+    s3_bucket_location = "demo"
+
+    allowed_hosts = ""
+    current_domain = ""
+
     lb_http_port              = 8002
     lb_https_port             = 8445
 

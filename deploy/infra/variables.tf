@@ -47,20 +47,6 @@ variable "s3_bucket_aws_secret_access_key" {
   type = string
 }
 
-variable "s3_bucket_location" {
-  type = string
-}
-
-variable "s3_bucket_location_dev" {
-  type = string
-}
-
-variable "s3_bucket_location_staging" {
-  type = string
-}
-variable "s3_bucket_location_prod" {
-  type = string
-}
 
 variable "ecr_repo_names" {
   type    = set(string)
@@ -72,14 +58,20 @@ variable "environments" {
     name                      = string
     app_image                 = string
     app_image_scheduled_tasks = string
-    lb_http_port              = number
-    lb_https_port             = number
-    debug                     = bool
-    rds_username              = string
-    rds_password              = string
-    rds_db_name               = string
-    secret_key                = string
-    staff_email               = string
+
+    s3_bucket_location = string
+
+    allowed_hosts  = string
+    current_domain = string
+
+    lb_http_port  = number
+    lb_https_port = number
+    debug         = bool
+    rds_username  = string
+    rds_password  = string
+    rds_db_name   = string
+    secret_key    = string
+    staff_email   = string
 
     use_custom_smtp            = bool
     smtp_use_tls               = bool

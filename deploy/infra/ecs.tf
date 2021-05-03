@@ -52,9 +52,11 @@ data "template_file" "managr_app" {
     fargate_memory            = var.fargate_memory
     aws_region                = data.aws_region.current.name
     config_secret_arn         = aws_secretsmanager_secret.managr_config[each.key].arn
-    current_domain            = aws_alb.main.dns_name
-    current_port              = 8000
-    debug                     = title(each.value.debug)
+
+    allowed_hosts  = each.value.allowed_hosts != "" ? each.value.allowed_hosts : "*"
+    current_domain = each.value.current_domain != "" ? each.value.current_domain : aws_alb.main.dns_name
+    current_port   = 8000
+    debug          = title(each.value.debug)
 
     use_rollbar = title(each.value.use_rollbar)
 
@@ -63,10 +65,7 @@ data "template_file" "managr_app" {
     smtp_port                  = each.value.smtp_port
     smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
 
-    aws_location         = var.s3_bucket_location
-    aws_location_dev     = var.s3_bucket_location_dev
-    aws_location_staging = var.s3_bucket_location_staging
-    aws_location_prod    = var.s3_bucket_location_prod
+    aws_location = each.value.s3_bucket_location
 
     use_nylas      = title(each.value.use_nylas)
     use_twilio     = title(each.value.use_twilio)
