@@ -42,6 +42,7 @@ WORKSPACE_SCOPES = [
     "im:write",
     "incoming-webhook",
     "mpim:write",
+    "channels:join",
 ]
 
 USER_SCOPES = ["identity.basic"]
