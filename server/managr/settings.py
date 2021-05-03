@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "managr.slack",
     "managr.zoom",
     "managr.salesforce",
+    "managr.alerts",
     # "managr.demo",
     # Django
     "django.contrib.admin",
