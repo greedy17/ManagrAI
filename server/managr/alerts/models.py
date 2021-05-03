@@ -19,7 +19,8 @@ class AlertTemplateQuerySet(models.QuerySet):
 class AlertTemplate(TimeStampModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alert_template")
-    objects = AlertTemplateQuerySet()
+    resource = models.CharField(max_length=255)
+    objects = AlertTemplateQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.title} created by {self.user.email}"
@@ -33,7 +34,7 @@ class AlertGroupQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         if user.organization and user.is_active:
-            return self.filter(user__organization=user.organization)
+            return self.filter(template__user__organization=user.organization)
         else:
             return self.none()
 
@@ -43,12 +44,23 @@ class AlertGroup(TimeStampModel):
     template = models.ForeignKey(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="groups"
     )
+    objects = AlertGroupQuerySet.as_manager()
 
     def __str__(self):
         return f"Alert group with operator {self.operator}, for template {self.template.title}"
 
     class Meta:
         ordering = ["-datetime_created"]
+
+
+class AlertOperandQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            return self.filter(group__template__user__organization=user.organization)
+        else:
+            return self.none()
 
 
 class AlertOperand(TimeStampModel):
@@ -63,9 +75,41 @@ class AlertOperand(TimeStampModel):
     operator = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
     recipients = ArrayField(models.CharField(max_length=255), default=list)
+    objects = AlertOperandQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.operand_type_identifier} {self.operator}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+
+class AlertMessageTemplateQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            return self.filter(template__user__organization=user.organization)
+        else:
+            return self.none()
+
+
+class AlertMessageTemplate(TimeStampModel):
+    template = models.OneToOneField(
+        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="message_template"
+    )
+    bindings = ArrayField(models.CharField(max_length=255), default=list)
+    notification_text = models.TextField(
+        blank=True,
+        help_text="This is the message that appears in the slack notification when the app is closed/out of view",
+    )
+    body = models.TextField(
+        help_text="This is the message the user will see in their notification message"
+    )
+    objects = AlertMessageTemplateQuerySet.as_manager()
+
+    def __str__(self):
+        return f"notification message for {self.template.title}"
 
     class Meta:
         ordering = ["-datetime_created"]
