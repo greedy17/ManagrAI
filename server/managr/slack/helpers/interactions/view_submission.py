@@ -45,7 +45,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
-
+from managr.api.decorators import slack_api_exceptions
 
 logger = logging.getLogger("managr")
 
@@ -211,6 +211,7 @@ def process_next_page_slack_commands_form(payload, context):
 
 
 @log_all_exceptions
+@slack_api_exceptions
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
