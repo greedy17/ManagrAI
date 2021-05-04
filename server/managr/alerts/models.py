@@ -1,7 +1,11 @@
+import operator as _operator
+
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 from managr.core.models import TimeStampModel
+from managr.salesforce.routes import routes as model_routes
+from managr.salesforce.adapter.routes import routes as adapter_routes
 
 # Create your models here.
 
@@ -19,7 +23,13 @@ class AlertTemplateQuerySet(models.QuerySet):
 class AlertTemplate(TimeStampModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alert_template")
-    resource = models.CharField(max_length=255)
+    resource_type = models.CharField(max_length=255)
+
+    occurences = models.PositiveIntegerField(
+        default=1, help_text="How many instances of the same alert should we send out"
+    )
+    recipients = ArrayField(models.CharField(max_length=255), default=list)
+    is_active = models.BooleanField(default=True)
     objects = AlertTemplateQuerySet.as_manager()
 
     def __str__(self):
@@ -40,7 +50,11 @@ class AlertGroupQuerySet(models.QuerySet):
 
 
 class AlertGroup(TimeStampModel):
-    operator = models.CharField(choices=(("AND", "AND"), ("OR", "OR"),), max_length=255)
+    group_condition = models.CharField(
+        choices=(("AND", "AND"), ("OR", "OR"),),
+        max_length=255,
+        help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
+    )
     template = models.ForeignKey(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="groups"
     )
@@ -67,14 +81,21 @@ class AlertOperand(TimeStampModel):
     group = models.ForeignKey(
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
+    operand_condition = models.CharField(
+        choices=(("AND", "AND"), ("OR", "OR"),),
+        max_length=255,
+        help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
+    )
     operand_type = models.CharField(
         max_length=255,
-        help_text="Type of operand aka if it is a 'field' ('close_date') or a 'managr' aka local to managr (last_stage_update)",
+        help_text="Type of operand aka if it is a 'sf_only' ('close_date') or a 'managr' aka saved to the model directly (last_stage_update, stage, amount,close_date)",
     )
-    operand_type_identifier = models.CharField(max_length=255)
+    operand_identifier = models.CharField(
+        max_length=255, help_text="Name of the field or managr constraint"
+    )
     operator = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
-    recipients = ArrayField(models.CharField(max_length=255), default=list)
+
     objects = AlertOperandQuerySet.as_manager()
 
     def __str__(self):
@@ -110,6 +131,34 @@ class AlertMessageTemplate(TimeStampModel):
 
     def __str__(self):
         return f"notification message for {self.template.title}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+
+class AlertInstance(TimeStampModel):
+    template = models.ForeignKey(
+        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
+    )
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
+    rendered_text = models.TextField(
+        help_text=(
+            "This is the original text rendered at time of send,"
+            "if for some reason an update has occured it will not show the new message but the original,"
+            "use to_rendered_text for the updated message"
+        )
+    )
+    resource_id = models.CharField(max_length=255)
+    sent_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"notification for {self.user.email} from template {self.template.title} for {self.template.resource_type}, {self.resource_id}"
+
+    @property
+    def resource(self):
+        return model_routes[self.template_resource_type]["model"].objects.filter(
+            id=self.resource_id
+        )
 
     class Meta:
         ordering = ["-datetime_created"]
