@@ -8,7 +8,7 @@ from django.conf import settings
 
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
-from managr.slack.helpers.block_sets import get_block_set
+
 from managr.slack.helpers.exceptions import CustomAPIException
 
 
