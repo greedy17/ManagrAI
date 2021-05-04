@@ -2,7 +2,9 @@ import logging
 import json
 import pytz
 from datetime import datetime
+
 from background_task import background
+from background_task.models import CompletedTask, Task
 
 
 from django.utils import timezone
@@ -20,7 +22,7 @@ from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
-from managr.slack.models import OrgCustomSlackForm
+from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
@@ -110,6 +112,12 @@ def emit_save_meeting_review(workflow_id):
     # currently only creating zoom meeting reviews
     # ignore this, and call _save_meeting_review directly
     return _save_meeting_review(workflow_id)
+
+
+def emit_meeting_workflow_tracker(workflow_id):
+    """ Checks the workflow after 5 mins to ensure completion """
+    schedule = timezone.now() + timezone.timedelta(minutes=5)
+    return _process_workflow_tracker(workflow_id, schedule=schedule)
 
 
 # SF Resource Sync Tasks
@@ -574,17 +582,14 @@ def _process_update_contacts(workflow_id, *args):
 
 ### This is currently run as async so dont catch the errors in the same way
 @background(schedule=0)
-def _process_create_new_resource(workflow_id, resource, *args):
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
+def _process_create_new_resource(form_ids, *args):
+
+    create_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    if not create_forms.count():
+        return logger.exception(f"An error occured no form was found")
+    user = create_forms.first().user
+    resource = create_forms.first().resource_type
     # get the create form
-    meeting = workflow.meeting
-    create_forms = workflow.forms.filter(
-        template__form_type__in=[
-            slack_consts.FORM_TYPE_CREATE,
-            slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
-    ).exclude(template__resource=slack_consts.FORM_RESOURCE_CONTACT)
     data = dict()
     for form in create_forms:
         data = {**data, **form.saved_data}
@@ -603,7 +608,7 @@ def _process_create_new_resource(workflow_id, resource, *args):
                 sf.access_token,
                 sf.instance_url,
                 sf.adapter_class.object_fields.get(resource),
-                str(workflow.user.id),
+                str(user.id),
             )
             serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)
@@ -732,6 +737,23 @@ def _process_list_tasks(user_id, data, *args):
 
 
 @background(schedule=0)
+@log_all_exceptions
+def _process_workflow_tracker(workflow_id):
+    """ gets workflow and check's if all tasks are completed and manually completes if not already completed """
+    workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    if workflow and workflow.in_progress:
+        completed_tasks = set(workflow.completed_operations)
+        all_tasks = set(workflow.operations)
+        tasks_diff = list(all_tasks - completed_tasks)
+        for task_hash in tasks_diff:
+            # check to see if there was a problem completing the flow but all tasks are ready
+            task = CompletedTask.objects.filter(task_hash=task_hash).count()
+            if task:
+                workflow.completed_operations.append(task_hash)
+
+
+@background(schedule=0)
+@log_all_exceptions
 def _process_stale_data_for_delete(batch):
     for record in batch:
         # running this as for loop instead of bulk delete to keep track of records deleted
