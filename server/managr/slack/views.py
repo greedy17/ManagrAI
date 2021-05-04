@@ -28,6 +28,8 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
+from managr.api.decorators import slack_api_exceptions
+
 from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
 from .serializers import OrgCustomSlackFormSerializer
 
@@ -346,6 +348,9 @@ class SlackFormsViewSet(
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
 def update_resource(request):
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opportunity", "account", "lead", "contact"]
@@ -382,13 +387,32 @@ def update_resource(request):
         resource_type = command_params[0][0].upper() + command_params[0][1:]
 
         blocks = get_block_set(
-            "command_update_resource", {"resource_type": resource_type, "u": str(user.id)}
+            "update_modal_block_set", {"resource_type": resource_type, "u": str(user.id)}
         )
-        channel = user.slack_integration.channel
         access_token = user.organization.slack_integration.access_token
-        slack_requests.send_channel_message(
-            channel, access_token, text=f"Select a {resource_type} to update", block_set=blocks
-        )
+
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        trigger_id = request.data.get("trigger_id")
+
+        private_metadata = {
+            "original_message_channel": request.data.get("channel_id"),
+        }
+
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "title": {"type": "plain_text", "text": f"Update {resource_type}"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Update", "emoji": True},
+                "private_metadata": json.dumps(private_metadata),
+                "external_id": "update_modal_block_set",
+            },
+        }
+
+        slack_requests.generic_request(url, data, access_token=access_token)
+
         return Response()
 
 
@@ -446,6 +470,9 @@ def meeting_summary(request):
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
 def create_task(request):
 
     # list of accepted commands for this fake endpoint
@@ -506,34 +533,21 @@ def create_task(request):
             "blocks": get_block_set("create_task_modal", context=context,),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": "create_task_modal",
         },
     }
 
-    try:
-        slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
-        )
+    slack_requests.generic_request(url, data, access_token=access_token)
 
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {str(user.id)} email {self.user.email} {e}"
-        )
     return Response()
 
 
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
 def list_tasks(request):
     ## helper to make datetime longform
     def to_date_string(date):
@@ -558,92 +572,8 @@ def list_tasks(request):
     user = slack.user
 
     # Pulls tasks from Salesforce
-    tasks = user.salesforce_account.adapter_class.list_tasks()
-    blocks = []
-
-    try:
-
-        if not len(tasks):
-            message = "Congratulations. You have no future tasks at this time."
-
-            return Response(data={"response_type": "ephemeral", "text": message,})
-        blocks.extend(
-            [
-                block_builders.header_block("View Tasks"),
-                block_builders.simple_section(f"You have *{len(tasks)}* upcoming tasks", "mrkdwn"),
-                block_builders.divider_block(),
-            ]
-        )
-        for t in tasks:
-            resource = "_salesforce object n/a_"
-            # get the resource if it is what_id is for account/opp
-            # get the resource if it is who_id is for lead
-            if t.what_id:
-                # first check for opp
-                obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-                if not obj:
-                    obj = user.imported_account.filter(integration_id=t.what_id).first()
-                if obj:
-                    resource = f"*{obj.name}*"
-
-            elif t.who_id:
-                obj = user.imported_lead.filter(integration_id=t.who_id).first()
-                if obj:
-                    resource = f"*{obj.name}*"
-
-            blocks.extend(
-                [
-                    block_builders.simple_section(
-                        f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
-                        "mrkdwn",
-                    ),
-                    block_builders.divider_block(),
-                    block_builders.section_with_button_block(
-                        "View Task",
-                        "view_task",
-                        "_*View task in salesforce*_",
-                        url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
-                    ),
-                ]
-            )
-
-        return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
-    except InvalidBlocksException as e:
-        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
-        return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Your Tasks",
-                "blocks": "Failed to list tasks",
-            }
-        )
-    except InvalidBlocksFormatException as e:
-        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
-        return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Your Tasks",
-                "blocks": "Failed to list tasks",
-            }
-        )
-    except UnHandeledBlocksException as e:
-        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
-        return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Your Tasks",
-                "blocks": "Failed to list tasks",
-            }
-        )
-    except InvalidAccessToken as e:
-        logger.exception(f"Failed to list tasks for user {str(user.id)} email {user.email} {e}")
-        return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Your Tasks",
-                "blocks": "Failed to list tasks",
-            }
-        )
+    blocks = get_block_set("tasks_list", {"u": str(user.id)})
+    return Response(data={"response_type": "ephemeral", "text": "Your Tasks", "blocks": blocks})
 
 
 @api_view(["post"])
