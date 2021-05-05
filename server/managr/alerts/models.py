@@ -26,7 +26,8 @@ class AlertTemplate(TimeStampModel):
     resource_type = models.CharField(max_length=255)
 
     occurences = models.PositiveIntegerField(
-        default=1, help_text="How many instances of the same alert should we send out"
+        default=1,
+        help_text="How many instances of the same alert should we send out (always 1 max per day)",
     )
     recipients = ArrayField(models.CharField(max_length=255), default=list)
     is_active = models.BooleanField(default=True)

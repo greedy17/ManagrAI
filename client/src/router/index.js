@@ -89,6 +89,12 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       name: 'SlackFormSettings',
     },
+    {
+      path: '/alerts',
+      beforeEnter: Auth.requireAuth,
+      name: 'Alerts',
+      component: () => import(/* webpackChunkName: "settings" */ '../views/settings/AlertsPage'),
+    },
 
     {
       path: '/settings',

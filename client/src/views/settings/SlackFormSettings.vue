@@ -319,8 +319,12 @@ export default {
             message: 'Successfully Retrieved Picklist Values please refresh your page',
           })
         }
-      } catch (e) {
-        console.log(e)
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting stages',
+        })
       } finally {
         this.loadingStages = false
       }
@@ -358,18 +362,27 @@ export default {
       try {
         this.formFields.filters = query_params
         this.formFields.refresh()
-      } catch (e) {
-        console.log(e)
+      } catch {
+        this.$Alert.alert({
+          message: 'There was an error gathering fields',
+          type: 'error',
+          timeout: 3000,
+        })
       }
     },
     async listValidations(query_params = {}) {
       try {
         this.validations.filters = query_params
         this.validations.refresh()
-      } catch (e) {
-        console.log(e)
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error gathering validations',
+        })
       }
     },
+
     async listPicklists(query_params = {}) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)

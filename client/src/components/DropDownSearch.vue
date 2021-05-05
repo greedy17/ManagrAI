@@ -41,17 +41,12 @@ export default {
   width: 12rem;
   height: 2.4rem;
 }
+::v-deep .tn-dropdown {
+}
 
 ::v-deep .tn-dropdown__trigger-icon {
   margin-right: 0.25rem;
 }
-
-// ::v-deep .tn-dropdown__trigger-icon {
-//   transform: rotate(-90deg);
-// }
-// ::v-deep .tn-dropdown__trigger-icon--expanded-local {
-//   transform: translate(-9px, 1px) rotate(90deg);
-// }
 
 .dropdown-search__select ::v-deep .tn-dropdown__search {
 }

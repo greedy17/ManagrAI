@@ -1,5 +1,11 @@
 <template>
-  <div class="list-container">
+  <div
+    class="list-container"
+    :class="{
+      'list-container--horizontal': isHorizonal,
+      'list-container--vertical': isVertical,
+    }"
+  >
     <div
       class="list-container__list"
       :class="{
@@ -39,14 +45,21 @@ export default {
   border-radius: 2px;
   color: white;
   width: 100%;
-  padding: 0.5rem 1rem;
-  height: 2.5rem;
+
   &__list {
     &--horizontal {
+      padding: 0.5rem 1rem;
       width: 100%;
       display: flex;
+      height: 20rem;
       //flex-direction: row;
       overflow-x: scroll;
+    }
+    &--vertical {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem 1rem;
     }
   }
 }

@@ -10,5 +10,8 @@
   "cacheDirectories": [
     "client/node_modules",
     ".cache/Cypress"
-  ]
+  ],
+  "dependencies": {
+    "@thinknimble/togglecheckbox": "^0.1.4"
+  }
 }
