@@ -96,3 +96,20 @@ resource "aws_acm_certificate" "managr" {
   private_key      = tls_private_key.managr.private_key_pem
   certificate_body = tls_self_signed_cert.managr.cert_pem
 }
+
+resource "aws_lb_listener_rule" "rule" {
+  for_each     = { for e in var.environments : e.name => e }
+  listener_arn = aws_alb_listener.front_end[each.key].arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_alb_target_group.app[each.key].id
+  }
+
+  condition {
+    host_header {
+      values = ["${each.value.name}.${var.managr_domain}"]
+    }
+  }
+}

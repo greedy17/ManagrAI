@@ -1,3 +1,4 @@
+managr_domain                   = "managr.ai"
 dd_api_key                      = ""
 s3_bucket_name                  = ""
 s3_bucket_aws_access_key_id     = ""
@@ -12,7 +13,7 @@ environments = [
 
     s3_bucket_location = "prod"
 
-    allowed_hosts = ""
+    allowed_hosts  = ""
     current_domain = ""
 
     debug        = true
@@ -70,11 +71,11 @@ environments = [
 
     s3_bucket_location = "staging"
 
-    allowed_hosts = ""
+    allowed_hosts  = ""
     current_domain = ""
 
-    lb_http_port              = 8001
-    lb_https_port             = 8444
+    lb_http_port  = 8001
+    lb_https_port = 8444
 
     debug        = true
     rds_username = ""
@@ -140,11 +141,11 @@ environments = [
 
     s3_bucket_location = "demo"
 
-    allowed_hosts = ""
+    allowed_hosts  = ""
     current_domain = ""
 
-    lb_http_port              = 8002
-    lb_https_port             = 8445
+    lb_http_port  = 8002
+    lb_https_port = 8445
 
     debug        = true
     rds_username = ""
