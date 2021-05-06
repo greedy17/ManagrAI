@@ -21,7 +21,8 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
 
   tags = {
-    "app" = "managr"
+    "app"    = "managr"
+    "subnet" = "private"
   }
 }
 
@@ -34,7 +35,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    "app" = "managr"
+    "app"    = "managr"
+    "subnet" = "public"
   }
 }
 

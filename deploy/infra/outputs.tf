@@ -32,3 +32,7 @@ output "ecr_config" {
 output "ecs_task_families" {
   value = [for e in var.environments : "managr-app-task-${lower(e.name)}"]
 }
+
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
