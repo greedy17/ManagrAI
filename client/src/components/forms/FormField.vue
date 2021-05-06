@@ -112,7 +112,6 @@ export default {
 }
 ::v-deep .input-content__active {
   outline: none;
-  color: red;
 }
 ::v-deep .input-form__active {
   border: $dark-green;
