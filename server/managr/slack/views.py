@@ -137,9 +137,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
         slack_id = data.get("authed_user").get("id")
         org = request.user.organization
         if hasattr(org, "slack_integration"):
-            UserSlackIntegration.objects.create(
+            user_slack = UserSlackIntegration.objects.create(
                 user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
             )
+            # get the user's channel
+            res = slack_requests.request_user_dm_channel(user_slack.slack_id, access_token).json()
+            # save Slack Channel ID
+            channel = res.get("channel", {}).get("id")
+            user_slack.channel = channel
+            user_slack.save()
 
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
