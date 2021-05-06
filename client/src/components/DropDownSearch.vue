@@ -8,6 +8,14 @@
         >
         </span>
       </template>
+      <template v-if="$attrs.hasNext" v-slot:tn-dropdown__pagination>
+        <div
+          @click.stop="$emit('load-more')"
+          class="tn-dropdown__options__option tn-dropdown__options__option__pagination"
+        >
+          +
+        </div>
+      </template>
     </DropDownSelect>
   </div>
 </template>

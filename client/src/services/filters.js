@@ -11,6 +11,7 @@ export {
   formatDateShortWithTime,
   roundToOneDecimalPlace,
   snakeCaseToTextFilter,
+  timeOnlyShort,
 }
 
 function uppercase(value) {
@@ -36,6 +37,9 @@ function timeAgo(value) {
 function timeToNow(value) {
   if (!value) return 'N/A'
   return moment(value).toNow(true)
+}
+function timeOnlyShort(value) {
+  return moment(value).format('HH:MM a')
 }
 
 function prependUrlProtocol(value) {

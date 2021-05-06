@@ -7,7 +7,7 @@
         @input="
           selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
         "
-        :value="selectedCondition == 'AND'"
+        :value="selectedCondition !== 'AND'"
         offColor="#199e54"
         onColor="#199e54"
       />
@@ -15,8 +15,24 @@
     </div>
     <div class="alert-operand-row__options">
       <div class="alert-operand-row__field">
+        <div class="alert-operand-row__condition">
+          <label class="alert-operand-row__condition-label">Field Level Alert</label>
+          <ToggleCheckBox
+            @input="
+              selectedOperandType == 'FIELD'
+                ? (selectedOperandType = 'NON_FIELD')
+                : (selectedOperandType = 'FIELD')
+            "
+            :value="selectedOperandType !== 'FIELD'"
+            offColor="#199e54"
+            onColor="#199e54"
+          />
+          <label class="alert-operand-row__condition-label">Non Field Level Alert</label>
+        </div>
         <DropDownSearch
+          v-if="selectedOperandType == 'FIELD'"
           :items="objectFields.list"
+          :itemsRef.sync="selectedOperandFieldRef"
           v-model="form.field.operandField.value"
           displayKey="referenceDisplayLabel"
           valueKey="apiName"
@@ -25,6 +41,20 @@
           :hasNext="!!objectFields.pagination.hasNextPage"
           @load-more="objectFieldNextPage"
           @search-term="onSearchFields"
+        />
+        <DropDownSearch
+          v-else-if="selectedOperandType == 'NON_FIELD'"
+          :items.sync="NON_FIELD_ALERT_OPTS[resourceType]"
+          :itemsRef.sync="selectedOperandFieldRef"
+          v-model="form.field.operandField.value"
+          displayKey="referenceDisplayLabel"
+          valueKey="apiName"
+          :nullDisplay="
+            NON_FIELD_ALERT_OPTS[resourceType].length ? 'Select an option' : 'Not Options Available'
+          "
+          :disabled="!NON_FIELD_ALERT_OPTS[resourceType].length"
+          searchable
+          local
         />
       </div>
       <div class="alert-operand-row__operator">
@@ -36,14 +66,28 @@
           nullDisplay="Select an Operator"
           searchable
           local
-          small
         />
       </div>
       <div class="alert-operand-row__value">
         <DropDownSearch
-          v-if="false"
-          :items.sync="operatorOpts"
-          :itemsRef.sync="form.field.operandValue.value"
+          v-if="selectedOperandFieldRef && selectedOperandFieldRef.dataType == 'Picklist'"
+          :items.sync="picklistOpts"
+          :itemsRef.sync="selectedOperandValueRef"
+          v-model="form.field.operandValue.value"
+          displayKey="label"
+          valueKey="value"
+          nullDisplay="Select a value"
+          searchable
+          local
+        />
+        <DropDownSearch
+          v-if="
+            selectedOperandFieldRef &&
+              (selectedOperandFieldRef.dataType == 'Date' ||
+                selectedOperandFieldRef.dataType == 'DateTime')
+          "
+          :items.sync="dateValueOpts"
+          :itemsRef.sync="selectedOperandValueRef"
           v-model="form.field.operandValue.value"
           displayKey="label"
           valueKey="value"
@@ -72,6 +116,7 @@
  * */
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
+
 //Internal
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
@@ -81,7 +126,12 @@ import DropDownSearch from '@/components/DropDownSearch'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
+import {
+  SObjectField,
+  SObjectValidations,
+  SObjectPicklist,
+  NON_FIELD_ALERT_OPTS,
+} from '@/services/salesforce'
 
 export default {
   /**
@@ -99,7 +149,13 @@ export default {
   data() {
     return {
       objectFields: CollectionManager.create({ ModelClass: SObjectField }),
-      selectedCondition: 'AND',
+
+      // used by dropdown as a ref field to retrieve obj of selected opt
+      selectedOperandFieldRef: null,
+      // used by dd as a ref field to retrieve obj of selected opt
+      selectedOperandValueRef: null,
+      picklistOpts: [],
+      NON_FIELD_ALERT_OPTS,
 
       operatorOpts: [
         { label: '>= (Greater or Equal)', value: 'gte' },
@@ -108,13 +164,21 @@ export default {
         { label: '> (Greater)', value: 'gt' },
         { lable: '= (Equal)', value: 'eq' },
       ],
+      dateValueOpts: [
+        { label: 'Same Day', value: '0' },
+        { label: '15 Days', value: '15' },
+        { label: 'One Month', value: '30' },
+      ],
     }
   },
   watch: {
-    selectedCondition: {
+    selectedOperandFieldRef: {
       immediate: true,
-      handler(val) {
-        this.form.field.operandCondition.value = val
+      deep: true,
+      async handler(val) {
+        if (val && val.apiName && val.dataType == 'Picklist') {
+          await this.listPicklists({ picklistFor: val.apiName })
+        }
       },
     },
     resourceType: {
@@ -130,7 +194,7 @@ export default {
   },
   methods: {
     async objectFieldNextPage() {
-      await this.objectFields.nextPage()
+      await this.objectFields.addNextPage()
     },
     async onSearchFields(v) {
       this.objectFields.pagination = new Pagination()
@@ -139,6 +203,39 @@ export default {
         search: v,
       }
       await this.objectFields.refresh()
+    },
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.picklistOpts = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+  },
+  computed: {
+    selectedField() {
+      return this.form.field.operandField.value
+    },
+    selectedFieldType() {
+      return this.selectedOperandFieldRef
+    },
+    selectedCondition: {
+      get() {
+        return this.form.field.operandCondition.value
+      },
+      set(val) {
+        this.form.field.operandCondition.value = val
+      },
+    },
+    selectedOperandType: {
+      get() {
+        return this.form.field.operandType.value
+      },
+      set(val) {
+        this.form.field.operandType.value = val
+      },
     },
   },
 }
@@ -161,7 +258,7 @@ export default {
   padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-  overflow: none;
+  overflow: visible;
   &--label {
     top: -1.05rem;
     position: relative;

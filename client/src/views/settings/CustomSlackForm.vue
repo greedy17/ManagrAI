@@ -82,21 +82,25 @@
           </small>
 
           <div :key="key" v-for="(form, key) in orderedStageForm">
-            <i style="text-transform:uppercase;"
-              >Fields from <strong>{{ form.stage }}</strong> stage</i
-            >
-            <ListContainer horizontal>
-              <template v-slot:list>
-                <ListItem
-                  @item-selected="onAddField(val)"
-                  :key="key"
-                  v-for="(val, key) in form.fieldsRef"
-                  :item="val.referenceDisplayLabel"
-                  :active="addedFieldIds.includes(val.id)"
-                  showIcon
-                />
-              </template>
-            </ListContainer>
+            <div class="stages-list">
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    @item-selected="onAddField(val)"
+                    :key="key"
+                    v-for="(val, key) in form.fieldsRef"
+                    :item="val.referenceDisplayLabel"
+                    :active="addedFieldIds.includes(val.id)"
+                    showIcon
+                  />
+                </template>
+              </ListContainer>
+            </div>
+            <div style="margin-top:1rem;">
+              <i style="text-transform:uppercase;font-size:12px;"
+                >Fields from <strong>{{ form.stage }}</strong> stage</i
+              >
+            </div>
           </div>
         </div>
 
@@ -711,9 +715,13 @@ export default {
   width: 15rem;
 
   &__list {
-    margin: 0.5rem 0;
     width: 80%;
     overflow: hidden;
+    position: inherit;
   }
+}
+.stages-list {
+  position: relative;
+  top: 0.1rem;
 }
 </style>

@@ -1,23 +1,24 @@
 <template>
-  <div class="alert-group-row">
-    <span class="alert-group-row--label">Alert Group</span>
-    <div class="alert-group-row__condition">
-      <label class="alert-group-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-group-row__condition-label">OR</label>
-    </div>
-    <div class="alert-group-row__operands">
-      <template v-for="(alertOperand, i) in form.field.alertOperands.groups">
-        <AlertOperandRow :resourceType="resourceType" :key="i" :form.sync="alertOperand" />
-      </template>
-      <button @click="addOperandForm">+ Opperand</button>
+  <div class="alert-summary">
+    <div class="box">
+      <div class="box__header">
+        <div class="box__header-title"></div>
+        <div class="box__header-subtitle"></div>
+      </div>
+      <div class="box__content">
+        {{ form.value.title }} for {{ form.value.resourceType }}
+        <div class="box__content-recipients">
+          <span>will Send To</span>
+          <span :key="key" v-for="(config, key) in form.value.alertConfig">
+            {{ config.recipients.join(', ') }} on day {{ config.recurrenceDay }}
+            {{ config.recurrenceFrequency }}
+          </span>
+        </div>
+        <div class="box__content-conditions">
+          if the following conditions are met,
+        </div>
+      </div>
+      <div class="box__footer"></div>
     </div>
   </div>
 </template>
@@ -34,7 +35,7 @@ import AlertOperandRow from '@/views/settings/_pages/_AlertOperandRow'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { AlertOperandForm, AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
 
 export default {
   /**
@@ -43,33 +44,19 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'AlertGroup',
-  components: { ToggleCheckBox, AlertOperandRow },
+  name: 'AlertSummary',
+  components: {},
 
   props: {
     form: { type: AlertGroupForm },
-    resourceType: { type: String },
   },
   data() {
     return {}
   },
   watch: {},
   async created() {},
-  methods: {
-    addOperandForm() {
-      this.form.addToArray('alertOperands', new AlertOperandForm())
-    },
-  },
-  computed: {
-    selectedCondition: {
-      get() {
-        return this.form.field.groupCondition.value
-      },
-      set(val) {
-        this.form.field.groupCondition.value = val
-      },
-    },
-  },
+  methods: {},
+  computed: {},
 }
 </script>
 

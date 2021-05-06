@@ -1,14 +1,6 @@
 <template>
-  <div>
-    <ExpandablePanel
-      :title="
-        `${
-          alertTemplateForm.field.resourceType.value
-            ? alertTemplateForm.field.resourceType.value
-            : 'Select Resource'
-        }`
-      "
-    >
+  <div class="alerts-page">
+    <ExpandablePanel :title="`${selectedResourceType ? selectedResourceType : 'Select Resource'}`">
       <template slot="panel-content">
         <DropDownSearch
           :items.sync="SOBJECTS_LIST"
@@ -23,44 +15,186 @@
     </ExpandablePanel>
     <ExpandablePanel title="Build Alert">
       <template slot="panel-content">
-        <FormField placeholder="Alert Title" large />
-        <FormField placeholder="Occurences" small />
-        <template v-for="(alertGroup, index) in alertTemplateForm.field.alertGroup.groups">
-          <AlertGroup
-            :key="index"
-            :form="alertGroup"
-            :resourceType="alertTemplateForm.field.resourceType.value"
+        <template v-if="selectedResourceType">
+          <FormField
+            v-model="alertTemplateForm.field.title.value"
+            placeholder="Alert Title"
+            large
           />
+          <template v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
+            <AlertGroup
+              :key="index"
+              :form="alertGroup"
+              :resourceType="alertTemplateForm.field.resourceType.value"
+            />
+          </template>
+          <button @click="onAddAlertGroup">+ Group</button>
         </template>
-        <button @click="addAlertGroup">+ Group</button>
+        <template v-else>
+          <div class="alerts-page__previous-step">
+            Please Select a resource to get started
+          </div>
+        </template>
       </template>
     </ExpandablePanel>
     <ExpandablePanel title="Construct Message">
       <template slot="panel-content">
-        <div>
-          Construct a message to send to your users
-          <br />
-          Special formatting options:
-          <ul>
-            <li>*bold*</li>
-            <li>_italics_</li>
-            <li>~strike through~</li>
-          </ul>
-          Dynamic Values available for any of the selected resource fields encased in {{}}
-          <ul>
-            <li>{{ '\{\{' + alertTemplateForm.field.resourceType.value + '.Name' + '\}\}' }}</li>
-            <li>{{ '\{\{' + 'User.fullName' + '\}\}' }}</li>
-          </ul>
-          <FormField large placeholder="Snippet in slack notification" />
-          <ElasticTextArea
-            v-model="alertTemplateForm.field.alertMessage.groups[0].field.body.value"
-          />
-        </div>
+        <template v-if="selectedResourceType">
+          <div class="alerts-page__message">
+            <div class="alerts-page__message-options">
+              <FormField
+                v-model="
+                  alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
+                "
+                large
+                placeholder="Snippet in slack notification"
+              />
+              <div class="alerts-page__message-options-body" style="height:5rem;width:30rem;">
+                <quill-editor
+                  ref="message-body"
+                  v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
+                  :options="{ modules: { toolbar: { container: ['bold', 'italic', 'strike'] } } }"
+                />
+                <div class="alerts-page__message-options-body__bindings">
+                  <DropDownSearch
+                    :items="fields.list"
+                    @input="bindText(`${selectedResourceType}.${$event}`)"
+                    displayKey="referenceDisplayLabel"
+                    valueKey="apiName"
+                    nullDisplay="Select a field"
+                    searchable
+                    :hasNext="!!fields.pagination.hasNextPage"
+                    @load-more="fieldNextPage"
+                    @search-term="onSearchFields"
+                    small
+                  />
+                  <!--
+                  <DropDownSearch
+                    :items.sync="NON_FIELD_ALERT_OPTS[selectedResourceType]"
+                    @input="bindText"
+                    displayKey="referenceDisplayLabel"
+                    valueKey="apiName"
+                    :nullDisplay="
+                      NON_FIELD_ALERT_OPTS[selectedResourceType].length
+                        ? 'Select an option'
+                        : 'Not Options Available'
+                    "
+                    :disabled="!NON_FIELD_ALERT_OPTS[selectedResourceType].length"
+                    searchable
+                    local
+                    small
+                  />
+                  -->
+
+                  <ListContainer
+                    horizontal
+                    v-if="NON_FIELD_ALERT_OPTS[selectedResourceType].length"
+                  >
+                    <template v-slot:list>
+                      <ListItem
+                        :key="key"
+                        v-for="(val, key) in NON_FIELD_ALERT_OPTS[selectedResourceType]"
+                        :item="val.referenceDisplayLabel"
+                        :active="true"
+                        @item-selected="bindText(`${selectedResourceType}.${val.apiName}`)"
+                      />
+                    </template>
+                  </ListContainer>
+                  <ListContainer horizontal>
+                    <template v-slot:list>
+                      <ListItem
+                        :key="key"
+                        v-for="(val, key) in recipientBindings"
+                        :item="val.referenceDisplayLabel"
+                        :active="true"
+                        @item-selected="bindText(`Recipient.${val.apiName}`)"
+                      />
+                    </template>
+                  </ListContainer>
+                </div>
+              </div>
+            </div>
+            <div class="alerts-page__message-template">
+              <div class="alerts-page__message-template__notification">
+                <SlackNotificationTemplate
+                  :msg="
+                    alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
+                  "
+                />
+              </div>
+              <div class="alerts-page__message-template__message">
+                <SlackMessagePreview :alert="alertObj" />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div class="alerts-page__previous-step">
+            Please Select a resource to get started
+          </div>
+        </template>
+      </template>
+    </ExpandablePanel>
+    <ExpandablePanel title="Alert Settings">
+      <template slot="panel-content">
+        <template v-if="selectedResourceType">
+          <div
+            class="alerts-page__settings"
+            :key="i"
+            v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
+          >
+            <div class="alerts-page__settings__frequency">
+              <label class="alerts-page__settings__frequency-label">Weekly</label>
+              <ToggleCheckBox
+                @input="
+                  form.field.recurrenceFrequency.value == 'WEEKLY'
+                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
+                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
+                "
+                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label class="alerts-page__settings__frequency-label">Monthly</label>
+            </div>
+            <div class="alerts-page__settings__day">
+              <FormField
+                placeholder="Enter day of week or month"
+                v-model="form.field.recurrenceDay.value"
+              />
+            </div>
+            <div class="alerts-page__settings__recipients">
+              <DropDownSearch
+                :items.sync="alertRecipientOpts"
+                v-model="form.field.recipients.value"
+                displayKey="key"
+                valueKey="value"
+                nullDisplay="Salesforce Resources"
+                searchable
+                local
+                multi
+              />
+            </div>
+          </div>
+          <button @click="onAddAlertSetting">Add Setting</button>
+        </template>
+        <template v-else>
+          <div class="alerts-page__previous-step">
+            Please Select a resource to get started
+          </div>
+        </template>
       </template>
     </ExpandablePanel>
     <ExpandablePanel title="Preview Alert Configuration">
       <template slot="panel-content">
-        {{ alertTemplateForm.value }}
+        <template v-if="selectedResourceType">
+          <AlertSummary :form="alertTemplateForm" />
+        </template>
+        <template v-else>
+          <div class="alerts-page__previous-step">
+            Please Select a resource to get started
+          </div>
+        </template>
       </template>
     </ExpandablePanel>
   </div>
@@ -71,12 +205,20 @@
  * Components
  * */
 // Pacakges
-import ElasticTextArea from '@thinknimble/elastic-text-area'
-import FormField from '@/components/forms/FormField'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+
+import { quillEditor } from 'vue-quill-editor'
+import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
+import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/_pages/_AlertGroup'
+import AlertSummary from '@/views/settings/_pages/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
-//import FormField from '@/components/forms/FormField'
+import ListItem from '@/components/ListItem'
+import SlackNotificationTemplate from '@/components/SlackNotificationTemplate'
+import SlackMessagePreview from '@/components/SlackMessagePreview'
 import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 
@@ -85,7 +227,15 @@ import ExpandablePanel from '@/components/ExpandablePanel'
  */
 
 import { SOBJECTS_LIST } from '@/services/salesforce'
-import { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/forms'
+import { AlertGroupForm, AlertTemplateForm, AlertConfigForm } from '@/services/alerts/forms'
+import { stringRenderer } from '@/services/utils'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import {
+  SObjectField,
+  SObjectValidations,
+  SObjectPicklist,
+  NON_FIELD_ALERT_OPTS,
+} from '@/services/salesforce'
 
 export default {
   name: 'AlertsPage',
@@ -93,32 +243,159 @@ export default {
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
+    ListItem,
+    SlackMessagePreview,
     AlertGroup,
-    ElasticTextArea,
+    SlackNotificationTemplate,
+    quillEditor,
+    ToggleCheckBox,
     FormField,
+    AlertSummary,
   },
   data() {
     return {
+      NON_FIELD_ALERT_OPTS,
+      stringRenderer,
       SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: ['User.fullName'],
+      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      recipientBindings: [
+        { referenceDisplayLabel: 'Recipient Name', apiName: 'recipientName' },
+        { referenceDisplayLabel: 'Recipient Email', apiName: 'recipientEmail' },
+      ],
+      alertRecipientOpts: [
+        { key: 'Myself', value: 'SELF' },
+        { key: 'Owner', value: 'OWNER' },
+        { key: 'All Managers', value: 'MANAGERS' },
+        { key: 'All Reps', value: 'REPS' },
+        { key: 'Everyone', value: 'ALL' },
+      ],
     }
   },
   watch: {
+    selectedResourceType: {
+      immediate: true,
+      async handler(val, prev) {
+        if (prev && val !== prev) {
+          this.alertTemplateForm = this.alertTemplateForm.reset()
+          this.selectedResourceType = val
+        }
+        if (this.selectedResourceType) {
+          this.fields.filters.salesforceObject = this.selectedResourceType
+          await this.fields.refresh()
+        }
+      },
+    },
     selectedBindings: {
       deep: true,
       immediate: true,
       handler(val) {
-        this.alertTemplateForm.field.alertMessage.groups[0].field.bindings.value = val
+        this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value = val
       },
     },
   },
   methods: {
-    addAlertGroup() {
-      this.alertTemplateForm.addToArray('alertGroup', new AlertGroupForm())
+    bindText(val) {
+      this.$refs['message-body'].quill.focus()
+      let start = 0
+      if (this.editor.selection.lastRange) {
+        start = this.editor.selection.lastRange.index
+      }
+      this.editor.insertText(start, `{ ${val} }`)
+    },
+    onAddAlertGroup() {
+      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
+    },
+    onAddAlertSetting() {
+      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
+    },
+    async onSearchFields(v) {
+      this.fields.pagination = new Pagination()
+      this.fields.filters = {
+        ...this.fields.filters,
+        search: v,
+      }
+      await this.fields.refresh()
+    },
+    async fieldNextPage() {
+      await this.fields.addNextPage()
+    },
+  },
+  computed: {
+    formValue() {
+      return this.alertTemplateForm.value
+    },
+    editor() {
+      return this.$refs['message-body'].quill
+    },
+    selection() {
+      return this.editor.selection.lastRange
+    },
+    alertObj() {
+      return {
+        title: this.formValue.title,
+        message: this.formValue.alertMessages[0].body,
+        resourceType: this.selectedResourceType,
+      }
+    },
+    selectedResourceType: {
+      get() {
+        return this.alertTemplateForm.field.resourceType.value
+      },
+      set(val) {
+        this.alertTemplateForm.field.resourceType.value = val
+      },
     },
   },
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
+@import '@/styles/buttons';
+
+textarea {
+  @extend .textarea;
+}
+.alerts-page {
+  padding: 0 8rem;
+  &__previous-step {
+    @include muted-font(12);
+  }
+  &__message {
+    display: flex;
+    height: 20rem;
+    &-template {
+      margin: 0rem 1rem;
+      &__notification {
+        width: 30rem;
+        margin: 1rem 0rem;
+      }
+      &__message {
+        width: 40rem;
+        margin: 1rem 0rem;
+      }
+    }
+  }
+}
+.alerts-page__settings {
+  display: flex;
+  align-items: center;
+  &__frequency {
+    display: flex;
+    align-items: center;
+    &-label {
+      @include muted-font();
+      margin: 0 0.5rem;
+    }
+  }
+}
+</style>

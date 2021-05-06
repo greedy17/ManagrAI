@@ -30,6 +30,7 @@ import {
   prependUrlProtocol,
   roundToOneDecimalPlace,
   snakeCaseToTextFilter,
+  timeOnlyShort,
 } from '@/services/filters'
 import pluralize from 'pluralize'
 
@@ -40,6 +41,7 @@ Vue.config.productionTip = false
 
 Vue.use(Vuex)
 Vue.use(AlertAlert)
+
 Vue.use(VueMask)
 Vue.use(VueGoogleMaps, {
   load: {
@@ -62,6 +64,7 @@ Vue.filter('dateShortWithTime', formatDateShortWithTime)
 Vue.filter('constantToCapitalized', constantToCapitalized)
 Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
 Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
+Vue.filter('timeOnlyShort', timeOnlyShort)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })

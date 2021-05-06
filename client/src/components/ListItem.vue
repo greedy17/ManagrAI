@@ -1,6 +1,6 @@
 <template>
   <div
-    @click="$emit('item-selected', item)"
+    @click="$emit('item-selected', item), $emit('click', $event)"
     class="item-container"
     :class="{ 'item-container--active': active }"
   >

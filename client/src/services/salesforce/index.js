@@ -12,3 +12,12 @@ export const SOBJECTS_LIST = [
   { key: LEAD, value: LEAD },
   { key: CONTACT, value: CONTACT },
 ]
+
+export const NON_FIELD_ALERT_OPTS = {
+  [OPPORTUNITY]: [
+    { referenceDisplayLabel: 'Last Stage Update', apiName: 'last_stage_update', dataType: 'Date' },
+  ],
+  [ACCOUNT]: [],
+  [CONTACT]: [],
+  [LEAD]: [],
+}

@@ -23,7 +23,19 @@ export default {
   data() {
     return {
       toggling: false,
+      isExpanded: false,
     }
+  },
+  computed: {},
+  watch: {
+    isExpanded: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          window.addEventListener('click', this.closeEvent)
+        }
+      },
+    },
   },
   methods: {
     async expandDiv() {
@@ -36,12 +48,36 @@ export default {
         setTimeout(() => {
           classList.remove('box__content--closed')
         }, 200)
+        this.isExpanded = false
       } else if (classList.contains('box__content--closed')) {
         classList.toggle('box__content--expanded')
         classList.toggle('box__content--closed')
+        this.isExpanded = true
       } else {
         classList.toggle('box__content--expanded')
+        this.isExpanded = true
       }
+    },
+    removeEvent() {
+      window.removeEventListener('click', this.closeEvent)
+    },
+    closeEvent(e) {
+      if (this.$el.contains(e.target) || this.$el.contains(e.target.parentNode)) {
+        return
+      }
+      let el = this.$refs['panel-content']
+      if (el) {
+        let classList = this.$refs['panel-content'].classList
+        if (classList.contains('box__content--expanded')) {
+          classList.toggle('box__content--closed')
+          classList.toggle('box__content--expanded')
+          setTimeout(() => {
+            classList.remove('box__content--closed')
+          }, 200)
+        }
+      }
+      this.isExpanded = false
+      this.removeEvent()
     },
   },
 }
@@ -74,7 +110,6 @@ export default {
   @include standard-border();
   margin-top: 1rem;
   border-radius: 0.5rem;
-
   display: block;
   animation: expandmenu forwards;
   animation-duration: 1s;
