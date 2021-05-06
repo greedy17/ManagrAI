@@ -21,7 +21,7 @@ export default class SlackAPI {
   }
 
   getOAuthLink = linkType => {
-    const payload = { linkType, redirectUri: this.cls.redirectURI }
+    const payload = { linkType, redirectUri: 'https://app.managr.ai/settings/integrations' }
     const promise = this.client
       .post(GET_OAUTH_LINK_ENDPOINT, objectToSnakeCase(payload))
       .then(r => objectToCamelCase(r.data))
