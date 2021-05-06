@@ -14,9 +14,26 @@
       <label class="alert-group-row__condition-label">OR</label>
     </div>
     <div class="alert-group-row__operands">
-      <template v-for="(alertOperand, i) in form.field.alertOperands.groups">
-        <AlertOperandRow :resourceType="resourceType" :key="i" :form.sync="alertOperand" />
-      </template>
+      <div
+        class="alert-group-row__operands__row"
+        :key="i"
+        v-for="(alertOperand, i) in form.field.alertOperands.groups"
+      >
+        <AlertOperandRow
+          @remove-operand="onRemoveOperand(i)"
+          :resourceType="resourceType"
+          :form.sync="alertOperand"
+        />
+        <div>
+          <button
+            class="btn btn--primary"
+            @click.stop="onRemoveOperand(i)"
+            :disabled="form.field.alertOperands.groups.length - 1 <= 0"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
       <button class="btn btn--primary" @click="addOperandForm">+ Opperand</button>
     </div>
   </div>
@@ -48,6 +65,8 @@ export default {
 
   props: {
     form: { type: AlertGroupForm },
+    canRemove: { type: Boolean },
+    index: { type: Number },
     resourceType: { type: String },
   },
   data() {
@@ -58,6 +77,12 @@ export default {
   methods: {
     addOperandForm() {
       this.form.addToArray('alertOperands', new AlertOperandForm())
+    },
+    onRemoveOperand(i) {
+      if (this.form.field.alertOperands.groups.length - 1 <= 0) {
+        return
+      }
+      this.form.removeFromArray('alertOperands', i)
     },
   },
   computed: {
@@ -97,6 +122,14 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: visible;
+  &__operands {
+    &__row {
+      display: flex;
+      &-remove {
+        height: 1rem;
+      }
+    }
+  }
   &--label {
     @include muted-font();
     top: -1.1rem;

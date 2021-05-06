@@ -29,13 +29,24 @@
             @blur="alertTemplateForm.field.title.validate()"
             large
           />
-          <template v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
+          <div
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+          >
             <AlertGroup
-              :key="index"
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
-          </template>
+            <div>
+              <button
+                class="btn btn--primary"
+                @click.stop="onRemoveAlertGroup(index)"
+                :disabled="alertTemplateForm.field.alertGroups.groups.length - 1 <= 0"
+              >
+                - Group
+              </button>
+            </div>
+          </div>
           <button class="btn btn--primary" @click="onAddAlertGroup">+ Group</button>
         </template>
         <template v-else>
@@ -177,6 +188,15 @@
                 searchable
                 local
               />
+            </div>
+            <div>
+              <button
+                class="btn btn--primary"
+                @click.stop="onRemoveSetting(i)"
+                :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
+              >
+                - Setting
+              </button>
             </div>
           </div>
           <button class="btn btn--primary" @click="onAddAlertSetting">Add Setting</button>
@@ -320,6 +340,18 @@ export default {
     },
     onAddAlertSetting() {
       this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
+    },
+    onRemoveAlertGroup(i) {
+      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
+        return
+      }
+      this.alertTemplateForm.removeFromArray('alertGroups', i)
+    },
+    onRemoveSetting(i) {
+      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
+        return
+      }
+      this.alertTemplateForm.removeFromArray('alertConfig', i)
     },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
