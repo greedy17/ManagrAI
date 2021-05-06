@@ -32,8 +32,8 @@
         <DropDownSearch
           v-if="selectedOperandType == 'FIELD'"
           :items="objectFields.list"
-          :itemsRef.sync="selectedOperandFieldRef"
-          v-model="form.field.operandField.value"
+          :itemsRef.sync="form.field._operandIdentifier.value"
+          v-model="form.field.operandIdentifier.value"
           displayKey="referenceDisplayLabel"
           valueKey="apiName"
           nullDisplay="Select a field"
@@ -45,8 +45,8 @@
         <DropDownSearch
           v-else-if="selectedOperandType == 'NON_FIELD'"
           :items.sync="NON_FIELD_ALERT_OPTS[resourceType]"
-          :itemsRef.sync="selectedOperandFieldRef"
-          v-model="form.field.operandField.value"
+          :itemsRef.sync="form.field._operandIdentifier.value"
+          v-model="form.field.operandIdentifier.value"
           displayKey="referenceDisplayLabel"
           valueKey="apiName"
           :nullDisplay="
@@ -60,6 +60,7 @@
       <div class="alert-operand-row__operator">
         <DropDownSearch
           :items.sync="operatorOpts"
+          :itemsRef.sync="form.field._operandOperator.value"
           v-model="form.field.operandOperator.value"
           displayKey="label"
           valueKey="value"
@@ -70,9 +71,9 @@
       </div>
       <div class="alert-operand-row__value">
         <DropDownSearch
-          v-if="selectedOperandFieldRef && selectedOperandFieldRef.dataType == 'Picklist'"
+          v-if="selectedFieldType && selectedFieldType.dataType == 'Picklist'"
           :items.sync="picklistOpts"
-          :itemsRef.sync="selectedOperandValueRef"
+          :itemsRef.sync="form.field._operandValue.value"
           v-model="form.field.operandValue.value"
           displayKey="label"
           valueKey="value"
@@ -82,12 +83,13 @@
         />
         <DropDownSearch
           v-if="
-            selectedOperandFieldRef &&
-              (selectedOperandFieldRef.dataType == 'Date' ||
-                selectedOperandFieldRef.dataType == 'DateTime')
+            selectedFieldType &&
+              (selectedFieldType.dataType == 'Date' ||
+                selectedFieldType.dataType == 'DateTime' ||
+                selectedFieldType.dataType == 'Boolean')
           "
-          :items.sync="dateValueOpts"
-          :itemsRef.sync="selectedOperandValueRef"
+          :items.sync="valueOpts"
+          :itemsRef.sync="form.field._operandValue.value"
           v-model="form.field.operandValue.value"
           displayKey="label"
           valueKey="value"
@@ -162,17 +164,21 @@ export default {
         { label: '<= (Less or Equal)', value: 'lte' },
         { label: '< (Less)', value: 'lt' },
         { label: '> (Greater)', value: 'gt' },
-        { lable: '= (Equal)', value: 'eq' },
+        { label: '= (Equal)', value: 'eq' },
       ],
       dateValueOpts: [
         { label: 'Same Day', value: '0' },
         { label: '15 Days', value: '15' },
         { label: 'One Month', value: '30' },
       ],
+      booleanValueOpts: [
+        { label: 'True', value: 'true' },
+        { label: 'False', value: 'false' },
+      ],
     }
   },
   watch: {
-    selectedOperandFieldRef: {
+    selectedFieldType: {
       immediate: true,
       deep: true,
       async handler(val) {
@@ -216,10 +222,23 @@ export default {
   },
   computed: {
     selectedField() {
-      return this.form.field.operandField.value
+      return this.form.field.operandIdentifier.value
     },
     selectedFieldType() {
-      return this.selectedOperandFieldRef
+      return this.form.field._operandIdentifier.value
+    },
+    valueOpts() {
+      if (this.selectedFieldType) {
+        if (
+          this.selectedFieldType.dataType == 'Date' ||
+          this.selectedFieldType.dataType == 'DateTime'
+        ) {
+          return this.dateValueOpts
+        } else {
+          return this.booleanValueOpts
+        }
+      }
+      return this.booleanValueOpts
     },
     selectedCondition: {
       get() {
@@ -251,6 +270,11 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+.btn {
+  &--primary {
+    @include primary-button();
+  }
+}
 
 .alert-operand-row {
   @include standard-border();

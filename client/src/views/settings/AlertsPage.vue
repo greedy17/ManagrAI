@@ -2,15 +2,21 @@
   <div class="alerts-page">
     <ExpandablePanel :title="`${selectedResourceType ? selectedResourceType : 'Select Resource'}`">
       <template slot="panel-content">
-        <DropDownSearch
-          :items.sync="SOBJECTS_LIST"
-          v-model="alertTemplateForm.field.resourceType.value"
-          displayKey="key"
-          valueKey="value"
-          nullDisplay="Salesforce Resources"
-          searchable
-          local
-        />
+        <FormField :errors="alertTemplateForm.field.resourceType.errors">
+          <template v-slot:input>
+            <DropDownSearch
+              :items.sync="SOBJECTS_LIST"
+              :itemsRef.sync="alertTemplateForm.field._resourceType.value"
+              v-model="alertTemplateForm.field.resourceType.value"
+              displayKey="key"
+              valueKey="value"
+              nullDisplay="Salesforce Resources"
+              searchable
+              local
+              @input="alertTemplateForm.field.resourceType.validate()"
+            />
+          </template>
+        </FormField>
       </template>
     </ExpandablePanel>
     <ExpandablePanel title="Build Alert">
@@ -19,6 +25,8 @@
           <FormField
             v-model="alertTemplateForm.field.title.value"
             placeholder="Alert Title"
+            :errors="alertTemplateForm.field.title.errors"
+            @blur="alertTemplateForm.field.title.validate()"
             large
           />
           <template v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
@@ -28,7 +36,7 @@
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
           </template>
-          <button @click="onAddAlertGroup">+ Group</button>
+          <button class="btn btn--primary" @click="onAddAlertGroup">+ Group</button>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">
@@ -50,11 +58,20 @@
                 placeholder="Snippet in slack notification"
               />
               <div class="alerts-page__message-options-body" style="height:5rem;width:30rem;">
-                <quill-editor
-                  ref="message-body"
-                  v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
-                  :options="{ modules: { toolbar: { container: ['bold', 'italic', 'strike'] } } }"
-                />
+                <FormField
+                  :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
+                >
+                  <template v-slot:input>
+                    <quill-editor
+                      @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
+                      ref="message-body"
+                      v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
+                      :options="{
+                        modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
+                      }"
+                    />
+                  </template>
+                </FormField>
                 <div class="alerts-page__message-options-body__bindings">
                   <DropDownSearch
                     :items="fields.list"
@@ -68,23 +85,6 @@
                     @search-term="onSearchFields"
                     small
                   />
-                  <!--
-                  <DropDownSearch
-                    :items.sync="NON_FIELD_ALERT_OPTS[selectedResourceType]"
-                    @input="bindText"
-                    displayKey="referenceDisplayLabel"
-                    valueKey="apiName"
-                    :nullDisplay="
-                      NON_FIELD_ALERT_OPTS[selectedResourceType].length
-                        ? 'Select an option'
-                        : 'Not Options Available'
-                    "
-                    :disabled="!NON_FIELD_ALERT_OPTS[selectedResourceType].length"
-                    searchable
-                    local
-                    small
-                  />
-                  -->
 
                   <ListContainer
                     horizontal
@@ -159,24 +159,27 @@
             </div>
             <div class="alerts-page__settings__day">
               <FormField
-                placeholder="Enter day of week or month"
+                placeholder="day"
+                :errors="form.field.recurrenceDay.errors"
+                @blur="form.field.recurrenceDay.validate()"
                 v-model="form.field.recurrenceDay.value"
+                small
               />
             </div>
             <div class="alerts-page__settings__recipients">
               <DropDownSearch
                 :items.sync="alertRecipientOpts"
+                :itemsRef.sync="form.field._recipients.value"
                 v-model="form.field.recipients.value"
                 displayKey="key"
                 valueKey="value"
                 nullDisplay="Salesforce Resources"
                 searchable
                 local
-                multi
               />
             </div>
           </div>
-          <button @click="onAddAlertSetting">Add Setting</button>
+          <button class="btn btn--primary" @click="onAddAlertSetting">Add Setting</button>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">
@@ -189,6 +192,12 @@
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <AlertSummary :form="alertTemplateForm" />
+          <PulseLoadingSpinnerButton
+            :loading="false"
+            class="primary-button"
+            text="Save"
+            :disabled="!alertTemplateForm.isValid"
+          />
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">
@@ -211,6 +220,7 @@ import 'quill/dist/quill.bubble.css'
 
 import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/_pages/_AlertGroup'
@@ -251,6 +261,7 @@ export default {
     ToggleCheckBox,
     FormField,
     AlertSummary,
+    PulseLoadingSpinnerButton,
   },
   data() {
     return {
@@ -361,6 +372,9 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+.quill-editor {
+  width: 100%;
+}
 
 textarea {
   @extend .textarea;
@@ -396,6 +410,11 @@ textarea {
       @include muted-font();
       margin: 0 0.5rem;
     }
+  }
+}
+.btn {
+  &--primary {
+    @include primary-button();
   }
 }
 </style>

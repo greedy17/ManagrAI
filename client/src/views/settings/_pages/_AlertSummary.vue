@@ -8,14 +8,44 @@
       <div class="box__content">
         {{ form.value.title }} for {{ form.value.resourceType }}
         <div class="box__content-recipients">
-          <span>will Send To</span>
-          <span :key="key" v-for="(config, key) in form.value.alertConfig">
-            {{ config.recipients.join(', ') }} on day {{ config.recurrenceDay }}
-            {{ config.recurrenceFrequency }}
-          </span>
+          <p>
+            will send to
+            <strong :key="key" v-for="(config, key) in form.value.alertConfig"
+              >{{ config._recipients ? config._recipients.key : '' }} on day
+              {{ config.recurrenceDay }} {{ config.recurrenceFrequency
+              }}{{ key != form.value.alertConfig.length - 1 ? ', ' : '' }}</strong
+            >
+          </p>
+          <span> </span>
         </div>
         <div class="box__content-conditions">
           if the following conditions are met,
+          <div :key="i" v-for="(group, i) in form.value.alertGroups">
+            <span v-if="i != 0">
+              {{ group.groupCondition }}
+            </span>
+            <span>Group {{ i + 1 }}</span>
+            <div :key="key" v-for="(operandRow, key) in group.alertOperands">
+              <span v-if="key != 0">
+                {{ operandRow.operandCondition }}
+              </span>
+              <div>
+                <span>{{
+                  operandRow._operandIdentifier
+                    ? operandRow._operandIdentifier.referenceDisplayLabel
+                    : ''
+                }}</span>
+                <span>{{
+                  operandRow._operandOperator ? operandRow._operandOperator.label : ''
+                }}</span>
+                <span>{{
+                  operandRow._operandValue
+                    ? operandRow._operandValue.referenceDisplayLabel
+                    : operandRow.operandValue
+                }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="box__footer"></div>

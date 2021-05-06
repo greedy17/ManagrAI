@@ -82,6 +82,11 @@
           </small>
 
           <div :key="key" v-for="(form, key) in orderedStageForm">
+            <div style="margin-top:1rem;">
+              <i style="text-transform:uppercase;font-size:12px;"
+                >Fields from <strong>{{ form.stage }}</strong> stage</i
+              >
+            </div>
             <div class="stages-list">
               <ListContainer horizontal>
                 <template v-slot:list>
@@ -95,11 +100,6 @@
                   />
                 </template>
               </ListContainer>
-            </div>
-            <div style="margin-top:1rem;">
-              <i style="text-transform:uppercase;font-size:12px;"
-                >Fields from <strong>{{ form.stage }}</strong> stage</i
-              >
             </div>
           </div>
         </div>
@@ -715,13 +715,12 @@ export default {
   width: 15rem;
 
   &__list {
+    margin-top: 0.2rem;
     width: 80%;
     overflow: hidden;
-    position: inherit;
   }
 }
 .stages-list {
-  position: relative;
   top: 0.1rem;
 }
 </style>

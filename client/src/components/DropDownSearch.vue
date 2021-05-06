@@ -38,16 +38,27 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+@import '@/styles/mixins/inputs.scss';
 ::v-deep .tn-dropdown__options__container {
   top: 50px;
   background-color: white;
+  @include input-field-white();
 }
 
-.dropdown ::v-deep .tn-dropdown__selection-container {
-  background-color: white;
-  border: 1px solid grey;
-  width: 12rem;
-  height: 2.4rem;
+::v-deep .tn-dropdown__selection-container {
+  @include input-field-white();
+}
+::v-deep .tn-dropdown__selection-container {
+  @include input-field-white();
+  .tn-dropdown__search {
+    @include input-field-white();
+    border: none;
+    &:focus {
+      box-shadow: 0 0 0 0;
+      outline: none;
+      background-color: $white;
+    }
+  }
 }
 ::v-deep .tn-dropdown {
 }

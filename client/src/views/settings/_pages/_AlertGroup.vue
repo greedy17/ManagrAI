@@ -17,7 +17,7 @@
       <template v-for="(alertOperand, i) in form.field.alertOperands.groups">
         <AlertOperandRow :resourceType="resourceType" :key="i" :form.sync="alertOperand" />
       </template>
-      <button @click="addOperandForm">+ Opperand</button>
+      <button class="btn btn--primary" @click="addOperandForm">+ Opperand</button>
     </div>
   </div>
 </template>
@@ -83,6 +83,13 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.btn {
+  &--primary {
+    @include primary-button();
+  }
+}
+
 .alert-group-row {
   @include standard-border();
   margin: 0.5rem;

@@ -91,38 +91,12 @@ export default {
   ::v-deep .primary {
     --active-opacity: 1;
   }
+
   /*   ::v-deep .input-content__active {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: $white;
   } */
-  ::v-deep .input-form__active {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: $white;
-  }
-
-  &__input {
-    border-radius: 4px;
-    background-color: $white;
-    border: 1px solid #eaebed;
-    box-sizing: border-box;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: red;
-    &--small {
-      width: 7.4375rem;
-    }
-    &--medium {
-      width: 13rem;
-    }
-    &--large {
-      width: 19.6875rem;
-    }
-    &--bordered {
-      border: 1px solid #eaebed;
-    }
-  }
 
   &__errors {
     display: flex;
@@ -132,5 +106,15 @@ export default {
     font-family: $base-font-family;
     margin-top: 0.3rem;
   }
+}
+::v-deep .input-content {
+  @include input-field();
+}
+::v-deep .input-content__active {
+  outline: none;
+  color: red;
+}
+::v-deep .input-form__active {
+  border: $dark-green;
 }
 </style>
