@@ -61,7 +61,7 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's stage did not change.",
-            "message_delta": "",
+            "message_delta": "{old_stage_name} (no change)",
         },
     },
     "forecast_category": {
@@ -84,7 +84,7 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's forecast did not change.",
-            "message_delta": "",
+            "message_delta": "{meeting.zoom_meeting_review.forecast_category} (no change)",
         },
     },
     "close_date": {
@@ -107,7 +107,7 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's forecast close date didn't change.",
-            "message_delta": "",
+            "message_delta": "{old_close_date} (no change)",
         },
     },
     "amount": {
@@ -130,7 +130,7 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's closing amount didn't change.",
-            "message_delta": "",
+            "message_delta": "{old_amount} (no change)",
         },
     },
     "attendance": {
