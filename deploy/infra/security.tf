@@ -4,7 +4,7 @@ resource "aws_security_group" "lb" {
   vpc_id      = aws_vpc.main.id
 
   dynamic "ingress" {
-    for_each = concat(var.environments.*.lb_http_port, var.environments.*.lb_https_port)
+    for_each = [80, 443]
     content {
       protocol    = "tcp"
       from_port   = ingress.value

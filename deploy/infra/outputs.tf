@@ -1,5 +1,9 @@
-output "managr_urls" {
+output "managr_app_urls" {
   value = local.app_urls
+}
+
+output "managr_load_balancer_dns_name" {
+  value = aws_alb.main.dns_name
 }
 
 output "ecs_cluster_name" {

@@ -46,26 +46,24 @@ resource "aws_alb_target_group" "app" {
 }
 
 resource "aws_alb_listener" "front_end" {
-  for_each          = { for e in var.environments : e.name => e }
   load_balancer_arn = aws_alb.main.id
-  port              = each.value["lb_http_port"]
+  port              = 80
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_alb_target_group.app[each.key].id
+    target_group_arn = aws_alb_target_group.app["prod"].id
     type             = "forward"
   }
 }
 
 resource "aws_alb_listener" "front_end_https" {
-  for_each          = { for e in var.environments : e.name => e }
   load_balancer_arn = aws_alb.main.id
-  port              = each.value["lb_https_port"]
+  port              = 443
   protocol          = "HTTPS"
   certificate_arn   = aws_acm_certificate.managr.arn
 
   default_action {
-    target_group_arn = aws_alb_target_group.app[each.key].id
+    target_group_arn = aws_alb_target_group.app["prod"].id
     type             = "forward"
   }
 }
@@ -99,8 +97,8 @@ resource "aws_acm_certificate" "managr" {
 
 resource "aws_lb_listener_rule" "rule" {
   for_each     = { for e in var.environments : e.name => e }
-  listener_arn = aws_alb_listener.front_end[each.key].arn
-  priority     = 100
+  listener_arn = aws_alb_listener.front_end.arn
+  priority     = 10 + index(tolist(var.environments), each.value)
 
   action {
     type             = "forward"

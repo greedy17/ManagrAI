@@ -1,7 +1,7 @@
 locals {
   app_urls = { for e in var.environments : e.name => {
-    http  = "http://${aws_alb.main.dns_name}:${e.lb_http_port}"
-    https = "https://${aws_alb.main.dns_name}:${e.lb_https_port}"
+    http  = "http://${lower(e.name)}.${var.managr_domain}"
+    https = "https://${lower(e.name)}.${var.managr_domain}"
     }
   }
 }
