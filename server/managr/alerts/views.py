@@ -37,12 +37,12 @@ from . import serializers as alert_serializers
 # Create your views here.
 
 
-class AlertViewSet(
+class AlertTemplateViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
-    generics.GenericAPIView,
+    viewsets.GenericViewSet,
 ):
     serializer_class = alert_serializers.AlertTemplateSerializer
 
@@ -50,8 +50,11 @@ class AlertViewSet(
         return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        serializer = alert_serializers.AlertTemplateWriteSerializer()
+        data = request.data
+        data.update({"user": request.user.id})
+        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return super().create(request, *args, **kwargs)
+        response_serializer = self.serializer_class(serializer.instance)
+        return Response(data=response_serializer.data)
 

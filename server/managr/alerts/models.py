@@ -115,7 +115,7 @@ class AlertMessageTemplate(TimeStampModel):
     template = models.OneToOneField(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="message_template"
     )
-    bindings = ArrayField(models.CharField(max_length=255), default=list)
+    bindings = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     notification_text = models.TextField(
         blank=True,
         help_text="This is the message that appears in the slack notification when the app is closed/out of view",
@@ -153,7 +153,7 @@ class AlertConfig(TimeStampModel):
         help_text="Currently UI will only send one recipient will change in the future",
     )
     template = models.ForeignKey(
-        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configurations"
+        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configs"
     )
     objects = AlertConfigQuerySet.as_manager()
 
