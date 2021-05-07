@@ -22,14 +22,9 @@ class AlertTemplateQuerySet(models.QuerySet):
 
 class AlertTemplate(TimeStampModel):
     title = models.CharField(max_length=255)
-    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alert_template")
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alert_templates")
     resource_type = models.CharField(max_length=255)
 
-    occurences = models.PositiveIntegerField(
-        default=1,
-        help_text="How many instances of the same alert should we send out (always 1 max per day)",
-    )
-    recipients = ArrayField(models.CharField(max_length=255), default=list)
     is_active = models.BooleanField(default=True)
     objects = AlertTemplateQuerySet.as_manager()
 
@@ -89,13 +84,13 @@ class AlertOperand(TimeStampModel):
     )
     operand_type = models.CharField(
         max_length=255,
-        help_text="Type of operand aka if it is a 'sf_only' ('close_date') or a 'managr' aka saved to the model directly (last_stage_update, stage, amount,close_date)",
+        help_text="field indicates sobject field non_field indicates managr model fields",
     )
     operand_identifier = models.CharField(
         max_length=255, help_text="Name of the field or managr constraint"
     )
-    operator = models.CharField(max_length=255)
-    value = models.CharField(max_length=255)
+    operand_operator = models.CharField(max_length=255)
+    operand_value = models.CharField(max_length=255)
 
     objects = AlertOperandQuerySet.as_manager()
 
@@ -137,6 +132,48 @@ class AlertMessageTemplate(TimeStampModel):
         ordering = ["-datetime_created"]
 
 
+class AlertConfigQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            return self.filter(template__user__organization=user.organization)
+        else:
+            return self.none()
+
+
+class AlertConfig(TimeStampModel):
+    recurrence_frequency = models.CharField(
+        max_length=255, default="WEEKLY", help_text="Weekly/Monthly will run on these days"
+    )
+    recurrence_day = models.SmallIntegerField(help_text="day of week/ month")
+    recipients = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        help_text="Currently UI will only send one recipient will change in the future",
+    )
+    template = models.ForeignKey(
+        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configurations"
+    )
+    objects = AlertConfigQuerySet.as_manager()
+
+    def __str__(self):
+        return f"Configuration for {self.template.title} for user {self.template.user}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+
+class AlertInstanceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.organization and user.is_active:
+            return self.filter(template__user=user)
+        else:
+            return self.none()
+
+
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
@@ -151,6 +188,7 @@ class AlertInstance(TimeStampModel):
     )
     resource_id = models.CharField(max_length=255)
     sent_at = models.DateTimeField()
+    objects = AlertGroupQuerySet.as_manager()
 
     def __str__(self):
         return f"notification for {self.user.email} from template {self.template.title} for {self.template.resource_type}, {self.resource_id}"

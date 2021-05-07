@@ -41,7 +41,6 @@ export class AlertMessageTemplate extends Form {
 export class AlertTemplateForm extends Form {
   static title = new FormField({ validators: [new RequiredValidator()] })
   static resourceType = new FormField({ validators: [new RequiredValidator()] })
-  static recipients = new FormField({})
   static alertGroups = new FormArray({
     name: 'alertGroups',
     groups: [new AlertGroupForm()],
