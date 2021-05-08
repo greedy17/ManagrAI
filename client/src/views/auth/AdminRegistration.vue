@@ -82,8 +82,8 @@
       </div> -->
       <div class="registration__privacy">
         By clicking Sign Up, I agree to the
-        <a href>Terms of Service</a> and
-        <a href>Privacy Policy</a>
+        <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
+        <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
       </div>
 
       <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
