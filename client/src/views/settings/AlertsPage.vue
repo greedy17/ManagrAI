@@ -289,10 +289,10 @@ export default {
     FormField,
     AlertSummary,
     PulseLoadingSpinnerButton,
-    savingTemplate,
   },
   data() {
     return {
+      savingTemplate: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -333,7 +333,8 @@ export default {
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
-          const res = await this.alertTemplateForm.save()
+          const res = await AlertTemplate.api.createAlertTemplate(this.alertTemplateForm.toAPI)
+          this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
           this.$Alert.alert({
             message: 'An error occured saving template',
