@@ -441,22 +441,25 @@ def _send_meeting_summary(workflow_id):
                     )
         except InvalidBlocksException as e:
             return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
             )
         except InvalidBlocksFormatException as e:
             return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
             )
         except UnHandeledBlocksException as e:
             return logger.exception(
-                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {user.email} {e}"
             )
         except InvalidAccessToken as e:
             return logger.exception(
-                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  SummaryInteraction for workflow {str(workflow.id)} for user  email {user.email} {e}"
             )
 
-        return
+        except Exception as e:
+            return logger.exception(
+                f"Failed to Generate Summary Interaction for workflow  workflow {str(workflow.id)} for user  email {workflow.user.email} {e}"
+            )
     return
 
 
