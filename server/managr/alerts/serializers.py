@@ -16,6 +16,7 @@ class AlertTemplateRefSerializer(serializers.ModelSerializer):
             "user",
             "is_active",
             "resource_type",
+            "alert_level",
         )
 
 
@@ -73,6 +74,7 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "recurrence_frequency",
+            "recurrence_day",
             "recipients",
             "template",
             "template_ref",
@@ -136,6 +138,7 @@ class AlertTemplateSerializer(serializers.ModelSerializer):
             "configs_ref",
             "instances",
             "instances_ref",
+            "alert_level",
         )
 
 
@@ -222,6 +225,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             "new_groups",
             "message_template",
             "new_configs",
+            "alert_level",
         )
 
     def create(self, validated_data, *args, **kwargs):

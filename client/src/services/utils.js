@@ -34,6 +34,7 @@ const Utils = {
   loadEntireCollection,
   constantToCapitalized,
   urlQueryParams,
+  stringRenderer,
 }
 
 export default Utils
@@ -131,11 +132,17 @@ export function objectToSnakeCase(value) {
   if (isObject(value)) {
     return Object.keys(value).reduce((acc, camelKey) => {
       const snakeKey = toSnakeCase(camelKey)
-      acc[snakeKey] = isObject(value[camelKey])
-        ? objectToSnakeCase(value[camelKey])
-        : value[camelKey]
+      if (isObject(value[camelKey])) {
+        acc[snakeKey] = objectToSnakeCase(value[camelKey])
+      } else if (Array.isArray(value[camelKey])) {
+        acc[snakeKey] = value[camelKey].map(v => objectToSnakeCase(v))
+      } else {
+        acc[snakeKey] = value[camelKey]
+      }
       return acc
     }, {})
+  } else {
+    return value
   }
 }
 
@@ -363,7 +370,6 @@ export function stringRenderer(
   group = 0,
   startIndex = 0,
   existingSets = [],
-  instances = 1,
 ) {
   /***
    * Searches string for opening and closing characters to be used as template rendering

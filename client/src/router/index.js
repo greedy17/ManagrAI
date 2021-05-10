@@ -91,9 +91,25 @@ export default new Router({
     },
     {
       path: '/alerts',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/AlertsDashboard'),
       beforeEnter: Auth.requireAuth,
-      name: 'Alerts',
-      component: () => import(/* webpackChunkName: "settings" */ '../views/settings/AlertsPage'),
+      children: [
+        {
+          path: 'new',
+          name: 'CreateNew',
+          component: () =>
+            import(/* webpackChunkName: "settings" */ '../views/settings/AlertsPage'),
+        },
+        {
+          path: 'list-templates',
+          name: 'ListTemplates',
+          component: () =>
+            import(
+              /* webpackChunkName: "settings" */ '../views/settings/alerts/_AlertsTemplateList'
+            ),
+        },
+      ],
     },
 
     {

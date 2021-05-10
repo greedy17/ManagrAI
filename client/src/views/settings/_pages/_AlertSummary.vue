@@ -78,7 +78,7 @@ export default {
   components: {},
 
   props: {
-    form: { type: AlertGroupForm },
+    form: { type: AlertTemplateForm },
   },
   data() {
     return {}

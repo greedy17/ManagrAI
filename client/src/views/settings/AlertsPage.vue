@@ -118,7 +118,7 @@
                         v-for="(val, key) in recipientBindings"
                         :item="val.referenceDisplayLabel"
                         :active="true"
-                        @item-selected="bindText(`Recipient.${val.apiName}`)"
+                        @item-selected="bindText(`__Recipient.${val.apiName}`)"
                       />
                     </template>
                   </ListContainer>
@@ -216,6 +216,7 @@
             :loading="false"
             class="primary-button"
             text="Save"
+            @click.stop="onSave"
             :disabled="!alertTemplateForm.isValid"
           />
         </template>
@@ -257,7 +258,13 @@ import ExpandablePanel from '@/components/ExpandablePanel'
  */
 
 import { SOBJECTS_LIST } from '@/services/salesforce'
-import { AlertGroupForm, AlertTemplateForm, AlertConfigForm } from '@/services/alerts/forms'
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import {
@@ -289,7 +296,7 @@ export default {
       stringRenderer,
       SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
-      selectedBindings: ['User.fullName'],
+      selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Name', apiName: 'recipientName' },
@@ -318,15 +325,15 @@ export default {
         }
       },
     },
-    selectedBindings: {
-      deep: true,
-      immediate: true,
-      handler(val) {
-        this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value = val
-      },
-    },
   },
   methods: {
+    async onSave() {
+      try {
+        const res = await this.alertTemplateForm.save()
+      } catch (e) {
+        console.log(e)
+      }
+    },
     bindText(val) {
       this.$refs['message-body'].quill.focus()
       let start = 0
@@ -412,7 +419,6 @@ textarea {
   @extend .textarea;
 }
 .alerts-page {
-  padding: 0 8rem;
   &__previous-step {
     @include muted-font(12);
   }

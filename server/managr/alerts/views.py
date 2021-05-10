@@ -42,6 +42,7 @@ class AlertTemplateViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     serializer_class = alert_serializers.AlertTemplateSerializer

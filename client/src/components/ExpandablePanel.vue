@@ -2,7 +2,7 @@
   <div class="expandable-panel">
     <div class="box">
       <template>
-        <slot name="panel-header">
+        <slot name="panel-header" :classes="'box__header'" :expand="expandDiv">
           <div @click.prevent="expandDiv" class="box__header">{{ title }}</div>
         </slot>
 
@@ -38,7 +38,13 @@ export default {
     },
   },
   methods: {
-    async expandDiv() {
+    onExpandDiv() {
+      /**
+       * handler for slot
+       */
+      this.expandDiv()
+    },
+    expandDiv() {
       /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
 
       let classList = this.$refs['panel-content'].classList

@@ -24,7 +24,7 @@ class AlertTemplate(TimeStampModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alert_templates")
     resource_type = models.CharField(max_length=255)
-
+    alert_level = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     objects = AlertTemplateQuerySet.as_manager()
 
