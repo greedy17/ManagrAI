@@ -141,7 +141,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
             )
             # get the user's channel
-            res = slack_requests.request_user_dm_channel(user_slack.slack_id, access_token).json()
+            res = slack_requests.request_user_dm_channel(
+                user_slack.slack_id, org.slack_integration.access_token
+            ).json()
             # save Slack Channel ID
             channel = res.get("channel", {}).get("id")
             user_slack.channel = channel
