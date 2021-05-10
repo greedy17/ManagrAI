@@ -416,10 +416,12 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    # only send meeting reviews for opps
     if (
         hasattr(workflow.meeting, "zoom_meeting_review")
         and workflow.meeting.zoom_meeting_review.meeting_sentiment
         == zoom_consts.MEETING_SENTIMENT_GREAT
+        and workflow.resource_type == "Opportunity"
     ):
 
         user = workflow.user
