@@ -390,7 +390,7 @@ def _save_meeting_review(workflow_id):
         elif form_data.get("ForecastCategory", None) not in ["", None]:
             forecast_category = form_data.get("ForecastCategory")
         # format data appropriately
-        print(form_data.get("meeting_sentiment"))
+
         data = {
             "meeting": meeting,
             "resource_type": workflow.resource_type,

@@ -110,12 +110,4 @@ export class AlertTemplateForm extends Form {
       newConfigs: this.field.alertConfig.groups.map(g => g.toAPI),
     }
   }
-  async save() {
-    this.validate()
-    if (!this.isValid) {
-      return
-    }
-    const res = await AlertTemplate.api.createAlertTemplate(this.toAPI)
-    return res
-  }
 }

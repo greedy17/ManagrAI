@@ -213,11 +213,11 @@
         <template v-if="selectedResourceType">
           <AlertSummary :form="alertTemplateForm" />
           <PulseLoadingSpinnerButton
-            :loading="false"
+            :loading="savingTemplate"
             class="primary-button"
             text="Save"
             @click.stop="onSave"
-            :disabled="!alertTemplateForm.isValid"
+            :disabled="!alertTemplateForm.isValid || savingTemplate"
           />
         </template>
         <template v-else>
@@ -289,6 +289,7 @@ export default {
     FormField,
     AlertSummary,
     PulseLoadingSpinnerButton,
+    savingTemplate,
   },
   data() {
     return {
@@ -328,10 +329,20 @@ export default {
   },
   methods: {
     async onSave() {
-      try {
-        const res = await this.alertTemplateForm.save()
-      } catch (e) {
-        console.log(e)
+      this.savingTemplate = true
+      this.alertTemplateForm.validate()
+      if (this.alertTemplateForm.isValid) {
+        try {
+          const res = await this.alertTemplateForm.save()
+        } catch (e) {
+          this.$Alert.alert({
+            message: 'An error occured saving template',
+            timeout: 2000,
+            type: 'error',
+          })
+        } finally {
+          this.savingTemplate = false
+        }
       }
     },
     bindText(val) {
