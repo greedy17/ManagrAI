@@ -1,25 +1,29 @@
 <template>
-  <div class="slack-notif">
-    <div class="slack-notif__container">
-      <div class="slack-notif__container-icon">
+  <div class="slack-message">
+    <div class="slack-message__container">
+      <div class="slack-message__container-icon">
         <!-- vertical icon -->
       </div>
-      <div class="slack-notif__container-content">
+      <div class="slack-message__container-content">
         <!-- horizontal stacked divs -->
-        <div class="slack-notif__container-content__heading">
+        <div class="slack-message__container-content__heading">
           <!--Horizontal spans -->
-          <span class="slack-notif__container-content__heading-title">
+          <span class="slack-message__container-content__heading-title">
             Managr
           </span>
-          <span class="slack-notif__container-content__heading-type">
+          <span class="slack-message__container-content__heading-type">
             APP
           </span>
-          <span class="slack-notif__container-content__heading-time">
+          <span class="slack-message__container-content__heading-time">
             {{ new Date() | timeOnlyShort }}
           </span>
         </div>
-        <div class="slack-notif__container-content__body">
-          {{ msg }}
+        <div class="slack-message__container-content__body">
+          <span v-html="alert.title" style="word-wrap:break-word;"></span>
+          <div class="divider"></div>
+          <span v-html="alert.message" style="word-wrap:break-word;"></span>
+          <div class="divider"></div>
+          <button class="btn btn--primary">Update {{ alert.resourceType }}</button>
         </div>
       </div>
     </div>
@@ -28,9 +32,9 @@
 
 <script>
 export default {
-  name: 'SlackNotificationTemplate',
+  name: 'SlackMessagePreview',
   props: {
-    msg: String,
+    alert: { type: Object, default: () => {} },
     active: {
       type: Boolean,
       default: true,
@@ -42,17 +46,25 @@ export default {
 <style scoped lang="scss">
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
-.slack-notif {
+@import '@/styles/mixins/buttons';
+.btn {
+  &--primary {
+    @include primary-button();
+  }
+}
+
+.slack-message {
   box-shadow: 0.2rem 0.5rem 0.5rem 0.2rem whitesmoke, -0.2rem 0.5rem 0.5rem 0.2rem whitesmoke;
-  height: 5rem;
+
   padding: 0.8rem 2rem;
   border-radius: 1rem;
+  min-height: 10rem;
   width: 100%;
 }
-.slack-notif__container {
+.slack-message__container {
   display: flex;
   &-icon {
-    background-image: url(../assets/images/slack.png);
+    background-image: url(../../../../assets/images/logo.png);
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
@@ -64,8 +76,9 @@ export default {
     flex: 1 0 auto;
     flex-direction: column;
     &__body {
-      font-size: 20px;
+      font-size: 16px;
       margin: 0rem 1rem;
+      max-width: 35rem;
     }
     &__heading {
       display: flex;
@@ -74,6 +87,7 @@ export default {
         font-weight: bold;
         font-size: 20px;
         margin: 0rem 1rem;
+        max-width: 35rem;
       }
       &-type {
         background-color: whitesmoke;
@@ -86,6 +100,10 @@ export default {
         margin: 0rem 1rem;
       }
     }
+  }
+  .divider {
+    @include standard-border();
+    margin: 1rem 0rem;
   }
 }
 </style>

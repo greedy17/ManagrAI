@@ -12,6 +12,7 @@ export {
   roundToOneDecimalPlace,
   snakeCaseToTextFilter,
   timeOnlyShort,
+  toCapitalCase,
 }
 
 function uppercase(value) {
@@ -77,4 +78,12 @@ function roundToOneDecimalPlace(value) {
 
 function snakeCaseToTextFilter(value) {
   return snakeCaseToText(value)
+}
+
+function toCapitalCase(val) {
+  if (val && val.length) {
+    if (typeof val == 'string') {
+      return val[0].toLowerCase() + val.substring(1).toLowerCase()
+    }
+  }
 }

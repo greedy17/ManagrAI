@@ -53,7 +53,7 @@ class AlertOperandRefSerializer(serializers.ModelSerializer):
         )
 
 
-class AlertMessageRefTemplateSerializer(serializers.ModelSerializer):
+class AlertMessageTemplateRefSerializer(serializers.ModelSerializer):
     template_ref = AlertTemplateRefSerializer(source="template")
 
     class Meta:
@@ -121,7 +121,7 @@ class AlertGroupSerializer(serializers.ModelSerializer):
 
 class AlertTemplateSerializer(serializers.ModelSerializer):
     groups_ref = AlertGroupSerializer(source="groups", many=True)
-    message_template_ref = AlertMessageRefTemplateSerializer(source="message_template")
+    message_template_ref = AlertMessageTemplateRefSerializer(source="message_template")
     configs_ref = AlertConfigRefSerializer(source="configs", many=True)
     instances_ref = AlertInstanceRefSerializer(source="instances", many=True)
 

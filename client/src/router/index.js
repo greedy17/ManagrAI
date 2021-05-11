@@ -99,14 +99,14 @@ export default new Router({
           path: 'new',
           name: 'CreateNew',
           component: () =>
-            import(/* webpackChunkName: "settings" */ '../views/settings/AlertsPage'),
+            import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/AlertsPage'),
         },
         {
           path: 'list-templates',
           name: 'ListTemplates',
           component: () =>
             import(
-              /* webpackChunkName: "settings" */ '../views/settings/alerts/_AlertsTemplateList'
+              /* webpackChunkName: "settings" */ '../views/settings/alerts/view/_AlertsTemplateList'
             ),
         },
       ],

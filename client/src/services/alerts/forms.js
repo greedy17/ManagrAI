@@ -13,7 +13,7 @@ import AlertTemplate from '.'
 export class AlertConfigForm extends Form {
   static recurrenceFrequency = new FormField({ value: 'WEEKLY' })
   static recurrenceDay = new FormField({ validators: [new RequiredValidator()] })
-  static recipients = new FormField({})
+  static recipients = new FormField({ validators: [new RequiredValidator()] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recipients = new FormField({ value: null })
 
@@ -29,12 +29,12 @@ export class AlertConfigForm extends Form {
   }
 }
 export class AlertOperandForm extends Form {
-  static operandCondition = new FormField({ value: 'AND' })
+  static operandCondition = new FormField({ value: 'OR' })
   static operandIdentifier = new FormField({ validators: [new RequiredValidator()] })
   static operandOperator = new FormField({ validators: [new RequiredValidator()] })
   static operandValue = new FormField({ validators: [new RequiredValidator()] })
   static operandType = new FormField({ value: 'FIELD' })
-  static operandOrder = new FormField({ value: 0, validators: [new RequiredValidator()] })
+  static operandOrder = new FormField({ value: 0, validators: [] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _operandIdentifier = new FormField({ value: null })
   static _operandOperator = new FormField({ value: null })
@@ -53,8 +53,8 @@ export class AlertOperandForm extends Form {
   }
 }
 export class AlertGroupForm extends Form {
-  static groupCondition = new FormField({ value: 'AND' })
-  static groupOrder = new FormField({ value: 0, validators: [new RequiredValidator()] })
+  static groupCondition = new FormField({ value: 'OR' })
+  static groupOrder = new FormField({ value: 0, validators: [] })
   static alertOperands = new FormArray({
     name: 'alertOperands',
     groups: [new AlertOperandForm()],
@@ -71,7 +71,7 @@ export class AlertGroupForm extends Form {
 }
 export class AlertMessageTemplateForm extends Form {
   static bindings = new FormField({})
-  static notificationText = new FormField({})
+  static notificationText = new FormField({ validators: [new RequiredValidator()] })
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
 export class AlertTemplateForm extends Form {

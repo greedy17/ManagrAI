@@ -58,9 +58,8 @@
  * Components
  * */
 // Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
+
 //Internal
-import AlertOperandRow from '@/views/settings/_pages/_AlertOperandRow'
 
 /**
  * Services

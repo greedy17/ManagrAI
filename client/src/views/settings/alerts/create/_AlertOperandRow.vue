@@ -4,9 +4,7 @@
     <div class="alert-operand-row__condition">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
+        @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#199e54"
         onColor="#199e54"
@@ -199,6 +197,11 @@ export default {
     this.objectFields.refresh()
   },
   methods: {
+    toggleSelectedCondition() {
+      this.selectedCondition == 'AND'
+        ? (this.selectedCondition = 'OR')
+        : (this.selectedCondition = 'AND')
+    },
     async objectFieldNextPage() {
       await this.objectFields.addNextPage()
     },

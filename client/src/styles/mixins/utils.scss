@@ -36,6 +36,20 @@
   font-size: $base-font-size;
 }
 
+@mixin header-title($font-case: uppercase) {
+  display: block;
+  font-weight: 1000;
+  margin-bottom: 0.25rem;
+  text-transform: $font-case;
+}
+@mixin header-subtitle($font-case: uppercase) {
+  display: block;
+  font-weight: 500;
+  color: #9f9cb7;
+  margin-bottom: 0.25rem;
+  text-transform: $font-case;
+}
+
 .is-title {
   display: block;
   font-weight: 1000;

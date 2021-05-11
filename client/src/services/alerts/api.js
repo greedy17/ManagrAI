@@ -18,14 +18,41 @@ export default class AlertTemplateAPI extends ModelAPI {
       const res = this.client.post(AlertTemplateAPI.ENDPOINT, d)
       return this.cls.fromAPI(res.data)
     } catch (e) {
-      apiErrorHandler({ apiName: 'AlertTemplateAPI.createAlertTemplate' })
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.createAlertTemplate' })(e)
     }
   }
   async deleteAlertTemplate(id) {
     try {
       this.client.delete(`${AlertTemplateAPI.ENDPOINT}${id}/`)
     } catch (e) {
-      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
+    }
+  }
+  async updateAlertTemplate(id, data) {
+    const d = objectToSnakeCase(data)
+    try {
+      this.client.patch(`${AlertTemplateAPI.ENDPOINT}${id}/`, d)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.UpdateAlertTemplate' })(e)
+    }
+  }
+}
+export class AlertMessageTemplateAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/message-templates/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async updateMessageTemplate(id, data) {
+    const d = objectToSnakeCase(data)
+    try {
+      this.client.patch(`${AlertMessageTemplateAPI.ENDPOINT}${id}/`, d)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.UpdateAlertTemplate' })(e)
     }
   }
 }

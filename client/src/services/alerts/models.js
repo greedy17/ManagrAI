@@ -1,6 +1,7 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import User from '../users/models'
-import AlertTemplateAPI from './api'
+import { objectToCamelCase } from '../utils'
+import AlertTemplateAPI, { AlertMessageTemplateAPI } from './api'
 
 export class AlertTemplateRef extends Model {
   /**
@@ -11,12 +12,8 @@ export class AlertTemplateRef extends Model {
   static title = new fields.CharField()
   static user = new fields.CharField({})
   static isActive = new fields.BooleanField({ default: true })
-  static resourceType = new fields.CharField({})
-  //static groups = new fields.ArrayField({ type: AlertGroup })
-  static messageTemplate = new fields.CharField({})
   static alertLevel = new fields.CharField({})
-  //static configs = new fields.ArrayField({ type: AlertConfig })
-  //static instances = new fields.ArrayField({ type: AlertInstance })
+  static resourceType = new fields.CharField({})
 }
 
 export class AlertGroupRef extends Model {
@@ -25,7 +22,7 @@ export class AlertGroupRef extends Model {
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
   static groupOrder = new fields.IntegerField({})
-  // operands = new fields.ArrayField({ type: AlertGroupOperand })
+  //
 }
 export class AlertGroupOperand extends Model {
   static id = new fields.IdField({ readOnly: true })
@@ -40,18 +37,12 @@ export class AlertGroupOperand extends Model {
 }
 
 export class AlertGroup extends AlertGroupRef {
+  static operands = new fields.ArrayField({ type: new fields.CharField() })
   static operandsRef = new fields.ModelField({ ModelClass: AlertGroupOperand, many: true })
   static newOperands = new fields.ModelField({ ModelClass: AlertGroupOperand, many: true })
 }
-export class AlertMessageTemplateRef extends Model {
-  static id = new fields.IdField({ readOnly: true })
-  static template = new fields.CharField({})
-  static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
-  static bindings = new fields.ArrayField({ type: new fields.CharField() })
-  static notificationText = new fields.CharField({})
-  static body = new fields.CharField({})
-}
-export class AlertMessageTemplate extends AlertTemplateRef {
+export class AlertMessageTemplate extends Model {
+  static api = AlertMessageTemplateAPI.create(AlertMessageTemplate)
   static id = new fields.IdField({ readOnly: true })
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
@@ -64,7 +55,7 @@ export class AlertConfig extends Model {
   static id = new fields.IdField({ readOnly: true })
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
-  static recurrenceFrequency = new fields.IntegerField({})
+  static recurrenceFrequency = new fields.CharField({})
   static recurrenceDay = new fields.IntegerField({})
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
 }
@@ -88,4 +79,7 @@ export default class AlertTemplate extends AlertTemplateRef {
   static configsRef = new fields.ModelField({ ModelClass: AlertConfig, many: true })
   static newConfigs = new fields.ModelField({ ModelClass: AlertConfig, many: true })
   static instancesRef = new fields.ModelField({ ModelClass: AlertInstance, many: true })
+  static groups = new fields.ArrayField({ type: new fields.CharField() })
+  static configs = new fields.ArrayField({ type: new fields.CharField() })
+  static instances = new fields.ArrayField({ type: new fields.CharField() })
 }

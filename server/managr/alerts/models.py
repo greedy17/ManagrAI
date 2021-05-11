@@ -15,7 +15,7 @@ class AlertTemplateQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         if user.organization and user.is_active:
-            return self.filter(user__organization=user.organization)
+            return self.filter(user=user)
         else:
             return self.none()
 
@@ -108,7 +108,7 @@ class AlertMessageTemplateQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         if user.organization and user.is_active:
-            return self.filter(template__user__organization=user.organization)
+            return self.filter(template__user=user)
         else:
             return self.none()
 
@@ -128,7 +128,7 @@ class AlertMessageTemplate(TimeStampModel):
     objects = AlertMessageTemplateQuerySet.as_manager()
 
     def __str__(self):
-        return f"notification message for {self.template.title}"
+        return f"notification message for {self.template}"
 
     class Meta:
         ordering = ["-datetime_created"]

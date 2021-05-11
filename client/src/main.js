@@ -31,6 +31,7 @@ import {
   roundToOneDecimalPlace,
   snakeCaseToTextFilter,
   timeOnlyShort,
+  toCapitalCase,
 } from '@/services/filters'
 import pluralize from 'pluralize'
 
@@ -65,6 +66,7 @@ Vue.filter('constantToCapitalized', constantToCapitalized)
 Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
 Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
 Vue.filter('timeOnlyShort', timeOnlyShort)
+Vue.filter('capitalCase', toCapitalCase)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })
