@@ -68,6 +68,17 @@ def simple_section_multiple(text_blocks, block_id=None):
 
 
 def option(text, value):
+    """ accepts a string and returns an object with 2 properties, type and text.
+
+    The type property is set to plain_text. The text property is given the value of the string entered.
+    
+    Parameters
+    ----------
+    text: str
+        plain text
+    value: any    
+    """
+
     return {
         "text": {"type": "plain_text", "text": text},
         "value": value,
