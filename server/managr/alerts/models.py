@@ -51,6 +51,7 @@ class AlertGroup(TimeStampModel):
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
+    group_order = models.SmallIntegerField()
     template = models.ForeignKey(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="groups"
     )
@@ -91,6 +92,7 @@ class AlertOperand(TimeStampModel):
     )
     operand_operator = models.CharField(max_length=255)
     operand_value = models.CharField(max_length=255)
+    operand_order = models.SmallIntegerField()
 
     objects = AlertOperandQuerySet.as_manager()
 

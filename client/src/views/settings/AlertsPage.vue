@@ -37,7 +37,7 @@
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
-            {{ alertGroup.field.groupOrder.value }}
+
             <div>
               <button
                 class="btn btn--primary"

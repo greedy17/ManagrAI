@@ -24,6 +24,7 @@ export class AlertGroupRef extends Model {
   static groupCondition = new fields.CharField({})
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
+  static groupOrder = new fields.IntegerField({})
   // operands = new fields.ArrayField({ type: AlertGroupOperand })
 }
 export class AlertGroupOperand extends Model {
@@ -35,6 +36,7 @@ export class AlertGroupOperand extends Model {
   static operandIdentifier = new fields.CharField({})
   static operandOperator = new fields.CharField({})
   static operandValue = new fields.CharField({})
+  static operandOrder = new fields.IntegerField({})
 }
 
 export class AlertGroup extends AlertGroupRef {

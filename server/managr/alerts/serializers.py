@@ -31,6 +31,7 @@ class AlertGroupRefSerializer(serializers.ModelSerializer):
             "template",
             "template_ref",
             "operands",
+            "group_order",
         )
 
 
@@ -48,6 +49,7 @@ class AlertOperandRefSerializer(serializers.ModelSerializer):
             "operand_identifier",
             "operand_operator",
             "operand_value",
+            "operand_order",
         )
 
 
@@ -113,6 +115,7 @@ class AlertGroupSerializer(serializers.ModelSerializer):
             "template_ref",
             "operands",
             "operands_ref",
+            "group_order",
         )
 
 
@@ -168,6 +171,7 @@ class AlertOperandWriteSerializer(serializers.ModelSerializer):
             "operand_identifier",
             "operand_operator",
             "operand_value",
+            "operand_order",
         )
 
 
@@ -181,6 +185,7 @@ class AlertGroupWriteSerializer(serializers.ModelSerializer):
             "group_condition",
             "template",
             "new_operands",
+            "group_order",
         )
 
     def create(self, validated_data, *args, **kwargs):

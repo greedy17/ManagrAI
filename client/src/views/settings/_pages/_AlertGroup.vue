@@ -24,7 +24,7 @@
           :resourceType="resourceType"
           :form.sync="alertOperand"
         />
-        {{ alertOperand.field.operandOrder.value }}
+
         <div>
           <button
             class="btn btn--primary"
