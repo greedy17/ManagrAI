@@ -19,9 +19,26 @@ def input_block(
     optional=True,
 ):
     """ 
+    Creates a basic text input block 
+
+    Parameters:
+    label - String of what the label text should be 
+    initial_value - Set an initial value for input using string passed in, otherwise None
+    placeholder - Sets placeholder text for input using string passed in, defaults to no placeholder
+    multiline - If True will set input to a text field style input 
+    placeholder_type - Only used if placeholder is passed in, sets placeholder type to plain_text
+    action_id - Sets id of input to value passed in, otherwise defaults to 'plain_input'
+    block_id - Set id of block to value passed in, if none is passed in will create one with uuid
+    label_type - Sets the label type to plain_text. SHOULD NOT BE CHANGED. 
+    min_length - Set a minimum length for the input
+    max_length - Set a maximum length for the input
+    optional - indicated whether the input can be left blank
+
     If a placeholder, min_length, max_length is 
     passed in it will be used otherwise False 
     will not add a placeholder 
+
+    For a basic input only a string for the label has to be passed in. 
     """
 
     if not block_id:
