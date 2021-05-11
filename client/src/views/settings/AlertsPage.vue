@@ -37,6 +37,7 @@
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
+            {{ alertGroup.field.groupOrder.value }}
             <div>
               <button
                 class="btn btn--primary"
@@ -355,16 +356,32 @@ export default {
       this.editor.insertText(start, `{ ${val} }`)
     },
     onAddAlertGroup() {
+      // get next order
+      const order = this.alertTemplateForm.field.alertGroups.groups.length
+
+      console.log(order)
       this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
+      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
     },
     onAddAlertSetting() {
       this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
     },
     onRemoveAlertGroup(i) {
+      // get order and update options
+
       if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
         return
       }
+
+      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
+
       this.alertTemplateForm.removeFromArray('alertGroups', i)
+
+      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
+
+      greaterThan.forEach((el, index) => {
+        el.field.groupOrder.value = order + index
+      })
     },
     onRemoveSetting(i) {
       if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {

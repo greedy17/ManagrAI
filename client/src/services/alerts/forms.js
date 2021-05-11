@@ -34,6 +34,7 @@ export class AlertOperandForm extends Form {
   static operandOperator = new FormField({ validators: [new RequiredValidator()] })
   static operandValue = new FormField({ validators: [new RequiredValidator()] })
   static operandType = new FormField({ value: 'FIELD' })
+  static operandOrder = new FormField({ value: 0, validators: [new RequiredValidator()] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _operandIdentifier = new FormField({ value: null })
   static _operandOperator = new FormField({ value: null })
@@ -47,11 +48,13 @@ export class AlertOperandForm extends Form {
       operandOperator: originalValue.operandOperator,
       operandValue: originalValue.operandValue,
       operandType: originalValue.operandType,
+      operandOrder: originalValue.operandOrder,
     }
   }
 }
 export class AlertGroupForm extends Form {
   static groupCondition = new FormField({ value: 'AND' })
+  static groupOrder = new FormField({ value: 0, validators: [new RequiredValidator()] })
   static alertOperands = new FormArray({
     name: 'alertOperands',
     groups: [new AlertOperandForm()],
@@ -62,6 +65,7 @@ export class AlertGroupForm extends Form {
     return {
       groupCondition: originalValue.groupCondition,
       newOperands: this.field.alertOperands.groups.map(o => o.toAPI),
+      groupOrder: originalValue.groupOrder,
     }
   }
 }
