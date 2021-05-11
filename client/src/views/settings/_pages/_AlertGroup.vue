@@ -24,6 +24,7 @@
           :resourceType="resourceType"
           :form.sync="alertOperand"
         />
+        {{ alertOperand.field.operandOrder.value }}
         <div>
           <button
             class="btn btn--primary"
@@ -76,13 +77,24 @@ export default {
   async created() {},
   methods: {
     addOperandForm() {
+      const order = this.form.field.alertOperands.groups.length
+      if (order >= 3) {
+        this.$Alert.alert({ message: 'You can only add 3 items per group', timeout: 2000 })
+        return
+      }
       this.form.addToArray('alertOperands', new AlertOperandForm())
+      this.form.field.alertOperands.groups[order].field.operandOrder.value = order
     },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {
         return
       }
+      const order = this.form.field.alertOperands.groups[i].field.operandOrder.value
       this.form.removeFromArray('alertOperands', i)
+      let greaterThan = this.form.field.alertOperands.groups.slice(i)
+      greaterThan.forEach((el, index) => {
+        el.field.operandOrder.value = order + index
+      })
     },
   },
   computed: {

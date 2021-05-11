@@ -356,14 +356,22 @@ export default {
       this.editor.insertText(start, `{ ${val} }`)
     },
     onAddAlertGroup() {
-      // get next order
+      // length determines order
       const order = this.alertTemplateForm.field.alertGroups.groups.length
+      if (order >= 3) {
+        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
+        return
+      }
+      // set next order
 
-      console.log(order)
       this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
       this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
     },
     onAddAlertSetting() {
+      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
+        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
+        return
+      }
       this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
     },
     onRemoveAlertGroup(i) {
