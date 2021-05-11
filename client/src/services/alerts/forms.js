@@ -10,9 +10,47 @@ import {
 } from '@thinknimble/tn-validators'
 import AlertTemplate from '.'
 
+export class MinimumValueValidator extends Validator {
+  constructor({ message = 'Must meet minimum value', code = 'minValue', min = 1 } = {}) {
+    super({ message, code })
+    this.min = min
+  }
+
+  call(value) {
+    if (!value || !Number.isInteger(parseFloat(value))) {
+      throw new Error(JSON.stringify({ code: this.code, message: 'Please enter a valid Number' }))
+    } else {
+      if (value < this.min) {
+        throw new Error(JSON.stringify({ code: this.code, message: this.message }))
+      }
+    }
+  }
+}
+export class MaximumValueValidator extends Validator {
+  constructor({ message = 'Must meet minimum value', code = 'maxValue', max = 10 } = {}) {
+    super({ message, code })
+    this.max = max
+  }
+
+  call(value) {
+    if (!value || !Number.isInteger(parseFloat(value))) {
+      throw new Error(JSON.stringify({ code: this.code, message: 'Please enter a valid Number' }))
+    } else {
+      if (value > this.max) {
+        throw new Error(JSON.stringify({ code: this.code, message: this.message }))
+      }
+    }
+  }
+}
 export class AlertConfigForm extends Form {
   static recurrenceFrequency = new FormField({ value: 'WEEKLY' })
-  static recurrenceDay = new FormField({ validators: [new RequiredValidator()] })
+  static recurrenceDay = new FormField({
+    validators: [
+      new RequiredValidator(),
+      new MinimumValueValidator({ min: 1 }),
+      new MinimumValueValidator({ max: 31 }),
+    ],
+  })
   static recipients = new FormField({ validators: [new RequiredValidator()] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recipients = new FormField({ value: null })

@@ -1,7 +1,7 @@
 <template>
   <div class="alert-group-row">
     <span class="alert-group-row--label">Alert Group</span>
-    <div class="alert-group-row__condition">
+    <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
       <label class="alert-group-row__condition-label">AND</label>
       <ToggleCheckBox
         @input="

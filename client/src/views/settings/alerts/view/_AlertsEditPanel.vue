@@ -54,16 +54,18 @@
             :key="index"
             class="alerts-template-list__content-conditions__group"
           >
-            {{ group.groupCondition }}
+            <span v-if="group.groupOrder != 0">{{ group.groupCondition }}</span>
             <div class="alerts-template-list__content-conditions__operand">
               <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
-                    large
+                    medium
                     v-for="(operand, i) in group.operandsRef"
                     :key="i"
                     :item="
-                      `${operand.operandIdentifier}     ${operand.operandOperator}     ${operand.operandValue} `
+                      `${operand.operandOrder != 0 ? operand.operandCondition : ''} ${
+                        operand.operandIdentifier
+                      }     ${operand.operandOperator}     ${operand.operandValue} `
                     "
                     :active="true"
                     showIcon
@@ -78,6 +80,7 @@
             <FormField
               @input="executeUpdateMessageTemplate"
               v-model="messageTemplateForm.field.notificationText.value"
+              :errors="messageTemplateForm.field.notificationText.errors"
             />
             <div
               class="alerts-template-list__content-message__form-body"
@@ -87,7 +90,7 @@
                 <template v-slot:input>
                   <quill-editor
                     @blur="messageTemplateForm.field.body.validate()"
-                    @input="messageTemplateForm.field.body.value"
+                    @input="executeUpdateMessageTemplate"
                     ref="message-body"
                     v-model="messageTemplateForm.field.body.value"
                     :options="{

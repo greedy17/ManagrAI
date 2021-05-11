@@ -1,7 +1,7 @@
 <template>
   <div class="alert-operand-row">
     <span class="alert-operand-row--label">Alert Operands</span>
-    <div class="alert-operand-row__condition">
+    <div class="alert-operand-row__condition" v-if="form.field.operandOrder.value != 0">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
@@ -294,7 +294,7 @@ export default {
 }
 .alert-operand-row__condition {
   position: relative;
-  top: -2.4rem;
+  top: -2rem;
   display: flex;
   align-items: center;
   justify-content: center;

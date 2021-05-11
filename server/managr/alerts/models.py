@@ -61,7 +61,7 @@ class AlertGroup(TimeStampModel):
         return f"Alert group with operator {self.operator}, for template {self.template.title}"
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["group_order"]
 
 
 class AlertOperandQuerySet(models.QuerySet):
@@ -100,7 +100,7 @@ class AlertOperand(TimeStampModel):
         return f"{self.operand_type_identifier} {self.operator}"
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["operand_order"]
 
 
 class AlertMessageTemplateQuerySet(models.QuerySet):
