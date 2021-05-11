@@ -87,6 +87,7 @@
                 <template v-slot:input>
                   <quill-editor
                     @blur="messageTemplateForm.field.body.validate()"
+                    @input="messageTemplateForm.field.body.value"
                     ref="message-body"
                     v-model="messageTemplateForm.field.body.value"
                     :options="{
@@ -171,6 +172,8 @@ import AlertTemplate, {
   AlertMessageTemplateForm,
   AlertOperandForm,
 } from '@/services/alerts/'
+import { stringRenderer } from '@/services/utils'
+
 const TABS = [
   { key: 'TEMPLATE', label: 'General Info' },
   { key: 'GROUPS', label: 'Conditions' },
@@ -243,9 +246,11 @@ export default {
       if (this.messageTemplateForm.isValid) {
         try {
           this.savingInTab = true
+          const bindings = stringRenderer('{', '}', this.messageTemplateForm.field.body.value)
           await AlertMessageTemplate.api.updateMessageTemplate(this.alert.messageTemplateRef.id, {
             body: this.messageTemplateForm.field.body.value,
             notificationText: this.messageTemplateForm.field.notificationText.value,
+            bindings: bindings,
           })
           this.savedChanges = true
           setTimeout(() => {
