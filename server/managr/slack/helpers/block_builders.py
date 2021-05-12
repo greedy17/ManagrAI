@@ -317,7 +317,19 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
 def section_with_accessory_block(
     section_text, accessory, text_type="mrkdwn", block_id=None,
 ):
-    """ Builds a section with an accessory (image/button) """
+    """" Builds a section with an accessory (image/button) 
+        
+        parameters
+        ----------
+        section_text: str
+            text for the section block
+        accessory: obj
+            element object
+        text_type: str
+            markdown 
+        block_id: str
+            unique identifier
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
