@@ -108,7 +108,21 @@ def external_select(
 def static_select(
     label, options, action_id=None, initial_option=None, placeholder="Select", block_id=None,
 ):
-    # options are an array of block_optiosn (see above)
+    """"
+    Returns a select block where the select values are known and won't change. 
+
+    Parameters:
+    label - A string for the select input label
+    options - Options are an array of options (see above)
+    action_id - Will be included if entered otherwise None
+    initial_option - An option block has to be entered, this shows the entered option when first being displayed
+    placeholder - Changed placeholder text, otherwise defautls to Select 
+    block_id - Sets block_id, otherwise will use uuid to set.
+
+    Function returns an entire section with the select input. 
+    Only parameters that need to be entered are label and array of options.
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
