@@ -165,7 +165,7 @@ class AlertOperand(TimeStampModel):
             )
         elif self.data_type == "DATETIME":
             value = (timezone.now() + timezone.timedelta(days=int(self.operand_value))).strftime(
-                "%Y-%m-%dT00:00Z"
+                "%Y-%m-%dT00:00:00Z"
             )
         elif self.data_type == "STRING":
             # sf requires single quotes for strings only (aka not decimal or date)
@@ -181,7 +181,7 @@ class AlertOperand(TimeStampModel):
             # calulate a boundary for same day
             end_value = (
                 timezone.now() + timezone.timedelta(days=int(self.operand_value))
-            ).strftime("%Y-%m-%dT11:59Z")
+            ).strftime("%Y-%m-%dT11:59:00Z")
             q_s = (
                 f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
             )

@@ -135,10 +135,10 @@ class UserTestCase(TestCase):
             }
         )
         value = (timezone.now() + timezone.timedelta(days=row.operand_value)).strftime(
-            "%Y-%m-%dT00:00Z"
+            "%Y-%m-%dT00:00:00Z"
         )
         end_value = (timezone.now() + timezone.timedelta(days=row.operand_value)).strftime(
-            "%Y-%m-%dT11:59Z"
+            "%Y-%m-%dT11:59:00Z"
         )
         expected = (
             f"{row.operand_identifier} >= {value} AND {row.operand_identifier} <= {end_value}"

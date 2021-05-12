@@ -84,7 +84,6 @@ export class AlertOperandForm extends Form {
       this.field._operandIdentifier && this.field._operandIdentifier.value
         ? ALERT_DATA_TYPE_MAP[this.field._operandIdentifier.value.dataType]
         : STRING
-    debugger
     return {
       // object to snakecase side effect, will change var with _ into var without camelcase
       operandCondition: originalValue.operandCondition,
