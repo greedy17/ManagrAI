@@ -287,11 +287,21 @@ def section_with_button_block(
     return block
 
 
-def simple_button_block(
-    label, value, url=None, style=None, confirm=False, action_id=None, block_id=None
-):
-    ### this can only be used in action_blocks
-    # action ID must be unique
+def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
+    """
+    Function returns an object for a button block.
+
+    label - Sets text of the button
+    value - Sets value of the button to be passed in the payload
+    url - If included button will forward user to the url, otherwise None
+    style - If included will change the appearance of the button.
+            Choices are default, primary, or danger
+    confirm - If included will add a popup window confirming button press
+    action_id - Sets the action_id to string passed in, otherwise set with uuid, must be unique
+
+    This block can only be used in action_block function and action_id must be unique
+    """
+
     block = {
         "type": "button",
         "text": {"type": "plain_text", "text": label},
