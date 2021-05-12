@@ -210,6 +210,14 @@ def multi_external_select(
     block_id=None,
     min_query_length=0,
 ):
+    """ A section block with markup text and a multi_external_select menu.
+    
+    Works the same as the external_select, but allows a user to select multiple items.
+
+    If the section block has no id it will generate a random one. Returns the section block 
+    with the initial option if one was selected, and without the initial option if it was not 
+    selected.
+    """
 
     if not block_id:
         block_id = str(uuid.uuid4())
@@ -266,6 +274,22 @@ def section_with_button_block(
     confirm=False,
     action_id=None,
 ):
+    """
+    Function returns a section object with a button.
+
+    Parameters:
+    button_label - Sets the text of the button, needs to be included
+    button_value - Sets the value to be passed along in the payload, needs to be included
+    section_text - Sets the text of the section body, needs to be included
+    text_type - Sets the type for the section block, generally doesn't need to be changed
+    block_id - Sets the block_id to string passed in, otherwise is set with uuid
+    url - If included the button will forward the user to the url, otherwise None
+    style - If included changes the style of the button, options are default, primary, or danger.
+    confirm - If True will have a popup confirmation window appear when button is pressed.
+    action_id - Sets the action_id to string passed in, otherwise is set with uuid.
+
+    Used for linking to another site/page or confirming information.
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
