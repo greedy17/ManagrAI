@@ -91,6 +91,13 @@ def divider_block():
 
 
 def header_block(text, block_id=None):
+    """ 
+        Creates a header block to be used inside other blocks
+
+        Parameters:
+        text - Set text as any String passed in.
+        block_id - Optional Id can be passed in, otherwise creates one with uuid
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     return {"type": "header", "text": {"type": "plain_text", "text": text}, "block_id": block_id}
