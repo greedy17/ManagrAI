@@ -75,6 +75,7 @@ def option(text, value):
 
 
 def divider_block():
+    """ returns an object that has one property, type:divider """
     return {"type": "divider"}
 
 
