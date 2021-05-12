@@ -783,4 +783,3 @@ def handle_view_submission(payload):
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
     return switcher.get(callback_id, NO_OP)(payload, view_context)
-

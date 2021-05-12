@@ -299,4 +299,3 @@ class AlertInstance(TimeStampModel):
     def render_text(self):
         """ takes the message template body and renders """
         return
-

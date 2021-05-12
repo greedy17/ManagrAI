@@ -259,4 +259,3 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_configs.is_valid(raise_exception=True)
             _new_configs.save()
         return data
-

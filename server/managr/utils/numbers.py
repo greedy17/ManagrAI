@@ -77,9 +77,6 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
     return empty_str
 
 
-
-
-
 def validate_phone_number(value, country="US"):
     """ 
         validates phone number depending on country (default is us) 

@@ -99,4 +99,3 @@ class AlertMessageTemplateViewSet(
 
     def get_queryset(self):
         return alert_models.AlertMessageTemplate.objects.for_user(self.request.user)
-

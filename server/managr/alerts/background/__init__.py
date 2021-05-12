@@ -110,4 +110,3 @@ def _process_check_alert(alert_id, user_id):
                     channel_id, access_token, text=text, block_set=blocks
                 )
                 print(res)
-

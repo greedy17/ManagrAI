@@ -30,4 +30,3 @@ if __name__ == "__main__":
     print(test_fn(group_3, 0, None))
     print(test_fn(group_2, 0, None))
     print(test_fn(group_1, 0, None))
-

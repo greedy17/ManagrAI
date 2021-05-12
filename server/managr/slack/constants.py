@@ -183,4 +183,3 @@ FORM_TYPES = (
     (FORM_TYPE_STAGE_GATING, "Stage Gating"),
     (FORM_TYPE_MEETING_REVIEW, "Meeting Review"),
 )
-
