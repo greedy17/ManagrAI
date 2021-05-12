@@ -34,7 +34,7 @@ def _initial_interaction_message(resource_name=None, resource_type=None):
         return "I've noticed your meeting just ended but couldn't find an Opportunity or Account or Lead to link what would you like to do?"
 
     # replace opp, review disregard
-    return f"I've noticed your meeting with {resource_type} *{resource_name}* just ended would you like to log this meeting?"
+    return f"I've noticed your meeting with {resource_type} *{resource_name}* just ended would you like to update Salesforce?"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -325,7 +325,7 @@ def initial_meeting_interaction_block_set(context):
             ),
         ),
         block_builders.section_with_button_block(
-            "Review Meeting Participants",
+            "Update Contacts",
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "Add Contacts to Salesforce",
             action_id=action_with_params(
