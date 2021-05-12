@@ -310,7 +310,15 @@ def actions_block(blocks=[], block_id=None):
     """
     Array of interactive element objects - buttons, select menus, overflow menus, or date pickers.
     max of 5
+
+    parameters
+    ----------
+    blocks: array
+        Element objects
+    block_id: str
+        A unique identifier for the block    
     """
+
     if not len(blocks):
         return
     if len(blocks) > 4:
