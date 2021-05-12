@@ -320,7 +320,15 @@ def actions_block(blocks=[], block_id=None):
     """
     Array of interactive element objects - buttons, select menus, overflow menus, or date pickers.
     max of 5
+
+    parameters
+    ----------
+    blocks: array
+        Element objects
+    block_id: str
+        A unique identifier for the block    
     """
+
     if not len(blocks):
         return
     if len(blocks) > 4:
@@ -331,6 +339,17 @@ def actions_block(blocks=[], block_id=None):
 
 
 def checkbox_block(label, options, action_id=None, initial_options=None, block_id=None):
+    """
+    Function returns a section with checkbox inputs.
+
+    Parameters:
+    label - String to set the text of the section, must be included
+    options - array of options (see above), must be included
+    action_id - sets action_id to value passed in, otherwise sets id from uuid
+    initial_options - Array of options (see above), if included will pre-check those options
+    block_id - sets block_is as value entered, otherwise sets if from uuid
+
+    """
     if not action_id:
         action_id = str(uuid.uuid4())
     if not block_id:
@@ -341,10 +360,8 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
         "text": {"type": "mrkdwn", "text": f"{label}"},
         "accessory": {"type": "checkboxes", "action_id": action_id, "options": options},
     }
-
     if initial_options:
         block["accessory"]["initial_options"] = initial_options
-
     return block
 
 
