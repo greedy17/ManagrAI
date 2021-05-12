@@ -15,6 +15,11 @@ terraform {
       version = "3.1.0"
     }
   }
+  #Update with ThinkNimble's S3 bucket
+   backend "s3" {
+     bucket = "managr-app-tfstate"
+     region = "us-east-1"
+   }
 }
 
 provider "aws" {}
