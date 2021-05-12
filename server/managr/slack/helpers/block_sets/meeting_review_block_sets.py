@@ -325,7 +325,7 @@ def initial_meeting_interaction_block_set(context):
             ),
         ),
         block_builders.section_with_button_block(
-            "Review Meeting Participants",
+            "Update Contacts",
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "Add Contacts to Salesforce",
             action_id=action_with_params(
