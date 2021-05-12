@@ -210,6 +210,14 @@ def multi_external_select(
     block_id=None,
     min_query_length=0,
 ):
+    """ A section block with markup text and a multi_external_select menu.
+    
+    Works the same as the external_select, but allows a user to select multiple items.
+
+    If the section block has no id it will generate a random one. Returns the section block 
+    with the initial option if one was selected, and without the initial option if it was not 
+    selected.
+    """
 
     if not block_id:
         block_id = str(uuid.uuid4())
