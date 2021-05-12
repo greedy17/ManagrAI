@@ -22,7 +22,9 @@ terraform {
    }
 }
 
-provider "aws" {}
+provider "aws" {
+  region = "us-east-1"
+}
 
 locals {
   env            = "pr-${var.pr_number}"
