@@ -210,6 +210,14 @@ def multi_external_select(
     block_id=None,
     min_query_length=0,
 ):
+    """ A section block with markup text and a multi_external_select menu.
+    
+    Works the same as the external_select, but allows a user to select multiple items.
+
+    If the section block has no id it will generate a random one. Returns the section block 
+    with the initial option if one was selected, and without the initial option if it was not 
+    selected.
+    """
 
     if not block_id:
         block_id = str(uuid.uuid4())
@@ -303,11 +311,21 @@ def section_with_button_block(
     return block
 
 
-def simple_button_block(
-    label, value, url=None, style=None, confirm=False, action_id=None, block_id=None
-):
-    ### this can only be used in action_blocks
-    # action ID must be unique
+def simple_button_block(label, value, url=None, style=None, confirm=False, action_id=None):
+    """
+    Function returns an object for a button block.
+
+    label - Sets text of the button
+    value - Sets value of the button to be passed in the payload
+    url - If included button will forward user to the url, otherwise None
+    style - If included will change the appearance of the button.
+            Choices are default, primary, or danger
+    confirm - If included will add a popup window confirming button press
+    action_id - Sets the action_id to string passed in, otherwise set with uuid, must be unique
+
+    This block can only be used in action_block function and action_id must be unique
+    """
+
     block = {
         "type": "button",
         "text": {"type": "plain_text", "text": label},
@@ -326,7 +344,15 @@ def actions_block(blocks=[], block_id=None):
     """
     Array of interactive element objects - buttons, select menus, overflow menus, or date pickers.
     max of 5
+
+    parameters
+    ----------
+    blocks: array
+        Element objects
+    block_id: str
+        A unique identifier for the block    
     """
+
     if not len(blocks):
         return
     if len(blocks) > 4:
@@ -337,6 +363,17 @@ def actions_block(blocks=[], block_id=None):
 
 
 def checkbox_block(label, options, action_id=None, initial_options=None, block_id=None):
+    """
+    Function returns a section with checkbox inputs.
+
+    Parameters:
+    label - String to set the text of the section, must be included
+    options - array of options (see above), must be included
+    action_id - sets action_id to value passed in, otherwise sets id from uuid
+    initial_options - Array of options (see above), if included will pre-check those options
+    block_id - sets block_is as value entered, otherwise sets if from uuid
+
+    """
     if not action_id:
         action_id = str(uuid.uuid4())
     if not block_id:
@@ -347,10 +384,8 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
         "text": {"type": "mrkdwn", "text": f"{label}"},
         "accessory": {"type": "checkboxes", "action_id": action_id, "options": options},
     }
-
     if initial_options:
         block["accessory"]["initial_options"] = initial_options
-
     return block
 
 

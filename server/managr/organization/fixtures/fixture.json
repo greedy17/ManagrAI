@@ -36,7 +36,7 @@
       "data_type": "Picklist",
       "display_value": "",
       "value": null,
-      "label": "How Did It go?",
+      "label": "How Did It Go?",
       "length": 10,
       "reference": "False",
       "relationship_name": null,
