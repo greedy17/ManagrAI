@@ -34,6 +34,7 @@ export class AlertGroupOperand extends Model {
   static operandOperator = new fields.CharField({})
   static operandValue = new fields.CharField({})
   static operandOrder = new fields.IntegerField({})
+  static dataType = new fields.CharField({})
 }
 
 export class AlertGroup extends AlertGroupRef {

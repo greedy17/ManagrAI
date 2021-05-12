@@ -58,3 +58,29 @@ export class SObjectPicklist extends Model {
   static fieldRef = new fields.ModelField({ ModelClass: SObjectField })
   static values = new fields.ArrayField({ type: new fields.Field() })
 }
+
+const INTEGER = 'INTEGER'
+const STRING = 'STRING'
+const DATE = 'DATE'
+const DECIMAL = 'DECIMAL'
+
+const INPUT_TYPE_MAP = {
+  Currency: 'number',
+  Int: 'number',
+  Double: 'number',
+  Long: 'number',
+  TextArea: 'text',
+  String: 'text',
+}
+const ALERT_DATA_TYPE_MAP = {
+  Currency: DECIMAL,
+  Double: DECIMAL,
+  Int: INTEGER,
+  Long: INTEGER,
+  String: STRING,
+  Date: DATE,
+  DateTime: DATE,
+  Picklist: STRING,
+  TextArea: STRING,
+}
+export { INTEGER, STRING, DATE, DECIMAL, INPUT_TYPE_MAP, ALERT_DATA_TYPE_MAP }

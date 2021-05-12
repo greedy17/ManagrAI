@@ -185,7 +185,7 @@
                 v-model="form.field.recipients.value"
                 displayKey="key"
                 valueKey="value"
-                nullDisplay="Salesforce Resources"
+                nullDisplay="User groups"
                 searchable
                 local
               />

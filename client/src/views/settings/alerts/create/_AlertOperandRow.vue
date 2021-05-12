@@ -80,7 +80,7 @@
           local
         />
         <DropDownSearch
-          v-if="
+          v-else-if="
             selectedFieldType &&
               (selectedFieldType.dataType == 'Date' ||
                 selectedFieldType.dataType == 'DateTime' ||
@@ -101,6 +101,7 @@
           :itemsRef.sync="form.field.operandValue.value"
           :errors="form.field.operandValue.errors"
           v-model="form.field.operandValue.value"
+          :inputType="getInputType(form.field._operandIdentifier.value)"
           large
           bordered
           placeholder="Enter a value"
@@ -132,6 +133,14 @@ import {
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
 } from '@/services/salesforce'
+import {
+  ALERT_DATA_TYPE_MAP,
+  INPUT_TYPE_MAP,
+  INTEGER,
+  STRING,
+  DATE,
+  DECIMAL,
+} from '@/services/salesforce/models'
 
 export default {
   /**
@@ -148,7 +157,10 @@ export default {
   },
   data() {
     return {
-      objectFields: CollectionManager.create({ ModelClass: SObjectField }),
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        filters: { forAlerts: true },
+      }),
 
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
@@ -187,16 +199,29 @@ export default {
     },
     resourceType: {
       async handler(val) {
-        this.objectFields.filters.salesforceObject = val
+        this.objectFields.filters = {
+          ...this.objectFields.filters,
+          forAlerts: true,
+          salesforceObject: val,
+        }
         this.objectFields.refresh()
       },
     },
   },
   async created() {
-    this.objectFields.filters.salesforceObject = this.resourceType
-    this.objectFields.refresh()
+    this.objectFields.filters = {
+      ...this.objectFields.filters,
+      salesforceObject: val,
+    }
+    await this.objectFields.refresh()
   },
   methods: {
+    getInputType(type) {
+      if (type && INPUT_TYPE_MAP[type.dataType]) {
+        return INPUT_TYPE_MAP[type.dataType]
+      }
+      return 'text'
+    },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
         ? (this.selectedCondition = 'OR')

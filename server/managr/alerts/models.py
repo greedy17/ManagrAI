@@ -93,6 +93,11 @@ class AlertOperand(TimeStampModel):
     operand_operator = models.CharField(max_length=255)
     operand_value = models.CharField(max_length=255)
     operand_order = models.SmallIntegerField()
+    data_type = models.CharField(
+        null=True,
+        max_length=255,
+        help_text="To what data type we are comparing to, all data types are converted to either string, date, decimal",
+    )
 
     objects = AlertOperandQuerySet.as_manager()
 

@@ -50,6 +50,7 @@ class AlertOperandRefSerializer(serializers.ModelSerializer):
             "operand_operator",
             "operand_value",
             "operand_order",
+            "data_type",
         )
 
 
@@ -172,6 +173,7 @@ class AlertOperandWriteSerializer(serializers.ModelSerializer):
             "operand_operator",
             "operand_value",
             "operand_order",
+            "data_type",
         )
 
 

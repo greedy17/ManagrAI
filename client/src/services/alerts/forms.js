@@ -1,6 +1,6 @@
 import Form, { FormArray, FormField } from '@thinknimble/tn-forms'
 import { stringRenderer } from '../utils'
-
+import { ALERT_DATA_TYPE_MAP, INTEGER, STRING, DATE, DECIMAL } from '../salesforce/models'
 import {
   MustMatchValidator,
   EmailValidator,
@@ -73,12 +73,18 @@ export class AlertOperandForm extends Form {
   static operandValue = new FormField({ validators: [new RequiredValidator()] })
   static operandType = new FormField({ value: 'FIELD' })
   static operandOrder = new FormField({ value: 0, validators: [] })
+  static dataType = new FormField({})
   // Keeping a private copy of the dropdown ref obj for later use
   static _operandIdentifier = new FormField({ value: null })
   static _operandOperator = new FormField({ value: null })
   static _operandValue = new FormField({ value: null })
   get toAPI() {
     const originalValue = this.value
+    const dataType =
+      this.field._operandIdentifier && this.field._operandIdentifier.value
+        ? ALERT_DATA_TYPE_MAP[this.field._operandIdentifier.value.dataType]
+        : STRING
+    debugger
     return {
       // object to snakecase side effect, will change var with _ into var without camelcase
       operandCondition: originalValue.operandCondition,
@@ -87,6 +93,7 @@ export class AlertOperandForm extends Form {
       operandValue: originalValue.operandValue,
       operandType: originalValue.operandType,
       operandOrder: originalValue.operandOrder,
+      dataType: dataType,
     }
   }
 }

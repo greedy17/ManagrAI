@@ -48,11 +48,13 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
 
   async listFields(query_params = {}) {
+    console.log('filters')
     let filterMaps = {
       ...SObjectFormBuilderAPI.FILTERS_MAP,
       createable: ApiFilter.create({ key: 'createable' }),
       updateable: ApiFilter.create({ key: 'updateable' }),
       salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+
       search: ApiFilter.create({ key: 'search' }),
     }
 
@@ -87,6 +89,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       updateable: ApiFilter.create({ key: 'updateable' }),
       salesforceObject: ApiFilter.create({ key: 'salesforce_object' }),
       search: ApiFilter.create({ key: 'search' }),
+      forAlerts: ApiFilter.create({ key: 'for_alerts' }),
     }
 
     const url = SObjectFormBuilderAPI.ENDPOINT + 'fields/'
