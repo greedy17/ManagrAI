@@ -2,13 +2,16 @@ import json
 
 from django.utils import timezone
 from django.test import TestCase
+
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIClient
+
 from managr.core import factories as core_factories
 from managr.salesforce.models import SalesforceAuthAccount
-from . import models as alert_models
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
+
+from . import models as alert_models
 
 TestCase.maxDiff = None
 
@@ -55,6 +58,20 @@ class UserTestCase(TestCase):
 
         expected = (
             f"{self.row.operand_identifier} {self.row.operand_operator} {self.row.operand_value}"
+        )
+        self.assertEqual(self.row.query_str, expected)
+
+    def test_operand_row_generates_query_string_w_str_cond(self):
+        """ 
+            Tests that the appropriate qs was built for the row 
+            If data type is string it MUST append ' ' 
+            NOTE if row is top group order it will not append operator
+        """
+
+        self.row.data_type = "STRING"
+        self.row.save()
+        expected = (
+            f"{self.row.operand_identifier} {self.row.operand_operator} '{self.row.operand_value}'"
         )
         self.assertEqual(self.row.query_str, expected)
 

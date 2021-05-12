@@ -13,6 +13,7 @@
             <span class="alerts-template-list__header-item">Run Now</span>
             <span class="alerts-template-list__header-item">Delete</span>
             <span class="alerts-template-list__header-item">Active</span>
+            <span class="alerts-template-list__header-item">Test</span>
           </div>
         </template>
       </ExpandablePanel>
@@ -23,7 +24,10 @@
               class="alerts-template-list__header-item alerts-template-list__header-item--main"
               >{{ alert.title }}</span
             >
-            <span class="alerts-template-list__header-item alerts-template-list__header-item">
+            <span
+              @click.stop="onRunTemplateNow(alert.id)"
+              class="alerts-template-list__header-item alerts-template-list__header-item"
+            >
               <svg class="icon" fill="black" viewBox="0 0 30 30">
                 <use xlink:href="@/assets/images/loop.svg#loop" />
               </svg>
@@ -37,7 +41,20 @@
               </svg>
             </span>
             <span class="alerts-template-list__header-item alerts-template-list__header-item">
-              <ToggleCheckBox :value="alert.isActive" offColor="#aaaaaa" onColor="#199e54" />
+              <ToggleCheckBox
+                @input="onToggleAlert"
+                :value="alert.isActive"
+                offColor="#aaaaaa"
+                onColor="#199e54"
+              />
+            </span>
+            <span
+              @click.stop="onTest(alert.id)"
+              class="alerts-template-list__header-item alerts-template-list__header-item"
+            >
+              <svg class="icon" fill="black" viewBox="0 0 30 30">
+                <use xlink:href="@/assets/images/loop.svg#loop" />
+              </svg>
             </span>
           </div>
         </template>
@@ -104,6 +121,55 @@ export default {
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
+      } catch {
+        this.$Alert.alert({
+          message: 'There was an error removing your alert',
+          type: 'error',
+          timeout: 2000,
+        })
+      }
+    },
+    async onTest(id) {
+      try {
+        await AlertTemplate.api.testAlertTemplate(id)
+        this.$Alert.alert({
+          message: `Alert has been initiated to test against your data only`,
+          type: 'success',
+          timeout: 2000,
+        })
+      } catch {
+        this.$Alert.alert({
+          message: 'There was an error removing your alert',
+          type: 'error',
+          timeout: 2000,
+        })
+      }
+    },
+    async onToggleAlert(id, value) {
+      try {
+        await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
+        await this.templates.refresh()
+        this.$Alert.alert({
+          message: `Alert is now ${value}`,
+          type: 'success',
+          timeout: 2000,
+        })
+      } catch {
+        this.$Alert.alert({
+          message: 'There was an error removing your alert',
+          type: 'error',
+          timeout: 2000,
+        })
+      }
+    },
+    async onRunAlertTemplateNow(id) {
+      try {
+        await AlertTemplate.api.testAlertTemplate(id)
+        this.$Alert.alert({
+          message: `Alert has been initiated`,
+          type: 'success',
+          timeout: 2000,
+        })
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',

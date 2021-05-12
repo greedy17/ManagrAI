@@ -21,6 +21,7 @@ from rest_framework import (
     views,
     viewsets,
 )
+from rest_framework.decorators import action
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -30,6 +31,8 @@ from rest_framework.decorators import (
 
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
+
+from .background import emit_init_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
@@ -59,6 +62,28 @@ class AlertTemplateViewSet(
         serializer.save()
         response_serializer = self.serializer_class(serializer.instance)
         return Response(data=response_serializer.data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=True,
+        url_path="test",
+    )
+    def test_alert(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.test_alert()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=True,
+        url_path="run-now",
+    )
+    def run_now(self, request, *args, **kwargs):
+        obj = self.get_object()
+        emit_init_alert(str(obj.id))
+        return Response()
 
 
 class AlertMessageTemplateViewSet(

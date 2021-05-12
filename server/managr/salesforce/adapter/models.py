@@ -468,6 +468,14 @@ class SalesforceAuthAccountAdapter:
 
         return self._handle_response(res)
 
+    def execute_alert_query(self, url, resource):
+        """ Handles alert requests to salesforce """
+        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = self._handle_response(res)
+
+        res = self._format_resource_response(res, resource)
+        return res
+
     def revoke(self):
         # if a token is already expired a 400 error occurs we can ignore that
         client.post(sf_consts.REVOKE_URI, {"token": self.access_token})

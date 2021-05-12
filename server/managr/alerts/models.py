@@ -55,6 +55,19 @@ class AlertTemplate(TimeStampModel):
         )
         return f"{user_sf.instance_url}{q}"
 
+    @property
+    def get_users(self):
+        # get user groups
+        ## currently applies to all user groups
+        return self.user.organization.users.filter(is_active=True)
+
+    def test_alert(self):
+        from managr.alerts.background import _process_check_alert
+
+        user = self.user
+        if hasattr(user, "salesforce_account"):
+            _process_check_alert.now(str(self.id), str(user.id))
+
 
 class AlertGroupQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -79,7 +92,7 @@ class AlertGroup(TimeStampModel):
     objects = AlertGroupQuerySet.as_manager()
 
     def __str__(self):
-        return f"Alert group with operator {self.operator}, for template {self.template.title}"
+        return f"Alert group, for template {self.template.title}"
 
     class Meta:
         ordering = ["group_order"]
@@ -134,7 +147,7 @@ class AlertOperand(TimeStampModel):
     objects = AlertOperandQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.operand_type_identifier} {self.operator}"
+        return f"{self.group.template.title} {self.operand_identifier}"
 
     class Meta:
         ordering = ["operand_order"]
@@ -145,14 +158,18 @@ class AlertOperand(TimeStampModel):
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         if self.data_type == "DATE":
-            value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
+            # try converting value to int
+
+            value = (timezone.now() + timezone.timedelta(days=int(self.operand_value))).strftime(
                 "%Y-%m-%d"
             )
         elif self.data_type == "DATETIME":
-            value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
+            value = (timezone.now() + timezone.timedelta(days=int(self.operand_value))).strftime(
                 "%Y-%m-%dT00:00Z"
             )
-
+        elif self.data_type == "STRING":
+            # sf requires single quotes for strings only (aka not decimal or date)
+            value = f"'{value}'"
         # zero conditional does not get added
         q_s = f"{self.operand_identifier} {self.operand_operator} {value}"
         ## TODO: there may be a reason to check id for match in group.operands.first() if there is an issue with order
@@ -162,9 +179,9 @@ class AlertOperand(TimeStampModel):
             self.operand_operator == "=" or self.operand_operator == "!="
         ):
             # calulate a boundary for same day
-            end_value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
-                "%Y-%m-%dT11:59Z"
-            )
+            end_value = (
+                timezone.now() + timezone.timedelta(days=int(self.operand_value))
+            ).strftime("%Y-%m-%dT11:59Z")
             q_s = (
                 f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
             )
@@ -257,19 +274,29 @@ class AlertInstance(TimeStampModel):
             "use to_rendered_text for the updated message"
         )
     )
+    sent_at = models.DateTimeField(null=True)
     resource_id = models.CharField(max_length=255)
-    sent_at = models.DateTimeField()
     objects = AlertGroupQuerySet.as_manager()
+
+    # TODO [MGR-1013]: add private errors here to keep track in case of errors
+
+    # TODO: change resource_id to be a list of id's to apply to one instance
 
     def __str__(self):
         return f"notification for {self.user.email} from template {self.template.title} for {self.template.resource_type}, {self.resource_id}"
 
     @property
     def resource(self):
-        return model_routes[self.template_resource_type]["model"].objects.filter(
-            id=self.resource_id
+        return (
+            model_routes[self.template.resource_type]["model"]
+            .objects.filter(id=self.resource_id)
+            .first()
         )
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    def render_text(self):
+        """ takes the message template body and renders """
+        return
 

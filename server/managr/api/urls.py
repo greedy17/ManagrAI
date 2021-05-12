@@ -97,3 +97,4 @@ router.register(
     "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"
 )
 urlpatterns += router.urls
+

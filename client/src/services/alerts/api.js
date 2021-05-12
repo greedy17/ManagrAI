@@ -28,6 +28,21 @@ export default class AlertTemplateAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
   }
+  async testAlertTemplate(id) {
+    try {
+      this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/test/`)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
+    }
+  }
+  async runAlertTemplateNow(id) {
+    try {
+      this.client.post(`${AlertTemplateAPI.ENDPOINT}test/${id}/test/`)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
+    }
+  }
+
   async updateAlertTemplate(id, data) {
     const d = objectToSnakeCase(data)
     try {
