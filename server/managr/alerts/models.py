@@ -2,6 +2,7 @@ import operator as _operator
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.utils import timezone
 
 from managr.core.models import TimeStampModel
 from managr.salesforce.routes import routes as model_routes
@@ -106,6 +107,36 @@ class AlertOperand(TimeStampModel):
 
     class Meta:
         ordering = ["operand_order"]
+
+    def query_str(self):
+        """ gathers different parts of operand and constructs query """
+        # if type is date or date time we need to create a strftime/date
+        value = self.operand_value
+        if self.data_type == "DATE":
+            value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y%m%d"
+            )
+        elif self.data_type == "DATETIME":
+            value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y%m%dT00:00Z"
+            )
+
+        # zero conditional does not get added
+        q_s = f"{self.operand_identifier} {self.operand_operator} {value}"
+        if self.operand_order == 0:
+            q_s = f"{self.operand_condition} {q_s}"
+        if self.data_type == "DATETIME" and (
+            self.operand_operator == "=" or self.operand_operator == "!="
+        ):
+            # calulate a boundary for same day
+            end_value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y%m%dT11:59Z"
+            )
+            q_s = (
+                f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
+            )
+
+        return q_s
 
 
 class AlertMessageTemplateQuerySet(models.QuerySet):

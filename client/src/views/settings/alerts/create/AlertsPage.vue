@@ -220,6 +220,7 @@
             @click.stop="onSave"
             :disabled="!alertTemplateForm.isValid || savingTemplate"
           />
+          {{ alertTemplateForm.errors }}
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">

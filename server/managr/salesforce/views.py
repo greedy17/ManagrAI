@@ -189,12 +189,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         DjangoFilterBackend,
         filters.SearchFilter,
     )
-    search_fields = (
-        "user__first_name",
-        "user__last_name",
-        "user__email",
-        "label",
-    )
+    search_fields = ("label",)
     filter_class = SObjectFieldFilterSet
 
     def get_queryset(self):

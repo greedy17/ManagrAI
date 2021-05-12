@@ -13,20 +13,6 @@
     </div>
     <div class="alert-operand-row__options">
       <div class="alert-operand-row__field">
-        <div class="alert-operand-row__condition">
-          <label class="alert-operand-row__condition-label">Field Level Alert</label>
-          <ToggleCheckBox
-            @input="
-              selectedOperandType == 'FIELD'
-                ? (selectedOperandType = 'NON_FIELD')
-                : (selectedOperandType = 'FIELD')
-            "
-            :value="selectedOperandType !== 'FIELD'"
-            offColor="#199e54"
-            onColor="#199e54"
-          />
-          <label class="alert-operand-row__condition-label">Non Field Level Alert</label>
-        </div>
         <DropDownSearch
           v-if="selectedOperandType == 'FIELD'"
           :items="objectFields.list"
@@ -39,20 +25,6 @@
           :hasNext="!!objectFields.pagination.hasNextPage"
           @load-more="objectFieldNextPage"
           @search-term="onSearchFields"
-        />
-        <DropDownSearch
-          v-else-if="selectedOperandType == 'NON_FIELD'"
-          :items.sync="NON_FIELD_ALERT_OPTS[resourceType]"
-          :itemsRef.sync="form.field._operandIdentifier.value"
-          v-model="form.field.operandIdentifier.value"
-          displayKey="referenceDisplayLabel"
-          valueKey="apiName"
-          :nullDisplay="
-            NON_FIELD_ALERT_OPTS[resourceType].length ? 'Select an option' : 'Not Options Available'
-          "
-          :disabled="!NON_FIELD_ALERT_OPTS[resourceType].length"
-          searchable
-          local
         />
       </div>
       <div class="alert-operand-row__operator">
@@ -69,7 +41,7 @@
       </div>
       <div class="alert-operand-row__value">
         <DropDownSearch
-          v-if="selectedFieldType && selectedFieldType.dataType == 'Picklist'"
+          v-if="selectedFieldTypeRaw == 'Picklist'"
           :items.sync="picklistOpts"
           :itemsRef.sync="form.field._operandValue.value"
           v-model="form.field.operandValue.value"
@@ -81,10 +53,9 @@
         />
         <DropDownSearch
           v-else-if="
-            selectedFieldType &&
-              (selectedFieldType.dataType == 'Date' ||
-                selectedFieldType.dataType == 'DateTime' ||
-                selectedFieldType.dataType == 'Boolean')
+            selectedFieldType == 'DATE' ||
+              selectedFieldType == 'DATETIME' ||
+              selectedFieldType == 'BOOLEAN'
           "
           :items.sync="valueOpts"
           :itemsRef.sync="form.field._operandValue.value"
@@ -140,6 +111,8 @@ import {
   STRING,
   DATE,
   DECIMAL,
+  BOOLEAN,
+  DATETIME,
 } from '@/services/salesforce/models'
 
 export default {
@@ -169,17 +142,28 @@ export default {
       picklistOpts: [],
       NON_FIELD_ALERT_OPTS,
 
-      operatorOpts: [
-        { label: '>= (Greater or Equal)', value: 'gte' },
-        { label: '<= (Less or Equal)', value: 'lte' },
-        { label: '< (Less)', value: 'lt' },
-        { label: '> (Greater)', value: 'gt' },
-        { label: '= (Equal)', value: 'eq' },
+      intOpts: [
+        { label: '>= (Greater or Equal)', value: '>=' },
+        { label: '<= (Less or Equal)', value: '<=' },
+        { label: '< (Less)', value: '<' },
+        { label: '> (Greater)', value: '>' },
+        { label: '= (Equals)', value: '=' },
+        { label: '!= (Not Equals)', value: '!=' },
+        // string based equality
+      ],
+      strOpts: [
+        // string based equality
+        { label: 'Contains', value: '%LIKE%' },
+        { label: 'Starts With', value: '%LIKE' },
+        { label: 'Ends With', value: 'LIKE%' },
+        { label: '= (Equals)', value: '=' },
+        { label: '!= (Not Equals)', value: '!=' },
       ],
       dateValueOpts: [
         { label: 'Same Day', value: '0' },
+        { label: '7 days', value: '7' },
         { label: '15 Days', value: '15' },
-        { label: 'One Month', value: '30' },
+        { label: 'Month', value: '30' },
       ],
       booleanValueOpts: [
         { label: 'True', value: 'true' },
@@ -188,7 +172,7 @@ export default {
     }
   },
   watch: {
-    selectedFieldType: {
+    selectedFieldRef: {
       immediate: true,
       deep: true,
       async handler(val) {
@@ -211,7 +195,7 @@ export default {
   async created() {
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      salesforceObject: val,
+      salesforceObject: this.resourceType,
     }
     await this.objectFields.refresh()
   },
@@ -252,15 +236,43 @@ export default {
     selectedField() {
       return this.form.field.operandIdentifier.value
     },
+
+    selectedFieldTypeRaw() {
+      if (this.form.field._operandIdentifier.value) {
+        return this.form.field._operandIdentifier.value.dataType
+      }
+      return null
+    },
+    selectedFieldRef() {
+      if (this.selectedFieldTypeRaw) {
+        return this.form.field._operandIdentifier.value
+      }
+      return null
+    },
     selectedFieldType() {
-      return this.form.field._operandIdentifier.value
+      if (this.selectedFieldTypeRaw) {
+        return ALERT_DATA_TYPE_MAP[this.form.field._operandIdentifier.value.dataType]
+      } else {
+        return STRING
+      }
+    },
+    operatorOpts() {
+      switch (this.selectedFieldType) {
+        case INTEGER:
+          return this.intOpts
+        case DECIMAL:
+          return this.intOpts
+        case DATE:
+          return this.intOpts
+        case DATETIME:
+          return this.intOpts
+        default:
+          return this.strOpts
+      }
     },
     valueOpts() {
       if (this.selectedFieldType) {
-        if (
-          this.selectedFieldType.dataType == 'Date' ||
-          this.selectedFieldType.dataType == 'DateTime'
-        ) {
+        if (this.selectedFieldType == DATE || this.selectedFieldType == DATETIME) {
           return this.dateValueOpts
         } else {
           return this.booleanValueOpts

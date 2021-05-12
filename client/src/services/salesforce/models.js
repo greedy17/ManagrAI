@@ -62,7 +62,9 @@ export class SObjectPicklist extends Model {
 const INTEGER = 'INTEGER'
 const STRING = 'STRING'
 const DATE = 'DATE'
+const DATETIME = 'DATETIME'
 const DECIMAL = 'DECIMAL'
+const BOOLEAN = 'BOOLEAN'
 
 const INPUT_TYPE_MAP = {
   Currency: 'number',
@@ -79,8 +81,9 @@ const ALERT_DATA_TYPE_MAP = {
   Long: INTEGER,
   String: STRING,
   Date: DATE,
-  DateTime: DATE,
+  DateTime: DATETIME,
   Picklist: STRING,
   TextArea: STRING,
+  Boolean: BOOLEAN,
 }
-export { INTEGER, STRING, DATE, DECIMAL, INPUT_TYPE_MAP, ALERT_DATA_TYPE_MAP }
+export { INTEGER, STRING, DATE, DATETIME, DECIMAL, INPUT_TYPE_MAP, ALERT_DATA_TYPE_MAP }
