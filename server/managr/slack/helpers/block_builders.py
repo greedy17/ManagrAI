@@ -85,6 +85,17 @@ def simple_section_multiple(text_blocks, block_id=None):
 
 
 def option(text, value):
+    """ accepts a string and returns an object with 2 properties, type and text.
+
+    The type property is set to plain_text. The text property is given the value of the string entered.
+    
+    Parameters
+    ----------
+    text: str
+        plain text
+    value: any    
+    """
+
     return {
         "text": {"type": "plain_text", "text": text},
         "value": value,
@@ -92,10 +103,18 @@ def option(text, value):
 
 
 def divider_block():
+    """ returns an object that has one property, type:divider """
     return {"type": "divider"}
 
 
 def header_block(text, block_id=None):
+    """ 
+        Creates a header block to be used inside other blocks
+
+        Parameters:
+        text - Set text as any String passed in.
+        block_id - Optional Id can be passed in, otherwise creates one with uuid
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     return {"type": "header", "text": {"type": "plain_text", "text": text}, "block_id": block_id}
@@ -124,7 +143,21 @@ def external_select(
 def static_select(
     label, options, action_id=None, initial_option=None, placeholder="Select", block_id=None,
 ):
-    # options are an array of block_optiosn (see above)
+    """"
+    Returns a select block where the select values are known and won't change. 
+
+    Parameters:
+    label - A string for the select input label
+    options - Options are an array of options (see above)
+    action_id - Will be included if entered otherwise None
+    initial_option - An option block has to be entered, this shows the entered option when first being displayed
+    placeholder - Changed placeholder text, otherwise defautls to Select 
+    block_id - Sets block_id, otherwise will use uuid to set.
+
+    Function returns an entire section with the select input. 
+    Only parameters that need to be entered are label and array of options.
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
