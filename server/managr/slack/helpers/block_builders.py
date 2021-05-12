@@ -87,6 +87,26 @@ def header_block(text, block_id=None):
 def external_select(
     label, action_id, initial_option=None, block_id=None, min_query_length=0, placeholder="Select",
 ):
+    """ returns a section block with markdown text and an external_select dropdown menu
+
+    External menu's load their options from an external data source, allowing for a dynamic list of options.
+
+    Parameters
+    ----------
+    label: mrkdwn
+        markdown text for the section block.
+    action_id: str
+        An identifier for the action triggered when a menu option is selected.
+    initial_option: obj
+        The option selected when the menu initially loads.
+    block_id: str
+        Unique identifier for the block
+    min_query_length: int
+        Tell's Slack the fewest number of typed characters required before dispatch.
+    placeholder: obj
+        Defines the placeholder text shown on the menu. Maximum length for the text in this field is 150 characters.                     
+    """
+
     block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": f"{label}"},
