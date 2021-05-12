@@ -34,7 +34,7 @@ REMOVE_OWNER_ID = {
 
 
 # SF CUSTOM URI QUERIES
-def SALSFORCE_RESOURCE_QUERY_URI(
+def SALESFORCE_RESOURCE_QUERY_URI(
     owner_id,
     resource,
     fields,
@@ -62,7 +62,7 @@ def SALSFORCE_RESOURCE_QUERY_URI(
             f = re.sub(r"^(AND|OR)", "", f)
             f = f"WHERE {f}"
 
-        url = f"{url} {f} "
+        url = f"{url} {f}"
     # TODO: [MGR-917] make ordering dynamic
     return f"{url} order by LastModifiedDate DESC limit {limit}"
 

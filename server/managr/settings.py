@@ -46,9 +46,9 @@ STAFF_EMAIL = _env_get_required("STAFF_EMAIL")
 CURRENT_DOMAIN = _env_get_required("CURRENT_DOMAIN")
 CURRENT_PORT = os.environ.get("CURRENT_PORT")
 ALLOWED_HOSTS = []
-METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", [])
-container_metadata = requests.get(METADATA_URI).json()
-ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
+# METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", [])
+# container_metadata = requests.get(METADATA_URI).json()
+# ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 if CURRENT_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(CURRENT_DOMAIN)

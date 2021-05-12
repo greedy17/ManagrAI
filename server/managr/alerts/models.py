@@ -7,6 +7,7 @@ from django.utils import timezone
 from managr.core.models import TimeStampModel
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
+from managr.salesforce import constants as sf_consts
 
 # Create your models here.
 
@@ -34,6 +35,25 @@ class AlertTemplate(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        return adapter_routes.get(self.resource_type, None)
+
+    def url_str(self, user):
+        """ Generates Url Str for request when executing alert """
+        user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
+
+        q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
+            user_sf.salesforce_id,
+            self.resource_type,
+            ["Id"],
+            additional_filters=[
+                *self.adapter_class.additional_filters(),
+                *[group.query_str for group in self.groups.all()],
+            ],
+        )
+        return f"{user_sf.instance_url}{q}"
 
 
 class AlertGroupQuerySet(models.QuerySet):
@@ -63,6 +83,17 @@ class AlertGroup(TimeStampModel):
 
     class Meta:
         ordering = ["group_order"]
+
+    @property
+    def query_str(self):
+        """ returns a grouped qs of operand rows (in ()) """
+        q_s = f"({' '.join([operand.query_str for operand in self.operands.all()])})"
+        if self.group_order != 0:
+            q_s = f"{self.operand_condition} {q_s}"
+        else:
+            ## the firest item always gets the AND since there are other additional filters already
+            q_s = f"AND {q_s}"
+        return q_s
 
 
 class AlertOperandQuerySet(models.QuerySet):
@@ -108,29 +139,31 @@ class AlertOperand(TimeStampModel):
     class Meta:
         ordering = ["operand_order"]
 
+    @property
     def query_str(self):
         """ gathers different parts of operand and constructs query """
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         if self.data_type == "DATE":
-            value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
-                "%Y%m%d"
+            value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y-%m-%d"
             )
         elif self.data_type == "DATETIME":
-            value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
-                "%Y%m%dT00:00Z"
+            value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y-%m-%dT00:00Z"
             )
 
         # zero conditional does not get added
         q_s = f"{self.operand_identifier} {self.operand_operator} {value}"
-        if self.operand_order == 0:
+        ## TODO: there may be a reason to check id for match in group.operands.first() if there is an issue with order
+        if self.operand_order != 0:
             q_s = f"{self.operand_condition} {q_s}"
         if self.data_type == "DATETIME" and (
             self.operand_operator == "=" or self.operand_operator == "!="
         ):
             # calulate a boundary for same day
-            end_value = (timezone.now() - timezone.timedelta(days=self.operand_value)).strftime(
-                "%Y%m%dT11:59Z"
+            end_value = (timezone.now() + timezone.timedelta(days=self.operand_value)).strftime(
+                "%Y-%m-%dT11:59Z"
             )
             q_s = (
                 f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
