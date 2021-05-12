@@ -112,7 +112,7 @@ fargatePRTeardown: &fargatePRTeardown
 fargateStagingDeployment: &fargateStagingDeployment
   name: Deploy Staging to AWS Fargate
   image: atlassian/default-image:2
-  deployment: andrew
+  deployment: Staging
   services:
     - docker
   caches:
@@ -156,7 +156,7 @@ fargateStagingDeployment: &fargateStagingDeployment
 fargateDemoDeployment: &fargateDemoDeployment
   name: Deploy Demo to AWS Fargate
   image: atlassian/default-image:2
-  deployment: andrew
+  deployment: Demo
   services:
     - docker
   caches:
@@ -200,7 +200,7 @@ fargateDemoDeployment: &fargateDemoDeployment
 fargateProdDeployment: &fargateProdDeployment
   name: Deploy Prod to AWS Fargate
   image: atlassian/default-image:2
-  deployment: andrew
+  deployment: Production
   services:
     - docker
   caches:
@@ -251,9 +251,9 @@ pipelines:
           - step: *e2eTests
           - step: *djangoTests
       - step: *fargateDemoDeployment
-      # - step: *fargatePRDeployment
+      #- step: *fargatePRDeployment
       #- step: *fargateStagingDeployment
-      # - step: *fargateProdDeployment
+      #- step: *fargateProdDeployment
   branches:
     develop:
       - parallel:

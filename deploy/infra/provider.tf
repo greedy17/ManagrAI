@@ -13,13 +13,15 @@ terraform {
   }
 
   #Update with ThinkNimble's S3 bucket
-  # backend "s3" {
-  #   bucket = "managr-app-tfstate"
-  #   key    = "tfstate"
-  #   region = "us-east-1"
-  # }
+   backend "s3" {
+     bucket = "managr-app-tfstate"
+     key    = "tfstate"
+     region = "us-east-1"
+   }
 }
 
-provider "aws" {}
+provider "aws" {
+  region = "us-east-1"
+}
 
 data "aws_region" "current" {}
