@@ -179,7 +179,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/managr-app",
+        "awslogs-group": "${aws_logs_group}",
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
@@ -373,7 +373,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/managr-app",
+        "awslogs-group": "${aws_logs_group}",
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
@@ -420,7 +420,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/managr-app",
+        "awslogs-group": "${aws_logs_group}",
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
@@ -446,7 +446,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/managr-app",
+        "awslogs-group": "${aws_logs_group}",
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
@@ -496,7 +496,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/managr-app",
+        "awslogs-group": "${aws_logs_group}",
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }

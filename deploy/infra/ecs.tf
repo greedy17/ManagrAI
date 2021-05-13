@@ -43,7 +43,8 @@ data "template_file" "managr_app" {
   template = file("${path.module}/templates/managr_app.json.tpl")
 
   vars = {
-    nginx_config = base64encode(data.template_file.nginx_config[each.key].rendered)
+    nginx_config   = base64encode(data.template_file.nginx_config[each.key].rendered)
+    aws_logs_group = aws_cloudwatch_log_group.managr_log_group[each.key].name
 
     environment               = each.value.name
     app_image                 = each.value.app_image
