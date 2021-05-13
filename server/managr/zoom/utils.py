@@ -24,18 +24,21 @@ SCORE_LOOKUP = {
             "points": 50,
             "impact": "positive",
             "message_tpl": "The rep said the meeting went great!",
+            "message_delta": "",
         },
         zoom_consts.MEETING_SENTIMENT_FINE: {
             "type": "meeting_sentiment",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The rep said the meeting did not go well.",
+            "message_delta": "",
         },
         zoom_consts.MEETING_SENTIMENT_FINE: {
             "type": "meeting_sentiment",
             "points": 20,
             "impact": "positive",
             "message_tpl": "The rep said the meeting went fine.",
+            "message_delta": "",
         },
     },
     "stage": {
@@ -44,18 +47,21 @@ SCORE_LOOKUP = {
             "points": 10,
             "impact": "positive",
             "message_tpl": "The opportunity moved forward to a new stage: {meeting.zoom_meeting_review.stage}.",
+            "message_delta": "~{old_stage_name}~ {new_stage_name}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "stage",
             "points": 10,
             "impact": "negative",
             "message_tpl": "The opportunity moved backward to a previous stage: {meeting.zoom_meeting_review.stage}.",
+            "message_delta": "~{old_stage_name}~ {new_stage_name}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "stage",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's stage did not change.",
+            "message_delta": "{meeting.zoom_meeting_review.resource.stage} _(no change)_",
         },
     },
     "forecast_category": {
@@ -63,19 +69,22 @@ SCORE_LOOKUP = {
             "type": "forecast",
             "points": 10,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast improved. It is now {meeting.zoom_meeting_review.forecast_category}.",
+            "message_tpl": "Improved to {meeting.zoom_meeting_review.forecast_category}.",
+            "message_delta": "",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "forecast",
             "points": 10,
             "impact": "negative",
-            "message_tpl": "The opportunity's forecast decreased. It is now {meeting.zoom_meeting_review.forecast_category}.",
+            "message_tpl": "Worsened to {meeting.zoom_meeting_review.forecast_category}.",
+            "message_delta": "",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "forecast",
             "points": 0,
             "impact": "positive",
-            "message_tpl": "The opportunity's forecast did not change.",
+            "message_tpl": "{meeting.zoom_meeting_review.resource.forecast_category} _(no change)_",
+            "message_delta": "",
         },
     },
     "close_date": {
@@ -84,18 +93,21 @@ SCORE_LOOKUP = {
             "points": 5,
             "impact": "positive",
             "message_tpl": "The opportunity's forecast close date improved. It is now: {new_close_date}",
+            "message_delta": "~{old_close_date}~ {new_close_date}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "close_date",
             "points": 5,
             "impact": "negative",
             "message_tpl": "The opportunity's forecast close date moved back. It is now: {new_close_date}",
+            "message_delta": "~{old_close_date}~ {new_close_date}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "close_date",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's forecast close date didn't change.",
+            "message_delta": "{meeting.zoom_meeting_review.resource.close_date} _(no change)_",
         },
     },
     "amount": {
@@ -104,18 +116,21 @@ SCORE_LOOKUP = {
             "points": 5,
             "impact": "positive",
             "message_tpl": "The opportunity's closing amount has increased. It is now: ${new_amount}",
+            "message_delta": "~${old_amount}~ ${new_amount}",
         },
         zoom_consts.MEETING_REVIEW_REGRESSED: {
             "type": "amount",
             "points": 5,
             "impact": "negative",
             "message_tpl": "The opportunity's closing amount has decreased. It is now: ${new_amount}",
+            "message_delta": "~${old_amount}~ ${new_amount}",
         },
         zoom_consts.MEETING_REVIEW_UNCHANGED: {
             "type": "amount",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The opportunity's closing amount didn't change.",
+            "message_delta": "{meeting.zoom_meeting_review.resource.amount} _(no change)_",
         },
     },
     "attendance": {
@@ -124,30 +139,35 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The meeting had only one attendee.",
+            "message_delta": "",
         },
         2: {
             "type": "attendance",
             "points": 2,
             "impact": "positive",
             "message_tpl": "The meeting had two attendees.",
+            "message_delta": "",
         },
         3: {
             "type": "attendance",
             "points": 3,
             "impact": "positive",
             "message_tpl": "The meeting had three attendees.",
+            "message_delta": "",
         },
         4: {
             "type": "attendance",
             "points": 4,
             "impact": "positive",
             "message_tpl": "The meeting had very good attendance of at least 4 participants",
+            "message_delta": "",
         },
         5: {
             "type": "attendance",
             "points": 5,
             "impact": "positive",
             "message_tpl": "The meeting had very good attendance of 5 or more participants",
+            "message_delta": "",
         },
     },
     "duration": {
@@ -156,60 +176,70 @@ SCORE_LOOKUP = {
             "points": 0,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, we could not determine whether meeting lasted longer than planned or ended sooner.",
+            "message_delta": "",
         },
         "planned_over_15": {
             "type": "duration",
             "points": 10,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, it went over time by more than 15 minutes.",
+            "message_delta": "",
         },
         "planned_under_15": {
             "type": "duration",
             "points": 5,
             "impact": "negative",
             "message_tpl": "The meeting lasted {duration} minutes, it was cut short by less than 15 minutes.",
+            "message_delta": "",
         },
         "planned_under_15_plus": {
             "type": "duration",
             "points": 10,
             "impact": "negative",
             "message_tpl": "The meeting lasted {duration} minutes, it was cut short by more than 15 minutes.",
+            "message_delta": "",
         },
         "planned_over_5": {
             "type": "duration",
             "points": 6,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, it went over time by about 5 minutes.",
+            "message_delta": "",
         },
         "planned_over_2": {
             "type": "duration",
             "points": 3,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, it went over time by about 2 minutes.",
+            "message_delta": "",
         },
         "planned_on_time": {
             "type": "duration",
             "points": 0,
             "impact": "positive",
             "message_tpl": "The meeting lasted {duration} minutes, it ended on time.",
+            "message_delta": "",
         },
         "instant_over_60": {
             "type": "duration",
             "points": 10,
             "impact": "positive",
             "message_tpl": "This was an instant meeting that lasted over 60 minutes.",
+            "message_delta": "",
         },
         "instant_over_30": {
             "type": "duration",
             "points": 6,
             "impact": "positive",
             "message_tpl": "This was an instant meeting that lasted around 30 minutes.",
+            "message_delta": "",
         },
         "instant_over_20": {
             "type": "duration",
             "points": 3,
             "impact": "positive",
             "message_tpl": "This was an instant meeting that lasted around 20 minutes.",
+            "message_delta": "",
         },
     },
 }
@@ -218,12 +248,15 @@ SCORE_LOOKUP = {
 class ScoreComponent:
     """Helper class for handling the components of the meeting score."""
 
-    def __init__(self, meeting, type="unkown", points=0, impact="positive", message_tpl=""):
+    def __init__(
+        self, meeting, type="unkown", points=0, impact="positive", message_tpl="", message_delta=""
+    ):
         self.meeting = meeting
         self.type = type
         self._points = points
         self.impact = impact
         self.message_tpl = message_tpl
+        self.message_delta = message_delta
 
     @property
     def rendered_message(self):
@@ -248,6 +281,39 @@ class ScoreComponent:
         )
 
     @property
+    def rendered_message_delta(self):
+        # HACK: Provide general-purpose context to the formatter
+        new_stage_name = ""
+        old_stage_name = ""
+        new_close_date = ""
+        old_close_date = ""
+        new_amount = ""
+        old_amount = ""
+        if self.meeting.zoom_meeting_review.stage:
+            new_stage_name = self.meeting.zoom_meeting_review.stage
+        if self.meeting.zoom_meeting_review.prev_stage:
+            old_stage_name = self.meeting.zoom_meeting_review.prev_stage
+        if self.meeting.zoom_meeting_review.close_date:
+            new_close_date = self.meeting.zoom_meeting_review.close_date.strftime("%m/%d/%Y")
+        if self.meeting.zoom_meeting_review.prev_close_date:
+            old_close_date = self.meeting.zoom_meeting_review.prev_close_date.strftime("%m/%d/%Y")
+        if self.meeting.zoom_meeting_review.amount:
+            new_amount = self.meeting.zoom_meeting_review.amount
+        if self.meeting.zoom_meeting_review.prev_amount:
+            old_amount = self.meeting.zoom_meeting_review.prev_amount
+        # END HACK
+
+        return self.message_delta.format(
+            meeting=self.meeting,
+            new_stage_name=new_stage_name,
+            old_stage_name=old_stage_name,
+            new_close_date=new_close_date,
+            old_close_date=old_close_date,
+            new_amount=new_amount,
+            old_amount=old_amount,
+        )
+
+    @property
     def points(self):
         return self._points if self.impact == "positive" else -self._points
 
@@ -258,6 +324,7 @@ class ScoreComponent:
             "points": self._points,
             "impact": self.impact,
             "message": self.rendered_message,
+            "delta": self.rendered_message_delta,
         }
 
 

@@ -416,10 +416,12 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    # only send meeting reviews for opps
     if (
         hasattr(workflow.meeting, "zoom_meeting_review")
         and workflow.meeting.zoom_meeting_review.meeting_sentiment
         == zoom_consts.MEETING_SENTIMENT_GREAT
+        and workflow.resource_type == "Opportunity"
     ):
 
         user = workflow.user
@@ -439,22 +441,25 @@ def _send_meeting_summary(workflow_id):
                     )
         except InvalidBlocksException as e:
             return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
             )
         except InvalidBlocksFormatException as e:
             return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
             )
         except UnHandeledBlocksException as e:
             return logger.exception(
-                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {user.email} {e}"
             )
         except InvalidAccessToken as e:
             return logger.exception(
-                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {workflow.user.email} {e}"
+                f"Failed To Generate  SummaryInteraction for workflow {str(workflow.id)} for user  email {user.email} {e}"
             )
 
-        return
+        except Exception as e:
+            return logger.exception(
+                f"Failed to Generate Summary Interaction for workflow  workflow {str(workflow.id)} for user  email {workflow.user.email} {e}"
+            )
     return
 
 

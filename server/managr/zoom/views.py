@@ -86,14 +86,6 @@ def get_zoom_authentication(request):
     if not code:
         raise ValidationError()
     res = ZoomAcct.create_account(code, request.user.id)
-    if hasattr(request.user, "zoom_account"):
-        zoom = request.user.zoom_account
-        zoom.access_token = res.access_token
-        zoom.refresh_token = res.refresh_token
-        zoom.is_revoked = False
-        zoom.save()
-        return Response(data={"success": True})
-
     serializer = ZoomAuthSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -110,14 +102,11 @@ def revoke_zoom_access_token(request):
         except Exception:
             # revoke token will fail if ether token is expired
             pass
-        zoom.is_revoked = True
-        zoom.access_token = ""
-        zoom.refresh_token = ""
         if zoom.refresh_token_task:
             task = Task.objects.filter(id=zoom.refresh_token_task).first()
             if task:
                 task.delete()
-        zoom.save()
+        zoom.delete()
 
     return Response()
 
@@ -191,6 +180,7 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
+    logger.info({f"--ZOOM_MEETING_FROM_ZOOM event {event} payload{obj}"})
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}

@@ -35,12 +35,14 @@ logger = logging.getLogger("managr")
 @block_set()
 def loading_block_set(context):
     message = context.get("message", "Saving Data")
-    return block_builders.section_with_accessory_block(
-        f"*{message}*",
-        block_builders.simple_image_block(
-            "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif", "Loading..."
-        ),
-    )
+    return [
+        block_builders.section_with_accessory_block(
+            f"*{message}*",
+            block_builders.simple_image_block(
+                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
+            ),
+        )
+    ]
 
 
 @block_set()
@@ -95,7 +97,7 @@ def onboarding_interaction_block_set(context):
 
 
 @block_set()
-def tasks_block_set(context={}):
+def tasks_list_block_set(context={}):
     def to_date_string(date):
         if not date:
             return "n/a"
@@ -199,7 +201,7 @@ def home_modal_block_set(context):
             text_type="mrkdwn",
         ),
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/settings/integrations|Email>* will help us gather additional metadata about your meetings",
+            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/settings/integrations|Calendar>* will help us gather additional metadata about your meetings",
             text_type="mrkdwn",
         ),
     ]
@@ -211,7 +213,7 @@ def home_modal_block_set(context):
         *integration_blocks,
         block_builders.divider_block(),
         block_builders.simple_section("*Today's Tasks*", "mrkdwn"),
-        *tasks_block_set(context),
+        *tasks_list_block_set(context),
         block_builders.divider_block(),
         block_builders.simple_section("*Alerts*", "mrkdwn"),
         *coming_soon_modal_block_set({}),
