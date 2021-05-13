@@ -85,7 +85,7 @@
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
           class="primary-button"
-          text="Connect"
+          :text="slackButtonMessage"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
         ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
@@ -243,7 +243,6 @@ export default {
         } else {
           // auto sends a channel message, will also send a private dm
           await SlackOAuth.api.generateAccessToken(this.$route.query.code)
-          await SlackOAuth.api.testDM()
         }
 
         this.$router.replace({
@@ -305,6 +304,15 @@ export default {
     },
     user() {
       return this.$store.state.user
+    },
+    slackButtonMessage() {
+      if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
+        return 'Connect Workspace'
+      } else if (this.orgHasSlackIntegration && !this.hasSlackIntegration) {
+        return 'Connect'
+      } else {
+        return 'N/A'
+      }
     },
   },
 }
