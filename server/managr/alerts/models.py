@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
+from managr.alerts.utils.utils import convertToSlackFormat
 from managr.core.models import TimeStampModel
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
@@ -299,9 +300,29 @@ class AlertInstance(TimeStampModel):
 
     def render_text(self):
         """ takes the message template body and renders """
-        # replace all <strong> tags with * *
-        # replace all <em>< with _ _
-        # replace all <s></s> with ~ ~
+
         body = self.template.message_template.body
 
+        body = convertToSlackFormat(body)
+        for k, v in self.var_binding_map.items():
+            body = body.replace(k, f"{v}")
         return body
+
+    @property
+    def var_binding_map(self):
+        """ takes set of variable bindings and replaces them with the value """
+        binding_map = dict()
+        for binding in self.template.message_template.bindings:
+            ## collect all valid bindings
+            try:
+                k, v = binding.split(".")
+                if k != self.template.resource_type and k != "__Recipient":
+                    continue
+                if k == self.template.resource_type:
+                    binding_map[binding] = self.resource.secondary_data.get(v, "*N/A*")
+                elif k == "__Recipient":
+                    binding_map[binding] = getattr(self.user, v)
+
+            except ValueError:
+                continue
+        return binding_map

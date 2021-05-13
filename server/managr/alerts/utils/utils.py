@@ -1,4 +1,29 @@
 import operator
+import re
+from io import StringIO
+from html.parser import HTMLParser
+
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.text = StringIO()
+
+    def handle_data(self, d):
+        self.text.write(d)
+
+    def get_data(self):
+        return self.text.getvalue()
+
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
 
 # group_1 = [[[True, "OR"], [False, "AND"], [True, "OR"]], "OR"]
 # group_2 = [[[True, "AND"], [False, "AND"], [True, "AND"]], "AND"]
@@ -8,7 +33,7 @@ group_3 = [[True, "AND"], [False, "AND"], [True, "OR"]]
 group_2 = [[True, "AND"], [False, "AND"], [True, "AND"]]
 group_1 = [[True, "OR"], [False, "AND"], [True, "AND"]]
 
-
+## true false recurrsion
 def test_fn(group, current_index, current_eval):
     group_length = len(group)
     current_conditional = f"__{group[current_index][1].lower()}__"
@@ -26,7 +51,20 @@ def test_fn(group, current_index, current_eval):
         return current_eval
 
 
-if __name__ == "__main__":
-    print(test_fn(group_3, 0, None))
-    print(test_fn(group_2, 0, None))
-    print(test_fn(group_1, 0, None))
+# variable substition
+def convertToSlackFormat(body):
+    """
+        converts em tags to _
+        converts strong tags to *
+        converst s tags to ~
+        strips orphaned tags and cleans out other html
+    """
+    new_str = body
+    new_str = re.sub(r"<s>\s?(?=[A-Za-z0-9])", "~", new_str)
+    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</s>)", "~", new_str)
+    new_str = re.sub(r"<em>\s?(?=[A-Za-z0-9])", "_", new_str)
+    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</em>)", "_", new_str)
+    new_str = re.sub(r"<strong>\s?(?=[A-Za-z0-9])", "*", new_str)
+    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</strong>)", "*", new_str)
+    new_str = strip_tags(new_str)
+    return new_str

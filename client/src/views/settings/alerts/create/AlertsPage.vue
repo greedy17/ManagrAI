@@ -301,8 +301,10 @@ export default {
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Name', apiName: 'recipientName' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'recipientEmail' },
+        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
+        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
+        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
+        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
       ],
       alertRecipientOpts: [
         { key: 'Myself', value: 'SELF' },
