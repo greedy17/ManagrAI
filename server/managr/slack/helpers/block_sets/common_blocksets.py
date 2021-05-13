@@ -221,3 +221,34 @@ def home_modal_block_set(context):
     ]
     view = {"type": "home", "blocks": blocks}
     return view
+
+
+@block_set()
+def home_modal_generic_block_set(context):
+    slack_id = context.get("slack_id")
+    org_name = context.get("org_name")
+    blocks = [
+        block_builders.header_block("Join Managr!"),
+        block_builders.divider_block(),
+        block_builders.section_with_button_block(
+            "Request Invite",
+            slack_id,
+            "Send a request to your team on Managr, we'll send them a DM with your info",
+            action_id=slack_const.HOME_REQUEST_SLACK_INVITE,
+            block_id="INVITE_BUTTON",
+        ),
+        block_builders.divider_block(),
+        block_builders.simple_section(
+            "*Once you've signed up you'll be able to integrate your accounts and use Managr to help you _SELL_* :moneybag:",
+            "mrkdwn",
+        ),
+        block_builders.section_with_accessory_block(
+            f"_Checkout the About Tab_",
+            block_builders.simple_image_block(
+                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
+            ),
+        ),
+    ]
+
+    view = {"type": "home", "blocks": blocks}
+    return view
