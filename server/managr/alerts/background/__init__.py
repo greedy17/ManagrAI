@@ -98,15 +98,9 @@ def _process_check_alert(alert_id, user_id):
             if hasattr(user, "slack_integration"):
                 channel_id = user.slack_integration.channel
                 access_token = user.organization.slack_integration.access_token
-                text = "WILL CHANGE TO PROVIDED TEXT"
-                blocks = [
-                    block_builders.header_block(template.title),
-                    block_builders.divider_block(),
-                    block_builders.simple_section(
-                        f"Triggered an alert for {instance.resource.name}"
-                    ),
-                ]
+                text = template.message_template.notification_text
+                blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+
                 res = slack_requests.send_channel_message(
                     channel_id, access_token, text=text, block_set=blocks
                 )
-                print(res)

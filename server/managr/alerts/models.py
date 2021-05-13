@@ -1,3 +1,4 @@
+import re
 import operator as _operator
 
 from django.db import models
@@ -298,4 +299,9 @@ class AlertInstance(TimeStampModel):
 
     def render_text(self):
         """ takes the message template body and renders """
-        return
+        # replace all <strong> tags with * *
+        # replace all <em>< with _ _
+        # replace all <s></s> with ~ ~
+        body = self.template.message_template.body
+
+        return body

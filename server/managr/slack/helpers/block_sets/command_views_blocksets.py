@@ -19,6 +19,7 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.alerts.models import AlertInstance
 
 
 @block_set(required_context=["resource_type", "u"])
@@ -61,6 +62,35 @@ def command_meeting_summary(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
+        ),
+    ]
+
+
+@block_set(required_context=["instance_id"])
+def alert_instance_block_set(context):
+    """ 
+        Builds out the message based on the template the of the alert 
+        heading - alert title 
+        divider -
+        message - alert template message 
+        divider 
+        update button
+    """
+    instance = AlertInstance.objects.get(id=context.get("instance_id"))
+    user = instance.user
+    return [
+        block_builders.header_block(instance.template.title),
+        block_builders.divider_block(),
+        block_builders.simple_section(instance.render_text(), "mrkdwn"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Update",
+                    instance.resource_id,
+                    action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
+                )
+            ]
         ),
     ]
 
