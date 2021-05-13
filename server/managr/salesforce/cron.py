@@ -1,9 +1,8 @@
 import logging
 import kronos
-from datetime import datetime
-import logging
 import math
 
+from datetime import datetime
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone

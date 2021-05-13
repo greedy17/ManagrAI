@@ -41,7 +41,7 @@ def emit_init_alert(alert_id):
     return _process_init_alert(alert_id)
 
 
-@background()
+@background(queue="MANAGR_ALERTS_QUEUE")
 def _process_init_alert(alert_id,):
 
     template = AlertTemplate.objects.filter(id=alert_id).first()
@@ -50,10 +50,10 @@ def _process_init_alert(alert_id,):
     users = template.get_users
 
     for user in users:
-        _process_check_alert()
+        _process_check_alert(alert_id, str(user.id))
 
 
-@background()
+@background(queue="MANAGR_ALERTS_QUEUE")
 def _process_check_alert(alert_id, user_id):
 
     template = AlertTemplate.objects.filter(id=alert_id).first()
@@ -64,6 +64,8 @@ def _process_check_alert(alert_id, user_id):
     if not template:
         return logger.exception(f"Could not find Alert template to send {alert_id}")
     attempts = 1
+    if not hasattr(user, "salesforce_account"):
+        return
     while True:
         sf = user.salesforce_account
         try:
