@@ -42,8 +42,8 @@
             </span>
             <span class="alerts-template-list__header-item alerts-template-list__header-item">
               <ToggleCheckBox
-                @input="onToggleAlert"
-                :value="alert.isActive"
+                @input="onToggleAlert(alert.id, alert.isActive)"
+                v-model="alert.isActive"
                 offColor="#aaaaaa"
                 onColor="#199e54"
               />
