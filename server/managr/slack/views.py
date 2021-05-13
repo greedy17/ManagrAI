@@ -597,7 +597,6 @@ def slack_events(request):
         if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
-            user = None
             if user and user.is_active:
                 slack_requests.publish_view(
                     slack_id,
