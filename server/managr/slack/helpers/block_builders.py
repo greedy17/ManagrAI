@@ -70,7 +70,8 @@ def simple_section_multiple(text_blocks, block_id=None):
 def option(text, value):
     """accepts a string and returns an object with 2 properties, type and text.
 
-    The type property is set to plain_text. The text property is given the value of the string entered.
+    The type property is set to plain_text. The text property is given the value of the 
+    string entered.
 
     Parameters
     ----------
@@ -133,7 +134,8 @@ def static_select(
     label - A string for the select input label
     options - Options are an array of options (see above)
     action_id - Will be included if entered otherwise None
-    initial_option - An option block has to be entered, this shows the entered option when first being displayed
+    initial_option - An option block has to be entered, this shows the entered option 
+    when first being displayed
     placeholder - Changed placeholder text, otherwise defautls to Select
     block_id - Sets block_id, otherwise will use uuid to set.
 
