@@ -148,6 +148,18 @@ class SlackViewSet(viewsets.GenericViewSet,):
             channel = res.get("channel", {}).get("id")
             user_slack.channel = channel
             user_slack.save()
+            if not user_slack.is_onboarded:
+                slack_requests.send_channel_message(
+                    user_slack.slack_integration.channel,
+                    user_slack.organization.slack_integration.access_token,
+                    text="Welcome to Managr!",
+                    block_set=get_block_set(
+                        "onboarding_interaction", {"u": str(user_slack.user.id)}
+                    ),
+                )
+
+                user_slack.is_onboarded = True
+                user_slack.save()
 
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
