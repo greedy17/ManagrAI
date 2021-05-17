@@ -150,8 +150,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
             user_slack.save()
             if not user_slack.is_onboarded:
                 slack_requests.send_channel_message(
-                    user_slack.slack_integration.channel,
-                    user_slack.organization.slack_integration.access_token,
+                    user_slack.channel,
+                    user_slack.user.organization.slack_integration.access_token,
                     text="Welcome to Managr!",
                     block_set=get_block_set(
                         "onboarding_interaction", {"u": str(user_slack.user.id)}
