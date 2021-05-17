@@ -129,7 +129,11 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
             )
         else:
-            team_id = data.get("team").get("id")
+            team_id = data.get("team", {}).get("id")
+            if not team_id:
+                raise ValidationError(
+                    "We hit an issue getting your team id, please try the integration again."
+                )
             if team_id != request.user.organization.slack_integration.team_id:
                 raise ValidationError(
                     "You signed into the wrong Slack workspace, please try again."
