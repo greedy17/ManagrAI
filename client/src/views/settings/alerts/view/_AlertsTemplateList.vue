@@ -17,7 +17,7 @@
           </div>
         </template>
       </ExpandablePanel>
-      <ExpandablePanel v-for="(alert, i) in templates.list">
+      <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
         <template v-slot:panel-header="{ classes, expand }">
           <div :data-key="alert.id" @click="expand" :class="classes">
             <span
@@ -25,7 +25,7 @@
               >{{ alert.title }}</span
             >
             <span
-              @click.stop="onRunTemplateNow(alert.id)"
+              @click.stop="onRunAlertTemplateNow(alert.id)"
               class="alerts-template-list__header-item alerts-template-list__header-item"
             >
               <svg class="icon" fill="black" viewBox="0 0 30 30">
@@ -164,7 +164,7 @@ export default {
     },
     async onRunAlertTemplateNow(id) {
       try {
-        await AlertTemplate.api.testAlertTemplate(id)
+        await AlertTemplate.api.runAlertTemplateNow(id)
         this.$Alert.alert({
           message: `Alert has been initiated`,
           type: 'success',

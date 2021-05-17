@@ -160,10 +160,13 @@ export default {
         { label: '!= (Not Equals)', value: '!=' },
       ],
       dateValueOpts: [
-        { label: 'Same Day', value: '0' },
-        { label: '7 days', value: '7' },
-        { label: '15 Days', value: '15' },
-        { label: 'Month', value: '30' },
+        { label: 'Same Day as alert day', value: '0' },
+        { label: '7 days FROM alert day', value: '7' },
+        { label: '7 days PRIOR TO alert day', value: '-7' },
+        { label: '15 Days FROM alert day', value: '15' },
+        { label: '15 Days PRIOR TO alert day', value: '-15' },
+        { label: 'Month  FROM alert day', value: '30' },
+        { label: 'Month  PRIOR TO alert day', value: '-30' },
       ],
       booleanValueOpts: [
         { label: 'True', value: 'true' },

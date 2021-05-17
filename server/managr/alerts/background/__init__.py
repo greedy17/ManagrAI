@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 
 from django.conf import settings
+from django.db.models import Q
 
 from background_task import background
 from rest_framework.exceptions import ValidationError
@@ -31,38 +32,39 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
 )
 
-from ..models import AlertTemplate, AlertInstance
+from ..models import AlertTemplate, AlertInstance, AlertConfig
 
 
 logger = logging.getLogger("managr")
 
 
-def emit_init_alert(alert_id):
-    return _process_init_alert(alert_id)
+def emit_init_alert(config_id):
+    return _process_init_alert(config_id)
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
-def _process_init_alert(alert_id,):
+def _process_init_alert(config_id,):
 
-    template = AlertTemplate.objects.filter(id=alert_id).first()
-    if not template:
-        return logger.exception(f"Could not find Alert template to send {alert_id}")
+    config = AlertConfig.objects.filter(id=config_id).first()
+    if not config:
+        return logger.exception(f"Could not find config for template to send {config_id}")
+    template = config.template
     users = template.get_users
 
     for user in users:
-        _process_check_alert(alert_id, str(user.id))
+        _process_check_alert(config_id, str(user.id))
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
-def _process_check_alert(alert_id, user_id):
-
-    template = AlertTemplate.objects.filter(id=alert_id).first()
+def _process_check_alert(config_id, user_id):
+    config = AlertConfig.objects.filter(id=config_id).first()
+    template = config.template
+    alert_id = str(template.id)
     resource = template.resource_type
     route = model_routes[resource]
     model_class = route["model"]
     user = template.get_users.filter(id=user_id).first()
-    if not template:
-        return logger.exception(f"Could not find Alert template to send {alert_id}")
+
     attempts = 1
     if not hasattr(user, "salesforce_account"):
         return
@@ -70,14 +72,14 @@ def _process_check_alert(alert_id, user_id):
         sf = user.salesforce_account
         try:
             res = sf.adapter_class.execute_alert_query(
-                template.url_str(user), template.resource_type
+                template.url_str(user, config_id), template.resource_type
             )
             logger.info(f"Pulled total {len(res)} from request for {resource} matching alert query")
             break
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync {resource} data for user {user_id} after {attempts} tries"
+                    f"Failed to retrieve alerts for {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
                 sf.regenerate_token()
@@ -94,15 +96,43 @@ def _process_check_alert(alert_id, user_id):
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             # create alert instance to keep on hand and track errors
-            instance = AlertInstance.objects.create(
-                template_id=alert_id, user_id=user_id, resource_id=str(existing.id)
-            )
-            if hasattr(user, "slack_integration"):
-                channel_id = user.slack_integration.channel
-                access_token = user.organization.slack_integration.access_token
-                text = template.message_template.notification_text
-                blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+            instance_meta = {
+                "query_sent": template.url_str(user, config_id),
+                "results_count": len(res),
+                "errors": [],
+            }
+            # create instance for each user group it will be sent to
+            query = Q()
+            for user_group in config.recipients:
+                if user_group == "SELF":
+                    query |= Q(id=template.user.id)
+                elif user_group == "OWNER":
+                    query |= Q(id=user.id)
+                elif user_group == "MANAGERS":
+                    query != Q(user_level="MANAGER")
 
-                res = slack_requests.send_channel_message(
-                    channel_id, access_token, text=text, block_set=blocks
+                elif user_group == "REPS":
+                    query != Q(user_level="REP")
+                elif user_group == "ALL":
+                    query != Q(user_level="MANAGER") | Q(user_level="REP")
+            query &= Q(is_active=True)
+            users = template.user.organization.users.filter(query).distinct()
+            for u in users:
+
+                instance = AlertInstance.objects.create(
+                    template_id=alert_id,
+                    user_id=u.id,
+                    resource_id=str(existing.id),
+                    instance_meta=instance_meta,
                 )
+
+                if hasattr(user, "slack_integration"):
+                    channel_id = user.slack_integration.channel
+                    access_token = user.organization.slack_integration.access_token
+                    text = template.message_template.notification_text
+                    blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+
+                    res = slack_requests.send_channel_message(
+                        channel_id, access_token, text=text, block_set=blocks
+                    )
+

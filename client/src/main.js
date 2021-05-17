@@ -7,6 +7,7 @@ import Vuex from 'vuex'
 import AlertAlert from '@/services/alertAlert'
 import VueMask from 'v-mask'
 import * as VueGoogleMaps from 'vue2-google-maps'
+import VueSanitize from 'vue-sanitize'
 
 import App from './App'
 import router from './router'
@@ -42,7 +43,7 @@ Vue.config.productionTip = false
 
 Vue.use(Vuex)
 Vue.use(AlertAlert)
-
+Vue.use(VueSanitize)
 Vue.use(VueMask)
 Vue.use(VueGoogleMaps, {
   load: {

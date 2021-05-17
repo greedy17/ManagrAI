@@ -37,7 +37,7 @@ export default class AlertTemplateAPI extends ModelAPI {
   }
   async runAlertTemplateNow(id) {
     try {
-      this.client.post(`${AlertTemplateAPI.ENDPOINT}test/${id}/test/`)
+      this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }

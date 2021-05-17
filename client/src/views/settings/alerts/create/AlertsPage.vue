@@ -171,12 +171,31 @@
             </div>
             <div class="alerts-page__settings__day">
               <FormField
-                placeholder="day"
+                v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+                placeholder="Day of month"
                 :errors="form.field.recurrenceDay.errors"
                 @blur="form.field.recurrenceDay.validate()"
                 v-model="form.field.recurrenceDay.value"
                 small
               />
+              <FormField
+                v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
+                :errors="form.field.recurrenceDay.errors"
+              >
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="weeklyOpts"
+                    :itemsRef.sync="form.field._recurrenceDay.value"
+                    v-model="form.field.recurrenceDay.value"
+                    @input="form.field.recurrenceDay.validate()"
+                    displayKey="key"
+                    valueKey="value"
+                    nullDisplay="Select"
+                    searchable
+                    local
+                  />
+                </template>
+              </FormField>
             </div>
             <div class="alerts-page__settings__recipients">
               <DropDownSearch
@@ -312,6 +331,15 @@ export default {
         { key: 'All Managers', value: 'MANAGERS' },
         { key: 'All Reps', value: 'REPS' },
         { key: 'Everyone', value: 'ALL' },
+      ],
+      weeklyOpts: [
+        { key: 'Monday', value: '0' },
+        { key: 'Tuesday', value: '1' },
+        { key: 'Wednesday', value: '2' },
+        { key: 'Thursday', value: '3' },
+        { key: 'Friday', value: '4' },
+        { key: 'Saturday', value: '5' },
+        { key: 'Sunday', value: '6' },
       ],
     }
   },

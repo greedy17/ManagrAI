@@ -245,6 +245,7 @@ export default {
     },
 
     async updateMessageTemplate() {
+      // TODO: Sanitize body PB 05/18/21
       this.messageTemplateForm.validate()
       if (this.messageTemplateForm.isValid) {
         try {

@@ -1,8 +1,9 @@
 import re
 import operator as _operator
+from dateutil.relativedelta import relativedelta
 
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.utils import timezone
 
 from managr.alerts.utils.utils import convertToSlackFormat
@@ -42,7 +43,7 @@ class AlertTemplate(TimeStampModel):
     def adapter_class(self):
         return adapter_routes.get(self.resource_type, None)
 
-    def url_str(self, user):
+    def url_str(self, user, config_id):
         """ Generates Url Str for request when executing alert """
         user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
 
@@ -52,7 +53,7 @@ class AlertTemplate(TimeStampModel):
             ["Id"],
             additional_filters=[
                 *self.adapter_class.additional_filters(),
-                *[group.query_str for group in self.groups.all()],
+                *[group.query_str(config_id) for group in self.groups.all()],
             ],
         )
         return f"{user_sf.instance_url}{q}"
@@ -67,8 +68,30 @@ class AlertTemplate(TimeStampModel):
         from managr.alerts.background import _process_check_alert
 
         user = self.user
+        # create a temporary config
+        c = AlertConfig.objects.create(
+            recurrence_day=timezone.now().weekday(),
+            recurrence_frequency="WEEKLY",
+            recipients=["SELF"],
+            template=self,
+        )
+
         if hasattr(user, "salesforce_account"):
-            _process_check_alert.now(str(self.id), str(user.id))
+            _process_check_alert.now(str(c.id), str(user.id))
+        # delete after test is over
+        c.delete()
+
+    def config_user_group(self, config_id):
+        """ returns the users who will be receiving the messages based on the config """
+        config = self.configs.filter(id=config_id).first()
+        if config:
+            return config.recipient_users
+
+    def config_run_against_date(self, config_id):
+        """ returns the date against which the query is executed """
+        config = self.configs.filter(id=config_id).first()
+        if config:
+            return config.run_against_date
 
 
 class AlertGroupQuerySet(models.QuerySet):
@@ -99,10 +122,9 @@ class AlertGroup(TimeStampModel):
     class Meta:
         ordering = ["group_order"]
 
-    @property
-    def query_str(self):
+    def query_str(self, config_id):
         """ returns a grouped qs of operand rows (in ()) """
-        q_s = f"({' '.join([operand.query_str for operand in self.operands.all()])})"
+        q_s = f"({' '.join([operand.query_str(config_id) for operand in self.operands.all()])})"
         if self.group_order != 0:
             q_s = f"{self.operand_condition} {q_s}"
         else:
@@ -154,21 +176,22 @@ class AlertOperand(TimeStampModel):
     class Meta:
         ordering = ["operand_order"]
 
-    @property
-    def query_str(self):
+    def query_str(self, config_id):
         """ gathers different parts of operand and constructs query """
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         if self.data_type == "DATE":
             # try converting value to int
 
-            value = (timezone.now() + timezone.timedelta(days=int(self.operand_value))).strftime(
-                "%Y-%m-%d"
-            )
+            value = (
+                self.group.template.config_run_against_date(config_id)
+                + timezone.timedelta(days=int(self.operand_value))
+            ).strftime("%Y-%m-%d")
         elif self.data_type == "DATETIME":
-            value = (timezone.now() + timezone.timedelta(days=int(self.operand_value))).strftime(
-                "%Y-%m-%dT00:00:00Z"
-            )
+            value = (
+                self.group.template.config_run_against_date(config_id)
+                + timezone.timedelta(days=int(self.operand_value))
+            ).strftime("%Y-%m-%dT00:00:00Z")
         elif self.data_type == "STRING":
             # sf requires single quotes for strings only (aka not decimal or date)
             value = f"'{value}'"
@@ -182,7 +205,8 @@ class AlertOperand(TimeStampModel):
         ):
             # calulate a boundary for same day
             end_value = (
-                timezone.now() + timezone.timedelta(days=int(self.operand_value))
+                self.group.template.config_run_against_date(config_id)
+                + timezone.timedelta(days=int(self.operand_value))
             ).strftime("%Y-%m-%dT11:59:00Z")
             q_s = (
                 f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
@@ -253,6 +277,25 @@ class AlertConfig(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def run_against_date(self):
+        """ 
+            returns the date based on the selected config to run against 
+            normally this would be today's date but mike wants to allow 
+            users to manually run this alert for the date provided
+        """
+        if self.recurrence_frequency == "WEEKLY":
+            today_weekday = timezone.now().weekday()
+            if today_weekday != int(self.recurrence_day):
+                # calculate the specific date wanted based on day of week
+                day_diff = int(self.recurrence_day) - today_weekday
+                return timezone.now() + timezone.timedelta(days=day_diff)
+            return timezone.now()
+        elif self.recurrence_frequency == "MONTHLY":
+            return timezone.now() + relativedelta(days=int(self.recurrence_day))
+
+        return timezone.now()
+
 
 class AlertInstanceQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -278,6 +321,12 @@ class AlertInstance(TimeStampModel):
     )
     sent_at = models.DateTimeField(null=True)
     resource_id = models.CharField(max_length=255)
+    instance_meta = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+        help_text="an object holding some metadata results_count: # across alert, query_sent: copy of sql, errors: Array of any errors ",
+    )
     objects = AlertGroupQuerySet.as_manager()
 
     # TODO [MGR-1013]: add private errors here to keep track in case of errors
@@ -305,7 +354,10 @@ class AlertInstance(TimeStampModel):
 
         body = convertToSlackFormat(body)
         for k, v in self.var_binding_map.items():
-            body = body.replace(k, f"{v}")
+            str_rep = "{ " + k + " }"
+            str_rep = r"{}".format(str_rep)
+
+            body = body.replace(str_rep, str(v))
         return body
 
     @property
@@ -318,11 +370,19 @@ class AlertInstance(TimeStampModel):
                 k, v = binding.split(".")
                 if k != self.template.resource_type and k != "__Recipient":
                     continue
-                if k == self.template.resource_type:
+                if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
                     binding_map[binding] = self.resource.secondary_data.get(v, "*N/A*")
+                    # HACK pb for datetime fields Mike wants just the date
+                    user = self.user
+                    if self.resource.secondary_data.get(v):
+                        field = user.salesforce_account.object_fields.filter(api_name=v).first()
+                        if field and field.data_type == "DateTime":
+                            binding_map[binding] = binding_map[binding][0:10]
+
                 elif k == "__Recipient":
                     binding_map[binding] = getattr(self.user, v)
 
             except ValueError:
                 continue
         return binding_map
+

@@ -70,7 +70,7 @@ def command_meeting_summary(context):
 def alert_instance_block_set(context):
     """ 
         Builds out the message based on the template the of the alert 
-        heading - alert title 
+      
         divider -
         message - alert template message 
         divider 
@@ -78,21 +78,31 @@ def alert_instance_block_set(context):
     """
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     user = instance.user
-    return [
-        block_builders.header_block(instance.template.title),
-        block_builders.divider_block(),
+    blocks = [
         block_builders.simple_section(instance.render_text(), "mrkdwn"),
         block_builders.divider_block(),
-        block_builders.actions_block(
-            [
-                block_builders.simple_button_block(
-                    "Update",
-                    instance.resource_id,
-                    action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
-                )
-            ]
-        ),
     ]
+    if user.id == instance.resource.owner.id:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Update",
+                        instance.resource_id,
+                        action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
+                    )
+                ]
+            )
+        )
+    else:
+        blocks.append(
+            block_builders.simple_section(
+                f"_*This {instance.template.resource_type} is owned by {instance.resource.owner.full_name} *_",
+                "mrkdwn",
+            ),
+        )
+
+    return blocks
 
 
 @block_set(required_context=["u"])

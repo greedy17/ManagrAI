@@ -82,7 +82,8 @@ class AlertTemplateViewSet(
     )
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
-        emit_init_alert(str(obj.id))
+        for config in obj.configs.all():
+            emit_init_alert(str(config.id))
         return Response()
 
 

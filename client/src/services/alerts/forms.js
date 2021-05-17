@@ -47,13 +47,15 @@ export class AlertConfigForm extends Form {
   static recurrenceDay = new FormField({
     validators: [
       new RequiredValidator(),
-      new MinimumValueValidator({ min: 1 }),
-      new MinimumValueValidator({ max: 31 }),
+      new MinimumValueValidator({ min: 1, message: 'Please add values 1 - 31' }),
+      new MaximumValueValidator({ max: 31, message: 'Please add values 1 - 31' }),
     ],
   })
   static recipients = new FormField({ validators: [new RequiredValidator()] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recipients = new FormField({ value: null })
+  // Keeping a private copy of the dropdown ref obj for later use
+  static _recurrenceDay = new FormField({ value: null })
 
   get toAPI() {
     //overriding .value here to set recipients into an array for future support
@@ -63,6 +65,7 @@ export class AlertConfigForm extends Form {
     }
     // object to snakecase side effect, will change var with _ into var without camelcase
     delete val['_recipients']
+    delete val['_recurrenceDay']
     return val
   }
 }
@@ -78,6 +81,7 @@ export class AlertOperandForm extends Form {
   static _operandIdentifier = new FormField({ value: null })
   static _operandOperator = new FormField({ value: null })
   static _operandValue = new FormField({ value: null })
+
   get toAPI() {
     const originalValue = this.value
     const dataType =
