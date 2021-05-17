@@ -180,9 +180,9 @@ class AlertOperand(TimeStampModel):
         """ gathers different parts of operand and constructs query """
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
+        operator = self.operand_operator
         if self.data_type == "DATE":
             # try converting value to int
-
             value = (
                 self.group.template.config_run_against_date(config_id)
                 + timezone.timedelta(days=int(self.operand_value))
@@ -194,15 +194,23 @@ class AlertOperand(TimeStampModel):
             ).strftime("%Y-%m-%dT00:00:00Z")
         elif self.data_type == "STRING":
             # sf requires single quotes for strings only (aka not decimal or date)
-            value = f"'{value}'"
-        # zero conditional does not get added
-        q_s = f"{self.operand_identifier} {self.operand_operator} {value}"
+
+            # zero conditional does not get added
+            if self.operand_operator in ["CONTAINS", "STARTSWITH", "ENDSWITH"]:
+                operator = "LIKE"
+                if self.operand_operator == "CONTAINS":
+                    value = f"'%{value}%'"
+                elif self.operand_operator == "STARTSWITH":
+                    value = f"'%{value}'"
+                elif self.operand_operator == "ENDSWITH":
+                    value = f"'{value}%'"
+            else:
+                value = f"'{value}'"
+        q_s = f"{self.operand_identifier} {operator} {value}"
         ## TODO: there may be a reason to check id for match in group.operands.first() if there is an issue with order
         if self.operand_order != 0:
             q_s = f"{self.operand_condition} {q_s}"
-        if self.data_type == "DATETIME" and (
-            self.operand_operator == "=" or self.operand_operator == "!="
-        ):
+        if self.data_type == "DATETIME" and (operator == "=" or operator == "!="):
             # calulate a boundary for same day
             end_value = (
                 self.group.template.config_run_against_date(config_id)

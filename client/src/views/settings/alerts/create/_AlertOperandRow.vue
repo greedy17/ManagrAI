@@ -153,9 +153,9 @@ export default {
       ],
       strOpts: [
         // string based equality
-        { label: 'Contains', value: '%LIKE%' },
-        { label: 'Starts With', value: '%LIKE' },
-        { label: 'Ends With', value: 'LIKE%' },
+        { label: 'Contains', value: 'CONTAINS' },
+        { label: 'Starts With', value: 'STARTSWITH' },
+        { label: 'Ends With', value: 'ENDSWITH' },
         { label: '= (Equals)', value: '=' },
         { label: '!= (Not Equals)', value: '!=' },
       ],
