@@ -199,8 +199,8 @@ export default {
       try {
         await this.selectedIntegrationSwitcher.api.revoke()
       } finally {
-        this.generatingToken = false
         this.$store.dispatch('refreshCurrentUser')
+        this.generatingToken = false
       }
     },
     async onIntegrateSlack() {
@@ -236,6 +236,7 @@ export default {
     if (this.$route.query.code) {
       this.generatingToken = true
       this.selectedIntegration = this.$route.query.state // state is the current integration name
+
       try {
         const modelClass = this.selectedIntegrationSwitcher
         if (this.selectedIntegration != 'SLACK') {
@@ -244,11 +245,6 @@ export default {
           // auto sends a channel message, will also send a private dm
           await SlackOAuth.api.generateAccessToken(this.$route.query.code)
         }
-
-        this.$router.replace({
-          name: 'Integrations',
-          params: {},
-        })
       } catch (e) {
         let { response } = e
         if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
@@ -262,9 +258,14 @@ export default {
           }
         }
       } finally {
-        this.$store.dispatch('refreshCurrentUser')
+        await this.$store.dispatch('refreshCurrentUser')
+
         this.generatingToken = false
         this.selectedIntegration = null
+        this.$router.replace({
+          name: 'Integrations',
+          params: {},
+        })
       }
     }
   },
