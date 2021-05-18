@@ -32,4 +32,3 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(e))
 
             self.stdout.write(self.style.SUCCESS(t))
-

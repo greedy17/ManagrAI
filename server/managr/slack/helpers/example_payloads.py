@@ -317,4 +317,3 @@ view_submission_type = {
     },
     "response_urls": [],
 }
-
