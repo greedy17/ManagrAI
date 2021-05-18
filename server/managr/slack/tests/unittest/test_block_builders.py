@@ -8,6 +8,7 @@ from managr.slack.helpers.block_builders import (
     section_with_button_block,
     section_with_accessory_block,
     simple_image_block,
+    external_select,
 )
 
 
@@ -24,6 +25,60 @@ class TestTextBlock(TestCase):
     def test_returns_object_with_mrkdwn_type(self):
         result = text_block("test", "mrkdwn")
         self.assertEqual(result, {"type": "mrkdwn", "text": "test"})
+
+
+class TestExternalSelect(TestCase):
+    """unit test for external select"""
+
+    def test_returned_block(self):
+        result = external_select(
+            "test_label",
+            "test_action_id",
+            initial_option=None,
+            block_id=None,
+            min_query_length=0,
+            placeholder="Select_test",
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "test_label"},
+                "accessory": {
+                    "type": "external_select",
+                    "action_id": "test_action_id",
+                    "placeholder": {"type": "plain_text", "text": "Select_test"},
+                    "min_query_length": 0,
+                },
+            },
+        )
+
+    def test_initial_option(self):
+        result = external_select(
+            "test_label",
+            "test_action_id",
+            initial_option={"text": {"type": "plain_text", "text": "test"}, "value": "test",},
+            block_id=None,
+            min_query_length=0,
+            placeholder="Select_test",
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "test_label"},
+                "accessory": {
+                    "type": "external_select",
+                    "action_id": "test_action_id",
+                    "placeholder": {"type": "plain_text", "text": "Select_test"},
+                    "min_query_length": 0,
+                    "initial_option": {
+                        "text": {"type": "plain_text", "text": "test"},
+                        "value": "test",
+                    },
+                },
+            },
+        )
 
 
 class TestSectionWithButtonBlock(TestCase):
