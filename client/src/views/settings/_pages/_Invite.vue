@@ -71,9 +71,7 @@
         </div>
         <div class="invite-form__actions">
           <div
-            @click="
-              userInviteForm.field.slackInvite.value = !userInviteForm.field.slackInvite.value
-            "
+            @click="onConfirmSlackInvite"
             style="display:flex;align-items:center;align-self:flex-start;"
           >
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
@@ -173,6 +171,18 @@ export default {
   },
 
   methods: {
+    onConfirmSlackInvite() {
+      if (!this.userInviteForm.field.slackInvite.value) {
+        let confirmSlack = confirm(
+          'This will post a message to the channel you selected tagging the user to sign up',
+        )
+        if (confirmSlack) {
+          this.userInviteForm.field.slackInvite.value = true
+        }
+      } else {
+        this.userInviteForm.field.slackInvite.value = false
+      }
+    },
     async refresh() {
       this.user = this.$store.state.user
 
