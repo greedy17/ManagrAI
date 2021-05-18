@@ -9,6 +9,8 @@
           v-model="loginForm.field.email.value"
           placeholder="email"
           :errors="loginForm.field.email.errors"
+          name="email"
+          id="email"
           large
         />
         <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
@@ -20,6 +22,8 @@
           v-model="loginForm.field.password.value"
           inputType="password"
           placeholder="password"
+          name="password"
+          id="password"
           large
         />
       </div>
