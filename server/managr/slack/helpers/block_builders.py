@@ -182,7 +182,21 @@ def multi_static_select(
     placeholder="Select",
     block_id=None,
 ):
-    # options are an array of block_optiosn (see above)
+    """
+    Creates a selection input for selecting multiple options
+
+    Parameters:
+    label - String of what the label text should be
+    options  - must be an array of options (see above)
+    action_id - set id to the value passed in, otherwise None
+    initial_options - must be an array of options (see above) to show when initially loading
+    placeholder - String for the placeholder text in the input, otherwise 'Select'
+    block_id - set id of block to value passed in, otherwise created with uuid
+
+    Should be used when the value of the selection are known
+    and do not need to be gotten from and external source
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
