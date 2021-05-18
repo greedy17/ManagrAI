@@ -771,4 +771,3 @@ def _process_stale_data_for_delete(batch):
             logger.exception(e)
             pass
     return
-
