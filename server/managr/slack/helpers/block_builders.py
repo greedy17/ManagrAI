@@ -61,7 +61,16 @@ def simple_section(value, text_type="plain_text", block_id=None):
 
 
 def simple_section_multiple(text_blocks, block_id=None):
-    """sections can have multiple fields they are a collection of text_block"""
+    """ sections can have multiple fields they are a collection of text_block 
+    
+    Parameters
+    -----------
+    text_blocks: object
+        contains plain text or markup
+    block_id: str
+        block i.d number. If not entered will generate random str
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     return {"type": "section", "fields": text_blocks, "block_id": block_id}
