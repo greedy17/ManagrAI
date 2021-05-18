@@ -338,4 +338,3 @@ def simple_image_block(url, alt_text):
         "image_url": url,
         "alt_text": alt_text,
     }
-

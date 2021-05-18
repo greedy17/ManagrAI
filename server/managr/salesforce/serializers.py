@@ -106,4 +106,3 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
                 .first()
             )
         return super().to_internal_value(data)
-
