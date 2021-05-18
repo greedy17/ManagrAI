@@ -111,7 +111,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
             )
             # TODO: Investigate option to not workspace integration pb 04/20/21 Mike ok'd
 
-            text = f"<!here> your organization has enabled slack for managr!\nYou can now integrate your account navigate to the integrations setings in the portal here {site_utils.get_site_url()}/settings/integrations"
+            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/settings/integrations"
 
             channel = integration.incoming_webhook.get("channel_id", None)
             if not channel:
@@ -129,7 +129,11 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
             )
         else:
-            team_id = data.get("team").get("id")
+            team_id = data.get("team", {}).get("id")
+            if not team_id:
+                raise ValidationError(
+                    "We hit an issue getting your team id, please try the integration again."
+                )
             if team_id != request.user.organization.slack_integration.team_id:
                 raise ValidationError(
                     "You signed into the wrong Slack workspace, please try again."
@@ -148,6 +152,18 @@ class SlackViewSet(viewsets.GenericViewSet,):
             channel = res.get("channel", {}).get("id")
             user_slack.channel = channel
             user_slack.save()
+            if not user_slack.is_onboarded:
+                slack_requests.send_channel_message(
+                    user_slack.channel,
+                    user_slack.user.organization.slack_integration.access_token,
+                    text="Welcome to Managr!",
+                    block_set=get_block_set(
+                        "onboarding_interaction", {"u": str(user_slack.user.id)}
+                    ),
+                )
+
+                user_slack.is_onboarded = True
+                user_slack.save()
 
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
@@ -591,17 +607,36 @@ def slack_events(request):
     if request.data.get("type") == "url_verification":
         # respond to challenge (should only happen once)
         return Response(request.data.get("challenge"))
+    slack_data = request.data
     slack_event = request.data.get("event", None)
     if slack_event:
         if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
-            if user:
+            if user and user.is_active:
                 slack_requests.publish_view(
                     slack_id,
                     user.organization.slack_integration.access_token,
                     get_block_set("home_modal", {"u": str(user.id)}),
                 )
+            else:
+                # get the user's team and check for the org
+                org = OrganizationSlackIntegration.objects.filter(
+                    team_id=slack_data.get("team_id")
+                ).first()
+                # send a generic home page assuming their org has the token
+                if org:
+                    slack_requests.publish_view(
+                        slack_id,
+                        org.access_token,
+                        get_block_set(
+                            "home_modal_generic",
+                            {"slack_id": slack_id, "org_name": org.organization.name},
+                        ),
+                    )
+                    return Response()
+                else:
+                    return Response()
             if user and user.slack_integration.is_onboarded:
 
                 return Response()
@@ -625,4 +660,3 @@ def slack_events(request):
         return Response()
 
         # check if they exist in managr
-
