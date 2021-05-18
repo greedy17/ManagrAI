@@ -118,9 +118,3 @@ variable "environments" {
     salesforce_api_version  = string
   }))
 }
-
-variable "local_workstation_public_ip" {
-  type        = string
-  description = "This is the public IP address associated with your local workstation. You can retrieve this from https://www.whatismyip.com/. This value is used to configure the AWS Security Group ingress rule to only allow traffic to managr from your local workstation for testing purposes."
-  default     = ""
-}

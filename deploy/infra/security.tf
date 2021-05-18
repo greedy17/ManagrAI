@@ -9,7 +9,7 @@ resource "aws_security_group" "lb" {
       protocol    = "tcp"
       from_port   = ingress.value
       to_port     = ingress.value
-      cidr_blocks = ["${var.local_workstation_public_ip}/32"]
+      cidr_blocks = ["0.0.0.0/0"]
     }
   }
 

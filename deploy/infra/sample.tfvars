@@ -205,5 +205,3 @@ environments = [
     salesforce_api_version  = ""
   }
 ]
-
-local_workstation_public_ip = ""

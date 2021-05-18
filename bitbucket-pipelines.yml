@@ -70,6 +70,7 @@ fargatePRDeployment: &fargatePRDeployment
     # Build Docker images
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:pr-$BITBUCKET_PR_ID" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
 
     # Push to ECR
     - pipe: atlassian/aws-ecr-push-image:1.3.0
@@ -80,6 +81,11 @@ fargatePRDeployment: &fargatePRDeployment
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'pr-${BITBUCKET_PR_ID} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
         TAGS: 'pr-${BITBUCKET_PR_ID} latest' # Optional
         # DEBUG: "<boolean>" # Optional
 
@@ -127,6 +133,7 @@ fargateStagingDeployment: &fargateStagingDeployment
     # Build Docker images
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
 
     # Push to ECR
     - pipe: atlassian/aws-ecr-push-image:1.3.0
@@ -137,6 +144,11 @@ fargateStagingDeployment: &fargateStagingDeployment
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
         TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
         # DEBUG: "<boolean>" # Optional
 
@@ -171,6 +183,7 @@ fargateDemoDeployment: &fargateDemoDeployment
     # Build Docker images
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:demo" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
 
     # Push to ECR
     - pipe: atlassian/aws-ecr-push-image:1.3.0
@@ -181,6 +194,11 @@ fargateDemoDeployment: &fargateDemoDeployment
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'demo-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
         TAGS: 'demo-${BITBUCKET_COMMIT} latest' # Optional
         # DEBUG: "<boolean>" # Optional
 
@@ -215,6 +233,7 @@ fargateProdDeployment: &fargateProdDeployment
     # Build Docker images
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:prod" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
 
     # Push to ECR
     - pipe: atlassian/aws-ecr-push-image:1.3.0
@@ -225,6 +244,11 @@ fargateProdDeployment: &fargateProdDeployment
     - pipe: atlassian/aws-ecr-push-image:1.3.0
       variables:
         IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
         TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
         # DEBUG: "<boolean>" # Optional
 
