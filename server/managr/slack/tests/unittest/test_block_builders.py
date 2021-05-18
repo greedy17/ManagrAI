@@ -1,8 +1,9 @@
 from unittest.case import TestCase
 from managr.slack.helpers.block_builders import (
-    simple_image_block,
     text_block,
     section_with_button_block,
+    section_with_accessory_block,
+    simple_image_block,
 )
 
 
@@ -42,6 +43,35 @@ class TestSectionWithButtonBlock(TestCase):
         )
 
 
+class TestSectionWithAccessoryBlock(TestCase):
+    """Unit tests for section_with_accessory_block"""
+
+    def test_returns_basic_object(self):
+        result = section_with_accessory_block("Test", accessory={}, block_id="1")
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "Test"},
+                "block_id": "1",
+                "accessory": {},
+            },
+        )
+
+    def test_returns_image_block(self):
+        result = section_with_accessory_block(
+            "Test", simple_image_block("https://www.test.com/image.png", "test image")
+        )
+        self.assertEqual(
+            result["accessory"],
+            {
+                "type": "image",
+                "image_url": "https://www.test.com/image.png",
+                "alt_text": "test image",
+            },
+        )
+
+
 class TestSimpleImageBlock(TestCase):
     """Unit test for simple image block"""
 
@@ -50,3 +80,4 @@ class TestSimpleImageBlock(TestCase):
         self.assertEqual(
             result, {"type": "image", "image_url": "testurl123", "alt_text": "alt_test"}
         )
+
