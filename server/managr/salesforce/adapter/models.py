@@ -207,7 +207,11 @@ class SalesforceAuthAccountAdapter:
         return formatted_data
 
     def format_field_options(
-        self, sf_account_id, user_id, resource, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        resource,
+        res_data=[],
     ):
         fields = res_data["fields"]
         ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
@@ -234,7 +238,10 @@ class SalesforceAuthAccountAdapter:
         return data
 
     def format_validation_rules(
-        self, sf_account_id, user_id, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        res_data=[],
     ):
         records = res_data["records"]
         return list(
@@ -247,7 +254,11 @@ class SalesforceAuthAccountAdapter:
         )
 
     def format_picklist_values(
-        self, sf_account_id, user_id, resource, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        resource,
+        res_data=[],
     ):
         fields = res_data["picklistFieldValues"]
         return list(
@@ -290,7 +301,9 @@ class SalesforceAuthAccountAdapter:
     def authenticate(code):
         data = sf_consts.AUTHENTICATION_BODY(code)
         res = client.post(
-            f"{sf_consts.AUTHENTICATION_URI}", data, headers=sf_consts.AUTHENTICATION_HEADERS,
+            f"{sf_consts.AUTHENTICATION_URI}",
+            data,
+            headers=sf_consts.AUTHENTICATION_HEADERS,
         )
 
         return SalesforceAuthAccountAdapter._handle_response(res)
@@ -298,15 +311,20 @@ class SalesforceAuthAccountAdapter:
     def refresh(self):
         data = sf_consts.REAUTHENTICATION_BODY(self.refresh_token)
         res = client.post(
-            f"{sf_consts.REFRESH_URI}", data, headers=sf_consts.AUTHENTICATION_HEADERS,
+            f"{sf_consts.REFRESH_URI}",
+            data,
+            headers=sf_consts.AUTHENTICATION_HEADERS,
         )
 
         return SalesforceAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
-        """ Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to """
+        """Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to"""
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
 
         return {
@@ -317,21 +335,27 @@ class SalesforceAuthAccountAdapter:
         }
 
     def list_picklist_values(self, resource):
-        """ Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to """
+        """Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to"""
 
         record_type_id = self.default_record_ids[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
 
         return self.format_picklist_values(str(self.id), str(self.user), resource, res)
 
     def get_stage_picklist_values(self, resource):
-        """ Sync method to help users whose stages are not populated """
+        """Sync method to help users whose stages are not populated"""
         record_type_id = self.default_record_ids[resource]
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         url = f"{url}/StageName"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
 
         return SObjectPicklistAdapter.create_from_api(
@@ -346,7 +370,7 @@ class SalesforceAuthAccountAdapter:
         )
 
     def get_individual_picklist_values(self, resource, field_name=None):
-        """ Sync method to get picklist values for resources not saved in our db """
+        """Sync method to get picklist values for resources not saved in our db"""
 
         record_type_id = self.default_record_ids.get("resource", None)
         if not record_type_id:
@@ -358,7 +382,8 @@ class SalesforceAuthAccountAdapter:
             url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
 
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
 
             res = self._handle_response(res)
@@ -366,11 +391,16 @@ class SalesforceAuthAccountAdapter:
             if res.get("totalSize", 0) > 0:
                 record_type_id = res.get("Id")
             else:
-                record_type_id = self.default_record_ids.get("Opportunity",)
+                record_type_id = self.default_record_ids.get(
+                    "Opportunity",
+                )
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
 
         url = f"{url}/{field_name}" if field_name else url
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
 
         return SObjectPicklistAdapter.create_from_api(
@@ -385,10 +415,13 @@ class SalesforceAuthAccountAdapter:
         )
 
     def list_validations(self, resource):
-        """ Lists all (active) Validations that apply to a resource from the ValidationRules object """
+        """Lists all (active) Validations that apply to a resource from the ValidationRules object"""
 
         url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
 
         return self.format_validation_rules(str(self.id), str(self.user), res)
@@ -407,7 +440,10 @@ class SalesforceAuthAccountAdapter:
         if offset:
             url = f"{url} offset {offset}"
         logger.info(f"{url} was sent")
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
         saved_response = res
         logger.info(
@@ -445,7 +481,10 @@ class SalesforceAuthAccountAdapter:
         # always retreive id
         fields.insert(0, "Id")
         url = f"{self.instance_url}{sf_consts.SALSFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
         # no need to format to any adapter
         res = self._format_resource_response(res, None)
@@ -454,7 +493,10 @@ class SalesforceAuthAccountAdapter:
     def list_tasks(self):
         additional_filters = TaskAdapter.additional_filters()
         url = f"{self.instance_url}{sf_consts.SALSFORCE_TASK_QUERY_URI(self.salesforce_id, sf_consts.SALESFORCE_RESOURCE_TASK,sf_consts.TASK_QUERY_FIELDS, additional_filters=additional_filters,limit=10)}"
-        res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
+        res = client.get(
+            url,
+            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        )
         res = self._handle_response(res)
         # no need to format to any adapter
         res = self._format_resource_response(res, "Task")
@@ -503,7 +545,7 @@ class AccountAdapter:
 
     @staticmethod
     def reverse_integration_mapping():
-        """ mapping of 'standard' data when sending from the SF API """
+        """mapping of 'standard' data when sending from the SF API"""
         reverse = {}
         for k, v in AccountAdapter.integration_mapping.items():
             reverse[v] = k
@@ -515,12 +557,12 @@ class AccountAdapter:
 
     @staticmethod
     def additional_filters():
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         return ["AND IsDeleted = false"]
 
     @staticmethod
     def to_api(data, mapping, object_fields):
-        """ data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
         formatted_data = dict()
         for k, v in data.items():
             key = mapping.get(k, None)
@@ -564,7 +606,9 @@ class AccountAdapter:
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -576,7 +620,9 @@ class AccountAdapter:
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_ACCOUNT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         # get the opp as well uses the same url as the write but with get
         r = SalesforceAuthAccountAdapter._handle_response(r)
@@ -617,12 +663,12 @@ class ContactAdapter:
 
     @staticmethod
     def additional_filters():
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         return ["AND IsDeleted = false"]
 
     @staticmethod
     def reverse_integration_mapping():
-        """ mapping of 'standard' data when sending from the SF API """
+        """mapping of 'standard' data when sending from the SF API"""
         reverse = {}
         for k, v in ContactAdapter.integration_mapping.items():
             reverse[v] = k
@@ -669,7 +715,9 @@ class ContactAdapter:
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -683,7 +731,9 @@ class ContactAdapter:
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -721,12 +771,12 @@ class LeadAdapter:
 
     @staticmethod
     def additional_filters():
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         return ["AND IsDeleted = false", "AND IsConverted = false"]
 
     @staticmethod
     def reverse_integration_mapping():
-        """ mapping of 'standard' data when sending from the SF API """
+        """mapping of 'standard' data when sending from the SF API"""
         reverse = {}
         for k, v in LeadAdapter.integration_mapping.items():
             reverse[v] = k
@@ -774,7 +824,9 @@ class LeadAdapter:
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -821,7 +873,7 @@ class OpportunityAdapter:
 
     @staticmethod
     def get_child_rels():
-        """ Builds sub query for resource """
+        """Builds sub query for resource"""
         return {
             sf_consts.OPPORTUNITY_CONTACT_ROLES: {
                 "fields": sf_consts.OPPORTUNITY_CONTACT_ROLE_FIELDS,
@@ -835,12 +887,12 @@ class OpportunityAdapter:
 
     @staticmethod
     def additional_filters():
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         return ["AND IsDeleted = false", "AND IsClosed = false"]
 
     @staticmethod
     def reverse_integration_mapping():
-        """ mapping of 'standard' data when sending from the SF API """
+        """mapping of 'standard' data when sending from the SF API"""
         reverse = {}
         for k, v in OpportunityAdapter.integration_mapping.items():
             reverse[v] = k
@@ -890,7 +942,7 @@ class OpportunityAdapter:
 
     @staticmethod
     def to_api(data, mapping, object_fields):
-        """ data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
         formatted_data = dict()
         for k, v in data.items():
             key = mapping.get(k, None)
@@ -913,7 +965,9 @@ class OpportunityAdapter:
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.patch(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -927,7 +981,9 @@ class OpportunityAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         logger.info(f"REQUEST DATA: {json_data}")
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
 
         # get the opp as well uses the same url as the write but with get
@@ -949,7 +1005,9 @@ class OpportunityAdapter:
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -959,7 +1017,7 @@ class OpportunityAdapter:
 
 
 class ActivityAdapter:
-    """ Two types of activities Task (includes calls, emails) and Events"""
+    """Two types of activities Task (includes calls, emails) and Events"""
 
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
@@ -975,13 +1033,15 @@ class ActivityAdapter:
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 
 
 class TaskAdapter:
-    """ Two types of activities Task (includes calls, emails) and Events"""
+    """Two types of activities Task (includes calls, emails) and Events"""
 
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
@@ -1001,14 +1061,14 @@ class TaskAdapter:
 
     @staticmethod
     def additional_filters(**kwargs):
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         time_zone = datetime.now().date().strftime("%Y-%m-%d")
         return [f"AND ActivityDate >= {time_zone}", "AND (NOT Status LIKE '%Completed%') "]
 
     # formatted_data.append(resource_class.from_api(result, self.user, *args))
     @staticmethod
     def from_api(result, user):
-        """ pass custom additional filters to the url """
+        """pass custom additional filters to the url"""
         return TaskAdapter(
             id=result["Id"],
             description=result["Description"],
@@ -1026,7 +1086,9 @@ class TaskAdapter:
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         r = client.post(
-            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            url,
+            json_data,
+            headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
         return SalesforceAuthAccountAdapter._handle_response(r)
 

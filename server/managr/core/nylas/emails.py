@@ -22,7 +22,7 @@ logger = logging.getLogger("managr")
 
 
 def _generate_nylas_basic_auth_token(user):
-    """ Function to generate the encoded basic auth token required by Nylas
+    """Function to generate the encoded basic auth token required by Nylas
     Details here: https://docs.nylas.com/docs/using-access-tokens
     """
     password = ""
@@ -36,25 +36,27 @@ def _generate_nylas_basic_auth_token(user):
 
 
 def _handle_nylas_response(response):
-    """ Function to generate a Json object from Nylas's server.
+    """Function to generate a Json object from Nylas's server.
     Returns either the JSON object or raises an error.
     Eventually we can extend this to clean and serialize the data."""
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 401:
         raise APIException(
-            detail="401 Unauthorized Response from Nylas server", code=response.status_code,
+            detail="401 Unauthorized Response from Nylas server",
+            code=response.status_code,
         )
     elif response.status_code == 400:
         raise APIException(
-            detail="400 Bad Request response from Nylas server", code=response.status_code,
+            detail="400 Bad Request response from Nylas server",
+            code=response.status_code,
         )
     else:
         raise APIException(detail="Error from Nylas server", code=response.status_code)
 
 
 def _return_nylas_headers(user):
-    """ Function to generate the basic headers required by Nylas
+    """Function to generate the basic headers required by Nylas
     Details here: https://docs.nylas.com/docs/using-access-tokens"""
     headers = dict(Authorization=(f"Basic {_generate_nylas_basic_auth_token(user)}"))
     return headers
@@ -72,8 +74,7 @@ def return_file_id_from_nylas(user, file_object):
 
 
 def download_file_from_nylas(user, file_id):
-    """ Use Nylas to download file based on file_id
-    """
+    """Use Nylas to download file based on file_id"""
     # First generate the authorization required for both requests
     headers = _return_nylas_headers(user)
     # First we make a call to nylas to get the file metadata from the file_id
@@ -259,7 +260,13 @@ def send_new_email_legacy(auth, sender, receipient, message):
     body = message.get("body", None)
     headers = dict(Authorization=(f"Bearer {token}"))
     data = json.dumps(
-        {"from": sender, "to": to, "subject": subject, "body": body, "tracking": {"opens": True},}
+        {
+            "from": sender,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "tracking": {"opens": True},
+        }
     )
 
     response = requests.post(
@@ -272,7 +279,8 @@ def send_new_email_legacy(auth, sender, receipient, message):
 
 
 def send_system_email(
-    recipients, message,
+    recipients,
+    message,
 ):
     """Sends an email from a service account.
 
@@ -288,7 +296,7 @@ def send_system_email(
         try:
             send_new_email_legacy(token, sender, recipients, message)
         except Exception as e:
-            """ this error is most likely going to be an error on our set
-            up rather than the user_token """
+            """this error is most likely going to be an error on our set
+            up rather than the user_token"""
             logger.warning(f"Unable to send system email {e}")
             pass

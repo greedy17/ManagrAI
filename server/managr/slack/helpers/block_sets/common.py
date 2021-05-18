@@ -15,4 +15,3 @@ from managr.slack.helpers.utils import action_with_params, block_set, map_fields
 from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
-

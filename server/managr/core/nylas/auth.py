@@ -21,7 +21,7 @@ def gen_auth_url(email, scopes=core_consts.ALL_SCOPES_STR):
 
 
 def get_access_token(code):
-    """ gets access token from code """
+    """gets access token from code"""
     base64_secret = base64.b64encode(core_consts.NYLAS_CLIENT_SECRET.encode("ascii")).decode(
         "utf-8"
     )
@@ -48,22 +48,23 @@ def get_access_token(code):
     elif res.status_code == 400:
         raise HTTPError(res.status_code)
     else:
-        """ most likely an error with our account or their server """
+        """most likely an error with our account or their server"""
         raise HTTPError(res.status_code)
 
 
 def get_account_details(token):
-    """ gets account details from token to store in db """
+    """gets account details from token to store in db"""
     headers = dict(Authorization=f"Bearer {token}")
     res = requests.get(
-        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}", headers=headers,
+        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}",
+        headers=headers,
     )
     return res.json()
 
 
 def revoke_access_token(token):
-    """ function to revoke access token
-        mostly used for billing if a user changes smtp or is removed
+    """function to revoke access token
+    mostly used for billing if a user changes smtp or is removed
     """
     headers = dict(Authorization=f"Bearer {token}")
     res = requests.post(
@@ -77,19 +78,19 @@ def revoke_access_token(token):
     if res.status_code == 200:
         return res
     elif res.status_code == 401:
-        """ access token was not verified (aka does not exist) and we have a sync mismatch"""
+        """access token was not verified (aka does not exist) and we have a sync mismatch"""
         raise HTTPError(res.status_code)
     else:
-        """ most likely an error with our account or their server """
+        """most likely an error with our account or their server"""
         raise HTTPError()
 
 
 def revoke_all_access_tokens(account_id, keep_token=""):
     """
-        This function will remove all access tokens for accounts that have more than one
-        we will be calling this in case of a 401 on revoke (meaning we have out of sync data)
-        and every 24 hours with a cron job
-        manager will be charged for duplicates
+    This function will remove all access tokens for accounts that have more than one
+    we will be calling this in case of a 401 on revoke (meaning we have out of sync data)
+    and every 24 hours with a cron job
+    manager will be charged for duplicates
     """
     password = ""
     auth_string = f"{core_consts.NYLAS_CLIENT_SECRET}:{password}"
@@ -105,9 +106,9 @@ def revoke_all_access_tokens(account_id, keep_token=""):
     if res.status_code == 200:
         return res.json()
     elif res.status_code == 404:
-        """ the user has no tokens to revoke """
+        """the user has no tokens to revoke"""
         raise HTTPError(res.status_code)
     else:
-        """ most likely an error with our account or their server """
+        """most likely an error with our account or their server"""
         raise HTTPError()
     return

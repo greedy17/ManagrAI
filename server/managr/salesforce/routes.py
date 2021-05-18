@@ -18,7 +18,10 @@ routes = {
         "model": org_models.Contact,
         "serializer": org_ser.ContactSerializer,
     },
-    sf_consts.RESOURCE_SYNC_LEAD: {"model": opp_models.Lead, "serializer": opp_ser.LeadSerializer,},
+    sf_consts.RESOURCE_SYNC_LEAD: {
+        "model": opp_models.Lead,
+        "serializer": opp_ser.LeadSerializer,
+    },
     ACTION_CHOICE_RESOURCE: {
         "model": org_models.ActionChoice,
         "serializer": org_ser.ActionChoiceSerializer,

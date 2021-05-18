@@ -46,7 +46,9 @@ class Organization(TimeStampModel):
     name = models.CharField(max_length=255, blank=True)
     photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     state = models.CharField(
-        max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
+        max_length=255,
+        choices=org_consts.STATE_CHOCIES,
+        default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
 
@@ -55,7 +57,7 @@ class Organization(TimeStampModel):
     @property
     def deactivate_all_users(self):
         # TODO: When deleting an org also remember to revoke nylas tokens and request delete
-        """ helper method to deactivate all users if their org is deactivated """
+        """helper method to deactivate all users if their org is deactivated"""
         users = User.objects.filter(organization=self)
         for u in users:
             u.state = org_consts.STATE_INACTIVE
@@ -87,7 +89,9 @@ class Account(TimeStampModel, IntegrationModel):
 
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "Organization", related_name="accounts", on_delete=models.CASCADE,
+        "Organization",
+        related_name="accounts",
+        on_delete=models.CASCADE,
     )
     parent = models.ForeignKey(
         "organization.Account",
@@ -121,11 +125,11 @@ class Account(TimeStampModel, IntegrationModel):
 
     @property
     def title(self):
-        """ Returns the name as a title using common fields as we have with leads and opps"""
+        """Returns the name as a title using common fields as we have with leads and opps"""
         return self.name
 
     def save(self, *args, **kwargs):
-        """ In case of duplicates update not save"""
+        """In case of duplicates update not save"""
         obj = (
             Account.objects.filter(
                 integration_id=self.integration_id, organization=self.organization
@@ -219,7 +223,7 @@ class Contact(TimeStampModel, IntegrationModel):
 
     @property
     def name(self):
-        """ returns full name for use with blocksets """
+        """returns full name for use with blocksets"""
 
         if self.secondary_data.get("Email", None) not in ["", None]:
             return self.secondary_data.get("Email")
@@ -270,7 +274,9 @@ class Stage(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="This may be use as a unique value, if it exists"
     )
     organization = models.ForeignKey(
-        "Organization", related_name="stages", on_delete=models.CASCADE,
+        "Organization",
+        related_name="stages",
+        on_delete=models.CASCADE,
     )
     order = models.IntegerField(blank=True, null=True)
     is_closed = models.BooleanField(default=False)
@@ -317,7 +323,9 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
+        "organization.Organization",
+        on_delete=models.CASCADE,
+        related_name="action_choices",
     )
 
     objects = ActionChoiceQuerySet.as_manager()

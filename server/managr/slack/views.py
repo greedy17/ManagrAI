@@ -50,7 +50,9 @@ from managr.slack.helpers.exceptions import (
 logger = logging.getLogger("managr")
 
 
-class SlackViewSet(viewsets.GenericViewSet,):
+class SlackViewSet(
+    viewsets.GenericViewSet,
+):
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -126,7 +128,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     }
                 )
             slack_requests.send_channel_message(
-                integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
+                integration.incoming_webhook.get("channel_id"),
+                integration.access_token,
+                text=text,
             )
         else:
             team_id = data.get("team", {}).get("id")
@@ -142,7 +146,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
         org = request.user.organization
         if hasattr(org, "slack_integration"):
             user_slack = UserSlackIntegration.objects.create(
-                user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
+                user=request.user,
+                slack_id=slack_id,
+                organization_slack=org.slack_integration,
             )
             # get the user's channel
             res = slack_requests.request_user_dm_channel(
@@ -373,7 +379,12 @@ class SlackFormsViewSet(
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def update_resource(request):
     # list of accepted commands for this fake endpoint
@@ -495,7 +506,12 @@ def meeting_summary(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def create_task(request):
 
@@ -554,7 +570,10 @@ def create_task(request):
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
             "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set("create_task_modal", context=context,),
+            "blocks": get_block_set(
+                "create_task_modal",
+                context=context,
+            ),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
             "external_id": "create_task_modal",
@@ -570,7 +589,12 @@ def create_task(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def list_tasks(request):
     ## helper to make datetime longform

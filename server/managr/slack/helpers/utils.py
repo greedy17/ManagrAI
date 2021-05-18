@@ -68,8 +68,13 @@ def get_lead_rating_emoji(rating):
 
 
 def block_finder(block_id, blocks=[]):
-    """ Takes in a list of blocks and return block and index (used for updating and removing from modal) """
-    item = list(filter(lambda x: x[1]["block_id"] == block_id, enumerate(blocks),))
+    """Takes in a list of blocks and return block and index (used for updating and removing from modal)"""
+    item = list(
+        filter(
+            lambda x: x[1]["block_id"] == block_id,
+            enumerate(blocks),
+        )
+    )
     if len(item):
         return item[0]
     return item

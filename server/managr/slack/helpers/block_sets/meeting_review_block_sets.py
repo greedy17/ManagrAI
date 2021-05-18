@@ -125,14 +125,23 @@ def meeting_contacts_block_set(context):
     sf_account = meeting.zoom_account.user.salesforce_account
 
     block_sets = [
-        {"type": "header", "text": {"type": "plain_text", "text": "Review Meeting Participants",},},
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Review Meeting Participants",
+            },
+        },
         {"type": "divider"},
     ]
     # list contacts we already had from sf
     contacts_in_sf = list(filter(lambda contact: contact["integration_id"], contacts))
 
     contacts_not_in_sf = list(
-        filter(lambda contact: contact.get("integration_id", None) in [None, ""], contacts,)
+        filter(
+            lambda contact: contact.get("integration_id", None) in [None, ""],
+            contacts,
+        )
     )
 
     if len(contacts_not_in_sf):
@@ -184,7 +193,8 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
+                    ":dart: *Managr found these attendees as contacts in Salesforce*",
+                    "mrkdwn",
                 ),
                 block_builders.simple_section(
                     f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
@@ -329,7 +339,10 @@ def initial_meeting_interaction_block_set(context):
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "Add Contacts to Salesforce",
             action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                params=[
+                    workflow_id_param,
+                ],
             ),
         ),
         {"type": "divider"},
@@ -340,7 +353,10 @@ def initial_meeting_interaction_block_set(context):
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
     blocks = [
-        block_builders.simple_section(title_section, "mrkdwn",),
+        block_builders.simple_section(
+            title_section,
+            "mrkdwn",
+        ),
         *default_blocks,
     ]
     # action button blocks
@@ -436,7 +452,7 @@ def meeting_review_modal_block_set(context):
 
 @block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
-    """ This interaction updates the message to show a drop down of resources """
+    """This interaction updates the message to show a drop down of resources"""
     blocks = [
         block_builders.static_select(
             ":information_source: Select a resource to attach to the meeting",
@@ -478,13 +494,16 @@ def create_or_search_modal_block_set(context):
 
 @block_set(required_context=["w", "resource"])
 def create_modal_block_set(context, *args, **kwargs):
-    """ Shows a modal to create a resource """
+    """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(
-            Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
+            Q(
+                resource=context.get("resource"),
+                form_type=slack_const.FORM_TYPE_CREATE,
+            )
             & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
         )
         .first()
@@ -526,7 +545,7 @@ def create_modal_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["w"])
 def disregard_meeting_review_block_set(context, *args, **kwargs):
-    """ Shows a modal to create/select a resource """
+    """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
     user = w.user
     blocks = [
@@ -610,4 +629,3 @@ def meeting_summary_blockset(context):
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
-

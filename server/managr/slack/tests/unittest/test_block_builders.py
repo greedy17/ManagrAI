@@ -1,5 +1,9 @@
 from unittest.case import TestCase
-from server.managr.slack.helpers.block_builders import text_block, section_with_button_block
+from server.managr.slack.helpers.block_builders import (
+    multi_external_select,
+    text_block,
+    section_with_button_block,
+)
 
 
 class TestTextBlock(TestCase):
@@ -33,6 +37,60 @@ class TestSectionWithButtonBlock(TestCase):
                     "text": {"type": "plain_text", "text": "Test"},
                     "value": "TEST",
                     "action_id": "1",
+                },
+            },
+        )
+
+
+class TestMultiExternalSelect(TestCase):
+    """Unit test for multi external select"""
+
+    def test_returned_block(self):
+        result = multi_external_select(
+            label="label_test",
+            action_id="test123",
+            initial_options=None,
+            placeholder="Select",
+            block_id="test_id",
+            min_query_length=0,
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "label_test"},
+                "block_id": "test_id",
+                "accessory": {
+                    "type": "multi_external_select",
+                    "placeholder": {"type": "plain_text", "text": "Select"},
+                    "action_id": "test123",
+                    "min_query_length": 0,
+                },
+            },
+        )
+
+    def test_initial_options(self):
+        result = multi_external_select(
+            label="test label",
+            block_id="test block",
+            initial_options={
+                "type": "multi_external_select",
+                "placeholder": {"type": "plain_text", "text": "initial options test"},
+                "action_id": "initial id test",
+                "min_query_length": 0,
+            },
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "test label"},
+                "block_id": "test block",
+                "accessory": {
+                    "type": "multi_external_select",
+                    "placeholder": {"type": "plain_text", "text": "initial options test"},
+                    "action_id": "initial id test",
+                    "min_query_length": 0,
                 },
             },
         )

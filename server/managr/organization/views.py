@@ -82,7 +82,7 @@ class OrganizationViewSet(
         url_path="list-org-tokens",
     )
     def list_org_tokens(self, request, *args, **kwargs):
-        """Endpoint to list orgs and tokens for integration accounts """
+        """Endpoint to list orgs and tokens for integration accounts"""
         param = request.query_params.get("name", None)
 
         qs = self.get_queryset().filter(is_externalsyncenabled=True)
@@ -100,7 +100,7 @@ class AccountViewSet(
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
 ):
-    """ Accounts can only be created, updated or deleted by Managers of an Organization All users can list/retrieve  """
+    """Accounts can only be created, updated or deleted by Managers of an Organization All users can list/retrieve"""
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = AccountSerializer
@@ -122,7 +122,9 @@ class AccountViewSet(
         # checking to see if this is a bulk add or not if it is set to many
 
         serializer = AccountSerializer(
-            data=request.data, context={"request": request}, many=isinstance(request.data, list),
+            data=request.data,
+            context={"request": request},
+            many=isinstance(request.data, list),
         )
         serializer.is_valid(raise_exception=True)
 
@@ -139,7 +141,8 @@ class AccountViewSet(
         serializer.is_valid(raise_exception=True)
         if user.organization != acc.organization or user.type != core_consts.ACCOUNT_TYPE_MANAGER:
             return Response(
-                {"non_field_errors": ("Not Authorized")}, status=status.HTTP_401_UNAUTHORIZED,
+                {"non_field_errors": ("Not Authorized")},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
         serializer.save()
 
@@ -153,11 +156,15 @@ class AccountViewSet(
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
-                {"non_field_errors": ("Not Authorized")}, status=status.HTTP_401_UNAUTHORIZED,
+                {"non_field_errors": ("Not Authorized")},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
     @action(
-        methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update",
+        methods=["POST"],
+        permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="bulk-update",
     )
     def bulk_update(self, request, *args, **kwargs):
         accounts = request.data
@@ -188,7 +195,7 @@ class ContactViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    """ All memebers of the organization can add, create and update contacts """
+    """All memebers of the organization can add, create and update contacts"""
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ContactSerializer
@@ -202,7 +209,9 @@ class ContactViewSet(
         # check if this is a bulk add
 
         serializer = ContactSerializer(
-            data=request.data, context={"request": request}, many=isinstance(request.data, list),
+            data=request.data,
+            context={"request": request},
+            many=isinstance(request.data, list),
         )
 
         serializer.is_valid(raise_exception=True)
@@ -259,7 +268,7 @@ class ContactViewSet(
         url_path="link-to-leads",
     )
     def add_to_lead(self, request, *args, **kwargs):
-        """ special endpoint to add a contact to a lead or leads, takes a list of contact ids and lead ids"""
+        """special endpoint to add a contact to a lead or leads, takes a list of contact ids and lead ids"""
 
         d = request.data
         contacts = d.get("contacts", [])
@@ -286,7 +295,7 @@ class ContactViewSet(
         url_path="remove-from-lead",
     )
     def remove_from_lead(self, request, *args, **kwargs):
-        """ special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
+        """special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
         request_data = request.data
         contacts = request_data.get("contacts", [])
         contacts_removed = list()
@@ -311,7 +320,7 @@ class StageViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
 ):
-    """ endpoint to retrieve all stages for an org """
+    """endpoint to retrieve all stages for an org"""
 
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsSalesPerson,)
@@ -362,11 +371,10 @@ class ActionChoiceViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    """ endpoint to create Action Choice """
+    """endpoint to create Action Choice"""
 
     authentication_classes = (authentication.TokenAuthentication,)
     serializer_class = ActionChoiceSerializer
 
     def get_queryset(self):
         return ActionChoice.objects.for_user(self.request.user)
-

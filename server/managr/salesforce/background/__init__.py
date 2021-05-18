@@ -115,7 +115,7 @@ def emit_save_meeting_review(workflow_id):
 
 
 def emit_meeting_workflow_tracker(workflow_id):
-    """ Checks the workflow after 5 mins to ensure completion """
+    """Checks the workflow after 5 mins to ensure completion"""
     schedule = timezone.now() + timezone.timedelta(minutes=5)
     return _process_workflow_tracker(workflow_id, schedule=schedule)
 
@@ -739,7 +739,7 @@ def _process_list_tasks(user_id, data, *args):
 @background(schedule=0)
 @log_all_exceptions
 def _process_workflow_tracker(workflow_id):
-    """ gets workflow and check's if all tasks are completed and manually completes if not already completed """
+    """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
@@ -771,4 +771,3 @@ def _process_stale_data_for_delete(batch):
             logger.exception(e)
             pass
     return
-

@@ -2,7 +2,10 @@ STAGE_TYPE_PRIVATE = "PRIVATE"
 STAGE_TYPE_PUBLIC = "PUBLIC"
 
 STAGE_TYPES = (
-    (STAGE_TYPE_PRIVATE, "Private",),
+    (
+        STAGE_TYPE_PRIVATE,
+        "Private",
+    ),
     (STAGE_TYPE_PUBLIC, "Public"),
 )
 

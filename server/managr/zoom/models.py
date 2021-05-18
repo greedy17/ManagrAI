@@ -175,7 +175,9 @@ class ZoomMeetingQuerySet(models.QuerySet):
 
 class ZoomMeeting(TimeStampModel):
     zoom_account = models.ForeignKey(
-        "ZoomAuthAccount", related_name="meetings", on_delete=models.CASCADE,
+        "ZoomAuthAccount",
+        related_name="meetings",
+        on_delete=models.CASCADE,
     )
     account_id = models.CharField(max_length=255, blank=True, null=True)
     operator = models.EmailField(null=True, blank=True)
@@ -188,7 +190,10 @@ class ZoomMeeting(TimeStampModel):
     end_time = models.DateTimeField(null=True, blank=True)
     duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Operation on all or single occurences",
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Operation on all or single occurences",
     )
     timezone = models.CharField(max_length=255, null=True, blank=True)
     occurences = ArrayField(
@@ -232,7 +237,11 @@ class ZoomMeeting(TimeStampModel):
 
     # Meeting scores
     meeting_score = models.SmallIntegerField(null=True, blank=True)
-    meeting_score_components = JSONField(default=dict, blank=True, null=True,)
+    meeting_score_components = JSONField(
+        default=dict,
+        blank=True,
+        null=True,
+    )
     original_duration = models.SmallIntegerField(
         null=True,
         blank=True,
@@ -321,7 +330,7 @@ class ZoomMeeting(TimeStampModel):
 
 
 class MeetingReview(TimeStampModel):
-    """ Parent Model in preparation for other meeting types (aka not zoom) """
+    """Parent Model in preparation for other meeting types (aka not zoom)"""
 
     resource_type = models.CharField(blank=True, max_length=255)
     resource_id = models.CharField(blank=True, max_length=255)
@@ -332,14 +341,25 @@ class MeetingReview(TimeStampModel):
         help_text="The value must corespond to the values in the ActionChoice Model",
     )
     forecast_category = models.CharField(blank=True, null=True, max_length=255)
-    stage = models.CharField(blank=True, null=True, max_length=255,)
+    stage = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+    )
     meeting_comments = models.TextField(blank=True, null=True, max_length=255)
     meeting_sentiment = models.CharField(
-        max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
+        max_length=255,
+        choices=zoom_consts.MEETING_SENTIMENT_OPTIONS,
+        blank=True,
+        null=True,
     )
     # amount cannot be blank we are allowing blank to deal with django admin
     amount = models.DecimalField(
-        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
+        max_digits=13,
+        decimal_places=2,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
     )
     next_step = models.TextField(
         blank=True, help_text="If user uses next step field this will be saved"
@@ -357,7 +377,11 @@ class MeetingReview(TimeStampModel):
     prev_close_date = models.DateField(null=True, blank=True)
 
     prev_amount = models.DecimalField(
-        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
+        max_digits=13,
+        decimal_places=2,
+        help_text="This field is editable",
+        null=True,
+        blank=True,
     )
 
     @property
@@ -386,7 +410,7 @@ class ZoomMeetingReview(MeetingReview):
 
     @property
     def meeting_resource(self):
-        """ determines whether this is a meeting review for a meeting with an opp or an acct"""
+        """determines whether this is a meeting review for a meeting with an opp or an acct"""
         return self.meeting.workflow.meeting_resource
 
     @property

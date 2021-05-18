@@ -48,6 +48,8 @@ class Command(BaseCommand):
         emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully initiated the object field sync for the user {}".format(user.email,)
+                "Successfully initiated the object field sync for the user {}".format(
+                    user.email,
+                )
             )
         )

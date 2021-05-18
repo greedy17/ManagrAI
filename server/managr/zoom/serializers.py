@@ -35,9 +35,9 @@ class ZoomAuthSerializer(serializers.ModelSerializer):
 
 
 class ZoomMeetingWebhookSerializer(serializers.ModelSerializer):
-    """ 
-        special serializer for events coming from the webhook that are different in structure
-        to data coming from the django serializer that creates an entry in our db
+    """
+    special serializer for events coming from the webhook that are different in structure
+    to data coming from the django serializer that creates an entry in our db
     """
 
     class Meta:

@@ -90,7 +90,10 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", context,)
+    blocks = get_block_set(
+        "show_meeting_contacts",
+        context,
+    )
 
     data = {
         "trigger_id": trigger_id,
@@ -185,7 +188,10 @@ def process_edit_meeting_contact(payload, context):
             "title": title,
             "blocks": blocks,
             "private_metadata": json.dumps(
-                {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                }
             ),
         },
     }
@@ -389,7 +395,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
-    """ opens a modal with the options to search or create """
+    """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
 
@@ -443,7 +449,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
-    """ depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
@@ -469,7 +475,10 @@ def process_meeting_selected_resource_option(payload, context):
         context["action"] = "CREATE_NEW"
         blocks = [
             block_finder("select_existing", payload["view"]["blocks"])[1],
-            *get_block_set("create_modal_block_set", context,),
+            *get_block_set(
+                "create_modal_block_set",
+                context,
+            ),
         ]
         external_id = "create_modal_block_set"
 
@@ -504,7 +513,10 @@ def process_meeting_selected_resource_option(payload, context):
             "title": {"type": "plain_text", "text": f"{resource_type}"},
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),
-            "submit": {"type": "plain_text", "text": "Submit",},
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit",
+            },
             "external_id": external_id,
         },
     }
@@ -532,7 +544,7 @@ def process_meeting_selected_resource_option(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
-    """ attaches a drop down to the message block for selecting a resource type """
+    """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
@@ -632,7 +644,9 @@ def process_show_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user,
+            template=template,
+            resource_id=resource_id,
+            user=user,
         )
         if slack_form:
             context.update({"f": str(slack_form.id)})
@@ -791,9 +805,9 @@ def process_create_task(payload, context):
 
 @processor()
 def process_request_invite_from_home_tab(payload, context):
-    """ 
-        According to slack anyone can see the home tab if a user triggers the home event 
-        And is not a user we show a button to request access, this will ask the is_admin user to invite them
+    """
+    According to slack anyone can see the home tab if a user triggers the home event
+    And is not a user we show a button to request access, this will ask the is_admin user to invite them
     """
     # get the org team
     team_id = payload["user"]["team_id"]

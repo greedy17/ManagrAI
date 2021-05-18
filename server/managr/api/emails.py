@@ -48,7 +48,13 @@ def send_html_email(subject, template, send_from, send_to, context={}, bcc_email
     )
     # END TODO
 
-    email = EmailMultiAlternatives(subject, plaintext_body, send_from, send_to, bcc_emails,)
+    email = EmailMultiAlternatives(
+        subject,
+        plaintext_body,
+        send_from,
+        send_to,
+        bcc_emails,
+    )
 
     email.attach_alternative(html_body, "text/html")
 

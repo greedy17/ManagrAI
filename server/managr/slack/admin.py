@@ -25,4 +25,3 @@ admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)
 admin.site.register(slack_models.OrgCustomSlackFormInstance, CustomOrgSlackFormsInstance)
 admin.site.register(slack_models.OrganizationSlackIntegration)
 admin.site.register(slack_models.UserSlackIntegration)
-

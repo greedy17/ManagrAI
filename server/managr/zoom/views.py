@@ -115,10 +115,10 @@ def revoke_zoom_access_token(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_deauth_webhook(request):
-    """ 
-        When a user uninstalls the zoom app directly from their apps we will be notified here 
-        We must complete the steps provided in this document 
-        https://marketplace.zoom.us/docs/guides/publishing/data-compliance
+    """
+    When a user uninstalls the zoom app directly from their apps we will be notified here
+    We must complete the steps provided in this document
+    https://marketplace.zoom.us/docs/guides/publishing/data-compliance
     """
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
@@ -220,7 +220,10 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom account",
+            }
         )
     host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
@@ -245,7 +248,10 @@ def init_fake_meeting(request):
     meeting_uuid = settings.ZOOM_FAKE_MEETING_UUID
     if not meeting_uuid:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom meeting",
+            }
         )
     host_id = host_id
     meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
@@ -290,7 +296,8 @@ def init_fake_meeting(request):
                 ts,
                 access_token,
                 block_set=get_block_set(
-                    "initial_meeting_interaction", context={"w": str(workflow.id)},
+                    "initial_meeting_interaction",
+                    context={"w": str(workflow.id)},
                 ),
             )
         except InvalidBlocksException as e:
@@ -336,4 +343,3 @@ def score_meetings(request):
     call_command("generatemeetingscores")
 
     return Response(data="Scoring Meeting...")
-

@@ -13,4 +13,3 @@ def send_failed_slack():
     return requests.send_channel_message(
         u.slack_integration.channel, org.slack_integration.access_token, block_set=blocks
     )
-

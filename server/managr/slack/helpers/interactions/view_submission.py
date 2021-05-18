@@ -91,7 +91,11 @@ def process_stage_next_page(payload, context):
 
 @log_all_exceptions
 @processor(
-    required_context=["w", "original_message_channel", "original_message_timestamp",]
+    required_context=[
+        "w",
+        "original_message_channel",
+        "original_message_timestamp",
+    ]
 )
 def process_zoom_meeting_data(payload, context):
     # get context
@@ -388,7 +392,9 @@ def process_zoom_meeting_attach_resource(payload, context):
     else:
         # check to see if it already has the create form added and save that instead
         main_form = (
-            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE,)
+            workflow.forms.filter(
+                template__form_type=slack_const.FORM_TYPE_CREATE,
+            )
             .exclude(template__resource="Contact")
             .first()
         )
@@ -447,7 +453,8 @@ def process_zoom_meeting_attach_resource(payload, context):
     # clear old forms (except contact forms)
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
     workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
+        meeting_resource,
+        slack_const.FORM_TYPE_MEETING_REVIEW,
     )
     try:
         # update initial interaction workflow with new resource
@@ -527,7 +534,10 @@ def process_update_meeting_contact(payload, context):
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
+    blocks = get_block_set(
+        "show_meeting_contacts",
+        {"w": context.get("w")},
+    )
 
     data = {
         "trigger_id": trigger_id,
@@ -564,7 +574,7 @@ def process_update_meeting_contact(payload, context):
 
 @processor()
 def process_edit_meeting_contact(payload, context):
-    """ This Submission returns the update form stacked on top of the view contacts form """
+    """This Submission returns the update form stacked on top of the view contacts form"""
     action = slack_const.VIEWS_UPDATE
     url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]
@@ -584,7 +594,10 @@ def process_edit_meeting_contact(payload, context):
             "type": "modal",
             "title": {"type": "plain_text", "text": "Updated view"},
             "submit": {"type": "plain_text", "text": "Submit"},
-            "blocks": get_block_set("edit_meeting_contacts", context,),
+            "blocks": get_block_set(
+                "edit_meeting_contacts",
+                context,
+            ),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(context),
         },
@@ -759,7 +772,9 @@ def process_create_task(payload, context):
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Task Created"},
-            "blocks": [*get_block_set("success_modal"),],
+            "blocks": [
+                *get_block_set("success_modal"),
+            ],
         },
     }
 
@@ -783,4 +798,3 @@ def handle_view_submission(payload):
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
     return switcher.get(callback_id, NO_OP)(payload, view_context)
-

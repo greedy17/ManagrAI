@@ -184,7 +184,7 @@ class UserViewSet(
         url_path="retrieve-email",
     )
     def retrieve_email(self, request, *args, **kwargs):
-        """ retrieve's a users email to display in field on activation """
+        """retrieve's a users email to display in field on activation"""
         params = request.query_params
         pk = params.get("id")
         magic_token = params.get("token")
@@ -298,7 +298,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -306,7 +307,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -316,7 +319,7 @@ def get_email_authorization_link(request):
 
 class GetFileView(View):
     def get(self, request, file_id):
-        """ This endpoint returns a file from nylas using an nylas ID """
+        """This endpoint returns a file from nylas using an nylas ID"""
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
@@ -375,7 +378,7 @@ class NylasAccountWebhook(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        """ Respond to Nylas verification webhook """
+        """Respond to Nylas verification webhook"""
         challenge = request.query_params.get("challenge", None)
         if challenge:
             return HttpResponse(content=challenge)
@@ -421,7 +424,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -568,7 +573,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        """ endpoint to reset a password that is forgotten """
+        """endpoint to reset a password that is forgotten"""
         token = request.data.get("token", None)
         if not token:
             raise ValidationError(
@@ -630,10 +635,12 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
-    """ endpoint to request a password reset email (forgot password) """
+    """endpoint to request a password reset email (forgot password)"""
     email = request.data.get("email", None)
     # if no email is provided return validation error
     if email is None:

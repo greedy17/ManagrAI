@@ -249,7 +249,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 
             else:
                 account = Account.objects.filter(
-                    contacts__email__in=participant_emails, owner__id=user.id,
+                    contacts__email__in=participant_emails,
+                    owner__id=user.id,
                 ).first()
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
@@ -328,7 +329,12 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
         if hasattr(user, "slack_integration"):
             user_slack_channel = user.slack_integration.channel
             slack_org_access_token = user.organization.slack_integration.access_token
-            block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
+            block_set = get_block_set(
+                "initial_meeting_interaction",
+                {
+                    "w": managr_meeting_id,
+                },
+            )
             try:
                 res = slack_requests.send_channel_message(
                     user_slack_channel,
@@ -465,7 +471,6 @@ def _send_meeting_summary(workflow_id):
 
 @background(schedule=0)
 def _process_confirm_compliance(obj):
-    """ Sends Compliance verification on app deauth to zoom """
+    """Sends Compliance verification on app deauth to zoom"""
     ZoomAcct.compliance_api(json.loads(obj))
     return
-

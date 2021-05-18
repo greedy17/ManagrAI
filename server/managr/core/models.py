@@ -30,7 +30,9 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+        max_length=255,
+        choices=org_consts.INTEGRATION_SOURCES,
+        blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -89,7 +91,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         return self._create_user(email, password, **extra_fields)
 
     def create_admin_user(self, email, password=None, **extra_fields):
-        """ An Admin user is the one who set up the initial account and org """
+        """An Admin user is the one who set up the initial account and org"""
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
@@ -123,12 +125,30 @@ class User(AbstractUser, TimeStampModel):
     OPERATIONS = "OPERATIONS"
     ENABLEMENT = "ENABLEMENT"
     ROLE_CHOICES = [
-        (LEADERSHIP, "Leadership",),
-        (FRONTLINE_MANAGER, "Frontline Manager",),
-        (ACCOUNT_EXEC, "Account Executive",),
-        (ACCOUNT_MANAGER, "Account Manager",),
-        (OPERATIONS, "OPERATIONS",),
-        (ENABLEMENT, "Enablement",),
+        (
+            LEADERSHIP,
+            "Leadership",
+        ),
+        (
+            FRONTLINE_MANAGER,
+            "Frontline Manager",
+        ),
+        (
+            ACCOUNT_EXEC,
+            "Account Executive",
+        ),
+        (
+            ACCOUNT_MANAGER,
+            "Account Manager",
+        ),
+        (
+            OPERATIONS,
+            "OPERATIONS",
+        ),
+        (
+            ENABLEMENT,
+            "Enablement",
+        ),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -142,9 +162,14 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS,
+        max_length=255,
+        default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True,)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+    )
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -169,7 +194,7 @@ class User(AbstractUser, TimeStampModel):
 
     @property
     def activation_link(self):
-        """ Generate A Link for the User who has been invited to complete registration """
+        """Generate A Link for the User who has been invited to complete registration"""
         base_url = site_utils.get_site_url()
         return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
 
@@ -254,7 +279,7 @@ class NylasAuthAccount(TimeStampModel):
         return f"{self.email_address}"
 
     def revoke(self):
-        """ method to revoke access if account is changed, user is removed"""
+        """method to revoke access if account is changed, user is removed"""
         revoke_access_token(self.access_token)
         return self.delete()
 
@@ -284,9 +309,9 @@ class NotificationQuerySet(models.QuerySet):
 
 
 class Notification(TimeStampModel):
-    """ By default Notifications will only return alerts
-        We also will allow the code to access all types of notifications
-        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
+    """By default Notifications will only return alerts
+    We also will allow the code to access all types of notifications
+    SLACK, EMAIL, ALERT when checking whether or not it should create an alert
     """
 
     notify_at = models.DateTimeField(

@@ -28,4 +28,10 @@ class Command(BaseCommand):
                 )
             )
         else:
-            self.stdout.write(self.style.ERROR("User is not admin {}".format(user.email,)))
+            self.stdout.write(
+                self.style.ERROR(
+                    "User is not admin {}".format(
+                        user.email,
+                    )
+                )
+            )

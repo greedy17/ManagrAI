@@ -127,10 +127,12 @@ class OrgCustomSlackFormQuerySet(models.QuerySet):
 
 
 class OrgCustomSlackForm(TimeStampModel):
-    """Model to store the organizations JSON-based custom Slack form config - these are templates """
+    """Model to store the organizations JSON-based custom Slack form config - these are templates"""
 
     organization = models.ForeignKey(
-        "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
+        "organization.Organization",
+        related_name="custom_slack_forms",
+        on_delete=models.CASCADE,
     )
     form_type = models.CharField(
         max_length=255,
@@ -175,10 +177,12 @@ class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
 
 
 class OrgCustomSlackFormInstance(TimeStampModel):
-    """Model to store the instances created when a form is submitted from slack """
+    """Model to store the instances created when a form is submitted from slack"""
 
     user = models.ForeignKey(
-        "core.User", related_name="custom_slack_form_instances", on_delete=models.CASCADE,
+        "core.User",
+        related_name="custom_slack_form_instances",
+        on_delete=models.CASCADE,
     )
     template = models.ForeignKey(
         "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
@@ -220,7 +224,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def get_user_fields(self):
         template_fields = (
             self.template.formfield_set.all()
-            .values_list("field__api_name", "field__salesforce_object",)
+            .values_list(
+                "field__api_name",
+                "field__salesforce_object",
+            )
             .order_by("order")
         )
         user_fields = []
@@ -235,11 +242,11 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return user_fields
 
     def generate_form(self, data=None):
-        """ 
-        Collects all the fields 
-        and creates them into an object 
-        that has all the necessary fields as 
-        slack blocks 
+        """
+        Collects all the fields
+        and creates them into an object
+        that has all the necessary fields as
+        slack blocks
         If a resource is available it's current values
         will be passed in as values
         ## Optionally pass in data to override instance data
@@ -266,10 +273,19 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if field.is_public:
                 # pass in user as a kwarg
                 form_blocks.append(
-                    field.to_slack_field(val, user=self.user, resource=self.resource_type,)
+                    field.to_slack_field(
+                        val,
+                        user=self.user,
+                        resource=self.resource_type,
+                    )
                 )
             else:
-                form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
+                form_blocks.append(
+                    field.to_slack_field(
+                        val,
+                        workflow=self.workflow,
+                    )
+                )
 
         return form_blocks
 
@@ -306,7 +322,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return vals
 
     def save_form(self, state, from_slack_object=True):
-        """ gets all form values but only saves values for fields """
+        """gets all form values but only saves values for fields"""
         # this is a HACK because we needed to concatenate all stage gating forms since
         # we can only show 3 stacked forms
         values = self.get_values(state) if from_slack_object else state
@@ -329,5 +345,8 @@ class FormField(TimeStampModel):
     field = models.ForeignKey(
         "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
     )
-    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
+    form = models.ForeignKey(
+        "slack.OrgCustomSlackForm",
+        on_delete=models.CASCADE,
+    )
     order = models.IntegerField(default=0)

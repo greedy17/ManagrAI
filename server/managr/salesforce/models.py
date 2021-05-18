@@ -127,7 +127,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
     @property
     def reference_display_label(self):
-        """ returns the reference object's name as a display label """
+        """returns the reference object's name as a display label"""
 
         if self.data_type == "Reference" and self.reference and self.relationship_name:
             return self.relationship_name
@@ -147,7 +147,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            lambda opt: opt.get("value", None) == value,
+                            self.get_slack_options,
                         ),
                     ),
                 )
@@ -169,7 +170,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         ),
                     ),
@@ -185,7 +187,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -287,7 +290,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
     @property
     def display_value_keys(self):
-        """ helper getter to retrieve related name display keys """
+        """helper getter to retrieve related name display keys"""
         if self.reference and len(self.reference_to_infos):
             # some fields are referenced to completely different objects (as in ReportsTo)
             items = dict(
@@ -423,17 +426,17 @@ class SFSyncOperation(TimeStampModel):
 
     @property
     def completed_count(self):
-        """ Number of all operations success/failed completed"""
+        """Number of all operations success/failed completed"""
         return len(self.completed_operations)
 
     @property
     def total_count(self):
-        """ Number of all operations success/failed """
+        """Number of all operations success/failed"""
         return len(self.operations)
 
     @property
     def progress(self):
-        """ percentage of all operations """
+        """percentage of all operations"""
         if len(self.operations):
             return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
 
@@ -441,14 +444,14 @@ class SFSyncOperation(TimeStampModel):
 
     @property
     def in_progress(self):
-        """ disable actions while in progress """
+        """disable actions while in progress"""
         return self.progress != 100
 
     def __str__(self):
         return f"{self.user.email} status: {self.status} tasks {self.progress}% complete"
 
     def remove_from_operations_list(self, operations=[]):
-        """ This method is used to remove operations (array) from the NEXT sync """
+        """This method is used to remove operations (array) from the NEXT sync"""
         self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
         self.save()
 
@@ -637,16 +640,19 @@ class MeetingWorkflow(SFSyncOperation):
         return _kick_off_slack_interaction.now(str(self.user.id), str(self.id))
 
     def add_form(self, resource, form_type, **kwargs):
-        """ 
-            helper method to add form for the review 
-            E.g Create form if creating new resource, stage gating form 
+        """
+        helper method to add form for the review
+        E.g Create form if creating new resource, stage gating form
         """
         from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
         template = (
             OrgCustomSlackForm.objects.for_user(self.user)
             .filter(
-                Q(resource=resource, form_type=form_type,)
+                Q(
+                    resource=resource,
+                    form_type=form_type,
+                )
                 & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
             )
             .first()
@@ -655,7 +661,11 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            kwargs = dict(user=self.user, template=template, workflow=self,)
+            kwargs = dict(
+                user=self.user,
+                template=template,
+                workflow=self,
+            )
             if self.resource:
                 kwargs["resource_id"] = str(self.resource.id)
 
@@ -663,11 +673,11 @@ class MeetingWorkflow(SFSyncOperation):
         return None
 
     def remove_form(self):
-        """ helper method to remove for the review """
+        """helper method to remove for the review"""
         return
 
     def save(self, *args, **kwargs):
-        """ sets the loading to done """
+        """sets the loading to done"""
         if self.progress == 100 and self.slack_interaction:
             from managr.slack.helpers import requests as slack_requests
             from managr.slack.helpers.block_sets import get_block_set
@@ -730,7 +740,10 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
     sobjects = JSONField(
-        default=dict, null=True, help_text="All resources we are retrieving", max_length=500,
+        default=dict,
+        null=True,
+        help_text="All resources we are retrieving",
+        max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,

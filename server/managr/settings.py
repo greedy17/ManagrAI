@@ -6,9 +6,10 @@ from managr.utils import sites as site_utils
 def _env_get_required(setting_name):
     """Get the value of an environment variable and assert that it is set."""
     setting = os.environ.get(setting_name)
-    assert setting not in {None, "",}, "{0} must be defined as an environment variable.".format(
-        setting_name
-    )
+    assert setting not in {
+        None,
+        "",
+    }, "{0} must be defined as an environment variable.".format(setting_name)
     return setting
 
 
@@ -161,9 +162,13 @@ AUTH_USER_MODEL = "core.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 10,},
+        "OPTIONS": {
+            "min_length": 10,
+        },
     },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 #
@@ -262,7 +267,9 @@ LOGGING = {
     "disable_existing_loggers": True,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue",},
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
     },
     "formatters": {
         "verbose": {
@@ -287,9 +294,19 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
+        "django": {
+            "handlers": ["console", "mail_admins"],
+            "level": "INFO",
+        },
         # The logger name matters -- it MUST match the name of the app
-        "managr": {"handlers": ["console", "mail_admins",], "level": "DEBUG", "propagate": True,},
+        "managr": {
+            "handlers": [
+                "console",
+                "mail_admins",
+            ],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "managr.request": {"handlers": [], "level": "INFO", "propagate": True},
         "managr.tasks": {"handlers": [], "level": "INFO", "propagate": True},
     },
@@ -412,4 +429,3 @@ if USE_SALESFORCE:
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
 
 MAX_ATTEMPTS = 5
-
