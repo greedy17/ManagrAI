@@ -30,6 +30,7 @@ REMOVE_OWNER_ID = {
     # as we do with additional filters instead we remove it from the query for objects documented here for now
     "User",
     "RecordType",
+    "Pricebook2",
 }
 
 
