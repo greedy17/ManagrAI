@@ -257,6 +257,17 @@ def datepicker(
     label="Select Date",
     placeholder="Select a date",
 ):
+    """
+    Function returns a datepicker block object
+
+    Parameters:
+    initial_date - Sets the initial value to the date string passed in, must be 'YEAR-MONTH-DAY' format (ex '2020-04-21')
+    action_id - Sets id to value passed in, otherwise None
+    block_id - Sets id to value passed in, otherwise sets id with uuid
+    label - Sets the label to the string passed in, otherwise default is 'Select Date'
+    placeholder - Sets the placeholder text of the input to string passed in, otherwise default is 'Select a date'
+
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
@@ -404,7 +415,7 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
 def section_with_accessory_block(
     section_text, accessory, text_type="mrkdwn", block_id=None,
 ):
-    """" Builds a section with an accessory (image/button) 
+    """ Builds a section with an accessory (image/button) 
         
         parameters
         ----------
