@@ -60,3 +60,7 @@ class TestSimpleButtonBlock(TestCase):
     def test_returns_proper_url(self):
         result = simple_button_block("Test", "TEST", url="https://www.test.com")
         self.assertEqual(result["url"], "https://www.test.com")
+
+    def test_returns_proper_style(self):
+        result = simple_button_block("Test", "TEST", style="danger")
+        self.assertEqual(result["style"], "danger")
