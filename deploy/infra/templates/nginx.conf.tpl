@@ -34,7 +34,7 @@ http {
             return 200 "healthy\n";
         }
 
-        location ~ ^/microsoft-identity-association.json {
+        location ~ ^/.well-known/microsoft-identity-association.json {
             root /var/www/html/;
         }
 
