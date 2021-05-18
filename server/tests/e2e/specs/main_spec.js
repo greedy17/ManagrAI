@@ -6,11 +6,6 @@ describe('Managr UI Tests', () => {
     cy.get('div').should('have.id', 'app')
   })
   it('contains a login text field', () => {
-    cy.get('input')
-      .should('have.attr', 'placeholder', 'email')
-      .as('emailField')
-  })
-  it('contains a login button', () => {
-    cy.get('button').contains('Next')
+    cy.get('input').should('have.attr', 'placeholder', 'email').as('emailField')
   })
 })

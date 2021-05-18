@@ -17,6 +17,7 @@
         }"
         v-bind="$attrs"
         v-on="$listeners"
+        :type="inputType"
       />
     </slot>
     <div v-if="errors.length" class="tn-input__errors">
