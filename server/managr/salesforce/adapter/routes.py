@@ -8,4 +8,3 @@ routes = {
     sf_consts.RESOURCE_SYNC_LEAD: model_adapters.LeadAdapter,
     sf_consts.SALESFORCE_RESOURCE_TASK: model_adapters.TaskAdapter,
 }
-

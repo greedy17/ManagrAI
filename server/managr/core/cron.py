@@ -103,4 +103,3 @@ def revoke_tokens():
     ).values_list("access_token", flat=True)
     for token in nylas_tokens:
         revoke_access_token(token)
-
