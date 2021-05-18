@@ -625,4 +625,3 @@ def slack_events(request):
         return Response()
 
         # check if they exist in managr
-

@@ -336,4 +336,3 @@ def score_meetings(request):
     call_command("generatemeetingscores")
 
     return Response(data="Scoring Meeting...")
-

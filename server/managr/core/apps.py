@@ -7,4 +7,3 @@ class ManagrCoreConfig(AppConfig):
 
     def ready(self):
         return
-
