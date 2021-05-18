@@ -184,4 +184,3 @@ class TestSimpleImageBlock(TestCase):
         self.assertEqual(
             result, {"type": "image", "image_url": "testurl123", "alt_text": "alt_test"}
         )
-

@@ -84,4 +84,3 @@ def create_task_modal_block_set(context):
     )
 
     return blocks
-
