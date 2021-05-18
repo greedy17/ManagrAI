@@ -135,7 +135,7 @@
                 {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
               </div>
               <div v-else>
-                {{ k.formType == 'CREATE' ? 'Edit Created Contacts' : 'Edit Existing Contacts' }}
+                {{ k.formType == 'CREATE' ? 'Create Contact' : 'Edit Existing Contacts' }}
               </div>
             </div>
 
