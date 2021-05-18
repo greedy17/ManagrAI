@@ -1,6 +1,8 @@
 from unittest.case import TestCase
 
+
 from managr.slack.helpers.block_builders import (
+    actions_block,
     simple_button_block,
     text_block,
     section_with_button_block,
@@ -43,6 +45,27 @@ class TestSectionWithButtonBlock(TestCase):
                 },
             },
         )
+
+
+class TestActionsBlock(TestCase):
+    """Unit test for actions block"""
+
+    def test_returned_block(self):
+        result = actions_block(blocks=["test_button", "test_menu"], block_id="test")
+        self.assertEqual(
+            result,
+            {"type": "actions", "block_id": "test", "elements": ["test_button", "test_menu"]},
+        )
+
+    def test_no_blocks_entered(self):
+        result = actions_block(blocks=[], block_id=None)
+        self.assertEqual(result, None)
+
+    def test_too_many_blocks_entered(self):
+        result = actions_block(
+            blocks=["test", "test", "test", "test", "test", "test"], block_id=None
+        )
+        self.assertEqual(result, None)
 
 
 class TestSimpleButtonBlock(TestCase):
