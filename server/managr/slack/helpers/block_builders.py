@@ -31,11 +31,7 @@ def input_block(
         "block_id": block_id,
         "label": {"type": label_type, "text": label},
         "optional": optional,
-        "element": {
-            "type": "plain_text_input",
-            "action_id": action_id,
-            "multiline": multiline,
-        },
+        "element": {"type": "plain_text_input", "action_id": action_id, "multiline": multiline,},
     }
     if placeholder:
         # placeholder is a text_block
@@ -108,12 +104,7 @@ def header_block(text, block_id=None):
 
 
 def external_select(
-    label,
-    action_id,
-    initial_option=None,
-    block_id=None,
-    min_query_length=0,
-    placeholder="Select",
+    label, action_id, initial_option=None, block_id=None, min_query_length=0, placeholder="Select",
 ):
     block = {
         "type": "section",
@@ -133,12 +124,7 @@ def external_select(
 
 
 def static_select(
-    label,
-    options,
-    action_id=None,
-    initial_option=None,
-    placeholder="Select",
-    block_id=None,
+    label, options, action_id=None, initial_option=None, placeholder="Select", block_id=None,
 ):
     """ "
     Returns a select block where the select values are known and won't change.
@@ -175,12 +161,7 @@ def static_select(
 
 
 def multi_static_select(
-    label,
-    options,
-    action_id=None,
-    initial_options=None,
-    placeholder="Select",
-    block_id=None,
+    label, options, action_id=None, initial_options=None, placeholder="Select", block_id=None,
 ):
     # options are an array of block_optiosn (see above)
     if not block_id:
@@ -203,12 +184,7 @@ def multi_static_select(
 
 
 def multi_external_select(
-    label,
-    action_id,
-    initial_options=None,
-    placeholder="Select",
-    block_id=None,
-    min_query_length=0,
+    label, action_id, initial_options=None, placeholder="Select", block_id=None, min_query_length=0,
 ):
     """ A section block with markup text and a multi_external_select menu.
     
@@ -390,10 +366,7 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
 
 
 def section_with_accessory_block(
-    section_text,
-    accessory,
-    text_type="mrkdwn",
-    block_id=None,
+    section_text, accessory, text_type="mrkdwn", block_id=None,
 ):
     """Builds a section with an accessory (image/button)"""
     if not block_id:

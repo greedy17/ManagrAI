@@ -610,4 +610,3 @@ def meeting_summary_blockset(context):
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
-
