@@ -1,5 +1,5 @@
 from unittest.case import TestCase
-from server.managr.slack.helpers.block_builders import text_block, section_with_button_block
+from managr.slack.helpers.block_builders import text_block, section_with_button_block
 
 
 class TestTextBlock(TestCase):
