@@ -18,7 +18,12 @@ def _handle_response(response, fn_name=None, blocks=[]):
 
     else:
         status_code = response.status_code
-        res_data = response.json()
+        try:
+            res_data = response.json()
+        except json.decoder.JSONDecodeError:
+            # one slack request (see generic requests) does not return json
+            return response.text
+
         if not res_data.get("ok"):
             error_code = response.status_code
             error_param = res_data.get("error")

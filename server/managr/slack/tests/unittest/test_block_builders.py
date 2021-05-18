@@ -1,5 +1,5 @@
 from unittest.case import TestCase
-from server.managr.slack.helpers.block_builders import (
+from managr.slack.helpers.block_builders import (
     text_block,
     section_with_button_block,
     section_with_accessory_block,
@@ -70,3 +70,14 @@ class TestSectionWithAccessoryBlock(TestCase):
                 "alt_text": "test image",
             },
         )
+
+
+class TestSimpleImageBlock(TestCase):
+    """Unit test for simple image block"""
+
+    def test_returns_url_and_alt(self):
+        result = simple_image_block("testurl123", "alt_test")
+        self.assertEqual(
+            result, {"type": "image", "image_url": "testurl123", "alt_text": "alt_test"}
+        )
+
