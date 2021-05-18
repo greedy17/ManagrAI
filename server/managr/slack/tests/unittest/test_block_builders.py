@@ -1,5 +1,7 @@
 from unittest.case import TestCase
+
 from managr.slack.helpers.block_builders import (
+    simple_button_block,
     text_block,
     section_with_button_block,
     section_with_accessory_block,
@@ -41,6 +43,30 @@ class TestSectionWithButtonBlock(TestCase):
                 },
             },
         )
+
+
+class TestSimpleButtonBlock(TestCase):
+    """unit tests for simple_button_block"""
+
+    def test_returns_basic_object(self):
+        result = simple_button_block("Test", "TEST", action_id="1")
+        self.assertEqual(
+            result,
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Test"},
+                "value": "TEST",
+                "action_id": "1",
+            },
+        )
+
+    def test_returns_proper_url(self):
+        result = simple_button_block("Test", "TEST", url="https://www.test.com")
+        self.assertEqual(result["url"], "https://www.test.com")
+
+    def test_returns_proper_style(self):
+        result = simple_button_block("Test", "TEST", style="danger")
+        self.assertEqual(result["style"], "danger")
 
 
 class TestSectionWithAccessoryBlock(TestCase):
