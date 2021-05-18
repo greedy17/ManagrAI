@@ -1,5 +1,9 @@
 from unittest.case import TestCase
-from server.managr.slack.helpers.block_builders import text_block, section_with_button_block
+from server.managr.slack.helpers.block_builders import (
+    checkbox_block,
+    text_block,
+    section_with_button_block,
+)
 
 
 class TestTextBlock(TestCase):
@@ -33,6 +37,58 @@ class TestSectionWithButtonBlock(TestCase):
                     "text": {"type": "plain_text", "text": "Test"},
                     "value": "TEST",
                     "action_id": "1",
+                },
+            },
+        )
+
+
+class TestCheckBoxBlock(TestCase):
+    """unit test for checkbox block"""
+
+    def test_returned_block(self):
+        result = checkbox_block(
+            label="test",
+            options=["test", "test"],
+            action_id="action_test",
+            initial_options=None,
+            block_id="block_test",
+        )
+        self.assertEqual(
+            result,
+            {
+                {
+                    "type": "section",
+                    "block_id": "block_test",
+                    "text": {"type": "mrkdwn", "text": "test"},
+                    "accessory": {
+                        "type": "checkboxes",
+                        "action_id": "action_test",
+                        "options": ["test", "test"],
+                    },
+                }
+            },
+        )
+
+    def test_initial_options(self):
+        result = checkbox_block(
+            label="test",
+            block_id="block_test",
+            initial_options={
+                "type": "checkboxes",
+                "action_id": "action_test",
+                "options": ["test", "test"],
+            },
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "block_id": "block_test",
+                "text": {"type": "mrkdwn", "text": "test"},
+                "accessory": {
+                    "type": "checkboxes",
+                    "action_id": "action_test",
+                    "options": ["test", "test"],
                 },
             },
         )
