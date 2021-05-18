@@ -1,127 +1,112 @@
 <template>
-  <div class="login">
-    <form @submit.prevent="handleSubmit">
+  <div class="login-page">
+    <div class="login-page__form">
       <h2>Login</h2>
-      <div class="errors">
-        <!-- client side validations -->
-        <div
-          v-if="
-            isFormValid !== null && !isFormValid && (errors.emailIsBlank || errors.passwordIsBlank)
-          "
-        >
-          {{ errors.emailIsBlank ? 'Field' : 'Fields' }} may not be blank.
-        </div>
-        <!-- server side validations -->
-        <div v-else-if="success !== null && !success && errors[500]">
-          Something went wrong, please retry later.
-        </div>
-        <div v-else-if="success !== null && !success && errors.invalidEmail">
-          Invalid or not-activated email.
-        </div>
-        <div v-else-if="success !== null && !success && errors.invalidPassword">
-          Incorrect password.
-        </div>
+      <div class="login-page__form__fields">
+        <FormField
+          @input="execCheckEmail"
+          :disabled="showPassword"
+          v-model="loginForm.field.email.value"
+          placeholder="email"
+          :errors="loginForm.field.email.errors"
+          name="email"
+          id="email"
+          large
+        />
+        <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
+
+        <FormField
+          v-on:keyup.enter.native="handleLoginAttempt"
+          :errors="loginForm.field.password.errors"
+          v-if="showPassword"
+          v-model="loginForm.field.password.value"
+          inputType="password"
+          placeholder="password"
+          name="password"
+          id="password"
+          large
+        />
       </div>
-      <input :disabled="currentStep > 1" v-model="email" type="text" placeholder="email" />
-      <input
-        :class="{ hidden: currentStep < 2 }"
-        ref="passwordInput"
-        v-model="password"
-        type="password"
-        placeholder="password"
+      <PulseLoadingSpinnerButton
+        v-if="showPassword"
+        :disabled="loggingIn || !loginForm.isValid"
+        @click="handleLoginAttempt"
+        class="primary-button"
+        text="Log In"
+        :loading="loggingIn"
       />
-      <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Register' }">
-          No account? Sign Up
-        </router-link>
+        <router-link :to="{ name: 'Register' }"> No account? Sign Up </router-link>
       </div>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'ForgotPassword' }">
-          Forgot Password?
-        </router-link>
+        <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password? </router-link>
       </div>
-    </form>
+      <div style="margin-top: 1rem">
+        <p>
+          <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+          |
+          <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+          |
+          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+/**
+ * Services
+ */
 import User from '@/services/users'
+import { UserLoginForm } from '@/services/users/forms'
+import debounce from 'lodash.debounce'
+/**
+ * External Components
+ */
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
+/**
+ * internal Components
+ */
+import FormField from '@/components/forms/FormField'
 
 export default {
   name: 'Login',
-  components: {},
+  components: { FormField, PulseLoadingSpinnerButton, PulseLoadingSpinner },
   data() {
     return {
-      currentStep: 1,
-      email: '', // step 1
-      password: '', // step 2
-      isFormValid: null, // client side validations
-      success: null, //server side validations
-      errors: {},
+      loggingIn: false,
+      showPassword: false,
+      loginForm: new UserLoginForm(),
+      execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
   methods: {
-    handleSubmit() {
-      if (this.currentStep === 1) {
-        this.checkAccountStatus()
-      } else {
-        this.handleLoginAttempt()
+    async checkAccountStatus() {
+      this.loginForm.field.email.validate()
+      if (this.loginForm.field.email.isValid) {
+        this.loggingIn = true
+        try {
+          await User.api.checkStatus(this.loginForm.field.email.value)
+          this.showPassword = true
+        } catch (e) {
+          console.log(e)
+          this.loginForm.field.email.errors.push({
+            code: 'invalidAccount',
+            message: 'Account inactive or does not exist',
+          })
+        } finally {
+          this.loggingIn = false
+        }
       }
     },
-    checkAccountStatus() {
-      // reset component data when submission begins, in case of prior request
-      this.isFormValid = null
-      this.success = null
-      this.errors = {}
-
-      // check form data for this request
-      let validationResults = this.emailClientSideValidations()
-      this.isFormValid = validationResults[0]
-      this.errors = validationResults[1]
-      if (!this.isFormValid) {
-        return
-      }
-
-      let checkStatusPromise = User.api.checkStatus(this.email)
-
-      checkStatusPromise
-        .then(() => {
-          this.currentStep = 2
-          // setTimeout(..., 0) is used to focus once JS Stack is clear -- for some reason this is needed, even though the
-          // element is already on the DOM by this point (it is always present, see template).
-          setTimeout(() => this.$refs.passwordInput.focus(), 0)
-        })
-        .catch(error => {
-          if (error.response.status >= 500) {
-            this.errors[500] = true
-            this.success = false
-          } else if (error.response.status >= 400) {
-            // handle invalid or inactive email
-            this.errors.invalidEmail = true
-            this.success = false
-          }
-        })
-    },
-    handleLoginAttempt() {
-      // reset component data when submission begins, in case of prior request
-      this.isFormValid = null
-      this.success = null
-      this.errors = {}
-
-      // check form data for this request
-      let validationResults = this.passwordClientSideValidations()
-      this.isFormValid = validationResults[0]
-      this.errors = validationResults[1]
-      if (!this.isFormValid) {
-        return
-      }
-
-      let loginPromise = User.api.login(this.email, this.password)
-
-      loginPromise
-        .then(response => {
-          // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
+    async handleLoginAttempt() {
+      this.loginForm.validate()
+      if (this.loginForm.isValid) {
+        this.loggingIn = true
+        try {
+          const response = await User.api.login({ ...this.loginForm.value })
           let token = response.data.token
           let userData = response.data
           delete userData.token
@@ -132,51 +117,29 @@ export default {
           } else {
             this.$router.push({ name: 'Integrations' })
           }
-          this.success = true
-        })
-        .catch(error => {
+        } catch (error) {
+          const e = error
+
           if (!error.response || !error.response.status) {
             this.$Alert.alert({
               message: 'An Unknown Error occured please reach out to support',
               timeout: 3000,
               type: 'error',
             })
-          }
-          if (error.response.status >= 500) {
-            this.errors[500] = true
-            this.success = false
           } else if (error.response.status >= 400) {
-            // handle invalid password
-            this.errors.invalidPassword = true
-            this.success = false
+            this.$Alert.alert({
+              message: 'Incorrect Email/Password combination',
+              timeout: 3000,
+              type: 'error',
+            })
           }
-        })
-    },
-    emailClientSideValidations() {
-      let formErrors = {
-        emailIsBlank: this.emailIsBlank,
+        } finally {
+          this.loggingIn = false
+        }
       }
-      let isFormValid = !this.emailIsBlank
-
-      return [isFormValid, formErrors]
-    },
-    passwordClientSideValidations() {
-      let formErrors = {
-        passwordIsBlank: this.passwordIsBlank,
-      }
-      let isFormValid = !this.passwordIsBlank
-
-      return [isFormValid, formErrors]
     },
   },
-  computed: {
-    emailIsBlank() {
-      return !this.email.length
-    },
-    passwordIsBlank() {
-      return !this.password.length
-    },
-  },
+  computed: {},
 }
 </script>
 
@@ -186,28 +149,41 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.login {
-  display: flex;
-  flex-flow: row;
-  justify-content: center;
-}
-
 h2 {
   @include base-font-styles();
   font-weight: bold;
   color: $main-font-gray;
   text-align: center;
 }
-
-form {
+.login-page {
+  padding: 2rem 2rem;
+  @media only screen and (max-width: 768px) {
+    /* For mobile phones: */
+    padding: 0rem;
+  }
+}
+.login-page__form {
   @include standard-border();
+  position: relative;
+  left: 35%;
+  padding: 1rem 2rem;
   margin-top: 3.125rem;
   width: 31.25rem;
-  height: 18.75rem;
+  min-height: 15rem;
+  height: auto;
   background-color: $white;
   display: flex;
   flex-flow: column;
   align-items: center;
+  @media only screen and (max-width: 768px) {
+    /* For mobile phones: */
+    width: 100%;
+    height: 100%;
+    padding: 0rem;
+    left: 0;
+    display: block;
+    border: 0;
+  }
 }
 
 input {

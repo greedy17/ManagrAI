@@ -1,5 +1,5 @@
 from unittest.case import TestCase
-from server.managr.slack.helpers.block_builders import (
+from managr.slack.helpers.block_builders import (
     simple_image_block,
     text_block,
     section_with_button_block,

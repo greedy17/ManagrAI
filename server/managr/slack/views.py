@@ -125,9 +125,10 @@ class SlackViewSet(viewsets.GenericViewSet,):
                         }
                     }
                 )
-            slack_requests.send_channel_message(
-                integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
+            slack_requests.generic_request(
+                integration.incoming_webhook.get("url"), dict(text=text,), integration.access_token,
             )
+
         else:
             team_id = data.get("team", {}).get("id")
             if not team_id:
