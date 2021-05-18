@@ -34,6 +34,10 @@ http {
             return 200 "healthy\n";
         }
 
+        location ~ ^/microsoft-identity-association.json {
+            root /var/www/html/;
+        }
+
         # Redirect insecure traffic to https. The load balancer will
         # set the X-Forwarded-Proto header to let us know if the incoming
         # request was secure or insecure.

@@ -106,7 +106,7 @@ resource "aws_lb_listener_rule" "rule" {
 
   condition {
     host_header {
-      values = ["${each.value.name}.${var.managr_domain}"]
+      values = [each.value.name == "prod" ? "app.${var.managr_domain}" : "${each.value.name}.${var.managr_domain}"]
     }
   }
 }

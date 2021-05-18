@@ -26,6 +26,11 @@ output "ecr_config" {
       registry_url = split("/", aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url)[0]
       ecr_repo_url = aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url
     }
+    nginx = {
+      image_name   = "thinknimble/managr/nginx"
+      registry_url = split("/", aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url)[0]
+      ecr_repo_url = aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url
+    }
   }
 }
 

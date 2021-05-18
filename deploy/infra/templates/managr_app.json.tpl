@@ -381,7 +381,7 @@
   },
   {
     "name": "managr-app-proxy",
-    "image": "nginx",
+    "image": "${nginx_image}",
     "essential": true,
     "dependsOn": [
       {
