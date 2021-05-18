@@ -32,14 +32,19 @@
       />
       <button type="submit">{{ currentStep === 1 ? 'Next' : 'Login' }}</button>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Register' }">
-          No account? Sign Up
-        </router-link>
+        <router-link :to="{ name: 'Register' }"> No account? Sign Up </router-link>
       </div>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'ForgotPassword' }">
-          Forgot Password?
-        </router-link>
+        <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password? </router-link>
+      </div>
+      <div style="margin-top: 1rem">
+        <p>
+          <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+          |
+          <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+          |
+          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+        </p>
       </div>
     </form>
   </div>
@@ -92,7 +97,7 @@ export default {
           // element is already on the DOM by this point (it is always present, see template).
           setTimeout(() => this.$refs.passwordInput.focus(), 0)
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false
@@ -120,7 +125,7 @@ export default {
       let loginPromise = User.api.login(this.email, this.password)
 
       loginPromise
-        .then(response => {
+        .then((response) => {
           // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
           let token = response.data.token
           let userData = response.data
@@ -134,7 +139,7 @@ export default {
           }
           this.success = true
         })
-        .catch(error => {
+        .catch((error) => {
           if (!error.response || !error.response.status) {
             this.$Alert.alert({
               message: 'An Unknown Error occured please reach out to support',

@@ -80,7 +80,7 @@
         <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
+            (orgHasSlackIntegration && !hasSlackIntegration)
           "
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
@@ -105,7 +105,7 @@
         </div>
 
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
-        <div style="margin-bottom:0.5rem;width:15rem;">
+        <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
             @click="onGetAuthLink('NYLAS')"
             :loading="generatingToken && selectedIntegration == 'NYLAS'"
@@ -151,6 +151,13 @@
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
       by Managr.
     </div>
+    <p>
+      <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+      |
+      <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+      |
+      <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+    </p>
   </div>
 </template>
 
