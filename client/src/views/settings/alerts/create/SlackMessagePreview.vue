@@ -19,7 +19,6 @@
           </span>
         </div>
         <div class="slack-message__container-content__body">
-          <span v-html="alert.title" style="word-wrap:break-word;"></span>
           <div class="divider"></div>
           <span v-html="alert.message" style="word-wrap:break-word;"></span>
           <div class="divider"></div>

@@ -11,7 +11,7 @@ import {
 import AlertTemplate from '.'
 
 export class MinimumValueValidator extends Validator {
-  constructor({ message = 'Must meet minimum value', code = 'minValue', min = 1 } = {}) {
+  constructor({ message = 'Must meet minimum value', code = 'minValue', min = 0 } = {}) {
     super({ message, code })
     this.min = min
   }
@@ -47,8 +47,8 @@ export class AlertConfigForm extends Form {
   static recurrenceDay = new FormField({
     validators: [
       new RequiredValidator(),
-      new MinimumValueValidator({ min: 1, message: 'Please add values 1 - 31' }),
-      new MaximumValueValidator({ max: 31, message: 'Please add values 1 - 31' }),
+      new MinimumValueValidator({ min: 0, message: 'Please add values 0 - 31' }),
+      new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
     ],
   })
   static recipients = new FormField({ validators: [new RequiredValidator()] })
