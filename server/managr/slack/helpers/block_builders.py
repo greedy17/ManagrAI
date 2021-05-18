@@ -115,6 +115,26 @@ def external_select(
     min_query_length=0,
     placeholder="Select",
 ):
+    """ returns a section block with markdown text and an external_select dropdown menu
+
+    External menu's load their options from an external data source, allowing for a dynamic list of options.
+
+    Parameters
+    ----------
+    label: mrkdwn
+        markdown text for the section block.
+    action_id: str
+        An identifier for the action triggered when a menu option is selected.
+    initial_option: obj
+        The option selected when the menu initially loads.
+    block_id: str
+        Unique identifier for the block
+    min_query_length: int
+        Tell's Slack the fewest number of typed characters required before dispatch.
+    placeholder: obj
+        Defines the placeholder text shown on the menu. Maximum length for the text in this field is 150 characters.                     
+    """
+
     block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": f"{label}"},
@@ -182,7 +202,21 @@ def multi_static_select(
     placeholder="Select",
     block_id=None,
 ):
-    # options are an array of block_optiosn (see above)
+    """
+    Creates a selection input for selecting multiple options
+
+    Parameters:
+    label - String of what the label text should be
+    options  - must be an array of options (see above)
+    action_id - set id to the value passed in, otherwise None
+    initial_options - must be an array of options (see above) to show when initially loading
+    placeholder - String for the placeholder text in the input, otherwise 'Select'
+    block_id - set id of block to value passed in, otherwise created with uuid
+
+    Should be used when the value of the selection are known
+    and do not need to be gotten from and external source
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
