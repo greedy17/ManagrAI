@@ -60,6 +60,7 @@ variable "app_config" {
   type = object({
     name                      = string
     app_image                 = string
+    nginx_image               = string
     app_image_scheduled_tasks = string
 
     s3_bucket_location = string

@@ -1,32 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "3.38.0"
-    }
-
-    local = {
-      source  = "hashicorp/local"
-      version = "2.1.0"
-    }
-
-    random = {
-      source  = "hashicorp/random"
-      version = "3.1.0"
-    }
-  }
-  
-  # Update with ThinkNimble's S3 bucket
-  backend "s3" {
-    bucket = "managr-app-tfstate"
-    region = "us-east-1"
-  }
-}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
 locals {
   env            = "pr-${var.pr_number}"
   pr_url         = "${local.env}.${var.managr_domain}"
@@ -126,7 +97,9 @@ data "template_file" "managr_app" {
 
     environment               = local.env
     app_image                 = var.app_config.app_image
+    nginx_image               = var.app_config.nginx_image
     app_image_scheduled_tasks = var.app_config.app_image_scheduled_tasks
+    aws_logs_group            = aws_cloudwatch_log_group.managr_log_group.name
     fargate_cpu               = var.fargate_cpu
     fargate_memory            = var.fargate_memory
     aws_region                = data.aws_region.current.name
@@ -309,4 +282,19 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesforceRedirectUri = var.app_config.salesforce_redirect_uri
     salesforceApiVersion  = var.app_config.salesforce_api_version
   })
+}
+
+resource "aws_cloudwatch_log_group" "managr_log_group" {
+  name              = "/ecs/managr-app/${local.env}"
+  retention_in_days = 30
+
+  tags = {
+    "name" = "managr-log-group-${local.env}"
+    "app"  = "managr"
+  }
+}
+
+resource "aws_cloudwatch_log_stream" "managr_log_stream" {
+  name           = "managr-log-stream-${local.env}"
+  log_group_name = aws_cloudwatch_log_group.managr_log_group.name
 }
