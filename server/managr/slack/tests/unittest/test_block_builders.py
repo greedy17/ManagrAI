@@ -14,6 +14,7 @@ from managr.slack.helpers.block_builders import (
     simple_section,
     input_block,
     text_block,
+    option,
 )
 
 
@@ -30,6 +31,20 @@ class TestTextBlock(TestCase):
     def test_returns_object_with_mrkdwn_type(self):
         result = text_block("test", "mrkdwn")
         self.assertEqual(result, {"type": "mrkdwn", "text": "test"})
+
+
+class TestOption(TestCase):
+    """Unit test for option"""
+
+    def test_returns_object_correctly(self):
+        result = option("test", "TEST")
+        self.assertEqual(result, {"text": {"type": "plain_text", "text": "test"}, "value": "TEST"})
+
+    def test_returns_error_with_no_params(self):
+        self.assertRaises(TypeError, option)
+
+    def test_returns_error_with_one_param(self):
+        self.assertRaises(TypeError, option, "test")
 
 
 class TestInputBlock(TestCase):
