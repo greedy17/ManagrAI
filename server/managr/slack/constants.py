@@ -36,13 +36,9 @@ CHAT_UPDATE = "chat.update"
 
 WORKSPACE_SCOPES = [
     "chat:write",
-    "chat:write.public",
     "commands",
-    "im:history",
     "im:write",
     "incoming-webhook",
-    "mpim:write",
-    "channels:join",
 ]
 
 USER_SCOPES = ["identity.basic"]
@@ -112,6 +108,7 @@ COMMAND_CREATE_TASK = "COMMAND_CREATE_TASK"
 COMMAND_LIST_TASKS = "COMMAND_LIST_TASKS"
 UPDATE_TASK_SELECTED_RESOURCE = "UPDATE_TASK_SELECTED_RESOURCE"
 ZOOM_MEETING__SELECTED_RESOURCE_OPTION = "SELECTED_RESOURCE_OPTION"
+HOME_REQUEST_SLACK_INVITE = "HOME_REQUEST_SLACK_INVITE"
 
 
 GET_PICKLIST_OPTIONS = "GET_PICKLIST_OPTIONS"
