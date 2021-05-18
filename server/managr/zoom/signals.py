@@ -8,4 +8,3 @@ from .models import MeetingReview
 
 
 logger = logging.getLogger("managr")
-

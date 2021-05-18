@@ -13,4 +13,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         cutoff = options["cutoff"][0]
         return queue_stale_sf_data_for_delete(cutoff)
-
