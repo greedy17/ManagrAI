@@ -34,8 +34,10 @@ http {
             return 200 "healthy\n";
         }
 
-        location ~ ^/\.well-known/microsoft-identity-association.json {
-            root /var/www/html/.well-known/;
+        location ^~ /.well-known/ {
+            default_type "application/json";
+            rewrite /.well-known/(.*) /$1 break;
+            root /var/www/html/.well-known;
         }
 
         # Redirect insecure traffic to https. The load balancer will
