@@ -70,7 +70,8 @@ def simple_section_multiple(text_blocks, block_id=None):
 def option(text, value):
     """accepts a string and returns an object with 2 properties, type and text.
 
-    The type property is set to plain_text. The text property is given the value of the string entered.
+    The type property is set to plain_text. The text property is given the value of the 
+    string entered.
 
     Parameters
     ----------
@@ -106,6 +107,26 @@ def header_block(text, block_id=None):
 def external_select(
     label, action_id, initial_option=None, block_id=None, min_query_length=0, placeholder="Select",
 ):
+    """ returns a section block with markdown text and an external_select dropdown menu
+
+    External menu's load their options from an external data source, allowing for a dynamic list of options.
+
+    Parameters
+    ----------
+    label: mrkdwn
+        markdown text for the section block.
+    action_id: str
+        An identifier for the action triggered when a menu option is selected.
+    initial_option: obj
+        The option selected when the menu initially loads.
+    block_id: str
+        Unique identifier for the block
+    min_query_length: int
+        Tell's Slack the fewest number of typed characters required before dispatch.
+    placeholder: obj
+        Defines the placeholder text shown on the menu. Maximum length for the text in this field is 150 characters.                     
+    """
+
     block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": f"{label}"},
@@ -133,7 +154,8 @@ def static_select(
     label - A string for the select input label
     options - Options are an array of options (see above)
     action_id - Will be included if entered otherwise None
-    initial_option - An option block has to be entered, this shows the entered option when first being displayed
+    initial_option - An option block has to be entered, this shows the entered option 
+    when first being displayed
     placeholder - Changed placeholder text, otherwise defautls to Select
     block_id - Sets block_id, otherwise will use uuid to set.
 
@@ -163,7 +185,21 @@ def static_select(
 def multi_static_select(
     label, options, action_id=None, initial_options=None, placeholder="Select", block_id=None,
 ):
-    # options are an array of block_optiosn (see above)
+    """
+    Creates a selection input for selecting multiple options
+
+    Parameters:
+    label - String of what the label text should be
+    options  - must be an array of options (see above)
+    action_id - set id to the value passed in, otherwise None
+    initial_options - must be an array of options (see above) to show when initially loading
+    placeholder - String for the placeholder text in the input, otherwise 'Select'
+    block_id - set id of block to value passed in, otherwise created with uuid
+
+    Should be used when the value of the selection are known
+    and do not need to be gotten from and external source
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
@@ -221,6 +257,17 @@ def datepicker(
     label="Select Date",
     placeholder="Select a date",
 ):
+    """
+    Function returns a datepicker block object
+
+    Parameters:
+    initial_date - Sets the initial value to the date string passed in, must be 'YEAR-MONTH-DAY' format (ex '2020-04-21')
+    action_id - Sets id to value passed in, otherwise None
+    block_id - Sets id to value passed in, otherwise sets id with uuid
+    label - Sets the label to the string passed in, otherwise default is 'Select Date'
+    placeholder - Sets the placeholder text of the input to string passed in, otherwise default is 'Select a date'
+
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
@@ -368,7 +415,19 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
 def section_with_accessory_block(
     section_text, accessory, text_type="mrkdwn", block_id=None,
 ):
-    """Builds a section with an accessory (image/button)"""
+    """ Builds a section with an accessory (image/button) 
+        
+        parameters
+        ----------
+        section_text: str
+            text for the section block
+        accessory: obj
+            element object
+        text_type: str
+            markdown 
+        block_id: str
+            unique identifier
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
@@ -382,6 +441,15 @@ def section_with_accessory_block(
 
 
 def simple_image_block(url, alt_text):
+    """ An image block object with the image's url and alt text.
+
+    parameters
+    ----------
+    url: str
+        The URL of the image to be displayed. Maximum length for this field is 3000 characters.
+    alt_text: str 
+        A plain-text summary of the image. This should not contain any markup. Maximum length for this field is 2000 characters.   
+    """
     return {
         "type": "image",
         "image_url": url,
