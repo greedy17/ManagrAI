@@ -443,6 +443,15 @@ def section_with_accessory_block(
 
 
 def simple_image_block(url, alt_text):
+    """ An image block object with the image's url and alt text.
+
+    parameters
+    ----------
+    url: str
+        The URL of the image to be displayed. Maximum length for this field is 3000 characters.
+    alt_text: str 
+        A plain-text summary of the image. This should not contain any markup. Maximum length for this field is 2000 characters.   
+    """
     return {
         "type": "image",
         "image_url": url,
