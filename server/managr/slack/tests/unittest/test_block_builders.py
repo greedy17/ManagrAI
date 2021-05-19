@@ -15,6 +15,7 @@ from managr.slack.helpers.block_builders import (
     input_block,
     text_block,
     option,
+    divider_block,
 )
 
 
@@ -31,6 +32,14 @@ class TestTextBlock(TestCase):
     def test_returns_object_with_mrkdwn_type(self):
         result = text_block("test", "mrkdwn")
         self.assertEqual(result, {"type": "mrkdwn", "text": "test"})
+
+
+class TestDividerBlock(TestCase):
+    """ unit test for divider block """
+
+    def test_returns_divider_object(self):
+        result = divider_block()
+        self.assertEquals(result, {"type": "divider"})
 
 
 class TestOption(TestCase):
