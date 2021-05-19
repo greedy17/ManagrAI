@@ -28,8 +28,6 @@ class Command(BaseCommand):
             emit_gen_next_sync(str(user.id), operations, formatted_time)
             self.stdout.write(
                 self.style.SUCCESS(
-                    "Successfully initiated the sync for the user {}".format(
-                        user.email,
-                    )
+                    "Successfully initiated the sync for the user {}".format(user.email,)
                 )
             )

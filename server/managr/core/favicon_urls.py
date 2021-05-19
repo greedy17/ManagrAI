@@ -12,80 +12,70 @@ urlpatterns = [
     path(
         r"apple-icon-57x57.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-57x57.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-57x57.png"), permanent=False,
         ),
         name="apple-icon-57",
     ),
     path(
         r"apple-icon-60x60.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-60x60.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-60x60.png"), permanent=False,
         ),
         name="apple-icon-60",
     ),
     path(
         r"apple-icon-72x72.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-72x72.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-72x72.png"), permanent=False,
         ),
         name="apple-icon-72",
     ),
     path(
         r"apple-icon-76x76.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-76x76.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-76x76.png"), permanent=False,
         ),
         name="apple-icon-76",
     ),
     path(
         r"apple-icon-114x114.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-114x114.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-114x114.png"), permanent=False,
         ),
         name="apple-icon-114",
     ),
     path(
         r"apple-icon-120x120.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-120x120.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-120x120.png"), permanent=False,
         ),
         name="apple-icon-120",
     ),
     path(
         r"apple-icon-144x144.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-144x144.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-144x144.png"), permanent=False,
         ),
         name="apple-icon-144",
     ),
     path(
         r"apple-icon-152x152.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-152x152.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-152x152.png"), permanent=False,
         ),
         name="apple-icon-152",
     ),
     path(
         r"apple-icon-180x180.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/apple-icon-180x180.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/apple-icon-180x180.png"), permanent=False,
         ),
         name="apple-icon-180",
     ),
     path(
         r"android-icon-192x192.png",
         RedirectView.as_view(
-            url=staticfiles_storage.url("favicons/android-icon-192x192.png"),
-            permanent=False,
+            url=staticfiles_storage.url("favicons/android-icon-192x192.png"), permanent=False,
         ),
         name="apple-icon-192",
     ),

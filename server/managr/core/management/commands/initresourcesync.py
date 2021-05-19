@@ -9,9 +9,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--force",
-            action="store_true",
-            help="Delete poll instead of closing it",
+            "--force", action="store_true", help="Delete poll instead of closing it",
         )
 
     def handle(self, *args, **options):

@@ -147,8 +147,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
-                            lambda opt: opt.get("value", None) == value,
-                            self.get_slack_options,
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
                         ),
                     ),
                 )
@@ -170,8 +169,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value,
-                                self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
                             ),
                         ),
                     ),
@@ -187,8 +185,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value,
-                                self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
                             ),
                         )
                     )
@@ -649,10 +646,7 @@ class MeetingWorkflow(SFSyncOperation):
         template = (
             OrgCustomSlackForm.objects.for_user(self.user)
             .filter(
-                Q(
-                    resource=resource,
-                    form_type=form_type,
-                )
+                Q(resource=resource, form_type=form_type,)
                 & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
             )
             .first()
@@ -661,11 +655,7 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            kwargs = dict(
-                user=self.user,
-                template=template,
-                workflow=self,
-            )
+            kwargs = dict(user=self.user, template=template, workflow=self,)
             if self.resource:
                 kwargs["resource_id"] = str(self.resource.id)
 
@@ -740,10 +730,7 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
     sobjects = JSONField(
-        default=dict,
-        null=True,
-        help_text="All resources we are retrieving",
-        max_length=500,
+        default=dict, null=True, help_text="All resources we are retrieving", max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,

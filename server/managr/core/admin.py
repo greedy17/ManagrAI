@@ -16,10 +16,7 @@ from .models import (
 from . import constants as core_consts
 
 TRUE_FALSE_CHOICES = (
-    (
-        "True",
-        "ON",
-    ),
+    ("True", "ON",),
     ("False", "OFF"),
 )
 
@@ -76,17 +73,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = (
-        (
-            None,
-            {
-                "classes": ("wide",),
-                "fields": (
-                    "email",
-                    "password1",
-                    "password2",
-                ),
-            },
-        ),
+        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
     inlines = (
         UserSlackIntegrationInline,

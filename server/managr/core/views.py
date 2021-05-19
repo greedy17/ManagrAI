@@ -298,8 +298,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -307,9 +306,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -424,9 +421,7 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     u = request.user
@@ -635,9 +630,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""

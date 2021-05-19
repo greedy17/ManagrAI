@@ -102,14 +102,8 @@ EMAIL_OPENED = "EMAIL_OPENED"
 MESSAGE_RECEIVED = "LeadMessage.RECEIVED"
 MESSAGE_SENT = "LeadMessage.SENT"
 MESSAGE_DIRECTION_CHOICES = (
-    (
-        SENT,
-        "Sent",
-    ),
-    (
-        RECEIVED,
-        "Received",
-    ),
+    (SENT, "Sent",),
+    (RECEIVED, "Received",),
 )
 TWILIO_MESSAGE_DELIVERED = "delivered"
 TWILIO_MESSAGE_UNDELIVERED = "undelivered"
@@ -135,125 +129,38 @@ MESSAGE_NOT_DELIVERED = "NOT_DELIVERED"
 MESSAGE_PENDING = "MESSAGE_PENDING"
 
 MESSAGE_STATUS_CHOICES = (
-    (
-        MESSAGE_DELIVERED,
-        "Delivered",
-    ),
-    (
-        MESSAGE_NOT_DELIVERED,
-        "Not Delivered",
-    ),
-    (
-        MESSAGE_PENDING,
-        "Pending",
-    ),
+    (MESSAGE_DELIVERED, "Delivered",),
+    (MESSAGE_NOT_DELIVERED, "Not Delivered",),
+    (MESSAGE_PENDING, "Pending",),
 )
 
 ACTIVITY_CHOICES = (
-    (
-        LEAD_CREATED,
-        "Lead Created",
-    ),
-    (
-        LEAD_UPDATED,
-        "Lead Updated",
-    ),
-    (
-        LEAD_DELETED,
-        "Lead Deleted",
-    ),
-    (
-        LEAD_CLAIMED,
-        "Lead Claimed",
-    ),
-    (
-        LEAD_RELEASED,
-        "Lead Released",
-    ),
-    (
-        LEAD_RESET,
-        "Lead Reset",
-    ),
-    (
-        LEAD_CLOSED,
-        "Lead Closed",
-    ),
-    (
-        NOTE_CREATED,
-        "Note Created",
-    ),
-    (
-        NOTE_UPDATED,
-        "Note Updated",
-    ),
-    (
-        NOTE_DELETED,
-        "Note Deleted",
-    ),
-    (
-        CALL_NOTE_CREATED,
-        "Call Note Created",
-    ),
-    (
-        CALL_NOTE_UPDATED,
-        "Call Note Updated",
-    ),
-    (
-        CALL_NOTE_DELETED,
-        "Call Note Deleted",
-    ),
-    (
-        FILE_CREATED,
-        "File Created",
-    ),
-    (
-        FILE_UPDATED,
-        "File Updated",
-    ),
-    (
-        FILE_DELETED,
-        "File Deleted",
-    ),
-    (
-        REMINDER_CREATED,
-        "Reminder Created",
-    ),
-    (
-        REMINDER_UPDATED,
-        "Reminder Updated",
-    ),
-    (
-        REMINDER_DELETED,
-        "Reminder Deleted",
-    ),
-    (
-        ACTION_CREATED,
-        "Action Created",
-    ),
-    (
-        ACTION_UPDATED,
-        "Action Updated",
-    ),
-    (
-        ACTION_DELETED,
-        "Action Deleted",
-    ),
-    (
-        EMAIL_SENT,
-        "Email Sent",
-    ),
-    (
-        EMAIL_RECEIVED,
-        "Email Received",
-    ),
-    (
-        MESSAGE_RECEIVED,
-        "Message Received",
-    ),
-    (
-        MESSAGE_SENT,
-        "Message Sent",
-    ),
+    (LEAD_CREATED, "Lead Created",),
+    (LEAD_UPDATED, "Lead Updated",),
+    (LEAD_DELETED, "Lead Deleted",),
+    (LEAD_CLAIMED, "Lead Claimed",),
+    (LEAD_RELEASED, "Lead Released",),
+    (LEAD_RESET, "Lead Reset",),
+    (LEAD_CLOSED, "Lead Closed",),
+    (NOTE_CREATED, "Note Created",),
+    (NOTE_UPDATED, "Note Updated",),
+    (NOTE_DELETED, "Note Deleted",),
+    (CALL_NOTE_CREATED, "Call Note Created",),
+    (CALL_NOTE_UPDATED, "Call Note Updated",),
+    (CALL_NOTE_DELETED, "Call Note Deleted",),
+    (FILE_CREATED, "File Created",),
+    (FILE_UPDATED, "File Updated",),
+    (FILE_DELETED, "File Deleted",),
+    (REMINDER_CREATED, "Reminder Created",),
+    (REMINDER_UPDATED, "Reminder Updated",),
+    (REMINDER_DELETED, "Reminder Deleted",),
+    (ACTION_CREATED, "Action Created",),
+    (ACTION_UPDATED, "Action Updated",),
+    (ACTION_DELETED, "Action Deleted",),
+    (EMAIL_SENT, "Email Sent",),
+    (EMAIL_RECEIVED, "Email Received",),
+    (MESSAGE_RECEIVED, "Message Received",),
+    (MESSAGE_SENT, "Message Sent",),
 )
 
 LEAD_ACTIONS_TRIGGER_ALERT = (

@@ -56,8 +56,7 @@ def get_account_details(token):
     """gets account details from token to store in db"""
     headers = dict(Authorization=f"Bearer {token}")
     res = requests.get(
-        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}",
-        headers=headers,
+        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EMAIL_ACCOUNT_URI}", headers=headers,
     )
     return res.json()
 

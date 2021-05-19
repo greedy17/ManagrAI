@@ -130,9 +130,7 @@ class OrgCustomSlackForm(TimeStampModel):
     """Model to store the organizations JSON-based custom Slack form config - these are templates"""
 
     organization = models.ForeignKey(
-        "organization.Organization",
-        related_name="custom_slack_forms",
-        on_delete=models.CASCADE,
+        "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
     )
     form_type = models.CharField(
         max_length=255,
@@ -180,9 +178,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     """Model to store the instances created when a form is submitted from slack"""
 
     user = models.ForeignKey(
-        "core.User",
-        related_name="custom_slack_form_instances",
-        on_delete=models.CASCADE,
+        "core.User", related_name="custom_slack_form_instances", on_delete=models.CASCADE,
     )
     template = models.ForeignKey(
         "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
@@ -224,10 +220,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def get_user_fields(self):
         template_fields = (
             self.template.formfield_set.all()
-            .values_list(
-                "field__api_name",
-                "field__salesforce_object",
-            )
+            .values_list("field__api_name", "field__salesforce_object",)
             .order_by("order")
         )
         user_fields = []
@@ -273,19 +266,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if field.is_public:
                 # pass in user as a kwarg
                 form_blocks.append(
-                    field.to_slack_field(
-                        val,
-                        user=self.user,
-                        resource=self.resource_type,
-                    )
+                    field.to_slack_field(val, user=self.user, resource=self.resource_type,)
                 )
             else:
-                form_blocks.append(
-                    field.to_slack_field(
-                        val,
-                        workflow=self.workflow,
-                    )
-                )
+                form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
 
         return form_blocks
 
@@ -345,8 +329,5 @@ class FormField(TimeStampModel):
     field = models.ForeignKey(
         "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
     )
-    form = models.ForeignKey(
-        "slack.OrgCustomSlackForm",
-        on_delete=models.CASCADE,
-    )
+    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)

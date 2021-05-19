@@ -30,9 +30,7 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255,
-        choices=org_consts.INTEGRATION_SOURCES,
-        blank=True,
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -125,30 +123,12 @@ class User(AbstractUser, TimeStampModel):
     OPERATIONS = "OPERATIONS"
     ENABLEMENT = "ENABLEMENT"
     ROLE_CHOICES = [
-        (
-            LEADERSHIP,
-            "Leadership",
-        ),
-        (
-            FRONTLINE_MANAGER,
-            "Frontline Manager",
-        ),
-        (
-            ACCOUNT_EXEC,
-            "Account Executive",
-        ),
-        (
-            ACCOUNT_MANAGER,
-            "Account Manager",
-        ),
-        (
-            OPERATIONS,
-            "OPERATIONS",
-        ),
-        (
-            ENABLEMENT,
-            "Enablement",
-        ),
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -162,14 +142,9 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS,
-        max_length=255,
-        default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(
-        max_length=255,
-        blank=True,
-    )
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)

@@ -46,9 +46,7 @@ class Organization(TimeStampModel):
     name = models.CharField(max_length=255, blank=True)
     photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     state = models.CharField(
-        max_length=255,
-        choices=org_consts.STATE_CHOCIES,
-        default=org_consts.STATE_ACTIVE,
+        max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
 
@@ -89,9 +87,7 @@ class Account(TimeStampModel, IntegrationModel):
 
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "Organization",
-        related_name="accounts",
-        on_delete=models.CASCADE,
+        "Organization", related_name="accounts", on_delete=models.CASCADE,
     )
     parent = models.ForeignKey(
         "organization.Account",
@@ -274,9 +270,7 @@ class Stage(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="This may be use as a unique value, if it exists"
     )
     organization = models.ForeignKey(
-        "Organization",
-        related_name="stages",
-        on_delete=models.CASCADE,
+        "Organization", related_name="stages", on_delete=models.CASCADE,
     )
     order = models.IntegerField(blank=True, null=True)
     is_closed = models.BooleanField(default=False)
@@ -323,9 +317,7 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        "organization.Organization",
-        on_delete=models.CASCADE,
-        related_name="action_choices",
+        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
     )
 
     objects = ActionChoiceQuerySet.as_manager()

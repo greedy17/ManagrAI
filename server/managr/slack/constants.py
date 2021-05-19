@@ -117,14 +117,8 @@ GET_PICKLIST_OPTIONS = "GET_PICKLIST_OPTIONS"
 ZOOM_MEETING__ATTACH_RESOURCE_SECTION = "ATTACH_RESOURCE_SECTION"
 
 ZOOM_MEETING__SENTIMENTS = (
-    (
-        "Great",
-        ZOOM_MEETING__GREAT,
-    ),
-    (
-        "Fine",
-        ZOOM_MEETING__FINE,
-    ),
+    ("Great", ZOOM_MEETING__GREAT,),
+    ("Fine", ZOOM_MEETING__FINE,),
     ("Not Well", ZOOM_MEETING__NOT_WELL),
 )
 ## Customizable Slack forms exist for resources listed here and can only be one of each type

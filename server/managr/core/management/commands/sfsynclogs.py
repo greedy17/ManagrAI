@@ -12,9 +12,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--user",
-            action="store_true",
-            help="Delete poll instead of closing it",
+            "--user", action="store_true", help="Delete poll instead of closing it",
         )
 
     def handle(self, *args, **options):
@@ -26,17 +24,13 @@ class Command(BaseCommand):
                     report_sf_data_sync(user.sf_account)
                     self.stdout.write(
                         self.style.SUCCESS(
-                            "Successfully initiated the sync for the user {}".format(
-                                user.email,
-                            )
+                            "Successfully initiated the sync for the user {}".format(user.email,)
                         )
                     )
                 else:
                     self.stdout.write(
                         self.style.ERROR(
-                            "Successfully initiated the sync for the user {}".format(
-                                user.email,
-                            )
+                            "Successfully initiated the sync for the user {}".format(user.email,)
                         )
                     )
         else:

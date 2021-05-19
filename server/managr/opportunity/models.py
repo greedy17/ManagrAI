@@ -48,11 +48,7 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User",
-        related_name="owned_leads",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
+        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -100,12 +96,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(
-        max_digits=13,
-        decimal_places=2,
-        default=0.00,
-        null=True,
-    )
+    amount = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)

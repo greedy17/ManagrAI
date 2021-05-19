@@ -218,12 +218,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
                 )
                 resource_items.extend(
-                    [
-                        "opportunity",
-                        "account",
-                        "contact",
-                        "lead",
-                    ]
+                    ["opportunity", "account", "contact", "lead",]
                 )
             else:
                 resource_items.extend(

@@ -55,11 +55,5 @@ class ZoomAPIException:
             raise InvalidRequest(f"The request was invalid {self.param}")
         else:
             raise ValidationError(
-                {
-                    "detail": {
-                        "key": self.code,
-                        "message": self.message,
-                        "field": self.param,
-                    }
-                }
+                {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
             )

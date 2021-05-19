@@ -220,10 +220,7 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Sorry I cant find your zoom account",
-            }
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
         )
     host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
@@ -248,10 +245,7 @@ def init_fake_meeting(request):
     meeting_uuid = settings.ZOOM_FAKE_MEETING_UUID
     if not meeting_uuid:
         return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Sorry I cant find your zoom meeting",
-            }
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
         )
     host_id = host_id
     meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
@@ -296,8 +290,7 @@ def init_fake_meeting(request):
                 ts,
                 access_token,
                 block_set=get_block_set(
-                    "initial_meeting_interaction",
-                    context={"w": str(workflow.id)},
+                    "initial_meeting_interaction", context={"w": str(workflow.id)},
                 ),
             )
         except InvalidBlocksException as e:

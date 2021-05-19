@@ -12,10 +12,7 @@ from . import constants as opportunity_constants
 
 class ForecastKPIs:
     def __init__(
-        self,
-        date_range_from,
-        date_range_to,
-        representatives=[],
+        self, date_range_from, date_range_to, representatives=[],
     ):
         self._representatives = representatives
         self._date_range_from = date_range_from

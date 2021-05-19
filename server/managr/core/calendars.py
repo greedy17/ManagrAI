@@ -103,10 +103,7 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
         )
         # Bundle distances with event objects
         distances.append(
-            {
-                "distance": distance,
-                "event": e,
-            }
+            {"distance": distance, "event": e,}
         )
 
     # Get events with distances less than the defined threshold
@@ -125,10 +122,4 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     logger.info(f"    Got calendar participants: {participants}")
 
     # HACK: Here we translate this dictionary to match dict structure of Zoom participants
-    return [
-        {
-            "user_email": p.get("email"),
-            "name": p.get("name"),
-        }
-        for p in participants
-    ]
+    return [{"user_email": p.get("email"), "name": p.get("name"),} for p in participants]

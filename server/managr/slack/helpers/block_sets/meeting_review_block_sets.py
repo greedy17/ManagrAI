@@ -125,23 +125,14 @@ def meeting_contacts_block_set(context):
     sf_account = meeting.zoom_account.user.salesforce_account
 
     block_sets = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "Review Meeting Participants",
-            },
-        },
+        {"type": "header", "text": {"type": "plain_text", "text": "Review Meeting Participants",},},
         {"type": "divider"},
     ]
     # list contacts we already had from sf
     contacts_in_sf = list(filter(lambda contact: contact["integration_id"], contacts))
 
     contacts_not_in_sf = list(
-        filter(
-            lambda contact: contact.get("integration_id", None) in [None, ""],
-            contacts,
-        )
+        filter(lambda contact: contact.get("integration_id", None) in [None, ""], contacts,)
     )
 
     if len(contacts_not_in_sf):
@@ -193,8 +184,7 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":dart: *Managr found these attendees as contacts in Salesforce*",
-                    "mrkdwn",
+                    ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
                 ),
                 block_builders.simple_section(
                     f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
@@ -339,10 +329,7 @@ def initial_meeting_interaction_block_set(context):
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "Add Contacts to Salesforce",
             action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                params=[
-                    workflow_id_param,
-                ],
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
             ),
         ),
         {"type": "divider"},
@@ -353,10 +340,7 @@ def initial_meeting_interaction_block_set(context):
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
     blocks = [
-        block_builders.simple_section(
-            title_section,
-            "mrkdwn",
-        ),
+        block_builders.simple_section(title_section, "mrkdwn",),
         *default_blocks,
     ]
     # action button blocks
@@ -500,10 +484,7 @@ def create_modal_block_set(context, *args, **kwargs):
     template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(
-            Q(
-                resource=context.get("resource"),
-                form_type=slack_const.FORM_TYPE_CREATE,
-            )
+            Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
             & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
         )
         .first()

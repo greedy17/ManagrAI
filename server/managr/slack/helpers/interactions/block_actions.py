@@ -90,10 +90,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set(
-        "show_meeting_contacts",
-        context,
-    )
+    blocks = get_block_set("show_meeting_contacts", context,)
 
     data = {
         "trigger_id": trigger_id,
@@ -188,10 +185,7 @@ def process_edit_meeting_contact(payload, context):
             "title": title,
             "blocks": blocks,
             "private_metadata": json.dumps(
-                {
-                    "w": context.get("w"),
-                    "tracking_id": context.get("tracking_id"),
-                }
+                {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
             ),
         },
     }
@@ -475,10 +469,7 @@ def process_meeting_selected_resource_option(payload, context):
         context["action"] = "CREATE_NEW"
         blocks = [
             block_finder("select_existing", payload["view"]["blocks"])[1],
-            *get_block_set(
-                "create_modal_block_set",
-                context,
-            ),
+            *get_block_set("create_modal_block_set", context,),
         ]
         external_id = "create_modal_block_set"
 
@@ -513,10 +504,7 @@ def process_meeting_selected_resource_option(payload, context):
             "title": {"type": "plain_text", "text": f"{resource_type}"},
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),
-            "submit": {
-                "type": "plain_text",
-                "text": "Submit",
-            },
+            "submit": {"type": "plain_text", "text": "Submit",},
             "external_id": external_id,
         },
     }
@@ -644,9 +632,7 @@ def process_show_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template,
-            resource_id=resource_id,
-            user=user,
+            template=template, resource_id=resource_id, user=user,
         )
         if slack_form:
             context.update({"f": str(slack_form.id)})

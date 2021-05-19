@@ -122,9 +122,7 @@ class AccountViewSet(
         # checking to see if this is a bulk add or not if it is set to many
 
         serializer = AccountSerializer(
-            data=request.data,
-            context={"request": request},
-            many=isinstance(request.data, list),
+            data=request.data, context={"request": request}, many=isinstance(request.data, list),
         )
         serializer.is_valid(raise_exception=True)
 
@@ -141,8 +139,7 @@ class AccountViewSet(
         serializer.is_valid(raise_exception=True)
         if user.organization != acc.organization or user.type != core_consts.ACCOUNT_TYPE_MANAGER:
             return Response(
-                {"non_field_errors": ("Not Authorized")},
-                status=status.HTTP_401_UNAUTHORIZED,
+                {"non_field_errors": ("Not Authorized")}, status=status.HTTP_401_UNAUTHORIZED,
             )
         serializer.save()
 
@@ -156,15 +153,11 @@ class AccountViewSet(
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
-                {"non_field_errors": ("Not Authorized")},
-                status=status.HTTP_401_UNAUTHORIZED,
+                {"non_field_errors": ("Not Authorized")}, status=status.HTTP_401_UNAUTHORIZED,
             )
 
     @action(
-        methods=["POST"],
-        permission_classes=(IsSalesPerson,),
-        detail=False,
-        url_path="bulk-update",
+        methods=["POST"], permission_classes=(IsSalesPerson,), detail=False, url_path="bulk-update",
     )
     def bulk_update(self, request, *args, **kwargs):
         accounts = request.data
@@ -209,9 +202,7 @@ class ContactViewSet(
         # check if this is a bulk add
 
         serializer = ContactSerializer(
-            data=request.data,
-            context={"request": request},
-            many=isinstance(request.data, list),
+            data=request.data, context={"request": request}, many=isinstance(request.data, list),
         )
 
         serializer.is_valid(raise_exception=True)

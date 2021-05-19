@@ -37,9 +37,7 @@ class SlackWebhookAuthentication(authentication.BaseAuthentication):
             slack_const.SLACK_APP_VERSION
             + "="
             + hmac.new(
-                slack_const.SLACK_SIGNING_SECRET.encode("utf-8"),
-                sig_basedstring,
-                hashlib.sha256,
+                slack_const.SLACK_SIGNING_SECRET.encode("utf-8"), sig_basedstring, hashlib.sha256,
             ).hexdigest()
         )
         if hmac.compare_digest(my_sig, slack_signature):

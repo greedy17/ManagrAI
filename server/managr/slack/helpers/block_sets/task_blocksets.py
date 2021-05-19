@@ -40,11 +40,7 @@ def create_task_modal_block_set(context):
     )
 
     blocks = [
-        block_builders.input_block(
-            "Subject",
-            optional=False,
-            block_id="managr_task_subject",
-        ),
+        block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
         block_builders.datepicker(block_id="managr_task_datetime", label="Due Date"),
         block_builders.static_select(
             "Related to type",
