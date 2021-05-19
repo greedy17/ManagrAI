@@ -61,7 +61,16 @@ def simple_section(value, text_type="plain_text", block_id=None):
 
 
 def simple_section_multiple(text_blocks, block_id=None):
-    """sections can have multiple fields they are a collection of text_block"""
+    """ sections can have multiple fields they are a collection of text_block 
+    
+    Parameters
+    -----------
+    text_blocks: object
+        contains plain text or markup
+    block_id: str
+        block i.d number. If not entered will generate random str
+    """
+
     if not block_id:
         block_id = str(uuid.uuid4())
     return {"type": "section", "fields": text_blocks, "block_id": block_id}
@@ -257,6 +266,17 @@ def datepicker(
     label="Select Date",
     placeholder="Select a date",
 ):
+    """
+    Function returns a datepicker block object
+
+    Parameters:
+    initial_date - Sets the initial value to the date string passed in, must be 'YEAR-MONTH-DAY' format (ex '2020-04-21')
+    action_id - Sets id to value passed in, otherwise None
+    block_id - Sets id to value passed in, otherwise sets id with uuid
+    label - Sets the label to the string passed in, otherwise default is 'Select Date'
+    placeholder - Sets the placeholder text of the input to string passed in, otherwise default is 'Select a date'
+
+    """
     if not block_id:
         block_id = str(uuid.uuid4())
     block = {
