@@ -15,7 +15,7 @@ logger = logging.getLogger("managr")
 
 @receiver(post_save, sender=CompletedTask)
 def update_succesful_operations(sender, instance=None, created=False, **kwargs):
-    """When A background task is completed from the sf sync """
+    """When A background task is completed from the sf sync"""
     if created:
         # check that the user has the sf
         task_id = instance.id

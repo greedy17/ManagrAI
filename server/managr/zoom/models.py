@@ -321,7 +321,7 @@ class ZoomMeeting(TimeStampModel):
 
 
 class MeetingReview(TimeStampModel):
-    """ Parent Model in preparation for other meeting types (aka not zoom) """
+    """Parent Model in preparation for other meeting types (aka not zoom)"""
 
     resource_type = models.CharField(blank=True, max_length=255)
     resource_id = models.CharField(blank=True, max_length=255)
@@ -386,7 +386,7 @@ class ZoomMeetingReview(MeetingReview):
 
     @property
     def meeting_resource(self):
-        """ determines whether this is a meeting review for a meeting with an opp or an acct"""
+        """determines whether this is a meeting review for a meeting with an opp or an acct"""
         return self.meeting.workflow.meeting_resource
 
     @property
