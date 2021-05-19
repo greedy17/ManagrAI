@@ -10,7 +10,4 @@ describe('Managr UI Tests', () => {
       .should('have.attr', 'placeholder', 'email')
       .as('emailField')
   })
-  it('contains a login button', () => {
-    cy.get('button').contains('Next')
-  })
 })
