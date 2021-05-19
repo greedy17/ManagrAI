@@ -36,7 +36,6 @@ CHAT_UPDATE = "chat.update"
 
 WORKSPACE_SCOPES = [
     "chat:write",
-    "chat:write.public",
     "commands",
     "im:write",
     "incoming-webhook",
