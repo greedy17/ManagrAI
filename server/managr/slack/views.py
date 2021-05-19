@@ -125,11 +125,16 @@ class SlackViewSet(viewsets.GenericViewSet,):
                         }
                     }
                 )
-            slack_requests.send_channel_message(
-                integration.incoming_webhook.get("channel_id"), integration.access_token, text=text,
+            slack_requests.generic_request(
+                integration.incoming_webhook.get("url"), dict(text=text,), integration.access_token,
             )
+
         else:
-            team_id = data.get("team").get("id")
+            team_id = data.get("team", {}).get("id")
+            if not team_id:
+                raise ValidationError(
+                    "We hit an issue getting your team id, please try the integration again."
+                )
             if team_id != request.user.organization.slack_integration.team_id:
                 raise ValidationError(
                     "You signed into the wrong Slack workspace, please try again."
@@ -150,8 +155,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
             user_slack.save()
             if not user_slack.is_onboarded:
                 slack_requests.send_channel_message(
-                    user_slack.slack_integration.channel,
-                    user_slack.organization.slack_integration.access_token,
+                    user_slack.channel,
+                    user_slack.user.organization.slack_integration.access_token,
                     text="Welcome to Managr!",
                     block_set=get_block_set(
                         "onboarding_interaction", {"u": str(user_slack.user.id)}
