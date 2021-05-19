@@ -135,4 +135,3 @@ def _process_check_alert(config_id, user_id):
                     res = slack_requests.send_channel_message(
                         channel_id, access_token, text=text, block_set=blocks
                     )
-

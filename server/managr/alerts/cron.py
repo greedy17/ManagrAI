@@ -25,4 +25,3 @@ def init_alert_check():
     for config in configs:
         emit_init_alert(str(config.id))
     return
-
