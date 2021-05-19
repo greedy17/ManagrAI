@@ -20,6 +20,7 @@ from managr.slack.helpers.block_builders import (
     checkbox_block,
     static_select,
     multi_static_select,
+    multi_external_select,
 )
 
 
@@ -343,6 +344,61 @@ class TestSectionWithButtonBlock(TestCase):
                     "text": {"type": "plain_text", "text": "Test"},
                     "value": "TEST",
                     "action_id": "1",
+                },
+            },
+        )
+
+
+class TestMultiExternalSelect(TestCase):
+    """Unit test for multi external select"""
+
+    def test_returned_block(self):
+        result = multi_external_select(
+            label="label_test",
+            action_id="test123",
+            initial_options=None,
+            placeholder="Select",
+            block_id="test_id",
+            min_query_length=0,
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "label_test"},
+                "block_id": "test_id",
+                "accessory": {
+                    "type": "multi_external_select",
+                    "placeholder": {"type": "plain_text", "text": "Select"},
+                    "action_id": "test123",
+                    "min_query_length": 0,
+                },
+            },
+        )
+
+    def test_initial_options(self):
+        result = multi_external_select(
+            label="label_test",
+            action_id="test123",
+            initial_options=[{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+            placeholder="Select",
+            block_id="test_id",
+            min_query_length=0,
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "label_test"},
+                "block_id": "test_id",
+                "accessory": {
+                    "type": "multi_external_select",
+                    "placeholder": {"type": "plain_text", "text": "Select"},
+                    "action_id": "test123",
+                    "min_query_length": 0,
+                    "initial_options": [
+                        {"text": {"type": "plain_text", "text": "test"}, "value": "test",}
+                    ],
                 },
             },
         )

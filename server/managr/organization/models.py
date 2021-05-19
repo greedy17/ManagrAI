@@ -55,7 +55,7 @@ class Organization(TimeStampModel):
     @property
     def deactivate_all_users(self):
         # TODO: When deleting an org also remember to revoke nylas tokens and request delete
-        """ helper method to deactivate all users if their org is deactivated """
+        """helper method to deactivate all users if their org is deactivated"""
         users = User.objects.filter(organization=self)
         for u in users:
             u.state = org_consts.STATE_INACTIVE
@@ -121,11 +121,11 @@ class Account(TimeStampModel, IntegrationModel):
 
     @property
     def title(self):
-        """ Returns the name as a title using common fields as we have with leads and opps"""
+        """Returns the name as a title using common fields as we have with leads and opps"""
         return self.name
 
     def save(self, *args, **kwargs):
-        """ In case of duplicates update not save"""
+        """In case of duplicates update not save"""
         obj = (
             Account.objects.filter(
                 integration_id=self.integration_id, organization=self.organization
@@ -219,7 +219,7 @@ class Contact(TimeStampModel, IntegrationModel):
 
     @property
     def name(self):
-        """ returns full name for use with blocksets """
+        """returns full name for use with blocksets"""
 
         if self.secondary_data.get("Email", None) not in ["", None]:
             return self.secondary_data.get("Email")
