@@ -16,6 +16,7 @@ from managr.slack.helpers.block_builders import (
     text_block,
     option,
     divider_block,
+    header_block,
 )
 
 
