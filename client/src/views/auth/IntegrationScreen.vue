@@ -80,7 +80,7 @@
         <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-            (orgHasSlackIntegration && !hasSlackIntegration)
+              (orgHasSlackIntegration && !hasSlackIntegration)
           "
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
@@ -212,7 +212,7 @@ export default {
     },
     async onIntegrateSlack() {
       const confirmation = confirm(
-        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their slacks',
+        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
       )
       if (!confirmation) {
         return
