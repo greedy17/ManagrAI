@@ -176,7 +176,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
             return res
 
     def create_in_salesforce(self, data=None, user_id=None):
-        """ when synchronous create in db first to be able to use immediately """
+        """when synchronous create in db first to be able to use immediately"""
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
         object_fields = self.owner.salesforce_account.object_fields.filter(

@@ -61,9 +61,9 @@ def process_get_user_opportunities(payload, context):
 
 @processor(required_context=["u", "resource"])
 def process_get_local_resource_options(payload, context):
-    """ 
-        Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields 
-        additional options can be passed in the context 
+    """
+    Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields
+    additional options can be passed in the context
     """
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
@@ -113,10 +113,10 @@ def process_get_local_resource_options(payload, context):
 
 @processor(required_context=["u", "field"])  # takes in additional_options list as an optional param
 def process_get_picklist_options(payload, context):
-    """ 
-        Gets picklist options for options saved in our db, for all options except stages we use an external picklist block
-        Using the external picklist means we can avoid the slack 50 block limit since each option counts as a limit
-        Only stages use the static select block because we require the ordering to retrieve the linked stage forms in order
+    """
+    Gets picklist options for options saved in our db, for all options except stages we use an external picklist block
+    Using the external picklist means we can avoid the slack 50 block limit since each option counts as a limit
+    Only stages use the static select block because we require the ordering to retrieve the linked stage forms in order
     """
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
 
@@ -142,7 +142,7 @@ def process_get_picklist_options(payload, context):
 
 @processor(required_context=["u", "resource", "field"])
 def process_get_external_picklist_options(payload, context):
-    """ This retrieves external picklist options for picklists we do not currently store in our DB eg Tasks """
+    """This retrieves external picklist options for picklists we do not currently store in our DB eg Tasks"""
     # TODO pass in values as query
     # pass in limit for query
     user = User.objects.get(pk=context["u"])

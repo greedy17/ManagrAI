@@ -107,7 +107,7 @@ def alert_instance_block_set(context):
 
 @block_set(required_context=["u"])
 def update_modal_block_set(context, *args, **kwargs):
-    """ Shows a modal to update a resource """
+    """Shows a modal to update a resource"""
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")

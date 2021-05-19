@@ -40,7 +40,7 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
         zoom_meeting (ZoomMtg): ZoomMtg helper instance that corresponds to a Zoom meeting
                                             that ended, which we were notified about through
                                             a webhook.
-        user (User): Required because we are working with a ZoomMtg helper instance, 
+        user (User): Required because we are working with a ZoomMtg helper instance,
                      not a full model.
     """
     logger.info("Retrieving participants for Zoom meeting from Nylas Calendar...")

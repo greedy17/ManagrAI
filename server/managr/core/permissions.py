@@ -9,7 +9,7 @@ from managr.core import constants as core_consts
 
 
 class IsOrganizationManager(permissions.BasePermission):
-    """ Organization has salespeople who are managers or limited """
+    """Organization has salespeople who are managers or limited"""
 
     """ Managers can invite new users and update account info """
 
@@ -89,15 +89,15 @@ def org_permissions(self, request, view, obj):
 
 class CanEditResourceOrReadOnly(permissions.BasePermission):
     """
-        Most resources allow read access to all but write access to only an owner
-        Leads can be edited by their current claimed_by user we will also create custom methods
-        within the endpoints to allow overriding of this base permission however in general this rule
+    Most resources allow read access to all but write access to only an owner
+    Leads can be edited by their current claimed_by user we will also create custom methods
+    within the endpoints to allow overriding of this base permission however in general this rule
     """
 
     def has_object_permission(self, request, view, obj):
 
         if request.method in permissions.SAFE_METHODS:
-            """ All users are allowed to perform safe methods GET, OPTIONS"""
+            """All users are allowed to perform safe methods GET, OPTIONS"""
             return True
         elif (
             request.user.is_superuser
@@ -106,7 +106,7 @@ class CanEditResourceOrReadOnly(permissions.BasePermission):
         ):
             return True
         elif isinstance(obj, Opportunity):
-            """ if obj is Opportunity check claimed_by unless it is being claimed or unclaimed"""
+            """if obj is Opportunity check claimed_by unless it is being claimed or unclaimed"""
             return lead_permissions(self, request, view, obj)
         elif isinstance(obj, List):
             return list_permissions(self, request, view, obj)
@@ -125,9 +125,9 @@ class IsSuperUser(permissions.BasePermission):
 
 
 class SuperUserCreateOnly(permissions.BasePermission):
-    """ only super_user can create organization
-        OrgMangers can edit org
-        all else can view own org
+    """only super_user can create organization
+    OrgMangers can edit org
+    all else can view own org
     """
 
     def has_permission(self, request, view):
