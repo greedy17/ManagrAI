@@ -60,4 +60,3 @@ class TestStaticSelect(TestCase):
             "Test", [option("Test", "TEST"), option("Test2", "TEST2")], action_id="1"
         )
         self.assertIs(result["accessory"]["action_id"], "1")
-

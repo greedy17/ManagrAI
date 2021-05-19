@@ -148,4 +148,3 @@ def generic_request(url, data, access_token=None):
         else slack_auth.json_headers(),
     )
     return _handle_response(res, blocks=original_data.get("blocks"))
-
