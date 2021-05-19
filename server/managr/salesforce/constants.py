@@ -4,7 +4,9 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 
-SF_API_VERSION = settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
+SF_API_VERSION = (
+    settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
+)
 
 # SF COMMON URIS - Mostly Used for Auth
 
@@ -110,7 +112,9 @@ SALESFORCE_VALIDATION_QUERY = (
 CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if hasattr(settings, "SALESFORCE_CONSUMER_KEY") else ""
 CLIENT_SECRET = settings.SALESFORCE_SECRET if hasattr(settings, "SALESFORCE_SECRET") else ""
 SCOPES = settings.SALESFORCE_SCOPES if hasattr(settings, "SALESFORCE_SCOPES") else ""
-REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL if hasattr(settings, "SALESFORCE_REDIRECT_URL") else ""
+REDIRECT_URL = (
+    settings.SALESFORCE_REDIRECT_URL if hasattr(settings, "SALESFORCE_REDIRECT_URL") else ""
+)
 
 AUTHENTICATION_BODY = lambda code: {
     "grant_type": "authorization_code",
