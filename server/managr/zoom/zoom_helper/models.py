@@ -203,9 +203,9 @@ class ZoomAcct:
 
     @staticmethod
     def compliance_api(obj):
-        """ 
-            When app_deauth webhook is registered post data deletion to zoom compliance
-            data = https://marketplace.zoom.us/docs/api-reference/data-compliance/data-compliance/compliance
+        """
+        When app_deauth webhook is registered post data deletion to zoom compliance
+        data = https://marketplace.zoom.us/docs/api-reference/data-compliance/data-compliance/compliance
         """
         headers = {
             "Authorization": f"Basic {zoom_model_consts.APP_BASIC_TOKEN}",
@@ -224,4 +224,3 @@ class ZoomAcct:
         logger.info(f"Compiance API: {r.json()}")
 
         return ZoomAcct._handle_response(r)
-

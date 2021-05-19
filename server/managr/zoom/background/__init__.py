@@ -465,7 +465,6 @@ def _send_meeting_summary(workflow_id):
 
 @background(schedule=0)
 def _process_confirm_compliance(obj):
-    """ Sends Compliance verification on app deauth to zoom """
+    """Sends Compliance verification on app deauth to zoom"""
     ZoomAcct.compliance_api(json.loads(obj))
     return
-

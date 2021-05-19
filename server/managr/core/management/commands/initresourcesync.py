@@ -15,4 +15,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         queue_users_sf_resource(force_all=options.get("force", None))
-

@@ -436,7 +436,7 @@ def meeting_review_modal_block_set(context):
 
 @block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
-    """ This interaction updates the message to show a drop down of resources """
+    """This interaction updates the message to show a drop down of resources"""
     blocks = [
         block_builders.static_select(
             ":information_source: Select a resource to attach to the meeting",
@@ -478,7 +478,7 @@ def create_or_search_modal_block_set(context):
 
 @block_set(required_context=["w", "resource"])
 def create_modal_block_set(context, *args, **kwargs):
-    """ Shows a modal to create a resource """
+    """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     template = (
@@ -526,7 +526,7 @@ def create_modal_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["w"])
 def disregard_meeting_review_block_set(context, *args, **kwargs):
-    """ Shows a modal to create/select a resource """
+    """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
     user = w.user
     blocks = [
@@ -610,4 +610,3 @@ def meeting_summary_blockset(context):
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
-
