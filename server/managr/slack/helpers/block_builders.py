@@ -25,7 +25,7 @@ def input_block(
     label - String of what the label text should be 
     initial_value - Set an initial value for input using string passed in, otherwise None
     placeholder - Sets placeholder text for input using string passed in, defaults to no placeholder
-    multiline - If True will set input to a text field style input 
+    multiline - If True will set text input (in slack) to a Multiline text area  
     placeholder_type - Only used if placeholder is passed in, sets placeholder type to plain_text
     action_id - Sets id of input to value passed in, otherwise defaults to 'plain_input'
     block_id - Set id of block to value passed in, if none is passed in will create one with uuid
@@ -353,4 +353,3 @@ def simple_image_block(url, alt_text):
         "image_url": url,
         "alt_text": alt_text,
     }
-

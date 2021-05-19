@@ -369,4 +369,3 @@ class ActionChoiceViewSet(
 
     def get_queryset(self):
         return ActionChoice.objects.for_user(self.request.user)
-
