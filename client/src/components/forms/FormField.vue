@@ -20,7 +20,7 @@
         :type="inputType"
       />
     </slot>
-    <div v-if="errors.length" class="tn-input__errors">
+    <div v-show="errors.length" class="tn-input__errors">
       <span :key="`${error.code}-${i}`" v-for="(error, i) in errors">{{ error.message }}</span>
     </div>
   </div>
@@ -100,12 +100,14 @@ export default {
   } */
 
   &__errors {
+    position: relative;
+    top: 2px;
     display: flex;
     flex-direction: column;
-    color: red;
+    color: $coral;
     font-size: 0.75rem;
     font-family: $base-font-family;
-    margin-top: 0.3rem;
+    z-index: 999;
   }
 }
 ::v-deep .input-content {

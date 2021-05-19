@@ -27,15 +27,21 @@
 
         <div>
           <button
-            class="btn btn--primary"
+            class="btn btn--danger btn--icon"
             @click.stop="onRemoveOperand(i)"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            Remove
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
           </button>
         </div>
       </div>
-      <button class="btn btn--primary" @click="addOperandForm">+ Opperand</button>
+      <button class="btn btn--secondary btn--icon" @click="addOperandForm">
+        <svg width="24px" height="24px" viewBox="0 0 24 24">
+          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>
@@ -122,11 +128,20 @@ export default {
 @import '@/styles/buttons';
 
 .btn {
+  &--danger {
+    @include button-danger();
+  }
   &--primary {
     @include primary-button();
   }
-}
+  &--secondary {
+    @include secondary-button();
+  }
 
+  &--icon {
+    @include --icon();
+  }
+}
 .alert-group-row {
   @include standard-border();
   margin: 0.5rem;

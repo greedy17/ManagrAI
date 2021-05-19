@@ -46,15 +46,13 @@ class AlertTemplate(TimeStampModel):
     def url_str(self, user, config_id):
         """ Generates Url Str for request when executing alert """
         user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
-
+        operand_groups = [group.query_str(config_id) for group in self.groups.all()]
+        operand_groups = f"AND ({' '.join(operand_groups)})"
         q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
             user_sf.salesforce_id,
             self.resource_type,
             ["Id"],
-            additional_filters=[
-                *self.adapter_class.additional_filters(),
-                *[group.query_str(config_id) for group in self.groups.all()],
-            ],
+            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
         )
         return f"{user_sf.instance_url}{q}"
 
@@ -77,7 +75,10 @@ class AlertTemplate(TimeStampModel):
         )
 
         if hasattr(user, "salesforce_account"):
-            _process_check_alert.now(str(c.id), str(user.id))
+            try:
+                _process_check_alert.now(str(c.id), str(user.id))
+            except:
+                return c.delete()
         # delete after test is over
         c.delete()
 
@@ -126,10 +127,7 @@ class AlertGroup(TimeStampModel):
         """ returns a grouped qs of operand rows (in ()) """
         q_s = f"({' '.join([operand.query_str(config_id) for operand in self.operands.all()])})"
         if self.group_order != 0:
-            q_s = f"{self.operand_condition} {q_s}"
-        else:
-            ## the firest item always gets the AND since there are other additional filters already
-            q_s = f"AND {q_s}"
+            q_s = f"{self.group_condition} {q_s}"
         return q_s
 
 

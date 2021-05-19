@@ -8,7 +8,7 @@ from . import models as sf_models
 
 class SObjectFieldFilterSet(FilterSet):
 
-    for_alerts = django_filters.CharFilter(method="for_alerts")
+    for_alerts = django_filters.CharFilter(method="by_alerts")
 
     class Meta:
         model = sf_models.SObjectField
@@ -16,10 +16,24 @@ class SObjectFieldFilterSet(FilterSet):
             "salesforce_object",
             "createable",
             "updateable",
+            "filterable",
         )
 
-    def for_alerts(self, qs, name, value):
+    def by_alerts(self, qs, name, value):
         """ returns qs with field types that we support for alerts as list """
+
         if value:
-            return qs.filter(data_type__in=["Currency",])
+            return qs.filter(
+                data_type__in=[
+                    "Currency",
+                    "String",
+                    "Float",
+                    "Date",
+                    "DateTime",
+                    "Int",
+                    "Double",
+                    "Long",
+                    "Boolean",
+                ]
+            )
         return qs

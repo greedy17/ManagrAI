@@ -31,7 +31,7 @@ from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import UserSlackIntegration
-from managr.api.decorators import log_all_exceptions, sf_api_exceptions
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,

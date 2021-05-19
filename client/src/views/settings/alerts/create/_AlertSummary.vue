@@ -6,39 +6,83 @@
         <div class="box__header-subtitle"></div>
       </div>
       <div class="box__content">
-        {{ form.value.title }} for {{ form.value.resourceType }}
-        <div class="box__content-recipients">
-          <p>
-            will send to
-            <strong :key="key" v-for="(config, key) in form.value.alertConfig"
-              >{{ config._recipients ? config._recipients.key : '' }} on day
-              {{ config.recurrenceDay }} {{ config.recurrenceFrequency
-              }}{{ key != form.value.alertConfig.length - 1 ? ', ' : '' }}</strong
-            >
-          </p>
-          <span> </span>
-        </div>
-        <div class="box__content-conditions">
-          if the following conditions are met,
-          <div :key="i" v-for="(group, i) in form.value.alertGroups">
-            <span v-if="i != 0">
-              {{ group.groupCondition }}
+        <h2>
+          {{ form.value.title ? form.value.title : 'No title' }} for {{ form.value.resourceType }}
+        </h2>
+
+        <div
+          class="box__content-recipient-group__recipient-group"
+          :key="key"
+          v-for="(config, key) in form.value.alertConfig"
+        >
+          <div
+            class="box__content-recipient-group__recipient-group__recipient"
+            v-if="config.recurrenceFrequency == 'WEEKLY'"
+          >
+            Will run every week on {{ config.recurrenceDay }} and will check all user's resources
+            but only alert {{ config._recipients ? config._recipients.key : '' }}
+          </div>
+          <div
+            class="box__content-recipient-group__recipient-group__recipient"
+            v-else-if="config.recurrenceFrequency == 'MONTHLY'"
+          >
+            Will run every Month on the {{ config.recurrenceDay | numberSuffix }} and will check all
+            user's resources but only alert
+            {{ config._recipients ? config._recipients.key : '' }}
+          </div>
+
+          <div
+            class="box__content-recipient-group__recipient-group__conditions"
+            :key="i"
+            v-for="(group, i) in form.value.alertGroups"
+          >
+            <span class="box__content-recipient-group__recipient-group__conditions-condition">
+              {{ group.groupOrder == 0 ? 'If ' : `${group.groupCondition} ` }} Group
+              {{ ` ${i + 1}` }}
             </span>
-            <span>Group {{ i + 1 }}</span>
-            <div :key="key" v-for="(operandRow, key) in group.alertOperands">
-              <span v-if="key != 0">
+
+            <div
+              class="box__content-recipient-group__recipient-group__conditions__operands"
+              :key="key"
+              v-for="(operandRow, key) in group.alertOperands"
+            >
+              <span
+                class="box__content-recipient-group__recipient-group__conditions__operands-condition"
+                v-if="key != 0"
+              >
                 {{ operandRow.operandCondition }}
               </span>
-              <div>
-                <span>{{
-                  operandRow._operandIdentifier
-                    ? operandRow._operandIdentifier.referenceDisplayLabel
-                    : ''
-                }}</span>
+              <div
+                style="display:flex;justify-content:space-evenly;"
+                class="box__content-recipient-group__recipient-group__conditions__operands-operand"
+              >
+                <span>{{ form.value.resourceType }} </span>
+                <span>
+                  {{
+                    operandRow._operandIdentifier
+                      ? operandRow._operandIdentifier.referenceDisplayLabel
+                      : ''
+                  }}</span
+                >
                 <span>{{
                   operandRow._operandOperator ? operandRow._operandOperator.label : ''
                 }}</span>
-                <span>{{
+
+                <span
+                  v-if="
+                    operandRow._operandIdentifier &&
+                      (operandRow._operandIdentifier.dataType == 'Date' ||
+                        operandRow._operandIdentifier.dataType == 'DateTime')
+                  "
+                >
+                  {{
+                    moment()
+                      .add(operandRow.operandValue, 'd')
+                      .format('MM/DD')
+                  }}
+                  <em>(or current month at run time)</em>
+                </span>
+                <span v-else>{{
                   operandRow._operandValue
                     ? operandRow._operandValue.referenceDisplayLabel
                     : operandRow.operandValue
@@ -65,6 +109,7 @@
  * Services
  */
 import { AlertOperandForm, AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
+import moment from 'moment'
 
 export default {
   /**
@@ -80,7 +125,9 @@ export default {
     form: { type: AlertTemplateForm },
   },
   data() {
-    return {}
+    return {
+      moment,
+    }
   },
   watch: {},
   async created() {},

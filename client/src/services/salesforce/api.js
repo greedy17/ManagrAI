@@ -48,7 +48,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
 
   async listFields(query_params = {}) {
-    console.log('filters')
     let filterMaps = {
       ...SObjectFormBuilderAPI.FILTERS_MAP,
       createable: ApiFilter.create({ key: 'createable' }),
@@ -90,6 +89,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       salesforceObject: ApiFilter.create({ key: 'salesforce_object' }),
       search: ApiFilter.create({ key: 'search' }),
       forAlerts: ApiFilter.create({ key: 'for_alerts' }),
+      filterable: ApiFilter.create({ key: 'filterable' }),
     }
 
     const url = SObjectFormBuilderAPI.ENDPOINT + 'fields/'
@@ -101,6 +101,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
         pageSize: pagination.size,
       }),
     }
+
     return this.client
       .get(url, options)
       .then(response => response.data)

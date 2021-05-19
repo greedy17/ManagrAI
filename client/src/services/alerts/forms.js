@@ -70,7 +70,7 @@ export class AlertConfigForm extends Form {
   }
 }
 export class AlertOperandForm extends Form {
-  static operandCondition = new FormField({ value: 'OR' })
+  static operandCondition = new FormField({ value: 'AND' })
   static operandIdentifier = new FormField({ validators: [new RequiredValidator()] })
   static operandOperator = new FormField({ validators: [new RequiredValidator()] })
   static operandValue = new FormField({ validators: [new RequiredValidator()] })
@@ -101,7 +101,7 @@ export class AlertOperandForm extends Form {
   }
 }
 export class AlertGroupForm extends Form {
-  static groupCondition = new FormField({ value: 'OR' })
+  static groupCondition = new FormField({ value: 'AND' })
   static groupOrder = new FormField({ value: 0, validators: [] })
   static alertOperands = new FormArray({
     name: 'alertOperands',

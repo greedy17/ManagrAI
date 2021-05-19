@@ -120,6 +120,9 @@ class SObjectField(TimeStampModel, IntegrationModel):
         default=False,
         help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
     )
+    filterable = models.BooleanField(
+        default=False, help_text="Indicates if we can filter queries against this field"
+    )
     objects = SObjectFieldQuerySet.as_manager()
 
     def __str__(self):

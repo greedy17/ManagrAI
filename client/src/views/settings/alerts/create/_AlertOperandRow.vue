@@ -13,59 +13,78 @@
     </div>
     <div class="alert-operand-row__options">
       <div class="alert-operand-row__field">
-        <DropDownSearch
-          v-if="selectedOperandType == 'FIELD'"
-          :items="objectFields.list"
-          :itemsRef.sync="form.field._operandIdentifier.value"
-          v-model="form.field.operandIdentifier.value"
-          displayKey="referenceDisplayLabel"
-          valueKey="apiName"
-          nullDisplay="Select a field"
-          searchable
-          :hasNext="!!objectFields.pagination.hasNextPage"
-          @load-more="objectFieldNextPage"
-          @search-term="onSearchFields"
-        />
+        <FormField :errors="form.field.operandIdentifier.errors">
+          <template v-slot:input>
+            <DropDownSearch
+              v-if="selectedOperandType == 'FIELD'"
+              :items="objectFields.list"
+              :itemsRef.sync="form.field._operandIdentifier.value"
+              v-model="form.field.operandIdentifier.value"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Select a field"
+              searchable
+              :hasNext="!!objectFields.pagination.hasNextPage"
+              @load-more="objectFieldNextPage"
+              @search-term="onSearchFields"
+              @input="form.field.operandIdentifier.validate()"
+            />
+          </template>
+        </FormField>
       </div>
       <div class="alert-operand-row__operator">
-        <DropDownSearch
-          :items.sync="operatorOpts"
-          :itemsRef.sync="form.field._operandOperator.value"
-          v-model="form.field.operandOperator.value"
-          displayKey="label"
-          valueKey="value"
-          nullDisplay="Select an Operator"
-          searchable
-          local
-        />
+        <FormField :errors="form.field.operandOperator.errors">
+          <template v-slot:input>
+            <DropDownSearch
+              :items.sync="operatorOpts"
+              :itemsRef.sync="form.field._operandOperator.value"
+              v-model="form.field.operandOperator.value"
+              @input="form.field.operandOperator.validate()"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select an Operator"
+              searchable
+              local
+            />
+          </template>
+        </FormField>
       </div>
       <div class="alert-operand-row__value">
-        <DropDownSearch
+        <FormField
           v-if="selectedFieldTypeRaw == 'Picklist'"
-          :items.sync="picklistOpts"
-          :itemsRef.sync="form.field._operandValue.value"
-          v-model="form.field.operandValue.value"
-          displayKey="label"
-          valueKey="value"
-          nullDisplay="Select a value"
-          searchable
-          local
-        />
-        <DropDownSearch
-          v-else-if="
-            selectedFieldType == 'DATE' ||
-              selectedFieldType == 'DATETIME' ||
-              selectedFieldType == 'BOOLEAN'
-          "
-          :items.sync="valueOpts"
-          :itemsRef.sync="form.field._operandValue.value"
-          v-model="form.field.operandValue.value"
-          displayKey="label"
-          valueKey="value"
-          nullDisplay="Select a value"
-          searchable
-          local
-        />
+          :errors="form.field.operandValue.errors"
+        >
+          <template v-slot:input>
+            <DropDownSearch
+              :items.sync="picklistOpts"
+              :itemsRef.sync="form.field._operandValue.value"
+              v-model="form.field.operandValue.value"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select a value"
+              searchable
+              local
+            />
+          </template>
+        </FormField>
+        <FormField
+          v-else-if="selectedFieldType == 'BOOLEAN'"
+          :errors="form.field.operandValue.errors"
+        >
+          <template v-slot:input>
+            <DropDownSearch
+              :items.sync="valueOpts"
+              :itemsRef.sync="form.field._operandValue.value"
+              v-model="form.field.operandValue.value"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select a value"
+              searchable
+              local
+            />
+          </template>
+        </FormField>
+
         <FormField
           v-else
           @blur="form.field.operandValue.validate()"
@@ -77,6 +96,25 @@
           bordered
           placeholder="Enter a value"
         />
+        <div
+          v-if="
+            form.field.operandValue.isValid &&
+              (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
+          "
+          class="alert-operand-row__date-range"
+        >
+          This alert will look for resources {{ form.field.operandValue.value }}
+          {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
+          selected alert trigger date
+          {{
+            form.field.operandOperator.value
+              ? /=/.test(form.field.operandOperator.value)
+                ? ' including the specified day '
+                : ' excluding the specified day '
+              : ''
+          }}
+          see preview for details
+        </div>
       </div>
     </div>
   </div>
@@ -132,7 +170,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        filters: { forAlerts: true },
+        filters: { forAlerts: true, filterable: true },
       }),
 
       // used by dropdown as a ref field to retrieve obj of selected opt
@@ -189,6 +227,7 @@ export default {
         this.objectFields.filters = {
           ...this.objectFields.filters,
           forAlerts: true,
+          filterable: true,
           salesforceObject: val,
         }
         this.objectFields.refresh()
@@ -314,11 +353,20 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .btn {
+  &--danger {
+    @include button-danger();
+  }
   &--primary {
     @include primary-button();
   }
-}
+  &--secondary {
+    @include secondary-button();
+  }
 
+  &--icon {
+    @include --icon();
+  }
+}
 .alert-operand-row {
   @include standard-border();
   margin: 1rem;
@@ -343,9 +391,18 @@ export default {
     margin: 0 0.5rem;
   }
 }
+.alert-operand-row__date-range {
+  // displays a message on top of the input field for date/datetime selection
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 15rem;
+
+  @include muted-font(10px);
+}
 .alert-operand-row__options {
   display: flex;
-  align-items: center;
+  padding: 1rem;
   justify-content: space-evenly;
   &-label {
     color: black;

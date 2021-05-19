@@ -32,6 +32,7 @@
           <div
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+            class="alerts-page__groups__group"
           >
             <AlertGroup
               :form="alertGroup"
@@ -40,15 +41,21 @@
 
             <div>
               <button
-                class="btn btn--primary"
+                class="btn btn--danger btn--icon"
                 @click.stop="onRemoveAlertGroup(index)"
                 :disabled="alertTemplateForm.field.alertGroups.groups.length - 1 <= 0"
               >
-                - Group
+                <svg width="24px" height="24px" viewBox="0 0 24 24">
+                  <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
               </button>
             </div>
           </div>
-          <button class="btn btn--primary" @click="onAddAlertGroup">+ Group</button>
+          <button class="btn btn--secondary btn--icon" @click="onAddAlertGroup">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+            </svg>
+          </button>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">
@@ -97,21 +104,6 @@
                     @search-term="onSearchFields"
                     small
                   />
-
-                  <ListContainer
-                    horizontal
-                    v-if="NON_FIELD_ALERT_OPTS[selectedResourceType].length"
-                  >
-                    <template v-slot:list>
-                      <ListItem
-                        :key="key"
-                        v-for="(val, key) in NON_FIELD_ALERT_OPTS[selectedResourceType]"
-                        :item="val.referenceDisplayLabel"
-                        :active="true"
-                        @item-selected="bindText(`${selectedResourceType}.${val.apiName}`)"
-                      />
-                    </template>
-                  </ListContainer>
                   <ListContainer horizontal>
                     <template v-slot:list>
                       <ListItem
@@ -211,15 +203,21 @@
             </div>
             <div>
               <button
-                class="btn btn--primary"
+                class="btn btn--danger btn--icon"
                 @click.stop="onRemoveSetting(i)"
                 :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
               >
-                - Setting
+                <svg width="24px" height="24px" viewBox="0 0 24 24">
+                  <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
               </button>
             </div>
           </div>
-          <button class="btn btn--primary" @click="onAddAlertSetting">Add Setting</button>
+          <button class="btn btn--secondary btn--icon" @click="onAddAlertSetting">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+            </svg>
+          </button>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">
@@ -489,6 +487,11 @@ textarea {
   &__previous-step {
     @include muted-font(12);
   }
+  &__groups {
+    &__group {
+      display: flex;
+    }
+  }
   &__message {
     display: flex;
     height: 20rem;
@@ -518,8 +521,18 @@ textarea {
   }
 }
 .btn {
+  &--danger {
+    @include button-danger();
+  }
   &--primary {
     @include primary-button();
+  }
+  &--secondary {
+    @include secondary-button();
+  }
+
+  &--icon {
+    @include --icon();
   }
 }
 </style>

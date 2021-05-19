@@ -11,6 +11,7 @@ from django.db.models import Q
 from background_task import background
 from rest_framework.exceptions import ValidationError
 
+from managr.api.decorators import sf_api_exceptions
 from managr.slack import constants as slack_const
 
 from managr.slack.helpers import requests as slack_requests
@@ -56,6 +57,7 @@ def _process_init_alert(config_id,):
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
+@sf_api_exceptions(rethrow=True)
 def _process_check_alert(config_id, user_id):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
@@ -135,3 +137,5 @@ def _process_check_alert(config_id, user_id):
                     res = slack_requests.send_channel_message(
                         channel_id, access_token, text=text, block_set=blocks
                     )
+    return
+

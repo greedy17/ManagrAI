@@ -27,6 +27,7 @@ export class SObjectField extends Model {
   static value = new fields.CharField()
   static displayValue = new fields.CharField()
   static referenceDisplayLabel = new fields.CharField({ readOnly: true })
+  static filterable = new fields.CharField({ readOnly: true })
   static order = new fields.IntegerField()
 
   static fromAPI(json = {}) {
@@ -73,6 +74,8 @@ const INPUT_TYPE_MAP = {
   Long: 'number',
   TextArea: 'text',
   String: 'text',
+  Date: 'number',
+  DateTime: 'number',
 }
 const ALERT_DATA_TYPE_MAP = {
   Currency: DECIMAL,

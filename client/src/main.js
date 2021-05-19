@@ -25,8 +25,10 @@ import { formatDateShort, constantToCapitalized } from '@/services/utils'
 import {
   formatDateShortWithTime,
   momentDateTime,
+  momentDateShort,
   momentDateTimeShort,
   timeAgo,
+  toNumberSuffix,
   timeToNow,
   prependUrlProtocol,
   roundToOneDecimalPlace,
@@ -56,6 +58,7 @@ Vue.use(VueGoogleMaps, {
 Vue.use(VTooltip)
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)
+Vue.filter('momentDateShort', momentDateShort)
 Vue.filter('currency', currencyFilter)
 Vue.filter('currencyNoCents', currencyFilterNoCents)
 Vue.filter('dateShort', formatDateShort)
@@ -68,6 +71,7 @@ Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
 Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
 Vue.filter('timeOnlyShort', timeOnlyShort)
 Vue.filter('capitalCase', toCapitalCase)
+Vue.filter('numberSuffix', toNumberSuffix)
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })

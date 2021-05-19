@@ -77,7 +77,7 @@ export default {
     &__body {
       font-size: 16px;
       margin: 0rem 1rem;
-      max-width: 35rem;
+      width: 25rem;
     }
     &__heading {
       display: flex;

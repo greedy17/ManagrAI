@@ -38,6 +38,7 @@ class SObjectFieldAdapter:
         self.required = data.get("required", None)
         self.unique = data.get("unique", None)
         self.value = data.get("value", None)
+        self.filterable = data.get("filterable", None)
         self.display_value = data.get("display_value", "")
         self.options = data.get("options", [])
         self.integration_source = data.get("integration_source", "")

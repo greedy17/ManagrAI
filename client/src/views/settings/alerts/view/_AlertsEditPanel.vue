@@ -59,6 +59,7 @@
               <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
+                    @item-selected="onDeleteOperand(operand.id)"
                     medium
                     v-for="(operand, i) in group.operandsRef"
                     :key="i"
@@ -68,7 +69,6 @@
                       }     ${operand.operandOperator}     ${operand.operandValue} `
                     "
                     :active="true"
-                    showIcon
                   />
                 </template>
               </ListContainer>
@@ -82,13 +82,11 @@
               v-model="messageTemplateForm.field.notificationText.value"
               :errors="messageTemplateForm.field.notificationText.errors"
             />
-            <div
-              class="alerts-template-list__content-message__form-body"
-              style="height:5rem;width:30rem;"
-            >
+            <div class="alerts-template-list__content-message__form-body">
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
+                    style="width:20rem;"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -99,6 +97,31 @@
                   />
                 </template>
               </FormField>
+            </div>
+            <div class="alerts-page__message-options-body__bindings">
+              <DropDownSearch
+                :items="fields.list"
+                @input="bindText(`${alert.resourceType}.${$event}`)"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Select a field"
+                searchable
+                :hasNext="!!fields.pagination.hasNextPage"
+                @load-more="fieldNextPage"
+                @search-term="onSearchFields"
+                small
+              />
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    :key="key"
+                    v-for="(val, key) in recipientBindings"
+                    :item="val.referenceDisplayLabel"
+                    :active="true"
+                    @item-selected="bindText(`__Recipient.${val.apiName}`)"
+                  />
+                </template>
+              </ListContainer>
             </div>
           </div>
           <div class="alerts-template-list__content-message__preview">
@@ -111,6 +134,7 @@
             <ListContainer horizontal>
               <template v-slot:list>
                 <ListItem
+                  @item-selected="onDeleteConfig(config.id)"
                   large
                   :key="index"
                   v-for="(config, index) in alert.configsRef"
@@ -120,7 +144,6 @@
                     } to ${config.recipients.join(',')} `
                   "
                   :active="true"
-                  showIcon
                 />
               </template>
             </ListContainer>
@@ -153,6 +176,7 @@ import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
+import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  *
@@ -169,6 +193,8 @@ import {
 
 import AlertTemplate, {
   AlertMessageTemplate,
+  AlertConfig,
+  AlertGroup,
   AlertGroupForm,
   AlertTemplateForm,
   AlertConfigForm,
@@ -176,6 +202,12 @@ import AlertTemplate, {
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
+import {
+  SObjectField,
+  SObjectValidations,
+  SObjectPicklist,
+  NON_FIELD_ALERT_OPTS,
+} from '@/services/salesforce'
 
 const TABS = [
   { key: 'TEMPLATE', label: 'General Info' },
@@ -193,6 +225,7 @@ export default {
     ListItem,
     ListContainer,
     PulseLoadingSpinner,
+    DropDownSearch,
   },
   props: {
     alert: {
@@ -210,7 +243,22 @@ export default {
       selectedTab: TABS[0].key,
       savedChanges: false,
       savingInTab: false,
+      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      recipientBindings: [
+        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
+        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
+        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
+        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
+      ],
     }
+  },
+  watch: {
+    async selectedTab(val, curr) {
+      if (val && val == 'MESSAGE' && val != curr) {
+        this.fields.filters.salesforceObject = this.alert.resourceType
+        this.fields.refresh()
+      }
+    },
   },
   computed: {
     alertObj() {
@@ -220,8 +268,40 @@ export default {
         resourceType: this.alert.resourceType,
       }
     },
+    editor() {
+      return this.$refs['message-body'].quill
+    },
   },
   methods: {
+    async onDeleteOperand(id) {
+      // await AlertGroup.api.delete(id)
+      return
+    },
+
+    async onDeleteConfig(id) {
+      // await AlertConfig.api.delete(id)
+      return
+    },
+    async onSearchFields(v) {
+      this.fields.pagination = new Pagination()
+      this.fields.filters = {
+        ...this.fields.filters,
+        search: v,
+      }
+      await this.fields.refresh()
+    },
+    async fieldNextPage() {
+      await this.fields.addNextPage()
+    },
+
+    bindText(val) {
+      this.$refs['message-body'].quill.focus()
+      let start = 0
+      if (this.editor.selection.lastRange) {
+        start = this.editor.selection.lastRange.index
+      }
+      this.editor.insertText(start, `{ ${val} }`)
+    },
     async updateTemplate(field) {
       this.templateTitleField.validate()
       if (this.templateTitleField.isValid) {
@@ -273,7 +353,7 @@ export default {
       }
     },
   },
-  created() {
+  async created() {
     // populate values for stand alone fields
     // for this version only allowing edit of certain fields or delete of array items
     if (this.alert) {
@@ -327,9 +407,9 @@ export default {
 }
 .alerts-template-list__content-message {
   display: flex;
-  justify-content: space-between;
-
+  justify-content: space-evenly;
   &__form {
+    width: 30rem;
   }
   &__preview {
   }

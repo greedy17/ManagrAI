@@ -41,16 +41,32 @@
   }
 }
 
+@mixin --icon($ptb: 0.5rem, $plr: 0.5rem) {
+  border-radius: 50%;
+  padding: $ptb $plr;
+}
+
 @mixin secondary-button() {
   @include base-button();
   background-color: $silver;
   color: $main-font-gray;
+  &:hover {
+    box-shadow: 1px 1px 5px -1px $dark-green, -1px -1px 5px -1px $dark-green;
+    fill: $dark-green;
+  }
 }
 
 @mixin button-danger() {
   @include base-button();
   background-color: $coral;
   color: $white;
+  fill: $white;
+  &:hover {
+    background-color: $silver;
+    color: $main-font-gray;
+    box-shadow: 1px 1px 5px -1px $coral, -1px -1px 5px -1px $coral;
+    fill: $coral;
+  }
 }
 
 @mixin disabled-button-styles() {
