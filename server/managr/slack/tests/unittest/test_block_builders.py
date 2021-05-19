@@ -379,21 +379,23 @@ class TestMultiExternalSelect(TestCase):
 
     def test_initial_options(self):
         result = multi_external_select(
-            label="test label",
-            block_id="test block",
+            label="label_test",
+            action_id="test123",
             initial_options=[{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
-            action_id="init_id_text",
+            placeholder="Select",
+            block_id="test_id",
+            min_query_length=0,
         )
         self.assertEqual(
             result,
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": "test label"},
-                "block_id": "test block",
+                "text": {"type": "mrkdwn", "text": "label_test"},
+                "block_id": "test_id",
                 "accessory": {
                     "type": "multi_external_select",
-                    "placeholder": {"type": "plain_text", "text": "initial options test"},
-                    "action_id": "init_id_text",
+                    "placeholder": {"type": "plain_text", "text": "Select"},
+                    "action_id": "test123",
                     "min_query_length": 0,
                     "initial_options": [
                         {"text": {"type": "plain_text", "text": "test"}, "value": "test",}
