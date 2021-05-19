@@ -127,7 +127,7 @@ class OrgCustomSlackFormQuerySet(models.QuerySet):
 
 
 class OrgCustomSlackForm(TimeStampModel):
-    """Model to store the organizations JSON-based custom Slack form config - these are templates """
+    """Model to store the organizations JSON-based custom Slack form config - these are templates"""
 
     organization = models.ForeignKey(
         "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
@@ -175,7 +175,7 @@ class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
 
 
 class OrgCustomSlackFormInstance(TimeStampModel):
-    """Model to store the instances created when a form is submitted from slack """
+    """Model to store the instances created when a form is submitted from slack"""
 
     user = models.ForeignKey(
         "core.User", related_name="custom_slack_form_instances", on_delete=models.CASCADE,
@@ -235,11 +235,11 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return user_fields
 
     def generate_form(self, data=None):
-        """ 
-        Collects all the fields 
-        and creates them into an object 
-        that has all the necessary fields as 
-        slack blocks 
+        """
+        Collects all the fields
+        and creates them into an object
+        that has all the necessary fields as
+        slack blocks
         If a resource is available it's current values
         will be passed in as values
         ## Optionally pass in data to override instance data
@@ -306,7 +306,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return vals
 
     def save_form(self, state, from_slack_object=True):
-        """ gets all form values but only saves values for fields """
+        """gets all form values but only saves values for fields"""
         # this is a HACK because we needed to concatenate all stage gating forms since
         # we can only show 3 stacked forms
         values = self.get_values(state) if from_slack_object else state

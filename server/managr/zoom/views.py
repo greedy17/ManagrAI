@@ -115,10 +115,10 @@ def revoke_zoom_access_token(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_deauth_webhook(request):
-    """ 
-        When a user uninstalls the zoom app directly from their apps we will be notified here 
-        We must complete the steps provided in this document 
-        https://marketplace.zoom.us/docs/guides/publishing/data-compliance
+    """
+    When a user uninstalls the zoom app directly from their apps we will be notified here
+    We must complete the steps provided in this document
+    https://marketplace.zoom.us/docs/guides/publishing/data-compliance
     """
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
@@ -336,4 +336,3 @@ def score_meetings(request):
     call_command("generatemeetingscores")
 
     return Response(data="Scoring Meeting...")
-

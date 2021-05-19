@@ -119,11 +119,11 @@ def sf_api_exceptions(error_key):
 
 
 def slack_api_exceptions(rethrow=False, return_opt=None):
-    """ 
-        Decorator for cathcing common slack errors 
-        return_object: if provided will return what is passed eg return Response()
-        rethrow: False will rethrow any caught errors if provided (return object will override)
-        
+    """
+    Decorator for cathcing common slack errors
+    return_object: if provided will return what is passed eg return Response()
+    rethrow: False will rethrow any caught errors if provided (return object will override)
+
     """
 
     def error_fn(func):

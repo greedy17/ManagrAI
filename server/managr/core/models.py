@@ -89,7 +89,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         return self._create_user(email, password, **extra_fields)
 
     def create_admin_user(self, email, password=None, **extra_fields):
-        """ An Admin user is the one who set up the initial account and org """
+        """An Admin user is the one who set up the initial account and org"""
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
@@ -169,7 +169,7 @@ class User(AbstractUser, TimeStampModel):
 
     @property
     def activation_link(self):
-        """ Generate A Link for the User who has been invited to complete registration """
+        """Generate A Link for the User who has been invited to complete registration"""
         base_url = site_utils.get_site_url()
         return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
 
@@ -254,7 +254,7 @@ class NylasAuthAccount(TimeStampModel):
         return f"{self.email_address}"
 
     def revoke(self):
-        """ method to revoke access if account is changed, user is removed"""
+        """method to revoke access if account is changed, user is removed"""
         revoke_access_token(self.access_token)
         return self.delete()
 
@@ -284,9 +284,9 @@ class NotificationQuerySet(models.QuerySet):
 
 
 class Notification(TimeStampModel):
-    """ By default Notifications will only return alerts
-        We also will allow the code to access all types of notifications
-        SLACK, EMAIL, ALERT when checking whether or not it should create an alert
+    """By default Notifications will only return alerts
+    We also will allow the code to access all types of notifications
+    SLACK, EMAIL, ALERT when checking whether or not it should create an alert
     """
 
     notify_at = models.DateTimeField(

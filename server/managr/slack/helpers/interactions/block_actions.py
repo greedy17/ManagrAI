@@ -389,7 +389,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
-    """ opens a modal with the options to search or create """
+    """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
 
@@ -443,7 +443,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
-    """ depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
@@ -532,7 +532,7 @@ def process_meeting_selected_resource_option(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
-    """ attaches a drop down to the message block for selecting a resource type """
+    """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
@@ -791,9 +791,9 @@ def process_create_task(payload, context):
 
 @processor()
 def process_request_invite_from_home_tab(payload, context):
-    """ 
-        According to slack anyone can see the home tab if a user triggers the home event 
-        And is not a user we show a button to request access, this will ask the is_admin user to invite them
+    """
+    According to slack anyone can see the home tab if a user triggers the home event
+    And is not a user we show a button to request access, this will ask the is_admin user to invite them
     """
     # get the org team
     team_id = payload["user"]["team_id"]

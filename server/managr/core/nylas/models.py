@@ -29,12 +29,12 @@ class NylasAccountStatus:
 
     @property
     def data(self):
-        """ returns an object as a dictionary to pass in response if needed """
+        """returns an object as a dictionary to pass in response if needed"""
         return self.__dict__()
 
     @property
     def account_id(self):
-        """ helper to retrun account_id """
+        """helper to retrun account_id"""
         return self.details["account_id"]
 
 
@@ -48,7 +48,7 @@ class NylasAccountStatusList:
         self.items = [NylasAccountStatus(item) for item in deltas]
 
     def values(self, *args):
-        """ returns values as list of lists for each key passed if it exists"""
+        """returns values as list of lists for each key passed if it exists"""
         collected = []
         for v in self.items:
             current = []
