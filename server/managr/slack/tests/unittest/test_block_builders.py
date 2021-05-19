@@ -126,7 +126,6 @@ class TestStaticSelect(TestCase):
             initial_option=option("Test", "TEST"),
             block_id="1",
         )
-        print(result.keys())
         self.assertTrue("initial_option" in result["accessory"].keys())
         self.assertTrue(result["accessory"]["initial_option"]["value"] == "TEST")
 
