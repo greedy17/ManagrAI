@@ -17,6 +17,7 @@ from managr.slack.helpers.block_builders import (
     option,
     divider_block,
     header_block,
+    checkbox_block,
 )
 
 
@@ -242,6 +243,57 @@ class TestSectionWithButtonBlock(TestCase):
                     "text": {"type": "plain_text", "text": "Test"},
                     "value": "TEST",
                     "action_id": "1",
+                },
+            },
+        )
+
+
+class TestCheckBoxBlock(TestCase):
+    """unit test for checkbox block"""
+
+    def test_returned_block(self):
+        result = checkbox_block(
+            "test",
+            [{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+            action_id="action_test",
+            initial_options=None,
+            block_id="block_test",
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "block_id": "block_test",
+                "text": {"type": "mrkdwn", "text": "test"},
+                "accessory": {
+                    "type": "checkboxes",
+                    "action_id": "action_test",
+                    "options": [{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+                },
+            },
+        )
+
+    def test_initial_options(self):
+        result = checkbox_block(
+            "test",
+            [{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+            initial_options=[{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+            block_id="block_test",
+            action_id="block_test",
+        )
+        self.assertEqual(
+            result,
+            {
+                "type": "section",
+                "block_id": "block_test",
+                "text": {"type": "mrkdwn", "text": "test"},
+                "accessory": {
+                    "type": "checkboxes",
+                    "action_id": "block_test",
+                    "options": [{"text": {"type": "plain_text", "text": "test"}, "value": "test",}],
+                    "initial_options": [
+                        {"text": {"type": "plain_text", "text": "test"}, "value": "test",}
+                    ],
                 },
             },
         )
