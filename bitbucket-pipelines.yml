@@ -274,10 +274,17 @@ pipelines:
           - step: *vueAppBuild
           - step: *e2eTests
           - step: *djangoTests
-      - step: *fargateDemoDeployment
+      #- step: *fargateDemoDeployment
       #- step: *fargatePRDeployment
       #- step: *fargateStagingDeployment
       #- step: *fargateProdDeployment
+
+    feature/*test: # specifically point staging to this branch
+      - parallel:
+          - step: *vueAppBuild
+          - step: *e2eTests
+          - step: *djangoTests
+      - step: *fargateStagingDeployment
   branches:
     develop:
       - parallel:
