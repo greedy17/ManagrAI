@@ -283,10 +283,11 @@ pipelines:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      - parallel:
+      #- parallel:
           #- step: *herokuStagingDeployment
-          - step: *fargateDemoDeployment
-          - step: *fargateStagingDeployment
+      - step: *fargateDemoDeployment
+      - step: *fargateStagingDeployment
+          #- step: *fargateStagingDeployment
           # - step: *fargatePRTeardown
 
 definitions:
