@@ -564,7 +564,7 @@ def process_update_meeting_contact(payload, context):
 
 @processor()
 def process_edit_meeting_contact(payload, context):
-    """ This Submission returns the update form stacked on top of the view contacts form """
+    """This Submission returns the update form stacked on top of the view contacts form"""
     action = slack_const.VIEWS_UPDATE
     url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]

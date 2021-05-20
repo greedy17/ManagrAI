@@ -123,4 +123,10 @@ export class UserInviteForm extends Form {
   }
 }
 
+export class UserLoginForm extends Form {
+  static email = new FormField({ validators: [new RequiredValidator()] })
+
+  static password = new FormField({ validators: [new RequiredValidator({})] })
+}
+
 export { MustMatchValidator }

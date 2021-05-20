@@ -42,24 +42,13 @@ class ZoomAuthAccountQuerySet(models.QuerySet):
 class ZoomAuthAccount(TimeStampModel):
     user = models.OneToOneField("core.User", on_delete=models.CASCADE, related_name="zoom_account")
     zoom_id = models.CharField(max_length=255, unique=True)
-    first_name = models.CharField(max_length=255, null=True, blank=True)
-    last_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.CharField(max_length=255)
     type = models.PositiveSmallIntegerField()
     role_name = models.CharField(max_length=255, null=True, blank=True)
-    personal_meeting_url = models.CharField(max_length=255)
     timezone = models.CharField(max_length=255)
-    verified = models.PositiveSmallIntegerField()
-    dept = models.CharField(max_length=255, blank=True, null=True)
-    pic_url = models.CharField(max_length=255, blank=True, null=True)
-    pmi = models.CharField(max_length=255, blank=True, null=True, help_text="personal meeting id")
-    use_pmi = models.BooleanField(default=False)
     host_key = models.CharField(max_length=255)
-    jid = models.CharField(max_length=255)
     account_id = models.CharField(max_length=255)
     language = models.CharField(max_length=150, null=True, blank=True)
-    phone_country = models.CharField(max_length=150, null=True, blank=True)
-    phone_number = models.CharField(max_length=150, null=True, blank=True)
     status = models.CharField(max_length=150)
     access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
@@ -332,7 +321,7 @@ class ZoomMeeting(TimeStampModel):
 
 
 class MeetingReview(TimeStampModel):
-    """ Parent Model in preparation for other meeting types (aka not zoom) """
+    """Parent Model in preparation for other meeting types (aka not zoom)"""
 
     resource_type = models.CharField(blank=True, max_length=255)
     resource_id = models.CharField(blank=True, max_length=255)
@@ -397,7 +386,7 @@ class ZoomMeetingReview(MeetingReview):
 
     @property
     def meeting_resource(self):
-        """ determines whether this is a meeting review for a meeting with an opp or an acct"""
+        """determines whether this is a meeting review for a meeting with an opp or an acct"""
         return self.meeting.workflow.meeting_resource
 
     @property

@@ -14,6 +14,7 @@
     "test:e2e": "vue-cli-service test:e2e"
   },
   "dependencies": {
+    "@datadog/browser-rum": "^2.6.2",
     "@thinknimble/button": "^0.4.0",
     "@thinknimble/collection-search": "^0.5.2",
     "@thinknimble/dropdownselect": "0.0.4",

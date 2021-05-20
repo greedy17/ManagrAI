@@ -85,7 +85,7 @@
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
           class="primary-button"
-          text="Connect"
+          :text="slackButtonMessage"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
         ></PulseLoadingSpinnerButton>
         <PulseLoadingSpinnerButton
@@ -105,7 +105,7 @@
         </div>
 
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
-        <div style="margin-bottom:0.5rem;width:15rem;">
+        <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
             @click="onGetAuthLink('NYLAS')"
             :loading="generatingToken && selectedIntegration == 'NYLAS'"
@@ -151,6 +151,13 @@
       We take your security and privacy very seriously. Your data is encrypted, and not being stored
       by Managr.
     </div>
+    <p>
+      <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+      |
+      <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+      |
+      <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+    </p>
   </div>
 </template>
 
@@ -199,11 +206,17 @@ export default {
       try {
         await this.selectedIntegrationSwitcher.api.revoke()
       } finally {
-        this.generatingToken = false
         this.$store.dispatch('refreshCurrentUser')
+        this.generatingToken = false
       }
     },
     async onIntegrateSlack() {
+      const confirmation = confirm(
+        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+      )
+      if (!confirmation) {
+        return
+      }
       this.generatingToken = true
       if (!this.orgHasSlackIntegration) {
         if (this.userCanIntegrateSlack) {
@@ -236,6 +249,7 @@ export default {
     if (this.$route.query.code) {
       this.generatingToken = true
       this.selectedIntegration = this.$route.query.state // state is the current integration name
+
       try {
         const modelClass = this.selectedIntegrationSwitcher
         if (this.selectedIntegration != 'SLACK') {
@@ -243,13 +257,7 @@ export default {
         } else {
           // auto sends a channel message, will also send a private dm
           await SlackOAuth.api.generateAccessToken(this.$route.query.code)
-          await SlackOAuth.api.testDM()
         }
-
-        this.$router.replace({
-          name: 'Integrations',
-          params: {},
-        })
       } catch (e) {
         let { response } = e
         if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
@@ -263,9 +271,14 @@ export default {
           }
         }
       } finally {
-        this.$store.dispatch('refreshCurrentUser')
+        await this.$store.dispatch('refreshCurrentUser')
+
         this.generatingToken = false
         this.selectedIntegration = null
+        this.$router.replace({
+          name: 'Integrations',
+          params: {},
+        })
       }
     }
   },
@@ -305,6 +318,15 @@ export default {
     },
     user() {
       return this.$store.state.user
+    },
+    slackButtonMessage() {
+      if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
+        return 'Connect Workspace'
+      } else if (this.orgHasSlackIntegration && !this.hasSlackIntegration) {
+        return 'Connect'
+      } else {
+        return 'N/A'
+      }
     },
   },
 }

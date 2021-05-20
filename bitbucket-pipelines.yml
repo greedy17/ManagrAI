@@ -49,6 +49,222 @@ herokuStagingDeployment: &herokuStagingDeployment
   script:
     - git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git develop:master -f
 
+
+fargatePRDeployment: &fargatePRDeployment
+  name: Deploy pull request to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: andrew
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install Terraform and the AWS CLI
+    - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+    - apt-add-repository -y "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    - apt-get update && apt-get install -y terraform
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:pr-$BITBUCKET_PR_ID" -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'pr-${BITBUCKET_PR_ID} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'pr-${BITBUCKET_PR_ID} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
+        TAGS: 'pr-${BITBUCKET_PR_ID} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Initialize Terraform
+    - cd deploy/infra/pr
+    - terraform init -backend-config="key=pr-$BITBUCKET_PR_ID-tfstate"
+    - terraform plan -no-color
+    - terraform apply -auto-approve
+
+fargatePRTeardown: &fargatePRTeardown
+  name: Teardown AWS Fargate pull request environment
+  image: atlassian/default-image:2
+  deployment: andrew
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install Terraform
+    - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+    - apt-add-repository -y "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    - apt-get update && apt-get install -y terraform
+
+
+    # Initialize Terraform
+    - cd deploy/infra/pr
+    - terraform init -backend-config="key=pr-$BITBUCKET_PR_ID-tfstate"
+    - terraform destroy -auto-approve
+
+fargateStagingDeployment: &fargateStagingDeployment
+  name: Deploy Staging to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: Staging
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install jq and the AWS CLI
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Dynamically update Fargate task definition
+    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
+    # Deploy to Fargate
+    - pipe: atlassian/aws-ecs-deploy:1.5.0
+      variables:
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
+        TASK_DEFINITION: 'task-definition.json' # Optional
+        FORCE_NEW_DEPLOYMENT: 'true' # Optional
+        WAIT: 'true' # Optional 
+        # DEBUG: '<string>' # Optional
+
+fargateDemoDeployment: &fargateDemoDeployment
+  name: Deploy Demo to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: Demo
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install jq and the AWS CLI
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:demo" -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'demo-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'demo-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
+        TAGS: 'demo-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Dynamically update Fargate task definition
+    - TASK_FAMILY="managr-app-task-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
+    # Deploy to Fargate
+    - pipe: atlassian/aws-ecs-deploy:1.5.0
+      variables:
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
+        TASK_DEFINITION: 'task-definition.json' # Optional
+        FORCE_NEW_DEPLOYMENT: 'true' # Optional
+        WAIT: 'true' # Optional 
+        # DEBUG: '<string>' # Optional
+
+fargateProdDeployment: &fargateProdDeployment
+  name: Deploy Prod to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: Production
+  services:
+    - docker
+  caches:
+    - docker
+  script:
+    # Install jq and the AWS CLI
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:prod" -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
+
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
+        TAGS: 'prod-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+
+    # Dynamically update Fargate task definition
+    - TASK_FAMILY="managr-app-task-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
+    # Deploy to Fargate
+    - pipe: atlassian/aws-ecs-deploy:1.5.0
+      variables:
+        CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
+        SERVICE_NAME: $AWS_ECS_SERVICE_NAME
+        TASK_DEFINITION: 'task-definition.json' # Optional
+        FORCE_NEW_DEPLOYMENT: 'true' # Optional
+        WAIT: 'true' # Optional 
+        # DEBUG: '<string>' # Optional
+
 pipelines:
   # Insert other test or build pipelines here as appropriate.
   # NOTE: If this is not a Vue app, then disable the 'vueAppBuild' and 'e2eTests' steps in the pipelines below.
@@ -58,12 +274,28 @@ pipelines:
           - step: *vueAppBuild
           - step: *e2eTests
           - step: *djangoTests
+      #- step: *fargateDemoDeployment
+      #- step: *fargatePRDeployment
+      #- step: *fargateStagingDeployment
+      #- step: *fargateProdDeployment
+
+    feature/*test: # specifically point staging to this branch
+      - parallel:
+          - step: *vueAppBuild
+          - step: *e2eTests
+          - step: *djangoTests
+      - step: *fargateStagingDeployment
   branches:
     develop:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      - step: *herokuStagingDeployment
+      #- parallel:
+          #- step: *herokuStagingDeployment
+      #- step: *fargateDemoDeployment
+      - step: *fargateStagingDeployment
+          #- step: *fargateStagingDeployment
+          # - step: *fargatePRTeardown
 
 definitions:
   caches:
@@ -77,3 +309,5 @@ definitions:
         POSTGRES_DB: test_db
         POSTGRES_USER: managr
         POSTGRES_PASSWORD: manager
+    docker:
+      memory: 2048

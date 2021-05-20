@@ -63,8 +63,8 @@ export default class UserAPI {
     }
   }
 
-  login(email, password) {
-    const data = { email, password }
+  login(d) {
+    const data = { ...d }
     const promise = apiClient()
       .post(LOGIN_ENDPOINT, data)
       .catch(

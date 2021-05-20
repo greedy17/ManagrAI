@@ -389,7 +389,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
-    """ opens a modal with the options to search or create """
+    """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
 
@@ -443,7 +443,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
-    """ depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
@@ -532,7 +532,7 @@ def process_meeting_selected_resource_option(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
-    """ attaches a drop down to the message block for selecting a resource type """
+    """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
@@ -789,6 +789,44 @@ def process_create_task(payload, context):
         )
 
 
+@processor()
+def process_request_invite_from_home_tab(payload, context):
+    """
+    According to slack anyone can see the home tab if a user triggers the home event
+    And is not a user we show a button to request access, this will ask the is_admin user to invite them
+    """
+    # get the org team
+    team_id = payload["user"]["team_id"]
+    new_user_slack_id = payload["actions"][0]["value"]
+    # get the is_admin user
+    o = Organization.objects.filter(slack_integration__team_id=team_id).first()
+    u = o.users.filter(is_admin=True).first()
+    # send a message to invite the user
+    slack_requests.send_ephemeral_message(
+        u.slack_integration.channel,
+        o.slack_integration.access_token,
+        u.slack_integration.slack_id,
+        text="User requested an invite",
+        block_set=[
+            block_builders.simple_section(
+                f"<@{new_user_slack_id}> has requested an invite to Managr", "mrkdwn"
+            )
+        ],
+    )
+    old_view = payload["view"]
+    blocks = old_view["blocks"]
+    # remove the request button
+    index, block = block_finder("INVITE_BUTTON", blocks)
+    new_blocks = [
+        *blocks[0:index],
+        block_builders.simple_section("Invite Sent"),
+        *blocks[index + 1 :],
+    ]
+    view = {"type": "home", "blocks": new_blocks}
+    slack_requests.publish_view(new_user_slack_id, o.slack_integration.access_token, view)
+    # update the home tab of the user with message that it was sent
+
+
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
 
@@ -857,6 +895,7 @@ def handle_block_actions(payload):
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
+        slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
