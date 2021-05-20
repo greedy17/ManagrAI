@@ -15,4 +15,19 @@ BASH_ENV=/container.env
 
 ## syncs resource fields from sf every 0th minute of the 12th hour (currently managed here there is also a datetime added to the function we can apply to change when the task is executed)
 
-0 */12 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py initobjectfieldsync --duration 3600' > /proc/1/fd/1 2>/proc/1/fd/2
+0 */12 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py initobjectfieldsync' > /proc/1/fd/1 2>/proc/1/fd/2
+
+## Automatically sends a task list at 7 am UTC (3 am EST) to users
+
+## 0 7 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py sendslacktasks' > /proc/1/fd/1 2>/proc/1/fd/2
+
+## Automatically clear's stale data at Midnight UTC that hasn't been updated for at least 24 hours (1440 mins)
+
+0 0 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py clearsfstaledata 1440' > /proc/1/fd/1 2>/proc/1/fd/2
+
+
+## Automatically run alerts everyday at 7am est 11am UTC
+
+0 11 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py triggeralerts' > /proc/1/fd/1 2>/proc/1/fd/2
+
+

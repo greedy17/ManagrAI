@@ -285,7 +285,7 @@ pipelines:
           - step: *e2eTests
       #- parallel:
           #- step: *herokuStagingDeployment
-      - step: *fargateDemoDeployment
+      #- step: *fargateDemoDeployment
       - step: *fargateStagingDeployment
           #- step: *fargateStagingDeployment
           # - step: *fargatePRTeardown
