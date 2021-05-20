@@ -1,5 +1,6 @@
 import os
 import dj_database_url
+import requests
 from managr.utils import sites as site_utils
 
 
@@ -46,6 +47,28 @@ CURRENT_DOMAIN = _env_get_required("CURRENT_DOMAIN")
 CURRENT_PORT = os.environ.get("CURRENT_PORT")
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
+
+### Get allowed hosts from ecs
+
+EC2_PRIVATE_IP = None
+METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", "http://169.254.170.2/v2/metadata")
+
+try:
+    resp = requests.get(METADATA_URI)
+    data = resp.json()
+    # print(data)
+
+    container_meta = data["Containers"][0]
+    EC2_PRIVATE_IP = container_meta["Networks"][0]["IPv4Addresses"][0]
+except:
+    # silently fail as we may not be in an ECS environment
+    pass
+
+if EC2_PRIVATE_IP:
+    # Be sure your ALLOWED_HOSTS is a list NOT a tuple
+    # or .append() will fail
+    ALLOWED_HOSTS.append(EC2_PRIVATE_IP)
+
 if CURRENT_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(CURRENT_DOMAIN)
 
@@ -381,21 +404,6 @@ if USE_SLACK:
     SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
     SLACK_SIGNING_SECRET = _env_get_required("SLACK_SIGNING_SECRET")
     SLACK_APP_VERSION = _env_get_required("SLACK_APP_VERSION")
-
-TEST_SLACK = os.environ.get("TEST_SLACK") == "True"
-if USE_SLACK and TEST_SLACK:
-    SLACK_TEST_TEAM_NAME = _env_get_required("SLACK_TEST_TEAM_NAME")
-    SLACK_TEST_TEAM_ID = _env_get_required("SLACK_TEST_TEAM_ID")
-    SLACK_TEST_BOT_USER_ID = _env_get_required("SLACK_TEST_BOT_USER_ID")
-    SLACK_TEST_ACCESS_TOKEN = _env_get_required("SLACK_TEST_ACCESS_TOKEN")
-    SLACK_TEST_INCOMING_WEBHOOK_URL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_URL")
-    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL = _env_get_required("SLACK_TEST_INCOMING_WEBHOOK_CHANNEL")
-    SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID = _env_get_required(
-        "SLACK_TEST_INCOMING_WEBHOOK_CHANNEL_ID"
-    )
-    SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL = _env_get_required(
-        "SLACK_TEST_INCOMING_WEBHOOK_CONFIGURATION_URL"
-    )
 
 
 USE_SALESFORCE = os.environ.get("USE_SALESFORCE") == "True"
