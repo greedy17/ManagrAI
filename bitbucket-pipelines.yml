@@ -296,6 +296,16 @@ pipelines:
       - step: *fargateStagingDeployment
           #- step: *fargateStagingDeployment
           # - step: *fargatePRTeardown
+    master:
+      - parallel:
+          - step: *djangoTests
+          - step: *e2eTests
+      #- parallel:
+          #- step: *herokuStagingDeployment
+      #- step: *fargateDemoDeployment
+      - step: *fargateProdDeployment
+          #- step: *fargateStagingDeployment
+          # - step: *fargatePRTeardown
 
 definitions:
   caches:
