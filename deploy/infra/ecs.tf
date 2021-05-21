@@ -46,7 +46,7 @@ data "template_file" "managr_app" {
     nginx_config   = base64encode(data.template_file.nginx_config[each.key].rendered)
     aws_logs_group = aws_cloudwatch_log_group.managr_log_group[each.key].name
 
-    environment               = each.value.name
+    environment               = each.value.environment
     app_image                 = each.value.app_image
     nginx_image               = aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url
     app_image_scheduled_tasks = each.value.app_image_scheduled_tasks

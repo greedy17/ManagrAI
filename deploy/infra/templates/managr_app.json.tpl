@@ -21,6 +21,7 @@
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
+      { "name": "ENVIRONMENT", "value": "${environment}" },
 
       { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
       { "name": "USE_NYLAS", "value": "${use_nylas}" },
