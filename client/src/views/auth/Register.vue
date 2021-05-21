@@ -50,7 +50,7 @@
             :errors="registrationForm.field.password.errors"
             v-model="registrationForm.field.password.value"
             placeholder=""
-            type="password"
+            intputType="password"
             large
             bordered
           />
@@ -60,7 +60,7 @@
             :errors="registrationForm.field.confirmPassword.errors"
             v-model="registrationForm.field.confirmPassword.value"
             placeholder=""
-            type="password"
+            inputType="password"
             large
             bordered
           />

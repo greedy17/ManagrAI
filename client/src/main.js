@@ -1,3 +1,17 @@
+import { datadogRum } from '@datadog/browser-rum'
+
+datadogRum.init({
+  applicationId: process.env.VUE_APP_DD_APP_ID,
+  clientToken: process.env.VUE_APP_DD_CLIENT_TOKEN,
+  site: 'datadoghq.com',
+  service: 'managr',
+  env: process.env.VUE_APP_DD_ENV,
+  // Specify a version number to identify the deployed version of your application in Datadog
+  // version: '1.0.0',
+  sampleRate: 100,
+  trackInteractions: true,
+})
+
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import 'babel-polyfill'
@@ -72,6 +86,7 @@ Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
 Vue.filter('timeOnlyShort', timeOnlyShort)
 Vue.filter('capitalCase', toCapitalCase)
 Vue.filter('numberSuffix', toNumberSuffix)
+
 Vue.filter('pluralize', function(value, number) {
   return pluralize(value, number)
 })

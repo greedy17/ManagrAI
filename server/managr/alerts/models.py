@@ -47,7 +47,9 @@ class AlertTemplate(TimeStampModel):
         """ Generates Url Str for request when executing alert """
         user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
         operand_groups = [group.query_str(config_id) for group in self.groups.all()]
+
         operand_groups = f"AND ({' '.join(operand_groups)})"
+
         q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
             user_sf.salesforce_id,
             self.resource_type,

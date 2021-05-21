@@ -177,13 +177,13 @@ class UserTestCase(TestCase):
 
         self.assertEqual(row.query_str(self.config.id), expected)
 
-    def test_group_generates_query_string_w_and_cond(self):
+    def test_group_generates_query_string_wo_and_cond(self):
         """ 
             Tests that the appropriate qs was built for the row 
             NOTE if row is top group order it will not append operator
         """
 
-        expected = f"AND ({self.row.query_str(self.config.id)})"
+        expected = f"({self.row.query_str(self.config.id)})"
         self.assertEqual(self.group.query_str(self.config.id), expected)
 
     def test_group_generates_url_string(self):
@@ -192,10 +192,9 @@ class UserTestCase(TestCase):
             NOTE if row is top group order it will not append operator
         """
         adapter_class = adapter_routes.get(self.template.resource_type, None)
-        additional_filters = [
-            *adapter_class.additional_filters(),
-            *[group.query_str(self.config.id) for group in self.template.groups.all()],
-        ]
+        query_items = [group.query_str(self.config.id) for group in self.template.groups.all()]
+        query_items = f"AND ({' '.join(query_items)})"
+        additional_filters = [*adapter_class.additional_filters(), query_items]
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
         self.assertEqual(self.template.url_str(self.admin_user, (self.config.id)), expected)
 
