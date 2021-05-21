@@ -5,6 +5,7 @@ export default {
   requireAuth,
   homepageRedirect,
   requireUserTypeManagerOrStaff,
+  requireIsAdminAuth,
 }
 
 //  NOTE(Bruno 4-8-20): login/logout functionality is within the UserAPI.
@@ -58,13 +59,13 @@ function requireAuth(to, from, next) {
  * @description vue-router beforeEnter-style function to check user auth
  *              status and see if they are the isAdmin user redirect appropriately.
  */
-function requireAuth(to, from, next) {
+function requireIsAdminAuth(to, from, next) {
   if (!store.getters.userIsLoggedIn) {
     next({
       name: 'Login',
       query: { redirect: to.fullPath },
     })
-  } else if (!store.getters.user.isAdmin) {
+  } else if (!store.state.user.isAdmin) {
     next({
       name: 'Integrations',
       query: { redirect: to.fullPath },
