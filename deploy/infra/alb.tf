@@ -130,3 +130,35 @@ resource "aws_lb_listener_rule" "rule_https" {
     }
   }
 }
+
+resource "aws_lb_listener_rule" "rule_http_default" {
+  listener_arn = aws_alb_listener.front_end.arn
+  priority     = 200
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_alb_target_group.app["prod"].id
+  }
+
+  condition {
+    host_header {
+      values = [var.managr_domain]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "rule_https_default" {
+  listener_arn = aws_alb_listener.front_end_https.arn
+  priority     = 200
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_alb_target_group.app["prod"].id
+  }
+
+  condition {
+    host_header {
+      values = [var.managr_domain]
+    }
+  }
+}
