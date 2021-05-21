@@ -53,6 +53,26 @@ function requireAuth(to, from, next) {
     next()
   }
 }
+/**
+ * @function    requireIsAdminAuth
+ * @description vue-router beforeEnter-style function to check user auth
+ *              status and see if they are the isAdmin user redirect appropriately.
+ */
+function requireAuth(to, from, next) {
+  if (!store.getters.userIsLoggedIn) {
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath },
+    })
+  } else if (!store.getters.user.isAdmin) {
+    next({
+      name: 'Integrations',
+      query: { redirect: to.fullPath },
+    })
+  } else {
+    next()
+  }
+}
 
 /**
  * @function    homepageRedirect
