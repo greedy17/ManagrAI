@@ -60,11 +60,17 @@ def convertToSlackFormat(body):
         strips orphaned tags and cleans out other html
     """
     new_str = body
-    new_str = re.sub(r"<s>\s?(?=[A-Za-z0-9])", "~", new_str)
-    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</s>)", "~", new_str)
-    new_str = re.sub(r"<em>\s?(?=[A-Za-z0-9])", "_", new_str)
-    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</em>)", "_", new_str)
-    new_str = re.sub(r"<strong>\s?(?=[A-Za-z0-9])", "*", new_str)
-    new_str = re.sub(r"(?<=[A-Za-z0-9])(\s*</strong>)", "*", new_str)
+    new_str = re.sub(r"<s>\s*(?=\S)", "~", new_str)
+    new_str = re.sub(r"(?<=\S)(\s*</s>)", "~", new_str)
+    new_str = re.sub(r"<em>\s*(?=\S)", "_", new_str)
+    new_str = re.sub(r"(?<=\S)(\s*</em>)", "_", new_str)
+    new_str = re.sub(r"<strong>\s*(?=\S)", "*", new_str)
+    new_str = re.sub(r"(?<=\S)(\s*</strong>)", "*", new_str)
+    new_str = re.sub(r"(?<=[\}])~(?=\S)", "~ ", new_str)
+    new_str = re.sub(r"(?<=[\}])_(?=\S)", "_ ", new_str)
+    new_str = re.sub(r"(?<=[\}])\*(?=\S)", "* ", new_str)
+    new_str = re.sub(r"(?<=\S)~(?=[\{])", " ~", new_str)
+    new_str = re.sub(r"(?<=\S)_(?=[\{])", " _", new_str)
+    new_str = re.sub(r"(?<=\S)\*(?=[\{])", " *", new_str)
     new_str = strip_tags(new_str)
     return new_str

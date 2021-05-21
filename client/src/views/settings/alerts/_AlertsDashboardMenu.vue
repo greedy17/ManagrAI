@@ -18,13 +18,14 @@
         <p class="card-text">View & Edit Existing Alerts</p>
       </div>
 
-      <div class="card">
+      <div class="card card--disabled">
         <div class="card__header">
           <img class="card-img" src="" />
           <h3 class="card__title">Instances</h3>
         </div>
 
         <p class="card-text">See how many times your alert was triggered</p>
+        <p class="coming-soon">Comming Soon</p>
       </div>
     </div>
     <router-view :key="$route.fullPath"></router-view>
@@ -53,6 +54,9 @@ export default {
     margin-bottom: 2rem;
   }
 }
+.coming-soon {
+  @include muted-font(11px);
+}
 
 .card {
   width: 10rem;
@@ -63,6 +67,14 @@ export default {
     -webkit-box-shadow: 0 0 5px 0.1rem $dark-green;
     box-shadow: 0 0 5px 0.1rem $dark-green;
     cursor: pointer;
+  }
+  &--disabled {
+    &:hover {
+      -moz-box-shadow: 0 0 5px 0.1rem gray;
+      -webkit-box-shadow: 0 0 5px 0.1rem gray;
+      box-shadow: 0 0 5px 0.1rem gray;
+      cursor: not-allowed;
+    }
   }
   @media only screen and (min-width: 768px) {
     flex: 1 0 24%;

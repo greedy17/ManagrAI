@@ -398,7 +398,7 @@ export default {
   flex-direction: column;
   width: 15rem;
 
-  @include muted-font(10px);
+  @include muted-font(11px);
 }
 .alert-operand-row__options {
   display: flex;

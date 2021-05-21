@@ -19,16 +19,27 @@
             class="box__content-recipient-group__recipient-group__recipient"
             v-if="config.recurrenceFrequency == 'WEEKLY'"
           >
-            Will run every week on {{ config.recurrenceDay }} and will check all user's resources
-            but only alert {{ config._recipients ? config._recipients.key : '' }}
+            Will run every <u><b>week</b></u> on
+            <u
+              ><b>{{ config._recurrenceDay ? config._recurrenceDay.key : '' }}</b></u
+            >
+            and will check all <u><b>users</b></u> resources but only alert
+            <u
+              ><b>{{ config._recipients ? config._recipients.key : '' }}</b></u
+            >
           </div>
           <div
             class="box__content-recipient-group__recipient-group__recipient"
             v-else-if="config.recurrenceFrequency == 'MONTHLY'"
           >
-            Will run every Month on the {{ config.recurrenceDay | numberSuffix }} and will check all
-            user's resources but only alert
-            {{ config._recipients ? config._recipients.key : '' }}
+            Will run every <u><b>Month</b></u> on the
+            <u
+              ><b>{{ config.recurrenceDay | numberSuffix }}</b></u
+            >
+            and will check <u><b>all users'</b></u> resources but only alert
+            <u
+              ><b>{{ config._recipients ? config._recipients.key : '' }}</b></u
+            >
           </div>
 
           <div
@@ -67,6 +78,7 @@
                 <span>{{
                   operandRow._operandOperator ? operandRow._operandOperator.label : ''
                 }}</span>
+                <!-- If this is a monthly alert (with a datetime or date type) show the calculated period -->
 
                 <span
                   v-if="
@@ -76,17 +88,29 @@
                   "
                 >
                   {{
-                    moment()
-                      .add(operandRow.operandValue, 'd')
-                      .format('MM/DD')
+                    operandDateValToStr(
+                      config.recurrenceFrequency,
+                      config.recurrenceDay,
+                      operandRow.operandValue,
+                    )
                   }}
-                  <em>(or current month at run time)</em>
+                  <small><em>(or current month at run time)</em></small>
                 </span>
-                <span v-else>{{
-                  operandRow._operandValue
-                    ? operandRow._operandValue.referenceDisplayLabel
-                    : operandRow.operandValue
-                }}</span>
+                <!-- If this is a weekly alert (with a datetime or date type show) the calculated period -->
+                <span
+                  v-else-if="
+                    operandRow._operandIdentifier &&
+                      operandRow._operandIdentifier.dataType == 'Picklist'
+                  "
+                  >{{
+                    operandRow._operandValue
+                      ? operandRow._operandValue.label
+                      : operandRow.operandValue
+                  }}</span
+                >
+                <span v-else>
+                  {{ operandRow.operandValue }}
+                </span>
               </div>
             </div>
           </div>
@@ -131,7 +155,32 @@ export default {
   },
   watch: {},
   async created() {},
-  methods: {},
+  methods: {
+    operandDateValToStr(frequency, day, diffValue) {
+      /**
+       * Helper for converting the selected recurrence frequency to
+       * a real date for use in the SUMMARY COMPONENT
+       *
+       * */
+
+      if (frequency == 'MONTHLY') {
+        // get current date start of month
+        let d = moment().startOf('month')
+        // get the selected day of the month (-1)
+        let selectedD = d.add(day - 1, 'd').add(diffValue, 'd')
+        // return diff based on operand value
+        return selectedD.format('MM/DD')
+      } else {
+        // assume weekly
+        // get todays weekday (as iso 1-7)
+        let m = moment()
+          .startOf('isoweek')
+          .add(day, 'd')
+        m.add(diffValue, 'd')
+        return m.format('MM/DD')
+      }
+    },
+  },
   computed: {},
 }
 </script>
@@ -170,6 +219,8 @@ export default {
     margin: 0 0.5rem;
   }
 }
-.alert-group-row__operands {
+.box__content-recipient-group__recipient-group {
+  padding: 1rem;
+  border-bottom: 1px solid gray;
 }
 </style>

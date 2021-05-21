@@ -34,6 +34,7 @@ class SObjectFieldFilterSet(FilterSet):
                     "Double",
                     "Long",
                     "Boolean",
+                    "Picklist",
                 ]
             )
         return qs
