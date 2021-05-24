@@ -43,5 +43,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "meeting_summary": meeting_review_block_sets.meeting_summary_blockset,
         "command_create_task": command_views_blocksets.command_create_task_interaction,
         "tasks_list": common_blocksets.tasks_list_block_set,
+        "create_modal": command_views_blocksets.create_modal_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

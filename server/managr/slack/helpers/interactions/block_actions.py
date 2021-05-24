@@ -835,6 +835,10 @@ def process_resource_selected_for_task(payload, context):
     u = User.objects.get(id=context.get("u"))
     org = u.organization
     selected_value = None
+    # if this is coming from the create form delete the old form
+    form_id = context.get("f")
+    if form_id:
+        OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
@@ -844,8 +848,8 @@ def process_resource_selected_for_task(payload, context):
         "view_id": payload.get("view").get("id"),
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_CREATE_TASK,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "callback_id": payload["view"]["callback_id"],
+            "title": payload["view"]["title"],
             "blocks": get_block_set(
                 payload["view"]["external_id"], {**context, "resource_type": selected_value}
             ),

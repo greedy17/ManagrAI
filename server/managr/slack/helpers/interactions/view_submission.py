@@ -337,17 +337,18 @@ def process_submit_resource_data(payload, context):
         }
     else:
         # update the channel message to clear it
+        if main_form.template.form_type == "CREATE":
+            text = f"Managr created {main_form.resource_type}"
+            message = f"Successfully created *{main_form.resource_type}* _{main_form.saved_data.get('Name','N/A')}_"
+        else:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
         slack_requests.send_ephemeral_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             user.slack_integration.slack_id,
-            text=f"Managr updated {main_form.resource_type}",
-            block_set=get_block_set(
-                "success_modal",
-                {
-                    "message": f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-                },
-            ),
+            text=text,
+            block_set=get_block_set("success_modal", {"message": message},),
         )
     return {"response_action": "clear"}
 
