@@ -162,7 +162,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        #WAIT: 'true' # Optional 
+        WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 fargateDemoDeployment: &fargateDemoDeployment
@@ -212,7 +212,7 @@ fargateDemoDeployment: &fargateDemoDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        #WAIT: 'true' # Optional 
+        WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 fargateProdDeployment: &fargateProdDeployment
@@ -262,7 +262,7 @@ fargateProdDeployment: &fargateProdDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        #WAIT: 'true' # Optional 
+        WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 pipelines:
