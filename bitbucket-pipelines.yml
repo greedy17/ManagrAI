@@ -277,7 +277,7 @@ pipelines:
       #- step: *fargateDemoDeployment
       #- step: *fargatePRDeployment
       #- step: *fargateStagingDeployment
-      - step: *fargateProdDeployment
+      - step: *fargateStagingDeployment
   branches:
     develop:
       - parallel:
