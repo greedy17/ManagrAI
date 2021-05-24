@@ -30,7 +30,7 @@ class CustomFormInstanceInline(admin.StackedInline):
 class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
-    list_filter = ("user",)
+    list_filter = ("user__email", "progress", "meeting__topic")
     list_display = ("datetime_created",)
     ordering = ("-datetime_created",)
 
