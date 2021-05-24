@@ -415,7 +415,7 @@ if USE_SALESFORCE:
     SALESFORCE_REDIRECT_URL = (
         f'http://localhost:8080/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
         if IN_DEV
-        else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+        else f'{_env_get_required("SALESFORCE_REDIRECT_URI")}'
     )
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
 
