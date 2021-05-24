@@ -52,7 +52,8 @@ resource "aws_alb_listener" "front_end" {
   default_action {
     type = "redirect"
     redirect {
-      port        = 443
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -97,23 +98,6 @@ resource "aws_acm_certificate" "managr" {
   certificate_body = tls_self_signed_cert.managr.cert_pem
 }
 
-resource "aws_lb_listener_rule" "rule" {
-  for_each     = { for e in var.environments : e.name => e }
-  listener_arn = aws_alb_listener.front_end.arn
-  priority     = 10 + index(tolist(var.environments), each.value)
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_alb_target_group.app[each.key].id
-  }
-
-  condition {
-    host_header {
-      values = [each.value.name == "prod" ? "app.${var.managr_domain}" : "${each.value.name}.${var.managr_domain}"]
-    }
-  }
-}
-
 resource "aws_lb_listener_rule" "rule_https" {
   for_each     = { for e in var.environments : e.name => e }
   listener_arn = aws_alb_listener.front_end_https.arn
@@ -127,22 +111,6 @@ resource "aws_lb_listener_rule" "rule_https" {
   condition {
     host_header {
       values = [each.value.name == "prod" ? "app.${var.managr_domain}" : "${each.value.name}.${var.managr_domain}"]
-    }
-  }
-}
-
-resource "aws_lb_listener_rule" "rule_http_default" {
-  listener_arn = aws_alb_listener.front_end.arn
-  priority     = 200
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_alb_target_group.app["prod"].id
-  }
-
-  condition {
-    host_header {
-      values = [var.managr_domain]
     }
   }
 }
