@@ -51,7 +51,7 @@ ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 ### Get allowed hosts from ecs
 
 EC2_PRIVATE_IP = None
-METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", "http://169.254.170.2/v2/metadata")
+METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", None)
 
 try:
     resp = requests.get(METADATA_URI)

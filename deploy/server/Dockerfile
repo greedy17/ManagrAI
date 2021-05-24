@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
   python3-pip
 
 ENV SECRET_KEY='secret123' \
-  ENVIRONMENT=development \
+  ENVIRONMENT='' \
   STAFF_EMAIL='test@test.com' \
   ALLOWED_HOSTS=* \
   CURRENT_DOMAIN=localhost \

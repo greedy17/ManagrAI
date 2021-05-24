@@ -69,6 +69,7 @@ variable "app_config" {
     current_domain = string
 
     debug        = bool
+    environment  = string
     rds_username = string
     rds_password = string
     rds_db_name  = string
