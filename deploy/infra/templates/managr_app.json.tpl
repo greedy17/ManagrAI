@@ -432,7 +432,7 @@
   },
   {
     "name": "nginx-config",
-    "image": "bash",
+    "image": "bash:latest",
     "essential": false,
     "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
     "environment": [
