@@ -162,7 +162,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        WAIT: 'true' # Optional 
+        #WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 fargateDemoDeployment: &fargateDemoDeployment
@@ -212,7 +212,7 @@ fargateDemoDeployment: &fargateDemoDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        WAIT: 'true' # Optional 
+        #WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 fargateProdDeployment: &fargateProdDeployment
@@ -262,7 +262,7 @@ fargateProdDeployment: &fargateProdDeployment
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
-        WAIT: 'true' # Optional 
+        #WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
 pipelines:
@@ -270,6 +270,15 @@ pipelines:
   # NOTE: If this is not a Vue app, then disable the 'vueAppBuild' and 'e2eTests' steps in the pipelines below.
   pull-requests:
     '**':
+      - parallel:
+          - step: *vueAppBuild
+          - step: *e2eTests
+          - step: *djangoTests
+      #- step: *fargateDemoDeployment
+      #- step: *fargatePRDeployment
+      #- step: *fargateStagingDeployment
+      #- step: *fargateStagingDeployment
+    'feature-branch/*':
       - parallel:
           - step: *vueAppBuild
           - step: *e2eTests

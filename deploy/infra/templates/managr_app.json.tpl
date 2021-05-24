@@ -10,10 +10,12 @@
       { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
 
+
       { "name": "ALLOWED_HOSTS", "value": "${allowed_hosts}" },
       { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
       { "name": "CURRENT_PORT", "value": "${current_port}" },
       { "name": "DEBUG", "value": "${debug}" },
+      { "name": "ENVIRONMENT", "value": "${environment}" },
 
       { "name": "USE_CUSTOM_SMTP", "value": "${use_custom_smtp}" },
       { "name": "SMTP_USE_TLS", "value": "${smtp_use_tls}" },
@@ -210,6 +212,7 @@
       { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
       { "name": "CURRENT_PORT", "value": "${current_port}" },
       { "name": "DEBUG", "value": "${debug}" },
+      { "name": "ENVIRONMENT", "value": "${environment}" },
 
       { "name": "USE_CUSTOM_SMTP", "value": "${use_custom_smtp}" },
       { "name": "SMTP_USE_TLS", "value": "${smtp_use_tls}" },
@@ -429,7 +432,7 @@
   },
   {
     "name": "nginx-config",
-    "image": "bash",
+    "image": "bash:latest",
     "essential": false,
     "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
     "environment": [
