@@ -42,11 +42,16 @@
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
           <FormField
+            :id="`resource-title-${alert.id}`"
             :errors="templateTitleField.errors"
             @input="executeUpdateTemplate(templateTitleField)"
             v-model="templateTitleField.value"
           />
-          <FormField :disabled="true" v-model="alert.resourceType" />
+          <FormField
+            :id="`resource-type-${alert.id}`"
+            :disabled="true"
+            v-model="alert.resourceType"
+          />
         </div>
         <div v-if="selectedTab == 'GROUPS'" class="alerts-template-list__content-groups">
           <div

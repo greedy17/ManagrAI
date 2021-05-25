@@ -23,6 +23,7 @@
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <FormField
+            id="alert-title"
             v-model="alertTemplateForm.field.title.value"
             placeholder="Alert Title"
             :errors="alertTemplateForm.field.title.errors"
@@ -73,6 +74,7 @@
                 v-model="
                   alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
                 "
+                id="notification-text"
                 large
                 placeholder="Snippet in slack notification"
               />
@@ -190,16 +192,21 @@
               </FormField>
             </div>
             <div class="alerts-page__settings__recipients">
-              <DropDownSearch
-                :items.sync="alertRecipientOpts"
-                :itemsRef.sync="form.field._recipients.value"
-                v-model="form.field.recipients.value"
-                displayKey="key"
-                valueKey="value"
-                nullDisplay="User groups"
-                searchable
-                local
-              />
+              <FormField :errors="form.field.recipients.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="alertRecipientOpts"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="key"
+                    valueKey="value"
+                    nullDisplay="User groups"
+                    searchable
+                    local
+                  />
+                </template>
+              </FormField>
             </div>
             <div>
               <button
@@ -510,7 +517,7 @@ textarea {
 }
 .alerts-page__settings {
   display: flex;
-  align-items: center;
+
   &__frequency {
     display: flex;
     align-items: center;

@@ -46,6 +46,11 @@
                 v-model="alert.isActive"
                 offColor="#aaaaaa"
                 onColor="#199e54"
+                @click="
+                  () => {
+                    console.log('log')
+                  }
+                "
               />
             </span>
             <span
@@ -150,7 +155,7 @@ export default {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
         await this.templates.refresh()
         this.$Alert.alert({
-          message: `Alert is now ${value}`,
+          message: `Alert is now ${value ? 'active' : 'inactive'}`,
           type: 'success',
           timeout: 2000,
         })

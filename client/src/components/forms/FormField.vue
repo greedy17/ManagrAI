@@ -8,7 +8,7 @@
     <slot name="input">
       <InputField
         class="tn-input__input"
-        :id="labelRelation"
+        :id="$attrs.id"
         :class="{
           'tn-input__input--small': isSmall,
           'tn-input__input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
