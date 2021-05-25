@@ -176,6 +176,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="test-channel",
     )
     def test_channel(self, request, *args, **kwargs):
+        ## deprecated this will no longer work as we do not have
         """Send a test message in the Organization's default Slack Channel for the Managr app."""
         organization_slack = request.user.organization.slack_integration
         url = organization_slack.incoming_webhook.get("url")
