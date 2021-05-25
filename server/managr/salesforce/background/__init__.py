@@ -485,11 +485,12 @@ def _process_create_new_contacts(workflow_id, *args):
             sf_adapter = sf.adapter_class
             logger.info(f"Data from form {data}")
             try:
-                res = ContactAdapter.create_new_contact(
+                res = ContactAdapter.create(
                     data,
                     sf.access_token,
                     sf.instance_url,
                     sf_adapter.object_fields.get("Contact", {}),
+                    str(user.id),
                 )
 
                 if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
