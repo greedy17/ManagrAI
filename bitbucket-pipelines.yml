@@ -277,7 +277,16 @@ pipelines:
       #- step: *fargateDemoDeployment
       #- step: *fargatePRDeployment
       #- step: *fargateStagingDeployment
-      - step: *fargateStagingDeployment
+      #- step: *fargateStagingDeployment
+    'feature-branch/*':
+      - parallel:
+          - step: *vueAppBuild
+          - step: *e2eTests
+          - step: *djangoTests
+      #- step: *fargateDemoDeployment
+      #- step: *fargatePRDeployment
+      #- step: *fargateStagingDeployment
+      #- step: *fargateStagingDeployment
   branches:
     develop:
       - parallel:

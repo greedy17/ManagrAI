@@ -48,7 +48,7 @@ data "template_file" "managr_app" {
 
     environment               = each.value.environment
     app_image                 = each.value.app_image
-    nginx_image               = aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url
+    nginx_image               = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
     app_image_scheduled_tasks = each.value.app_image_scheduled_tasks
     fargate_cpu               = var.fargate_cpu
     fargate_memory            = var.fargate_memory

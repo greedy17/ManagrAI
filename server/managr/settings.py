@@ -412,11 +412,7 @@ if USE_SALESFORCE:
     SALESFORCE_CONSUMER_KEY = _env_get_required("SALESFORCE_CONSUMER_KEY")
     SALESFORCE_BASE_URL = _env_get_required("SALESFORCE_BASE_URL")
     SALESFORCE_SCOPES = _env_get_required("SALESFORCE_SCOPES")
-    SALESFORCE_REDIRECT_URL = (
-        f'http://localhost:8080/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
-        if IN_DEV
-        else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
-    )
+    SALESFORCE_REDIRECT_URL = _env_get_required("SALESFORCE_REDIRECT_URI")
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
 
 MAX_ATTEMPTS = 5
