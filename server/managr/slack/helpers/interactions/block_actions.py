@@ -284,6 +284,7 @@ def process_stage_selected(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{user_id}",
         },
     }
     try:
