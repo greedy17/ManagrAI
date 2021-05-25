@@ -60,6 +60,7 @@ def convertToSlackFormat(body):
         strips orphaned tags and cleans out other html
     """
     new_str = body
+    new_str = re.sub(r"(?<=\S)(\s*</p>)", "\n", new_str)
     new_str = re.sub(r"<s>\s*(?=\S)", "~", new_str)
     new_str = re.sub(r"(?<=\S)(\s*</s>)", "~", new_str)
     new_str = re.sub(r"<em>\s*(?=\S)", "_", new_str)

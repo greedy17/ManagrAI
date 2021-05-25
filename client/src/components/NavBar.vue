@@ -44,8 +44,6 @@
             :right="10"
             :items="[
               { key: 'Integrations', value: 'Integrations' },
-              { key: 'Smart Alerts', value: 'CreateNew' },
-
               { key: 'Log Out', value: 'logout' },
             ]"
             v-if="!isAdmin"
