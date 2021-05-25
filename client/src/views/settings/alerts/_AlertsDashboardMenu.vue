@@ -25,7 +25,7 @@
         </div>
 
         <p class="card-text">See how many times your alert was triggered</p>
-        <p class="coming-soon">Comming Soon</p>
+        <p class="coming-soon">Coming Soon</p>
       </div>
     </div>
     <router-view :key="$route.fullPath"></router-view>
