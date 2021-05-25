@@ -433,7 +433,7 @@ def update_resource(request):
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Update", "emoji": True},
                 "private_metadata": json.dumps(private_metadata),
-                "external_id": "update_modal_block_set",
+                "external_id": f"update_modal_block_set.{str(user.id)}",
             },
         }
         logger.info(f"BLOCKS FROM UPDATE --{data}")
@@ -559,7 +559,7 @@ def create_task(request):
             "blocks": get_block_set("create_task_modal", context=context,),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": "create_task_modal",
+            "external_id": f"create_task_modal.{str(user.id)}",
         },
     }
 
