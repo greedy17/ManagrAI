@@ -165,7 +165,9 @@ def _generate_form_template(user_id):
         )
 
         if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
-            fields = SObjectField.objects.filter(is_public=True)
+            fields = SObjectField.objects.filter(
+                is_public=True, id__in=sf_consts.MEETING_REVIEW_PUBLIC_FIELD_IDS
+            )
             for i, field in enumerate(fields):
                 f.fields.add(field, through_defaults={"order": i})
             f.save()
