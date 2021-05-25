@@ -436,7 +436,7 @@ def update_resource(request):
                 "external_id": "update_modal_block_set",
             },
         }
-
+        logger.info(f"BLOCKS FROM UPDATE --{data}")
         slack_requests.generic_request(url, data, access_token=access_token)
 
         return Response()
