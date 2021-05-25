@@ -284,6 +284,7 @@ def process_stage_selected(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{user_id}",
         },
     }
     try:
@@ -865,13 +866,11 @@ def process_resource_selected_for_task(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set(
-                payload["view"]["external_id"], {**context, "resource_type": selected_value}
-            ),
+            "title": payload.get("view").get("title"),
+            "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
             "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
-            "external_id": f'{payload["view"]["external_id"]}.{str(u.id)}',
+            "external_id": f"{view_type}.{str(u.id)}",
         },
     }
     try:
