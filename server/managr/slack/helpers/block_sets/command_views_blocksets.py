@@ -136,6 +136,9 @@ def update_modal_block_set(context, *args, **kwargs):
                 f"*Search for an {context.get('resource_type')}*",
                 f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}",
                 block_id="select_existing",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
             ),
         )
 
