@@ -66,6 +66,7 @@ def _process_check_alert(config_id, user_id):
     route = model_routes[resource]
     model_class = route["model"]
     user = template.get_users.filter(id=user_id).first()
+    template_user = template.user
 
     attempts = 1
     if not hasattr(user, "salesforce_account"):
@@ -107,35 +108,69 @@ def _process_check_alert(config_id, user_id):
             query = Q()
             for user_group in config.recipients:
                 if user_group == "SELF":
-                    query |= Q(id=template.user.id)
-                elif user_group == "OWNER":
-                    query |= Q(id=user.id)
-                elif user_group == "MANAGERS":
-                    query != Q(user_level="MANAGER")
-
-                elif user_group == "REPS":
-                    query != Q(user_level="REP")
-                elif user_group == "ALL":
-                    query != Q(user_level="MANAGER") | Q(user_level="REP")
-            query &= Q(is_active=True)
-            users = template.user.organization.users.filter(query).distinct()
-            for u in users:
-
-                instance = AlertInstance.objects.create(
-                    template_id=alert_id,
-                    user_id=u.id,
-                    resource_id=str(existing.id),
-                    instance_meta=instance_meta,
-                )
-
-                if hasattr(user, "slack_integration"):
-                    channel_id = user.slack_integration.channel
-                    access_token = user.organization.slack_integration.access_token
-                    text = template.message_template.notification_text
-                    blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
-
-                    res = slack_requests.send_channel_message(
-                        channel_id, access_token, text=text, block_set=blocks
+                    instance = AlertInstance.objects.create(
+                        template_id=alert_id,
+                        user_id=template_user.id,
+                        resource_id=str(existing.id),
+                        instance_meta=instance_meta,
                     )
+                    if hasattr(template_user, "slack_integration"):
+                        channel_id = template_user.slack_integration.channel
+                        access_token = template_user.organization.slack_integration.access_token
+                        text = template.message_template.notification_text
+                        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+
+                        res = slack_requests.send_channel_message(
+                            channel_id, access_token, text=text, block_set=blocks
+                        )
+                elif user_group == "OWNER":
+                    instance = AlertInstance.objects.create(
+                        template_id=alert_id,
+                        user_id=user.id,
+                        resource_id=str(existing.id),
+                        instance_meta=instance_meta,
+                    )
+                    if hasattr(user, "slack_integration"):
+                        channel_id = user.slack_integration.channel
+                        access_token = user.organization.slack_integration.access_token
+                        text = template.message_template.notification_text
+                        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+
+                        res = slack_requests.send_channel_message(
+                            channel_id, access_token, text=text, block_set=blocks
+                        )
+                else:
+                    if user_group == "MANAGERS":
+                        query &= Q(Q(user_level="MANAGER", is_active=True))
+
+                    elif user_group == "REPS":
+                        query != Q(user_level="REP", is_active=True)
+                    elif user_group == "ALL":
+
+                        query = Q(is_active=True) & Q(Q(user_level="MANAGER") | Q(user_level="REP"))
+
+                    users = (
+                        template.user.organization.users.filter(query)
+                        .filter(is_active=True)
+                        .distinct()
+                    )
+                    for u in users:
+                        instance = AlertInstance.objects.create(
+                            template_id=alert_id,
+                            user_id=u.id,
+                            resource_id=str(existing.id),
+                            instance_meta=instance_meta,
+                        )
+                        if hasattr(user, "slack_integration"):
+                            channel_id = u.slack_integration.channel
+                            access_token = u.organization.slack_integration.access_token
+                            text = template.message_template.notification_text
+                            blocks = get_block_set(
+                                "alert_instance", {"instance_id": str(instance.id)}
+                            )
+
+                            res = slack_requests.send_channel_message(
+                                channel_id, access_token, text=text, block_set=blocks
+                            )
     return
 
