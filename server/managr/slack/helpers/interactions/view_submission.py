@@ -64,6 +64,7 @@ def process_stage_next_page(payload, context):
     review_form = workflow.forms.filter(template__form_type=context.get("form_type")).first()
     review_form.save_form(state)
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).all()
+
     if len(forms):
         next_blocks = []
         for form in forms:

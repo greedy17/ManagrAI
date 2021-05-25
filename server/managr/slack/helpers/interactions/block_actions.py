@@ -55,7 +55,7 @@ def process_meeting_review(payload, context):
             "blocks": get_block_set("meeting_review_modal", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": "meeting_review_modal",
+            "external_id": f"meeting_review_modal.{str(workflow.user.id)}",
         },
     }
     try:
@@ -246,16 +246,22 @@ def process_stage_selected(payload, context):
             )
         # gather and attach all forms
 
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, user_id = external_id.split(".")
+    except ValueError:
+        pass
+
     if not stage_form:
         submit_text = "Submit"
-        if payload["view"]["external_id"] == "create_modal_block_set":
+        if view_type == "create_modal_block_set":
             callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
         else:
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
-        if payload["view"]["callback_id"] == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
+        if view_type == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
             context = {
                 **context,
                 "form_type": slack_const.FORM_TYPE_MEETING_REVIEW,
@@ -278,6 +284,7 @@ def process_stage_selected(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{user_id}",
         },
     }
     try:
@@ -471,7 +478,7 @@ def process_meeting_selected_resource_option(payload, context):
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
         ]
-        external_id = "create_modal_block_set"
+        external_id = f"create_modal_block_set.{str(workflow.user.id)}"
 
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
@@ -674,7 +681,7 @@ def process_show_update_resource_form(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Update", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": "update_modal_block_set",
+            "external_id": f"update_modal_block_set.{str(user.id)}",
         },
     }
 
@@ -843,19 +850,24 @@ def process_resource_selected_for_task(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
+
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, user_id = external_id.split(".")
+    except ValueError:
+        pass
+
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
         "view": {
             "type": "modal",
             "callback_id": payload["view"]["callback_id"],
-            "title": payload["view"]["title"],
-            "blocks": get_block_set(
-                payload["view"]["external_id"], {**context, "resource_type": selected_value}
-            ),
+            "title": payload.get("view").get("title"),
+            "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
             "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
-            "external_id": payload["view"]["external_id"],
+            "external_id": f"{view_type}.{str(u.id)}",
         },
     }
     try:
