@@ -9,6 +9,8 @@ from rest_framework.test import APIClient
 
 
 from managr.core import factories as core_factories
+from managr.organization import factories as org_factories
+from managr.opportunity import factories as opp_factories
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
@@ -21,7 +23,10 @@ TestCase.maxDiff = None
 class UserTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.admin_user = core_factories.UserFactory(is_admin=True)
+        self.admin_user = core_factories.UserFactory(
+            is_admin=True, user_level="MANAGER", organization=org_factories.OrganizationFactory()
+        )
+
         temp = {
             "user_id": str(self.admin_user.id),
             "title": "test",
@@ -281,3 +286,289 @@ class UserTestCase(TestCase):
         ).count()
 
         self.assertEqual(f, 4)
+
+    def test_sends_to_self_and_owner_only(self):
+        """ Expects four instances to be created since both matched but the admin and rep users get the alert the admin user gets 3 and the owner only 1"""
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        self.assertEqual(rep.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=self.template,
+        )
+        conf_2 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["OWNER"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+        query = Q()
+        for opp in [opp_1, opp_2]:
+            for setting in [conf_1, conf_2]:
+                for user_group in setting.recipients:
+                    # if self expects two instances one for each opp matched (2 matched here)
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    # expects 2 since each owner will get 1
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+                    else:
+                        ## expects 0
+                        if user_group == "MANAGERS":
+                            query &= Q(Q(user_level="MANAGER", is_active=True))
+
+                        elif user_group == "REPS":
+                            query != Q(user_level="REP", is_active=True)
+                        elif user_group == "ALL":
+
+                            query = Q(is_active=True) & Q(
+                                Q(user_level="MANAGER") | Q(user_level="REP")
+                            )
+
+                        users = (
+                            self.template.user.organization.users.filter(query)
+                            .filter(is_active=True)
+                            .distinct()
+                        )
+                        for u in users:
+                            alert_models.AlertInstance.objects.create(
+                                template_id=self.template.id,
+                                user_id=u.id,
+                                resource_id=str(opp.id),
+                                instance_meta={},
+                            )
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 4)
+
+    def test_sends_to_self_only(self):
+        """ Expects two instances to be created since both matched but only the admin user gets the alert"""
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        self.assertEqual(rep.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+
+        for opp in [opp_1, opp_2]:
+            for setting in [conf_1]:
+                for user_group in setting.recipients:
+                    # if self expects two instances one for each opp matched (2 matched here)
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    # expects 2 since each owner will get 1
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
+
+    def test_sends_to_owner_only(self):
+        """ Expects two instances to be created since both matched but only the owning user gets the alert"""
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        self.assertEqual(rep.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["OWNER"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+        query = Q()
+        for opp in [opp_1, opp_2]:
+            for setting in [conf_1]:
+                for user_group in setting.recipients:
+                    # if self expects two instances one for each opp matched (2 matched here)
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    # expects 2 since each owner will get 1
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+                    else:
+                        ## expects 0
+                        if user_group == "MANAGERS":
+                            query &= Q(Q(user_level="MANAGER", is_active=True))
+
+                        elif user_group == "REPS":
+                            query != Q(user_level="REP", is_active=True)
+                        elif user_group == "ALL":
+
+                            query = Q(is_active=True) & Q(
+                                Q(user_level="MANAGER") | Q(user_level="REP")
+                            )
+
+                        users = (
+                            self.template.user.organization.users.filter(query)
+                            .filter(is_active=True)
+                            .distinct()
+                        )
+                        for u in users:
+                            alert_models.AlertInstance.objects.create(
+                                template_id=self.template.id,
+                                user_id=u.id,
+                                resource_id=str(opp.id),
+                                instance_meta={},
+                            )
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
+
+    def test_sends_to_is_admin_user_only(self):
+        """ Expects 1 instance to be created from the rep's opp"""
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        self.assertEqual(rep.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+        for opp in [opp_1]:
+            for setting in [conf_1]:
+                for user_group in setting.recipients:
+                    # if self expects two instances one for each opp matched (2 matched here)
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    # expects 2 since each owner will get 1
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 1)
+        self.assertEquals(alert_models.AlertInstance.objects.first().user.id, self.template.user.id)
+
+    def test_sends_to_managers_only(self):
+        """ Expects 4 instances to be created since both matched but there are only 3 managers and 1 is inactive"""
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        core_factories.UserFactory(
+            is_admin=False, user_level="MANAGER", organization=self.admin_user.organization
+        )
+        core_factories.UserFactory(
+            is_admin=False,
+            user_level="MANAGER",
+            organization=self.admin_user.organization,
+            is_active=False,
+        )
+
+        self.assertEqual(rep.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["MANAGERS"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+        query = Q()
+        for opp in [opp_1, opp_2]:
+            for setting in [conf_1]:
+                for user_group in setting.recipients:
+                    # if self expects two instances one for each opp matched (2 matched here)
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    # expects 2 since each owner will get 1
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+                    else:
+                        ## expects 0
+                        if user_group == "MANAGERS":
+                            query &= Q(Q(user_level="MANAGER", is_active=True))
+
+                        elif user_group == "REPS":
+                            query != Q(user_level="REP", is_active=True)
+                        elif user_group == "ALL":
+
+                            query = Q(is_active=True) & Q(
+                                Q(user_level="MANAGER") | Q(user_level="REP")
+                            )
+
+                        users = self.template.user.organization.users.filter(query).distinct()
+                        for u in users:
+                            alert_models.AlertInstance.objects.create(
+                                template_id=self.template.id,
+                                user_id=u.id,
+                                resource_id=str(opp.id),
+                                instance_meta={},
+                            )
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 4)

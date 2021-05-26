@@ -149,11 +149,7 @@ def _process_check_alert(config_id, user_id):
 
                         query = Q(is_active=True) & Q(Q(user_level="MANAGER") | Q(user_level="REP"))
 
-                    users = (
-                        template.user.organization.users.filter(query)
-                        .filter(is_active=True)
-                        .distinct()
-                    )
+                    users = template.user.organization.users.filter(query).distinct()
                     for u in users:
                         instance = AlertInstance.objects.create(
                             template_id=alert_id,
