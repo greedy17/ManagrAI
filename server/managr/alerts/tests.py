@@ -572,3 +572,21 @@ class UserTestCase(TestCase):
                                 instance_meta={},
                             )
         self.assertEquals(alert_models.AlertInstance.objects.count(), 4)
+
+    def test_group_generates_url_string_w_weekly(self):
+        """ 
+            Tests that the appropriate qs was built for the row 
+            NOTE if row is top group order it will not append operator
+        """
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=3,
+            recurrence_frequency="WEEKLY",
+            recipients=["MANAGERS"],
+            template=self.template,
+        )
+        adapter_class = adapter_routes.get(self.template.resource_type, None)
+        query_items = [group.query_str(self.config.id) for group in self.template.groups.all()]
+        query_items = f"AND ({' '.join(query_items)})"
+        additional_filters = [*adapter_class.additional_filters(), query_items]
+        expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
+        self.assertEqual(self.template.url_str(self.admin_user, str(conf_1.id)), expected)
