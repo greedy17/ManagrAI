@@ -148,6 +148,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     dbPass = each.value.rds_password
     dbName = each.value.rds_db_name
 
+    superuserEmail    = each.value.superuser_email
+    superuserPassword = each.value.superuser_password
+
     secretKey = each.value.secret_key
 
     staffEmail = each.value.staff_email
