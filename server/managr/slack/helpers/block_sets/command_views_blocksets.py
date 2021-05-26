@@ -24,6 +24,7 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.alerts.models import AlertInstance
 
 
 @block_set(required_context=["resource_type", "u"])
@@ -70,6 +71,45 @@ def command_meeting_summary(context):
     ]
 
 
+@block_set(required_context=["instance_id"])
+def alert_instance_block_set(context):
+    """ 
+        Builds out the message based on the template the of the alert 
+      
+        divider -
+        message - alert template message 
+        divider 
+        update button
+    """
+    instance = AlertInstance.objects.get(id=context.get("instance_id"))
+    user = instance.user
+    blocks = [
+        block_builders.simple_section(instance.render_text(), "mrkdwn"),
+        block_builders.divider_block(),
+    ]
+    if user.id == instance.resource.owner.id:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Update",
+                        instance.resource_id,
+                        action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
+                    )
+                ]
+            )
+        )
+    else:
+        blocks.append(
+            block_builders.simple_section(
+                f"_*This {instance.template.resource_type} is owned by {instance.resource.owner.full_name} *_",
+                "mrkdwn",
+            ),
+        )
+
+    return blocks
+
+
 @block_set(required_context=["u"])
 def update_modal_block_set(context, *args, **kwargs):
     """Shows a modal to update a resource"""
@@ -85,7 +125,6 @@ def update_modal_block_set(context, *args, **kwargs):
             [
                 block_builders.option("Opportunity", "Opportunity"),
                 block_builders.option("Account", "Account"),
-                # block_builders.option("Contact", "Contact"),
                 block_builders.option("Lead", "Lead"),
             ],
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
@@ -101,6 +140,9 @@ def update_modal_block_set(context, *args, **kwargs):
                 f"*Search for an {context.get('resource_type')}*",
                 f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}",
                 block_id="select_existing",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
             ),
         )
 

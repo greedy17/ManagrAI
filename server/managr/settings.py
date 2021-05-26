@@ -46,6 +46,9 @@ STAFF_EMAIL = _env_get_required("STAFF_EMAIL")
 CURRENT_DOMAIN = _env_get_required("CURRENT_DOMAIN")
 CURRENT_PORT = os.environ.get("CURRENT_PORT")
 ALLOWED_HOSTS = []
+# METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", [])
+# container_metadata = requests.get(METADATA_URI).json()
+# ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 
 ### Get allowed hosts from ecs
@@ -87,6 +90,7 @@ INSTALLED_APPS = [
     "managr.slack",
     "managr.zoom",
     "managr.salesforce",
+    "managr.alerts",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -413,6 +417,11 @@ if USE_SALESFORCE:
     SALESFORCE_BASE_URL = _env_get_required("SALESFORCE_BASE_URL")
     SALESFORCE_SCOPES = _env_get_required("SALESFORCE_SCOPES")
     SALESFORCE_REDIRECT_URL = _env_get_required("SALESFORCE_REDIRECT_URI")
+    # SALESFORCE_REDIRECT_URL = (
+    #    f'http://localhost:8080/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+    #    if IN_DEV
+    #    else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
+    # )
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
 
 MAX_ATTEMPTS = 5

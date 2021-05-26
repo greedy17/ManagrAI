@@ -20,7 +20,8 @@
       "options": [],
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "filterable": false
     }
   },
   {
@@ -48,7 +49,8 @@
       ],
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "filterable": false
     }
   },
   {
@@ -192,7 +194,8 @@
       "relationship_name": null,
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
+      "last_edited": "2020-08-03 11:39:23.632256Z",
+      "filterable": false
     }
   }
 ]

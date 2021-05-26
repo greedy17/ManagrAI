@@ -1,4 +1,5 @@
 import random
+import uuid
 import factory
 from django.utils import timezone
 from factory.django import DjangoModelFactory
@@ -6,13 +7,16 @@ from factory.django import DjangoModelFactory
 from .models import Opportunity
 
 
-class LeadFactory(DjangoModelFactory):
+class OpportunityFactory(DjangoModelFactory):
     """Generate a Opportunity with random attributes"""
 
-    title = factory.Faker("sentence")
+    name = factory.Faker("sentence")
     amount = factory.LazyAttribute(lambda a: random.randint(1, 30) * 1000)
-    primary_description = factory.Faker("text", max_nb_chars=150)
-    secondary_description = factory.Faker("text", max_nb_chars=150)
+    close_date = factory.LazyAttribute(
+        lambda a: timezone.now() + timezone.timedelta(random.randint(1, 30))
+    )
+    integration_id = factory.LazyAttribute(lambda a: str(uuid.uuid4()))
+    stage = factory.Faker("name")
 
     class Meta:
         model = Opportunity
