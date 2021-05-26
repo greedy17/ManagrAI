@@ -69,6 +69,7 @@ from managr.salesforce.adapter.exceptions import (
 )
 
 from . import constants as sf_consts
+from .filters import SObjectFieldFilterSet
 
 
 @api_view(["post"])
@@ -188,8 +189,8 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         DjangoFilterBackend,
         filters.SearchFilter,
     )
-    filter_fields = ("salesforce_object", "createable", "updateable")
     search_fields = ("label",)
+    filter_class = SObjectFieldFilterSet
 
     def get_queryset(self):
         return SObjectField.objects.for_user(self.request.user)

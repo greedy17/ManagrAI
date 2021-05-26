@@ -623,9 +623,15 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    select = payload["actions"][0]["selected_option"]
-    selected_option = select["value"]
+    is_update = payload.get("view", None)
+    url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    actions = payload["actions"]
+    if actions[0]["type"] == "external_select":
+        selected_option = actions[0]["selected_option"]["value"]
+    elif actions[0]["type"] == "button":
+        selected_option = actions[0]["value"]
+    else:
+        selected_option = None
     resource_id = selected_option
     resource_type = context.get("resource")
     user = User.objects.get(id=context.get("u"))
@@ -674,7 +680,6 @@ def process_show_update_resource_form(payload, context):
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
-        "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -685,6 +690,8 @@ def process_show_update_resource_form(payload, context):
             "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
         },
     }
+    if is_update:
+        data["view_id"] = is_update.get("id")
 
     slack_requests.generic_request(url, data, access_token=access_token)
 
@@ -885,6 +892,29 @@ def process_resource_selected_for_task(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
+
+
+@slack_api_exceptions(rethrow=False)
+@processor(required_context="u")
+def process_open_edit_modal(payload, context):
+
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": payload.get("view").get("id"),
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "blocks": get_block_set(
+                payload["view"]["external_id"], {**context, "resource_type": selected_value}
+            ),
+            "submit": payload["view"]["submit"],
+            "private_metadata": json.dumps(context),
+            "external_id": payload["view"]["external_id"],
+        },
+    }
 
 
 def handle_block_actions(payload):

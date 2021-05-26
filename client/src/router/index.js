@@ -89,6 +89,28 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       name: 'SlackFormSettings',
     },
+    {
+      path: '/alerts',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/AlertsDashboard'),
+      beforeEnter: Auth.requireIsAdminAuth,
+      children: [
+        {
+          path: 'new',
+          name: 'CreateNew',
+          component: () =>
+            import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/AlertsPage'),
+        },
+        {
+          path: 'list-templates',
+          name: 'ListTemplates',
+          component: () =>
+            import(
+              /* webpackChunkName: "settings" */ '../views/settings/alerts/view/_AlertsTemplateList'
+            ),
+        },
+      ],
+    },
 
     {
       path: '/settings',

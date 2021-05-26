@@ -53,6 +53,7 @@ class SObjectFieldSerializer(serializers.ModelSerializer):
             "integration_id",
             "is_public",
             "imported_by",
+            "filterable",
         )
 
 

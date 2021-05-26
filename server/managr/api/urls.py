@@ -8,6 +8,7 @@ from rest_auth import views as rest_auth_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
+from managr.alerts import views as alert_views
 
 # from . import views
 
@@ -91,4 +92,8 @@ router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesf
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
+router.register("alerts/templates", alert_views.AlertTemplateViewSet, "alert-templates")
+router.register(
+    "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"
+)
 urlpatterns += router.urls
