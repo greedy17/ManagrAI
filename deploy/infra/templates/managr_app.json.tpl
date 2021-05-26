@@ -58,6 +58,15 @@
         "name": "DB_NAME",
         "valueFrom": "${config_secret_arn}:dbName::"
       },
+      {
+        "name": "SUPERUSER_EMAIL",
+        "valueFrom": "${config_secret_arn}:superuserEmail::"
+      },
+      {
+        "name": "SUPERUSER_PASSWORD",
+        "valueFrom": "${config_secret_arn}:superuserPassword::"
+      },
+
 
       {
         "name": "ROLLBAR_ACCESS_TOKEN",
@@ -220,7 +229,7 @@
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
 
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
-
+      { "name": "ENVIRONMENT", "value": "${environment}" },
       { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
       { "name": "USE_NYLAS", "value": "${use_nylas}" },
       { "name": "USE_TWILIO", "value": "${use_twilio}" },
@@ -249,6 +258,14 @@
       {
         "name": "DB_PASS",
         "valueFrom": "${config_secret_arn}:dbPass::"
+      },
+      {
+        "name": "SUPERUSER_EMAIL",
+        "valueFrom": "${config_secret_arn}:superuserEmail::"
+      },
+      {
+        "name": "SUPERUSER_PASSWORD",
+        "valueFrom": "${config_secret_arn}:superuserPassword::"
       },
       {
         "name": "DB_NAME",
