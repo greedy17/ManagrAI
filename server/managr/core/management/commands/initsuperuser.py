@@ -16,4 +16,4 @@ class Command(BaseCommand):
             password = os.environ.get("SUPERUSER_PASSWORD")
             # create a super user
             User.objects.create_superuser(email, password)
-        self.stdout.write(self.style.SUCCESS("Created SU with email {}".format(email)))
+            self.stdout.write(self.style.SUCCESS("Created SU with email {}".format(email)))
