@@ -68,13 +68,15 @@ variable "environments" {
     allowed_hosts  = string
     current_domain = string
 
-    debug        = bool
-    environment  = string
-    rds_username = string
-    rds_password = string
-    rds_db_name  = string
-    secret_key   = string
-    staff_email  = string
+    debug              = bool
+    environment        = string
+    rds_username       = string
+    rds_password       = string
+    rds_db_name        = string
+    secret_key         = string
+    staff_email        = string
+    superuser_email    = string
+    superuser_password = string
 
     use_custom_smtp            = bool
     smtp_use_tls               = bool

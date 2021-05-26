@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 
 from datetime import datetime
 from managr.utils import sites as site_utils
@@ -433,7 +434,7 @@ def update_resource(request):
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Update", "emoji": True},
                 "private_metadata": json.dumps(private_metadata),
-                "external_id": f"update_modal_block_set.{str(user.id)}",
+                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
             },
         }
         logger.info(f"BLOCKS FROM UPDATE --{data}")
@@ -559,7 +560,7 @@ def create_task(request):
             "blocks": get_block_set("create_task_modal", context=context,),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": f"create_task_modal.{str(user.id)}",
+            "external_id": f"create_task_modal.{str(uuid.uuid4())}",
         },
     }
 
