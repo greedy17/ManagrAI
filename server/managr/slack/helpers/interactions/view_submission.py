@@ -38,7 +38,11 @@ from managr.salesforce.background import (
     _process_create_task,
     emit_meeting_workflow_tracker,
 )
-from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
+from managr.zoom.background import (
+    _save_meeting_review,
+    emit_send_meeting_summary,
+    _send_meeting_summary,
+)
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -114,7 +118,7 @@ def process_zoom_meeting_data(payload, context):
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    logger.info(f"{contact_forms.values_list('id', 'template__form_type')}")
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -168,8 +172,6 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
-    _save_meeting_review.now(str(workflow.id))
-    emit_send_meeting_summary(str(workflow.id))
 
     return {"response_action": "clear"}
 

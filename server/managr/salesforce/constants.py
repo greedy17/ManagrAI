@@ -246,7 +246,6 @@ MEETING_REVIEW_PUBLIC_FIELD_IDS = [
     "fae88a10-53cc-470e-86ec-32376c041893",
     "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
     "6407b7a1-a877-44e2-979d-1effafec5035",
-    "77f62583-c26f-4ba0-91c4-238f97531a8f",
     "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
 ]
 

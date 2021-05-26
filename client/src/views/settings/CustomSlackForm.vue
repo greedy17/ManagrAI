@@ -108,7 +108,6 @@
           <div
             v-if="
               field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '77f62583-c26f-4ba0-91c4-238f97531a8f' ||
                 field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
                 field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
                 field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
@@ -134,14 +133,7 @@
               >
                 {{ 'Logs the rep’s comments about the meeting' }}
               </div>
-              <div
-                v-if="field.id === '77f62583-c26f-4ba0-91c4-238f97531a8f'"
-                class="form-field__body"
-              >
-                {{
-                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
-                }}
-              </div>
+
               <div
                 v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
                 class="form-field__body"
@@ -159,7 +151,6 @@
                 class="form-field__label"
                 v-if="
                   field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '77f62583-c26f-4ba0-91c4-238f97531a8f' &&
                     field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
                     field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
                     field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'

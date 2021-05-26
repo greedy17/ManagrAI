@@ -26,7 +26,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
 
 from ..routes import routes
 from ..models import (
@@ -106,12 +106,6 @@ def emit_sf_update_resource_from_meeting(workflow_id, *args):
 
 def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
-
-
-def emit_save_meeting_review(workflow_id):
-    # currently only creating zoom meeting reviews
-    # ignore this, and call _save_meeting_review directly
-    return _save_meeting_review(workflow_id)
 
 
 def emit_meeting_workflow_tracker(workflow_id):
@@ -379,7 +373,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     while True:
         sf = user.salesforce_account
         try:
-            workflow.resource.update_in_salesforce(data)
+            res = workflow.resource.update_in_salesforce(data)
             break
         except TokenExpired:
             if attempts >= 5:
@@ -389,9 +383,13 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             else:
                 sf.regenerate_token()
                 attempts += 1
+    # create a summary
 
+    # emit summary
+    _save_meeting_review.now(str(workflow.id))
+    emit_send_meeting_summary(str(workflow.id))
     # push to sf
-    return
+    return res
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -637,34 +635,6 @@ def _process_create_new_resource(form_ids, *args):
             raise RequiredFieldError(e)
 
     return
-
-
-@background(schedule=0)
-@log_all_exceptions
-def _save_meeting_review(workflow_id):
-    # _save_meeting_review.now(workflow_id)/ .now makes it happen now, not a backgound function
-
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
-    # get the create form
-    meeting = workflow.meeting
-    # format data appropriately
-    review_form = forms.filter(template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW).first()
-    # get data
-    form_data = review_form.saved_data
-    # format data appropriately
-    data = {
-        "resource_type": workflow.resource_type,
-        "resource_id": workflow.resource_id,
-        "forecast_category": form_data.get("ForcastCategory", ""),
-        "stage": form_data.get("StageName", ""),
-        "meeting_comments": form_data.get("meeting_comments", ""),
-        "meeting_type": form_data.get("meeting_type", ""),
-        "meeting_sentiment": form_data.get("meeting_sentiment", ""),
-        "amount": form_data.get("Amount", None),
-        "close_data": form_data.get("CloseDate", None),
-        "next_step": form_data.get("NextStep", ""),
-    }
 
 
 @background(schedule=0)
