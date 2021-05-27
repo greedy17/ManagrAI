@@ -47,13 +47,16 @@ data "template_file" "managr_app" {
     aws_logs_group = aws_cloudwatch_log_group.managr_log_group[each.key].name
 
     environment               = each.value.environment
-    app_image                 = each.value.app_image
+    app_image                 = each.value.app_image != "" ? each.value.app_image : "${aws_ecr_repository.managr["thinknimble/managr/server"].repository_url}:latest"
+    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks != "" ? each.value.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
     nginx_image               = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
-    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks
-    fargate_cpu               = var.fargate_cpu
-    fargate_memory            = var.fargate_memory
-    aws_region                = data.aws_region.current.name
-    config_secret_arn         = aws_secretsmanager_secret.managr_config[each.key].arn
+    bash_image                = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
+    datadog_image             = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
+
+    fargate_cpu       = var.fargate_cpu
+    fargate_memory    = var.fargate_memory
+    aws_region        = data.aws_region.current.name
+    config_secret_arn = aws_secretsmanager_secret.managr_config[each.key].arn
 
     allowed_hosts  = each.value.allowed_hosts != "" ? each.value.allowed_hosts : "*"
     current_domain = each.value.current_domain != "" ? each.value.current_domain : aws_alb.main.dns_name
@@ -147,6 +150,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     dbUser = each.value.rds_username
     dbPass = each.value.rds_password
     dbName = each.value.rds_db_name
+
+    superuserEmail    = each.value.superuser_email
+    superuserPassword = each.value.superuser_password
 
     secretKey = each.value.secret_key
 

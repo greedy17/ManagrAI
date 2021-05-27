@@ -1,5 +1,6 @@
 import json
 import pdb
+import uuid
 import logging
 from urllib.parse import urlencode
 from django.db.models import Q
@@ -55,7 +56,7 @@ def process_meeting_review(payload, context):
             "blocks": get_block_set("meeting_review_modal", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": f"meeting_review_modal.{str(workflow.user.id)}",
+            "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
     try:
@@ -248,7 +249,7 @@ def process_stage_selected(payload, context):
 
     external_id = payload.get("view", {}).get("external_id", None)
     try:
-        view_type, user_id = external_id.split(".")
+        view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
 
@@ -284,7 +285,7 @@ def process_stage_selected(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": f"{view_type}.{user_id}",
+            "external_id": f"{view_type}.{__unique_id}",
         },
     }
     try:
@@ -478,7 +479,7 @@ def process_meeting_selected_resource_option(payload, context):
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
         ]
-        external_id = f"create_modal_block_set.{str(workflow.user.id)}"
+        external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
 
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
@@ -686,7 +687,7 @@ def process_show_update_resource_form(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Update", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": f"update_modal_block_set.{str(user.id)}",
+            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     if is_update:
@@ -860,7 +861,7 @@ def process_resource_selected_for_task(payload, context):
 
     external_id = payload.get("view", {}).get("external_id", None)
     try:
-        view_type, user_id = external_id.split(".")
+        view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
 
@@ -874,7 +875,7 @@ def process_resource_selected_for_task(payload, context):
             "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
             "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
-            "external_id": f"{view_type}.{str(u.id)}",
+            "external_id": f"{view_type}.{__unique_id}",
         },
     }
     try:

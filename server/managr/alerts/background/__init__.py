@@ -123,6 +123,8 @@ def _process_check_alert(config_id, user_id):
                         res = slack_requests.send_channel_message(
                             channel_id, access_token, text=text, block_set=blocks
                         )
+                        instance.rendered_text = instance.render_text()
+                        instance.save()
                 elif user_group == "OWNER":
                     instance = AlertInstance.objects.create(
                         template_id=alert_id,
@@ -139,6 +141,8 @@ def _process_check_alert(config_id, user_id):
                         res = slack_requests.send_channel_message(
                             channel_id, access_token, text=text, block_set=blocks
                         )
+                        instance.rendered_text = instance.render_text()
+                        instance.save()
                 else:
                     if user_group == "MANAGERS":
                         query &= Q(Q(user_level="MANAGER", is_active=True))
@@ -168,5 +172,7 @@ def _process_check_alert(config_id, user_id):
                             res = slack_requests.send_channel_message(
                                 channel_id, access_token, text=text, block_set=blocks
                             )
+                            instance.rendered_text = instance.render_text()
+                            instance.save()
     return
 

@@ -31,6 +31,16 @@ output "ecr_config" {
       registry_url = split("/", aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url)[0]
       ecr_repo_url = aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url
     }
+    bash = {
+      image_name   = "thinknimble/managr/bash"
+      registry_url = split("/", aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url)[0]
+      ecr_repo_url = aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url
+    }
+    datadog_agent = {
+      image_name   = "thinknimble/managr/datadog/agent"
+      registry_url = split("/", aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url)[0]
+      ecr_repo_url = aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url
+    }
   }
 }
 
