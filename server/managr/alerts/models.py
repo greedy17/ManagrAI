@@ -1,6 +1,8 @@
 import re
+import datetime
 import operator as _operator
 from dateutil.relativedelta import relativedelta
+from calendar import monthrange
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -300,7 +302,15 @@ class AlertConfig(TimeStampModel):
                 return timezone.now() + timezone.timedelta(days=day_diff)
             return timezone.now()
         elif self.recurrence_frequency == "MONTHLY":
-            return timezone.now() + relativedelta(days=int(self.recurrence_day))
+            d = timezone.now()
+            d_range = monthrange(d.year, d.month)
+            if self.recurrence_day > d_range[1]:
+                # aka if the month does not have 31 or is 28 and is greater than 28 days
+                diff = self.recurrence_day - d_range[1]
+
+                return timezone() + relativedelta(days=diff)
+            else:
+                return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day)
 
         return timezone.now()
 
@@ -379,7 +389,7 @@ class AlertInstance(TimeStampModel):
                 if k != self.template.resource_type and k != "__Recipient":
                     continue
                 if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
-                    binding_map[binding] = self.resource.secondary_data.get(v, "*N/A*")
+                    binding_map[binding] = self.resource.secondary_data.get(v, "N/A")
                     # HACK pb for datetime fields Mike wants just the date
                     user = self.user
                     if self.resource.secondary_data.get(v):
