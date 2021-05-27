@@ -449,7 +449,7 @@
   },
   {
     "name": "nginx-config",
-    "image": "bash:latest",
+    "image": "${bash_image}",
     "essential": false,
     "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
     "environment": [
@@ -475,7 +475,7 @@
   },
   {
     "name": "datadog-agent",
-    "image": "datadog/agent:latest",
+    "image": "${datadog_image}",
     "secrets": [
       {
         "name": "DD_API_KEY",
