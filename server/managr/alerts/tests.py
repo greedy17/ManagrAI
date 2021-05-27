@@ -11,8 +11,8 @@ from django.db.models import Q, F, Func, IntegerField, DateField, Sum
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIClient
 
-
 from managr.core import factories as core_factories
+from managr.alerts.utils.utils import convertToSlackFormat
 from managr.organization import factories as org_factories
 from managr.opportunity import factories as opp_factories
 from managr.salesforce.models import SalesforceAuthAccount
@@ -719,3 +719,50 @@ class UserTestCase(TestCase):
         current_date_filter = f"AND ((CloseDate > {(d+timezone.timedelta(days=opp.operand_value)).strftime('%Y-%m-%d')}))"
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
         self.assertEqual(template.url_str(template.user, conf_1.id), expected)
+
+    def test_formatting_bindings(self):
+        original_text = "This text should render like <strong>this</strong>"
+        original_text_1 = "This text should render like <em>this</em>"
+        original_text_2 = "This text should render like <s>this</s>"
+        original_text_3 = "This text should render like<strong>this</strong>"
+        original_text_4 = "This text should render like<em>this</em>"
+        original_text_5 = "This text should render like<s>this</s>"
+        original_text_6 = "This text should render like <em>this</em>"
+        original_text_7 = "This text should render like <s>this</s>"
+        original_text_8 = "This text should render like<strong>this</strong>"
+        original_text_9 = "This text should render like<em> this</em>"
+        original_text_10 = "This text should render like<s> this</s>"
+        original_text_11 = "This text should render like<s>{ this }</s>"
+        original_text_12 = "<s>This text should render like{ this }</s>"
+        original_text_13 = "<strong>This</strong> <em>text</em> <strong><em>should render</em></strong> like{ this }"
+
+        sample_text = "This text should render like *this*"
+        sample_text_1 = "This text should render like _this_"
+        sample_text_2 = "This text should render like ~this~"
+        sample_text_3 = "This text should render like*this*"
+        sample_text_4 = "This text should render like_this_"
+        sample_text_5 = "This text should render like~this~"
+        sample_text_6 = "This text should render like _this_"
+        sample_text_7 = "This text should render like ~this~"
+        sample_text_8 = "This text should render like*this*"
+        sample_text_9 = "This text should render like_this_"
+        sample_text_10 = "This text should render like~this~"
+        sample_text_11 = "This text should render like ~{ this }~"
+        sample_text_12 = "~This text should render like{ this }~"
+        sample_text_13 = "*This* _text_ *_should render_* like{ this }"
+
+        self.assertEqual(convertToSlackFormat(original_text), sample_text)
+        self.assertEqual(convertToSlackFormat(original_text_1), sample_text_1)
+        self.assertEqual(convertToSlackFormat(original_text_2), sample_text_2)
+        self.assertEqual(convertToSlackFormat(original_text_3), sample_text_3)
+        self.assertEqual(convertToSlackFormat(original_text_4), sample_text_4)
+        self.assertEqual(convertToSlackFormat(original_text_5), sample_text_5)
+        self.assertEqual(convertToSlackFormat(original_text_6), sample_text_6)
+        self.assertEqual(convertToSlackFormat(original_text_7), sample_text_7)
+        self.assertEqual(convertToSlackFormat(original_text_8), sample_text_8)
+        self.assertEqual(convertToSlackFormat(original_text_9), sample_text_9)
+        self.assertEqual(convertToSlackFormat(original_text_10), sample_text_10)
+        self.assertEqual(convertToSlackFormat(original_text_11), sample_text_11)
+        self.assertEqual(convertToSlackFormat(original_text_12), sample_text_12)
+        self.assertEqual(convertToSlackFormat(original_text_13), sample_text_13)
+
