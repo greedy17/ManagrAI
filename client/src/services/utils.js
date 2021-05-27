@@ -377,48 +377,26 @@ export function stringRenderer(
   var block = textBlock,
     currPos = startIndex,
     openBrackets = 0,
-    stillSearching = true,
-    waitForChar = false,
+    //    stillSearching = true,
+    // waitForChar = false,
     charSet = existingSets,
     currGroup = group
 
-  while (stillSearching && currPos < block.length) {
+  while (/*stillSearching  && */ currPos < block.length) {
+    //debugger
     var currChar = block.charAt(currPos)
 
-    if (!waitForChar) {
-      switch (currChar) {
-        case openChar:
-          openBrackets++
-          charSet[currGroup] = [currPos]
-          break
-        case closeCar:
-          if (charSet[currGroup] && charSet[currGroup][0]) {
-            charSet[currGroup].push(currPos)
-            openBrackets--
-          }
-          break
-        case '"':
-        case "'":
-          waitForChar = currChar
-          break
-        case '/':
-          var nextChar = block.charAt(currPos + 1)
-          if (nextChar === '/') {
-            waitForChar = '\n'
-          } else if (nextChar === '*') {
-            waitForChar = '*/'
-          }
-      }
-    } else {
-      if (currChar === waitForChar) {
-        if (waitForChar === '"' || waitForChar === "'") {
-          block.charAt(currPos - 1) !== '\\' && (waitForChar = false)
-        } else {
-          waitForChar = false
+    switch (currChar) {
+      case openChar:
+        openBrackets++
+        charSet[currGroup] = [currPos]
+        break
+      case closeCar:
+        if (charSet[currGroup] && charSet[currGroup][0]) {
+          charSet[currGroup].push(currPos)
+          openBrackets--
         }
-      } else if (currChar === '*') {
-        block.charAt(currPos + 1) === '/' && (waitForChar = false)
-      }
+        break
     }
 
     if (

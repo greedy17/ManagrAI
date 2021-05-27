@@ -318,6 +318,7 @@ export default {
             this.savedChanges = false
           }, 1000)
         } catch (e) {
+          console.log(e)
           this.$Alert.alert({
             message: 'There was an error updating your template',
             type: 'error',
