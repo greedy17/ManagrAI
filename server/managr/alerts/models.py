@@ -390,10 +390,10 @@ class AlertInstance(TimeStampModel):
                     continue
                 if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
                     # if field does not exist set to strike through field with N/A
-                    binding_map[binding] = self.resource.secondary_data.get(v, f" ~{k} {v} N/A~ ")
+                    binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
                     # if field value is None or blank set to empty or no value
                     if binding_map[binding] in ["", None]:
-                        binding_map[binding] = f" ~{k} {v} N/A~ "
+                        binding_map[binding] = "~None~"
                     # HACK pb for datetime fields Mike wants just the date
                     user = self.user
                     if self.resource.secondary_data.get(v):

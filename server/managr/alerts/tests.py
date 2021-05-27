@@ -766,3 +766,104 @@ class UserTestCase(TestCase):
         self.assertEqual(convertToSlackFormat(original_text_12), sample_text_12)
         self.assertEqual(convertToSlackFormat(original_text_13), sample_text_13)
 
+    def test_field_bindings(self):
+
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+        opp_2.secondary_data = {
+            "Id": "0065w000025aEK6AAM",
+            "Company": "T",
+            "Name": "Amazon",
+            "Type": None,
+            "IsWon": False,
+            "Amount": 480000.0,
+            "CRM__c": None,
+            "Fiscal": "2021 2",
+            "OwnerId": "0055w00000BiLWwAAN",
+            "IsClosed": False,
+            "NextStep": None,
+            "Video__c": None,
+            "AccountId": "0015w00002TgeyYAAR",
+            "CloseDate": "2021-06-02",
+            "ContactId": None,
+            "IsDeleted": False,
+            "StageName": "Ready",
+            "CampaignId": None,
+            "FiscalYear": 2021,
+            "Handoff__c": None,
+            "LeadSource": None,
+            "Package__c": None,
+            "CreatedById": "0055w00000BiLWwAAN",
+            "CreatedDate": "2021-05-27T13:50:24.000+0000",
+            "Description": None,
+            "Probability": 0.0,
+            "Messanger__c": None,
+            "Pricebook2Id": None,
+            "RecordTypeId": "0125w000000GGd5AAG",
+            "FiscalQuarter": 2,
+            "Multi_Test__c": None,
+            "SyncedQuoteId": None,
+            "Competitors__c": None,
+            "HasOverdueTask": False,
+            "LastViewedDate": "2021-05-27T13:59:29.000+0000",
+            "SystemModstamp": "2021-05-27T13:59:29.000+0000",
+            "HasOpenActivity": False,
+            "ForecastCategory": "Pipeline",
+            "LastActivityDate": None,
+            "LastModifiedById": "0055w00000BiLWwAAN",
+            "LastModifiedDate": "2021-05-27T13:59:29.000+0000",
+            "Next_Step_Date__c": None,
+            "Agreement_Notes__c": None,
+            "LastReferencedDate": "2021-05-27T13:59:29.000+0000",
+            "ForecastCategoryName": "Pipeline",
+            "OpportunityHistories": {
+                "done": True,
+                "records": [
+                    {
+                        "Id": "0085w000041qLB3AAM",
+                        "attributes": {
+                            "url": "/services/data/v50.0/sobjects/OpportunityHistory/0085w000041qLB3AAM",
+                            "type": "OpportunityHistory",
+                        },
+                        "CreatedDate": "2021-05-27T13:59:29.000+0000",
+                    }
+                ],
+                "totalSize": 1,
+            },
+            "managr__Heroku_id__c": None,
+            "HasOpportunityLineItem": False,
+            "Last_Correspondence__c": None,
+            "OpportunityContactRoles": None,
+            "managr__Managr_Amount__c": None,
+            "LastAmountChangedHistoryId": None,
+            "Last_Correspondence_Date__c": None,
+            "managr__Heroku_id_formula__c": None,
+            "LastCloseDateChangedHistoryId": "0085w000041qLB3AAM",
+            "managr__Managr_Account_Id_Formula__c": None,
+        }
+        opp_2.save()
+        message_templ = alert_models.AlertMessageTemplate.objects.create(
+            template=self.template,
+            bindings=[
+                "__Recipient.first_name",
+                "Opportunity.Company",
+                "Opportunity.LastModifiedDate",
+                "Opportunity.Competitors__c",
+                "Opportunity.Last_Correspondence__c",
+                "Opportunity.Last_Correspondence_Date__c",
+                "Opportunity.Last_Correspondence_Date__c",
+                "Opportunity.num_of_Outreach__c",
+                "Opportunity.Outreach_Type__c",
+                "Opportunity.Last_Outreach_Date__c",
+            ],
+            notification_text="POP UP",
+            body="<p>Hey { __Recipient.first_name } <strong>{ Opportunity.Company }</strong> hasn't been worked in over 10 days, last touched on <strong>{ Opportunity.LastModifiedDate }</strong>. They are using <strong>{ Opportunity.Competitors__c } </strong>last correspondence was<em> { Opportunity.Last_Correspondence__c }</em>, which took place on { Opportunity.Last_Correspondence_Date__c }. You have reached out <strong>{ Opportunity.num_of_Outreach__c }</strong> times via <em>{ Opportunity.Outreach_Type__c },</em> last time was on <em>{ Opportunity.Last_Outreach_Date__c }</em></p>",
+        )
+        expected = f"Hey {self.admin_user.first_name} *T* hasn't been worked in over 10 days, last touched on *{opp_2.secondary_data.get('LastModifiedDate', '~None~')}* . They are using *~None~* last correspondence was _~None~_ , which took place on ~None~. You have reached out *~None~* times via _~None~,_ last time was on _~None~_\n"
+        instance = alert_models.AlertInstance.objects.create(
+            template_id=self.template.id,
+            user_id=self.admin_user.id,
+            resource_id=str(opp_2.id),
+            instance_meta={},
+        )
+        self.assertEqual(expected, instance.render_text())
+        return
