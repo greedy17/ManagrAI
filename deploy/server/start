@@ -7,4 +7,5 @@ set -o nounset
 python3 server/manage.py migrate
 # run this once
 python3 server/manage.py initsuperuser
+python3 server/manage.py loaddata fixture.json
 ddtrace-run python3 server/manage.py runserver 0.0.0.0:8000
