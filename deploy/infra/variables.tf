@@ -3,6 +3,10 @@ variable "managr_domain" {
   default = "mymanagrapp.com"
 }
 
+variable "ecs_task_role_name" {
+  default = "ManagrEcsTaskRole"
+}
+
 variable "ecs_task_execution_role_name" {
   default = "ManagrEcsTaskExecutionRole"
 }

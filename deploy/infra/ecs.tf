@@ -89,6 +89,7 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.managr_app[each.key].rendered
+  task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
   volume {
     name = "nginx-conf-vol"
   }
