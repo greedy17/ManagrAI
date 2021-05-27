@@ -54,7 +54,7 @@ variable "s3_bucket_aws_secret_access_key" {
 
 variable "ecr_repo_names" {
   type    = set(string)
-  default = ["thinknimble/managr/server", "thinknimble/managr/server-tasks", "thinknimble/managr/nginx"]
+  default = ["thinknimble/managr/server", "thinknimble/managr/server-tasks", "thinknimble/managr/nginx", "thinknimble/managr/bash", "thinknimble/managr/datadog/agent"]
 }
 
 variable "environments" {
