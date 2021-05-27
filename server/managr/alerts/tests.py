@@ -1,4 +1,8 @@
 import json
+import datetime
+from dateutil.relativedelta import relativedelta
+from calendar import monthrange
+
 
 from django.utils import timezone
 from django.test import TestCase
@@ -590,3 +594,128 @@ class UserTestCase(TestCase):
         additional_filters = [*adapter_class.additional_filters(), query_items]
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
         self.assertEqual(self.template.url_str(self.admin_user, str(conf_1.id)), expected)
+
+    def test_url_str_run_now_monthly(self):
+        temp = {
+            "user_id": str(self.admin_user.id),
+            "title": "test",
+            "is_active": True,
+            "resource_type": "Opportunity",
+            "alert_level": "ORGANIZATION",
+        }
+        template = alert_models.AlertTemplate.objects.create(**temp)
+        grp = {"template_id": str(template.id), "group_condition": "AND", "group_order": 0}
+        group = alert_models.AlertGroup.objects.create(**grp)
+        op = {
+            "group_id": str(group.id),
+            "operand_type": "FIELD",
+            "operand_order": 0,
+            "operand_identifier": "CloseDate",
+            "operand_value": 2,
+            "operand_condition": "OR",
+            "operand_operator": ">",
+            "data_type": "DATE",
+        }
+        alert_models.AlertOperand.objects.create(**op)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=27,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=template,
+        )
+        adapter_class = adapter_routes.get(template.resource_type, None)
+        additional_filters = adapter_class.additional_filters()
+        current_date_filter = f"AND ((CloseDate > {datetime.datetime(day=29,month=5,year=2021).strftime('%Y-%m-%d')}))"
+        expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
+        self.assertEqual(template.url_str(template.user, conf_1.id), expected)
+
+    def test_url_str_run_now_monthly_next_month_31(self):
+        """ test for month with 31 days should return 6th"""
+        temp = {
+            "user_id": str(self.admin_user.id),
+            "title": "test",
+            "is_active": True,
+            "resource_type": "Opportunity",
+            "alert_level": "ORGANIZATION",
+        }
+        template = alert_models.AlertTemplate.objects.create(**temp)
+        grp = {"template_id": str(template.id), "group_condition": "AND", "group_order": 0}
+        group = alert_models.AlertGroup.objects.create(**grp)
+        op = {
+            "group_id": str(group.id),
+            "operand_type": "FIELD",
+            "operand_order": 0,
+            "operand_identifier": "CloseDate",
+            "operand_value": 10,
+            "operand_condition": "OR",
+            "operand_operator": ">",
+            "data_type": "DATE",
+        }
+        opp = alert_models.AlertOperand.objects.create(**op)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=27,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=template,
+        )
+        adapter_class = adapter_routes.get(template.resource_type, None)
+        additional_filters = adapter_class.additional_filters()
+        d = timezone.now()
+        d_range = monthrange(d.year, d.month)
+        if conf_1.recurrence_day > d_range[1]:
+            # aka if the month does not have 31 or is 28 and is greater than 28 days
+            diff = conf_1.recurrence_day - d_range[1]
+
+            d = timezone() + relativedelta(days=diff)
+        else:
+            d = datetime.datetime(year=d.year, month=d.month, day=conf_1.recurrence_day)
+        current_date_filter = f"AND ((CloseDate > {(d+timezone.timedelta(days=opp.operand_value)).strftime('%Y-%m-%d')}))"
+        expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
+        self.assertEqual(template.url_str(template.user, conf_1.id), expected)
+
+    def test_url_str_run_now_monthly_next_month_30(self):
+        """ test for month with 31 days should return 1st july taking into account 30 day month"""
+        temp = {
+            "user_id": str(self.admin_user.id),
+            "title": "test",
+            "is_active": True,
+            "resource_type": "Opportunity",
+            "alert_level": "ORGANIZATION",
+        }
+        template = alert_models.AlertTemplate.objects.create(**temp)
+        grp = {"template_id": str(template.id), "group_condition": "AND", "group_order": 0}
+        group = alert_models.AlertGroup.objects.create(**grp)
+        op = {
+            "group_id": str(group.id),
+            "operand_type": "FIELD",
+            "operand_order": 0,
+            "operand_identifier": "CloseDate",
+            "operand_value": 35,
+            "operand_condition": "OR",
+            "operand_operator": ">",
+            "data_type": "DATE",
+        }
+        opp = alert_models.AlertOperand.objects.create(**op)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=27,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=template,
+        )
+        adapter_class = adapter_routes.get(template.resource_type, None)
+        additional_filters = adapter_class.additional_filters()
+        d = timezone.now()
+        d_range = monthrange(d.year, d.month)
+        if conf_1.recurrence_day > d_range[1]:
+            # aka if the month does not have 31 or is 28 and is greater than 28 days
+            diff = conf_1.recurrence_day - d_range[1]
+
+            d = timezone() + relativedelta(days=diff)
+        else:
+            d = datetime.datetime(year=d.year, month=d.month, day=conf_1.recurrence_day)
+        current_date_filter = f"AND ((CloseDate > {(d+timezone.timedelta(days=opp.operand_value)).strftime('%Y-%m-%d')}))"
+        expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
+        self.assertEqual(template.url_str(template.user, conf_1.id), expected)
