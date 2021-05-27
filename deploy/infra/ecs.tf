@@ -99,14 +99,15 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "main" {
-  for_each         = { for e in var.environments : e.name => e }
-  name             = "managr-service-${lower(each.value.name)}"
-  cluster          = aws_ecs_cluster.main.id
-  task_definition  = aws_ecs_task_definition.app[each.key].arn
-  desired_count    = var.app_count
-  launch_type      = "FARGATE"
-  platform_version = "1.4.0"
-  propagate_tags   = "SERVICE"
+  for_each               = { for e in var.environments : e.name => e }
+  name                   = "managr-service-${lower(each.value.name)}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.app[each.key].arn
+  desired_count          = var.app_count
+  launch_type            = "FARGATE"
+  platform_version       = "1.4.0"
+  propagate_tags         = "SERVICE"
+  enable_execute_command = true
 
   # temporary
   force_new_deployment = true
