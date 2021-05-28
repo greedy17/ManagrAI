@@ -89,6 +89,7 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.managr_app[each.key].rendered
+  task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
   volume {
     name = "nginx-conf-vol"
   }
@@ -99,14 +100,15 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "main" {
-  for_each         = { for e in var.environments : e.name => e }
-  name             = "managr-service-${lower(each.value.name)}"
-  cluster          = aws_ecs_cluster.main.id
-  task_definition  = aws_ecs_task_definition.app[each.key].arn
-  desired_count    = var.app_count
-  launch_type      = "FARGATE"
-  platform_version = "1.4.0"
-  propagate_tags   = "SERVICE"
+  for_each               = { for e in var.environments : e.name => e }
+  name                   = "managr-service-${lower(each.value.name)}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.app[each.key].arn
+  desired_count          = var.app_count
+  launch_type            = "FARGATE"
+  platform_version       = "1.4.0"
+  propagate_tags         = "SERVICE"
+  enable_execute_command = true
 
   # temporary
   force_new_deployment = true
