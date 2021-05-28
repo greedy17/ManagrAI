@@ -13,6 +13,32 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   }
 }
 
+resource "aws_iam_role" "ecs_task_role_ecs_exec" {
+  name               = var.ecs_task_role_name
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
+
+  inline_policy {
+    name = "ecs_exec"
+
+    policy = jsonencode({
+
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel"
+          ],
+          "Resource" : "*"
+        }
+      ]
+    })
+  }
+}
+
 # ECS task execution role
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = var.ecs_task_execution_role_name
