@@ -158,9 +158,22 @@ def _generate_form_template(user_id):
             form_type=form_type, resource=resource, organization=org
         )
 
-        if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
+        if (
+            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
+            and resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY
+        ):
             fields = SObjectField.objects.filter(
-                is_public=True, id__in=sf_consts.MEETING_REVIEW_PUBLIC_FIELD_IDS
+                is_public=True, id__in=sf_consts.MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS
+            )
+            for i, field in enumerate(fields):
+                f.fields.add(field, through_defaults={"order": i})
+            f.save()
+        elif (
+            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
+            and resource == sf_consts.RESOURCE_SYNC_ACCOUNT
+        ):
+            fields = SObjectField.objects.filter(
+                is_public=True, id__in=sf_consts.MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS
             )
             for i, field in enumerate(fields):
                 f.fields.add(field, through_defaults={"order": i})

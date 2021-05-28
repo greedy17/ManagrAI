@@ -7,7 +7,7 @@ from managr.organization.models import Stage
 #
 # The scoring algo is made up of six components.
 #
-# 1. Sentiment (0-50 points)
+
 # 2. Stage Progress (+/-10 points)
 # 3. Forecast Progress (+/-10 points)
 # 4. Close Date Progress (+/-5 points)
@@ -18,29 +18,6 @@ from managr.organization.models import Stage
 
 # Data structure defining how meeting scores are computed.
 SCORE_LOOKUP = {
-    "meeting_sentiment": {
-        zoom_consts.MEETING_SENTIMENT_GREAT: {
-            "type": "meeting_sentiment",
-            "points": 50,
-            "impact": "positive",
-            "message_tpl": "The rep said the meeting went great!",
-            "message_delta": "",
-        },
-        zoom_consts.MEETING_SENTIMENT_FINE: {
-            "type": "meeting_sentiment",
-            "points": 0,
-            "impact": "positive",
-            "message_tpl": "The rep said the meeting did not go well.",
-            "message_delta": "",
-        },
-        zoom_consts.MEETING_SENTIMENT_FINE: {
-            "type": "meeting_sentiment",
-            "points": 20,
-            "impact": "positive",
-            "message_tpl": "The rep said the meeting went fine.",
-            "message_delta": "",
-        },
-    },
     "stage": {
         zoom_consts.MEETING_REVIEW_PROGRESSED: {
             "type": "stage",
@@ -337,7 +314,7 @@ def score_meeting(meeting):
         zoom_meeting_review = meeting.zoom_meeting_review
 
         # "Clean" the meeting review data
-        meeting_sentiment = zoom_meeting_review.meeting_sentiment or slack_consts.ZOOM_MEETING__FINE
+
         stage_progress = zoom_meeting_review.stage_progress
         forecast_progress = zoom_meeting_review.forecast_progress
         close_date_progress = zoom_meeting_review.close_date_progress
@@ -361,7 +338,6 @@ def score_meeting(meeting):
         score_components = [
             ScoreComponent(meeting, **i)
             for i in [
-                SCORE_LOOKUP["meeting_sentiment"][meeting_sentiment],
                 SCORE_LOOKUP["stage"][stage_progress],
                 SCORE_LOOKUP["forecast_category"][forecast_progress],
                 SCORE_LOOKUP["close_date"][close_date_progress],

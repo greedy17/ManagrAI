@@ -26,35 +26,6 @@
   },
   {
     "model": "salesforce.SObjectField",
-    "pk": "77f62583-c26f-4ba0-91c4-238f97531a8f",
-    "fields": {
-      "api_name": "meeting_sentiment",
-      "custom": true,
-      "createable": true,
-      "updateable": true,
-      "unique": false,
-      "required": false,
-      "data_type": "Picklist",
-      "display_value": "",
-      "value": null,
-      "label": "How Did It Go?",
-      "length": 10,
-      "reference": false,
-      "relationship_name": null,
-      "reference_to_infos": [],
-      "options": [
-        { "label": "Great", "value": "ZOOM_MEETING__GREAT" },
-        { "label": "Fine", "value": "ZOOM_MEETING__FINE" },
-        { "label": "Not Well", "value": "ZOOM_MEETING__NOT_WELL" }
-      ],
-      "is_public": true,
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "filterable": false
-    }
-  },
-  {
-    "model": "salesforce.SObjectField",
     "pk": "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
     "fields": {
       "api_name": "meeting_comments",
