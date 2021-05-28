@@ -8,6 +8,7 @@ from managr.salesforce.adapter.exceptions import (
     UnhandledSalesforceError,
     SFNotFoundError,
     InvalidRefreshToken,
+    InvalidFieldError,
 )
 from managr.slack.helpers.exceptions import (
     TokenExpired,
@@ -36,12 +37,12 @@ def log_all_exceptions(func):
     return wrapper_log_all_exceptions
 
 
-def sf_api_exceptions(error_key):
-    """Decorator for sf async functions will error_key: kebab case key"""
+def sf_api_exceptions_wf(error_key):
+    """Decorator for sf async (for workflows only) functions will error_key: kebab case key"""
 
     def error_fn(func):
         @functools.wraps(func)
-        def wrapper_sf_api_exceptions(*args, **kwargs):
+        def wrapper_sf_api_exceptions_wf(*args, **kwargs):
             # only retries for token expired errors
             try:
                 return func(*args, **kwargs)
@@ -59,6 +60,19 @@ def sf_api_exceptions(error_key):
                 w.failed_task_description.append(f"{operation_key} {str(e)}")
                 w.save()
             except FieldValidationError as e:
+                from managr.salesforce.models import MeetingWorkflow
+
+                operation_key = f"Failed to {snake_to_space(error_key)}"
+
+                workflow_id = args[0]
+                w = MeetingWorkflow.objects.filter(id=workflow_id).first()
+                if not w:
+                    return LOGGER.exception(
+                        f"Function wrapped in sfw logger but cannot find workflow {e}"
+                    )
+                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                w.save()
+            except InvalidFieldError as e:
                 from managr.salesforce.models import MeetingWorkflow
 
                 operation_key = f"Failed to {snake_to_space(error_key)}"
@@ -113,7 +127,57 @@ def sf_api_exceptions(error_key):
             except Exception as e:
                 LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
 
-        return wrapper_sf_api_exceptions
+        return wrapper_sf_api_exceptions_wf
+
+    return error_fn
+
+
+def sf_api_exceptions(rethrow=False):
+    """Decorator for sf async functions will error_key: kebab case key"""
+
+    def error_fn(func):
+        @functools.wraps(func)
+        def wrapper_sf_api_exceptions_wf(*args, **kwargs):
+            # only retries for token expired errors
+            try:
+                return func(*args, **kwargs)
+            except RequiredFieldError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except FieldValidationError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except UnhandledSalesforceError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except SFNotFoundError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except InvalidRefreshToken as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except InvalidFieldError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except Exception as e:
+                if rethrow:
+                    raise e
+
+                LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+
+        return wrapper_sf_api_exceptions_wf
 
     return error_fn
 

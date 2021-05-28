@@ -75,6 +75,41 @@ def emit_send_meeting_summary(workflow_id):
     return _send_meeting_summary(workflow_id)
 
 
+def _send_zoom_error_message(user, meeting_uuid):
+    if hasattr(user, "slack_integration"):
+        user_slack_channel = user.slack_integration.channel
+        slack_org_access_token = user.organization.slack_integration.access_token
+
+        try:
+            slack_requests.send_channel_message(
+                user_slack_channel,
+                slack_org_access_token,
+                text=f"Unable to log meeting",
+                block_set=get_block_set(
+                    "error_message",
+                    {
+                        "message": "Unfortunately we cannot gather meeting details for (basic) free level zoom accounts"
+                    },
+                ),
+            )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+
+
 @background()
 def _refresh_zoom_token(zoom_account_id):
     zoom_account = ZoomAuthAccount.objects.filter(id=zoom_account_id).first()
@@ -131,8 +166,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 logger.info(
                     f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
                 )
-                meeting.participants = []
-                break
+                _send_zoom_error_message(user, meeting_uuid)
+                return
 
         #
         logger.info(
@@ -394,7 +429,7 @@ def _save_meeting_review(workflow_id):
         elif form_data.get("ForecastCategory", None) not in ["", None]:
             forecast_category = form_data.get("ForecastCategory")
         # format data appropriately
-        print(form_data.get("meeting_sentiment"))
+
         data = {
             "meeting": meeting,
             "resource_type": workflow.resource_type,
