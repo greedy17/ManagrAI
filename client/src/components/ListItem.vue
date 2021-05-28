@@ -1,8 +1,13 @@
 <template>
   <div
-    @click="$emit('item-selected', item)"
+    @click="$emit('item-selected', item), $emit('click', $event)"
     class="item-container"
-    :class="{ 'item-container--active': active }"
+    :class="{
+      'item-container--active': active,
+      'item-container--small': isSmall || (!isMedium && !isLarge && !isAutoSize),
+      'item-container--medium': isMedium,
+      'item-container--large': isLarge,
+    }"
   >
     <span class="item-container__label">{{ item }}</span>
     <span v-if="showIcon" class="item-container__icon">x</span>
@@ -23,6 +28,18 @@ export default {
     showIcon() {
       return this.$attrs.hasOwnProperty('showIcon')
     },
+    isSmall() {
+      return this.$attrs.hasOwnProperty('small')
+    },
+    isMedium() {
+      return this.$attrs.hasOwnProperty('medium')
+    },
+    isLarge() {
+      return this.$attrs.hasOwnProperty('large')
+    },
+    isAutoSize() {
+      return this.$attrs.hasOwnProperty('autoSize')
+    },
   },
 }
 </script>
@@ -36,7 +53,7 @@ export default {
   background-color: lightgray;
   border-radius: 2px;
   color: white;
-  width: 10rem;
+
   padding: 0.2rem 1rem;
   font-size: 13px;
   font-weight: bold;
@@ -44,6 +61,16 @@ export default {
   &--active {
     background-color: #199e54;
   }
+  &--small {
+    width: 10rem;
+  }
+  &--medium {
+    width: 20rem;
+  }
+  &--large {
+    width: 30rem;
+  }
+
   &:hover {
     cursor: pointer;
   }

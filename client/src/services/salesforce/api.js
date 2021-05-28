@@ -53,6 +53,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       createable: ApiFilter.create({ key: 'createable' }),
       updateable: ApiFilter.create({ key: 'updateable' }),
       salesforceObject: ApiFilter.create({ key: 'salesforceObject' }),
+
       search: ApiFilter.create({ key: 'search' }),
     }
 
@@ -87,6 +88,8 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       updateable: ApiFilter.create({ key: 'updateable' }),
       salesforceObject: ApiFilter.create({ key: 'salesforce_object' }),
       search: ApiFilter.create({ key: 'search' }),
+      forAlerts: ApiFilter.create({ key: 'for_alerts' }),
+      filterable: ApiFilter.create({ key: 'filterable' }),
     }
 
     const url = SObjectFormBuilderAPI.ENDPOINT + 'fields/'
@@ -98,6 +101,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
         pageSize: pagination.size,
       }),
     }
+
     return this.client
       .get(url, options)
       .then(response => response.data)
@@ -115,7 +119,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
 
     let params = ApiFilter.buildParams(filterMaps, { ...query_params })
-    console.log(SObjectFormBuilderAPI.ENDPOINT)
+
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'validations/', {
         params: this.cls.toAPI(params),
