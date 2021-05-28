@@ -28,6 +28,6 @@ BASH_ENV=/container.env
 
 ## Automatically run alerts everyday at 7am est 11am UTC
 
-## 0 11 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py triggeralerts' > /proc/1/fd/1 2>/proc/1/fd/2
+0 11 * * * bash -c 'ddtrace-run /usr/local/bin/python /app/server/manage.py triggeralerts' > /proc/1/fd/1 2>/proc/1/fd/2
 
 
