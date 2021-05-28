@@ -85,8 +85,7 @@ export default new Router({
     {
       path: '/forms',
       component: SlackFormSettings,
-
-      beforeEnter: Auth.requireAuth,
+      beforeEnter: Auth.requireIsAdminAuth,
       name: 'SlackFormSettings',
     },
     {
