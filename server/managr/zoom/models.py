@@ -337,7 +337,7 @@ class MeetingReview(TimeStampModel):
         max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
     )
     next_step = models.TextField(
-        blank=True, help_text="If user uses next step field this will be saved"
+        blank=True, help_text="If user uses next step field this will be saved", null=True
     )
     close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
