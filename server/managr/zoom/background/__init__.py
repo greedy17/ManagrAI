@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 
 from django.conf import settings
+from django.db.models import Q
 
 from background_task import background
 from rest_framework.exceptions import ValidationError
@@ -75,6 +76,41 @@ def emit_send_meeting_summary(workflow_id):
     return _send_meeting_summary(workflow_id)
 
 
+def _send_zoom_error_message(user, meeting_uuid):
+    if hasattr(user, "slack_integration"):
+        user_slack_channel = user.slack_integration.channel
+        slack_org_access_token = user.organization.slack_integration.access_token
+
+        try:
+            slack_requests.send_channel_message(
+                user_slack_channel,
+                slack_org_access_token,
+                text=f"Unable to log meeting",
+                block_set=get_block_set(
+                    "error_message",
+                    {
+                        "message": "Unfortunately we cannot gather meeting details for (basic) free level zoom accounts"
+                    },
+                ),
+            )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed to gather meeting for user {user.email} with uuid {meeting_uuid}"
+            )
+
+
 @background()
 def _refresh_zoom_token(zoom_account_id):
     zoom_account = ZoomAuthAccount.objects.filter(id=zoom_account_id).first()
@@ -109,12 +145,14 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             zoom_account = user.zoom_account
             try:
                 meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-                meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+
                 meeting.original_duration = original_duration
                 logger.info(f"{meeting.original_duration}")
                 if meeting.original_duration < 0:
                     # zoom weired bug where instance meetings get a random -1324234234 negative big int
                     meeting.original_duration = 0
+                # this will fail if a user has a free account
+                meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
 
                 break
             except TokenExpired:
@@ -129,6 +167,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 logger.info(
                     f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
                 )
+                _send_zoom_error_message(user, meeting_uuid)
+                return
 
         #
         logger.info(
@@ -390,7 +430,7 @@ def _save_meeting_review(workflow_id):
         elif form_data.get("ForecastCategory", None) not in ["", None]:
             forecast_category = form_data.get("ForecastCategory")
         # format data appropriately
-        print(form_data.get("meeting_sentiment"))
+
         data = {
             "meeting": meeting,
             "resource_type": workflow.resource_type,
@@ -399,7 +439,6 @@ def _save_meeting_review(workflow_id):
             "stage": form_data.get("StageName", ""),
             "meeting_comments": form_data.get("meeting_comments", ""),
             "meeting_type": form_data.get("meeting_type", ""),
-            "meeting_sentiment": form_data.get("meeting_sentiment", ""),
             "amount": to_float(form_data.get("Amount", None)),
             "close_date": pytz.utc.localize(
                 datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
@@ -416,20 +455,36 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    # only send meeting reviews for opps
-    if (
-        hasattr(workflow.meeting, "zoom_meeting_review")
-        and workflow.meeting.zoom_meeting_review.meeting_sentiment
-        == zoom_consts.MEETING_SENTIMENT_GREAT
-        and workflow.resource_type == "Opportunity"
-    ):
+    # only send meeting reviews for opps if the leadership box is selected or owner is selected
+    send_summ_to_leadership = (
+        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        .first()
+        .saved_data.get("__send_recap_to_leadership")
+    )
+    send_summ_to_owner = (
+        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        .first()
+        .saved_data.get("__send_recap_to_owner")
+    )
+    if hasattr(workflow.meeting, "zoom_meeting_review") and workflow.resource_type == "Opportunity":
 
         user = workflow.user
+        if True not in [send_summ_to_leadership, send_summ_to_owner]:
+            return
+        query = Q()
+        if send_summ_to_leadership:
+            query |= Q(user_level="MANAGER")
+        if send_summ_to_owner:
+            query |= Q(id=user.id)
+
+        user_list = (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
         slack_access_token = user.organization.slack_integration.access_token
 
-        user_list = user.organization.users.filter(user_level="MANAGER").select_related(
-            "slack_integration"
-        )
         try:
             for u in user_list:
                 if hasattr(u, "slack_integration"):
@@ -465,7 +520,6 @@ def _send_meeting_summary(workflow_id):
 
 @background(schedule=0)
 def _process_confirm_compliance(obj):
-    """ Sends Compliance verification on app deauth to zoom """
+    """Sends Compliance verification on app deauth to zoom"""
     ZoomAcct.compliance_api(json.loads(obj))
     return
-

@@ -18,7 +18,12 @@ def _handle_response(response, fn_name=None, blocks=[]):
 
     else:
         status_code = response.status_code
-        res_data = response.json()
+        try:
+            res_data = response.json()
+        except json.decoder.JSONDecodeError:
+            # one slack request (see generic requests) does not return json
+            return response.text
+
         if not res_data.get("ok"):
             error_code = response.status_code
             error_param = res_data.get("error")
@@ -79,7 +84,7 @@ def request_user_dm_channel(slack_id, access_token):
 
 def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     """
-    Posts a message to a public channel, private channel, or DM channel.
+    Posts a message to a DM channel - we do not have chat scope anymore this will only work for dms.
     Initial context for block_set goes here!
     **Channel Id required to send DM's or Channel
     """
@@ -109,7 +114,7 @@ def publish_view(slack_id, access_token, view):
 
 def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block_set=[]):
     """
-    Posts a message to a public channel, private channel, or DM channel.
+    Posts a message to DM channel.
     *Channel and User are required for ephemeral messages
     """
     url = slack_const.SLACK_API_ROOT + slack_const.POST_EPHEMERAL
@@ -125,7 +130,7 @@ def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block
 
 def update_channel_message(channel, message_timestamp, access_token, text="Managr", block_set=[]):
     """
-    Updates a message.
+    Updates a message in DM.
     """
     url = slack_const.SLACK_API_ROOT + slack_const.CHAT_UPDATE
     data = {}
@@ -148,4 +153,3 @@ def generic_request(url, data, access_token=None):
         else slack_auth.json_headers(),
     )
     return _handle_response(res, blocks=original_data.get("blocks"))
-

@@ -8,7 +8,7 @@
     <slot name="input">
       <InputField
         class="tn-input__input"
-        :id="labelRelation"
+        :id="$attrs.id"
         :class="{
           'tn-input__input--small': isSmall,
           'tn-input__input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
@@ -17,9 +17,10 @@
         }"
         v-bind="$attrs"
         v-on="$listeners"
+        :type="inputType"
       />
     </slot>
-    <div v-if="errors.length" class="tn-input__errors">
+    <div v-show="errors.length" class="tn-input__errors">
       <span :key="`${error.code}-${i}`" v-for="(error, i) in errors">{{ error.message }}</span>
     </div>
   </div>
@@ -91,46 +92,31 @@ export default {
   ::v-deep .primary {
     --active-opacity: 1;
   }
+
   /*   ::v-deep .input-content__active {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: $white;
   } */
-  ::v-deep .input-form__active {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: $white;
-  }
-
-  &__input {
-    border-radius: 4px;
-    background-color: $white;
-    border: 1px solid #eaebed;
-    box-sizing: border-box;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    color: red;
-    &--small {
-      width: 7.4375rem;
-    }
-    &--medium {
-      width: 13rem;
-    }
-    &--large {
-      width: 19.6875rem;
-    }
-    &--bordered {
-      border: 1px solid #eaebed;
-    }
-  }
 
   &__errors {
+    position: relative;
+    top: 2px;
     display: flex;
     flex-direction: column;
-    color: red;
+    color: $coral;
     font-size: 0.75rem;
     font-family: $base-font-family;
-    margin-top: 0.3rem;
+    z-index: 999;
   }
+}
+::v-deep .input-content {
+  @include input-field();
+}
+::v-deep .input-content__active {
+  outline: none;
+}
+::v-deep .input-form__active {
+  border: $dark-green;
 }
 </style>

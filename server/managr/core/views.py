@@ -184,7 +184,7 @@ class UserViewSet(
         url_path="retrieve-email",
     )
     def retrieve_email(self, request, *args, **kwargs):
-        """ retrieve's a users email to display in field on activation """
+        """retrieve's a users email to display in field on activation"""
         params = request.query_params
         pk = params.get("id")
         magic_token = params.get("token")
@@ -316,7 +316,7 @@ def get_email_authorization_link(request):
 
 class GetFileView(View):
     def get(self, request, file_id):
-        """ This endpoint returns a file from nylas using an nylas ID """
+        """This endpoint returns a file from nylas using an nylas ID"""
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
@@ -375,7 +375,7 @@ class NylasAccountWebhook(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        """ Respond to Nylas verification webhook """
+        """Respond to Nylas verification webhook"""
         challenge = request.query_params.get("challenge", None)
         if challenge:
             return HttpResponse(content=challenge)
@@ -550,12 +550,12 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             recipient,
             context=context,
         )
-        text = f"{user.full_name}, {u.full_name} has invited {user.full_name} to join the managr app, check your email for your invitation {user.email}"
+        text = f"{u.full_name} has invited {user.email} to join the Managr, an invitation has been sent to {user.email}"
         if send_slack and hasattr(u.organization, "slack_integration"):
-            slack_requests.send_channel_message(
-                u.organization.slack_integration.incoming_webhook.get("channel"),
+            slack_requests.generic_request(
+                u.organization.slack_integration.incoming_webhook.get("url"),
+                dict(text=text,),
                 u.organization.slack_integration.access_token,
-                text=text,
             )
 
         response_data["activation_link"] = user.activation_link
@@ -568,7 +568,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        """ endpoint to reset a password that is forgotten """
+        """endpoint to reset a password that is forgotten"""
         token = request.data.get("token", None)
         if not token:
             raise ValidationError(
@@ -633,7 +633,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
     [permissions.AllowAny,]
 )
 def request_reset_link(request):
-    """ endpoint to request a password reset email (forgot password) """
+    """endpoint to request a password reset email (forgot password)"""
     email = request.data.get("email", None)
     # if no email is provided return validation error
     if email is None:

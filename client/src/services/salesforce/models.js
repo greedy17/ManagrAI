@@ -27,6 +27,7 @@ export class SObjectField extends Model {
   static value = new fields.CharField()
   static displayValue = new fields.CharField()
   static referenceDisplayLabel = new fields.CharField({ readOnly: true })
+  static filterable = new fields.CharField({ readOnly: true })
   static order = new fields.IntegerField()
 
   static fromAPI(json = {}) {
@@ -58,3 +59,34 @@ export class SObjectPicklist extends Model {
   static fieldRef = new fields.ModelField({ ModelClass: SObjectField })
   static values = new fields.ArrayField({ type: new fields.Field() })
 }
+
+const INTEGER = 'INTEGER'
+const STRING = 'STRING'
+const DATE = 'DATE'
+const DATETIME = 'DATETIME'
+const DECIMAL = 'DECIMAL'
+const BOOLEAN = 'BOOLEAN'
+
+const INPUT_TYPE_MAP = {
+  Currency: 'number',
+  Int: 'number',
+  Double: 'number',
+  Long: 'number',
+  TextArea: 'text',
+  String: 'text',
+  Date: 'number',
+  DateTime: 'number',
+}
+const ALERT_DATA_TYPE_MAP = {
+  Currency: DECIMAL,
+  Double: DECIMAL,
+  Int: INTEGER,
+  Long: INTEGER,
+  String: STRING,
+  Date: DATE,
+  DateTime: DATETIME,
+  Picklist: STRING,
+  TextArea: STRING,
+  Boolean: BOOLEAN,
+}
+export { INTEGER, STRING, DATE, DATETIME, DECIMAL, INPUT_TYPE_MAP, ALERT_DATA_TYPE_MAP }

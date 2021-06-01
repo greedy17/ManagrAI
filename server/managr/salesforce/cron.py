@@ -1,9 +1,8 @@
 import logging
 import kronos
-from datetime import datetime
-import logging
 import math
 
+from datetime import datetime
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -32,7 +31,7 @@ from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import UserSlackIntegration
-from managr.api.decorators import log_all_exceptions, sf_api_exceptions
+from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -57,9 +56,9 @@ class ArrayLength(Func):
 
 @kronos.register("*/10  * * * *")
 def queue_users_sf_resource(force_all=False):
-    """ 
-        runs every 12 hours and initiates user sf syncs if their prev workflow is done 
-        force_all will attempt all failed and not faild
+    """
+    runs every 12 hours and initiates user sf syncs if their prev workflow is done
+    force_all will attempt all failed and not faild
     """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
@@ -98,9 +97,9 @@ def queue_users_sf_resource(force_all=False):
 
 @kronos.register("0 */12 * * *")
 def queue_users_sf_fields(force_all=False):
-    """ 
-        runs every 12 hours and initiates user sf syncs if their prev workflow is done 
-        force_all will attempt all failed and not faild
+    """
+    runs every 12 hours and initiates user sf syncs if their prev workflow is done
+    force_all will attempt all failed and not faild
     """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
@@ -138,7 +137,7 @@ def queue_users_sf_fields(force_all=False):
 
 @kronos.register("*/60 * * * *")
 def report_sf_data_sync(sf_account=None):
-    """ runs every 60 mins and initiates user sf syncs if their prev workflow is done """
+    """runs every 60 mins and initiates user sf syncs if their prev workflow is done"""
     # latest_flow total_flows total_incomplete_flows total_day_flows total_incomplete_day_flows
     reports = []
     if not sf_account:
@@ -167,10 +166,10 @@ def report_sf_data_sync(sf_account=None):
 
 @kronos.register("0 */24 * * *")
 def queue_stale_sf_data_for_delete(cutoff=1440):
-    """ 
-        This should queue stale data for delete, it should only do this for users who are active and who have an sf account 
-        In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync 
-        or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
+    """
+    This should queue stale data for delete, it should only do this for users who are active and who have an sf account
+    In the future we will be having a flag for users who's salesforce token is soft revoked aka, they would like to pause the sync
+    or for whom we are having issues and they would like to refresh their token, for these users we should not be deleting data
     """
     resource_items = []
     limit = 0
@@ -366,4 +365,3 @@ def get_report_data(account):
         "todays_failed_flows": todays_failed_flows,
         "latest_flow": latest_flow_data if latest_flow else None,
     }
-

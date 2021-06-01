@@ -1,10 +1,10 @@
 <template>
-  <div class="list-container">
+  <div class="ls-container">
     <div
-      class="list-container__list"
+      class="ls-container__list"
       :class="{
-        'list-container__list--horizontal': isHorizonal,
-        'list-container__list--vertical': isVertical,
+        'ls-container__list--horizontal': isHorizonal,
+        'ls-container__list--vertical': isVertical,
       }"
     >
       <slot name="list"> </slot>
@@ -30,8 +30,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.list-container {
-  position: inherit;
+.ls-container {
   background-color: white;
   -moz-box-shadow: inset 0 0 10px lightgray;
   -webkit-box-shadow: inset 0 0 10px lightgray;
@@ -39,14 +38,21 @@ export default {
   border-radius: 2px;
   color: white;
   width: 100%;
-  padding: 0.5rem 1rem;
   height: 2.5rem;
+
   &__list {
     &--horizontal {
+      padding: 0.5rem 1rem;
       width: 100%;
       display: flex;
       //flex-direction: row;
       overflow-x: scroll;
+    }
+    &--vertical {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem 1rem;
     }
   }
 }

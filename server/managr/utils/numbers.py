@@ -14,18 +14,18 @@ def generate_random_numbers(length=10):
 
 
 def round_decimal(value, quantize=".01"):
-    """"""
+    """ """
     if value is not None:
         return Decimal(value).quantize(Decimal(quantize), rounding=ROUND_DOWN)
 
 
 def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
-    """ 
-        format phone number (numbers only) 
-        value = 10 or 11 digit phone number 
-        format = the format you want to conver to 
-            ether string literals of the characters you want or %d for digits %w for whitespace 
-        example +1(%d%d%d)%w%d%d%d-%d%d%d%d"
+    """
+    format phone number (numbers only)
+    value = 10 or 11 digit phone number
+    format = the format you want to conver to
+        ether string literals of the characters you want or %d for digits %w for whitespace
+    example +1(%d%d%d)%w%d%d%d-%d%d%d%d"
     """
 
     # final string should have this length - the special % sign
@@ -77,17 +77,14 @@ def format_phone_number(value, format="+1%d%d%d%d%d%d%d%d%d%d"):
     return empty_str
 
 
-
-
-
 def validate_phone_number(value, country="US"):
-    """ 
-        validates phone number depending on country (default is us) 
-        Currently only supports US, will accept formats 
-        ########################
-        0000000000, +10000000000,
-        +1(000) 000-0000, (000) 000-0000,
-        000-000-0000
+    """
+    validates phone number depending on country (default is us)
+    Currently only supports US, will accept formats
+    ########################
+    0000000000, +10000000000,
+    +1(000) 000-0000, (000) 000-0000,
+    000-000-0000
     """
     value_length = len(value)
     if value_length < 10:

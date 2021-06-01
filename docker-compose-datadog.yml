@@ -1,0 +1,116 @@
+version: "3.4"
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+
+services:
+  postgres:
+    restart: always
+    image: postgres:12
+    labels:
+      com.datadoghq.ad.check_names: '["postgres"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: '[{"host":"%%host%%", "port":5432,"username":"managr","password":"%%env_POSTGRES_PASSWORD%%"}]'
+    environment:
+      - POSTGRES_DB=managr_db
+      - POSTGRES_USER=managr
+      - POSTGRES_PASSWORD=managr
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data/
+      - local_postgres_data_backups:/backups
+    ports:
+      - 5432:5432
+
+  server:
+    build:
+      context: .
+      dockerfile: ./compose/server/Dockerfile
+    restart: always
+    command: /start
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    environment:
+      - DD_SERVICE=managr-server
+      - DD_ENV=local
+      - DD_AGENT_HOST=datadog
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+    env_file:
+      - "server/.env"
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    user: ${DOCKER_UID}
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./compose/server/Dockerfile
+    restart: always
+    command: ddtrace-run python3 server/manage.py process_tasks
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    environment:
+      - DD_SERVICE=managr-server-worker
+      - DD_ENV=local
+      - DD_AGENT_HOST=datadog
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true 
+    env_file:
+      - "server/.env"
+
+  datadog:
+    image: gcr.io/datadoghq/agent:7
+    environment:
+      - DD_API_KEY
+      - DD_SITE=datadoghq.com
+      - DD_APM_ENABLED=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_CONTAINER_EXCLUDE_LOGS=name:managr_datadog_1
+      - DD_PROCESS_AGENT_ENABLED=true
+      - DD_SYSTEM_PROBE_ENABLED=true
+      - POSTGRES_PASSWORD=managr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /sys/kernel/debug:/sys/kernel/debug
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - SYS_PTRACE
+      - NET_ADMIN
+      - IPC_LOCK
+    
+
+  # 2020-06-15 William: Temporarily disabled, because WSL is not picking
+  #                     up file changes and auto-refreshing.
+  client:
+    build:
+      context: .
+      dockerfile: ./compose/client/Dockerfile
+      args:
+        - NPM_PRIVATE_TOKEN
+    restart: always
+    env_file:
+      - "client/.env.local"
+    environment:
+      - NPM_PRIVATE_TOKEN
+    volumes:
+      - .:/app
+      - /app/client/node_modules
+    depends_on:
+      - server
+    ports:
+      - "8080:8080"
+    user: ${DOCKER_UID}

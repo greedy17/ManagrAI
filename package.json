@@ -10,5 +10,6 @@
   "cacheDirectories": [
     "client/node_modules",
     ".cache/Cypress"
-  ]
+  ],
+  "dependencies": {}
 }

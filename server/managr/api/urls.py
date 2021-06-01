@@ -8,6 +8,7 @@ from rest_auth import views as rest_auth_views
 from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
+from managr.alerts import views as alert_views
 
 # from . import views
 
@@ -71,6 +72,7 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/commands/create-resource", slack_views.create_resource, name="create-resource",),
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
@@ -92,4 +94,8 @@ router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesf
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
+router.register("alerts/templates", alert_views.AlertTemplateViewSet, "alert-templates")
+router.register(
+    "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"
+)
 urlpatterns += router.urls

@@ -41,7 +41,10 @@ def create_task_modal_block_set(context):
 
     blocks = [
         block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
-        block_builders.datepicker(block_id="managr_task_datetime", label="Due Date"),
+        # HACK:- According to slack values are cached based on block_id since this is a sub block adding action_id seems to preserve the value
+        block_builders.datepicker(
+            block_id="managr_task_datetime", label="Due Date", action_id="DO_NOTHING"
+        ),
         block_builders.static_select(
             "Related to type",
             [
@@ -81,4 +84,3 @@ def create_task_modal_block_set(context):
     )
 
     return blocks
-

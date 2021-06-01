@@ -35,4 +35,3 @@ class Command(BaseCommand):
                     )
         else:
             report_sf_data_sync()
-

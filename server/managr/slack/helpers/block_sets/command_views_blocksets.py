@@ -14,11 +14,17 @@ from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
+from managr.slack.helpers.utils import (
+    action_with_params,
+    block_set,
+    map_fields_to_type,
+    block_finder,
+)
 from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.alerts.models import AlertInstance
 
 
 @block_set(required_context=["resource_type", "u"])
@@ -65,9 +71,48 @@ def command_meeting_summary(context):
     ]
 
 
+@block_set(required_context=["instance_id"])
+def alert_instance_block_set(context):
+    """ 
+        Builds out the message based on the template the of the alert 
+      
+        divider -
+        message - alert template message 
+        divider 
+        update button
+    """
+    instance = AlertInstance.objects.get(id=context.get("instance_id"))
+    user = instance.user
+    blocks = [
+        block_builders.simple_section(instance.render_text(), "mrkdwn"),
+        block_builders.divider_block(),
+    ]
+    if user.id == instance.resource.owner.id:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Update",
+                        instance.resource_id,
+                        action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
+                    )
+                ]
+            )
+        )
+    else:
+        blocks.append(
+            block_builders.simple_section(
+                f"_*This {instance.template.resource_type} is owned by {instance.resource.owner.full_name} *_",
+                "mrkdwn",
+            ),
+        )
+
+    return blocks
+
+
 @block_set(required_context=["u"])
 def update_modal_block_set(context, *args, **kwargs):
-    """ Shows a modal to update a resource """
+    """Shows a modal to update a resource"""
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
@@ -80,7 +125,6 @@ def update_modal_block_set(context, *args, **kwargs):
             [
                 block_builders.option("Opportunity", "Opportunity"),
                 block_builders.option("Account", "Account"),
-                # block_builders.option("Contact", "Contact"),
                 block_builders.option("Lead", "Lead"),
             ],
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
@@ -96,6 +140,9 @@ def update_modal_block_set(context, *args, **kwargs):
                 f"*Search for an {context.get('resource_type')}*",
                 f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}",
                 block_id="select_existing",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
             ),
         )
 
@@ -123,3 +170,38 @@ def update_modal_block_set(context, *args, **kwargs):
             ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def create_modal_block_set(context, *args, **kwargs):
+    """Shows a modal to update a resource"""
+    resource_type = context.get("resource_type", None)
+
+    user_id = context.get("u")
+    form_id = context.get("f")
+    user = User.objects.get(id=user_id)
+    blocks = []
+
+    if form_id:
+        slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        form_blocks = slack_form.generate_form()
+        if len(form_blocks):
+            blocks.append(
+                block_builders.simple_section(
+                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                    "mrkdwn",
+                ),
+            )
+
+            blocks = [*blocks, *form_blocks]
+        else:
+
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Forms",
+                    "form",
+                    f"Please add fields to your {context.get('resource')} create form",
+                    url=f"{get_site_url()}/forms",
+                )
+            ]
+
+    return blocks

@@ -1,5 +1,6 @@
 import json
 import pdb
+import uuid
 import logging
 from urllib.parse import urlencode
 from django.db.models import Q
@@ -55,7 +56,7 @@ def process_meeting_review(payload, context):
             "blocks": get_block_set("meeting_review_modal", context=context),
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": "meeting_review_modal",
+            "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
     try:
@@ -246,16 +247,22 @@ def process_stage_selected(payload, context):
             )
         # gather and attach all forms
 
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        pass
+
     if not stage_form:
         submit_text = "Submit"
-        if payload["view"]["external_id"] == "create_modal_block_set":
+        if view_type == "create_modal_block_set":
             callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
         else:
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
-        if payload["view"]["callback_id"] == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
+        if view_type == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
             context = {
                 **context,
                 "form_type": slack_const.FORM_TYPE_MEETING_REVIEW,
@@ -278,6 +285,7 @@ def process_stage_selected(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{__unique_id}",
         },
     }
     try:
@@ -389,7 +397,7 @@ def process_remove_contact_from_meeting(payload, context):
 
 @processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
-    """ opens a modal with the options to search or create """
+    """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
 
@@ -443,7 +451,7 @@ def process_meeting_selected_resource(payload, context):
 
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
-    """ depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
@@ -471,7 +479,7 @@ def process_meeting_selected_resource_option(payload, context):
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
         ]
-        external_id = "create_modal_block_set"
+        external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
 
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
@@ -532,7 +540,7 @@ def process_meeting_selected_resource_option(payload, context):
 
 @processor()
 def process_create_or_search_selected(payload, context):
-    """ attaches a drop down to the message block for selecting a resource type """
+    """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
@@ -615,9 +623,15 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    select = payload["actions"][0]["selected_option"]
-    selected_option = select["value"]
+    is_update = payload.get("view", None)
+    url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    actions = payload["actions"]
+    if actions[0]["type"] == "external_select":
+        selected_option = actions[0]["selected_option"]["value"]
+    elif actions[0]["type"] == "button":
+        selected_option = actions[0]["value"]
+    else:
+        selected_option = None
     resource_id = selected_option
     resource_type = context.get("resource")
     user = User.objects.get(id=context.get("u"))
@@ -666,7 +680,6 @@ def process_show_update_resource_form(payload, context):
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
-        "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -674,9 +687,11 @@ def process_show_update_resource_form(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Update", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": "update_modal_block_set",
+            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
         },
     }
+    if is_update:
+        data["view_id"] = is_update.get("id")
 
     slack_requests.generic_request(url, data, access_token=access_token)
 
@@ -791,9 +806,9 @@ def process_create_task(payload, context):
 
 @processor()
 def process_request_invite_from_home_tab(payload, context):
-    """ 
-        According to slack anyone can see the home tab if a user triggers the home event 
-        And is not a user we show a button to request access, this will ask the is_admin user to invite them
+    """
+    According to slack anyone can see the home tab if a user triggers the home event
+    And is not a user we show a button to request access, this will ask the is_admin user to invite them
     """
     # get the org team
     team_id = payload["user"]["team_id"]
@@ -835,23 +850,32 @@ def process_resource_selected_for_task(payload, context):
     u = User.objects.get(id=context.get("u"))
     org = u.organization
     selected_value = None
+    # if this is coming from the create form delete the old form
+    form_id = context.get("f")
+    if form_id:
+        OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
+
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        pass
+
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_CREATE_TASK,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set(
-                payload["view"]["external_id"], {**context, "resource_type": selected_value}
-            ),
+            "callback_id": payload["view"]["callback_id"],
+            "title": payload.get("view").get("title"),
+            "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
             "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
-            "external_id": payload["view"]["external_id"],
+            "external_id": f"{view_type}.{__unique_id}",
         },
     }
     try:
@@ -872,6 +896,29 @@ def process_resource_selected_for_task(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
+
+
+@slack_api_exceptions(rethrow=False)
+@processor(required_context="u")
+def process_open_edit_modal(payload, context):
+
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": payload.get("view").get("id"),
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "title": {"type": "plain_text", "text": f"Create a Task"},
+            "blocks": get_block_set(
+                payload["view"]["external_id"], {**context, "resource_type": selected_value}
+            ),
+            "submit": payload["view"]["submit"],
+            "private_metadata": json.dumps(context),
+            "external_id": payload["view"]["external_id"],
+        },
+    }
 
 
 def handle_block_actions(payload):

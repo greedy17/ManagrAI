@@ -4,11 +4,13 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 
-SF_API_VERSION = settings.SALESFORCE_API_VERSION if settings.USE_SALESFORCE else None
+SF_API_VERSION = (
+    settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
+)
 
 # SF COMMON URIS - Mostly Used for Auth
 
-BASE_URL = settings.SALESFORCE_BASE_URL if settings.USE_SALESFORCE else None
+BASE_URL = settings.SALESFORCE_BASE_URL if hasattr(settings, "SALESFORCE_BASE_URL") else ""
 AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
 AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
 REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
@@ -35,7 +37,7 @@ REMOVE_OWNER_ID = {
 
 
 # SF CUSTOM URI QUERIES
-def SALSFORCE_RESOURCE_QUERY_URI(
+def SALESFORCE_RESOURCE_QUERY_URI(
     owner_id,
     resource,
     fields,
@@ -63,7 +65,7 @@ def SALSFORCE_RESOURCE_QUERY_URI(
             f = re.sub(r"^(AND|OR)", "", f)
             f = f"WHERE {f}"
 
-        url = f"{url} {f} "
+        url = f"{url} {f}"
     # TODO: [MGR-917] make ordering dynamic
     return f"{url} order by LastModifiedDate DESC limit {limit}"
 
@@ -107,10 +109,12 @@ SALESFORCE_VALIDATION_QUERY = (
 )
 
 # SF HEADERS
-CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if settings.USE_SALESFORCE else None
-CLIENT_SECRET = settings.SALESFORCE_SECRET if settings.USE_SALESFORCE else None
-SCOPES = settings.SALESFORCE_SCOPES if settings.USE_SALESFORCE else None
-REDIRECT_URL = settings.SALESFORCE_REDIRECT_URL if settings.USE_SALESFORCE else None
+CLIENT_ID = settings.SALESFORCE_CONSUMER_KEY if hasattr(settings, "SALESFORCE_CONSUMER_KEY") else ""
+CLIENT_SECRET = settings.SALESFORCE_SECRET if hasattr(settings, "SALESFORCE_SECRET") else ""
+SCOPES = settings.SALESFORCE_SCOPES if hasattr(settings, "SALESFORCE_SCOPES") else ""
+REDIRECT_URL = (
+    settings.SALESFORCE_REDIRECT_URL if hasattr(settings, "SALESFORCE_REDIRECT_URL") else ""
+)
 
 AUTHENTICATION_BODY = lambda code: {
     "grant_type": "authorization_code",
@@ -237,3 +241,15 @@ MEETING_REVIEW__UPDATE_RESOURCE = "MEETING_REVIEW_UPDATE_RESOURCE"
 MEETING_REVIEW__CREATE_CONTACTS = "MEETING_REVIEW_CREATE_CONTACTS"
 MEETING_REVIEW__UPDATE_CONTACTS = "MEETING_REVIEW_UPDATE_CONTACTS"
 MEETING_REVIEW__SAVE_CALL_LOG = "MEETING_REVIEW_SAVE_CALL_LOG"
+
+MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS = [
+    "fae88a10-53cc-470e-86ec-32376c041893",
+    "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+    "6407b7a1-a877-44e2-979d-1effafec5035",
+    "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
+]
+MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS = [
+    "6407b7a1-a877-44e2-979d-1effafec5035",
+    "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
+]
+

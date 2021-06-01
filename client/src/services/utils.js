@@ -34,6 +34,7 @@ const Utils = {
   loadEntireCollection,
   constantToCapitalized,
   urlQueryParams,
+  stringRenderer,
 }
 
 export default Utils
@@ -131,11 +132,17 @@ export function objectToSnakeCase(value) {
   if (isObject(value)) {
     return Object.keys(value).reduce((acc, camelKey) => {
       const snakeKey = toSnakeCase(camelKey)
-      acc[snakeKey] = isObject(value[camelKey])
-        ? objectToSnakeCase(value[camelKey])
-        : value[camelKey]
+      if (isObject(value[camelKey])) {
+        acc[snakeKey] = objectToSnakeCase(value[camelKey])
+      } else if (Array.isArray(value[camelKey])) {
+        acc[snakeKey] = value[camelKey].map(v => objectToSnakeCase(v))
+      } else {
+        acc[snakeKey] = value[camelKey]
+      }
       return acc
     }, {})
+  } else {
+    return value
   }
 }
 
@@ -354,4 +361,59 @@ export function urlQueryParams() {
     output[key] = value
   }
   return output
+}
+
+export function stringRenderer(
+  openChar,
+  closeCar,
+  textBlock = '',
+  group = 0,
+  startIndex = 0,
+  existingSets = [],
+) {
+  /***
+   * Searches string for opening and closing characters to be used as template rendering
+   */
+  var block = textBlock,
+    currPos = startIndex,
+    openBrackets = 0,
+    //    stillSearching = true,
+    // waitForChar = false,
+    charSet = existingSets,
+    currGroup = group
+
+  while (/*stillSearching  && */ currPos < block.length) {
+    //debugger
+    var currChar = block.charAt(currPos)
+
+    switch (currChar) {
+      case openChar:
+        openBrackets++
+        charSet[currGroup] = [currPos]
+        break
+      case closeCar:
+        if (charSet[currGroup] && charSet[currGroup][0]) {
+          charSet[currGroup].push(currPos)
+          openBrackets--
+        }
+        break
+    }
+
+    if (
+      openBrackets === 0 &&
+      charSet[currGroup] &&
+      charSet[currGroup].length == 2 &&
+      currPos <= charSet[currGroup][1] &&
+      currPos >= charSet[currGroup][0]
+    ) {
+      currGroup++
+      currPos++
+      return stringRenderer('{', '}', block, currGroup, currPos, charSet)
+    } else if (currPos < block.length) {
+      currPos++
+    }
+  }
+  let complete = charSet.filter(s => s.length == 2)
+  charSet = complete.map(s => block.substring(s[0] + 1, s[1]))
+  return charSet
 }

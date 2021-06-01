@@ -36,7 +36,6 @@ CHAT_UPDATE = "chat.update"
 
 WORKSPACE_SCOPES = [
     "chat:write",
-    "chat:write.public",
     "commands",
     "im:write",
     "incoming-webhook",
@@ -181,4 +180,3 @@ FORM_TYPES = (
     (FORM_TYPE_STAGE_GATING, "Stage Gating"),
     (FORM_TYPE_MEETING_REVIEW, "Meeting Review"),
 )
-

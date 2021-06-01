@@ -115,10 +115,10 @@ def revoke_zoom_access_token(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_deauth_webhook(request):
-    """ 
-        When a user uninstalls the zoom app directly from their apps we will be notified here 
-        We must complete the steps provided in this document 
-        https://marketplace.zoom.us/docs/guides/publishing/data-compliance
+    """
+    When a user uninstalls the zoom app directly from their apps we will be notified here
+    We must complete the steps provided in this document
+    https://marketplace.zoom.us/docs/guides/publishing/data-compliance
     """
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
@@ -263,6 +263,8 @@ def init_fake_meeting(request):
         workflow = _get_past_zoom_meeting_details.now(
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
+        if not workflow:
+            return Response(data={"response_type": "ephemeral", "text": "An error occured",})
         # get meeting
         workflow.begin_communication(now=True)
         workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
@@ -336,4 +338,3 @@ def score_meetings(request):
     call_command("generatemeetingscores")
 
     return Response(data="Scoring Meeting...")
-

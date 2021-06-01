@@ -53,6 +53,7 @@ class SObjectFieldSerializer(serializers.ModelSerializer):
             "integration_id",
             "is_public",
             "imported_by",
+            "filterable",
         )
 
 
@@ -106,4 +107,3 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
                 .first()
             )
         return super().to_internal_value(data)
-
