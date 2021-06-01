@@ -539,11 +539,11 @@ def create_resource(request):
                     "blocks": blocks,
                     "submit": {"type": "plain_text", "text": "Create", "emoji": True},
                     "private_metadata": json.dumps(private_metadata),
-                    "external_id": "create_modal",
+                    "external_id": f"create_modal.{str(uuid.uuid4())}",
                 },
             }
 
-            res = slack_requests.generic_request(url, data, access_token=access_token)
+            slack_requests.generic_request(url, data, access_token=access_token)
         return Response()
 
 
