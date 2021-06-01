@@ -626,7 +626,7 @@ class UserTestCase(TestCase):
         )
         adapter_class = adapter_routes.get(template.resource_type, None)
         additional_filters = adapter_class.additional_filters()
-        current_date_filter = f"AND ((CloseDate > {datetime.datetime(day=29,month=5,year=2021).strftime('%Y-%m-%d')}))"
+        current_date_filter = f"AND ((CloseDate > {datetime.datetime(day=29,month=timezone.now().month,year=2021).strftime('%Y-%m-%d')}))"
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
         self.assertEqual(template.url_str(template.user, conf_1.id), expected)
 
