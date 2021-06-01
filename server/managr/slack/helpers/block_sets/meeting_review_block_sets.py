@@ -457,21 +457,32 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 @block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
     additional_opts = []
-    if not context.get("resource") == "Lead":
+    resource_type = context.get("resource")
+    if not resource_type == "Lead":
         additional_opts = [
             {
-                "label": f'NEW {context.get("resource", None)} (create)',
+                "label": f"NEW {resource_type} (create)",
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
 
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
+    resource_id = context.get("resource_id", None)
+    # if an id is already passed (Aka this is recurrsive) get the resource
+    if resource_id:
+        resource = (
+            form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
+        )
+
     return [
         block_builders.external_select(
-            f"*Search for an {context.get('resource')}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
+            f"*Search for an {resource_type}*",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
+            initial_option=block_builders.option(resource.name, str(resource.id))
+            if resource_id and resource
+            else None,
         )
     ]
 
