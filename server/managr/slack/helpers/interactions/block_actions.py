@@ -321,7 +321,12 @@ def process_stage_selected_command_form(payload, context):
     view_id = payload["view"]["id"]
     private_metadata = json.loads(payload["view"]["private_metadata"])
     # get the forms associated with this slack
-
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        view_type = external_id
+        pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # delete any existing stage forms
     current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).delete()
@@ -364,6 +369,7 @@ def process_stage_selected_command_form(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_button_message},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
     try:
