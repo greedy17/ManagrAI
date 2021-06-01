@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 
 from django.conf import settings
+from django.db.models import Q
 
 from background_task import background
 from rest_framework.exceptions import ValidationError
@@ -438,7 +439,6 @@ def _save_meeting_review(workflow_id):
             "stage": form_data.get("StageName", ""),
             "meeting_comments": form_data.get("meeting_comments", ""),
             "meeting_type": form_data.get("meeting_type", ""),
-            "meeting_sentiment": form_data.get("meeting_sentiment", ""),
             "amount": to_float(form_data.get("Amount", None)),
             "close_date": pytz.utc.localize(
                 datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
@@ -455,20 +455,36 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    # only send meeting reviews for opps
-    if (
-        hasattr(workflow.meeting, "zoom_meeting_review")
-        and workflow.meeting.zoom_meeting_review.meeting_sentiment
-        == zoom_consts.MEETING_SENTIMENT_GREAT
-        and workflow.resource_type == "Opportunity"
-    ):
+    # only send meeting reviews for opps if the leadership box is selected or owner is selected
+    send_summ_to_leadership = (
+        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        .first()
+        .saved_data.get("__send_recap_to_leadership")
+    )
+    send_summ_to_owner = (
+        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        .first()
+        .saved_data.get("__send_recap_to_owner")
+    )
+    if hasattr(workflow.meeting, "zoom_meeting_review") and workflow.resource_type == "Opportunity":
 
         user = workflow.user
+        if True not in [send_summ_to_leadership, send_summ_to_owner]:
+            return
+        query = Q()
+        if send_summ_to_leadership:
+            query |= Q(user_level="MANAGER")
+        if send_summ_to_owner:
+            query |= Q(id=user.id)
+
+        user_list = (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
         slack_access_token = user.organization.slack_integration.access_token
 
-        user_list = user.organization.users.filter(user_level="MANAGER").select_related(
-            "slack_integration"
-        )
         try:
             for u in user_list:
                 if hasattr(u, "slack_integration"):

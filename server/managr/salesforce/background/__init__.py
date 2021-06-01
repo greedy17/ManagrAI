@@ -26,7 +26,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
 
 from ..routes import routes
 from ..models import (
@@ -108,12 +108,6 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
-def emit_save_meeting_review(workflow_id):
-    # currently only creating zoom meeting reviews
-    # ignore this, and call _save_meeting_review directly
-    return _save_meeting_review(workflow_id)
-
-
 def emit_meeting_workflow_tracker(workflow_id):
     """Checks the workflow after 5 mins to ensure completion"""
     schedule = timezone.now() + timezone.timedelta(minutes=5)
@@ -164,8 +158,23 @@ def _generate_form_template(user_id):
             form_type=form_type, resource=resource, organization=org
         )
 
-        if form_type == slack_consts.FORM_TYPE_MEETING_REVIEW:
-            fields = SObjectField.objects.filter(is_public=True)
+        if (
+            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
+            and resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY
+        ):
+            fields = SObjectField.objects.filter(
+                is_public=True, id__in=sf_consts.MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS
+            )
+            for i, field in enumerate(fields):
+                f.fields.add(field, through_defaults={"order": i})
+            f.save()
+        elif (
+            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
+            and resource == sf_consts.RESOURCE_SYNC_ACCOUNT
+        ):
+            fields = SObjectField.objects.filter(
+                is_public=True, id__in=sf_consts.MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS
+            )
             for i, field in enumerate(fields):
                 f.fields.add(field, through_defaults={"order": i})
             f.save()
@@ -377,7 +386,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     while True:
         sf = user.salesforce_account
         try:
-            workflow.resource.update_in_salesforce(data)
+            res = workflow.resource.update_in_salesforce(data)
             break
         except TokenExpired:
             if attempts >= 5:
@@ -387,9 +396,13 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             else:
                 sf.regenerate_token()
                 attempts += 1
+    # create a summary
 
+    # emit summary
+    _save_meeting_review.now(str(workflow.id))
+    emit_send_meeting_summary(str(workflow.id))
     # push to sf
-    return
+    return res
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -483,11 +496,12 @@ def _process_create_new_contacts(workflow_id, *args):
             sf_adapter = sf.adapter_class
             logger.info(f"Data from form {data}")
             try:
-                res = ContactAdapter.create_new_contact(
+                res = ContactAdapter.create(
                     data,
                     sf.access_token,
                     sf.instance_url,
                     sf_adapter.object_fields.get("Contact", {}),
+                    str(user.id),
                 )
 
                 if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
@@ -634,34 +648,6 @@ def _process_create_new_resource(form_ids, *args):
             raise RequiredFieldError(e)
 
     return
-
-
-@background(schedule=0)
-@log_all_exceptions
-def _save_meeting_review(workflow_id):
-    # _save_meeting_review.now(workflow_id)/ .now makes it happen now, not a backgound function
-
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
-    # get the create form
-    meeting = workflow.meeting
-    # format data appropriately
-    review_form = forms.filter(template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW).first()
-    # get data
-    form_data = review_form.saved_data
-    # format data appropriately
-    data = {
-        "resource_type": workflow.resource_type,
-        "resource_id": workflow.resource_id,
-        "forecast_category": form_data.get("ForcastCategory", ""),
-        "stage": form_data.get("StageName", ""),
-        "meeting_comments": form_data.get("meeting_comments", ""),
-        "meeting_type": form_data.get("meeting_type", ""),
-        "meeting_sentiment": form_data.get("meeting_sentiment", ""),
-        "amount": form_data.get("Amount", None),
-        "close_data": form_data.get("CloseDate", None),
-        "next_step": form_data.get("NextStep", ""),
-    }
 
 
 @background(schedule=0)

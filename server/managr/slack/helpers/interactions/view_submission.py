@@ -38,7 +38,11 @@ from managr.salesforce.background import (
     _process_create_task,
     emit_meeting_workflow_tracker,
 )
-from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
+from managr.zoom.background import (
+    _save_meeting_review,
+    emit_send_meeting_summary,
+    _send_meeting_summary,
+)
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -114,7 +118,7 @@ def process_zoom_meeting_data(payload, context):
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    logger.info(f"{contact_forms.values_list('id', 'template__form_type')}")
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -168,8 +172,6 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
-    _save_meeting_review.now(str(workflow.id))
-    emit_send_meeting_summary(str(workflow.id))
 
     return {"response_action": "clear"}
 
@@ -338,17 +340,18 @@ def process_submit_resource_data(payload, context):
         }
     else:
         # update the channel message to clear it
+        if main_form.template.form_type == "CREATE":
+            text = f"Managr created {main_form.resource_type}"
+            message = f"Successfully created *{main_form.resource_type}* _{resource.name if resource.name else resource.email}_"
+        else:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f"Successfully updated *{main_form.resource_type}* _{resource.name}_"
         slack_requests.send_ephemeral_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             user.slack_integration.slack_id,
-            text=f"Managr updated {main_form.resource_type}",
-            block_set=get_block_set(
-                "success_modal",
-                {
-                    "message": f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-                },
-            ),
+            text=text,
+            block_set=get_block_set("success_modal", {"message": message},),
         )
     return {"response_action": "clear"}
 

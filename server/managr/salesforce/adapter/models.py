@@ -620,6 +620,10 @@ class ContactAdapter:
         external_owner="OwnerId",
     )
 
+    @property
+    def name(self):
+        return f"{self.secondary_data.get('FirstName')} {self.secondary_date.get('LastName')}"
+
     @staticmethod
     def get_child_rels():
         return {}
@@ -670,17 +674,23 @@ class ContactAdapter:
         return formatted_data
 
     @staticmethod
-    def create_new_contact(data, access_token, custom_base, object_fields):
+    def create(data, access_token, custom_base, object_fields, user_id=None):
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
         logger.info(f"JSON_DATA Create Contact {json_data}")
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.post(
+        res = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
-        return SalesforceAuthAccountAdapter._handle_response(r)
+        res = SalesforceAuthAccountAdapter._handle_response(res)
+
+        url = f"{url}{res['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = OpportunityAdapter.from_api(r, user_id)
+        return r
 
     @staticmethod
     def update_contact(data, access_token, custom_base, integration_id, object_fields):
