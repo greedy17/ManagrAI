@@ -579,7 +579,7 @@ class UserTestCase(TestCase):
 
     def test_group_generates_url_string_w_weekly(self):
         """ 
-            Tests that the appropriate qs was built for the row 
+            Tests that the appropriate qs was built for the row
             NOTE if row is top group order it will not append operator
         """
         conf_1 = alert_models.AlertConfig.objects.create(
