@@ -921,6 +921,109 @@ def process_open_edit_modal(payload, context):
     }
 
 
+@slack_api_exceptions(rethrow=False)
+@processor()
+def process_return_to_form_modal(payload, context):
+    """ if an error occurs on create/update commands when the return button is clicked regen form """
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    original_view = payload["view"]
+    actions = payload["actions"]
+
+    if len(actions) and actions[0]["type"] == "button":
+        selected_option = actions[0]["value"]
+    else:
+        selected_option = None
+    main_form = OrgCustomSlackFormInstance.objects.filter(id=selected_option).first()
+    resource_id = None
+    resource_type = main_form.template.resource
+    if main_form.template.form_type == "UPDATE":
+        resource_id = str(main_form.resource_object.id)
+    user = main_form.user
+    organization = user.organization
+    slack_access_token = organization.slack_integration.access_token
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        pass
+    blocks = get_block_set(
+        view_type,
+        context={
+            **context,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "f": selected_option,
+            "u": str(user.id),
+        },
+    )
+    if main_form:
+        try:
+            index, block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
+
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(main_form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+
+    private_metadata = {
+        "channel_id": payload.get("container").get("channel_id"),
+        "f": str(main_form.id),
+        "u": str(user.id),
+    }
+    title_text = (
+        f"Update {resource_type}"
+        if view_type == "update_modal_block_set"
+        else f"Create {resource_type}"
+    )
+    submit_text = "Update" if view_type == "update_modal_block_set" else "Create"
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+            "title": {"type": "plain_text", "text": title_text,},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": submit_text, "emoji": True},
+            "private_metadata": json.dumps(private_metadata),
+            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=slack_access_token)
+        print(res)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+        )
+
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -943,6 +1046,7 @@ def handle_block_actions(payload):
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
+        slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

@@ -543,8 +543,7 @@ def create_resource(request):
                 },
             }
 
-            slack_requests.generic_request(url, data, access_token=access_token)
-
+            res = slack_requests.generic_request(url, data, access_token=access_token)
         return Response()
 
 

@@ -3,6 +3,7 @@ import pdb
 import pytz
 from datetime import datetime
 import logging
+import uuid
 
 
 from django.http import JsonResponse
@@ -225,6 +226,11 @@ def process_submit_resource_data(payload, context):
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
@@ -346,6 +352,21 @@ def process_submit_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
+        # only add the return button if there is not next page otherwise close will auto return to form
+        if not len(stage_forms):
+            blocks = [
+                *blocks,
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "return to form",
+                            str(main_form.id),
+                            style="primary",
+                            action_id=slack_const.RETURN_TO_FORM_MODAL,
+                        )
+                    ]
+                ),
+            ]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         data = {
             "trigger_id": trigger_id,
@@ -355,6 +376,7 @@ def process_submit_resource_data(payload, context):
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(context),
+                "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
         try:
@@ -439,6 +461,7 @@ def process_submit_resource_data(payload, context):
                 "title": {"type": "plain_text", "text": "Success"},
                 "blocks": get_block_set("success_modal", {"message": message},),
                 "private_metadata": json.dumps(context),
+                "clear_on_close": True,
             },
         }
         try:
@@ -467,7 +490,7 @@ def process_submit_resource_data(payload, context):
                 f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
             )
 
-    return
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions

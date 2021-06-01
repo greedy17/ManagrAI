@@ -173,12 +173,12 @@ def update_modal_block_set(context, *args, **kwargs):
 
 @block_set(required_context=["u"])
 def create_modal_block_set(context, *args, **kwargs):
-    """Shows a modal to update a resource"""
+    """Shows a modal to create a resource"""
     resource_type = context.get("resource_type", None)
 
     user_id = context.get("u")
     form_id = context.get("f")
-    user = User.objects.get(id=user_id)
+
     blocks = []
 
     if form_id:
@@ -199,7 +199,7 @@ def create_modal_block_set(context, *args, **kwargs):
                 block_builders.section_with_button_block(
                     "Forms",
                     "form",
-                    f"Please add fields to your {context.get('resource')} create form",
+                    f"Please add fields to your {resource_type} create form",
                     url=f"{get_site_url()}/forms",
                 )
             ]
