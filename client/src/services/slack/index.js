@@ -35,8 +35,8 @@ export default class SlackOAuth {
     WORKSPACE: 'WORKSPACE',
     USER: 'USER',
   }
-  static redirectURI =
-    window.location.protocol + '//' + window.location.host + '/settings/integrations'
+  static redirectURI = window.location.protocol + '//' + window.location.host + '/settings/integrations'
+
 }
 
 const MEETING_REVIEW = 'MEETING_REVIEW'

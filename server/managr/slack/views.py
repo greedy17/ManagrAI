@@ -1,11 +1,14 @@
 import json
 import logging
+from urllib.parse import urlencode
 import uuid
 
 from datetime import datetime
 from managr.utils import sites as site_utils
 
 from django.db.models import Sum, Avg, Q
+from django.conf import settings
+from django.shortcuts import redirect
 
 from rest_framework import (
     permissions,
@@ -767,3 +770,17 @@ def slack_events(request):
         return Response()
 
         # check if they exist in managr
+
+
+def redirect_from_slack(request):
+    ## this is only for dev, since the redirect url to localhost will not work
+    if settings.IN_DEV:
+        code = request.GET.get("code", None)
+        q = urlencode({"code": code, "state": "SLACK"})
+        if not code:
+            err = {"error": "there was an error"}
+            err = urlencode(err)
+            return redirect("http://localhost:8080/settings/integrations")
+        return redirect(f"http://localhost:8080/settings/integrations?{q}")
+    else:
+        return redirect("http://localhost:8080/settings/integrations")
