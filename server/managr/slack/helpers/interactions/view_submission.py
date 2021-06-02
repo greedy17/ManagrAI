@@ -215,7 +215,7 @@ def process_next_page_slack_commands_form(payload, context):
 
 
 @log_all_exceptions
-@slack_api_exceptions()
+@slack_api_exceptions(rethrow=True)
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
@@ -230,31 +230,23 @@ def process_submit_resource_data(payload, context):
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
+        view_type = external_id
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
-    # if there are stage forms save the data we already saved the original form
-    data = {}
+    stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
-        data = {**data, **form.saved_data}
+        stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
-        # if there was no stage forms then we need to save the main form
         main_form.save_form(state)
 
-    form_data = {**data, **main_form.saved_data}
+    all_form_data = {**stage_form_data_collector, **main_form.saved_data}
 
     slack_access_token = user.organization.slack_integration.access_token
-    # get state - state contains the values based on the block_id
-    # if we had a next page the form data for the review was already saved
-    # currently only for update
-
-    # update view to loading
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    data = {
+    loading_view_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
@@ -270,32 +262,20 @@ def process_submit_resource_data(payload, context):
         },
     }
     try:
-        res = slack_requests.generic_request(url, data, access_token=slack_access_token)
-    except InvalidBlocksException as e:
+        res = slack_requests.generic_request(
+            url, loading_view_data, access_token=slack_access_token
+        )
+    except Exception as e:
         return logger.exception(
             f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
         )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-    # process save to sf
-    # update page to error or success
-    # if error allow users to return to edit page
+
     attempts = 1
     while True:
         sf = user.salesforce_account
         try:
             if main_form.template.form_type == "UPDATE":
-                resource = main_form.resource_object.update_in_salesforce(form_data)
+                resource = main_form.resource_object.update_in_salesforce(all_form_data)
                 break
             else:
                 resource = _process_create_new_resource.now(current_form_ids)
@@ -352,8 +332,10 @@ def process_submit_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
-        # only add the return button if there is not next page otherwise close will auto return to form
+
         if not len(stage_forms):
+            # add a special button to return the user back to edit their form
+            # this is only required for single page forms
             blocks = [
                 *blocks,
                 block_builders.actions_block(
@@ -368,7 +350,7 @@ def process_submit_resource_data(payload, context):
                 ),
             ]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        data = {
+        error_view_data = {
             "trigger_id": trigger_id,
             "view_id": view_id,
             "view": {
@@ -380,30 +362,18 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            return slack_requests.generic_request(url, data, access_token=slack_access_token)
-        except InvalidBlocksException as e:
-            return logger.exception(
-                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            return slack_requests.generic_request(
+                url, error_view_data, access_token=slack_access_token
             )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
+        except Exception as e:
             return logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     pm = json.loads(payload["view"]["private_metadata"])
     if context.get("w"):
-        # return the same view with a submit button and the correct resource selected
-        # find the select block
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         pm.update({"action": "EXISTING"})
-        data = {
+        select_resource_view_data = {
             "trigger_id": trigger_id,
             "view_id": view_id,
             "view": {
@@ -424,22 +394,12 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            res = slack_requests.generic_request(url, data, access_token=slack_access_token)
-        except InvalidBlocksException as e:
+            slack_requests.generic_request(
+                url, select_resource_view_data, access_token=slack_access_token
+            )
+        except Exception as e:
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
-            )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Update the view for the workflow  {str(user.id)} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Update the view for the workflow  {str(user.id)} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
-            return logger.exception(
-                f"Failed To Update the view for the workflow  {str(user.id)} email {user.email} {e}"
             )
 
     else:
@@ -453,7 +413,7 @@ def process_submit_resource_data(payload, context):
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
 
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        data = {
+        success_view_data = {
             "trigger_id": trigger_id,
             "view_id": view_id,
             "view": {
@@ -465,7 +425,13 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            slack_requests.generic_request(url, data, access_token=slack_access_token)
+            slack_requests.generic_request(url, success_view_data, access_token=slack_access_token)
+
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
+            )
+        try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
@@ -473,21 +439,9 @@ def process_submit_resource_data(payload, context):
                 text=text,
                 block_set=get_block_set("success_modal", {"message": message},),
             )
-        except InvalidBlocksException as e:
+        except Exception as e:
             return logger.exception(
-                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
-            )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
-            return logger.exception(
-                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
             )
 
     return {"response_action": "clear"}

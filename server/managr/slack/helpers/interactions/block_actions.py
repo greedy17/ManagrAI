@@ -927,14 +927,13 @@ def process_open_edit_modal(payload, context):
     }
 
 
-@slack_api_exceptions(rethrow=False)
+@slack_api_exceptions(rethrow=True)
 @processor()
 def process_return_to_form_modal(payload, context):
     """ if an error occurs on create/update commands when the return button is clicked regen form """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-    original_view = payload["view"]
     actions = payload["actions"]
 
     if len(actions) and actions[0]["type"] == "button":
@@ -1008,25 +1007,12 @@ def process_return_to_form_modal(payload, context):
         },
     }
     try:
-        res = slack_requests.generic_request(url, data, access_token=slack_access_token)
-        print(res)
-    except InvalidBlocksException as e:
+        slack_requests.generic_request(url, data, access_token=slack_access_token)
+    except Exception as e:
+        # exception will only be thrown for caught errors using decorator
         return logger.exception(
             f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
         )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-        )
-
     return
 
 
