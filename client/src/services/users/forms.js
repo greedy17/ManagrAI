@@ -7,6 +7,7 @@ import {
   MinLengthValidator,
   Validator,
 } from '@thinknimble/tn-validators'
+import moment from 'moment'
 
 export class UserRegistrationForm extends Form {
   static fullName = new FormField({ validators: [new RequiredValidator()] })
@@ -20,6 +21,7 @@ export class UserRegistrationForm extends Form {
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
   static organizationName = new FormField({ validators: [new RequiredValidator()] })
   static role = new FormField({ validators: [new RequiredValidator()] })
+  static timezone = new FormField({ value: moment.tz.guess(), validators: [new RequiredValidator()] })
 
   dynamicValidators() {
     /**
