@@ -904,29 +904,6 @@ def process_resource_selected_for_task(payload, context):
         )
 
 
-@slack_api_exceptions(rethrow=False)
-@processor(required_context="u")
-def process_open_edit_modal(payload, context):
-
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    data = {
-        "trigger_id": trigger_id,
-        "view_id": payload.get("view").get("id"),
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.COMMAND_CREATE_TASK,
-            "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set(
-                payload["view"]["external_id"], {**context, "resource_type": selected_value}
-            ),
-            "submit": payload["view"]["submit"],
-            "private_metadata": json.dumps(context),
-            "external_id": payload["view"]["external_id"],
-        },
-    }
-
-
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_return_to_form_modal(payload, context):

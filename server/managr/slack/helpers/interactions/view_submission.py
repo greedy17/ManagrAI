@@ -660,18 +660,6 @@ def process_update_meeting_contact(payload, context):
 @processor()
 def process_edit_meeting_contact(payload, context):
     """This Submission returns the update form stacked on top of the view contacts form"""
-    action = slack_const.VIEWS_UPDATE
-    url = slack_const.SLACK_API_ROOT + action
-    trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    org = workflow.user.organization
-
-    access_token = org.slack_integration.access_token
-    # blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
-
-    # res = slack_requests.generic_request(url, data, access_token=access_token)
 
     return {
         "response_action": "push",
