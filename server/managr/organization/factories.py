@@ -39,4 +39,3 @@ class OrganizationFactory(DjangoModelFactory):
 
     class Meta:
         model = Organization
-

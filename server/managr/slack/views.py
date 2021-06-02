@@ -774,7 +774,6 @@ def slack_events(request):
 
 def redirect_from_slack(request):
     ## this is only for dev, since the redirect url to localhost will not work
-    print(request)
     if settings.IN_DEV:
         code = request.GET.get("code", None)
         q = urlencode({"code": code, "state": "SLACK"})
@@ -784,4 +783,4 @@ def redirect_from_slack(request):
             return redirect("http://localhost:8080/settings/integrations")
         return redirect(f"http://localhost:8080/settings/integrations?{q}")
     else:
-        return redirect(f"http://localhost:8080/settings/integrations?{q}")
+        return redirect("http://localhost:8080/settings/integrations")
