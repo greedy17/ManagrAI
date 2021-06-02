@@ -175,4 +175,3 @@ def _process_check_alert(config_id, user_id):
                             instance.rendered_text = instance.render_text()
                             instance.save()
     return
-
