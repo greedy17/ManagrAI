@@ -252,4 +252,3 @@ MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS = [
     "6407b7a1-a877-44e2-979d-1effafec5035",
     "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
 ]
-
