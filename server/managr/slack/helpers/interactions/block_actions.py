@@ -3,7 +3,10 @@ import pdb
 import uuid
 import logging
 from urllib.parse import urlencode
+
 from django.db.models import Q
+from django.utils import timezone
+
 from managr.organization.models import Organization, Stage
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -318,6 +321,7 @@ def process_stage_selected_command_form(payload, context):
     org = user.organization
     access_token = org.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    view = payload["view"]
     view_id = payload["view"]["id"]
     private_metadata = json.loads(payload["view"]["private_metadata"])
     # get the forms associated with this slack
@@ -348,7 +352,8 @@ def process_stage_selected_command_form(payload, context):
         # gather and attach all forms
     context = {**context, "f": ",".join([str(main_form.id), *added_form_ids])}
     private_metadata.update(context)
-    submit_button_message = "Next" if len(added_form_ids) else "Submit"
+    updated_view_title = view["title"]
+    submit_button_message = "Next" if len(added_form_ids) else view["submit"]["text"]
     callback_id = (
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
         if len(added_form_ids)
@@ -360,7 +365,7 @@ def process_stage_selected_command_form(payload, context):
         "view": {
             "type": "modal",
             "callback_id": callback_id,
-            "title": {"type": "plain_text", "text": "Update"},
+            "title": updated_view_title,
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_button_message},
             "private_metadata": json.dumps(private_metadata),
@@ -634,12 +639,14 @@ def process_show_update_resource_form(payload, context):
         selected_option = None
     resource_id = selected_option
     resource_type = context.get("resource")
+    pm = json.loads(payload["view"].get("private_metadata", "{}"))
+    prev_form = pm.get("f", None)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
 
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
-    if resource_id:
+    if resource_id and not prev_form:
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(Q(resource=resource_type, form_type="UPDATE"))
@@ -650,7 +657,8 @@ def process_show_update_resource_form(payload, context):
         )
         if slack_form:
             context.update({"f": str(slack_form.id)})
-
+    else:
+        slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -680,6 +688,7 @@ def process_show_update_resource_form(payload, context):
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
+        "hash": payload["view"]["hash"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -875,7 +884,7 @@ def process_resource_selected_for_task(payload, context):
             "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
             "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
-            "external_id": f"{view_type}.{__unique_id}",
+            "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
     try:
