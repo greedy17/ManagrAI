@@ -982,7 +982,7 @@ def process_return_to_form_modal(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_text, "emoji": True},
             "private_metadata": json.dumps(private_metadata),
-            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+            "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
     try:

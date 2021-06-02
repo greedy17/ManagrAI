@@ -148,7 +148,7 @@ def update_modal_block_set(context, *args, **kwargs):
 
     if form_id:
         slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        form_blocks = slack_form.generate_form()
+        form_blocks = slack_form.generate_form(slack_form.saved_data)
         if len(form_blocks):
             blocks.append(
                 block_builders.simple_section(
