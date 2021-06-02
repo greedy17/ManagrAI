@@ -318,6 +318,7 @@ def process_stage_selected_command_form(payload, context):
     org = user.organization
     access_token = org.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    view = payload["view"]
     view_id = payload["view"]["id"]
     private_metadata = json.loads(payload["view"]["private_metadata"])
     # get the forms associated with this slack
@@ -353,7 +354,8 @@ def process_stage_selected_command_form(payload, context):
         # gather and attach all forms
     context = {**context, "f": ",".join([str(main_form.id), *added_form_ids])}
     private_metadata.update(context)
-    submit_button_message = "Next" if len(added_form_ids) else "Submit"
+    updated_view_title = view["title"]
+    submit_button_message = "Next" if len(added_form_ids) else view["submit"]["text"]
     callback_id = (
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
         if len(added_form_ids)
@@ -365,7 +367,7 @@ def process_stage_selected_command_form(payload, context):
         "view": {
             "type": "modal",
             "callback_id": callback_id,
-            "title": {"type": "plain_text", "text": "Update"},
+            "title": updated_view_title,
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_button_message},
             "private_metadata": json.dumps(private_metadata),
