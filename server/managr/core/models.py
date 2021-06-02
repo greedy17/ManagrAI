@@ -160,7 +160,7 @@ class User(AbstractUser, TimeStampModel):
     profile_photo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
-    timezone = models.CharField(default="UTC", max_length="32")
+    timezone = models.CharField(default="UTC", max_length="255")
 
     objects = UserManager()
 
