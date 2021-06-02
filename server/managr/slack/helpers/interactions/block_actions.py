@@ -918,6 +918,9 @@ def process_resource_selected_for_task(payload, context):
 def process_return_to_form_modal(payload, context):
     """ if an error occurs on create/update commands when the return button is clicked regen form """
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    pm = json.loads(payload["view"]["private_metadata"])
+
+    from_workflow = pm.get("w", False) not in [None, False]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     actions = payload["actions"]
@@ -926,6 +929,7 @@ def process_return_to_form_modal(payload, context):
         selected_option = actions[0]["value"]
     else:
         selected_option = None
+
     main_form = OrgCustomSlackFormInstance.objects.filter(id=selected_option).first()
     resource_id = None
     resource_type = main_form.template.resource
@@ -939,46 +943,49 @@ def process_return_to_form_modal(payload, context):
         view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
-    blocks = get_block_set(
-        view_type,
-        context={
-            **context,
-            "resource_type": resource_type,
-            "resource_id": resource_id,
-            "f": selected_option,
-            "u": str(user.id),
-        },
-    )
-    if main_form:
+    view_context = {
+        **context,
+        "resource_type": resource_type,
+        "resource_id": resource_id,
+        "f": selected_option,
+        "u": str(user.id),
+    }
+    if from_workflow:
+        view_context["w"] = pm.get("w")
+        view_context["resource"] = resource_type
+    form_blocks = get_block_set(view_type, view_context)
+    if main_form and not from_workflow:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, stage_block = block_finder("StageName", form_blocks)
         except ValueError:
             # did not find the block
-            block = None
+            stage_block = None
             pass
 
-        if block:
-            block = {
-                **block,
+        if stage_block:
+            stage_block = {
+                **stage_block,
                 "accessory": {
-                    **block["accessory"],
+                    **stage_block["accessory"],
                     "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(main_form.id)}",
                 },
             }
-            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+            form_blocks = [*form_blocks[:index], stage_block, *form_blocks[index + 1 :]]
 
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
         "f": str(main_form.id),
         "u": str(user.id),
     }
+
     title_text = (
         f"Update {resource_type}"
         if view_type == "update_modal_block_set"
         else f"Create {resource_type}"
     )
     submit_text = "Update" if view_type == "update_modal_block_set" else "Create"
-    private_metadata.update(context)
+
+    private_metadata.update(view_context)
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -986,7 +993,7 @@ def process_return_to_form_modal(payload, context):
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
             "title": {"type": "plain_text", "text": title_text,},
-            "blocks": blocks,
+            "blocks": form_blocks,
             "submit": {"type": "plain_text", "text": submit_text, "emoji": True},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"{view_type}.{str(uuid.uuid4())}",

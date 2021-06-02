@@ -255,7 +255,8 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": "If you see an error from slack you may ignore this while we process the update"
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "fill": True,
                 },
             ),
             "private_metadata": json.dumps(context),
@@ -394,7 +395,7 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            slack_requests.generic_request(
+            return slack_requests.generic_request(
                 url, select_resource_view_data, access_token=slack_access_token
             )
         except Exception as e:
