@@ -23,8 +23,8 @@ export default class User extends Model {
   static type = new fields.Field()
   static fullName = new fields.Field()
   static emailAuthLink = new fields.CharField()
-  static nylas = new fields.Field({ default: () => {} })
-  static nylasRef = new fields.Field({ default: () => {} })
+  static nylas = new fields.Field({ default: () => { } })
+  static nylasRef = new fields.Field({ default: () => { } })
   static isStaff = new fields.BooleanField()
   static isAdmin = new fields.BooleanField()
   static isActive = new fields.BooleanField()
@@ -36,6 +36,7 @@ export default class User extends Model {
   static hasSalesforceIntegration = new fields.Field({ readOnly: true })
   static userLevel = new fields.Field({})
   static role = new fields.Field({})
+  static timezone = new fields.CharField()
 
   static fromAPI(json = {}) {
     return new User(objectToCamelCase(json))
