@@ -1,3 +1,4 @@
+import pytz
 from django.contrib import admin
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
@@ -45,8 +46,36 @@ class EmailAuthAccForm(forms.ModelForm):
         )
 
 
+def tz_as_choice_set():
+    return list(map(lambda c: [c, c], pytz.all_timezones))
+
+
+class CustomUserForm(forms.ModelForm):
+    timezone = forms.ChoiceField(widget=forms.Select, choices=tz_as_choice_set())
+
+    class Meta:
+        model = User
+        fields = (
+            "password",
+            "last_login",
+            "first_name",
+            "last_name",
+            "email",
+            "profile_photo",
+            "is_active",
+            "is_invited",
+            "is_admin",
+            "is_superuser",
+            "is_staff",
+            "organization",
+            "user_level",
+            "role",
+            "timezone",
+        )
+
+
 class CustomUserAdmin(UserAdmin):
-    model = User
+    form = CustomUserForm
 
     fieldsets = (
         (
@@ -67,6 +96,7 @@ class CustomUserAdmin(UserAdmin):
                     "organization",
                     "user_level",
                     "role",
+                    "timezone",
                 )
             },
         ),
@@ -75,6 +105,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
+
     inlines = (
         UserSlackIntegrationInline,
         ZoomAuthAccountInline,
