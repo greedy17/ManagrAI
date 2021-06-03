@@ -28,6 +28,7 @@
               { key: 'Slack Forms', value: 'SlackFormSettings' },
               { key: 'Invite Users', value: 'InviteUsers' },
               { key: 'Smart Alerts (Beta)', value: 'CreateNew' },
+              { key: 'Profile', value: 'ProfilePage' },
               { key: 'Log Out', value: 'logout' },
             ]"
             v-if="isAdmin"
@@ -44,6 +45,7 @@
             :right="10"
             :items="[
               { key: 'Integrations', value: 'Integrations' },
+              { key: 'Profile', value: 'ProfilePage' },
               { key: 'Log Out', value: 'logout' },
             ]"
             v-if="!isAdmin"
