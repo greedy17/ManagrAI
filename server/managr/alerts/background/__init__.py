@@ -7,6 +7,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 
 from background_task import background
 from rest_framework.exceptions import ValidationError
@@ -45,7 +46,7 @@ def emit_init_alert(config_id):
 
 def emit_send_alert(instance_id, scheduled_time=timezone.now()):
     schedule = datetime.strptime(scheduled_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_send_alert(str(instance_id), scheduled=scheduled_time)
+    return _process_send_alert(str(instance_id), scheduled=schedule)
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
@@ -182,16 +183,16 @@ def _process_check_alert(config_id, user_id):
 @background(queue="MANAGR_ALERTS_QUEUE", schedule=0)
 @sf_api_exceptions(rethrow=True)
 def _process_send_alert(instance_id):
-    if hasattr(user, "slack_integration"):
-        channel_id = u.slack_integration.channel
-        access_token = u.organization.slack_integration.access_token
-        text = template.message_template.notification_text
-        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+    alert_instance = AlertInstance.objects.filter(id=instance_id).select_related("user").first()
+    instance_user = alert_instance.user
+    if hasattr(instance_user, "slack_integration"):
+        channel_id = instance_user.slack_integration.channel
+        access_token = instance_user.organization.slack_integration.access_token
+        text = alert_instance.template.message_template.notification_text
+        blocks = get_block_set("alert_instance", {"instance_id": str(alert_instance.id)})
 
-        res = slack_requests.send_channel_message(
-            channel_id, access_token, text=text, block_set=blocks
-        )
-        instance.rendered_text = instance.render_text()
-        instance.save()
+        slack_requests.send_channel_message(channel_id, access_token, text=text, block_set=blocks)
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.save()
 
-    return instance
+    return alert_instance
