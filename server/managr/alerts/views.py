@@ -2,6 +2,7 @@ import logging
 import requests
 import json
 from faker import Faker
+import pytz
 from urllib.parse import urlencode
 from datetime import datetime
 
@@ -32,7 +33,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .background import emit_init_alert
+from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
@@ -83,7 +84,13 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         for config in obj.configs.all():
-            emit_init_alert(str(config.id))
+            template = config.template
+            users = template.get_users
+            for user in users:
+                run_time = datetime.now(pytz.utc)
+                _process_check_alert(
+                    str(config.id), str(user.id), run_time.strftime("%Y-%m-%dT%H:%M%z")
+                )
         return Response()
 
 
