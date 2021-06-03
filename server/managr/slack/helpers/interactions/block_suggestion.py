@@ -88,6 +88,13 @@ def process_get_local_resource_options(payload, context):
                 *[l.as_slack_option for l in user.owned_leads.filter(name__icontains=value)[:50]],
             ],
         }
+    elif resource == sf_consts.RESOURCE_SYNC_CONTACT:
+        return {
+            "options": [
+                *additional_opts,
+                *[l.as_slack_option for l in user.contacts.filter(Q(email__icontains=value))[:50]],
+            ],
+        }
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
         return {
             "options": [
