@@ -43,6 +43,11 @@ def emit_init_alert(config_id):
     return _process_init_alert(config_id)
 
 
+def emit_send_alert(instance_id, scheduled_time=timezone.now()):
+    schedule = datetime.strptime(scheduled_time, "%Y-%m-%dT%H:%M%Z")
+    return _process_send_alert(str(instance_id), scheduled=scheduled_time)
+
+
 @background(queue="MANAGR_ALERTS_QUEUE")
 def _process_init_alert(config_id,):
 
@@ -91,9 +96,6 @@ def _process_check_alert(config_id, user_id):
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
-
-    # check if we have it in our db to inform our user
-    ## currently only createting alert isntance if exists in db
 
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
@@ -161,7 +163,7 @@ def _process_check_alert(config_id, user_id):
                             resource_id=str(existing.id),
                             instance_meta=instance_meta,
                         )
-                        if hasattr(user, "slack_integration"):
+                        if hasattr(u, "slack_integration"):
                             channel_id = u.slack_integration.channel
                             access_token = u.organization.slack_integration.access_token
                             text = template.message_template.notification_text
@@ -175,3 +177,21 @@ def _process_check_alert(config_id, user_id):
                             instance.rendered_text = instance.render_text()
                             instance.save()
     return
+
+
+@background(queue="MANAGR_ALERTS_QUEUE", schedule=0)
+@sf_api_exceptions(rethrow=True)
+def _process_send_alert(instance_id):
+    if hasattr(user, "slack_integration"):
+        channel_id = u.slack_integration.channel
+        access_token = u.organization.slack_integration.access_token
+        text = template.message_template.notification_text
+        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
+
+        res = slack_requests.send_channel_message(
+            channel_id, access_token, text=text, block_set=blocks
+        )
+        instance.rendered_text = instance.render_text()
+        instance.save()
+
+    return instance

@@ -345,6 +345,7 @@ class AlertInstance(TimeStampModel):
         blank=True,
         help_text="an object holding some metadata results_count: # across alert, query_sent: copy of sql, errors: Array of any errors ",
     )
+
     objects = AlertGroupQuerySet.as_manager()
 
     # TODO [MGR-1013]: add private errors here to keep track in case of errors
@@ -409,3 +410,4 @@ class AlertInstance(TimeStampModel):
             except ValueError:
                 continue
         return binding_map
+
