@@ -35,14 +35,24 @@ logger = logging.getLogger("managr")
 @block_set()
 def loading_block_set(context):
     message = context.get("message", "Saving Data")
-    return [
-        block_builders.section_with_accessory_block(
-            f"*{message}*",
+    fill = context.get("fill", False)
+    if fill:
+        blocks = [
+            block_builders.simple_section(f"*{message}*", "mrkdwn"),
             block_builders.simple_image_block(
                 "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
             ),
-        )
-    ]
+        ]
+    else:
+        blocks = [
+            block_builders.section_with_accessory_block(
+                f"*{message}*",
+                block_builders.simple_image_block(
+                    "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
+                ),
+            )
+        ]
+    return blocks
 
 
 @block_set()
