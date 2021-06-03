@@ -96,6 +96,7 @@ def process_stage_next_page(payload, context):
 
 
 @log_all_exceptions
+@slack_api_exceptions(rethrow=True)
 @processor(
     required_context=["w", "original_message_channel", "original_message_timestamp",]
 )
@@ -104,8 +105,38 @@ def process_zoom_meeting_data(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
+    view = payload["view"]
+
+    trigger_id = payload["trigger_id"]
+    view_id = view["id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    loading_view_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "fill": True,
+                },
+            ),
+            "private_metadata": view["private_metadata"],
+        },
+    }
+    try:
+        res = slack_requests.generic_request(
+            url, loading_view_data, access_token=slack_access_token
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
+
     # get state - state contains the values based on the block_id
-    state = payload["view"]["state"]["values"]
+    state = view["state"]["values"]
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     if len(forms):
@@ -152,23 +183,10 @@ def process_zoom_meeting_data(payload, context):
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=block_set
         )
-    except InvalidBlocksException as e:
+    except Exception as e:
         return logger.exception(
             f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
@@ -255,7 +273,8 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": "If you see an error from slack you may ignore this while we process the update"
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "fill": True,
                 },
             ),
             "private_metadata": json.dumps(context),
@@ -394,7 +413,7 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            slack_requests.generic_request(
+            return slack_requests.generic_request(
                 url, select_resource_view_data, access_token=slack_access_token
             )
         except Exception as e:
@@ -410,7 +429,7 @@ def process_submit_resource_data(payload, context):
 
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_ your updates will be visible on the next sync"
 
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {

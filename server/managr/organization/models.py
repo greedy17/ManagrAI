@@ -220,15 +220,16 @@ class Contact(TimeStampModel, IntegrationModel):
     @property
     def name(self):
         """returns full name for use with blocksets"""
-
+        email = "N/A"
+        first_name = "N/A"
+        last_name = "N/A"
         if self.secondary_data.get("Email", None) not in ["", None]:
-            return self.secondary_data.get("Email")
-        elif self.secondary_data.get("FirstName", None) not in ["", None]:
-            return self.secondary_data.get("FirstName")
-        elif self.secondary_data.get("LastName", None) not in ["", None]:
-            return self.secondary_data.get("LastName")
-        else:
-            return "N/A"
+            email = self.secondary_data.get("Email")
+        if self.secondary_data.get("FirstName", None) not in ["", None]:
+            first_name = self.secondary_data.get("FirstName")
+        if self.secondary_data.get("LastName", None) not in ["", None]:
+            last_name = self.secondary_data.get("LastName")
+        return f"{first_name} {last_name} <{email}>"
 
     def __str__(self):
         return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
@@ -246,6 +247,24 @@ class Contact(TimeStampModel, IntegrationModel):
             if existing:
                 raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Contact"
+            ).values_list("api_name", flat=True)
+            res = ContactAdapter.update_contact(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
 
 class StageQuerySet(models.QuerySet):
