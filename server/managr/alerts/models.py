@@ -1,4 +1,6 @@
 import re
+import pytz
+import logging
 import datetime
 import operator as _operator
 from dateutil.relativedelta import relativedelta
@@ -15,6 +17,8 @@ from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
 
 # Create your models here.
+
+logger = logging.getLogger("managr")
 
 
 class AlertTemplateQuerySet(models.QuerySet):
@@ -80,8 +84,9 @@ class AlertTemplate(TimeStampModel):
 
         if hasattr(user, "salesforce_account"):
             try:
-                _process_check_alert.now(str(c.id), str(user.id))
-            except:
+                _process_check_alert.now(str(c.id), str(user.id), datetime.datetime.now(pytz.utc))
+            except Exception as e:
+                logger.info(f"Failed to send test alert for user {user.email} {e}")
                 return c.delete()
         # delete after test is over
         c.delete()
@@ -313,6 +318,15 @@ class AlertConfig(TimeStampModel):
                 return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day)
 
         return timezone.now()
+
+    def calculate_scheduled_time_for_alert(self, user):
+        user_tz = user.timezone
+        today = timezone.now()
+        user_7_am = datetime.datetime(
+            today.year, today.month, today.day, 7, 0, tzinfo=(pytz.timezone(user_tz))
+        )
+        utc_time_from_user_7_am = user_7_am.astimezone(pytz.timezone("UTC"))
+        return utc_time_from_user_7_am
 
 
 class AlertInstanceQuerySet(models.QuerySet):
