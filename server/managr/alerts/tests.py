@@ -1,5 +1,7 @@
 import json
 import datetime
+import pytz
+import random
 from dateutil.relativedelta import relativedelta
 from calendar import monthrange
 
@@ -867,3 +869,45 @@ class UserTestCase(TestCase):
         )
         self.assertEqual(expected, instance.render_text())
         return
+
+    def test_config_returns_correct_send_time_7am_local(self):
+        temp = {
+            "user_id": str(self.admin_user.id),
+            "title": "test",
+            "is_active": True,
+            "resource_type": "Opportunity",
+            "alert_level": "ORGANIZATION",
+        }
+        template = alert_models.AlertTemplate.objects.create(**temp)
+        grp = {"template_id": str(template.id), "group_condition": "AND", "group_order": 0}
+        group = alert_models.AlertGroup.objects.create(**grp)
+        op = {
+            "group_id": str(group.id),
+            "operand_type": "FIELD",
+            "operand_order": 0,
+            "operand_identifier": "CloseDate",
+            "operand_value": 2,
+            "operand_condition": "OR",
+            "operand_operator": ">",
+            "data_type": "DATE",
+        }
+        alert_models.AlertOperand.objects.create(**op)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=27,
+            recurrence_frequency="MONTHLY",
+            recipients=["SELF"],
+            template=template,
+        )
+        for index in range(0, 6):
+            tz = pytz.all_timezones[random.randint(0, 10)]
+            self.admin_user.timezone = tz
+            self.admin_user.save()
+            today = datetime.datetime.now()
+            self.assertEqual(
+                datetime.datetime(
+                    today.year, today.month, today.day, 7, 0, tzinfo=pytz.timezone(tz)
+                ).astimezone(pytz.utc),
+                conf_1.calculate_scheduled_time_for_alert(self.admin_user),
+            )
+
