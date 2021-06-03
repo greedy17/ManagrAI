@@ -19,13 +19,14 @@
       ></FormField>
       <FormField :errors="profileForm.field.timezone.errors" label="Timezone">
         <template v-slot:input>
-          <DropDownSelect
-            :items="timezones"
-            :itemsRef="timezones"
+          <DropDownSearch
+            :items.sync="timezones"
             v-model="profileForm.field.timezone.value"
             nullDisplay="Select your timezone"
+            searchable
+            local
             @input="profileForm.field.timezone.validate()"
-          ></DropDownSelect>
+          />
         </template>
       </FormField>
       <PulseLoadingSpinnerButton
@@ -42,7 +43,7 @@
 <script>
 import User from '@/services/users'
 import { UserProfileForm } from '@/services/users/forms'
-import DropDownSelect from '@/components/forms/inputs/DropDownSelect'
+import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import FormField from '@/components/forms/FormField'
@@ -51,51 +52,56 @@ import moment from 'moment-timezone'
 
 export default {
   name: 'ProfilePage',
-  components: { FormField, DropDownSelect, PulseLoadingSpinnerButton },
+  components: { FormField, DropDownSearch, PulseLoadingSpinnerButton },
   data() {
     return {
-      user: null,
+      user: this.getUser,
       timezones: moment.tz.names(),
-      profileForm: new UserProfileForm({
-        firstName: this.$store.state.user.firstName,
-        lastName: this.$store.state.user.lastName,
-        timezone: this.$store.state.user.timezone,
-      }),
+      profileForm: new UserProfileForm({}),
       loading: false,
     }
   },
   async created() {
-    this.timezones = this.timezones.map((tz) => {
+    this.profileForm = new UserProfileForm({
+      firstName: this.getUser.firstName,
+      lastName: this.getUser.lastName,
+      timezone: this.getUser.timezone,
+    })
+    this.timezones = this.timezones.map(tz => {
       return { key: tz, value: tz }
     })
-    this.refresh()
   },
   methods: {
-    async refresh() {
-      this.user = this.$store.state.user
-    },
     handleUpdate() {
       this.loading = true
-      let data = {
-        first_name: this.profileForm.field.firstName.value,
-        last_name: this.profileForm.field.lastName.value,
-        timezone: this.profileForm.field.timezone.value,
-      }
+
       User.api
-        .update(this.$store.state.user.id, data)
-        .then((response) => {
+        .update(this.getUser.id, this.profileForm.value)
+        .then(response => {
+          this.$Alert.alert({
+            message: 'Successfully Updated Profile info',
+            type: 'success',
+            timeout: 2000,
+          })
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
+
           this.resetProfileForm()
         })
-        .catch(() => {
+        .catch(e => {
+          console.log(e)
           this.resetProfileForm()
         })
     },
     resetProfileForm() {
-      this.profileForm.firstName = this.$store.state.user.firstName
-      this.profileForm.lastName = this.$store.state.user.lastName
-      this.profileForm.timezone = this.$store.state.user.timezone
+      this.profileForm.firstName = this.getUser.firstName
+      this.profileForm.lastName = this.getUser.lastName
+      this.profileForm.timezone = this.getUser.timezone
       this.loading = false
+    },
+  },
+  computed: {
+    getUser() {
+      return this.$store.state.user
     },
   },
 }
