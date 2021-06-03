@@ -161,7 +161,7 @@ def _process_check_alert(config_id, user_id):
                             resource_id=str(existing.id),
                             instance_meta=instance_meta,
                         )
-                        if hasattr(user, "slack_integration"):
+                        if hasattr(u, "slack_integration"):
                             channel_id = u.slack_integration.channel
                             access_token = u.organization.slack_integration.access_token
                             text = template.message_template.notification_text
