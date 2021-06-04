@@ -429,7 +429,7 @@ def process_submit_resource_data(payload, context):
 
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_ your updates will be visible on the next sync"
+            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
 
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
