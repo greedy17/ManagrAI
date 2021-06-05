@@ -1,16 +1,9 @@
-cd /opt/managr/client
-
-echo "Removing managr webapp node_modules directory..."
-rm -rf node_modules
-echo "Done removing node_modules."
-
-echo "Installing managr webapp dependencies..."
-npm i
-
-echo "Building the managr VueJS WebApp."
-npm run build
-
 cd /opt/managr/server
+echo "pulling latest master"
+git pull
+
+echo "applying migrations"
+source /opt/venv/bin/activate && python manage.py migrate
 
 echo "Collecting static files..."
 source /opt/venv/bin/activate && python manage.py collectstatic --noinput

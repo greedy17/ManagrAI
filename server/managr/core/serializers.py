@@ -75,6 +75,7 @@ class UserSerializer(serializers.ModelSerializer):
             "zoom_account",
             "has_zoom_integration",
             "has_salesforce_integration",
+            "timezone",
         )
 
     read_only_fields = (

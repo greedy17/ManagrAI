@@ -107,9 +107,10 @@
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
           <div
             v-if="
-              field.referenceDisplayLabel === 'Meeting Type' ||
-                field.referenceDisplayLabel === 'Meeting Comments' ||
-                field.referenceDisplayLabel === 'How Did It go?'
+              field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
+                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
             "
             class="form-field__label"
           >
@@ -117,30 +118,42 @@
           </div>
           <div style="display: flex; width: 100%;">
             <div class="form-field__left">
-              <div v-if="field.referenceDisplayLabel === 'Meeting Type'" class="form-field__body">
+              <div
+                v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
+                class="form-field__body"
+              >
                 {{
                   "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
                 }}
               </div>
 
               <div
-                v-if="field.referenceDisplayLabel === 'Meeting Comments'"
+                v-if="field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'"
                 class="form-field__body"
               >
                 {{ 'Logs the rep’s comments about the meeting' }}
               </div>
-              <div v-if="field.referenceDisplayLabel === 'How Did It go?'" class="form-field__body">
-                {{
-                  'Gives reps the ability to tell you how they think the meeting went (Great, Fine, Not Well)'
-                }}
+
+              <div
+                v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
+                class="form-field__body"
+              >
+                {{ 'Gives the reps the option to send a recap to leadership' }}
+              </div>
+              <div
+                v-if="field.id === 'fae88a10-53cc-470e-86ec-32376c041893'"
+                class="form-field__body"
+              >
+                {{ 'Gives the reps the option to send themselves a recap' }}
               </div>
 
               <div
                 class="form-field__label"
                 v-if="
-                  field.referenceDisplayLabel !== 'Meeting Type' &&
-                    field.referenceDisplayLabel !== 'Meeting Comments' &&
-                    field.referenceDisplayLabel !== 'How Did It go?'
+                  field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
                 "
               >
                 {{ field.referenceDisplayLabel }}
@@ -162,7 +175,7 @@
           </div>
           <div style="display: flex; align-items: center;">
             <input
-              v-if="field.referenceDisplayLabel === 'Meeting Type'"
+              v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
               placeholder="Enter Meeting Type"
               class="meeting-type"
               v-model="meetingType"
@@ -172,7 +185,7 @@
           </div>
 
           <div
-            v-if="field.referenceDisplayLabel === 'Meeting Type' && actionChoices.length"
+            v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
             class="meeting-type__list"
           >
             <template v-if="!loadingMeetingTypes">

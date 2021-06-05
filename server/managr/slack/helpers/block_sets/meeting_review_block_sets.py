@@ -457,21 +457,32 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 @block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
     additional_opts = []
-    if not context.get("resource") == "Lead":
+    resource_type = context.get("resource")
+    if not resource_type == "Lead":
         additional_opts = [
             {
-                "label": f'NEW {context.get("resource", None)} (create)',
+                "label": f"NEW {resource_type} (create)",
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
 
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
+    resource_id = context.get("resource_id", None)
+    # if an id is already passed (Aka this is recurrsive) get the resource
+    if resource_id:
+        resource = (
+            form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
+        )
+
     return [
         block_builders.external_select(
-            f"*Search for an {context.get('resource')}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
+            f"*Search for an {resource_type}*",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
+            initial_option=block_builders.option(resource.name, str(resource.id))
+            if resource_id and resource
+            else None,
         )
     ]
 
@@ -481,47 +492,55 @@ def create_modal_block_set(context, *args, **kwargs):
     """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    template = (
-        OrgCustomSlackForm.objects.for_user(user)
-        .filter(
-            Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
-            & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+    existing_form_id = context.get("f", None)
+    if existing_form_id:
+        existing_form = workflow.forms.filter(id=existing_form_id).first()
+        if not existing_form:
+            existing_form.add(existing_form)
+        form_blocks = existing_form.generate_form(existing_form.saved_data)
+    else:
+
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(
+                Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
+                & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+            )
+            .first()
         )
-        .first()
-    )
-    if template:
-        workflow.forms.filter(
-            template__form_type__in=[
-                slack_const.FORM_TYPE_CREATE,
-                slack_const.FORM_TYPE_STAGE_GATING,
-            ]
-        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-        # remove old instance (in case there was an error that required the form to add fields)
+        if template:
+            workflow.forms.filter(
+                template__form_type__in=[
+                    slack_const.FORM_TYPE_CREATE,
+                    slack_const.FORM_TYPE_STAGE_GATING,
+                ]
+            ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
+            # remove old instance (in case there was an error that required the form to add fields)
 
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            user=user, template=template, workflow=workflow
-        )
-        form_blocks = slack_form.generate_form()
-        if len(form_blocks):
-            blocks = [
-                block_builders.simple_section(
-                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                    "mrkdwn",
-                ),
-            ]
+            slack_form = OrgCustomSlackFormInstance.objects.create(
+                user=user, template=template, workflow=workflow
+            )
+            form_blocks = slack_form.generate_form()
+    if len(form_blocks):
+        blocks = [
+            block_builders.simple_section(
+                ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                "mrkdwn",
+            ),
+        ]
 
-            blocks = [*blocks, *form_blocks]
-        else:
+        blocks = [*blocks, *form_blocks]
+    else:
 
-            blocks = [
-                block_builders.section_with_button_block(
-                    "Forms",
-                    "form",
-                    f"Please add fields to your {context.get('resource')} create form",
-                    url=f"{get_site_url()}/forms",
-                )
-            ]
-        return blocks
+        blocks = [
+            block_builders.section_with_button_block(
+                "Forms",
+                "form",
+                f"Please add fields to your {context.get('resource')} create form",
+                url=f"{get_site_url()}/forms",
+            )
+        ]
+    return blocks
 
 
 @block_set(required_context=["w"])

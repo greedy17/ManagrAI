@@ -28,6 +28,7 @@ from .adapter.exceptions import (
     TokenExpired,
     InvalidFieldError,
     UnhandledSalesforceError,
+    InvalidRefreshToken,
 )
 from . import constants as sf_consts
 
@@ -476,8 +477,13 @@ class SFResourceSync(SFSyncOperation):
                             f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
                         )
                     else:
-                        sf_account.regenerate_token()
-                        attempts += 1
+                        try:
+                            sf_account.regenerate_token()
+                            attempts += 1
+                        except InvalidRefreshToken:
+                            return logger.exception(
+                                f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
+                            )
                 # get counts to set offsets
                 # has a 2000 offset limit as it is previously we would just get the rest which was too big
                 # we now only get a max of 500

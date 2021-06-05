@@ -14,7 +14,12 @@ from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
+from managr.slack.helpers.utils import (
+    action_with_params,
+    block_set,
+    map_fields_to_type,
+    block_finder,
+)
 from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
@@ -121,6 +126,7 @@ def update_modal_block_set(context, *args, **kwargs):
                 block_builders.option("Opportunity", "Opportunity"),
                 block_builders.option("Account", "Account"),
                 block_builders.option("Lead", "Lead"),
+                block_builders.option("Contact", "Contact"),
             ],
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
@@ -143,7 +149,7 @@ def update_modal_block_set(context, *args, **kwargs):
 
     if form_id:
         slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        form_blocks = slack_form.generate_form()
+        form_blocks = slack_form.generate_form(slack_form.saved_data)
         if len(form_blocks):
             blocks.append(
                 block_builders.simple_section(
@@ -163,4 +169,42 @@ def update_modal_block_set(context, *args, **kwargs):
                     url=f"{get_site_url()}/forms",
                 )
             ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def create_modal_block_set(context, *args, **kwargs):
+    """Shows a modal to create a resource"""
+    resource_type = context.get("resource_type", None)
+
+    user_id = context.get("u")
+    form_id = context.get("f")
+
+    blocks = []
+
+    if form_id:
+        slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        form_blocks = slack_form.generate_form(
+            slack_form.saved_data
+        )  # optionally pass any saved data from this form
+        if len(form_blocks):
+            blocks.append(
+                block_builders.simple_section(
+                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                    "mrkdwn",
+                ),
+            )
+
+            blocks = [*blocks, *form_blocks]
+        else:
+
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Forms",
+                    "form",
+                    f"Please add fields to your {resource_type} create form",
+                    url=f"{get_site_url()}/forms",
+                )
+            ]
+
     return blocks

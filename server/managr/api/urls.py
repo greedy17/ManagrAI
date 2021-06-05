@@ -44,6 +44,7 @@ urlpatterns = [
     path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
     path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
+    path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
@@ -71,6 +72,7 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/commands/create-resource", slack_views.create_resource, name="create-resource",),
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
