@@ -1,5 +1,6 @@
 import requests
 import json
+import logging
 import os
 import pdb
 from urllib.parse import urlencode
@@ -10,6 +11,8 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 
 from managr.slack.helpers.exceptions import CustomAPIException
+
+logger = logging.getLogger("managr")
 
 
 def _handle_response(response, fn_name=None, blocks=[]):
@@ -40,8 +43,20 @@ def _handle_response(response, fn_name=None, blocks=[]):
                 "error_param": error_param,
                 "error_message": error_message,
             }
-
-            CustomAPIException(HTTPError(kwargs), fn_name, blocks=blocks)
+            try:
+                CustomAPIException(HTTPError(kwargs), fn_name, blocks=blocks)
+            except Exception as e:
+                if settings.SLACK_ERROR_WEBHOOK:
+                    try:
+                        generic_request(
+                            slack_const.SLACK_ERROR_WEBHOOK, {"text": f"An error occured {e}"}
+                        )
+                    except Exception as fail_safe_error:
+                        logger.exception(
+                            f"Failed to send slack error to error channel {fail_safe_error}"
+                        )
+                        pass
+                raise e
 
         return res_data
 

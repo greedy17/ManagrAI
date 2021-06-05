@@ -188,6 +188,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     slackSecret        = each.value.slack_secret
     slackSigningSecret = each.value.slack_signing_secret
     slackAppVersion    = each.value.slack_app_version
+    slackErrorWebhook  = each.value.slack_error_webhook
 
     salesforceBaseUrl     = each.value.salesforce_base_url
     salesforceConsumerKey = each.value.salesforce_consumer_key
