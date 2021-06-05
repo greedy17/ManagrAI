@@ -164,6 +164,12 @@
       },
       
       {
+        "name": "SLACK_ERROR_WEBHOOK",
+        "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
+      },
+
+      
+      {
         "name": "SALESFORCE_BASE_URL",
         "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"
       },
@@ -365,6 +371,10 @@
       {
         "name": "SLACK_APP_VERSION",
         "valueFrom": "${config_secret_arn}:slackAppVersion::"
+      },
+      {
+        "name": "SLACK_ERROR_WEBHOOK",
+        "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
       },
       {
         "name": "SALESFORCE_BASE_URL",

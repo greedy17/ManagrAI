@@ -6,6 +6,7 @@ SLACK_OAUTH_AUTHORIZE_ROOT = "https://slack.com/oauth/v2/authorize"
 if settings.USE_SLACK:
     SLACK_SIGNING_SECRET = settings.SLACK_SIGNING_SECRET
     SLACK_APP_VERSION = settings.SLACK_APP_VERSION
+    SLACK_ERROR_WEBHOOK = settings.SLACK_ERROR_WEBHOOK
 
 # https://api.slack.com/methods/oauth.v2.access
 OAUTH_V2_ACCESS = "oauth.v2.access"
