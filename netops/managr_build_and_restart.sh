@@ -3,7 +3,7 @@ echo "pulling latest master"
 git pull
 
 echo "applying migrations"
-source /opt/venv/bin/activate && python manage.py migrate --noinput
+source /opt/venv/bin/activate && python manage.py migrate
 
 echo "Collecting static files..."
 source /opt/venv/bin/activate && python manage.py collectstatic --noinput
