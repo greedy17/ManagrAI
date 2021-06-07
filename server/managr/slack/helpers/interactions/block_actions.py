@@ -645,7 +645,7 @@ def process_show_update_resource_form(payload, context):
         selected_option = None
     resource_id = selected_option
     resource_type = context.get("resource")
-    pm = json.loads(payload["view"].get("private_metadata", "{}"))
+    pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
@@ -694,7 +694,6 @@ def process_show_update_resource_form(payload, context):
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
-        "hash": payload["view"]["hash"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
