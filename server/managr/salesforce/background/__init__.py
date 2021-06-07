@@ -414,14 +414,14 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 attempts += 1
         except UnableToUnlockRow as e:
             if attempts >= 5:
-                return logger.exception(
+                logger.exception(
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
+                raise e
             else:
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
-                raise e
 
     # create a summary
 
@@ -488,14 +488,14 @@ def _process_add_call_to_sf(workflow_id, *args):
                 attempts += 1
         except UnableToUnlockRow as e:
             if attempts >= 5:
-                return logger.exception(
+                logger.exception(
                     f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
+                raise e
             else:
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
-                raise e
     return
 
 
@@ -556,14 +556,14 @@ def _process_create_new_contacts(workflow_id, *args):
                     attempts += 1
             except UnableToUnlockRow as e:
                 if attempts >= 5:
-                    return logger.exception(
+                    logger.exception(
                         f"Failed to create contact for resource log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                     )
+                    raise e
                 else:
                     sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     attempts += 1
-                    raise e
 
         if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
             while True:
@@ -590,14 +590,14 @@ def _process_create_new_contacts(workflow_id, *args):
                         attempts += 1
                 except UnableToUnlockRow as e:
                     if attempts >= 5:
-                        return logger.exception(
+                        logger.exception(
                             f"Failed to add contact role to resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                         )
+                        raise e
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
-                        raise e
     return
 
 
@@ -646,14 +646,14 @@ def _process_update_contacts(workflow_id, *args):
                         attempts += 1
                 except UnableToUnlockRow as e:
                     if attempts >= 5:
-                        return logger.exception(
+                        logger.exception(
                             f"Failed to update contact from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                         )
+                        raise e
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
-                        raise e
 
         # if no data was saved the resource was not updated but we still add the contact role
 
@@ -688,14 +688,14 @@ def _process_update_contacts(workflow_id, *args):
 
                 except UnableToUnlockRow as e:
                     if attempts >= 5:
-                        return logger.exception(
+                        logger.exception(
                             f"Failed to add contact role from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                         )
+                        raise e
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
-                        raise e
     return
 
 
