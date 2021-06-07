@@ -10,6 +10,7 @@ from background_task.models import CompletedTask, Task
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.db.models import Q
 
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
@@ -50,7 +51,7 @@ from ..adapter.exceptions import (
     SFQueryOffsetError,
     SFNotFoundError,
 )
-
+from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -757,3 +758,83 @@ def _process_stale_data_for_delete(batch):
             logger.exception(e)
             pass
     return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_recap(form_ids):
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    user = main_form.user
+    old_data = None
+    if main_form.template.form_type == "UPDATE":
+        old_data = main_form.resource_object.secondary_data
+    new_data = dict()
+    form_fields = None
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+        if form_fields:
+            form_fields = [*form_fields, *form.template.fields.all()]
+        else:
+            form_fields = form.template.fields.all()
+    send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
+    send_summ_to_owner = new_data.get("__send_recap_to_owner")
+
+    slack_access_token = user.organization.slack_integration.access_token
+
+    blocks = []
+
+    for key, new_value in new_data.items():
+        field_label = form_fields.filter(api_name=key).first().reference_display_label
+        if main_form.template.form_type == "UPDATE":
+
+            if old_data and key in old_data:
+                if str(old_data.get(key)) != str(new_value):
+                    blocks.append(
+                        block_builders.simple_section(
+                            f"*{field_label}:* ~{old_data.get(key)}~ {new_value}", "mrkdwn"
+                        )
+                    )
+                else:
+                    blocks.append(
+                        block_builders.simple_section(
+                            f"*{field_label}:* {new_value} _(no change)_", "mrkdwn"
+                        )
+                    )
+
+        elif main_form.template.form_type == "CREATE":
+            blocks.append(block_builders.simple_section(f"*{field_label}:* {new_value}", "mrkdwn"))
+
+    if main_form.template.form_type == "UPDATE":
+        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+
+        blocks.insert(
+            0,
+            block_builders.header_block(
+                f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+            ),
+        )
+        query = Q()
+        if send_summ_to_leadership:
+            query |= Q(user_level="MANAGER")
+        if send_summ_to_owner:
+            query |= Q(id=user.id)
+
+        user_list = (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+        for u in user_list:
+            if hasattr(u, "slack_integration"):
+                try:
+                    slack_requests.send_channel_message(
+                        u.slack_integration.channel,
+                        slack_access_token,
+                        text=f"Recap {main_form.template.resource}",
+                        block_set=blocks,
+                    )
+                except Exception as e:
+                    logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                    continue
