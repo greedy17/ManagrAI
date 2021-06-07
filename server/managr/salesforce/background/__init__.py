@@ -51,6 +51,7 @@ from ..adapter.exceptions import (
     RequiredFieldError,
     SFQueryOffsetError,
     SFNotFoundError,
+    UnableToUnlockRow,
 )
 
 from .. import constants as sf_consts
@@ -399,17 +400,29 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         sf = user.salesforce_account
         try:
             res = workflow.resource.update_in_salesforce(data)
+            attempts = 1
             break
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync Update data for user {str(user.id)} after {attempts} tries from workflow {workflow.id}"
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+                raise e
+
     # create a summary
 
     # emit summary
@@ -461,8 +474,9 @@ def _process_add_call_to_sf(workflow_id, *args):
         sf = user.salesforce_account
         try:
             ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+            attempts = 1
             break
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
@@ -472,6 +486,16 @@ def _process_add_call_to_sf(workflow_id, *args):
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+                raise e
     return
 
 
@@ -519,7 +543,7 @@ def _process_create_new_contacts(workflow_id, *args):
                 )
                 attempts = 1
                 break
-            except TokenExpired:
+            except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
                         f"Failed to refresh user token for Salesforce operation add contact to sf failed"
@@ -530,6 +554,16 @@ def _process_create_new_contacts(workflow_id, *args):
                     time.sleep(sleep)
                     sf.regenerate_token()
                     attempts += 1
+            except UnableToUnlockRow as e:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to create contact for resource log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                    )
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    attempts += 1
+                    raise e
 
         if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
             while True:
@@ -543,7 +577,7 @@ def _process_create_new_contacts(workflow_id, *args):
                     )
                     attempts = 1
                     break
-                except TokenExpired:
+                except TokenExpired as e:
                     if attempts >= 5:
                         return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed"
@@ -554,6 +588,16 @@ def _process_create_new_contacts(workflow_id, *args):
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to add contact role to resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
+                        raise e
     return
 
 
@@ -587,18 +631,30 @@ def _process_update_contacts(workflow_id, *args):
                         form.resource_object.integration_id,
                         sf_adapter.object_fields.get("Contact", {}),
                     )
+                    attempts = 1
                     break
-                except TokenExpired:
+                except TokenExpired as e:
                     if attempts >= 5:
-                        logger.exception(
+                        return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
                         )
-                        break
+
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to update contact from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
+                        raise e
+
         # if no data was saved the resource was not updated but we still add the contact role
 
         if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
@@ -615,22 +671,31 @@ def _process_update_contacts(workflow_id, *args):
                         workflow.resource.add_contact_role(
                             sf.access_token, sf.instance_url, form.resource_object.integration_id
                         )
-                        break
-                    return logger.info(
-                        f"Did not add contact role for contact with id {str(form.resource_object.id)} this contact already is attached"
-                    )
-                except TokenExpired:
+                        attempts = 1
+                    break
+
+                except TokenExpired as e:
                     if attempts >= 5:
-                        logger.exception(
+                        return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
                         )
-                        break
+
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
 
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to add contact role from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
+                        raise e
     return
 
 
@@ -668,7 +733,7 @@ def _process_create_new_resource(form_ids, *args):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return serializer.instance
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
                     f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"

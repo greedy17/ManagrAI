@@ -15,7 +15,7 @@ from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
 from managr.slack.helpers import block_builders
 
-from .exceptions import CustomAPIException
+from .exceptions import CustomAPIException, UnableToUnlockRow
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
