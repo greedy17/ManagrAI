@@ -408,6 +408,11 @@ if USE_SLACK:
     SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
     SLACK_SIGNING_SECRET = _env_get_required("SLACK_SIGNING_SECRET")
     SLACK_APP_VERSION = _env_get_required("SLACK_APP_VERSION")
+    SLACK_ERROR_WEBHOOK = (
+        os.environ.get("SLACK_ERROR_WEBHOOK", None)
+        if os.environ.get("SLACK_ERROR_WEBHOOK") not in ["", None]
+        else None
+    )
 
 
 USE_SALESFORCE = os.environ.get("USE_SALESFORCE") == "True"

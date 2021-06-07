@@ -115,6 +115,7 @@ variable "environments" {
     slack_secret         = string
     slack_signing_secret = string
     slack_app_version    = string
+    slack_error_webhook  = string
 
     use_salesforce          = bool
     salesforce_base_url     = string
