@@ -51,6 +51,7 @@ ALLOWED_HOSTS = []
 # ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 
+print(ALLOWED_HOSTS)
 ### Get allowed hosts from ecs
 
 EC2_PRIVATE_IP = None
@@ -59,11 +60,12 @@ METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", None)
 try:
     resp = requests.get(METADATA_URI)
     data = resp.json()
-    # print(data)
+    print(data)
 
     container_meta = data["Containers"][0]
     EC2_PRIVATE_IP = container_meta["Networks"][0]["IPv4Addresses"][0]
-except:
+except Exception as e:
+    print(e)
     # silently fail as we may not be in an ECS environment
     pass
 
