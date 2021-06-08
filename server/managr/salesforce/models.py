@@ -542,8 +542,11 @@ class SFObjectFieldsOperation(SFSyncOperation):
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
 
-            # determine the operation and its param and get event emitter
-            t = operation(str(self.user.id), str(self.id), param)
+            # HACK this is a temporary measure to ensure sequence
+            scheduled_for = datetime.now(pytz.utc)
+            if operation_name == sf_consts.SALESFORCE_PICKLIST_VALUES:
+                scheduled_for = scheduled_for + timezone.timedelta(minutes=3)
+            t = operation(str(self.user.id), str(self.id), param, scheduled_for)
             if self.operations:
                 self.operations.append(str(t.task_hash))
             else:

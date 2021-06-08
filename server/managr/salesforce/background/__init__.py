@@ -72,16 +72,17 @@ def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.no
     return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_sync_sobject_fields(user_id, sync_id, resource):
-    return _process_sobject_fields_sync(user_id, sync_id, resource)
+def emit_sync_sobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
+    return _process_sobject_fields_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
-def emit_sync_sobject_validations(user_id, sync_id, resource):
-    return _process_sobject_validations_sync(user_id, sync_id, resource)
+def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=timezone.now()):
+    return _process_sobject_validations_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
-def emit_sync_sobject_picklist(user_id, sync_id, resource):
-    return _process_picklist_values_sync(user_id, sync_id, resource)
+def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
+
+    return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
 def emit_save_meeting_review_data(user_id, data):
