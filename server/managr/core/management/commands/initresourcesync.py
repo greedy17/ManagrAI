@@ -1,7 +1,13 @@
+import datetime
+import pytz
+import logging
+
 from django.utils import timezone
 
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.cron import queue_users_sf_resource
+
+logger = logging.getLogger("managr")
 
 
 class Command(BaseCommand):
@@ -13,5 +19,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
-        queue_users_sf_resource(force_all=options.get("force", None))
+        # Temp HACK: currently disabling resource sync during field sync
+        now = datetime.now()
+        noon = datetime(day=now.day, month=now.month, year=now.year, hour=12, tzinfo=pytz.utc)
+        noon_plus_10_mins = noon + datetime.timedelat(minutes=10)
+        midnight = datetime(day=now.day, month=now.month, year=now.year, tzinfo=pytz.utc)
+        midnight_plus_10_mins = midnight + datetime.timedelat(minutes=10)
+        if now >= noon and noon <= noon_plus_10_mins:
+            return logger.info("Skipping sync between noon utc time and 10 mins after")
+        elif now >= noon and midnight <= midnight_plus_10_mins:
+            return logger.info("Skipping sync between midnight utc time and 10 mins after")
+        else:
+            queue_users_sf_resource(force_all=options.get("force", None))
