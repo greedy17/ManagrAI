@@ -22,6 +22,7 @@ export const roles = {
   ACCOUNT_MANAGER,
   OPERATIONS,
   ENABLEMENT,
+  SDR,
   ROLE_CHOICES,
 }
 
