@@ -481,3 +481,20 @@ def simple_image_block(url, alt_text):
         "image_url": url,
         "alt_text": alt_text,
     }
+
+
+def context_block(value, text_type="plain_text"):
+    """Return a block for context, text will be muted and smaller that regular text blocks
+
+    parameters
+    ----------
+    value: str
+        Text of the block, if markdown, text_type needs to be changed
+    text_type: str
+        If mrkdwn is not entered will default to plain_text
+    """
+
+    return {
+        "type": "context",
+        "elements": [{"type": text_type, "text": value}],
+    }
