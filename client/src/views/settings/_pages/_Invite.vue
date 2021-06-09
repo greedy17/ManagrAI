@@ -10,9 +10,7 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <div class="invite-form__title">
-          Invite Users to Managr
-        </div>
+        <div class="invite-form__title">Invite Users to Managr</div>
         <div class="invite-form__subtitle">
           {{ $store.state.user.organizationRef.name }}
         </div>
@@ -72,10 +70,10 @@
         <div class="invite-form__actions">
           <div
             @click="onConfirmSlackInvite"
-            style="display:flex;align-items:center;align-self:flex-start;"
+            style="display: flex; align-items: center; align-self: flex-start"
           >
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-left:1rem;">Send Slack Invite</span>
+            <span style="margin-left: 1rem">Send Slack Invite</span>
           </div>
           <template>
             <PulseLoadingSpinnerButton
