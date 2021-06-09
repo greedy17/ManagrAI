@@ -39,9 +39,9 @@ def _initial_interaction_message(resource_name=None, resource_type=None):
 
 def _initial_meeting_step_one_message(resource_type=None):
     if not resource_type:
-        return "1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, :exclamation: \n or Lead. If none exists, you can create one!"
+        return "1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
 
-    return "1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity,:exclamation: \n or Lead."
+    return "1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -358,7 +358,7 @@ def initial_meeting_interaction_block_set(context):
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
         step_one = _initial_meeting_step_one_message(workflow.resource_type)
-    step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, etc are filled in or else SFDC may not save them as Contacts."
+    step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, :exclamation: \n etc are filled in or else SFDC may not save them as Contacts."
     blocks = [
         *default_blocks,
         block_builders.simple_section(title_section, "mrkdwn",),
@@ -388,7 +388,7 @@ def initial_meeting_interaction_block_set(context):
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
-        step_three = f"3.\tClick *'Update'* to make changes to this {workflow.resource_type}, progress Stages, change the :exclamation: \n Forecast, Amount, Next Step, etc."
+        step_three = f"3.\tClick *'Update'* to make changes to this {workflow.resource_type}, progress Stages, change the Forecast, Amount, Next Step, etc. "
         blocks.append(review_participants_button)
         blocks.append(block_builders.simple_section(step_three, "mrkdwn"))
         action_blocks = [
