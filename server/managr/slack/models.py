@@ -326,4 +326,3 @@ class FormField(TimeStampModel):
     )
     form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)
-

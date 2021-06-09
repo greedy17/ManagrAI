@@ -910,4 +910,3 @@ class UserTestCase(TestCase):
                 ).astimezone(pytz.utc),
                 conf_1.calculate_scheduled_time_for_alert(self.admin_user),
             )
-

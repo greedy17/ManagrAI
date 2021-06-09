@@ -6,13 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0008_user_timezone'),
+        ("core", "0008_user_timezone"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='role',
-            field=models.CharField(blank=True, choices=[('LEADERSHIP', 'Leadership'), ('FRONTLINE_MANAGER', 'Frontline Manager'), ('ACCOUNT_EXEC', 'Account Executive'), ('ACCOUNT MANAGER', 'Account Manager'), ('OPERATIONS', 'OPERATIONS'), ('ENABLEMENT', 'Enablement'), ('SDR', 'SDR')], max_length=32),
+            model_name="user",
+            name="role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("LEADERSHIP", "Leadership"),
+                    ("FRONTLINE_MANAGER", "Frontline Manager"),
+                    ("ACCOUNT_EXEC", "Account Executive"),
+                    ("ACCOUNT MANAGER", "Account Manager"),
+                    ("OPERATIONS", "OPERATIONS"),
+                    ("ENABLEMENT", "Enablement"),
+                    ("SDR", "SDR"),
+                ],
+                max_length=32,
+            ),
         ),
     ]
