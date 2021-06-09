@@ -280,3 +280,39 @@ you can edit cron jobs by running
 
 
 
+### Adding new variables to the terraform configuration 
+
+1. 
+   1. ***Sensitive*** in **ecs.tf** add variable to **aws_secretsmanager_secret_version** this will add the variable to the secrets managr
+   2. ***Insensitive*** in **ecs.tf** add variable to the **template_file** since it can be exposed 
+2. Add the variable in the **variables.tf** to **environments**
+3. Add the variable in the **managr_app.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
+4. add to **Dockerfile** for each environment 
+5. add to **default.auto.tfvars** for deployment 
+6. Run `terrafor apply -auto-approve` to apply changes 
+
+### SSH Into (New) Environments 
+
+Install [session manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-macos) if you have not already done so 
+
+
+
+`aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"`
+
+You can get the correct task_id by looking at the AWS Console under ECS tasks there may be multiple definitions running (if there was autoscaling) any one will do, the container_name corresponds to the container you are accessing aka managr-app, managr-tasks etc. 
+
+### Describe the task definition
+
+`aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"`
+
+
+### One time code to add new public fields to user's forms 
+
+
+    form_templates=OrgCustomSlackForm.objects.filter()
+    for template in form_templates:
+      ## check to see if the form already has duplicates before adding 
+      exists = template.formfield_set.filter(field_id="fae88a10-53cc-470e-86ec-32376c041893").exists()
+      if not exists:
+        FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="fae88a10-53cc-470e-86ec-32376c041893"))
+
