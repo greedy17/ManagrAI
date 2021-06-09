@@ -47,7 +47,7 @@ export default {
     },
   },
   watch: {
-    placeholder: function(newVal) {
+    placeholder: function (newVal) {
       this.selectedOption = newVal
     },
   },
