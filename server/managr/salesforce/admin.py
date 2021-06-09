@@ -21,6 +21,22 @@ class CustomSyncOperationAdmin(admin.ModelAdmin):
     form = SyncResourceForm
     list_filter = ("user",)
     ordering = ("-datetime_created",)
+    list_display = (
+        "datetime_created",
+        "user",
+        "progress",
+    )
+
+
+class CustomSyncFieldOperationAdmin(admin.ModelAdmin):
+    model = models.SFObjectFieldsOperation
+    list_display = (
+        "datetime_created",
+        "user",
+        "progress",
+    )
+    list_filter = ("user",)
+    ordering = ("-datetime_created",)
 
 
 class CustomFormInstanceInline(admin.StackedInline):
@@ -67,6 +83,6 @@ admin.site.register(models.SalesforceAuthAccount)
 admin.site.register(models.SObjectField, CustomSObjectField)
 admin.site.register(models.SObjectValidation)
 admin.site.register(models.SObjectPicklist, CustomPicklistValue)
-admin.site.register(models.SFObjectFieldsOperation)
+admin.site.register(models.SFObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(models.SFResourceSync, CustomSyncOperationAdmin)
 admin.site.register(models.MeetingWorkflow, CustomMeetingWorkflow)
