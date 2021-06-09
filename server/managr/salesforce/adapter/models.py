@@ -784,6 +784,29 @@ class LeadAdapter:
         return formatted_data
 
     @staticmethod
+    def create(data, access_token, custom_base, object_fields, user_id):
+        logger.info(f"UNFORMATED DATA: {data}")
+        json_data = json.dumps(
+            LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_LEAD, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        logger.info(f"REQUEST DATA: {json_data}")
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+
+        # get the opp as well uses the same url as the write but with get
+        logger.info(f"REQUEST RES: {r.json()}")
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        url = f"{url}{r['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+        logger.info(f"NEW DATA: {r.json()}")
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = LeadAdapter.from_api(r, user_id)
+        return r
+
+    @staticmethod
     def update_lead(data, access_token, custom_base, salesforce_id, object_fields):
         json_data = json.dumps(
             LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)

@@ -28,12 +28,12 @@ variable "health_check_path" {
 
 variable "fargate_cpu" {
   type    = string
-  default = "1024"
+  default = "2048"
 }
 
 variable "fargate_memory" {
   type    = string
-  default = "2048"
+  default = "4096"
 }
 
 variable "dd_api_key" {

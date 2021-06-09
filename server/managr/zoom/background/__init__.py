@@ -485,36 +485,41 @@ def _send_meeting_summary(workflow_id):
         )
         slack_access_token = user.organization.slack_integration.access_token
 
-        try:
-            for u in user_list:
-                if hasattr(u, "slack_integration"):
+        for u in user_list:
+            if hasattr(u, "slack_integration"):
+                try:
                     slack_requests.send_channel_message(
                         u.slack_integration.channel,
                         slack_access_token,
                         text=f"Meeting Review Summary For {user.email} from meeting",
                         block_set=get_block_set("meeting_summary", {"w": workflow_id}),
                     )
-        except InvalidBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
-            )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
-            return logger.exception(
-                f"Failed To Generate  SummaryInteraction for workflow {str(workflow.id)} for user  email {user.email} {e}"
-            )
+                except InvalidBlocksException as e:
+                    logger.exception(
+                        f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
+                    )
+                    continue
+                except InvalidBlocksFormatException as e:
+                    logger.exception(
+                        f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
+                    )
+                    continue
+                except UnHandeledBlocksException as e:
+                    logger.exception(
+                        f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {user.email} {e}"
+                    )
+                    continue
+                except InvalidAccessToken as e:
+                    logger.exception(
+                        f"Failed To Generate  SummaryInteraction for workflow {str(workflow.id)} for user  email {user.email} {e}"
+                    )
+                    continue
 
-        except Exception as e:
-            return logger.exception(
-                f"Failed to Generate Summary Interaction for workflow  workflow {str(workflow.id)} for user  email {workflow.user.email} {e}"
-            )
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to Generate Summary Interaction for workflow  workflow {str(workflow.id)} for user  email {workflow.user.email} {e}"
+                    )
+                    continue
     return
 
 
