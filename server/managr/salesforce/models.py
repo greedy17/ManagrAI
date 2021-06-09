@@ -484,11 +484,7 @@ class SFResourceSync(SFSyncOperation):
                             return logger.exception(
                                 f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
                             )
-                # get counts to set offsets
-                # has a 2000 offset limit as it is previously we would just get the rest which was too big
-                # we now only get a max of 500
-                # TODO:- Move this to the adapter classes aka limit
-            max_count = 500
+            max_count = 300
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
