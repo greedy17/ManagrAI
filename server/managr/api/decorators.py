@@ -9,6 +9,7 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
     InvalidFieldError,
+    UnableToUnlockRow,
 )
 from managr.slack.helpers.exceptions import (
     TokenExpired,
@@ -109,6 +110,18 @@ def sf_api_exceptions_wf(error_key):
                     )
                 w.failed_task_description.append(f"{operation_key} {str(e)}")
                 w.save()
+            except UnableToUnlockRow as e:
+                from managr.salesforce.models import MeetingWorkflow
+
+                operation_key = f"Failed to {snake_to_space(error_key)}"
+                workflow_id = args[0]
+                w = MeetingWorkflow.objects.filter(id=workflow_id).first()
+                if not w:
+                    return LOGGER.exception(
+                        f"Function wrapped in sfw logger but cannot find workflow {e}"
+                    )
+                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                w.save()
             except InvalidRefreshToken as e:
                 from managr.salesforce.models import MeetingWorkflow
 
@@ -137,7 +150,7 @@ def sf_api_exceptions(rethrow=False):
 
     def error_fn(func):
         @functools.wraps(func)
-        def wrapper_sf_api_exceptions_wf(*args, **kwargs):
+        def wrapper_sf_api_exceptions(*args, **kwargs):
             # only retries for token expired errors
             try:
                 return func(*args, **kwargs)
@@ -175,9 +188,9 @@ def sf_api_exceptions(rethrow=False):
                 if rethrow:
                     raise e
 
-                LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+                LOGGER.exception(f"Non SF related error {e}")
 
-        return wrapper_sf_api_exceptions_wf
+        return wrapper_sf_api_exceptions
 
     return error_fn
 
