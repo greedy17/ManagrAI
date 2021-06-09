@@ -496,24 +496,9 @@ class SFResourceSync(SFSyncOperation):
                 logger.info(
                     f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email} for a count of {count}"
                 )
-                if offset > 2000:
-                    # sf limit on offset for 2000 if it is greater than 2k
-                    # we need to get the rest of the records
-                    # log a warning this may fail
-                    logger.warning(
-                        f"offset for sync for user {self.user.email} with id {self.user.id} was over 2000"
-                    )
-                    offset = 2000
-                    limit = count - offset
-
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, limit, offset)
-                if self.operations:
-                    self.operations.append(str(t.task_hash))
-                else:
-                    self.operations = [str(t.task_hash)]
+                self.operations.append(str(t.task_hash))
                 self.save()
-                if offset >= 2000:
-                    break
 
     def save(self, *args, **kwargs):
         return super(SFResourceSync, self).save(*args, **kwargs)
@@ -547,10 +532,9 @@ class SFObjectFieldsOperation(SFSyncOperation):
             if operation_name == sf_consts.SALESFORCE_PICKLIST_VALUES:
                 scheduled_for = scheduled_for + timezone.timedelta(minutes=3)
             t = operation(str(self.user.id), str(self.id), param, scheduled_for)
-            if self.operations:
-                self.operations.append(str(t.task_hash))
-            else:
-                self.operations = [str(t.task_hash)]
+
+            self.operations.append(str(t.task_hash))
+
             self.save()
 
     def save(self, *args, **kwargs):
