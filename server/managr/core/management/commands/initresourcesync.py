@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import pytz
 import logging
 
@@ -20,14 +20,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Temp HACK: currently disabling resource sync during field sync
-        now = datetime.now()
+        now = datetime.now(pytz.utc)
         noon = datetime(day=now.day, month=now.month, year=now.year, hour=12, tzinfo=pytz.utc)
-        noon_plus_10_mins = noon + datetime.timedelat(minutes=10)
+        noon_plus_10_mins = noon + timedelta(minutes=10)
         midnight = datetime(day=now.day, month=now.month, year=now.year, tzinfo=pytz.utc)
-        midnight_plus_10_mins = midnight + datetime.timedelat(minutes=10)
-        if now >= noon and noon <= noon_plus_10_mins:
+        midnight_plus_10_mins = midnight + timedelta(minutes=10)
+        if now >= noon and now <= noon_plus_10_mins:
             return logger.info("Skipping sync between noon utc time and 10 mins after")
-        elif now >= noon and midnight <= midnight_plus_10_mins:
+        elif now >= noon and now <= midnight_plus_10_mins:
             return logger.info("Skipping sync between midnight utc time and 10 mins after")
         else:
             queue_users_sf_resource(force_all=options.get("force", None))

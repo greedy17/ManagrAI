@@ -89,6 +89,21 @@ def queue_users_sf_resource(force_all=False):
                 if latest_flow.progress == 100:
                     init_sf_resource_sync(account.user.id)
 
+                else:
+                    if settings.SLACK_ERROR_WEBHOOK:
+                        try:
+                            slack_requests.generic_request(
+                                slack_const.SLACK_ERROR_WEBHOOK,
+                                {
+                                    "text": f"Unable to force complete workflow for user {account.user.email} with id {account.user.id} progress is {latest_flow.progress}"
+                                },
+                            )
+                        except Exception as fail_safe_error:
+                            logger.exception(
+                                f"Failed to send slack error to error channel {fail_safe_error}"
+                            )
+                            pass
+
         else:
             init_sf_resource_sync(account.user.id)
 
