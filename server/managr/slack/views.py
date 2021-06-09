@@ -437,6 +437,7 @@ def update_resource(request):
 
         private_metadata = {
             "original_message_channel": request.data.get("channel_id"),
+            "triggered_from": "command",
         }
 
         data = {
