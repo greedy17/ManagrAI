@@ -149,6 +149,7 @@ export default {
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
         { key: 'Representative', value: User.types.REP },
+        { key: 'SDR', value: User.types.SDR },
       ],
       showInvited: true,
       team: CollectionManager.create({ ModelClass: User }),
