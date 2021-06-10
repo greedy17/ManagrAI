@@ -293,7 +293,8 @@ class ZoomMeeting(TimeStampModel):
                         slack_access_token,
                         block_set=[
                             block_builders.simple_section(
-                                ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                                ":put_litter_in_its_place: This meeting was removed from our records",
+                                "mrkdwn",
                             )
                         ],
                     )

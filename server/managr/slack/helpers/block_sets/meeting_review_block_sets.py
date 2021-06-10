@@ -31,10 +31,17 @@ logger = logging.getLogger("managr")
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return "I've noticed your meeting just ended but couldn't find an Opportunity or Account or Lead to link what would you like to do?"
+        return "I couldn't find an Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
 
     # replace opp, review disregard
-    return f"I've noticed your meeting with {resource_type} *{resource_name}* just ended would you like to update Salesforce?"
+    return f"We mapped it to {resource_type} *{resource_name}*"
+
+
+def _initial_meeting_step_one_message(resource_type=None):
+    if not resource_type:
+        return "1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
+
+    return "1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -316,53 +323,77 @@ def initial_meeting_interaction_block_set(context):
         else end_time
     )
     default_blocks = [
-        {"type": "divider"},
-        block_builders.section_with_accessory_block(
+        block_builders.simple_section("I noticed you had this meeting:"),
+        block_builders.simple_section(
             f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
-            block_builders.simple_image_block(
-                "https://api.slack.com/img/blocks/bkb_template_images/notifications.png",
-                "calendar thumbnail",
-            ),
-        ),
-        block_builders.section_with_button_block(
-            "Update Contacts",
-            slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-            "Add Contacts to Salesforce",
-            action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
-            ),
+            text_type="mrkdwn",
         ),
         {"type": "divider"},
     ]
+    create_change_button = block_builders.actions_block(
+        [
+            block_builders.simple_button_block(
+                "Change/Create",
+                str(workflow.id),
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+                style="primary",
+            )
+        ]
+    )
+    review_participants_button = block_builders.actions_block(
+        [
+            block_builders.simple_button_block(
+                "Review Participants",
+                str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+                ),
+            )
+        ]
+    )
     if not resource:
         title_section = _initial_interaction_message()
+        step_one = _initial_meeting_step_one_message()
     else:
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
+        step_one = _initial_meeting_step_one_message(workflow.resource_type)
+    step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, :exclamation: \n etc are filled in or else SFDC may not save them as Contacts."
     blocks = [
-        block_builders.simple_section(title_section, "mrkdwn",),
         *default_blocks,
+        block_builders.simple_section(title_section, "mrkdwn",),
+        block_builders.simple_section(step_one, "mrkdwn",),
+        create_change_button,
+        block_builders.simple_section(step_two_text, "mrkdwn",),
     ]
-    # action button blocks
     action_blocks = [
         block_builders.simple_button_block(
-            "Find/Change",
-            str(workflow.id),
-            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            style="primary",
-        ),
-        block_builders.simple_button_block(
-            "Hide",
+            "Hide*",
             str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
             style="danger",
-        ),
+        )
     ]
+    if not resource:
+        # action button blocks
+        action_blocks = [
+            block_builders.simple_button_block(
+                "Review Participants",
+                str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+                ),
+            ),
+            *action_blocks,
+        ]
 
-    if (
+    elif (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
+        step_three = f"3.\tClick *'Update'* to make changes to this {workflow.resource_type}, progress Stages, change the Forecast, Amount, Next Step, etc. "
+        blocks.append(review_participants_button)
+        blocks.append(block_builders.simple_section(step_three, "mrkdwn"))
         action_blocks = [
             block_builders.simple_button_block(
                 "Update",
@@ -385,7 +416,7 @@ def initial_meeting_interaction_block_set(context):
             *action_blocks,
         ]
     blocks.append(block_builders.actions_block(action_blocks))
-
+    blocks.append(block_builders.context_block("*Clicking 'Hide' will minimize this alert"))
     return blocks
 
 
