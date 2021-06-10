@@ -38,6 +38,7 @@ from managr.salesforce.background import (
     _process_create_new_resource,
     _process_create_task,
     emit_meeting_workflow_tracker,
+    _send_recap,
 )
 from managr.zoom.background import (
     _save_meeting_review,
@@ -431,6 +432,11 @@ def process_submit_resource_data(payload, context):
             text = f"Managr updated {main_form.resource_type}"
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
 
+        if all_form_data.get("__send_recap_to_leadership") or all_form_data.get(
+            "__send_recap_to_owner"
+        ):
+            _send_recap(current_form_ids)
+
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
             "trigger_id": trigger_id,
@@ -447,9 +453,10 @@ def process_submit_resource_data(payload, context):
             slack_requests.generic_request(url, success_view_data, access_token=slack_access_token)
 
         except Exception as e:
-            return logger.exception(
+            logger.exception(
                 f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
             )
+            pass
         try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,

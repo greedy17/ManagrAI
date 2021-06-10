@@ -307,8 +307,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     def save_form(self, state, from_slack_object=True):
         """gets all form values but only saves values for fields"""
-        # this is a HACK because we needed to concatenate all stage gating forms since
-        # we can only show 3 stacked forms
         values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
 
@@ -321,9 +319,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         self.saved_data = data
         self.save()
 
-    # users can have a slack form for create,
-    # update resources and one form for reviewing a meeting
-
 
 class FormField(TimeStampModel):
     field = models.ForeignKey(
@@ -331,3 +326,4 @@ class FormField(TimeStampModel):
     )
     form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)
+

@@ -1,6 +1,8 @@
 import logging
 import json
 import pytz
+import time
+import random
 from datetime import datetime
 
 from background_task import background
@@ -10,6 +12,7 @@ from background_task.models import CompletedTask, Task
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.db.models import Q
 
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
@@ -49,8 +52,9 @@ from ..adapter.exceptions import (
     RequiredFieldError,
     SFQueryOffsetError,
     SFNotFoundError,
+    UnableToUnlockRow,
 )
-
+from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -72,16 +76,17 @@ def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.no
     return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_sync_sobject_fields(user_id, sync_id, resource):
-    return _process_sobject_fields_sync(user_id, sync_id, resource)
+def emit_sync_sobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
+    return _process_sobject_fields_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
-def emit_sync_sobject_validations(user_id, sync_id, resource):
-    return _process_sobject_validations_sync(user_id, sync_id, resource)
+def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=timezone.now()):
+    return _process_sobject_validations_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
-def emit_sync_sobject_picklist(user_id, sync_id, resource):
-    return _process_picklist_values_sync(user_id, sync_id, resource)
+def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
+
+    return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
 
 
 def emit_save_meeting_review_data(user_id, data):
@@ -197,6 +202,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
         try:
             res = sf.list_resource_data(resource, offset, limit=limit)
             logger.info(f"Pulled total {len(res)} from request for {resource}")
+            attempts = 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -204,6 +210,8 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
                     f"Failed to sync {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
         except SFQueryOffsetError:
@@ -253,6 +261,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
         sf = user.salesforce_account
         try:
             fields = sf.get_fields(resource)
+            attempts = 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -260,6 +269,8 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                     f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
 
@@ -292,6 +303,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
         sf = user.salesforce_account
         try:
             values = sf.get_picklist_values(resource)
+            attempts = 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -299,6 +311,8 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
                     f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
         except SFNotFoundError:
@@ -333,6 +347,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
         sf = user.salesforce_account
         try:
             validations = sf.get_validations(resource)
+            attempts = 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -340,6 +355,8 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
                     f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
 
@@ -367,8 +384,6 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
-    meeting = workflow.meeting
-
     # collect forms for resource meeting_review and if stages any stages related forms
     update_forms = workflow.forms.filter(
         template__form_type__in=[
@@ -387,15 +402,29 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         sf = user.salesforce_account
         try:
             res = workflow.resource.update_in_salesforce(data)
+            attempts = 1
             break
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync Update data for user {str(user.id)} after {attempts} tries from workflow {workflow.id}"
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+
     # create a summary
 
     # emit summary
@@ -414,8 +443,6 @@ def _process_add_call_to_sf(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-
-    attempts = 1
     review_form = workflow.forms.filter(
         template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
     ).first()
@@ -449,14 +476,27 @@ def _process_add_call_to_sf(workflow_id, *args):
         sf = user.salesforce_account
         try:
             ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+            attempts = 1
             break
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
                 )
             else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 sf.regenerate_token()
+                attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
                 attempts += 1
     return
 
@@ -503,21 +543,63 @@ def _process_create_new_contacts(workflow_id, *args):
                     sf_adapter.object_fields.get("Contact", {}),
                     str(user.id),
                 )
-
-                if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
-                    workflow.resource.add_contact_role(
-                        sf.access_token, sf.instance_url, res.get("id")
-                    )
+                attempts = 1
                 break
-            except TokenExpired:
+            except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
-                        f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+                        f"Failed to refresh user token for Salesforce operation add contact to sf failed"
                     )
 
                 else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
                     sf.regenerate_token()
                     attempts += 1
+            except UnableToUnlockRow as e:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Failed to create contact for resource log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                    )
+                    raise e
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    attempts += 1
+
+        if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
+            while True:
+                sf = user.salesforce_account
+                sf_adapter = sf.adapter_class
+                logger.info(f"Data from form {data}")
+                try:
+
+                    workflow.resource.add_contact_role(
+                        sf.access_token, sf.instance_url, res.get("id")
+                    )
+                    attempts = 1
+                    break
+                except TokenExpired as e:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed"
+                        )
+
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        sf.regenerate_token()
+                        attempts += 1
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        logger.exception(
+                            f"Failed to add contact role to resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                        raise e
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
     return
 
 
@@ -551,16 +633,30 @@ def _process_update_contacts(workflow_id, *args):
                         form.resource_object.integration_id,
                         sf_adapter.object_fields.get("Contact", {}),
                     )
+                    attempts = 1
                     break
-                except TokenExpired:
+                except TokenExpired as e:
                     if attempts >= 5:
-                        logger.exception(
+                        return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
                         )
-                        break
+
                     else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        logger.exception(
+                            f"Failed to update contact from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                        raise e
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
+
         # if no data was saved the resource was not updated but we still add the contact role
 
         if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
@@ -577,20 +673,31 @@ def _process_update_contacts(workflow_id, *args):
                         workflow.resource.add_contact_role(
                             sf.access_token, sf.instance_url, form.resource_object.integration_id
                         )
-                        break
-                    return logger.info(
-                        f"Did not add contact role for contact with id {str(form.resource_object.id)} this contact already is attached"
-                    )
-                except TokenExpired:
+                        attempts = 1
+                    break
+
+                except TokenExpired as e:
                     if attempts >= 5:
-                        logger.exception(
+                        return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
                         )
-                        break
+
                     else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
 
+                except UnableToUnlockRow as e:
+                    if attempts >= 5:
+                        logger.exception(
+                            f"Failed to add contact role from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        )
+                        raise e
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        attempts += 1
     return
 
 
@@ -628,7 +735,7 @@ def _process_create_new_resource(form_ids, *args):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return serializer.instance
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 return logger.exception(
                     f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
@@ -757,3 +864,83 @@ def _process_stale_data_for_delete(batch):
             logger.exception(e)
             pass
     return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_recap(form_ids):
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    user = main_form.user
+    old_data = None
+    if main_form.template.form_type == "UPDATE":
+        old_data = main_form.resource_object.secondary_data
+    new_data = dict()
+    form_fields = None
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+        if form_fields:
+            form_fields = [*form_fields, *form.template.fields.all()]
+        else:
+            form_fields = form.template.fields.all()
+    send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
+    send_summ_to_owner = new_data.get("__send_recap_to_owner")
+
+    slack_access_token = user.organization.slack_integration.access_token
+
+    blocks = []
+
+    for key, new_value in new_data.items():
+        field_label = form_fields.filter(api_name=key).first().reference_display_label
+        if main_form.template.form_type == "UPDATE":
+
+            if old_data and key in old_data:
+                if str(old_data.get(key)) != str(new_value):
+                    blocks.append(
+                        block_builders.simple_section(
+                            f"*{field_label}:* ~{old_data.get(key)}~ {new_value}", "mrkdwn"
+                        )
+                    )
+                else:
+                    blocks.append(
+                        block_builders.simple_section(
+                            f"*{field_label}:* {new_value} _(no change)_", "mrkdwn"
+                        )
+                    )
+
+        elif main_form.template.form_type == "CREATE":
+            blocks.append(block_builders.simple_section(f"*{field_label}:* {new_value}", "mrkdwn"))
+
+    if main_form.template.form_type == "UPDATE":
+        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+
+        blocks.insert(
+            0,
+            block_builders.header_block(
+                f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+            ),
+        )
+        query = Q()
+        if send_summ_to_leadership:
+            query |= Q(user_level="MANAGER")
+        if send_summ_to_owner:
+            query |= Q(id=user.id)
+
+        user_list = (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+        for u in user_list:
+            if hasattr(u, "slack_integration"):
+                try:
+                    slack_requests.send_channel_message(
+                        u.slack_integration.channel,
+                        slack_access_token,
+                        text=f"Recap {main_form.template.resource}",
+                        block_set=blocks,
+                    )
+                except Exception as e:
+                    logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                    continue

@@ -167,7 +167,7 @@ def _process_send_alert(instance_id):
 
         slack_requests.send_channel_message(channel_id, access_token, text=text, block_set=blocks)
         alert_instance.rendered_text = alert_instance.render_text()
-        alert_instance.sent_at = timezone.now(pytz.utc)
+        alert_instance.sent_at = datetime.now(pytz.utc)
         alert_instance.save()
 
     return alert_instance
