@@ -117,4 +117,3 @@ class CustomAPIException:
             block_index = int(error[matches.end() + 8])
             return f"{error[:matches.start()]} on block {self.blocks[block_index]}"
         return [error]
-

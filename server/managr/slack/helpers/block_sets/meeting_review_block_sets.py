@@ -366,6 +366,14 @@ def initial_meeting_interaction_block_set(context):
         create_change_button,
         block_builders.simple_section(step_two_text, "mrkdwn",),
     ]
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Hide*",
+            str(workflow.id),
+            action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
+            style="danger",
+        )
+    ]
     if not resource:
         # action button blocks
         action_blocks = [
@@ -376,15 +384,10 @@ def initial_meeting_interaction_block_set(context):
                     slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
                 ),
             ),
-            block_builders.simple_button_block(
-                "Hide*",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-                style="danger",
-            ),
+            *action_blocks,
         ]
 
-    if (
+    elif (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
@@ -398,12 +401,7 @@ def initial_meeting_interaction_block_set(context):
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
             ),
-            block_builders.simple_button_block(
-                "Hide*",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-                style="danger",
-            ),
+            *action_blocks,
         ]
     elif workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
         action_blocks = [

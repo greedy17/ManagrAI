@@ -424,4 +424,3 @@ class AlertInstance(TimeStampModel):
             except ValueError:
                 continue
         return binding_map
-
