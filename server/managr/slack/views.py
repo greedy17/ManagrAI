@@ -22,6 +22,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
@@ -48,11 +54,6 @@ from .models import (
 )
 from .serializers import OrgCustomSlackFormSerializer
 
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-)
 
 from managr.salesforce.routes import routes as model_routes
 from managr.slack.helpers.exceptions import (
