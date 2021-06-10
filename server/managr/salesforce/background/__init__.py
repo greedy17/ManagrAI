@@ -890,27 +890,22 @@ def _send_recap(form_ids):
 
     blocks = []
 
+    message_string_for_recap = ""
     for key, new_value in new_data.items():
         field_label = form_fields.filter(api_name=key).first().reference_display_label
         if main_form.template.form_type == "UPDATE":
 
             if old_data and key in old_data:
                 if str(old_data.get(key)) != str(new_value):
-                    blocks.append(
-                        block_builders.simple_section(
-                            f"*{field_label}:* ~{old_data.get(key)}~ {new_value}", "mrkdwn"
-                        )
-                    )
-                else:
-                    blocks.append(
-                        block_builders.simple_section(
-                            f"*{field_label}:* {new_value} _(no change)_", "mrkdwn"
-                        )
+
+                    message_string_for_recap += (
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
                     )
 
         elif main_form.template.form_type == "CREATE":
-            blocks.append(block_builders.simple_section(f"*{field_label}:* {new_value}", "mrkdwn"))
-
+            if new_value:
+                message_string_for_recap += f"*{field_label}:* {new_value}"
+    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
 
