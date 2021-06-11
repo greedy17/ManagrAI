@@ -56,6 +56,12 @@ class InvalidFieldError(Exception):
         super().__init__(self.message)
 
 
+class UnableToUnlockRow(Exception):
+    def __init(self, message="Unable to unlock row"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class UnhandledSalesforceError(Exception):
     def __init(self, message="A new error occured"):
         self.message = message
@@ -129,6 +135,10 @@ class CustomAPIException:
         elif self.status_code == 400 and self.param == "NOT_FOUND":
             raise UnhandledSalesforceError(
                 f"The selected object does not exist in salesforce {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "UNABLE_TO_LOCK_ROW":
+            raise UnableToUnlockRow(
+                f"Unable to save data because row is locked by salesforce {self.message}"
             )
 
         else:

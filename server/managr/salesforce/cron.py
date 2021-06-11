@@ -66,31 +66,51 @@ def queue_users_sf_resource(force_all=False):
         # get latest workflow
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)
+            latest_flow = flows.latest("datetime_created") if flows else None
             if not flows.count():
                 init_sf_resource_sync(account.user.id)
-            latest_flow = flows.latest("datetime_created") if flows else None
-            if latest_flow and latest_flow.progress == 100:
-                logger.info(
-                    f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
-                )
-                init_sf_resource_sync(latest_flow.user.id)
-            elif latest_flow and latest_flow.progress != 100:
-                # check to see if the tasks were completed but not recorded
-                completed_tasks = set(latest_flow.completed_operations)
-                all_tasks = set(latest_flow.operations)
-                tasks_diff = list(all_tasks - completed_tasks)
-                for task_hash in tasks_diff:
-                    # check to see if there was a problem completing the flow but all tasks are ready
-                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
-                    if task:
-                        latest_flow.completed_operations.append(task_hash)
 
-                latest_flow.save()
-                if latest_flow.progress == 100:
-                    init_sf_resource_sync(account.user.id)
+            else:
+                if latest_flow and latest_flow.progress == 100:
+                    logger.info(
+                        f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
+                    )
+                    init_sf_resource_sync(latest_flow.user.id)
+                    continue
+                elif latest_flow and latest_flow.progress != 100:
+                    # check to see if the tasks were completed but not recorded
+                    completed_tasks = set(latest_flow.completed_operations)
+                    all_tasks = set(latest_flow.operations)
+                    tasks_diff = list(all_tasks - completed_tasks)
+                    for task_hash in tasks_diff:
+                        # check to see if there was a problem completing the flow but all tasks are ready
+                        task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                        if task:
+                            latest_flow.completed_operations.append(task_hash)
+
+                    latest_flow.save()
+                    if latest_flow.progress == 100:
+                        init_sf_resource_sync(account.user.id)
+                        continue
+
+                    else:
+                        if settings.SLACK_ERROR_WEBHOOK:
+                            try:
+                                slack_requests.generic_request(
+                                    slack_const.SLACK_ERROR_WEBHOOK,
+                                    {
+                                        "text": f"Unable to force complete resource workflow ({str(latest_flow.id)}) for user {account.user.email} with id {account.user.id} progress is {latest_flow.progress}"
+                                    },
+                                )
+                            except Exception as fail_safe_error:
+                                logger.exception(
+                                    f"Failed to send slack error to error channel {fail_safe_error}"
+                                )
+                                continue
 
         else:
             init_sf_resource_sync(account.user.id)
+            continue
 
     return
 
@@ -106,31 +126,50 @@ def queue_users_sf_fields(force_all=False):
         # get latest workflow
         if not force_all:
             flows = SFObjectFieldsOperation.objects.filter(user=account.user)
+            latest_flow = flows.latest("datetime_created") if flows else None
             if not flows.count():
                 init_sf_field_sync(account.user)
-            latest_flow = flows.latest("datetime_created") if flows else None
-            if latest_flow and latest_flow.progress == 100:
-                logger.info(
-                    f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
-                )
-                init_sf_field_sync(latest_flow.user)
-            elif latest_flow and latest_flow.progress != 100:
-                # check to see if the tasks were completed but not recorded
-                completed_tasks = set(latest_flow.completed_operations)
-                all_tasks = set(latest_flow.operations)
-                tasks_diff = list(all_tasks - completed_tasks)
-                for task_hash in tasks_diff:
-                    # check to see if there was a problem completing the flow but all tasks are ready
-                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
-                    if task:
-                        latest_flow.completed_operations.append(task_hash)
+                continue
+            else:
+                if latest_flow and latest_flow.progress == 100:
+                    logger.info(
+                        f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
+                    )
+                    init_sf_field_sync(latest_flow.user)
+                    continue
+                elif latest_flow and latest_flow.progress != 100:
+                    # check to see if the tasks were completed but not recorded
+                    completed_tasks = set(latest_flow.completed_operations)
+                    all_tasks = set(latest_flow.operations)
+                    tasks_diff = list(all_tasks - completed_tasks)
+                    for task_hash in tasks_diff:
+                        # check to see if there was a problem completing the flow but all tasks are ready
+                        task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                        if task:
+                            latest_flow.completed_operations.append(task_hash)
 
-                latest_flow.save()
-                if latest_flow.progress == 100:
-                    init_sf_field_sync(account.user)
+                    latest_flow.save()
+                    if latest_flow.progress == 100:
+                        init_sf_field_sync(account.user)
+                        continue
+                    else:
+                        if settings.SLACK_ERROR_WEBHOOK:
+                            try:
+                                slack_requests.generic_request(
+                                    slack_const.SLACK_ERROR_WEBHOOK,
+                                    {
+                                        "text": f"Unable to force complete object field workflow ({str(latest_flow.id)}) for user {account.user.email} with id {account.user.id} progress is {latest_flow.progress}"
+                                    },
+                                )
+                            except Exception as fail_safe_error:
+                                logger.exception(
+                                    f"Failed to send slack error to error channel {fail_safe_error}"
+                                )
+                                continue
 
         else:
             init_sf_field_sync(account.user)
+            continue
         # if latest workflow is at 100 emit sf resource sync
     return
 

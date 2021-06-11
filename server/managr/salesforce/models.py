@@ -484,11 +484,7 @@ class SFResourceSync(SFSyncOperation):
                             return logger.exception(
                                 f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
                             )
-                # get counts to set offsets
-                # has a 2000 offset limit as it is previously we would just get the rest which was too big
-                # we now only get a max of 500
-                # TODO:- Move this to the adapter classes aka limit
-            max_count = 500
+            max_count = 300
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
                 offset = sf_consts.SALESFORCE_QUERY_LIMIT * i
@@ -496,24 +492,9 @@ class SFResourceSync(SFSyncOperation):
                 logger.info(
                     f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email} for a count of {count}"
                 )
-                if offset > 2000:
-                    # sf limit on offset for 2000 if it is greater than 2k
-                    # we need to get the rest of the records
-                    # log a warning this may fail
-                    logger.warning(
-                        f"offset for sync for user {self.user.email} with id {self.user.id} was over 2000"
-                    )
-                    offset = 2000
-                    limit = count - offset
-
                 t = emit_sf_sync(str(self.user.id), str(self.id), key, limit, offset)
-                if self.operations:
-                    self.operations.append(str(t.task_hash))
-                else:
-                    self.operations = [str(t.task_hash)]
+                self.operations.append(str(t.task_hash))
                 self.save()
-                if offset >= 2000:
-                    break
 
     def save(self, *args, **kwargs):
         return super(SFResourceSync, self).save(*args, **kwargs)
@@ -542,12 +523,14 @@ class SFObjectFieldsOperation(SFSyncOperation):
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
 
-            # determine the operation and its param and get event emitter
-            t = operation(str(self.user.id), str(self.id), param)
-            if self.operations:
-                self.operations.append(str(t.task_hash))
-            else:
-                self.operations = [str(t.task_hash)]
+            # HACK this is a temporary measure to ensure sequence
+            scheduled_for = datetime.now(pytz.utc)
+            if operation_name == sf_consts.SALESFORCE_PICKLIST_VALUES:
+                scheduled_for = scheduled_for + timezone.timedelta(minutes=2)
+            t = operation(str(self.user.id), str(self.id), param, scheduled_for)
+
+            self.operations.append(str(t.task_hash))
+
             self.save()
 
     def save(self, *args, **kwargs):

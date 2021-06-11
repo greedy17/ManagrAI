@@ -122,6 +122,7 @@ class User(AbstractUser, TimeStampModel):
     ACCOUNT_MANAGER = "ACCOUNT MANAGER"
     OPERATIONS = "OPERATIONS"
     ENABLEMENT = "ENABLEMENT"
+    SDR = "SDR"
     ROLE_CHOICES = [
         (LEADERSHIP, "Leadership",),
         (FRONTLINE_MANAGER, "Frontline Manager",),
@@ -129,6 +130,7 @@ class User(AbstractUser, TimeStampModel):
         (ACCOUNT_MANAGER, "Account Manager",),
         (OPERATIONS, "OPERATIONS",),
         (ENABLEMENT, "Enablement",),
+        (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
