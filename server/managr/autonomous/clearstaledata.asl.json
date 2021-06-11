@@ -41,19 +41,19 @@
         "Call Sync Resources Lambda FN": {
             "Comment": "Task state the calls the lambda function that matches the choice",
             "Type": "Task",
-            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:clear-stale-data",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:init-resource-sync",
             "End":true
         },
         "Call Sync Fields Lambda FN": {
             "Comment": "Task state the calls the lambda function that matches the choice",
             "Type": "Task",
-            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:clear-stale-data",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:init-field-sync",
             "End":true
         },
         "Call Trigger Alerts Data Lambda FN": {
             "Comment": "Task state the calls the lambda function that matches the choice",
             "Type": "Task",
-            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:clear-stale-data",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:trigger-alerts",
             "End":true
         }
     }
