@@ -116,6 +116,18 @@ def process_get_local_resource_options(payload, context):
                 ],
             ],
         }
+    elif resource == slack_const.SLACK_ACTION_RESOURCE_USER:
+        return {
+            "options": [
+                *additional_opts,
+                *[
+                    u.as_slack_option
+                    for u in user.organization.users.filter(
+                        first_name__icontains=value, last_name__icontains=value
+                    )[:50]
+                ],
+            ],
+        }
 
 
 @processor(required_context=["u", "field"])  # takes in additional_options list as an optional param

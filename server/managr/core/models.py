@@ -12,6 +12,7 @@ from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
+from managr.slack.helpers import block_builders
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
@@ -223,6 +224,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_nylas_integration(self):
         return hasattr(self, "nylas")
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.full_name, str(self.id))
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
