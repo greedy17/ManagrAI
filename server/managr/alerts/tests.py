@@ -579,6 +579,73 @@ class UserTestCase(TestCase):
                             )
         self.assertEquals(alert_models.AlertInstance.objects.count(), 4)
 
+    def test_sends_to_SDR_only(self):
+        """Expects there two be 2 alerts for the SDR since there are two opportunites"""
+        sdr = core_factories.UserFactory(
+            is_admin=False, user_level="SDR", organization=self.admin_user.organization
+        )
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+
+        self.assertEqual(sdr.organization.id, self.admin_user.organization.id)
+        opp_1 = opp_factories.OpportunityFactory(owner=rep)
+        opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
+
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["SDR"],
+            template=self.template,
+        )
+
+        # we pretend that our query found both opps
+        query = Q()
+        for opp in [opp_1, opp_2]:
+            for setting in [conf_1]:
+                for user_group in setting.recipients:
+                    if user_group == "SELF":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=self.template.user.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+                    elif user_group == "OWNER":
+                        alert_models.AlertInstance.objects.create(
+                            template_id=self.template.id,
+                            user_id=opp.owner.id,
+                            resource_id=str(opp.id),
+                            instance_meta={},
+                        )
+
+                    else:
+                        ## expects 2 since both alerts are for the SDR
+                        if user_group == "MANAGERS":
+                            query |= Q(Q(user_level="MANAGER", is_active=True))
+
+                        elif user_group == "REPS":
+                            query |= Q(user_level="REP", is_active=True)
+
+                        elif user_group == "SDR":
+                            query |= Q(user_level="SDR", is_active=True)
+
+                        elif user_group == "ALL":
+
+                            query = Q(is_active=True) & Q(
+                                Q(user_level="MANAGER") | Q(user_level="REP")
+                            )
+
+                        users = self.template.user.organization.users.filter(query).distinct()
+                        for u in users:
+                            alert_models.AlertInstance.objects.create(
+                                template_id=self.template.id,
+                                user_id=u.id,
+                                resource_id=str(opp.id),
+                                instance_meta={},
+                            )
+        self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
+
     def test_group_generates_url_string_w_weekly(self):
         """ 
             Tests that the appropriate qs was built for the row
