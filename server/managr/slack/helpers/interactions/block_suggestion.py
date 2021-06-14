@@ -69,7 +69,9 @@ def process_get_local_resource_options(payload, context):
     value = payload["value"]
     resource = context.get("resource")
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
-
+    default_filters = json.loads(context.get("default_filters", json.dumps([])))
+    if default_filters in ["", None]:
+        default_filters = []
     # conver type to make sure it follows {label:str|num, values:str|num}
 
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
@@ -117,15 +119,14 @@ def process_get_local_resource_options(payload, context):
             ],
         }
     elif resource == slack_const.SLACK_ACTION_RESOURCE_USER:
+        query = Q(first_name__icontains=value) | Q(last_name__icontains=value)
+        for f in default_filters:
+            query &= Q(f)
+
         return {
             "options": [
                 *additional_opts,
-                *[
-                    u.as_slack_option
-                    for u in user.organization.users.filter(
-                        first_name__icontains=value, last_name__icontains=value
-                    )[:50]
-                ],
+                *[u.as_slack_option for u in user.organization.users.filter(query)[:50]],
             ],
         }
 
