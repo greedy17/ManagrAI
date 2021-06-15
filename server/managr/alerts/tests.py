@@ -340,10 +340,10 @@ class UserTestCase(TestCase):
                     else:
                         ## expects 0
                         if user_group == "MANAGERS":
-                            query &= Q(Q(user_level="MANAGER", is_active=True))
+                            query |= Q(Q(user_level="MANAGER", is_active=True))
 
                         elif user_group == "REPS":
-                            query != Q(user_level="REP", is_active=True)
+                            query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
 
                             query = Q(is_active=True) & Q(
@@ -445,10 +445,10 @@ class UserTestCase(TestCase):
                     else:
                         ## expects 0
                         if user_group == "MANAGERS":
-                            query &= Q(Q(user_level="MANAGER", is_active=True))
+                            query |= Q(Q(user_level="MANAGER", is_active=True))
 
                         elif user_group == "REPS":
-                            query != Q(user_level="REP", is_active=True)
+                            query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
 
                             query = Q(is_active=True) & Q(
@@ -559,10 +559,10 @@ class UserTestCase(TestCase):
                     else:
                         ## expects 0
                         if user_group == "MANAGERS":
-                            query &= Q(Q(user_level="MANAGER", is_active=True))
+                            query |= Q(Q(user_level="MANAGER", is_active=True))
 
                         elif user_group == "REPS":
-                            query != Q(user_level="REP", is_active=True)
+                            query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
 
                             query = Q(is_active=True) & Q(
