@@ -70,9 +70,9 @@ class UserTestCase(TestCase):
         )
 
     def test_operand_row_generates_query_string_wo_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
 
         expected = (
@@ -81,10 +81,10 @@ class UserTestCase(TestCase):
         self.assertEqual(self.row.query_str(self.config.id), expected)
 
     def test_operand_row_generates_query_string_w_str_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            If data type is string it MUST append ' ' 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        If data type is string it MUST append ' '
+        NOTE if row is top group order it will not append operator
         """
 
         self.row.data_type = "STRING"
@@ -95,9 +95,9 @@ class UserTestCase(TestCase):
         self.assertEqual(self.row.query_str(self.config.id), expected)
 
     def test_operand_row_generates_query_string_w_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         row = alert_models.AlertOperand.objects.create(
             **{
@@ -114,9 +114,9 @@ class UserTestCase(TestCase):
         self.assertEqual(row.query_str(self.config.id), expected)
 
     def test_operand_row_generates_date_query_string_w_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         row = alert_models.AlertOperand.objects.create(
             **{
@@ -137,9 +137,9 @@ class UserTestCase(TestCase):
         self.assertEqual(row.query_str(self.config.id), expected)
 
     def test_operand_row_generates_date_query_string_w_cond_negative(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         row = alert_models.AlertOperand.objects.create(
             **{
@@ -160,9 +160,9 @@ class UserTestCase(TestCase):
         self.assertEqual(row.query_str(self.config.id), expected)
 
     def test_operand_row_generates_datetime_query_string_w_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         row = alert_models.AlertOperand.objects.create(
             **{
@@ -189,18 +189,18 @@ class UserTestCase(TestCase):
         self.assertEqual(row.query_str(self.config.id), expected)
 
     def test_group_generates_query_string_wo_and_cond(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
 
         expected = f"({self.row.query_str(self.config.id)})"
         self.assertEqual(self.group.query_str(self.config.id), expected)
 
     def test_group_generates_url_string(self):
-        """ 
-            Tests that the appropriate qs was built for the row 
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         adapter_class = adapter_routes.get(self.template.resource_type, None)
         query_items = [group.query_str(self.config.id) for group in self.template.groups.all()]
@@ -294,7 +294,7 @@ class UserTestCase(TestCase):
         self.assertEqual(f, 4)
 
     def test_sends_to_self_and_owner_only(self):
-        """ Expects four instances to be created since both matched but the admin and rep users get the alert the admin user gets 3 and the owner only 1"""
+        """Expects four instances to be created since both matched but the admin and rep users get the alert the admin user gets 3 and the owner only 1"""
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
@@ -365,7 +365,7 @@ class UserTestCase(TestCase):
         self.assertEquals(alert_models.AlertInstance.objects.count(), 4)
 
     def test_sends_to_self_only(self):
-        """ Expects two instances to be created since both matched but only the admin user gets the alert"""
+        """Expects two instances to be created since both matched but only the admin user gets the alert"""
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
@@ -405,7 +405,7 @@ class UserTestCase(TestCase):
         self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
 
     def test_sends_to_owner_only(self):
-        """ Expects two instances to be created since both matched but only the owning user gets the alert"""
+        """Expects two instances to be created since both matched but only the owning user gets the alert"""
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
@@ -470,7 +470,7 @@ class UserTestCase(TestCase):
         self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
 
     def test_sends_to_is_admin_user_only(self):
-        """ Expects 1 instance to be created from the rep's opp"""
+        """Expects 1 instance to be created from the rep's opp"""
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
@@ -509,7 +509,7 @@ class UserTestCase(TestCase):
         self.assertEquals(alert_models.AlertInstance.objects.first().user.id, self.template.user.id)
 
     def test_sends_to_managers_only(self):
-        """ Expects 4 instances to be created since both matched but there are only 3 managers and 1 is inactive"""
+        """Expects 4 instances to be created since both matched but there are only 3 managers and 1 is inactive"""
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
@@ -647,9 +647,9 @@ class UserTestCase(TestCase):
         self.assertEquals(alert_models.AlertInstance.objects.count(), 2)
 
     def test_group_generates_url_string_w_weekly(self):
-        """ 
-            Tests that the appropriate qs was built for the row
-            NOTE if row is top group order it will not append operator
+        """
+        Tests that the appropriate qs was built for the row
+        NOTE if row is top group order it will not append operator
         """
         conf_1 = alert_models.AlertConfig.objects.create(
             recurrence_day=3,
@@ -700,7 +700,7 @@ class UserTestCase(TestCase):
         self.assertEqual(template.url_str(template.user, conf_1.id), expected)
 
     def test_url_str_run_now_monthly_next_month_31(self):
-        """ test for month with 31 days should return 6th"""
+        """test for month with 31 days should return 6th"""
         temp = {
             "user_id": str(self.admin_user.id),
             "title": "test",
@@ -745,7 +745,7 @@ class UserTestCase(TestCase):
         self.assertEqual(template.url_str(template.user, conf_1.id), expected)
 
     def test_url_str_run_now_monthly_next_month_30(self):
-        """ test for month with 31 days should return 1st july taking into account 30 day month"""
+        """test for month with 31 days should return 1st july taking into account 30 day month"""
         temp = {
             "user_id": str(self.admin_user.id),
             "title": "test",
