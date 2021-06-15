@@ -54,10 +54,10 @@ def test_fn(group, current_index, current_eval):
 # variable substition
 def convertToSlackFormat(body):
     """
-        converts em tags to _
-        converts strong tags to *
-        converst s tags to ~
-        strips orphaned tags and cleans out other html
+    converts em tags to _
+    converts strong tags to *
+    converst s tags to ~
+    strips orphaned tags and cleans out other html
     """
     new_str = body
     new_str = re.sub(r"(?<=\S)(\s*</p>)", "\n", new_str)

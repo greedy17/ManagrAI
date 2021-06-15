@@ -915,7 +915,7 @@ def process_resource_selected_for_task(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_return_to_form_modal(payload, context):
-    """ if an error occurs on create/update commands when the return button is clicked regen form """
+    """if an error occurs on create/update commands when the return button is clicked regen form"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     pm = json.loads(payload["view"]["private_metadata"])
 

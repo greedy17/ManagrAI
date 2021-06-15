@@ -133,13 +133,19 @@ def _process_check_alert(config_id, user_id, run_time):
                     emit_send_alert(str(instance.id), scheduled_time=run_time)
                 else:
                     if user_group == "MANAGERS":
-                        query &= Q(Q(user_level="MANAGER", is_active=True))
+                        query |= Q(Q(user_level="MANAGER", is_active=True))
 
                     elif user_group == "REPS":
-                        query != Q(user_level="REP", is_active=True)
+                        query |= Q(user_level="REP", is_active=True)
+
+                    elif user_group == "SDR":
+                        query |= Q(user_level="SDR", is_active=True)
+
                     elif user_group == "ALL":
 
-                        query = Q(is_active=True) & Q(Q(user_level="MANAGER") | Q(user_level="REP"))
+                        query = Q(is_active=True) & Q(
+                            Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
+                        )
 
                     users = template.user.organization.users.filter(query).distinct()
                     for u in users:
