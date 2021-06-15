@@ -50,7 +50,7 @@ class AlertTemplate(TimeStampModel):
         return adapter_routes.get(self.resource_type, None)
 
     def url_str(self, user, config_id):
-        """ Generates Url Str for request when executing alert """
+        """Generates Url Str for request when executing alert"""
         user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
         operand_groups = [group.query_str(config_id) for group in self.groups.all()]
 
@@ -92,13 +92,13 @@ class AlertTemplate(TimeStampModel):
         c.delete()
 
     def config_user_group(self, config_id):
-        """ returns the users who will be receiving the messages based on the config """
+        """returns the users who will be receiving the messages based on the config"""
         config = self.configs.filter(id=config_id).first()
         if config:
             return config.recipient_users
 
     def config_run_against_date(self, config_id):
-        """ returns the date against which the query is executed """
+        """returns the date against which the query is executed"""
         config = self.configs.filter(id=config_id).first()
         if config:
             return config.run_against_date
@@ -133,7 +133,7 @@ class AlertGroup(TimeStampModel):
         ordering = ["group_order"]
 
     def query_str(self, config_id):
-        """ returns a grouped qs of operand rows (in ()) """
+        """returns a grouped qs of operand rows (in ())"""
         q_s = f"({' '.join([operand.query_str(config_id) for operand in self.operands.all()])})"
         if self.group_order != 0:
             q_s = f"{self.group_condition} {q_s}"
@@ -184,7 +184,7 @@ class AlertOperand(TimeStampModel):
         ordering = ["operand_order"]
 
     def query_str(self, config_id):
-        """ gathers different parts of operand and constructs query """
+        """gathers different parts of operand and constructs query"""
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
@@ -294,10 +294,10 @@ class AlertConfig(TimeStampModel):
 
     @property
     def run_against_date(self):
-        """ 
-            returns the date based on the selected config to run against 
-            normally this would be today's date but mike wants to allow 
-            users to manually run this alert for the date provided
+        """
+        returns the date based on the selected config to run against
+        normally this would be today's date but mike wants to allow
+        users to manually run this alert for the date provided
         """
         if self.recurrence_frequency == "WEEKLY":
             today_weekday = timezone.now().weekday()
@@ -381,7 +381,7 @@ class AlertInstance(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def render_text(self):
-        """ takes the message template body and renders """
+        """takes the message template body and renders"""
 
         body = self.template.message_template.body
 
@@ -395,7 +395,7 @@ class AlertInstance(TimeStampModel):
 
     @property
     def var_binding_map(self):
-        """ takes set of variable bindings and replaces them with the value """
+        """takes set of variable bindings and replaces them with the value"""
         binding_map = dict()
         for binding in self.template.message_template.bindings:
             ## collect all valid bindings

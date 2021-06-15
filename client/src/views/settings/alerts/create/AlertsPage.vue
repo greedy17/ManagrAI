@@ -59,9 +59,7 @@
           </button>
         </template>
         <template v-else>
-          <div class="alerts-page__previous-step">
-            Please Select a resource to get started
-          </div>
+          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
         </template>
       </template>
     </ExpandablePanel>
@@ -78,7 +76,7 @@
                 large
                 placeholder="Snippet in slack notification"
               />
-              <div class="alerts-page__message-options-body" style="height:5rem;width:30rem;">
+              <div class="alerts-page__message-options-body" style="height: 5rem; width: 30rem">
                 <FormField
                   :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
                 >
@@ -135,9 +133,7 @@
           </div>
         </template>
         <template v-else>
-          <div class="alerts-page__previous-step">
-            Please Select a resource to get started
-          </div>
+          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
         </template>
       </template>
     </ExpandablePanel>
@@ -227,9 +223,7 @@
           </button>
         </template>
         <template v-else>
-          <div class="alerts-page__previous-step">
-            Please Select a resource to get started
-          </div>
+          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
         </template>
       </template>
     </ExpandablePanel>
@@ -246,9 +240,7 @@
           />
         </template>
         <template v-else>
-          <div class="alerts-page__previous-step">
-            Please Select a resource to get started
-          </div>
+          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
         </template>
       </template>
     </ExpandablePanel>
@@ -336,6 +328,7 @@ export default {
         { key: 'All Managers', value: 'MANAGERS' },
         { key: 'All Reps', value: 'REPS' },
         { key: 'Everyone', value: 'ALL' },
+        { key: 'SDR', value: 'SDR' },
       ],
       weeklyOpts: [
         { key: 'Monday', value: '0' },
