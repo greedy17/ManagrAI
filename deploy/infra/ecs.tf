@@ -80,6 +80,48 @@ data "template_file" "managr_app" {
   }
 }
 
+data "template_file" "managr_app_scheduled_tasks" {
+  for_each = { for e in var.environments : e.name => e }
+  template = file("${path.module}/templates/managr_app_tasks.json.tpl")
+
+  vars = {
+    nginx_config   = base64encode(data.template_file.nginx_config[each.key].rendered)
+    aws_logs_group = aws_cloudwatch_log_group.managr_log_group[each.key].name
+
+    environment               = each.value.environment
+    app_image                 = each.value.app_image != "" ? each.value.app_image : "${aws_ecr_repository.managr["thinknimble/managr/server"].repository_url}:latest"
+    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks != "" ? each.value.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
+    nginx_image               = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
+    bash_image                = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
+    datadog_image             = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
+
+    fargate_cpu       = var.fargate_cpu
+    fargate_memory    = var.fargate_memory
+    aws_region        = data.aws_region.current.name
+    config_secret_arn = aws_secretsmanager_secret.managr_config[each.key].arn
+
+    allowed_hosts  = each.value.allowed_hosts != "" ? each.value.allowed_hosts : "*"
+    current_domain = each.value.current_domain != "" ? each.value.current_domain : aws_alb.main.dns_name
+    current_port   = 8000
+    debug          = title(each.value.debug)
+
+    use_rollbar = title(each.value.use_rollbar)
+
+    use_custom_smtp            = title(each.value.use_custom_smtp)
+    smtp_use_tls               = title(each.value.smtp_use_tls)
+    smtp_port                  = each.value.smtp_port
+    smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
+
+    aws_location = each.value.s3_bucket_location
+
+    use_nylas      = title(each.value.use_nylas)
+    use_twilio     = title(each.value.use_twilio)
+    use_zoom       = title(each.value.use_zoom)
+    use_slack      = title(each.value.use_slack)
+    use_salesforce = title(each.value.use_salesforce)
+  }
+}
+
 resource "aws_ecs_task_definition" "app" {
   for_each                 = { for e in var.environments : e.name => e }
   family                   = "managr-app-task-${lower(each.value.name)}"
@@ -89,6 +131,25 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.managr_app[each.key].rendered
+  task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
+  volume {
+    name = "nginx-conf-vol"
+  }
+
+  tags = {
+    "app" = "managr"
+  }
+}
+
+resource "aws_ecs_task_definition" "app_scheduled_tasks" {
+  for_each                 = { for e in var.environments : e.name => e }
+  family                   = "managr-app-scheduled-tasks-${lower(each.value.name)}"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.fargate_cpu
+  memory                   = var.fargate_memory
+  container_definitions    = data.template_file.managr_app_scheduled_tasks[each.key].rendered
   task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
   volume {
     name = "nginx-conf-vol"
@@ -126,6 +187,33 @@ resource "aws_ecs_service" "main" {
   }
 
   depends_on = [aws_alb_listener.front_end, aws_iam_role_policy_attachment.ecs_task_execution_role, aws_db_instance.managrdb, aws_vpc_endpoint.vpc_endpoint]
+
+  tags = {
+    "app" = "managr"
+  }
+}
+
+resource "aws_ecs_service" "main_scheduled_tasks" {
+  for_each               = { for e in var.environments : e.name => e }
+  name                   = "managr-service-scheduled-tasks-${lower(each.value.name)}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.app_scheduled_tasks[each.key].arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  platform_version       = "1.4.0"
+  propagate_tags         = "SERVICE"
+  enable_execute_command = true
+
+  # temporary
+  force_new_deployment = true
+
+  network_configuration {
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = true
+  }
+
+  depends_on = [aws_alb_listener.front_end, aws_iam_role_policy_attachment.ecs_task_execution_role, aws_db_instance.managrdb, aws_vpc_endpoint.vpc_endpoint, aws_ecs_service.main]
 
   tags = {
     "app" = "managr"
