@@ -53,6 +53,7 @@ from ..adapter.exceptions import (
     SFQueryOffsetError,
     SFNotFoundError,
     UnableToUnlockRow,
+    CannotRetreiveObjectType,
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
@@ -273,6 +274,8 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except CannotRetreiveObjectType:
+            sf.sobjects[resource] = False
 
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override

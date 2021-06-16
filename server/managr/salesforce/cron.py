@@ -68,14 +68,14 @@ def queue_users_sf_resource(force_all=False):
             flows = SFResourceSync.objects.filter(user=account.user)
             latest_flow = flows.latest("datetime_created") if flows else None
             if not flows.count():
-                init_sf_resource_sync(account.user.id)
+                init_sf_resource_sync(account.user)
 
             else:
                 if latest_flow and latest_flow.progress == 100:
                     logger.info(
                         f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
                     )
-                    init_sf_resource_sync(latest_flow.user.id)
+                    init_sf_resource_sync(latest_flow.user)
                     continue
                 elif latest_flow and latest_flow.progress != 100:
                     # check to see if the tasks were completed but not recorded
@@ -90,7 +90,7 @@ def queue_users_sf_resource(force_all=False):
 
                     latest_flow.save()
                     if latest_flow.progress == 100:
-                        init_sf_resource_sync(account.user.id)
+                        init_sf_resource_sync(account.user)
                         continue
 
                     else:
@@ -109,7 +109,7 @@ def queue_users_sf_resource(force_all=False):
                                 continue
 
         else:
-            init_sf_resource_sync(account.user.id)
+            init_sf_resource_sync(account.user)
             continue
 
     return
@@ -309,41 +309,24 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     continue
 
 
-def init_sf_resource_sync(user_id):
-    operations = [
-        sf_consts.RESOURCE_SYNC_ACCOUNT,
-        sf_consts.RESOURCE_SYNC_CONTACT,
-        sf_consts.RESOURCE_SYNC_OPPORTUNITY,
-        sf_consts.RESOURCE_SYNC_LEAD,
-    ]
+def init_sf_resource_sync(user):
+    if not hasattr(user, "salesforce_account"):
+        return
+    operations = [*user.salesforce_account.resource_sync_opts]
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-    return emit_gen_next_sync(str(user_id), operations, formatted_time)
+    return emit_gen_next_sync(str(user.id), operations, formatted_time)
 
 
 def init_sf_field_sync(user):
     logger.info(f"Initiating Object Field Sync for User {str(user.id)} with email {user.email}")
+    if not hasattr(user, "salesforce_account"):
+        return
     operations = [
-        f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-        f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-        f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-        f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-        f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+        *user.salesroce_account.field_sync_opts,
+        *user.salesroce_account.picklist_sync_opts,
+        *user.salesroce_account.validation_sync_opts,
     ]
-    if user.is_admin:
-        # we only need validations to show the user who is creating the forms
-
-        operations.extend(
-            [
-                f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-                f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-                f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
-                f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-            ]
-        )
 
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
