@@ -24,6 +24,8 @@ from managr.slack.helpers import block_builders
 from managr.salesforce.adapter.models import ContactAdapter, AccountAdapter
 from managr.opportunity import constants as opp_consts
 from managr.slack import constants as slack_consts
+from managr.slack.models import OrgCustomSlackForm
+from managr.slack.constants import FORM_RESOURCES_LIST, FORM_TYPE_LIST
 from . import constants as org_consts
 
 
@@ -60,6 +62,37 @@ class Organization(TimeStampModel):
         for u in users:
             u.state = org_consts.STATE_INACTIVE
             u.save()
+
+    def change_admin_user(self, user, preserve_fields=False):
+        """Method to change the is_admin user for an organization"""
+        if preserve_fields is False:
+            resources = FORM_RESOURCES_LIST
+            types = FORM_TYPE_LIST
+            new_admin = self.users.filter(id=user.id).first()
+            current_admin = self.users.filter(is_admin=True).first()
+            for resource in resources:
+                for type in types:
+                    form = OrgCustomSlackForm.objects.filter(
+                        form_type=type, resource=resource
+                    ).first()
+                    fields = form.fields.filter(is_public=False)
+                    form_fields = fields.values_list("api_name", flat=True)
+                    new_admin_fields = new_admin.imported_sobjecfield.filter(
+                        api_name__in=[form_fields], salesforce_object=resource
+                    )
+                    form_field_set = form.formfield_set.all()
+                    for formfield in form_field_set:
+                        new_field = new_admin_fields.filter(api_name=formfield.api_name).first()
+                        if new_field:
+                            formfield.field = new_field
+                            formfield.save()
+                    filtered_fields = new_admin_fields.difference(fields)
+                    fields = filtered_fields()
+                    fields.save()
+        current_admin.is_admin = False
+        current_admin.save()
+        new_admin.is_admin = True
+        new_admin.save()
 
     def __str__(self):
         return f"{self.name}"
