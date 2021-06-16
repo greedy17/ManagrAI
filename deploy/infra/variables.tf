@@ -161,15 +161,15 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "clearstaledata"
-      command    = "clearsfstaledata 1440"
-      cron       = "cron(0 0 * * ? *)"
+      name       = "sendtasklist"
+      command    = "sendslacktasks"
+      cron       = "cron(0 7 * * ? *)"
       task_count = 1
     },
     {
       name       = "runalerts"
-      command    = "triggeralerts"
-      cron       = "cron(0 11 * * ? *)"
+      command    = "pull_usage_statistics"
+      cron       = "cron(0 7 * * ? 1)"
       task_count = 1
     }
   ]
