@@ -880,7 +880,7 @@ def _send_recap(form_ids):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = [*form_fields, *form.template.fields.all()]
+            form_fields = [*form_fields, *form.template.formfield_set.filter(include_in_recap=True)]
         else:
             form_fields = form.template.fields.all()
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
