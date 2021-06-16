@@ -574,9 +574,7 @@ def _process_create_new_contacts(workflow_id, *args):
                 logger.info(f"Data from form {data}")
                 try:
 
-                    workflow.resource.add_contact_role(
-                        sf.access_token, sf.instance_url, res.get("id")
-                    )
+                    workflow.resource.add_contact_role(sf.access_token, sf.instance_url, res.id)
                     attempts = 1
                     break
                 except TokenExpired as e:

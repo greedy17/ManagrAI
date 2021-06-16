@@ -138,7 +138,7 @@ class TestStaticSelect(TestCase):
 
 
 class TestDividerBlock(TestCase):
-    """ unit test for divider block """
+    """unit test for divider block"""
 
     def test_returns_divider_object(self):
         result = divider_block()
@@ -160,7 +160,7 @@ class TestOption(TestCase):
 
 
 class TestInputBlock(TestCase):
-    """ Unit test for input_block """
+    """Unit test for input_block"""
 
     def test_returns_object_with_userinput(self):
         result = input_block(

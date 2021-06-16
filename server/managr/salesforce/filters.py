@@ -20,7 +20,7 @@ class SObjectFieldFilterSet(FilterSet):
         )
 
     def by_alerts(self, qs, name, value):
-        """ returns qs with field types that we support for alerts as list """
+        """returns qs with field types that we support for alerts as list"""
 
         if value:
             return qs.filter(
