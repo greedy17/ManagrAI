@@ -378,9 +378,11 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
 ## Meeting Review Workflow tasks
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
 @sf_api_exceptions_wf("update_object_from_review")
-def _process_update_resource_from_meeting(workflow_id, *args):
+def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -436,7 +438,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
-def _process_add_call_to_sf(workflow_id, *args):
+def _process_add_call_to_sf(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -503,7 +505,7 @@ def _process_add_call_to_sf(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
-def _process_create_new_contacts(workflow_id, *args):
+def _process_create_new_contacts(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -548,7 +550,11 @@ def _process_create_new_contacts(workflow_id, *args):
             except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
+<<<<<<< Updated upstream
                         f"Failed to refresh user token for Salesforce operation add contact to sf failed"
+=======
+                        f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
+>>>>>>> Stashed changes
                     )
 
                 else:
@@ -603,7 +609,7 @@ def _process_create_new_contacts(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("update_contacts_or_link_contacts")
-def _process_update_contacts(workflow_id, *args):
+def _process_update_contacts(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -635,8 +641,13 @@ def _process_update_contacts(workflow_id, *args):
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
+<<<<<<< Updated upstream
                         return logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+=======
+                        logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
+>>>>>>> Stashed changes
                         )
 
                     else:
