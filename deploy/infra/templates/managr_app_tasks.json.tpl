@@ -3,6 +3,7 @@
     "name": "managr-app-scheduled-tasks",
     "image": "${app_image_scheduled_tasks}",
     "networkMode": "awsvpc",
+    "command": ${command},
     "environment": [
       { "name": "DD_SERVICE", "value": "managr-server-scheduled-tasks" },
       { "name": "DD_ENV", "value": "fargate:${environment}" },

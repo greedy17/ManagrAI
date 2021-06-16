@@ -44,4 +44,4 @@ COPY ./server ./server
 COPY ./deploy/tasks/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
-ENTRYPOINT [ "/start" ]
+ENTRYPOINT [ "ddtrace-run", "/usr/local/bin/python", "/app/server/manage.py" ]
