@@ -22,6 +22,7 @@ export default class SlackAPI {
 
   getOAuthLink = linkType => {
     const payload = { linkType, redirectUri: this.cls.redirectURI }
+    payload.redirectUri = process.env.NODE_ENV == 'development' ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + "/api/users/slack/re-direct" : this.cls.redirectURI
     const promise = this.client
       .post(GET_OAUTH_LINK_ENDPOINT, objectToSnakeCase(payload))
       .then(r => objectToCamelCase(r.data))
@@ -31,6 +32,7 @@ export default class SlackAPI {
 
   generateAccessToken = code => {
     const payload = { code, redirectUri: this.cls.redirectURI }
+    payload.redirectUri = process.env.NODE_ENV == 'development' ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + "/api/users/slack/re-direct" : this.cls.redirectURI
     try {
       const res = this.client.post(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
       return new User(objectToCamelCase(res.data))

@@ -157,7 +157,7 @@ class OrgCustomSlackForm(TimeStampModel):
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
     def __str__(self):
-        return f"Slack Form {self.resource}, {self.form_type}"
+        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name}"
 
     class Meta:
         ordering = [
@@ -254,7 +254,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                 if self.resource_id:
                     if not self.resource_object:
                         return logger.exception(
-                            f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
+                            f"Failed to find the resource with id {self.resource_id} of model {self.resource_type}, to generate form for the user, the resource was most likely removed"
                         )
                     form_values = self.resource_object.secondary_data
                 else:
@@ -307,8 +307,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     def save_form(self, state, from_slack_object=True):
         """gets all form values but only saves values for fields"""
-        # this is a HACK because we needed to concatenate all stage gating forms since
-        # we can only show 3 stacked forms
         values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
 
@@ -320,9 +318,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
         self.saved_data = data
         self.save()
-
-    # users can have a slack form for create,
-    # update resources and one form for reviewing a meeting
 
 
 class FormField(TimeStampModel):

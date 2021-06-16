@@ -1,11 +1,14 @@
 import json
 import logging
+from urllib.parse import urlencode
 import uuid
 
 from datetime import datetime
 from managr.utils import sites as site_utils
 
 from django.db.models import Sum, Avg, Q
+from django.conf import settings
+from django.shortcuts import redirect
 
 from rest_framework import (
     permissions,
@@ -19,26 +22,38 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.utils import (
+    action_with_params,
+    block_set,
+    map_fields_to_type,
+    block_finder,
+)
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
 
-from .models import OrganizationSlackIntegration, UserSlackIntegration, OrgCustomSlackForm
+from .models import (
+    OrganizationSlackIntegration,
+    UserSlackIntegration,
+    OrgCustomSlackForm,
+    OrgCustomSlackFormInstance,
+)
 from .serializers import OrgCustomSlackFormSerializer
 
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-)
 
 from managr.salesforce.routes import routes as model_routes
 from managr.slack.helpers.exceptions import (
@@ -423,6 +438,7 @@ def update_resource(request):
 
         private_metadata = {
             "original_message_channel": request.data.get("channel_id"),
+            "triggered_from": "command",
         }
 
         data = {
@@ -440,6 +456,99 @@ def update_resource(request):
         logger.info(f"BLOCKS FROM UPDATE --{data}")
         slack_requests.generic_request(url, data, access_token=access_token)
 
+        return Response()
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
+def create_resource(request):
+    # list of accepted commands for this fake endpoint
+    allowed_commands = ["opportunity", "account", "lead", "contact"]
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = ["opportunity"]
+    resource_type = None
+
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        resource_type = command_params[0][0].upper() + command_params[0][1:]
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource=resource_type, form_type="CREATE"))
+            .first()
+        )
+        slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        if slack_form:
+
+            context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+            blocks = get_block_set("create_modal", context,)
+            try:
+                index, block = block_finder("StageName", blocks)
+            except ValueError:
+                # did not find the block
+                block = None
+                pass
+
+            if block:
+                block = {
+                    **block,
+                    "accessory": {
+                        **block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                    },
+                }
+                blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+            access_token = user.organization.slack_integration.access_token
+
+            url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+            trigger_id = request.data.get("trigger_id")
+
+            private_metadata = {
+                "original_message_channel": request.data.get("channel_id"),
+                **context,
+            }
+
+            data = {
+                "trigger_id": trigger_id,
+                "view": {
+                    "type": "modal",
+                    "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                    "title": {"type": "plain_text", "text": f"Create {resource_type}"},
+                    "blocks": blocks,
+                    "submit": {"type": "plain_text", "text": "Create", "emoji": True},
+                    "private_metadata": json.dumps(private_metadata),
+                    "external_id": f"create_modal.{str(uuid.uuid4())}",
+                },
+            }
+
+            slack_requests.generic_request(url, data, access_token=access_token)
         return Response()
 
 
@@ -663,3 +772,17 @@ def slack_events(request):
         return Response()
 
         # check if they exist in managr
+
+
+def redirect_from_slack(request):
+    ## this is only for dev, since the redirect url to localhost will not work
+    if settings.IN_DEV:
+        code = request.GET.get("code", None)
+        q = urlencode({"code": code, "state": "SLACK"})
+        if not code:
+            err = {"error": "there was an error"}
+            err = urlencode(err)
+            return redirect("http://localhost:8080/settings/integrations")
+        return redirect(f"http://localhost:8080/settings/integrations?{q}")
+    else:
+        return redirect("http://localhost:8080/settings/integrations")

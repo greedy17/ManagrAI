@@ -18,27 +18,27 @@ def input_block(
     max_length=False,
     optional=True,
 ):
-    """ 
-    Creates a basic text input block 
+    """
+    Creates a basic text input block
 
     Parameters:
-    label - String of what the label text should be 
+    label - String of what the label text should be
     initial_value - Set an initial value for input using string passed in, otherwise None
     placeholder - Sets placeholder text for input using string passed in, defaults to no placeholder
-    multiline - If True will set text input (in slack) to a Multiline text area  
+    multiline - If True will set text input (in slack) to a Multiline text area
     placeholder_type - Only used if placeholder is passed in, sets placeholder type to plain_text
     action_id - Sets id of input to value passed in, otherwise defaults to 'plain_input'
     block_id - Set id of block to value passed in, if none is passed in will create one with uuid
-    label_type - Sets the label type to plain_text. SHOULD NOT BE CHANGED. 
+    label_type - Sets the label type to plain_text. SHOULD NOT BE CHANGED.
     min_length - Set a minimum length for the input
     max_length - Set a maximum length for the input
     optional - indicated whether the input can be left blank
 
-    If a placeholder, min_length, max_length is 
-    passed in it will be used otherwise False 
-    will not add a placeholder 
+    If a placeholder, min_length, max_length is
+    passed in it will be used otherwise False
+    will not add a placeholder
 
-    For a basic input only a string for the label has to be passed in. 
+    For a basic input only a string for the label has to be passed in.
     """
 
     if not block_id:
@@ -78,8 +78,8 @@ def simple_section(value, text_type="plain_text", block_id=None):
 
 
 def simple_section_multiple(text_blocks, block_id=None):
-    """ sections can have multiple fields they are a collection of text_block 
-    
+    """sections can have multiple fields they are a collection of text_block
+
     Parameters
     -----------
     text_blocks: object
@@ -480,4 +480,21 @@ def simple_image_block(url, alt_text):
         "type": "image",
         "image_url": url,
         "alt_text": alt_text,
+    }
+
+
+def context_block(value, text_type="plain_text"):
+    """Return a block for context, text will be muted and smaller that regular text blocks
+
+    parameters
+    ----------
+    value: str
+        Text of the block, if markdown, text_type needs to be changed
+    text_type: str
+        If mrkdwn is not entered will default to plain_text
+    """
+
+    return {
+        "type": "context",
+        "elements": [{"type": text_type, "text": value}],
     }

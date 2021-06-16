@@ -31,10 +31,17 @@ logger = logging.getLogger("managr")
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return "I've noticed your meeting just ended but couldn't find an Opportunity or Account or Lead to link what would you like to do?"
+        return "I couldn't find an Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
 
     # replace opp, review disregard
-    return f"I've noticed your meeting with {resource_type} *{resource_name}* just ended would you like to update Salesforce?"
+    return f"We mapped it to {resource_type} *{resource_name}*"
+
+
+def _initial_meeting_step_one_message(resource_type=None):
+    if not resource_type:
+        return "1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
+
+    return "1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -316,53 +323,77 @@ def initial_meeting_interaction_block_set(context):
         else end_time
     )
     default_blocks = [
-        {"type": "divider"},
-        block_builders.section_with_accessory_block(
+        block_builders.simple_section("I noticed you had this meeting:"),
+        block_builders.simple_section(
             f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
-            block_builders.simple_image_block(
-                "https://api.slack.com/img/blocks/bkb_template_images/notifications.png",
-                "calendar thumbnail",
-            ),
-        ),
-        block_builders.section_with_button_block(
-            "Update Contacts",
-            slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-            "Add Contacts to Salesforce",
-            action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
-            ),
+            text_type="mrkdwn",
         ),
         {"type": "divider"},
     ]
+    create_change_button = block_builders.actions_block(
+        [
+            block_builders.simple_button_block(
+                "Change/Create",
+                str(workflow.id),
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+                style="primary",
+            )
+        ]
+    )
+    review_participants_button = block_builders.actions_block(
+        [
+            block_builders.simple_button_block(
+                "Review Participants",
+                str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+                ),
+            )
+        ]
+    )
     if not resource:
         title_section = _initial_interaction_message()
+        step_one = _initial_meeting_step_one_message()
     else:
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
+        step_one = _initial_meeting_step_one_message(workflow.resource_type)
+    step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, :exclamation: \n etc are filled in or else SFDC may not save them as Contacts."
     blocks = [
-        block_builders.simple_section(title_section, "mrkdwn",),
         *default_blocks,
+        block_builders.simple_section(title_section, "mrkdwn",),
+        block_builders.simple_section(step_one, "mrkdwn",),
+        create_change_button,
+        block_builders.simple_section(step_two_text, "mrkdwn",),
     ]
-    # action button blocks
     action_blocks = [
         block_builders.simple_button_block(
-            "Find/Change",
-            str(workflow.id),
-            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            style="primary",
-        ),
-        block_builders.simple_button_block(
-            "Hide",
+            "Hide*",
             str(workflow.id),
             action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
             style="danger",
-        ),
+        )
     ]
+    if not resource:
+        # action button blocks
+        action_blocks = [
+            block_builders.simple_button_block(
+                "Review Participants",
+                str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
+                ),
+            ),
+            *action_blocks,
+        ]
 
-    if (
+    elif (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
+        step_three = f"3.\tClick *'Update'* to make changes to this {workflow.resource_type}, progress Stages, change the Forecast, Amount, Next Step, etc. "
+        blocks.append(review_participants_button)
+        blocks.append(block_builders.simple_section(step_three, "mrkdwn"))
         action_blocks = [
             block_builders.simple_button_block(
                 "Update",
@@ -385,7 +416,7 @@ def initial_meeting_interaction_block_set(context):
             *action_blocks,
         ]
     blocks.append(block_builders.actions_block(action_blocks))
-
+    blocks.append(block_builders.context_block("*Clicking 'Hide' will minimize this alert"))
     return blocks
 
 
@@ -457,21 +488,32 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
 @block_set(required_context=["w", "resource"])
 def create_or_search_modal_block_set(context):
     additional_opts = []
-    if not context.get("resource") == "Lead":
+    resource_type = context.get("resource")
+    if not resource_type == "Lead":
         additional_opts = [
             {
-                "label": f'NEW {context.get("resource", None)} (create)',
+                "label": f"NEW {resource_type} (create)",
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
 
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
+    resource_id = context.get("resource_id", None)
+    # if an id is already passed (Aka this is recurrsive) get the resource
+    if resource_id:
+        resource = (
+            form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
+        )
+
     return [
         block_builders.external_select(
-            f"*Search for an {context.get('resource')}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource')}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
+            f"*Search for an {resource_type}*",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
+            initial_option=block_builders.option(resource.name, str(resource.id))
+            if resource_id and resource
+            else None,
         )
     ]
 
@@ -481,47 +523,55 @@ def create_modal_block_set(context, *args, **kwargs):
     """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    template = (
-        OrgCustomSlackForm.objects.for_user(user)
-        .filter(
-            Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
-            & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+    existing_form_id = context.get("f", None)
+    if existing_form_id:
+        existing_form = workflow.forms.filter(id=existing_form_id).first()
+        if not existing_form:
+            existing_form.add(existing_form)
+        form_blocks = existing_form.generate_form(existing_form.saved_data)
+    else:
+
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(
+                Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
+                & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+            )
+            .first()
         )
-        .first()
-    )
-    if template:
-        workflow.forms.filter(
-            template__form_type__in=[
-                slack_const.FORM_TYPE_CREATE,
-                slack_const.FORM_TYPE_STAGE_GATING,
-            ]
-        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-        # remove old instance (in case there was an error that required the form to add fields)
+        if template:
+            workflow.forms.filter(
+                template__form_type__in=[
+                    slack_const.FORM_TYPE_CREATE,
+                    slack_const.FORM_TYPE_STAGE_GATING,
+                ]
+            ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
+            # remove old instance (in case there was an error that required the form to add fields)
 
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            user=user, template=template, workflow=workflow
-        )
-        form_blocks = slack_form.generate_form()
-        if len(form_blocks):
-            blocks = [
-                block_builders.simple_section(
-                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                    "mrkdwn",
-                ),
-            ]
+            slack_form = OrgCustomSlackFormInstance.objects.create(
+                user=user, template=template, workflow=workflow
+            )
+            form_blocks = slack_form.generate_form()
+    if len(form_blocks):
+        blocks = [
+            block_builders.simple_section(
+                ":exclamation: *Please fill out all fields, not doing so may result in errors*",
+                "mrkdwn",
+            ),
+        ]
 
-            blocks = [*blocks, *form_blocks]
-        else:
+        blocks = [*blocks, *form_blocks]
+    else:
 
-            blocks = [
-                block_builders.section_with_button_block(
-                    "Forms",
-                    "form",
-                    f"Please add fields to your {context.get('resource')} create form",
-                    url=f"{get_site_url()}/forms",
-                )
-            ]
-        return blocks
+        blocks = [
+            block_builders.section_with_button_block(
+                "Forms",
+                "form",
+                f"Please add fields to your {context.get('resource')} create form",
+                url=f"{get_site_url()}/forms",
+            )
+        ]
+    return blocks
 
 
 @block_set(required_context=["w"])

@@ -122,6 +122,7 @@ class User(AbstractUser, TimeStampModel):
     ACCOUNT_MANAGER = "ACCOUNT MANAGER"
     OPERATIONS = "OPERATIONS"
     ENABLEMENT = "ENABLEMENT"
+    SDR = "SDR"
     ROLE_CHOICES = [
         (LEADERSHIP, "Leadership",),
         (FRONTLINE_MANAGER, "Frontline Manager",),
@@ -129,6 +130,7 @@ class User(AbstractUser, TimeStampModel):
         (ACCOUNT_MANAGER, "Account Manager",),
         (OPERATIONS, "OPERATIONS",),
         (ENABLEMENT, "Enablement",),
+        (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -160,6 +162,7 @@ class User(AbstractUser, TimeStampModel):
     profile_photo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
+    timezone = models.CharField(default="UTC", max_length=255)
 
     objects = UserManager()
 

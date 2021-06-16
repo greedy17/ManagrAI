@@ -15,7 +15,7 @@ from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
 from managr.slack.helpers import block_builders
 
-from .exceptions import CustomAPIException
+from .exceptions import CustomAPIException, UnableToUnlockRow
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -470,7 +470,7 @@ class SalesforceAuthAccountAdapter:
         return self._handle_response(res)
 
     def execute_alert_query(self, url, resource):
-        """ Handles alert requests to salesforce """
+        """Handles alert requests to salesforce"""
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
 
@@ -620,6 +620,10 @@ class ContactAdapter:
         external_owner="OwnerId",
     )
 
+    @property
+    def name(self):
+        return f"{self.secondary_data.get('FirstName')} {self.secondary_date.get('LastName')}"
+
     @staticmethod
     def get_child_rels():
         return {}
@@ -670,17 +674,23 @@ class ContactAdapter:
         return formatted_data
 
     @staticmethod
-    def create_new_contact(data, access_token, custom_base, object_fields):
+    def create(data, access_token, custom_base, object_fields, user_id=None):
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
         logger.info(f"JSON_DATA Create Contact {json_data}")
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_CONTACT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        r = client.post(
+        res = client.post(
             url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
         )
-        return SalesforceAuthAccountAdapter._handle_response(r)
+        res = SalesforceAuthAccountAdapter._handle_response(res)
+
+        url = f"{url}{res['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = OpportunityAdapter.from_api(r, user_id)
+        return r
 
     @staticmethod
     def update_contact(data, access_token, custom_base, integration_id, object_fields):
@@ -772,6 +782,29 @@ class LeadAdapter:
                         formatted_data[k] = v
 
         return formatted_data
+
+    @staticmethod
+    def create(data, access_token, custom_base, object_fields, user_id):
+        logger.info(f"UNFORMATED DATA: {data}")
+        json_data = json.dumps(
+            LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_LEAD, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        logger.info(f"REQUEST DATA: {json_data}")
+        r = client.post(
+            url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+        )
+
+        # get the opp as well uses the same url as the write but with get
+        logger.info(f"REQUEST RES: {r.json()}")
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        url = f"{url}{r['id']}"
+        r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+        logger.info(f"NEW DATA: {r.json()}")
+        r = SalesforceAuthAccountAdapter._handle_response(r)
+        r = LeadAdapter.from_api(r, user_id)
+        return r
 
     @staticmethod
     def update_lead(data, access_token, custom_base, salesforce_id, object_fields):

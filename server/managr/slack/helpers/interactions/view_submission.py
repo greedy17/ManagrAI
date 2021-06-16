@@ -3,6 +3,7 @@ import pdb
 import pytz
 from datetime import datetime
 import logging
+import uuid
 
 
 from django.http import JsonResponse
@@ -37,8 +38,13 @@ from managr.salesforce.background import (
     _process_create_new_resource,
     _process_create_task,
     emit_meeting_workflow_tracker,
+    _send_recap,
 )
-from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
+from managr.zoom.background import (
+    _save_meeting_review,
+    emit_send_meeting_summary,
+    _send_meeting_summary,
+)
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -91,6 +97,7 @@ def process_stage_next_page(payload, context):
 
 
 @log_all_exceptions
+@slack_api_exceptions(rethrow=True)
 @processor(
     required_context=["w", "original_message_channel", "original_message_timestamp",]
 )
@@ -99,8 +106,38 @@ def process_zoom_meeting_data(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
+    view = payload["view"]
+
+    trigger_id = payload["trigger_id"]
+    view_id = view["id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    loading_view_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "fill": True,
+                },
+            ),
+            "private_metadata": view["private_metadata"],
+        },
+    }
+    try:
+        res = slack_requests.generic_request(
+            url, loading_view_data, access_token=slack_access_token
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
+
     # get state - state contains the values based on the block_id
-    state = payload["view"]["state"]["values"]
+    state = view["state"]["values"]
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     if len(forms):
@@ -114,7 +151,7 @@ def process_zoom_meeting_data(payload, context):
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    logger.info(f"{contact_forms.values_list('id', 'template__form_type')}")
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -147,29 +184,14 @@ def process_zoom_meeting_data(payload, context):
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=block_set
         )
-    except InvalidBlocksException as e:
+    except Exception as e:
         return logger.exception(
             f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
-    _save_meeting_review.now(str(workflow.id))
-    emit_send_meeting_summary(str(workflow.id))
 
     return {"response_action": "clear"}
 
@@ -212,104 +234,114 @@ def process_next_page_slack_commands_form(payload, context):
 
 
 @log_all_exceptions
-@slack_api_exceptions()
+@slack_api_exceptions(rethrow=True)
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
+    has_error = False
     state = payload["view"]["state"]["values"]
+
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        view_type = external_id
+        pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
-    # if there are stage forms save the data we already saved the original form
-    data = {}
+    stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
-        data = {**data, **form.saved_data}
+        stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
-        # if there was no stage forms then we need to save the main form
         main_form.save_form(state)
 
-    data = {**data, **main_form.saved_data}
+    all_form_data = {**stage_form_data_collector, **main_form.saved_data}
 
     slack_access_token = user.organization.slack_integration.access_token
-    # get state - state contains the values based on the block_id
-    # if we had a next page the form data for the review was already saved
-    # currently only for update
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    loading_view_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "fill": True,
+                },
+            ),
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(
+            url, loading_view_data, access_token=slack_access_token
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+        )
+
     attempts = 1
     while True:
         sf = user.salesforce_account
         try:
             if main_form.template.form_type == "UPDATE":
-                main_form.resource_object.update_in_salesforce(data)
+                resource = main_form.resource_object.update_in_salesforce(all_form_data)
                 break
             else:
                 resource = _process_create_new_resource.now(current_form_ids)
                 break
 
         except FieldValidationError as e:
+            has_error = True
+            blocks = (
+                get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            )
+            break
 
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occured"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
-                        },
-                    ),
-                },
-            }
         except RequiredFieldError as e:
-
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occurred"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
-                        },
-                    ),
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
                 },
-            }
+            )
+            break
         except UnhandledSalesforceError as e:
-
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occurred"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
-                        },
-                    ),
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
                 },
-            }
+            )
+            break
+
         except SFNotFoundError as e:
-
-            return {
-                "response_action": "push",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "An Error Occurred"},
-                    "blocks": get_block_set(
-                        "error_modal",
-                        {
-                            "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
-                        },
-                    ),
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
                 },
-            }
+            )
+            break
+
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
@@ -319,37 +351,125 @@ def process_submit_resource_data(payload, context):
                 sf.regenerate_token()
                 attempts += 1
 
-    if context.get("w"):
-        # return the same view with a submit button and the correct resource selected
-        # find the select block
+    if has_error:
 
-        return {
-            "response_action": "update",
+        if not len(stage_forms):
+            # add a special button to return the user back to edit their form
+            # this is only required for single page forms
+            blocks = [
+                *blocks,
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "return to form",
+                            str(main_form.id),
+                            style="primary",
+                            action_id=slack_const.RETURN_TO_FORM_MODAL,
+                        )
+                    ]
+                ),
+            ]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        error_view_data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
             "view": {
                 "type": "modal",
-                "callback_id": "test",
-                "title": payload["view"]["title"],
-                "blocks": get_block_set(
-                    "create_or_search_modal",
-                    {"w": context.get("w"), "resource": current_forms.first().resource_type},
-                ),
-                "private_metadata": payload["view"]["private_metadata"],
+                "title": {"type": "plain_text", "text": "Error"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(context),
+                "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
+        try:
+            return slack_requests.generic_request(
+                url, error_view_data, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            )
+    pm = json.loads(payload["view"]["private_metadata"])
+    if context.get("w"):
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        pm.update({"action": "EXISTING"})
+        select_resource_view_data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": main_form.template.resource},
+                "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+                "blocks": get_block_set(
+                    "create_or_search_modal",
+                    {
+                        "w": context.get("w"),
+                        "resource": current_forms.first().resource_type,
+                        "resource_id": resource.integration_id,
+                        "action": "EXISTING",
+                    },
+                ),
+                "private_metadata": json.dumps(pm),
+                "submit": {"type": "plain_text", "text": "Submit",},
+            },
+        }
+        try:
+            return slack_requests.generic_request(
+                url, select_resource_view_data, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
+            )
+
     else:
         # update the channel message to clear it
-        slack_requests.send_ephemeral_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            user.slack_integration.slack_id,
-            text=f"Managr updated {main_form.resource_type}",
-            block_set=get_block_set(
-                "success_modal",
-                {
-                    "message": f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-                },
-            ),
-        )
+        if main_form.template.form_type == "CREATE":
+            text = f"Managr created {main_form.resource_type}"
+            message = f"Successfully created *{main_form.resource_type}* _{resource.name if resource.name else resource.email}_"
+
+        else:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+
+        if all_form_data.get("__send_recap_to_leadership") or all_form_data.get(
+            "__send_recap_to_owner"
+        ):
+            _send_recap(current_form_ids)
+
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        success_view_data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Success"},
+                "blocks": get_block_set("success_modal", {"message": message},),
+                "private_metadata": json.dumps(context),
+                "clear_on_close": True,
+            },
+        }
+        try:
+            slack_requests.generic_request(url, success_view_data, access_token=slack_access_token)
+
+        except Exception as e:
+            logger.exception(
+                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
+            )
+            pass
+        try:
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set("success_modal", {"message": message},),
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
+
     return {"response_action": "clear"}
 
 
@@ -566,18 +686,6 @@ def process_update_meeting_contact(payload, context):
 @processor()
 def process_edit_meeting_contact(payload, context):
     """This Submission returns the update form stacked on top of the view contacts form"""
-    action = slack_const.VIEWS_UPDATE
-    url = slack_const.SLACK_API_ROOT + action
-    trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    org = workflow.user.organization
-
-    access_token = org.slack_integration.access_token
-    # blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
-
-    # res = slack_requests.generic_request(url, data, access_token=access_token)
 
     return {
         "response_action": "push",

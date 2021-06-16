@@ -1,8 +1,10 @@
+import pytz
 from django.contrib import admin
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
@@ -45,8 +47,44 @@ class EmailAuthAccForm(forms.ModelForm):
         )
 
 
+def tz_as_choice_set():
+    return list(map(lambda c: [c, c], pytz.all_timezones))
+
+
+class CustomUserForm(forms.ModelForm):
+    timezone = forms.ChoiceField(widget=forms.Select, choices=tz_as_choice_set())
+    password = ReadOnlyPasswordHashField(
+        label=("Password"),
+        help_text=(
+            "Raw passwords are not stored, so there is no way to see "
+            "this user's password, but you can change the password "
+            'using <a href="../password/">this form</a>.'
+        ),
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "password",
+            "last_login",
+            "first_name",
+            "last_name",
+            "email",
+            "profile_photo",
+            "is_active",
+            "is_invited",
+            "is_admin",
+            "is_superuser",
+            "is_staff",
+            "organization",
+            "user_level",
+            "role",
+            "timezone",
+        )
+
+
 class CustomUserAdmin(UserAdmin):
-    model = User
+    form = CustomUserForm
 
     fieldsets = (
         (
@@ -67,6 +105,7 @@ class CustomUserAdmin(UserAdmin):
                     "organization",
                     "user_level",
                     "role",
+                    "timezone",
                 )
             },
         ),
@@ -75,6 +114,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
+
     inlines = (
         UserSlackIntegrationInline,
         ZoomAuthAccountInline,

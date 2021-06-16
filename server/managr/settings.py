@@ -51,19 +51,19 @@ ALLOWED_HOSTS = []
 # ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 
+print(ALLOWED_HOSTS)
 ### Get allowed hosts from ecs
 
 EC2_PRIVATE_IP = None
-METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", None)
+METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI_V4", None)
 
 try:
     resp = requests.get(METADATA_URI)
     data = resp.json()
     # print(data)
 
-    container_meta = data["Containers"][0]
-    EC2_PRIVATE_IP = container_meta["Networks"][0]["IPv4Addresses"][0]
-except:
+    EC2_PRIVATE_IP = data["Networks"][0]["IPv4Addresses"][0]
+except Exception as e:
     # silently fail as we may not be in an ECS environment
     pass
 
@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "managr.zoom",
     "managr.salesforce",
     "managr.alerts",
+    "managr.autonomous",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -408,6 +409,11 @@ if USE_SLACK:
     SLACK_CLIENT_ID = _env_get_required("SLACK_CLIENT_ID")
     SLACK_SIGNING_SECRET = _env_get_required("SLACK_SIGNING_SECRET")
     SLACK_APP_VERSION = _env_get_required("SLACK_APP_VERSION")
+    SLACK_ERROR_WEBHOOK = (
+        os.environ.get("SLACK_ERROR_WEBHOOK", None)
+        if os.environ.get("SLACK_ERROR_WEBHOOK") not in ["", None]
+        else None
+    )
 
 
 USE_SALESFORCE = os.environ.get("USE_SALESFORCE") == "True"

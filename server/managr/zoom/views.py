@@ -264,12 +264,7 @@ def init_fake_meeting(request):
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         if not workflow:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "There was an error initating the meeting",
-                }
-            )
+            return Response(data={"response_type": "ephemeral", "text": "An error occured",})
         # get meeting
         workflow.begin_communication(now=True)
         workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()

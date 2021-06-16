@@ -22,6 +22,8 @@ import Invite from '@/views/settings/_pages/_Invite'
 import SlackFormSettings from '../views/settings/SlackFormSettings'
 import Notifications from '@/views/settings/Notifications'
 
+import ProfilePage from '@/views/user/ProfilePage'
+
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
 // END TODO
@@ -87,6 +89,11 @@ export default new Router({
       component: SlackFormSettings,
       beforeEnter: Auth.requireIsAdminAuth,
       name: 'SlackFormSettings',
+    },
+    {
+      path: '/profile-page',
+      name: 'ProfilePage',
+      component: ProfilePage,
     },
     {
       path: '/alerts',

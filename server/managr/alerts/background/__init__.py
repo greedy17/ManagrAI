@@ -7,6 +7,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 
 from background_task import background
 from rest_framework.exceptions import ValidationError
@@ -43,8 +44,15 @@ def emit_init_alert(config_id):
     return _process_init_alert(config_id)
 
 
+def emit_send_alert(instance_id, scheduled_time=timezone.now()):
+    if isinstance(scheduled_time, str):
+        scheduled_time = datetime.strptime(scheduled_time, "%Y-%m-%dT%H:%M%z")
+
+    return _process_send_alert(str(instance_id), schedule=scheduled_time)
+
+
 @background(queue="MANAGR_ALERTS_QUEUE")
-def _process_init_alert(config_id,):
+def _process_init_alert(config_id):
 
     config = AlertConfig.objects.filter(id=config_id).first()
     if not config:
@@ -53,12 +61,13 @@ def _process_init_alert(config_id,):
     users = template.get_users
 
     for user in users:
-        _process_check_alert(config_id, str(user.id))
+        run_time = config.calculate_scheduled_time_for_alert(user).strftime("%Y-%m-%dT%H:%M%z")
+        _process_check_alert(config_id, str(user.id), run_time)
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
 @sf_api_exceptions(rethrow=True)
-def _process_check_alert(config_id, user_id):
+def _process_check_alert(config_id, user_id, run_time):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
     alert_id = str(template.id)
@@ -92,9 +101,6 @@ def _process_check_alert(config_id, user_id):
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
 
-    # check if we have it in our db to inform our user
-    ## currently only createting alert isntance if exists in db
-
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
@@ -114,17 +120,8 @@ def _process_check_alert(config_id, user_id):
                         resource_id=str(existing.id),
                         instance_meta=instance_meta,
                     )
-                    if hasattr(template_user, "slack_integration"):
-                        channel_id = template_user.slack_integration.channel
-                        access_token = template_user.organization.slack_integration.access_token
-                        text = template.message_template.notification_text
-                        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
 
-                        res = slack_requests.send_channel_message(
-                            channel_id, access_token, text=text, block_set=blocks
-                        )
-                        instance.rendered_text = instance.render_text()
-                        instance.save()
+                    emit_send_alert(str(instance.id), scheduled_time=run_time)
                 elif user_group == "OWNER":
                     instance = AlertInstance.objects.create(
                         template_id=alert_id,
@@ -132,26 +129,23 @@ def _process_check_alert(config_id, user_id):
                         resource_id=str(existing.id),
                         instance_meta=instance_meta,
                     )
-                    if hasattr(user, "slack_integration"):
-                        channel_id = user.slack_integration.channel
-                        access_token = user.organization.slack_integration.access_token
-                        text = template.message_template.notification_text
-                        blocks = get_block_set("alert_instance", {"instance_id": str(instance.id)})
 
-                        res = slack_requests.send_channel_message(
-                            channel_id, access_token, text=text, block_set=blocks
-                        )
-                        instance.rendered_text = instance.render_text()
-                        instance.save()
+                    emit_send_alert(str(instance.id), scheduled_time=run_time)
                 else:
                     if user_group == "MANAGERS":
-                        query &= Q(Q(user_level="MANAGER", is_active=True))
+                        query |= Q(Q(user_level="MANAGER", is_active=True))
 
                     elif user_group == "REPS":
-                        query != Q(user_level="REP", is_active=True)
+                        query |= Q(user_level="REP", is_active=True)
+
+                    elif user_group == "SDR":
+                        query |= Q(user_level="SDR", is_active=True)
+
                     elif user_group == "ALL":
 
-                        query = Q(is_active=True) & Q(Q(user_level="MANAGER") | Q(user_level="REP"))
+                        query = Q(is_active=True) & Q(
+                            Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
+                        )
 
                     users = template.user.organization.users.filter(query).distinct()
                     for u in users:
@@ -161,18 +155,25 @@ def _process_check_alert(config_id, user_id):
                             resource_id=str(existing.id),
                             instance_meta=instance_meta,
                         )
-                        if hasattr(user, "slack_integration"):
-                            channel_id = u.slack_integration.channel
-                            access_token = u.organization.slack_integration.access_token
-                            text = template.message_template.notification_text
-                            blocks = get_block_set(
-                                "alert_instance", {"instance_id": str(instance.id)}
-                            )
 
-                            res = slack_requests.send_channel_message(
-                                channel_id, access_token, text=text, block_set=blocks
-                            )
-                            instance.rendered_text = instance.render_text()
-                            instance.save()
+                        emit_send_alert(str(instance.id), scheduled_time=run_time)
     return
 
+
+@background(queue="MANAGR_ALERTS_QUEUE", schedule=0)
+@sf_api_exceptions(rethrow=True)
+def _process_send_alert(instance_id):
+    alert_instance = AlertInstance.objects.filter(id=instance_id).select_related("user").first()
+    instance_user = alert_instance.user
+    if hasattr(instance_user, "slack_integration"):
+        channel_id = instance_user.slack_integration.channel
+        access_token = instance_user.organization.slack_integration.access_token
+        text = alert_instance.template.message_template.notification_text
+        blocks = get_block_set("alert_instance", {"instance_id": str(alert_instance.id)})
+
+        slack_requests.send_channel_message(channel_id, access_token, text=text, block_set=blocks)
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.sent_at = datetime.now(pytz.utc)
+        alert_instance.save()
+
+    return alert_instance

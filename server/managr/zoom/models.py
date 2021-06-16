@@ -251,15 +251,13 @@ class ZoomMeeting(TimeStampModel):
     @property
     def readable_score_message(self):
         if self.meeting_score_components:
-            sentiment = ""
+
             stage = ""
             forecast = ""
             close_date = ""
             attendance = ""
             duration = ""
             for comp in self.meeting_score_components:
-                if comp["type"] == "sentiment":
-                    sentiment = comp.get("message", "N/A")
                 if comp["type"] == "stage":
                     stage = comp.get("message", "N/A")
                 if comp["type"] == "forecast_category":
@@ -270,7 +268,7 @@ class ZoomMeeting(TimeStampModel):
                     attendance = comp.get("message", "N/A")
                 if comp["type"] == "duration":
                     duration = comp.get("message", "N/A")
-            return f"{sentiment} {stage} {forecast} {close_date} {attendance} {duration}"
+            return f"{stage} {forecast} {close_date} {attendance} {duration}"
         return "This Meeting has not been scored yet"
 
     def delete(self, *args, **kwargs):
@@ -295,7 +293,8 @@ class ZoomMeeting(TimeStampModel):
                         slack_access_token,
                         block_set=[
                             block_builders.simple_section(
-                                ":garbage_fire: This meeting was removed from our records", "mrkdwn"
+                                ":put_litter_in_its_place: This meeting was removed from our records",
+                                "mrkdwn",
                             )
                         ],
                     )
@@ -334,15 +333,12 @@ class MeetingReview(TimeStampModel):
     forecast_category = models.CharField(blank=True, null=True, max_length=255)
     stage = models.CharField(blank=True, null=True, max_length=255,)
     meeting_comments = models.TextField(blank=True, null=True, max_length=255)
-    meeting_sentiment = models.CharField(
-        max_length=255, choices=zoom_consts.MEETING_SENTIMENT_OPTIONS, blank=True, null=True,
-    )
     # amount cannot be blank we are allowing blank to deal with django admin
     amount = models.DecimalField(
         max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
     )
     next_step = models.TextField(
-        blank=True, help_text="If user uses next step field this will be saved"
+        blank=True, help_text="If user uses next step field this will be saved", null=True
     )
     close_date = models.DateField(null=True, blank=True)
     prev_forecast = models.CharField(
