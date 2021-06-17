@@ -550,11 +550,7 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
             except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
-<<<<<<< Updated upstream
-                        f"Failed to refresh user token for Salesforce operation add contact to sf failed"
-=======
                         f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
->>>>>>> Stashed changes
                     )
 
                 else:
@@ -641,13 +637,8 @@ def _process_update_contacts(workflow_id, priority=1, *args):
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
-<<<<<<< Updated upstream
-                        return logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-=======
                         logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
->>>>>>> Stashed changes
                         )
 
                     else:
@@ -889,9 +880,9 @@ def _send_recap(form_ids):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = [*form_fields, *form.template.formfield_set.filter(include_in_recap=True)]
+            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
-            form_fields = form.template.fields.all()
+            form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
     send_summ_to_owner = new_data.get("__send_recap_to_owner")
 
@@ -901,7 +892,10 @@ def _send_recap(form_ids):
 
     message_string_for_recap = ""
     for key, new_value in new_data.items():
-        field_label = form_fields.filter(api_name=key).first().reference_display_label
+        field = form_fields.filter(field__api_name=key).first()
+        if not field:
+            continue
+        field_label = field.field.reference_display_label
         if main_form.template.form_type == "UPDATE":
 
             if old_data and key in old_data:
@@ -910,6 +904,11 @@ def _send_recap(form_ids):
                     message_string_for_recap += (
                         f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
                     )
+
+                else:
+                    message_string_for_recap += f"\n*{field_label}:* {new_value} _(no change)_"
+            else:
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
 
         elif main_form.template.form_type == "CREATE":
             if new_value:
