@@ -158,12 +158,19 @@
               </div>
             </div>
             <div
-              v-if="customForm.formType == 'UPDATE'"
+              v-if="customForm.formType == 'UPDATE' || customForm.stage"
               class="form-field__left"
               @click="field.includeInRecap = !field.includeInRecap"
             >
               <CheckBox :checked="field.includeInRecap" />
-              <h5 class="space">include in recap</h5>
+              <h5 class="space">
+                include in recap
+                <small
+                  ><i>{{
+                    customForm.stage ? ' (only available for update command)' : ''
+                  }}</i></small
+                >
+              </h5>
             </div>
             <div class="form-field__middle">
               {{ field.required ? 'required' : '' }}
