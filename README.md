@@ -315,4 +315,7 @@ You can get the correct task_id by looking at the AWS Console under ECS tasks th
       exists = template.formfield_set.filter(field_id="fae88a10-53cc-470e-86ec-32376c041893").exists()
       if not exists:
         FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="fae88a10-53cc-470e-86ec-32376c041893"))
+      exists = template.formfield_set.filter(field_id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d").exists()
+      if not exists:
+        FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d"))
 
