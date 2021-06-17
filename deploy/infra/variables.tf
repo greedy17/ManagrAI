@@ -140,13 +140,13 @@ variable "scheduled_tasks" {
       name       = "processalltasks"
       command    = "process_tasks --duration 3600"
       cron       = "cron(*/10 * * * ? *)"
-      task_count = 3
+      task_count = 1
     },
     {
       name       = "processsyncqueues"
       command    = "process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600"
       cron       = "cron(*/10 * * * ? *)"
-      task_count = 3
+      task_count = 1
     },
     {
       name       = "syncresourcedata"
