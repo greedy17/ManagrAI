@@ -550,11 +550,7 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
             except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
-<<<<<<< Updated upstream
-                        f"Failed to refresh user token for Salesforce operation add contact to sf failed"
-=======
                         f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
->>>>>>> Stashed changes
                     )
 
                 else:
@@ -641,13 +637,8 @@ def _process_update_contacts(workflow_id, priority=1, *args):
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
-<<<<<<< Updated upstream
-                        return logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-=======
                         logger.exception(
                             f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
->>>>>>> Stashed changes
                         )
 
                     else:
