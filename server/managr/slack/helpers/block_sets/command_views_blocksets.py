@@ -73,13 +73,13 @@ def command_meeting_summary(context):
 
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
-    """ 
-        Builds out the message based on the template the of the alert 
-      
-        divider -
-        message - alert template message 
-        divider 
-        update button
+    """
+    Builds out the message based on the template the of the alert
+
+    divider -
+    message - alert template message
+    divider
+    update button
     """
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     user = instance.user
