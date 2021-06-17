@@ -897,6 +897,8 @@ def _send_recap(form_ids):
             continue
         field_label = field.field.reference_display_label
         if main_form.template.form_type == "UPDATE":
+            ## Only sends values for fields that have been updated
+            ## all fields on update form are included by default users cannot edit
 
             if old_data and key in old_data:
                 if str(old_data.get(key)) != str(new_value):
@@ -905,14 +907,12 @@ def _send_recap(form_ids):
                         f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
                     )
 
-                else:
-                    message_string_for_recap += f"\n*{field_label}:* {new_value} _(no change)_"
-            else:
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-
         elif main_form.template.form_type == "CREATE":
             if new_value:
                 message_string_for_recap += f"*{field_label}:* {new_value}"
+    if not len(message_string_for_recap):
+        message_string_for_recap = "No Data to show from form"
+
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('slack', '0011_userslackintegration_is_onboarded'),
+        ("slack", "0011_userslackintegration_is_onboarded"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='formfield',
-            name='include_in_recap',
-            field=models.BooleanField(default=False),
+            model_name="formfield",
+            name="include_in_recap",
+            field=models.BooleanField(default=True),
         ),
     ]

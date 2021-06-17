@@ -157,8 +157,13 @@
                 {{ field.referenceDisplayLabel }}
               </div>
             </div>
-            <div
-              v-if="customForm.formType == 'UPDATE' || customForm.stage"
+
+            <!--             <div
+              v-if="
+                customForm.formType == 'CREATE' ||
+                  customForm.formType == 'MEETING_REVIEW' ||
+                  customForm.stage
+              "
               class="form-field__left"
               @click="field.includeInRecap = !field.includeInRecap"
             >
@@ -167,11 +172,11 @@
                 include in recap
                 <small
                   ><i>{{
-                    customForm.stage ? ' (only available for update command)' : ''
+                    customForm.stage ? ' (only available for create and meeting review)' : ''
                   }}</i></small
                 >
               </h5>
-            </div>
+            </div> -->
             <div class="form-field__middle">
               {{ field.required ? 'required' : '' }}
             </div>
