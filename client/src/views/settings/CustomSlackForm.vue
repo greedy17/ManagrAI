@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <div style="display:flex;">
+    <div style="display: flex">
       <div>
         <CollectionSearch
           :collection="formFields"
@@ -77,13 +77,11 @@
         </div>
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
           <h5>Previous stage specific forms</h5>
-          <small v-if="!orderedStageForm.length">
-            This is your first stage specific form
-          </small>
+          <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
 
           <div :key="key" v-for="(form, key) in orderedStageForm">
-            <div style="margin-top:1rem;">
-              <i style="text-transform:uppercase;font-size:12px;"
+            <div style="margin-top: 1rem">
+              <i style="text-transform: uppercase; font-size: 12px"
                 >Fields from <strong>{{ form.stage }}</strong> stage</i
               >
             </div>
@@ -116,7 +114,7 @@
           >
             {{ field.referenceDisplayLabel }}
           </div>
-          <div style="display: flex; width: 100%;">
+          <div style="display: flex; width: 100%">
             <div class="form-field__left">
               <div
                 v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
@@ -159,8 +157,24 @@
                 {{ field.referenceDisplayLabel }}
               </div>
             </div>
-
-            <div class="form-field__middle">{{ field.required ? 'required' : '' }}</div>
+            <div
+              v-if="customForm.formType == 'UPDATE' || customForm.stage"
+              class="form-field__left"
+              @click="field.includeInRecap = !field.includeInRecap"
+            >
+              <CheckBox :checked="field.includeInRecap" />
+              <h5 class="space">
+                include in recap
+                <small
+                  ><i>{{
+                    customForm.stage ? ' (only available for update command)' : ''
+                  }}</i></small
+                >
+              </h5>
+            </div>
+            <div class="form-field__middle">
+              {{ field.required ? 'required' : '' }}
+            </div>
             <div class="form-field__right">
               <div
                 class="form-field__btn form-field__btn--flipped"
@@ -173,7 +187,7 @@
               </div>
             </div>
           </div>
-          <div style="display: flex; align-items: center;">
+          <div style="display: flex; align-items: center">
             <input
               v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
               placeholder="Enter Meeting Type"
@@ -181,7 +195,7 @@
               v-model="meetingType"
               @keypress="updateMeeting"
             />
-            <small v-if="meetingType.length" style="margin-left: 1rem;">Press Enter to Save</small>
+            <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
           </div>
 
           <div
@@ -397,7 +411,7 @@ export default {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
-      this.addedFields.push({ ...field, order: this.addedFields.length })
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
 
     onRemoveField(field) {
@@ -506,13 +520,16 @@ export default {
         }
       }
       this.savingForm = true
+
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
+      let fields_ref = this.addedFields.filter(f => fields.includes(f.id))
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
           fields: fields,
           removedFields: this.removedFields,
+          fields_ref: fields_ref,
         })
         .then(res => {
           this.$emit('update:selectedForm', res)
@@ -735,5 +752,9 @@ export default {
 }
 .stages-list {
   top: 0.1rem;
+}
+
+.space {
+  margin: 0.5em;
 }
 </style>
