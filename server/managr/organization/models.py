@@ -65,30 +65,28 @@ class Organization(TimeStampModel):
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
-        if preserve_fields is False:
-            resources = FORM_RESOURCES_LIST
-            types = FORM_TYPE_LIST
-            new_admin = self.users.filter(id=user.id).first()
-            current_admin = self.users.filter(is_admin=True).first()
-            for resource in resources:
-                for type in types:
-                    form = OrgCustomSlackForm.objects.filter(
-                        form_type=type, resource=resource
-                    ).first()
-                    fields = form.fields.filter(is_public=False)
-                    form_fields = fields.values_list("api_name", flat=True)
-                    new_admin_fields = new_admin.imported_sobjecfield.filter(
-                        api_name__in=[form_fields], salesforce_object=resource
-                    )
-                    form_field_set = form.formfield_set.all()
-                    for formfield in form_field_set:
-                        new_field = new_admin_fields.filter(api_name=formfield.api_name).first()
-                        if new_field:
-                            formfield.field = new_field
-                            formfield.save()
-                    filtered_fields = new_admin_fields.difference(fields)
-                    fields = filtered_fields()
-                    fields.save()
+        templates = user.organization.custom_slack_forms.all()
+
+        if preserve_fields:
+            for form in templates:
+                new_admin = user
+                current_admin = self.users.filter(is_admin=True).first()
+                fields = form.fields.filter(is_public=False)
+                form_fields = fields.values_list("api_name", flat=True)
+                new_admin_fields = new_admin.imported_sobjecfield.filter(
+                    api_name__in=[form_fields], salesforce_object=templates.resource
+                )
+                form_field_set = form.formfield_set.all()
+
+                for formfield in form_field_set:
+                    new_field = new_admin_fields.filter(api_name=formfield.api_name).first()
+                    if new_field:
+                        formfield.field = new_field
+                        formfield.save()
+        else:
+            for form in templates:
+                form.fields.filter(is_public=False).delete()
+
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
