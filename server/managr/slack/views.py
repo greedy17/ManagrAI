@@ -372,7 +372,7 @@ class SlackFormsViewSet(
 
         data = self.request.data
         fields = data.pop("fields", [])
-        data.pop("fields_ref", [])
+        fields_ref = data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data, instance=self.get_object())
 
@@ -380,8 +380,11 @@ class SlackFormsViewSet(
         serializer.save()
         instance = serializer.instance
         instance.fields.clear()
-        for i, field in enumerate(fields):
-            instance.fields.add(field, through_defaults={"order": i})
+        for i, field in enumerate(fields_ref):
+            instance.fields.add(
+                field["id"],
+                through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
+            )
         instance.save()
 
         return Response(serializer.data)
