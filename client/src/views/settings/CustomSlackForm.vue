@@ -157,7 +157,11 @@
                 {{ field.referenceDisplayLabel }}
               </div>
             </div>
-            <div class="form-field__left" @click="field.includeInRecap = !field.includeInRecap">
+            <div
+              v-if="customForm.formType == 'UPDATE'"
+              class="form-field__left"
+              @click="field.includeInRecap = !field.includeInRecap"
+            >
               <CheckBox :checked="field.includeInRecap" />
               <h5 class="space">include in recap</h5>
             </div>
@@ -400,7 +404,7 @@ export default {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
-      this.addedFields.push({ ...field, order: this.addedFields.length })
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
 
     onRemoveField(field) {
@@ -509,13 +513,16 @@ export default {
         }
       }
       this.savingForm = true
+
       let fields = new Set([...this.addedFields.map(f => f.id)])
       fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
+      let fields_ref = this.addedFields.filter(f => fields.includes(f.id))
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
           fields: fields,
           removedFields: this.removedFields,
+          fields_ref: fields_ref,
         })
         .then(res => {
           this.$emit('update:selectedForm', res)
