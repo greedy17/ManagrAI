@@ -25,7 +25,6 @@ from managr.salesforce.adapter.models import ContactAdapter, AccountAdapter
 from managr.opportunity import constants as opp_consts
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm
-from managr.slack.constants import FORM_RESOURCES_LIST, FORM_TYPE_LIST
 from . import constants as org_consts
 
 
