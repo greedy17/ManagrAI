@@ -24,6 +24,7 @@ resource "aws_db_instance" "managrdb" {
   vpc_security_group_ids     = [aws_security_group.managr_db.id]
   publicly_accessible        = false
   auto_minor_version_upgrade = true
+  snapshot_identifier        = var.db_snapshot_id
 
   tags = {
     "app" = "managr"

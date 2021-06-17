@@ -174,3 +174,8 @@ variable "scheduled_tasks" {
     }
   ]
 }
+
+variable "db_snapshot_id" {
+  type    = string
+  default = ""
+}

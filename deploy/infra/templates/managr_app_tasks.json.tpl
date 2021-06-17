@@ -194,6 +194,7 @@
   },
   {
     "name": "datadog-agent",
+    "essential": false,
     "image": "${datadog_image}",
     "secrets": [
       {
