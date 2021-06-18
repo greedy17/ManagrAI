@@ -79,16 +79,7 @@ def queue_users_sf_resource(force_all=False):
                     continue
                 elif latest_flow and latest_flow.progress != 100:
                     # check to see if the tasks were completed but not recorded
-                    completed_tasks = set(latest_flow.completed_operations)
-                    all_tasks = set(latest_flow.operations)
-                    tasks_diff = list(all_tasks - completed_tasks)
-                    for task_hash in tasks_diff:
-                        # check to see if there was a problem completing the flow but all tasks are ready
-                        task = CompletedTask.objects.filter(task_hash=task_hash).count()
-                        if task:
-                            latest_flow.completed_operations.append(task_hash)
-
-                    latest_flow.save()
+                    latest_flow.reconcile()
                     if latest_flow.progress == 100:
                         init_sf_resource_sync(account.user.id)
                         continue
@@ -139,16 +130,7 @@ def queue_users_sf_fields(force_all=False):
                     continue
                 elif latest_flow and latest_flow.progress != 100:
                     # check to see if the tasks were completed but not recorded
-                    completed_tasks = set(latest_flow.completed_operations)
-                    all_tasks = set(latest_flow.operations)
-                    tasks_diff = list(all_tasks - completed_tasks)
-                    for task_hash in tasks_diff:
-                        # check to see if there was a problem completing the flow but all tasks are ready
-                        task = CompletedTask.objects.filter(task_hash=task_hash).count()
-                        if task:
-                            latest_flow.completed_operations.append(task_hash)
-
-                    latest_flow.save()
+                    latest_flow.reconcile()
                     if latest_flow.progress == 100:
                         init_sf_field_sync(account.user)
                         continue
