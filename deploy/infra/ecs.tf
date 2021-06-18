@@ -98,7 +98,7 @@ data "template_file" "managr_app_scheduled_tasks" {
 
     environment               = each.value.env.environment
     app_image                 = each.value.env.app_image != "" ? each.value.env.app_image : "${aws_ecr_repository.managr["thinknimble/managr/server"].repository_url}:latest"
-    app_image_scheduled_tasks = each.value.env.app_image_scheduled_tasks != "" ? each.value.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
+    app_image_scheduled_tasks = each.value.env.app_image_scheduled_tasks != "" ? each.value.env.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
     nginx_image               = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
     bash_image                = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
     datadog_image             = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
