@@ -69,3 +69,6 @@ The following Bitbucket variables are required for deployment:
 ### Datadog
 
 Datadog is used to collect metrics for the deployed application stages. The agent included in the ECS task definition is configured to collect tracing information from the managr server and worker containers. Datadog is also configured to collect metrics from the AWS components including RDS and ALB.
+
+### Helpful commands
+terraform apply -auto-approve -parallelism=1

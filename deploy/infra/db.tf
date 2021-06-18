@@ -13,7 +13,7 @@ resource "aws_db_instance" "managrdb" {
   allocated_storage          = 20
   engine                     = "postgres"
   engine_version             = "12.5"
-  instance_class             = "db.t2.micro"
+  instance_class             = "db.t2.medium"
   name                       = each.value.rds_db_name
   username                   = each.value.rds_username
   password                   = each.value.rds_password
