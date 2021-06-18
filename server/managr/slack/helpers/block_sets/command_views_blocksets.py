@@ -84,8 +84,8 @@ def alert_instance_block_set(context):
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     user = instance.user
     blocks = [
-        block_builders.simple_section(instance.render_text(), "mrkdwn"),
         block_builders.divider_block(),
+        block_builders.simple_section(instance.render_text(), "mrkdwn"),
     ]
     if user.id == instance.resource.owner.id:
         blocks.append(
