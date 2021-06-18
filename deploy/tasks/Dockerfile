@@ -33,15 +33,7 @@ COPY ./Pipfile.lock /app/Pipfile.lock
 RUN pip3 install pipenv \
   && pipenv install --system --deploy --ignore-pipfile
 
-COPY ./deploy/tasks/prod-crontab /etc/cron.d/prod-crontab
-RUN chmod 0644 /etc/cron.d/prod-crontab
-RUN crontab /etc/cron.d/prod-crontab
-RUN touch /var/log/cron.log
-
 # Copy app source
 COPY ./server ./server
 
-COPY ./deploy/tasks/start /start
-RUN sed -i 's/\r$//g' /start
-RUN chmod +x /start
-ENTRYPOINT [ "/start" ]
+ENTRYPOINT [ "ddtrace-run", "/usr/local/bin/python", "/app/server/manage.py" ]

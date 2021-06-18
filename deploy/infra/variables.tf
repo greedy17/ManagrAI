@@ -126,3 +126,56 @@ variable "environments" {
     salesforce_api_version  = string
   }))
 }
+
+variable "scheduled_tasks" {
+  type = list(object({
+    name       = string
+    command    = string
+    cron       = string
+    task_count = number
+  }))
+
+  default = [
+    {
+      name       = "processalltasks"
+      command    = "process_tasks --duration 3600"
+      cron       = "cron(*/10 * * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "processsyncqueues"
+      command    = "process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600"
+      cron       = "cron(*/10 * * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "syncresourcedata"
+      command    = "clearstaledata 1440"
+      cron       = "cron(0 0 * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "syncresourcefields"
+      command    = "initobjectfieldsync"
+      cron       = "cron(0 */12 * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "sendtasklist"
+      command    = "sendslacktasks"
+      cron       = "cron(0 7 * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "runalerts"
+      command    = "triggeralerts"
+      cron       = "cron(0 5 * * ? 1)"
+      task_count = 1
+    }
+  ]
+}
+
+variable "db_snapshot_id" {
+  type    = string
+  default = ""
+}

@@ -289,7 +289,7 @@ you can edit cron jobs by running
 3. Add the variable in the **managr_app.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
 4. add to **Dockerfile** for each environment 
 5. add to **default.auto.tfvars** for deployment 
-6. Run `terrafor apply -auto-approve` to apply changes 
+6. Run `terraform apply -auto-approve` to apply changes 
 
 ### SSH Into (New) Environments 
 
