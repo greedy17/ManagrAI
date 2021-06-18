@@ -150,8 +150,8 @@ variable "scheduled_tasks" {
     },
     {
       name       = "syncresourcedata"
-      command    = "initresourcesync"
-      cron       = "cron(*/10 * * * ? *)"
+      command    = "clearstaledata 1440"
+      cron       = "cron(0 0 * * ? *)"
       task_count = 1
     },
     {
@@ -168,8 +168,8 @@ variable "scheduled_tasks" {
     },
     {
       name       = "runalerts"
-      command    = "pull_usage_statistics"
-      cron       = "cron(0 7 * * ? 1)"
+      command    = "triggeralerts"
+      cron       = "cron(0 5 * * ? 1)"
       task_count = 1
     }
   ]
