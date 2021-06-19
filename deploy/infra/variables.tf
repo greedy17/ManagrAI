@@ -150,8 +150,8 @@ variable "scheduled_tasks" {
     },
     {
       name       = "syncresourcedata"
-      command    = "clearstaledata 1440"
-      cron       = "cron(0 0 * * ? *)"
+      command    = "initresourcesync"
+      cron       = "cron(*/10 * * * ? *)"
       task_count = 1
     },
     {
@@ -161,8 +161,8 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "sendtasklist"
-      command    = "sendslacktasks"
+      name       = "clearstaledata"
+      command    = "clearstaledata 1440"
       cron       = "cron(0 7 * * ? *)"
       task_count = 1
     },
