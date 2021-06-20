@@ -177,5 +177,5 @@ variable "scheduled_tasks" {
 
 variable "db_snapshot_id" {
   type    = string
-  default = ""
+  default = "rds:production-1-2021-06-20-04-50"
 }
