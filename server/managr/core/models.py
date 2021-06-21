@@ -61,6 +61,8 @@ class UserQuerySet(models.QuerySet):
                 return self.filter(organization=user.organization)
             if user.user_level == core_consts.ACCOUNT_TYPE_REP:
                 return self.filter(id=user.id)
+            elif user.user_level == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(id=user.id)
         else:
             return self.none()
 
