@@ -451,7 +451,7 @@ def update_resource(request):
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
                 "title": {"type": "plain_text", "text": f"Update {resource_type}"},
                 "blocks": blocks,
-                "submit": {"type": "plain_text", "text": "Update", "emoji": True},
+                # "submit": {"type": "plain_text", "text": "Update", "emoji": True},
                 "private_metadata": json.dumps(private_metadata),
                 "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
             },

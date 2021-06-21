@@ -77,6 +77,7 @@ variable "environments" {
     rds_username       = string
     rds_password       = string
     rds_db_name        = string
+    rds_db_snapshot_id = string
     secret_key         = string
     staff_email        = string
     superuser_email    = string

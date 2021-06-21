@@ -243,10 +243,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
   secret_string = jsonencode({
     ddApiKey = var.dd_api_key
 
-    dbHost = aws_db_instance.managrdb[each.key].address
-    dbUser = each.value.rds_username
-    dbPass = each.value.rds_password
-    dbName = each.value.rds_db_name
+    dbHost     = aws_db_instance.managrdb[each.key].address
+    dbUser     = each.value.rds_username
+    dbPass     = each.value.rds_password
+    dbName     = each.value.rds_db_name
+    dbSnapShot = each.value.rds_db_snapshot_id
 
     superuserEmail    = each.value.superuser_email
     superuserPassword = each.value.superuser_password
