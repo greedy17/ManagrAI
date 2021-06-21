@@ -8,7 +8,8 @@ from background_task.models import CompletedTask, Task
 
 from managr.core import factories as core_factories
 from managr.organization import factories as org_factories
-from managr.salesforce.models import SFResourceSync, SObjectField
+from managr.salesforce.models import SalesforceAuthAccount, SFResourceSync, SObjectField
+from managr.salesforce.adapter.exceptions import CannotRetreiveObjectType
 from managr.slack.models import OrgCustomSlackForm, FormField
 from managr.slack import constants as slack_consts
 
@@ -21,6 +22,12 @@ class SfSyncTestCase(TestCase):
         self.admin_user = core_factories.UserFactory(
             is_admin=True, user_level="MANAGER", organization=org_factories.OrganizationFactory()
         )
+
+        self.salesforce_account = SalesforceAuthAccount.objects.create(
+            user=self.admin_user,
+            sobjects={"Account": True, "Contact": True, "Lead": True, "Opportunity": True},
+        )
+
         self.resource_sync = SFResourceSync.objects.create(
             operations_list=["test", "test"], user=self.admin_user
         )
@@ -94,6 +101,119 @@ class SfSyncTestCase(TestCase):
         self.assertEquals(self.resource_sync.progress, 133)
         self.resource_sync.reconcile()
         self.assertEquals(self.resource_sync.progress, 100)
+
+    def test_resource_sync_opts(self):
+        sobjects = {"Account": True, "Contact": True, "Lead": True, "Opportunity": True}
+        self.assertEqual(
+            self.salesforce_account.resource_sync_opts,
+            list(map(lambda obj: obj if sobjects[obj] else False, sobjects)),
+        )
+
+    def test_resource_sync_opts_on_error(self):
+        sf_acc = self.salesforce_account
+        try:
+            raise CannotRetreiveObjectType
+        except CannotRetreiveObjectType:
+            sobjects = {"Account": True, "Contact": True, "Lead": False, "Opportunity": True}
+            pass
+        sf_acc.sobjects = sobjects
+        sf_acc.save()
+        self.assertEqual(
+            self.salesforce_account.resource_sync_opts,
+            list(filter(lambda obj: obj if sobjects[obj] else None, sobjects)),
+        )
+
+    def test_field_sync_opts_admin(self):
+        sobjects = {"Account": True, "Contact": True, "Lead": True, "Opportunity": True}
+        self.assertEqual(
+            self.salesforce_account.field_sync_opts,
+            list(
+                map(
+                    lambda resource: f"OBJECT_FIELDS.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        sobjects,
+                    ),
+                )
+            ),
+        )
+
+    def test_field_sync_opts_admin_on_error(self):
+        sf_acc = self.salesforce_account
+        try:
+            raise CannotRetreiveObjectType
+        except CannotRetreiveObjectType:
+            sobjects = {"Account": True, "Contact": True, "Lead": False, "Opportunity": True}
+            pass
+        sf_acc.sobjects = sobjects
+        sf_acc.save()
+
+        self.assertEqual(
+            self.salesforce_account.field_sync_opts,
+            list(
+                map(
+                    lambda resource: f"OBJECT_FIELDS.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        sobjects,
+                    ),
+                )
+            ),
+        )
+
+    def test_validation_sync_opts_admin(self):
+        sf_acc = self.salesforce_account
+        try:
+            raise CannotRetreiveObjectType
+        except CannotRetreiveObjectType:
+            sobjects = {"Account": True, "Contact": True, "Lead": False, "Opportunity": True}
+            pass
+        sf_acc.sobjects = sobjects
+        sf_acc.save()
+
+        self.assertEqual(
+            self.salesforce_account.validation_sync_opts,
+            list(
+                map(
+                    lambda resource: f"VALIDATIONS.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        sobjects,
+                    ),
+                )
+            ),
+        )
+
+    def test_non_validation_sync_opts(self):
+        sf_acc = self.salesforce_account
+        try:
+            raise CannotRetreiveObjectType
+        except CannotRetreiveObjectType:
+            sobjects = {"Account": True, "Contact": True, "Lead": False, "Opportunity": True}
+            pass
+        sf_acc.sobjects = sobjects
+        sf_acc.save()
+
+        self.assertEqual(
+            self.salesforce_account.validation_sync_opts,
+            list(
+                map(
+                    lambda resource: f"VALIDATIONS.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        sobjects,
+                    ),
+                )
+            ),
+        )
 
     def test_generates_forms_with_public_fields(self):
         for form in slack_consts.INITIAL_FORMS:
