@@ -562,16 +562,16 @@ def process_create_or_search_selected(payload, context):
     previous_blocks = payload["message"]["blocks"]
     # check if the dropdown option has been added already
     select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
-    block_sets = []
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
+        previous_blocks.insert(5, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
             payload["message"]["ts"],
             access_token,
-            block_set=[*previous_blocks, *block_sets],
+            block_set=previous_blocks,
         )
     except InvalidBlocksException as e:
         return logger.exception(

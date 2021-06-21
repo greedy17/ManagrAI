@@ -37,11 +37,11 @@ def _initial_interaction_message(resource_name=None, resource_type=None):
     return f"We mapped it to {resource_type} *{resource_name}*"
 
 
-def _initial_meeting_step_one_message(resource_type=None):
+def _initial_meeting_step_one_message(initial_message, resource_type=None):
     if not resource_type:
-        return "1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
+        return f"{initial_message}\n 1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
 
-    return "1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
+    return f"{initial_message}\n 1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -353,15 +353,14 @@ def initial_meeting_interaction_block_set(context):
     )
     if not resource:
         title_section = _initial_interaction_message()
-        step_one = _initial_meeting_step_one_message()
+        step_one = _initial_meeting_step_one_message(title_section)
     else:
         name = resource.name
         title_section = _initial_interaction_message(name, workflow.resource_type)
-        step_one = _initial_meeting_step_one_message(workflow.resource_type)
+        step_one = _initial_meeting_step_one_message(title_section, workflow.resource_type)
     step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, :exclamation: \n etc are filled in or else SFDC may not save them as Contacts."
     blocks = [
         *default_blocks,
-        block_builders.simple_section(title_section, "mrkdwn",),
         block_builders.simple_section(step_one, "mrkdwn",),
         create_change_button,
         block_builders.simple_section(step_two_text, "mrkdwn",),
