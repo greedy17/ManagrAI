@@ -12,6 +12,8 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
+from background_task.models import CompletedTask, Task
+
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
@@ -465,6 +467,34 @@ class SFSyncOperation(TimeStampModel):
         """This method is used to remove operations (array) from the NEXT sync"""
         self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
         self.save()
+
+    def reconcile(self):
+        if len(self.operations) and (len(self.completed_operations) or len(self.failed_operations)):
+            completed_tasks = set(self.completed_operations)
+            all_tasks = set(self.operations)
+            if self.progress > 100:
+                tasks_diff = list(completed_tasks - all_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).first()
+                    if task and str(self.id) in task.task_params:
+                        self.operations.append(task_hash)
+
+                return self.save()
+
+                return
+            elif self.progress < 100:
+
+                tasks_diff = list(all_tasks - completed_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                    if task:
+                        self.completed_operations.append(task_hash)
+
+                return self.save()
+
+        return
 
     def save(self, *args, **kwargs):
         return super(SFSyncOperation, self).save(*args, **kwargs)

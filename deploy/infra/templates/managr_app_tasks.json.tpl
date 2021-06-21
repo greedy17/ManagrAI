@@ -1,15 +1,13 @@
 [
   {
-    "name": "managr-app",
-    "image": "${app_image}",
-    "cpu": ${fargate_cpu},
-    "memory": ${fargate_memory},
+    "name": "managr-app-scheduled-tasks",
+    "image": "${app_image_scheduled_tasks}",
     "networkMode": "awsvpc",
+    "command": ${command},
     "environment": [
-      { "name": "DD_SERVICE", "value": "managr-server" },
+      { "name": "DD_SERVICE", "value": "managr-server-scheduled-tasks" },
       { "name": "DD_ENV", "value": "fargate:${environment}" },
       { "name": "DD_PROFILING_ENABLED", "value": "true" },
-
 
       { "name": "ALLOWED_HOSTS", "value": "${allowed_hosts}" },
       { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
@@ -24,7 +22,6 @@
 
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
       { "name": "ENVIRONMENT", "value": "${environment}" },
-
       { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
       { "name": "USE_NYLAS", "value": "${use_nylas}" },
       { "name": "USE_TWILIO", "value": "${use_twilio}" },
@@ -55,10 +52,6 @@
         "valueFrom": "${config_secret_arn}:dbPass::"
       },
       {
-        "name": "DB_NAME",
-        "valueFrom": "${config_secret_arn}:dbName::"
-      },
-      {
         "name": "SUPERUSER_EMAIL",
         "valueFrom": "${config_secret_arn}:superuserEmail::"
       },
@@ -66,7 +59,10 @@
         "name": "SUPERUSER_PASSWORD",
         "valueFrom": "${config_secret_arn}:superuserPassword::"
       },
-
+      {
+        "name": "DB_NAME",
+        "valueFrom": "${config_secret_arn}:dbName::"
+      },
 
       {
         "name": "ROLLBAR_ACCESS_TOKEN",
@@ -162,13 +158,6 @@
         "name": "SLACK_APP_VERSION",
         "valueFrom": "${config_secret_arn}:slackAppVersion::"
       },
-      
-      {
-        "name": "SLACK_ERROR_WEBHOOK",
-        "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
-      },
-
-      
       {
         "name": "SALESFORCE_BASE_URL",
         "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"
@@ -201,88 +190,11 @@
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
-    },
-    "portMappings": [
-      {
-        "containerPort": 8000
-      }
-    ]
-  },
-  {
-    "name": "managr-app-proxy",
-    "image": "${nginx_image}",
-    "essential": true,
-    "dependsOn": [
-      {
-        "containerName": "managr-app",
-        "condition": "START"
-      },
-      {
-        "containerName": "nginx-config",
-        "condition": "COMPLETE"
-      }
-    ],
-    "portMappings": [
-      {
-        "containerPort": 80,
-        "hostPort": 80
-      },
-      {
-        "containerPort": 81
-      }
-    ],
-    "dockerLabels": {
-      "com.datadoghq.ad.instances": "[{\"nginx_status_url\": \"http://%%host%%:81/nginx_status/\"}]",
-      "com.datadoghq.ad.check_names": "[\"nginx\"]",
-      "com.datadoghq.ad.init_configs": "[{}]"
-    },
-    "environment": [
-      { "name": "DD_SERVICE", "value": "managr-app-proxy" },
-      { "name": "DD_ENV", "value": "fargate:${environment}" }
-    ],
-    "mountPoints": [
-      {
-        "containerPath": "/etc/nginx",
-        "sourceVolume": "nginx-conf-vol"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "${aws_logs_group}",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "ecs"
-      }
-    }
-  },
-  {
-    "name": "nginx-config",
-    "image": "${bash_image}",
-    "essential": false,
-    "command": ["-c", "echo $DATA | base64 -d - | tee /etc/nginx/nginx.conf"],
-    "environment": [
-      {
-        "name": "DATA",
-        "value": "${nginx_config}"
-      }
-    ],
-    "mountPoints": [
-      {
-        "containerPath": "/etc/nginx",
-        "sourceVolume": "nginx-conf-vol"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "${aws_logs_group}",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "ecs"
-      }
     }
   },
   {
     "name": "datadog-agent",
+    "essential": false,
     "image": "${datadog_image}",
     "secrets": [
       {

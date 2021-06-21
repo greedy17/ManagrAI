@@ -13,6 +13,21 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   }
 }
 
+# CloudWatch Events Role
+data "aws_iam_policy_document" "cloud_watch_events_role" {
+  version = "2012-10-17"
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
 resource "aws_iam_role" "ecs_task_role_ecs_exec" {
   name               = var.ecs_task_role_name
   assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
@@ -31,6 +46,32 @@ resource "aws_iam_role" "ecs_task_role_ecs_exec" {
             "ssmmessages:CreateDataChannel",
             "ssmmessages:OpenControlChannel",
             "ssmmessages:OpenDataChannel"
+          ],
+          "Resource" : "*"
+        }
+      ]
+    })
+  }
+}
+
+resource "aws_iam_role" "ecs_scheduled_tasks_cloud_watch" {
+  name               = "ScheduledTasksCloudWatchRole"
+  assume_role_policy = data.aws_iam_policy_document.cloud_watch_events_role.json
+
+  inline_policy {
+    name = "ecs_exec"
+
+    policy = jsonencode({
+
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ecs:RunTask",
+            "iam:ListInstanceProfiles",
+            "iam:ListRoles",
+            "iam:PassRole"
           ],
           "Resource" : "*"
         }
