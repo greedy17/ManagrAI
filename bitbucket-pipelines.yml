@@ -195,7 +195,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-sendtasklist-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
@@ -305,7 +305,7 @@ fargateDemoDeployment: &fargateDemoDeployment
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-sendtasklist-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
@@ -415,7 +415,7 @@ fargateProdDeployment: &fargateProdDeployment
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-sendtasklist-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - pipe: atlassian/aws-ecs-deploy:1.5.0
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
