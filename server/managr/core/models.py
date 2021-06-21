@@ -231,7 +231,7 @@ class User(AbstractUser, TimeStampModel):
 
     def remove_user(self, request):
         """
-        Revoke the user's Slack, Zoom, and Salesforce authentication tokens, then delete.
+        Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, then delete.
         """
 
         user = request.user
