@@ -55,6 +55,11 @@
         "valueFrom": "${config_secret_arn}:dbPass::"
       },
       {
+        "name": "dbSnapShot",
+        "valueFrom": "${config_secret_arn}:dbSnapShot::"
+      },
+     
+      {
         "name": "DB_NAME",
         "valueFrom": "${config_secret_arn}:dbName::"
       },
