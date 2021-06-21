@@ -169,7 +169,7 @@ variable "scheduled_tasks" {
     {
       name       = "runalerts"
       command    = "triggeralerts"
-      cron       = "cron(0 5 * * ? 1)"
+      cron       = "cron(0 5 * * ? *)"
       task_count = 1
     }
   ]
