@@ -470,7 +470,7 @@ class SalesforceAuthAccountAdapter:
         return self._handle_response(res)
 
     def execute_alert_query(self, url, resource):
-        """ Handles alert requests to salesforce """
+        """Handles alert requests to salesforce"""
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
 

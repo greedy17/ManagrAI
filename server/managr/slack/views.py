@@ -22,6 +22,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+
 from managr.slack import constants as slack_const
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
@@ -48,11 +54,6 @@ from .models import (
 )
 from .serializers import OrgCustomSlackFormSerializer
 
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-)
 
 from managr.salesforce.routes import routes as model_routes
 from managr.slack.helpers.exceptions import (
@@ -371,7 +372,7 @@ class SlackFormsViewSet(
 
         data = self.request.data
         fields = data.pop("fields", [])
-        data.pop("fields_ref", [])
+        fields_ref = data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data, instance=self.get_object())
 
@@ -379,8 +380,11 @@ class SlackFormsViewSet(
         serializer.save()
         instance = serializer.instance
         instance.fields.clear()
-        for i, field in enumerate(fields):
-            instance.fields.add(field, through_defaults={"order": i})
+        for i, field in enumerate(fields_ref):
+            instance.fields.add(
+                field["id"],
+                through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
+            )
         instance.save()
 
         return Response(serializer.data)

@@ -1,0 +1,60 @@
+{
+    "Comment": "A simplified version for initiating cron jobs",
+    "StartAt": "Determine Function",
+    "States": {
+        "Determine Function": {
+            "Comment": "Receives a function to call",
+            "Type": "Pass",
+            "Next": "Decide Choice"
+        },
+        "Decide Choice":{
+            "Type":"Choice",
+            "Choices": [
+                {
+                    "Variable": "$.operation",
+                    "StringEquals": "CLEAR-STALE-DATA",
+                    "Next": "Call Clear Stale Data Lambda FN"
+                  },
+                {
+                    "Variable": "$.operation",
+                    "StringEquals": "SYNC-RESOURCE-DATA",
+                    "Next": "Call Sync Resources Lambda FN"
+                  },
+                {
+                    "Variable": "$.operation",
+                    "StringEquals": "SYNC-FIELD-DATA",
+                    "Next": "Call Sync Fields Lambda FN"
+                  },
+                {
+                    "Variable": "$.operation",
+                    "StringEquals": "TRIGGER-ALERTS",
+                    "Next": "Call Trigger Alerts Data Lambda FN"
+                  }
+            ]
+        },
+        "Call Clear Stale Data Lambda FN": {
+            "Comment": "Task state the calls the lambda function that matches the choice",
+            "Type": "Task",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:clear-stale-data",
+            "End":true
+        },
+        "Call Sync Resources Lambda FN": {
+            "Comment": "Task state the calls the lambda function that matches the choice",
+            "Type": "Task",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:init-resource-sync",
+            "End":true
+        },
+        "Call Sync Fields Lambda FN": {
+            "Comment": "Task state the calls the lambda function that matches the choice",
+            "Type": "Task",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:init-field-sync",
+            "End":true
+        },
+        "Call Trigger Alerts Data Lambda FN": {
+            "Comment": "Task state the calls the lambda function that matches the choice",
+            "Type": "Task",
+            "Resource":"arn:aws:lambda:us-east-1:986523545926:function:trigger-alerts",
+            "End":true
+        }
+    }
+}

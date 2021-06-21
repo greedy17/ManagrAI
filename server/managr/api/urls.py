@@ -9,6 +9,7 @@ from managr.slack import views as slack_views
 from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
 from managr.alerts import views as alert_views
+from managr.autonomous import views as auto_views
 
 # from . import views
 
@@ -76,7 +77,10 @@ urlpatterns = [
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
-    path("zoom/score-meetings", zoom_views.score_meetings, name="score-meetings",),
+    path("auto/clear-stale-data", auto_views.init_clear_stale_data, name="clear-stale-data",),
+    path("auto/sync-resources", auto_views.init_resource_sync, name="resource-sync",),
+    path("auto/sync-fields", auto_views.init_object_field_sync, name="object-field-sync",),
+    path("auto/trigger-alerts", auto_views.init_trigger_alerts, name="trigger-alerts",),
 ]
 
 

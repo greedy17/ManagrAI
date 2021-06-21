@@ -23,7 +23,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 class TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, *args, **kwargs):
-        self.timeout = 20
+        self.timeout = 10
         if "timeout" in kwargs:
             # if the user has specified a timeout override default
             timeout = kwargs.get("timeout", None)

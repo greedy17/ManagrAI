@@ -254,7 +254,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                 if self.resource_id:
                     if not self.resource_object:
                         return logger.exception(
-                            f"Failed to find the resource with id {self.template.resource_id} of model {self.resource_type}, to generate form for user"
+                            f"Failed to find the resource with id {self.resource_id} of model {self.resource_type}, to generate form for the user, the resource was most likely removed"
                         )
                     form_values = self.resource_object.secondary_data
                 else:
@@ -326,3 +326,4 @@ class FormField(TimeStampModel):
     )
     form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)
+    include_in_recap = models.BooleanField(default=True)

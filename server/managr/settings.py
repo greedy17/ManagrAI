@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "managr.zoom",
     "managr.salesforce",
     "managr.alerts",
+    "managr.autonomous",
     # "managr.demo",
     # Django
     "django.contrib.admin",
