@@ -229,6 +229,44 @@ class User(AbstractUser, TimeStampModel):
         response_data["token"] = auth_token.key
         return response_data
 
+    def remove_user(self, request):
+        """
+        Revoke the user's Slack, Zoom, and Salesforce authentication tokens, then delete.
+        """
+
+        user = request.user
+        organization = request.user.organization
+        if user.is_admin and hasattr(organization, "slack_integration"):
+            slack_int = organization.slack_integration
+            r = slack_requests.revoke_access_token(slack_int.access_token)
+            slack_int.delete()
+        else:
+            if hasattr(user, "slack_integration"):
+                user.slack_integration.delete()
+
+        if hasattr(user, "salesforce_account"):
+            sf_acc = user.salesforce_account
+            sf_acc.revoke()
+
+        if hasattr(request.user, "zoom_account"):
+            zoom = request.user.zoom_account
+            try:
+                zoom.helper_class.revoke()
+            except Exception:
+                # revoke token will fail if ether token is expired
+                pass
+            if zoom.refresh_token_task:
+                task = Task.objects.filter(id=zoom.refresh_token_task).first()
+                if task:
+                    task.delete()
+            zoom.delete()
+
+        if hasattr(request.user, "nylas"):
+            nylas = request.user.nylas
+            nylas.revoke()
+
+        self.delete()
+
     @property
     def has_zoom_integration(self):
         # when a user integrates we set the info once
