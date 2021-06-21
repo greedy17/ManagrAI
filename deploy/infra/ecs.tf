@@ -151,7 +151,7 @@ resource "aws_ecs_task_definition" "app" {
 
 resource "aws_ecs_task_definition" "app_scheduled_tasks" {
   for_each                 = { for st in local.scheduled_tasks : "${st.env.name}.${st.task.name}" => st }
-  family                   = "managr-app-scheduled-tasks-${lower(each.value.task.name)}"
+  family                   = "managr-app-scheduled-tasks-${lower(each.value.task.name)}-${lower(each.value.env.name)}"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
