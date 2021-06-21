@@ -84,8 +84,8 @@ def alert_instance_block_set(context):
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     user = instance.user
     blocks = [
-        block_builders.simple_section(instance.render_text(), "mrkdwn"),
         block_builders.divider_block(),
+        block_builders.simple_section(instance.render_text(), "mrkdwn"),
     ]
     if user.id == instance.resource.owner.id:
         blocks.append(
@@ -167,6 +167,7 @@ def update_modal_block_set(context, *args, **kwargs):
                     "form",
                     f"Please add fields to your {context.get('resource')} update form",
                     url=f"{get_site_url()}/forms",
+                    block_id=slack_const.NO_FORM_FIELDS,
                 )
             ]
     return blocks

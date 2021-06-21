@@ -501,6 +501,8 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
         return logger.exception("User does not have a salesforce account cannot push to sf")
 
     attempts = 1
+    if not len(args):
+        return
     contact_forms = workflow.forms.filter(id__in=args[0])
     for form in contact_forms:
         # if the resource is an account we set it to that account

@@ -250,4 +250,5 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
         ],
     },
 }
+NO_FORM_FIELDS = "NO_FORM_FIELDS"
 
