@@ -167,6 +167,7 @@ def update_modal_block_set(context, *args, **kwargs):
                     "form",
                     f"Please add fields to your {context.get('resource')} update form",
                     url=f"{get_site_url()}/forms",
+                    block_id=slack_const.NO_FORM_FIELDS,
                 )
             ]
     return blocks
