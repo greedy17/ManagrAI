@@ -29,6 +29,7 @@ export class SObjectField extends Model {
   static referenceDisplayLabel = new fields.CharField({ readOnly: true })
   static filterable = new fields.CharField({ readOnly: true })
   static order = new fields.IntegerField()
+  static includeInRecap = new fields.Field()
 
   static fromAPI(json = {}) {
     return new SObjectField(objectToCamelCase(json))

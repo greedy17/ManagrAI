@@ -13,7 +13,7 @@ resource "aws_db_instance" "managrdb" {
   allocated_storage          = 20
   engine                     = "postgres"
   engine_version             = "12.5"
-  instance_class             = "db.t2.micro"
+  instance_class             = "db.t2.medium"
   name                       = each.value.rds_db_name
   username                   = each.value.rds_username
   password                   = each.value.rds_password
@@ -24,7 +24,10 @@ resource "aws_db_instance" "managrdb" {
   vpc_security_group_ids     = [aws_security_group.managr_db.id]
   publicly_accessible        = false
   auto_minor_version_upgrade = true
-  snapshot_identifier        = var.db_snapshot_id
+  snapshot_identifier        = each.value.rds_db_snapshot_id
+  lifecycle {
+    ignore_changes = [snapshot_identifier]
+  }
 
   tags = {
     "app" = "managr"

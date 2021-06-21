@@ -562,16 +562,16 @@ def process_create_or_search_selected(payload, context):
     previous_blocks = payload["message"]["blocks"]
     # check if the dropdown option has been added already
     select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
-    block_sets = []
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
+        previous_blocks.insert(5, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
             payload["message"]["ts"],
             access_token,
-            block_set=[*previous_blocks, *block_sets],
+            block_set=previous_blocks,
         )
     except InvalidBlocksException as e:
         return logger.exception(
@@ -649,7 +649,7 @@ def process_show_update_resource_form(payload, context):
     prev_form = pm.get("f", None)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-
+    show_submit_button_if_fields_added = False
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -665,6 +665,8 @@ def process_show_update_resource_form(payload, context):
             context.update({"f": str(slack_form.id)})
     else:
         slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
+        slack_form = None
+
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -687,6 +689,19 @@ def process_show_update_resource_form(payload, context):
             }
             blocks = [*blocks[:index], block, *blocks[index + 1 :]]
 
+        try:
+            index, block = block_finder(slack_const.NO_FORM_FIELDS, blocks)
+        except ValueError:
+            # did not find the block
+            show_submit_button_if_fields_added = True
+            pass
+
+    else:
+        blocks.append(
+            block_builders.simple_section("Please re-select your salesforce resource to update")
+        )
+        show_submit_button_if_fields_added = False
+
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
     }
@@ -699,11 +714,14 @@ def process_show_update_resource_form(payload, context):
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
             "title": {"type": "plain_text", "text": f"Update {resource_type}"},
             "blocks": blocks,
-            "submit": {"type": "plain_text", "text": "Update", "emoji": True},
+            # "submit": {"type": "plain_text", "text": "Update", "emoji": True} ,
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
         },
     }
+    if show_submit_button_if_fields_added:
+        data["view"]["submit"] = {"type": "plain_text", "text": "Update", "emoji": True}
+
     if is_update:
         data["view_id"] = is_update.get("id")
 

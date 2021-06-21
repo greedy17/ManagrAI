@@ -77,6 +77,7 @@ variable "environments" {
     rds_username       = string
     rds_password       = string
     rds_db_name        = string
+    rds_db_snapshot_id = string
     secret_key         = string
     staff_email        = string
     superuser_email    = string
@@ -161,15 +162,15 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "sendtasklist"
-      command    = "sendslacktasks"
+      name       = "clearstaledata"
+      command    = "clearstaledata 1440"
       cron       = "cron(0 7 * * ? *)"
       task_count = 1
     },
     {
       name       = "runalerts"
-      command    = "pull_usage_statistics"
-      cron       = "cron(0 7 * * ? 1)"
+      command    = "triggeralerts"
+      cron       = "cron(0 5 * * ? *)"
       task_count = 1
     }
   ]

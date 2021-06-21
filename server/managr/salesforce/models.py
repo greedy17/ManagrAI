@@ -12,6 +12,8 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
+from background_task.models import CompletedTask, Task
+
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
@@ -29,10 +31,20 @@ from .adapter.exceptions import (
     InvalidFieldError,
     UnhandledSalesforceError,
     InvalidRefreshToken,
+    CannotRetreiveObjectType,
 )
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
+
+
+def getSobjectDefaults():
+    return {
+        sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+        sf_consts.RESOURCE_SYNC_CONTACT: True,
+        sf_consts.RESOURCE_SYNC_LEAD: True,
+        sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+    }
 
 
 class ArrayLength(models.Func):
@@ -456,6 +468,34 @@ class SFSyncOperation(TimeStampModel):
         self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
         self.save()
 
+    def reconcile(self):
+        if len(self.operations) and (len(self.completed_operations) or len(self.failed_operations)):
+            completed_tasks = set(self.completed_operations)
+            all_tasks = set(self.operations)
+            if self.progress > 100:
+                tasks_diff = list(completed_tasks - all_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).first()
+                    if task and str(self.id) in task.task_params:
+                        self.operations.append(task_hash)
+
+                return self.save()
+
+                return
+            elif self.progress < 100:
+
+                tasks_diff = list(all_tasks - completed_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                    if task:
+                        self.completed_operations.append(task_hash)
+
+                return self.save()
+
+        return
+
     def save(self, *args, **kwargs):
         return super(SFSyncOperation, self).save(*args, **kwargs)
 
@@ -484,6 +524,9 @@ class SFResourceSync(SFSyncOperation):
                             return logger.exception(
                                 f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
                             )
+                except CannotRetreiveObjectType:
+                    sf_account.sobjects[key] = False
+                    sf_account.save()
             max_count = 300
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
@@ -712,7 +755,6 @@ class SalesforceAuthAccount(TimeStampModel):
     scope = models.CharField(max_length=255, blank=True)
     id_token = models.TextField(blank=True)
     instance_url = models.CharField(max_length=255, blank=True)
-    # TODO: need to split the value here as it returns a link
     salesforce_id = models.CharField(max_length=255, blank=True)
     salesforce_account = models.CharField(max_length=255, blank=True)
     login_link = models.CharField(max_length=255, blank=True)
@@ -721,8 +763,9 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
+    # default for json field must be a callable
     sobjects = JSONField(
-        default=dict, null=True, help_text="All resources we are retrieving", max_length=500,
+        default=getSobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,
@@ -771,6 +814,61 @@ class SalesforceAuthAccount(TimeStampModel):
             ),
         )
         return SalesforceAuthAccountAdapter(**data)
+
+    @property
+    def resource_sync_opts(self):
+        return list(
+            filter(
+                lambda resource: f"{resource}"
+                if self.sobjects.get(resource, None) not in ["", None, False]
+                else False,
+                self.sobjects,
+            )
+        )
+
+    @property
+    def field_sync_opts(self):
+        return list(
+            map(
+                lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
+                filter(
+                    lambda resource: resource
+                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    else False,
+                    self.sobjects,
+                ),
+            )
+        )
+
+    @property
+    def picklist_sync_opts(self):
+        return list(
+            map(
+                lambda resource: f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{resource}",
+                filter(
+                    lambda resource: resource
+                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    else False,
+                    self.sobjects,
+                ),
+            )
+        )
+
+    @property
+    def validation_sync_opts(self):
+        if self.user.is_admin:
+            return list(
+                map(
+                    lambda resource: f"{sf_consts.SALESFORCE_VALIDATIONS}.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if self.sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        self.sobjects,
+                    ),
+                )
+            )
+        return []
 
     def regenerate_token(self):
         data = self.__dict__
