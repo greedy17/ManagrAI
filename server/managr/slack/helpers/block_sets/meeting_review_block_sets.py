@@ -469,7 +469,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     """This interaction updates the message to show a drop down of resources"""
     blocks = [
         block_builders.static_select(
-            ":information_source: Select a resource to attach to the meeting",
+            ":information_source: Select a SF object to attach to the meeting",
             [
                 *map(
                     lambda resource: block_builders.option(resource, resource),
