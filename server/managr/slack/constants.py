@@ -196,5 +196,59 @@ FORM_RESOURCE_LIST = [
     FORM_RESOURCE_CONTACT,
     FORM_RESOURCE_LEAD,
 ]
+DEFAULT_PUBLIC_FORM_FIELDS = {
+    FORM_RESOURCE_ACCOUNT: {
+        FORM_TYPE_CREATE: [
+            # "fae88a10-53cc-470e-86ec-32376c041893",
+            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+        FORM_TYPE_MEETING_REVIEW: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "6407b7a1-a877-44e2-979d-1effafec5035",
+            "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
+        ],
+        FORM_TYPE_UPDATE: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+    },
+    FORM_RESOURCE_CONTACT: {
+        FORM_TYPE_CREATE: [
+            # "fae88a10-53cc-470e-86ec-32376c041893",
+            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+        FORM_TYPE_UPDATE: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+    },
+    FORM_RESOURCE_LEAD: {
+        FORM_TYPE_CREATE: [
+            # "fae88a10-53cc-470e-86ec-32376c041893",
+            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+        FORM_TYPE_UPDATE: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+    },
+    FORM_RESOURCE_OPPORTUNITY: {
+        FORM_TYPE_CREATE: [
+            # "fae88a10-53cc-470e-86ec-32376c041893",
+            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+        FORM_TYPE_MEETING_REVIEW: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "6407b7a1-a877-44e2-979d-1effafec5035",
+            "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
+        ],
+        FORM_TYPE_UPDATE: [
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+        ],
+    },
+}
 NO_FORM_FIELDS = "NO_FORM_FIELDS"
 
