@@ -927,9 +927,13 @@ def _send_recap(form_ids):
         )
         query = Q()
         if send_summ_to_leadership:
-            query |= Q(user_level="MANAGER")
+            manager_list = send_summ_to_leadership.split(",")
+            manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
+            query |= Q(user_level="MANAGER", id__in=manager_filter)
         if send_summ_to_owner:
-            query |= Q(id=user.id)
+            rep_list = send_summ_to_owner.split(",")
+            rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
+            query |= Q(id=user.id, id__in=rep_filter)
 
         user_list = (
             user.organization.users.filter(query)
