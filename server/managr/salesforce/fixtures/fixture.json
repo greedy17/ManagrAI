@@ -53,6 +53,11 @@
     "pk": "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
     "fields": {
       "api_name": "__send_recap_to_leadership",
+      "type": "Reference",
+      "allow_multiple": true,
+      "default_filters": [
+        "user_level=MANAGER"
+      ],
       "custom": true,
       "createable": true,
       "updateable": true,
@@ -61,7 +66,7 @@
       "data_type": "Boolean",
       "display_value": "",
       "value": null,
-      "label": "Send Recap to Leadership",
+      "label": "Select Leadership users to send recap to",
       "length": 255,
       "reference": false,
       "reference_to_infos": [],
@@ -76,7 +81,12 @@
     "model": "salesforce.SObjectField",
     "pk": "fae88a10-53cc-470e-86ec-32376c041893",
     "fields": {
-      "api_name": "__send_recap_to_owner",
+      "api_name": "__send_recap_to_reps",
+      "type": "Reference",
+      "allow_multiple": true,
+      "default_filters": [
+        "user_role=REP"
+      ],
       "custom": true,
       "createable": true,
       "updateable": true,
@@ -85,7 +95,7 @@
       "data_type": "Boolean",
       "display_value": "",
       "value": null,
-      "label": "Send Recap to Owner",
+      "label": "Select Reps to send recap to",
       "length": 255,
       "reference": false,
       "reference_to_infos": [],
