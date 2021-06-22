@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 import pytz
 import uuid
 import random
@@ -206,6 +207,13 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
             )
+            participants.append(
+                {
+                    "name": "another1 baker",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@resource.calendar.google.com",
+                }
+            )
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -218,11 +226,17 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             """Parse domain out of an email"""
             return email[email.index("@") + 1 :]
 
+        org_email_domain = get_domain(user.email)
+        remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+            org_email_domain
+        )
         participants = [
             p
             for p in [*participants, *calendar_participants]
             if p.get("user_email", "") not in ["", user.email]
-            and get_domain(p.get("user_email", "")) != get_domain(user.email)
+            and not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+            # and get_domain(p.get("user_email", ""))
+            # not in ["resource.calendar.google.com", get_domain(user.email)]
         ]
 
         contact_forms = []
