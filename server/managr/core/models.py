@@ -234,8 +234,8 @@ class User(AbstractUser, TimeStampModel):
         Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, then delete.
         """
 
-        user = request.user
-        organization = request.user.organization
+        user = self
+        organization = user.organization
         if user.is_admin and hasattr(organization, "slack_integration"):
             slack_int = organization.slack_integration
             r = slack_requests.revoke_access_token(slack_int.access_token)
@@ -248,8 +248,8 @@ class User(AbstractUser, TimeStampModel):
             sf_acc = user.salesforce_account
             sf_acc.revoke()
 
-        if hasattr(request.user, "zoom_account"):
-            zoom = request.user.zoom_account
+        if hasattr(user, "zoom_account"):
+            zoom = user.zoom_account
             try:
                 zoom.helper_class.revoke()
             except Exception:
@@ -261,8 +261,8 @@ class User(AbstractUser, TimeStampModel):
                     task.delete()
             zoom.delete()
 
-        if hasattr(request.user, "nylas"):
-            nylas = request.user.nylas
+        if hasattr(user, "nylas"):
+            nylas = user.nylas
             nylas.revoke()
 
         self.delete()
