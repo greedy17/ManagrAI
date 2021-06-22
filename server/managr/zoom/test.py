@@ -147,7 +147,7 @@ class Meeting(TestCase):
 
         self.assertEquals(len(participants), 0)
 
-    def test_random_participants_joined_should_remove_self_and_nylas(self):
+    def test_random_participants_joined_should_remove_self_include_nylas(self):
         participants = []
         zoom_participants = [
             *self.fake_meeting_participants_w_self,
@@ -185,6 +185,39 @@ class Meeting(TestCase):
         self.assertEquals(
             len(participants),
             (len(self.fake_meeting_participants_w_random) + len(nylas_participants)),
+        )
+
+    def test_random_participants_joined_should_remove_self_and_nylas(self):
+        participants = []
+        zoom_participants = [
+            *self.fake_meeting_participants_w_self,
+            *self.fake_meeting_participants_w_random,
+        ]
+        nylas_participants = [*self.fake_meeting_participants_w_resource_booking]
+
+        memo = {}
+        for p in zoom_participants:
+            if (
+                p.get("user_email", "") not in ["", self.admin_user.email]
+                and get_domain(p.get("user_email", "")) != get_domain(self.admin_user.email)
+                and p.get("user_email", "") not in ["", None, *memo.keys()]
+            ):
+                memo[p.get("user_email")] = len(participants)
+                participants.append(p)
+        if len(participants):
+            for p in nylas_participants:
+                if p.get("user_email", "") not in ["", self.admin_user.email] and get_domain(
+                    p.get("user_email", "")
+                ) != get_domain(self.admin_user.email):
+                    if p.get("user_email", "") in memo.keys():
+                        index = memo[p.get("user_email")]
+                        participants[index]["name"] = p.get("name", "")
+                    else:
+                        memo[p.get("user_email")] = len(participants)
+                        participants.append(p)
+
+        self.assertEquals(
+            len(participants), len(self.fake_meeting_participants_w_random),
         )
 
     def test_random_participants_joined_should_remove_duplicates(self):
