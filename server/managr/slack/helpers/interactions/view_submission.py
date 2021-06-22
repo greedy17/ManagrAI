@@ -240,13 +240,12 @@ def process_submit_resource_data(payload, context):
     # get context
     has_error = False
     state = payload["view"]["state"]["values"]
-
+    print(payload)
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     external_id = payload.get("view", {}).get("external_id", None)
-
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
@@ -263,7 +262,6 @@ def process_submit_resource_data(payload, context):
         main_form.save_form(state)
 
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = {
