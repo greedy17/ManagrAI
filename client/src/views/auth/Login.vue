@@ -1,13 +1,18 @@
 <template>
   <div class="login-page">
     <div class="login-page__form">
-      <h2>Login</h2>
-      <div class="login-page__form__fields">
+      <div class="column">
+        <img src="@/assets/images/logo.png" alt="logo" />
+        <h2>Log in to Managr</h2>
+        <p class="enter-email">Please enter your email to log into Managr</p>
+      </div>
+      <div class="">
+        <label for="email">Enter your Email</label>
         <FormField
           @input="execCheckEmail"
           :disabled="showPassword"
           v-model="loginForm.field.email.value"
-          placeholder="email"
+          placeholder=""
           :errors="loginForm.field.email.errors"
           name="email"
           id="email"
@@ -31,17 +36,19 @@
         v-if="showPassword"
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
-        class="primary-button"
-        text="Log In"
+        class="login-button"
+        text="Continue"
         :loading="loggingIn"
       />
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Register' }"> No account? Sign Up </router-link>
+      <div class="row">
+        <p class="pad-right">New to Managr?</p>
+        <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password? </router-link>
+      <div class="row">
+        <p class="pad-right">Forgot password?</p>
+        <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
       </div>
-      <div style="margin-top: 1rem">
+      <div class="links">
         <p>
           <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
           |
@@ -150,9 +157,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 h2 {
-  @include base-font-styles();
   font-weight: bold;
-  color: $main-font-gray;
   text-align: center;
 }
 .login-page {
@@ -163,18 +168,11 @@ h2 {
   }
 }
 .login-page__form {
-  @include standard-border();
-  position: relative;
-  left: 35%;
-  padding: 1rem 2rem;
-  margin-top: 3.125rem;
-  width: 31.25rem;
-  min-height: 15rem;
-  height: auto;
-  background-color: $white;
+  background-color: transparent;
   display: flex;
   flex-flow: column;
   align-items: center;
+  justify-content: center;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     width: 100%;
@@ -205,7 +203,37 @@ button {
   width: 9.375rem;
 }
 
+a {
+  text-decoration: none;
+}
+
 .hidden {
   display: none;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: -20px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.enter-email {
+  padding-bottom: 80px;
+  margin-top: 0;
+  color: grey;
+}
+img {
+  height: 80px;
+}
+.pad-right {
+  padding-right: 0.3em;
+}
+.links {
+  font-size: 13px;
 }
 </style>
