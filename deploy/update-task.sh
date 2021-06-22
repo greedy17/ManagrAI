@@ -36,7 +36,7 @@ elif [ -n "$SCHEDULED_TASK_FAMILY" ]; then
     TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$SCHEDULED_TASK_FAMILY")
     echo $TASK_DEFINITION | jq --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)' >task-definition.json
     aws ecs register-task-definition --family "$SCHEDULED_TASK_FAMILY" --cli-input-json file://task-definition.json
-    TASK_REVISION=$(aws ecs describe-task-definition --task-definition "$SCHEDULED_TASK_FAMILY" | egrep "revision" | tr "/" " " | awk '{print $2}' | sed 's/"$//')
+    TASK_REVISION=$(aws ecs describe-task-definition --task-definition "$SCHEDULED_TASK_FAMILY" | jq '.taskDefinition.revision')
     EVENTS_RULE=$(aws events list-targets-by-rule --rule "$SCHEDULED_TASK_FAMILY")
     TASK_DEFINITION_ARN=$(aws events list-targets-by-rule --rule "$SCHEDULED_TASK_FAMILY" | egrep "TaskDefinitionArn" | tr "/" " " | awk '{print $2}')
     EVENTS_ROLE=$(aws events list-targets-by-rule --rule "$SCHEDULED_TASK_FAMILY" | egrep "RoleArn" | tr "/" " " | awk '{print $2}')
