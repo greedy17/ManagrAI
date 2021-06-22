@@ -170,7 +170,7 @@ resource "aws_ecs_task_definition" "app_scheduled_tasks" {
 
 resource "aws_cloudwatch_event_rule" "scheduled_task" {
   for_each            = { for st in local.scheduled_tasks : "${st.env.name}.${st.task.name}" => st }
-  name                = "managr-app-scheduled-tasks-${lower(each.value.task.name)}-${lower(each.value.env.name)}-"
+  name                = "managr-app-scheduled-tasks-${lower(each.value.task.name)}-${lower(each.value.env.name)}"
   schedule_expression = each.value.task.cron
 }
 
