@@ -416,10 +416,11 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            _save_meeting_review.now(str(workflow.id))
+            emit_send_meeting_summary(str(workflow.id))
+            raise e
 
-    # create a summary
-
-    # emit summary
     _save_meeting_review.now(str(workflow.id))
     emit_send_meeting_summary(str(workflow.id))
     # push to sf
