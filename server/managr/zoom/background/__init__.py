@@ -186,10 +186,22 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # Gather unique emails from the Zoom Meeting participants
         participants = []
         user = zoom_account.user
-        for participant in zoom_participants:
-            if participant not in participants and participant.get("user_email") != user.email:
-                participants.append(participant)
-            ### ADDING RANDOM USER FOR TESTING PURPOSES ONLY ###
+
+        def get_domain(email):
+            """Parse domain out of an email"""
+            return email[email.index("@") + 1 :]
+
+        memo = {}
+        for p in zoom_participants:
+            if (
+                p.get("user_email", "") not in ["", user.email]
+                and get_domain(p.get("user_email", "")) != get_domain(user.email)
+                and p.get("user_email", "") not in ["", None, *memo.keys()]
+            ):
+                memo[p.get("user_email")] = len(participants)
+                participants.append(p)
+        if not len(participants):
+            return
 
         if settings.IN_DEV or settings.IN_STAGING:
             participants.append(
@@ -206,6 +218,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
             )
+
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -214,16 +227,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # emails with domains that match the owner, which are teammates of the owner.
         logger.info(f"    Got list of participants: {participants}")
 
-        def get_domain(email):
-            """Parse domain out of an email"""
-            return email[email.index("@") + 1 :]
-
-        participants = [
-            p
-            for p in [*participants, *calendar_participants]
-            if p.get("user_email", "") not in ["", user.email]
-            and get_domain(p.get("user_email", "")) != get_domain(user.email)
-        ]
+        for p in calendar_participants:
+            if p.get("user_email", "") not in ["", user.email] and get_domain(
+                p.get("user_email", "")
+            ) != get_domain(user.email):
+                if p.get("user_email", "") in memo.keys():
+                    index = memo[p.get("user_email")]
+                    participants[index]["name"] = p.get("name", "")
+                else:
+                    memo[p.get("user_email")] = len(participants)
+                    participants.append(p)
 
         contact_forms = []
         if len(participants):
