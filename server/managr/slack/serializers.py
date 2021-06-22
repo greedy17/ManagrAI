@@ -14,13 +14,7 @@ class CustomFormFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormField
-        fields = (
-            "datetime_created",
-            "order",
-            "field",
-            "form",
-            "field_ref",
-        )
+        fields = ("datetime_created", "order", "field", "form", "field_ref", "include_in_recap")
 
 
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
