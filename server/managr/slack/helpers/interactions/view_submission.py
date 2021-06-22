@@ -246,6 +246,7 @@ def process_submit_resource_data(payload, context):
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     external_id = payload.get("view", {}).get("external_id", None)
+
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:

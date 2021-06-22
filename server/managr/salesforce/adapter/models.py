@@ -46,6 +46,8 @@ class SObjectFieldAdapter:
         self.salesforce_account = data.get("salesforce_account", None)
         self.salesforce_object = data.get("salesforce_object", None)
         self.imported_by = data.get("imported_by", None)
+        self.allow_multiple = data.get("allow_multiple", None)
+        self.default_filters = data.get("default_filters", [])
 
     @staticmethod
     def from_api(data):

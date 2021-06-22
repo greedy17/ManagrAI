@@ -107,6 +107,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
     length = models.PositiveIntegerField(default=0)
     reference = models.BooleanField(default=False)
     relationship_name = models.CharField(max_length=255, null=True)
+    allow_multiple = models.BooleanField(default=False)
+    default_filters = ArrayField(default=list)
     reference_to_infos = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
