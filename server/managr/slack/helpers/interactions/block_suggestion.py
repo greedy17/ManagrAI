@@ -59,7 +59,7 @@ def process_get_user_opportunities(payload, context):
     }
 
 
-@processor(required_context=["u", "resource"])
+@processor(required_context=["u", "resource", "default_filters"])
 def process_get_local_resource_options(payload, context):
     """
     Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields
