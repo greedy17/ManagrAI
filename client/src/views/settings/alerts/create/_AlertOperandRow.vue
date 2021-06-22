@@ -170,7 +170,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        filters: { forAlerts: true, filterable: true },
+        filters: { forAlerts: true, filterable: true, page:1 },
       }),
 
       // used by dropdown as a ref field to retrieve obj of selected opt

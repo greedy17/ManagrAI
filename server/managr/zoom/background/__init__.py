@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 import pytz
 import uuid
 import random
@@ -132,6 +133,10 @@ def _refresh_zoom_token(zoom_account_id):
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
     logger.info("Retrieving past Zoom meeting details...")
 
+    def get_domain(email):
+        """Parse domain out of an email"""
+        return email[email.index("@") + 1 :]
+
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     user = zoom_account.user
@@ -187,37 +192,20 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         participants = []
         user = zoom_account.user
 
-        def get_domain(email):
-            """Parse domain out of an email"""
-            return email[email.index("@") + 1 :]
-
+        org_email_domain = get_domain(user.email)
+        remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+            org_email_domain
+        )
+        # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         memo = {}
         for p in zoom_participants:
-            if (
-                p.get("user_email", "") not in ["", user.email]
-                and get_domain(p.get("user_email", "")) != get_domain(user.email)
-                and p.get("user_email", "") not in ["", None, *memo.keys()]
+            if p.get("user_email", "") not in ["", None, *memo.keys()] and not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
             ):
                 memo[p.get("user_email")] = len(participants)
                 participants.append(p)
         if not len(participants):
             return
-
-        if settings.IN_DEV or settings.IN_STAGING:
-            participants.append(
-                {
-                    "name": "testertesty baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
-            participants.append(
-                {
-                    "name": "another1 baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
 
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
@@ -228,9 +216,9 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         logger.info(f"    Got list of participants: {participants}")
 
         for p in calendar_participants:
-            if p.get("user_email", "") not in ["", user.email] and get_domain(
-                p.get("user_email", "")
-            ) != get_domain(user.email):
+            if not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
+            ) and p.get("user_email", "") not in ["", None]:
                 if p.get("user_email", "") in memo.keys():
                     index = memo[p.get("user_email")]
                     participants[index]["name"] = p.get("name", "")

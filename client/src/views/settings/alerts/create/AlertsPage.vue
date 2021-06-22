@@ -351,6 +351,7 @@ export default {
         }
         if (this.selectedResourceType) {
           this.fields.filters.salesforceObject = this.selectedResourceType
+          this.fields.filters.page=1
           await this.fields.refresh()
         }
       },
