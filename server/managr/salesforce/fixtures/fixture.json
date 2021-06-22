@@ -53,7 +53,6 @@
     "pk": "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
     "fields": {
       "api_name": "__send_recap_to_leadership",
-      "type": "Reference",
       "allow_multiple": true,
       "default_filters": [
         "user_level=MANAGER"
@@ -63,7 +62,7 @@
       "updateable": true,
       "unique": false,
       "required": false,
-      "data_type": "Boolean",
+      "data_type": "Reference",
       "display_value": "",
       "value": null,
       "label": "Select Leadership users to send recap to",
@@ -82,7 +81,6 @@
     "pk": "fae88a10-53cc-470e-86ec-32376c041893",
     "fields": {
       "api_name": "__send_recap_to_reps",
-      "type": "Reference",
       "allow_multiple": true,
       "default_filters": [
         "user_role=REP"
@@ -92,7 +90,7 @@
       "updateable": true,
       "unique": false,
       "required": false,
-      "data_type": "Boolean",
+      "data_type": "Reference",
       "display_value": "",
       "value": null,
       "label": "Select Reps to send recap to",

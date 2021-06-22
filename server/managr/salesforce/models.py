@@ -236,6 +236,16 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 action_query = (
                     f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
                 )
+            elif self.is_public and self.allow_multiple:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&add_opts=[default_filters={','.join(self.default_filters)}]"
+                return block_builders.multi_external_select(
+                    f"*{self.reference_display_label}*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_option=initial_option,
+                )
 
             else:
                 user_id = str(self.salesforce_account.user.id)

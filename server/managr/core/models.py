@@ -12,6 +12,7 @@ from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
+from managr.slack.helpers import block_builders
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
@@ -186,6 +187,10 @@ class User(AbstractUser, TimeStampModel):
         """
 
         return gen_auth_url(email=self.email)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
