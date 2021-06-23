@@ -19,25 +19,23 @@
           large
         />
         <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
-
         <FormField
           v-on:keyup.enter.native="handleLoginAttempt"
           :errors="loginForm.field.password.errors"
           v-if="showPassword"
           v-model="loginForm.field.password.value"
           inputType="password"
-          placeholder="password"
+          placeholder="Password"
           name="password"
           id="password"
           large
         />
       </div>
       <PulseLoadingSpinnerButton
-        v-if="showPassword"
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
-        text="Continue"
+        text="Log in"
         :loading="loggingIn"
       />
       <div class="row">
@@ -198,15 +196,20 @@ input {
 
 button {
   @include primary-button();
-  margin-top: 1.25rem;
-  height: 1.875rem;
-  width: 9.375rem;
+  margin-bottom: 6px;
+  height: 2.75rem;
+  width: 18.75rem;
+  background-color: #199e54 !important;
+  color: white !important;
 }
 
 a {
   text-decoration: none;
 }
 
+label {
+  font-size: 15px;
+}
 .hidden {
   display: none;
 }
@@ -226,6 +229,7 @@ a {
   padding-bottom: 80px;
   margin-top: 0;
   color: grey;
+  font-size: 14px;
 }
 img {
   height: 80px;
@@ -235,5 +239,13 @@ img {
 }
 .links {
   font-size: 13px;
+}
+#email,
+#password {
+  width: 300px;
+  border: 1px solid $soft-gray;
+  border-radius: 3px;
+  margin-top: 5px;
+  background-color: #ffffff;
 }
 </style>
