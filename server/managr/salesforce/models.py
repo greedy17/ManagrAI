@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
+from django.db.models.constraints import UniqueConstraint
 
 from background_task.models import CompletedTask, Task
 
@@ -789,6 +790,7 @@ class SalesforceAuthAccount(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+        constraints = [UniqueConstraint(fields=["salesforce_id"], name="unique_salesforce_id")]
 
     def __str__(self):
         return f"SF-{self.user.email} {self.salesforce_id}"
