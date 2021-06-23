@@ -1,4 +1,7 @@
 import uuid
+import logging
+
+from urllib.error import HTTPError
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -14,7 +17,10 @@ from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
 
+
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
+
+logger = logging.getLogger("managr")
 
 
 class TimeStampModel(models.Model):
@@ -59,6 +65,8 @@ class UserQuerySet(models.QuerySet):
             if user.user_level == core_consts.ACCOUNT_TYPE_MANAGER:
                 return self.filter(organization=user.organization)
             if user.user_level == core_consts.ACCOUNT_TYPE_REP:
+                return self.filter(id=user.id)
+            elif user.user_level == core_consts.ACCOUNT_TYPE_REP:
                 return self.filter(id=user.id)
         else:
             return self.none()
@@ -186,6 +194,10 @@ class User(AbstractUser, TimeStampModel):
 
         return gen_auth_url(email=self.email)
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
     def regen_magic_token(self):
         """Generate a new magic token. Set expiration of magic token to 30 days"""
         self.magic_token = uuid.uuid4()
@@ -201,6 +213,52 @@ class User(AbstractUser, TimeStampModel):
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
+
+    def remove_user(self):
+        """
+        Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, then delete.
+        """
+        from managr.slack.helpers import requests as slack_requests
+
+        user = self
+        organization = user.organization
+        if user.is_admin and hasattr(organization, "slack_integration"):
+            slack_int = organization.slack_integration
+            r = slack_requests.revoke_access_token(slack_int.access_token)
+            slack_int.delete()
+
+        if hasattr(user, "slack_integration"):
+            user.slack_integration.delete()
+
+        if hasattr(user, "salesforce_account"):
+            sf_acc = user.salesforce_account
+            sf_acc.revoke()
+
+        if hasattr(user, "zoom_account"):
+            zoom = user.zoom_account
+            try:
+                zoom.helper_class.revoke()
+            except Exception:
+                # revoke token will fail if ether token is expired
+                pass
+            if zoom.refresh_token_task:
+                from background_task.models import Task
+
+                task = Task.objects.filter(id=zoom.refresh_token_task).first()
+                if task:
+                    task.delete()
+            zoom.delete()
+
+        if hasattr(user, "nylas"):
+            nylas = user.nylas
+            try:
+                nylas.revoke()
+            except Exception as e:
+                logger.info(
+                    "Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                )
+                pass
+        self.delete()
 
     @property
     def has_zoom_integration(self):

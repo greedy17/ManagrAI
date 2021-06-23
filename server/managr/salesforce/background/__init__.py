@@ -53,6 +53,7 @@ from ..adapter.exceptions import (
     SFQueryOffsetError,
     SFNotFoundError,
     UnableToUnlockRow,
+    CannotRetreiveObjectType,
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
@@ -163,26 +164,13 @@ def _generate_form_template(user_id):
             form_type=form_type, resource=resource, organization=org
         )
 
-        if (
-            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
-            and resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY
-        ):
-            fields = SObjectField.objects.filter(
-                is_public=True, id__in=sf_consts.MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS
-            )
-            for i, field in enumerate(fields):
-                f.fields.add(field, through_defaults={"order": i})
-            f.save()
-        elif (
-            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
-            and resource == sf_consts.RESOURCE_SYNC_ACCOUNT
-        ):
-            fields = SObjectField.objects.filter(
-                is_public=True, id__in=sf_consts.MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS
-            )
-            for i, field in enumerate(fields):
-                f.fields.add(field, through_defaults={"order": i})
-            f.save()
+        public_fields = SObjectField.objects.filter(
+            is_public=True,
+            id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
+        )
+        for i, field in enumerate(public_fields):
+            f.fields.add(field, through_defaults={"order": i})
+        f.save()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
@@ -273,6 +261,8 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except CannotRetreiveObjectType:
+            sf.sobjects[resource] = False
 
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
@@ -378,9 +368,11 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
 ## Meeting Review Workflow tasks
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
 @sf_api_exceptions_wf("update_object_from_review")
-def _process_update_resource_from_meeting(workflow_id, *args):
+def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -436,7 +428,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
-def _process_add_call_to_sf(workflow_id, *args):
+def _process_add_call_to_sf(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -503,7 +495,7 @@ def _process_add_call_to_sf(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
-def _process_create_new_contacts(workflow_id, *args):
+def _process_create_new_contacts(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -512,6 +504,8 @@ def _process_create_new_contacts(workflow_id, *args):
         return logger.exception("User does not have a salesforce account cannot push to sf")
 
     attempts = 1
+    if not len(args):
+        return
     contact_forms = workflow.forms.filter(id__in=args[0])
     for form in contact_forms:
         # if the resource is an account we set it to that account
@@ -548,7 +542,7 @@ def _process_create_new_contacts(workflow_id, *args):
             except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
-                        f"Failed to refresh user token for Salesforce operation add contact to sf failed"
+                        f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
                     )
 
                 else:
@@ -574,9 +568,7 @@ def _process_create_new_contacts(workflow_id, *args):
                 logger.info(f"Data from form {data}")
                 try:
 
-                    workflow.resource.add_contact_role(
-                        sf.access_token, sf.instance_url, res.get("id")
-                    )
+                    workflow.resource.add_contact_role(sf.access_token, sf.instance_url, res.id)
                     attempts = 1
                     break
                 except TokenExpired as e:
@@ -605,7 +597,7 @@ def _process_create_new_contacts(workflow_id, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("update_contacts_or_link_contacts")
-def _process_update_contacts(workflow_id, *args):
+def _process_update_contacts(workflow_id, priority=1, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -637,8 +629,8 @@ def _process_update_contacts(workflow_id, *args):
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+                        logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
                         )
 
                     else:
@@ -880,9 +872,9 @@ def _send_recap(form_ids):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = [*form_fields, *form.template.fields.all()]
+            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
-            form_fields = form.template.fields.all()
+            form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
     send_summ_to_owner = new_data.get("__send_recap_to_owner")
 
@@ -892,8 +884,13 @@ def _send_recap(form_ids):
 
     message_string_for_recap = ""
     for key, new_value in new_data.items():
-        field_label = form_fields.filter(api_name=key).first().reference_display_label
+        field = form_fields.filter(field__api_name=key).first()
+        if not field:
+            continue
+        field_label = field.field.reference_display_label
         if main_form.template.form_type == "UPDATE":
+            ## Only sends values for fields that have been updated
+            ## all fields on update form are included by default users cannot edit
 
             if old_data and key in old_data:
                 if str(old_data.get(key)) != str(new_value):
@@ -905,6 +902,9 @@ def _send_recap(form_ids):
         elif main_form.template.form_type == "CREATE":
             if new_value:
                 message_string_for_recap += f"*{field_label}:* {new_value}"
+    if not len(message_string_for_recap):
+        message_string_for_recap = "No Data to show from form"
+
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
@@ -916,10 +916,14 @@ def _send_recap(form_ids):
             ),
         )
         query = Q()
-        if send_summ_to_leadership:
-            query |= Q(user_level="MANAGER")
-        if send_summ_to_owner:
-            query |= Q(id=user.id)
+        if send_summ_to_leadership is not None:
+            manager_list = send_summ_to_leadership.split(",")
+            manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
+            query |= Q(user_level="MANAGER", id__in=manager_filter)
+        if send_summ_to_owner is not None:
+            rep_list = send_summ_to_owner.split(",")
+            rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
+            query |= Q(id=user.id, id__in=rep_filter)
 
         user_list = (
             user.organization.users.filter(query)

@@ -286,10 +286,10 @@ you can edit cron jobs by running
    1. ***Sensitive*** in **ecs.tf** add variable to **aws_secretsmanager_secret_version** this will add the variable to the secrets managr
    2. ***Insensitive*** in **ecs.tf** add variable to the **template_file** since it can be exposed 
 2. Add the variable in the **variables.tf** to **environments**
-3. Add the variable in the **managr_app.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
-4. add to **Dockerfile** for each environment 
+3. Add the variable in the **managr_app.json.tpl** and the **managr_app_tasks.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
+4. add to **Dockerfile** for each environment (if needed)
 5. add to **default.auto.tfvars** for deployment 
-6. Run `terrafor apply -auto-approve` to apply changes 
+6. Run `terraform apply -auto-approve -parallelism=1` to apply changes 
 
 ### SSH Into (New) Environments 
 
@@ -315,4 +315,7 @@ You can get the correct task_id by looking at the AWS Console under ECS tasks th
       exists = template.formfield_set.filter(field_id="fae88a10-53cc-470e-86ec-32376c041893").exists()
       if not exists:
         FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="fae88a10-53cc-470e-86ec-32376c041893"))
+      exists = template.formfield_set.filter(field_id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d").exists()
+      if not exists:
+        FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d"))
 

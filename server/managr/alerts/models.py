@@ -50,7 +50,7 @@ class AlertTemplate(TimeStampModel):
         return adapter_routes.get(self.resource_type, None)
 
     def url_str(self, user, config_id):
-        """ Generates Url Str for request when executing alert """
+        """Generates Url Str for request when executing alert"""
         user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
         operand_groups = [group.query_str(config_id) for group in self.groups.all()]
 
@@ -92,13 +92,13 @@ class AlertTemplate(TimeStampModel):
         c.delete()
 
     def config_user_group(self, config_id):
-        """ returns the users who will be receiving the messages based on the config """
+        """returns the users who will be receiving the messages based on the config"""
         config = self.configs.filter(id=config_id).first()
         if config:
             return config.recipient_users
 
     def config_run_against_date(self, config_id):
-        """ returns the date against which the query is executed """
+        """returns the date against which the query is executed"""
         config = self.configs.filter(id=config_id).first()
         if config:
             return config.run_against_date
@@ -133,7 +133,7 @@ class AlertGroup(TimeStampModel):
         ordering = ["group_order"]
 
     def query_str(self, config_id):
-        """ returns a grouped qs of operand rows (in ()) """
+        """returns a grouped qs of operand rows (in ())"""
         q_s = f"({' '.join([operand.query_str(config_id) for operand in self.operands.all()])})"
         if self.group_order != 0:
             q_s = f"{self.group_condition} {q_s}"
@@ -184,7 +184,7 @@ class AlertOperand(TimeStampModel):
         ordering = ["operand_order"]
 
     def query_str(self, config_id):
-        """ gathers different parts of operand and constructs query """
+        """gathers different parts of operand and constructs query"""
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
@@ -294,10 +294,10 @@ class AlertConfig(TimeStampModel):
 
     @property
     def run_against_date(self):
-        """ 
-            returns the date based on the selected config to run against 
-            normally this would be today's date but mike wants to allow 
-            users to manually run this alert for the date provided
+        """
+        returns the date based on the selected config to run against
+        normally this would be today's date but mike wants to allow
+        users to manually run this alert for the date provided
         """
         if self.recurrence_frequency == "WEEKLY":
             today_weekday = timezone.now().weekday()
@@ -321,11 +321,11 @@ class AlertConfig(TimeStampModel):
 
     def calculate_scheduled_time_for_alert(self, user):
         user_tz = user.timezone
-        today = timezone.now()
-        user_7_am = datetime.datetime(
-            today.year, today.month, today.day, 7, 0, tzinfo=(pytz.timezone(user_tz))
+        user_7am_naive = timezone.now().replace(
+            hour=7, minute=0, second=0, microsecond=0, tzinfo=None
         )
-        utc_time_from_user_7_am = user_7_am.astimezone(pytz.timezone("UTC"))
+        user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+        utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC"))
         return utc_time_from_user_7_am
 
 
@@ -381,7 +381,7 @@ class AlertInstance(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def render_text(self):
-        """ takes the message template body and renders """
+        """takes the message template body and renders"""
 
         body = self.template.message_template.body
 
@@ -395,7 +395,7 @@ class AlertInstance(TimeStampModel):
 
     @property
     def var_binding_map(self):
-        """ takes set of variable bindings and replaces them with the value """
+        """takes set of variable bindings and replaces them with the value"""
         binding_map = dict()
         for binding in self.template.message_template.bindings:
             ## collect all valid bindings

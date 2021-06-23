@@ -62,6 +62,12 @@ class UnableToUnlockRow(Exception):
         super().__init__(self.message)
 
 
+class CannotRetreiveObjectType(Exception):
+    def __init(self, message="A new error occured Invalid Type/Insufficient Access"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class UnhandledSalesforceError(Exception):
     def __init(self, message="A new error occured"):
         self.message = message
@@ -135,6 +141,14 @@ class CustomAPIException:
         elif self.status_code == 400 and self.param == "NOT_FOUND":
             raise UnhandledSalesforceError(
                 f"The selected object does not exist in salesforce {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "INVALID_TYPE":
+            raise CannotRetreiveObjectType(
+                f"User does not have access to this object type {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "INSUFFICIENT_ACCESS":
+            raise CannotRetreiveObjectType(
+                f"User does not have access to this object type {self.message}"
             )
         elif self.status_code == 400 and self.param == "UNABLE_TO_LOCK_ROW":
             raise UnableToUnlockRow(

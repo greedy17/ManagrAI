@@ -46,6 +46,8 @@ class SObjectFieldAdapter:
         self.salesforce_account = data.get("salesforce_account", None)
         self.salesforce_object = data.get("salesforce_object", None)
         self.imported_by = data.get("imported_by", None)
+        self.allow_multiple = data.get("allow_multiple", None)
+        self.default_filters = data.get("default_filters", [])
 
     @staticmethod
     def from_api(data):
@@ -281,6 +283,12 @@ class SalesforceAuthAccountAdapter:
             data["salesforce_account"] = None
 
         data["user"] = user_id
+        data["sobjects"] = {
+            sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+            sf_consts.RESOURCE_SYNC_CONTACT: True,
+            sf_consts.RESOURCE_SYNC_LEAD: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+        }
         return SalesforceAuthAccountAdapter(**data)
 
     @staticmethod
@@ -470,7 +478,7 @@ class SalesforceAuthAccountAdapter:
         return self._handle_response(res)
 
     def execute_alert_query(self, url, resource):
-        """ Handles alert requests to salesforce """
+        """Handles alert requests to salesforce"""
         res = client.get(url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),)
         res = self._handle_response(res)
 
