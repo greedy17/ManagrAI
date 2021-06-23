@@ -1,4 +1,7 @@
 import uuid
+import logging
+
+from urllib.error import HTTPError
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -13,7 +16,10 @@ from managr.utils.misc import datetime_appended_filepath
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 
+
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
+
+logger = logging.getLogger("managr")
 
 
 class TimeStampModel(models.Model):
@@ -30,9 +36,7 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255,
-        choices=org_consts.INTEGRATION_SOURCES,
-        blank=True,
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -128,34 +132,13 @@ class User(AbstractUser, TimeStampModel):
     ENABLEMENT = "ENABLEMENT"
     SDR = "SDR"
     ROLE_CHOICES = [
-        (
-            LEADERSHIP,
-            "Leadership",
-        ),
-        (
-            FRONTLINE_MANAGER,
-            "Frontline Manager",
-        ),
-        (
-            ACCOUNT_EXEC,
-            "Account Executive",
-        ),
-        (
-            ACCOUNT_MANAGER,
-            "Account Manager",
-        ),
-        (
-            OPERATIONS,
-            "OPERATIONS",
-        ),
-        (
-            ENABLEMENT,
-            "Enablement",
-        ),
-        (
-            SDR,
-            "SDR",
-        ),
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
+        (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -169,14 +152,9 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS,
-        max_length=255,
-        default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(
-        max_length=255,
-        blank=True,
-    )
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -231,10 +209,11 @@ class User(AbstractUser, TimeStampModel):
         response_data["token"] = auth_token.key
         return response_data
 
-    def remove_user(self, request):
+    def remove_user(self):
         """
         Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, then delete.
         """
+        from managr.slack.helpers import requests as slack_requests
 
         user = self
         organization = user.organization
@@ -242,9 +221,9 @@ class User(AbstractUser, TimeStampModel):
             slack_int = organization.slack_integration
             r = slack_requests.revoke_access_token(slack_int.access_token)
             slack_int.delete()
-        else:
-            if hasattr(user, "slack_integration"):
-                user.slack_integration.delete()
+
+        if hasattr(user, "slack_integration"):
+            user.slack_integration.delete()
 
         if hasattr(user, "salesforce_account"):
             sf_acc = user.salesforce_account
@@ -258,6 +237,8 @@ class User(AbstractUser, TimeStampModel):
                 # revoke token will fail if ether token is expired
                 pass
             if zoom.refresh_token_task:
+                from background_task.models import Task
+
                 task = Task.objects.filter(id=zoom.refresh_token_task).first()
                 if task:
                     task.delete()
@@ -265,8 +246,13 @@ class User(AbstractUser, TimeStampModel):
 
         if hasattr(user, "nylas"):
             nylas = user.nylas
-            nylas.revoke()
-
+            try:
+                nylas.revoke()
+            except Exception as e:
+                logger.info(
+                    "Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                )
+                pass
         self.delete()
 
     @property
