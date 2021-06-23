@@ -321,11 +321,11 @@ class AlertConfig(TimeStampModel):
 
     def calculate_scheduled_time_for_alert(self, user):
         user_tz = user.timezone
-        today = timezone.now()
-        user_7_am = datetime.datetime(
-            today.year, today.month, today.day, 7, 0, tzinfo=(pytz.timezone(user_tz))
+        user_7am_naive = timezone.now().replace(
+            hour=7, minute=0, second=0, microsecond=0, tzinfo=None
         )
-        utc_time_from_user_7_am = user_7_am.astimezone(pytz.timezone("UTC"))
+        user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+        utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC"))
         return utc_time_from_user_7_am
 
 
