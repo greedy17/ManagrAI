@@ -281,6 +281,12 @@ class SalesforceAuthAccountAdapter:
             data["salesforce_account"] = None
 
         data["user"] = user_id
+        data["sobjects"] = {
+            sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+            sf_consts.RESOURCE_SYNC_CONTACT: True,
+            sf_consts.RESOURCE_SYNC_LEAD: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+        }
         return SalesforceAuthAccountAdapter(**data)
 
     @staticmethod
