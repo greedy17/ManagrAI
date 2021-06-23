@@ -240,7 +240,6 @@ def process_submit_resource_data(payload, context):
     # get context
     has_error = False
     state = payload["view"]["state"]["values"]
-    print(payload)
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
@@ -431,8 +430,9 @@ def process_submit_resource_data(payload, context):
             text = f"Managr updated {main_form.resource_type}"
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
 
-        if all_form_data.get("__send_recap_to_leadership") or all_form_data.get(
-            "__send_recap_to_owner"
+        if (
+            all_form_data.get("__send_recap_to_leadership") is not None
+            or all_form_data.get("__send_recap_to_owner") is not None
         ):
             _send_recap(current_form_ids)
 

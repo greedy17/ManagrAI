@@ -69,7 +69,6 @@ def process_get_local_resource_options(payload, context):
     value = payload["value"]
     resource = context.get("resource")
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
-
     # conver type to make sure it follows {label:str|num, values:str|num}
 
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
