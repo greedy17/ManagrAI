@@ -2,6 +2,7 @@ import jwt
 import pytz
 import math
 import logging
+import json
 
 from functools import reduce
 
@@ -230,7 +231,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
             initial_option = block_builders.option(value, value) if value else None
-            if self.is_public and self.allow_multiple is False:
+            if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
                 action_query = (
@@ -239,7 +240,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
             elif self.is_public and self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&default_filters={','.join(self.default_filters)}]"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
                     f"*{self.reference_display_label}*",
                     action_query,

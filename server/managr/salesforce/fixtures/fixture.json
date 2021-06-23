@@ -54,7 +54,7 @@
     "fields": {
       "api_name": "__send_recap_to_leadership",
       "allow_multiple": true,
-      "default_filters": ["user_level=MANAGER"],
+      "default_filters": [],
       "custom": true,
       "createable": true,
       "updateable": true,
@@ -68,7 +68,7 @@
       "reference": false,
       "reference_to_infos": [],
       "options": [],
-      "relationship_name": null,
+      "relationship_name": "User",
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
@@ -80,7 +80,7 @@
     "fields": {
       "api_name": "__send_recap_to_reps",
       "allow_multiple": true,
-      "default_filters": ["user_level=REP"],
+      "default_filters": [],
       "custom": true,
       "createable": true,
       "updateable": true,
@@ -94,83 +94,10 @@
       "reference": false,
       "reference_to_infos": [],
       "options": [],
-      "relationship_name": null,
-      "is_public": true,
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "salesforce.SObjectField",
-    "pk": "a69dd832-9283-4c5b-83fe-efee9ed578fc",
-    "fields": {
-      "api_name": "__using_competitor",
-      "custom": true,
-      "createable": true,
-      "updateable": true,
-      "unique": false,
-      "required": false,
-      "data_type": "Reference",
-      "display_value": "",
-      "value": null,
-      "label": "Select users to send recap to",
-      "length": 255,
-      "reference": true,
-      "reference_to_infos": [],
-      "options": [],
       "relationship_name": "User",
       "is_public": true,
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "salesforce.SObjectField",
-    "pk": "fc645580-db78-4c06-8137-faae0751beb7",
-    "fields": {
-      "api_name": "__vendor_review_date",
-      "custom": true,
-      "createable": true,
-      "updateable": true,
-      "unique": false,
-      "required": false,
-      "data_type": "Date",
-      "display_value": "",
-      "value": null,
-      "label": "Vendor Review Date",
-      "length": 255,
-      "reference": false,
-      "reference_to_infos": [],
-      "options": [],
-      "relationship_name": null,
-      "is_public": true,
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
-  },
-  {
-    "model": "salesforce.SObjectField",
-    "pk": "ca011b9e-cb9e-4499-a192-b7ed36ee95b1",
-    "fields": {
-      "api_name": "__sdr_note",
-      "custom": true,
-      "createable": true,
-      "updateable": true,
-      "unique": false,
-      "required": false,
-      "data_type": "TextArea",
-      "display_value": "",
-      "value": null,
-      "label": "SDR Note",
-      "length": 255,
-      "reference": false,
-      "reference_to_infos": [],
-      "options": [],
-      "relationship_name": null,
-      "is_public": true,
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z",
-      "filterable": false
     }
   }
 ]
