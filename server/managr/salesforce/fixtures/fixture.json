@@ -54,9 +54,7 @@
     "fields": {
       "api_name": "__send_recap_to_leadership",
       "allow_multiple": true,
-      "default_filters": [
-        "user_level=MANAGER"
-      ],
+      "default_filters": ["user_level=MANAGER"],
       "custom": true,
       "createable": true,
       "updateable": true,
@@ -82,9 +80,7 @@
     "fields": {
       "api_name": "__send_recap_to_reps",
       "allow_multiple": true,
-      "default_filters": [
-        "user_role=REP"
-      ],
+      "default_filters": ["user_level=REP"],
       "custom": true,
       "createable": true,
       "updateable": true,
