@@ -36,4 +36,5 @@ class Migration(migrations.Migration):
 
     operations = [
         # changes made to model this migration will no longer work
+        migrations.RunPython(load_fixture, remove_fixture),
     ]
