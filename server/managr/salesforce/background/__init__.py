@@ -876,7 +876,7 @@ def _send_recap(form_ids):
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
-    send_summ_to_owner = new_data.get("__send_recap_to_owner")
+    send_summ_to_owner = new_data.get("__send_recap_to_reps")
 
     slack_access_token = user.organization.slack_integration.access_token
 
@@ -919,15 +919,14 @@ def _send_recap(form_ids):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+
     query = Q()
     if send_summ_to_leadership is not None:
-        manager_list = send_summ_to_leadership.split(",")
-        manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
-        query |= Q(user_level="MANAGER", id__in=manager_filter)
+        manager_list = send_summ_to_leadership.split(";")
+        query |= Q(user_level="MANAGER", id__in=manager_list)
     if send_summ_to_owner is not None:
-        rep_list = send_summ_to_owner.split(",")
-        rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
-        query |= Q(id=user.id, id__in=rep_filter)
+        rep_list = send_summ_to_owner.split(";")
+        query |= Q(id__in=rep_list)
 
     user_list = (
         user.organization.users.filter(query)
