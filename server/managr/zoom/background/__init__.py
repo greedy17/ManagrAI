@@ -197,6 +197,15 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             org_email_domain
         )
         # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        #### first check if we care about this meeting before going forward
+        should_register_this_meeting = [
+            p
+            for p in zoom_participants
+            if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        ]
+        if not len(should_register_this_meeting):
+            return
+
         memo = {}
         for p in zoom_participants:
             if p.get("user_email", "") not in ["", None, *memo.keys()] and not re.search(
@@ -204,8 +213,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             ):
                 memo[p.get("user_email")] = len(participants)
                 participants.append(p)
-        if not len(participants):
-            return
 
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
