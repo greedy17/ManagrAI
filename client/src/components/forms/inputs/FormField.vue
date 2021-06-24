@@ -20,6 +20,7 @@
         class="form-field__input"
         :id="$attrs.id"
         :type="$attrs.type"
+        :disabled="$attrs.disabled"
         v-on="$listeners"
         @input="$emit('input', $event)"
         @blur="$emit('blur')"
