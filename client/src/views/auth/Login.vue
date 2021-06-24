@@ -1,38 +1,36 @@
 <template>
   <div class="login-page">
+    <div class="column">
+      <img src="@/assets/images/logo.png" alt="logo" />
+      <h2>Log in to Managr</h2>
+      <p class="enter-email">Please enter your email to log into Managr</p>
+    </div>
     <div class="login-page__form">
-      <div class="column">
-        <img src="@/assets/images/logo.png" alt="logo" />
-        <h2>Log in to Managr</h2>
-        <p class="enter-email">Please enter your email to log into Managr</p>
-      </div>
-      <div class="">
-        <!-- <label for="email">Enter your Email</label> -->
-        <FormField
-          labelRelation="email"
-          label="Enter an email"
-          @input="execCheckEmail"
-          :disabled="showPassword"
-          v-model="loginForm.field.email.value"
-          placeholder=""
-          :errors="loginForm.field.email.errors"
-          name="email"
-          id="email"
-          large
-        />
-        <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
-        <FormField
-          v-on:keyup.enter.native="handleLoginAttempt"
-          :errors="loginForm.field.password.errors"
-          v-if="showPassword"
-          v-model="loginForm.field.password.value"
-          type="password"
-          placeholder="Password"
-          name="password"
-          id="password"
-          large
-        />
-      </div>
+      <!-- <label for="email">Enter your Email</label> -->
+      <FormField
+        labelRelation="email"
+        label="Enter an email"
+        @input="execCheckEmail"
+        :disabled="showPassword"
+        v-model="loginForm.field.email.value"
+        placeholder=""
+        :errors="loginForm.field.email.errors"
+        name="email"
+        id="email"
+        large
+      />
+      <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
+      <FormField
+        v-on:keyup.enter.native="handleLoginAttempt"
+        :errors="loginForm.field.password.errors"
+        v-if="showPassword"
+        v-model="loginForm.field.password.value"
+        type="password"
+        placeholder="Password"
+        name="password"
+        id="password"
+        large
+      />
       <PulseLoadingSpinnerButton
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
@@ -162,6 +160,9 @@ h2 {
 }
 .login-page {
   padding: 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     padding: 0rem;
@@ -173,6 +174,8 @@ h2 {
   flex-flow: column;
   align-items: center;
   justify-content: center;
+  margin: 5.5rem 0;
+
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     width: 100%;
