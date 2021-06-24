@@ -62,11 +62,11 @@ class UserQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.is_active:
-            if user.user_level == core_consts.ACCOUNT_TYPE_MANAGER:
+            if user.user_level == core_consts.USER_LEVEL_MANAGER:
                 return self.filter(organization=user.organization)
-            if user.user_level == core_consts.ACCOUNT_TYPE_REP:
+            if user.user_level == core_consts.USER_LEVEL_REP:
                 return self.filter(id=user.id)
-            elif user.user_level == core_consts.ACCOUNT_TYPE_REP:
+            elif user.user_level == core_consts.USER_LEVEL_SDR:
                 return self.filter(id=user.id)
         else:
             return self.none()

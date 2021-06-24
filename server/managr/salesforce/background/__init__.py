@@ -372,7 +372,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
-def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
+def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -428,7 +428,7 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
-def _process_add_call_to_sf(workflow_id, priority=1, *args):
+def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -495,7 +495,7 @@ def _process_add_call_to_sf(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
-def _process_create_new_contacts(workflow_id, priority=1, *args):
+def _process_create_new_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -597,7 +597,7 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("update_contacts_or_link_contacts")
-def _process_update_contacts(workflow_id, priority=1, *args):
+def _process_update_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -876,7 +876,7 @@ def _send_recap(form_ids):
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
-    send_summ_to_owner = new_data.get("__send_recap_to_owner")
+    send_summ_to_owner = new_data.get("__send_recap_to_reps")
 
     slack_access_token = user.organization.slack_integration.access_token
 
@@ -925,13 +925,11 @@ def _send_recap(form_ids):
 
     query = Q()
     if send_summ_to_leadership is not None:
-        manager_list = send_summ_to_leadership.split(",")
-        manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
-        query |= Q(user_level="MANAGER", id__in=manager_filter)
+        manager_list = send_summ_to_leadership.split(";")
+        query |= Q(user_level="MANAGER", id__in=manager_list)
     if send_summ_to_owner is not None:
-        rep_list = send_summ_to_owner.split(",")
-        rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
-        query |= Q(id=user.id, id__in=rep_filter)
+        rep_list = send_summ_to_owner.split(";")
+        query |= Q(id__in=rep_list)
 
     user_list = (
         user.organization.users.filter(query)
