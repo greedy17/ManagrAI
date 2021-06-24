@@ -915,11 +915,14 @@ def _send_recap(form_ids):
                 f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
             ),
         )
+
     elif main_form.template.form_type == "CREATE":
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
-
+    blocks.append(
+        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
+    )
     query = Q()
     if send_summ_to_leadership is not None:
         manager_list = send_summ_to_leadership.split(";")
