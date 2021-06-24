@@ -7,6 +7,7 @@ import uuid
 
 
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework.response import Response
 
 
@@ -120,7 +121,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window, unless you have received a confirmation slack",
                     "fill": True,
                 },
             ),
@@ -421,6 +422,8 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
+        current_forms.update(is_submitted=True, submission_date=timezone.now())
+
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
