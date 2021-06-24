@@ -53,7 +53,7 @@
           </div>
 
           <div class="modal-container__box__footer">
-            <div style="display:flex;align-items:center;flex-direction:column">
+            <div style="display: flex; align-items: center; flex-direction: column">
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
               </span>
@@ -89,21 +89,10 @@
     </modal>
 
     <div class="header__container">
-      <h3 class="header__title">Customize your Slack form</h3>
+      <h3 class="header__title">Form Builder</h3>
       <div class="header__list">
         <div class="header__list__item">
-          1. Customize your Slack forms by picking from the fields on the left. Note required
-          “Managr” fields have been preselected
-        </div>
-        <div class="header__list__item">
-          2. Please make sure to fill out all the tabs for all Objects
-        </div>
-        <div class="header__list__item">
-          3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
-          selecting each Stage that is gated
-        </div>
-        <div class="header__list__item">
-          4. Make sure to double check that all your required fields are on the form
+          Connect <strong>Salesforce</strong> to <strong>Slack!</strong>
         </div>
       </div>
     </div>
@@ -114,7 +103,7 @@
             {{ resource }}
             <img
               v-if="selectedTab && isVisible"
-              style="height: 1rem; margin-left: 1rem; "
+              style="height: 1rem; margin-left: 1rem"
               src="@/assets/images/tooltipgray.png"
               @click.prevent.stop="toggleRequiredModal"
             />
@@ -171,7 +160,7 @@
                     </div>
                   </div>
                 </div>
-                <div style="display: flex; justify-content: center;">
+                <div style="display: flex; justify-content: center">
                   <button @click="onAddForm" class="modal-container__box__button">Add</button>
                 </div>
               </div>
@@ -272,7 +261,7 @@ export default {
     },
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
+        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
       } else if (this.resource == this.OPPORTUNITY) {
         return [...this.FORM_TYPES, this.STAGE_GATING]
       }
@@ -286,7 +275,9 @@ export default {
     currentFormStages() {
       // users can only create one form for the stage
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
+        return this.allFormsByType
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .map((f) => f.stage)
       }
       return []
     },
@@ -294,10 +285,10 @@ export default {
       // users can only create one form for the stage orderd by stage
       let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach(s => {
+        this.stages.forEach((s) => {
           this.allFormsByType
-            .filter(f => f.formType == this.STAGE_GATING)
-            .forEach(sf => {
+            .filter((f) => f.formType == this.STAGE_GATING)
+            .forEach((sf) => {
               if (sf.stage == s.value) {
                 forms.push(sf)
               }
@@ -401,7 +392,7 @@ export default {
 
         SlackOAuth.api
           .delete(id)
-          .then(async res => {
+          .then(async (res) => {
             this.$Alert.alert({
               type: 'success',
 
@@ -410,13 +401,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter(f => {
+            const forms = this.formsByType.filter((f) => {
               return f.id !== form.id
             })
             this.formsByType = forms
           })
 
-          .catch(e => {
+          .catch((e) => {
             this.$Alert.alert({
               type: 'error',
 
@@ -428,7 +419,7 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter(f => {
+        const forms = this.newForms.filter((f) => {
           return f.id !== form.id
         })
         this.newForms = forms
@@ -466,7 +457,7 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
@@ -494,7 +485,7 @@ export default {
         } else {
           let prev = this.resource
           this.resource = resource
-          this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
 
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
@@ -509,7 +500,7 @@ export default {
         }
       } else {
         this.resource = resource
-        this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
@@ -521,7 +512,7 @@ export default {
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
-      let form = this.allFormsByType.find(f => f.id == id && f.stage == stage)
+      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
 
       if (form && typeof form != undefined) {
         this.selectedForm = form
@@ -529,7 +520,7 @@ export default {
     },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
+      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
         this.formsByType[index] = this.selectedForm
@@ -680,7 +671,7 @@ export default {
     margin-bottom: 2rem;
 
     &__item {
-      font-size: 14px;
+      font-size: 18px;
     }
   }
 }
@@ -801,5 +792,9 @@ export default {
       padding: 1rem 3rem;
     }
   }
+}
+.resources {
+  display: flex;
+  flex-direction: row;
 }
 </style>
