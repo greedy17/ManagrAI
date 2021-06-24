@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NavBar v-if="!hideNavBar" />
+    <NavBar v-if="!hideNavBar && userIsLoggedIn" />
     <alert-alert />
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -48,6 +48,9 @@ export default {
     ...mapGetters(['userIsLoggedIn']),
     hideNavBar() {
       return routesWithoutNavBar.includes(this.$route.name)
+    },
+    userIsLoggedIn() {
+      return this.$store.getters.userIsLoggedIn
     },
   },
 }
