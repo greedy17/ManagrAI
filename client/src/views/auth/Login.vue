@@ -7,8 +7,10 @@
         <p class="enter-email">Please enter your email to log into Managr</p>
       </div>
       <div class="">
-        <label for="email">Enter your Email</label>
+        <!-- <label for="email">Enter your Email</label> -->
         <FormField
+          labelRelation="email"
+          label="Enter an email"
           @input="execCheckEmail"
           :disabled="showPassword"
           v-model="loginForm.field.email.value"
@@ -24,7 +26,7 @@
           :errors="loginForm.field.password.errors"
           v-if="showPassword"
           v-model="loginForm.field.password.value"
-          inputType="password"
+          type="password"
           placeholder="Password"
           name="password"
           id="password"
@@ -74,7 +76,7 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 /**
  * internal Components
  */
-import FormField from '@/components/forms/FormField'
+import FormField from '@/components/forms/inputs/FormField'
 
 export default {
   name: 'Login',
@@ -182,7 +184,7 @@ h2 {
   }
 }
 
-input {
+/* input {
   @include input-field();
   height: 2.5rem;
   width: 15.65rem;
@@ -193,12 +195,12 @@ input {
     border: 2px solid $dark-green;
   }
 }
-
+ */
 button {
   @include primary-button();
   margin-bottom: 6px;
   height: 2.75rem;
-  width: 18.75rem;
+  width: 19rem;
   background-color: #199e54 !important;
   color: white !important;
 }
@@ -226,10 +228,7 @@ label {
   align-items: center;
 }
 .enter-email {
-  padding-bottom: 80px;
-  margin-top: 0;
-  color: grey;
-  font-size: 14px;
+  @include muted-font();
 }
 img {
   height: 80px;
@@ -240,12 +239,11 @@ img {
 .links {
   font-size: 13px;
 }
-#email,
+/* #email,
 #password {
-  width: 300px;
   border: 1px solid $soft-gray;
   border-radius: 3px;
   margin-top: 5px;
   background-color: #ffffff;
-}
+} */
 </style>
