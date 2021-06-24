@@ -395,6 +395,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update_in_salesforce(data)
             attempts = 1
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -538,6 +539,8 @@ def _process_create_new_contacts(workflow_id, *args):
                     str(user.id),
                 )
                 attempts = 1
+                form.is_submitted = True
+                form.submission_date = timezone.now()
                 break
             except TokenExpired as e:
                 if attempts >= 5:
@@ -626,6 +629,8 @@ def _process_update_contacts(workflow_id, *args):
                         sf_adapter.object_fields.get("Contact", {}),
                     )
                     attempts = 1
+                    form.is_submitted = True
+                    form.submission_date = timezone.now()
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
@@ -866,7 +871,7 @@ def _send_recap(form_ids):
     user = main_form.user
     old_data = None
     if main_form.template.form_type == "UPDATE":
-        old_data = main_form.resource_object.secondary_data
+        old_data = main_form.previous_data
     new_data = dict()
     form_fields = None
     for form in submitted_forms:
