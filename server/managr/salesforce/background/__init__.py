@@ -372,7 +372,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
-def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
+def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -429,7 +429,7 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
-def _process_add_call_to_sf(workflow_id, priority=1, *args):
+def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -496,7 +496,7 @@ def _process_add_call_to_sf(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
-def _process_create_new_contacts(workflow_id, priority=1, *args):
+def _process_create_new_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -600,7 +600,7 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("update_contacts_or_link_contacts")
-def _process_update_contacts(workflow_id, priority=1, *args):
+def _process_update_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
