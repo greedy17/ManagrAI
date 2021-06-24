@@ -53,6 +53,7 @@ from ..adapter.exceptions import (
     SFQueryOffsetError,
     SFNotFoundError,
     UnableToUnlockRow,
+    CannotRetreiveObjectType,
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
@@ -163,26 +164,13 @@ def _generate_form_template(user_id):
             form_type=form_type, resource=resource, organization=org
         )
 
-        if (
-            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
-            and resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY
-        ):
-            fields = SObjectField.objects.filter(
-                is_public=True, id__in=sf_consts.MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS
-            )
-            for i, field in enumerate(fields):
-                f.fields.add(field, through_defaults={"order": i})
-            f.save()
-        elif (
-            form_type == slack_consts.FORM_TYPE_MEETING_REVIEW
-            and resource == sf_consts.RESOURCE_SYNC_ACCOUNT
-        ):
-            fields = SObjectField.objects.filter(
-                is_public=True, id__in=sf_consts.MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS
-            )
-            for i, field in enumerate(fields):
-                f.fields.add(field, through_defaults={"order": i})
-            f.save()
+        public_fields = SObjectField.objects.filter(
+            is_public=True,
+            id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
+        )
+        for i, field in enumerate(public_fields):
+            f.fields.add(field, through_defaults={"order": i})
+        f.save()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
@@ -273,6 +261,8 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
+        except CannotRetreiveObjectType:
+            sf.sobjects[resource] = False
 
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
@@ -382,7 +372,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource):
     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
-def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
+def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
@@ -405,6 +395,7 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
         try:
             res = workflow.resource.update_in_salesforce(data)
             attempts = 1
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -426,10 +417,11 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            _save_meeting_review.now(str(workflow.id))
+            emit_send_meeting_summary(str(workflow.id))
+            raise e
 
-    # create a summary
-
-    # emit summary
     _save_meeting_review.now(str(workflow.id))
     emit_send_meeting_summary(str(workflow.id))
     # push to sf
@@ -438,7 +430,7 @@ def _process_update_resource_from_meeting(workflow_id, priority=2, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
-def _process_add_call_to_sf(workflow_id, priority=1, *args):
+def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -505,7 +497,7 @@ def _process_add_call_to_sf(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
-def _process_create_new_contacts(workflow_id, priority=1, *args):
+def _process_create_new_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -514,6 +506,8 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
         return logger.exception("User does not have a salesforce account cannot push to sf")
 
     attempts = 1
+    if not len(args):
+        return
     contact_forms = workflow.forms.filter(id__in=args[0])
     for form in contact_forms:
         # if the resource is an account we set it to that account
@@ -546,6 +540,8 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
                     str(user.id),
                 )
                 attempts = 1
+                form.is_submitted = True
+                form.submission_date = timezone.now()
                 break
             except TokenExpired as e:
                 if attempts >= 5:
@@ -605,7 +601,7 @@ def _process_create_new_contacts(workflow_id, priority=1, *args):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("update_contacts_or_link_contacts")
-def _process_update_contacts(workflow_id, priority=1, *args):
+def _process_update_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     if not user:
@@ -634,6 +630,8 @@ def _process_update_contacts(workflow_id, priority=1, *args):
                         sf_adapter.object_fields.get("Contact", {}),
                     )
                     attempts = 1
+                    form.is_submitted = True
+                    form.submission_date = timezone.now()
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
@@ -874,7 +872,7 @@ def _send_recap(form_ids):
     user = main_form.user
     old_data = None
     if main_form.template.form_type == "UPDATE":
-        old_data = main_form.resource_object.secondary_data
+        old_data = main_form.previous_data
     new_data = dict()
     form_fields = None
     for form in submitted_forms:
@@ -884,7 +882,7 @@ def _send_recap(form_ids):
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
-    send_summ_to_owner = new_data.get("__send_recap_to_owner")
+    send_summ_to_owner = new_data.get("__send_recap_to_reps")
 
     slack_access_token = user.organization.slack_integration.access_token
 
@@ -909,7 +907,7 @@ def _send_recap(form_ids):
 
         elif main_form.template.form_type == "CREATE":
             if new_value:
-                message_string_for_recap += f"*{field_label}:* {new_value}"
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"
 
@@ -923,27 +921,37 @@ def _send_recap(form_ids):
                 f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
             ),
         )
-        query = Q()
-        if send_summ_to_leadership:
-            query |= Q(user_level="MANAGER")
-        if send_summ_to_owner:
-            query |= Q(id=user.id)
 
-        user_list = (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
+    elif main_form.template.form_type == "CREATE":
+        blocks.insert(
+            0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
-        for u in user_list:
-            if hasattr(u, "slack_integration"):
-                try:
-                    slack_requests.send_channel_message(
-                        u.slack_integration.channel,
-                        slack_access_token,
-                        text=f"Recap {main_form.template.resource}",
-                        block_set=blocks,
-                    )
-                except Exception as e:
-                    logger.exception(f"Failed to send recap to {u.email} due to {e}")
-                    continue
+    blocks.append(
+        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
+    )
+    query = Q()
+    if send_summ_to_leadership is not None:
+        manager_list = send_summ_to_leadership.split(";")
+        query |= Q(user_level="MANAGER", id__in=manager_list)
+    if send_summ_to_owner is not None:
+        rep_list = send_summ_to_owner.split(";")
+        query |= Q(id__in=rep_list)
+
+    user_list = (
+        user.organization.users.filter(query)
+        .filter(is_active=True)
+        .distinct()
+        .select_related("slack_integration")
+    )
+    for u in user_list:
+        if hasattr(u, "slack_integration"):
+            try:
+                slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except Exception as e:
+                logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                continue

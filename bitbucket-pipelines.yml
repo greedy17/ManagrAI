@@ -165,6 +165,13 @@ fargateStagingDeployment: &fargateStagingDeployment
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
 fargateDemoDeployment: &fargateDemoDeployment
   name: Deploy Demo to AWS Fargate
   image: atlassian/default-image:2
@@ -215,6 +222,13 @@ fargateDemoDeployment: &fargateDemoDeployment
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
 
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
 fargateProdDeployment: &fargateProdDeployment
   name: Deploy Prod to AWS Fargate
   image: atlassian/default-image:2
@@ -264,6 +278,13 @@ fargateProdDeployment: &fargateProdDeployment
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
         # DEBUG: '<string>' # Optional
+
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 pipelines:
   # Insert other test or build pipelines here as appropriate.

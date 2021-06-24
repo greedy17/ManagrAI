@@ -52,6 +52,10 @@
         "valueFrom": "${config_secret_arn}:dbPass::"
       },
       {
+        "name": "dbSnapShot",
+        "valueFrom": "${config_secret_arn}:dbSnapShot::"
+      },
+      {
         "name": "SUPERUSER_EMAIL",
         "valueFrom": "${config_secret_arn}:superuserEmail::"
       },
@@ -158,6 +162,11 @@
         "name": "SLACK_APP_VERSION",
         "valueFrom": "${config_secret_arn}:slackAppVersion::"
       },
+      {
+        "name": "SLACK_ERROR_WEBHOOK",
+        "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
+      },
+
       {
         "name": "SALESFORCE_BASE_URL",
         "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"

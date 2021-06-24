@@ -16,13 +16,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for t in options["users"]:
             user = User.objects.filter(email=t).first()
-
-            operations = [
-                sf_consts.RESOURCE_SYNC_ACCOUNT,
-                sf_consts.RESOURCE_SYNC_CONTACT,
-                sf_consts.RESOURCE_SYNC_OPPORTUNITY,
-                sf_consts.RESOURCE_SYNC_LEAD,
-            ]
+            if not hasattr(user, "salesforce_account"):
+                self.stdout.write(
+                    self.style.ERROR("User does not have an sf account {}".format(user.email,))
+                )
+            operations = [*user.salesforce_account.resource_sync_opts]
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
             emit_gen_next_sync(str(user.id), operations, formatted_time)
