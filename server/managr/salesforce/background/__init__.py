@@ -901,7 +901,7 @@ def _send_recap(form_ids):
 
         elif main_form.template.form_type == "CREATE":
             if new_value:
-                message_string_for_recap += f"*{field_label}:* {new_value}"
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"
 
@@ -915,31 +915,35 @@ def _send_recap(form_ids):
                 f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
             ),
         )
-        query = Q()
-        if send_summ_to_leadership is not None:
-            manager_list = send_summ_to_leadership.split(",")
-            manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
-            query |= Q(user_level="MANAGER", id__in=manager_filter)
-        if send_summ_to_owner is not None:
-            rep_list = send_summ_to_owner.split(",")
-            rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
-            query |= Q(id=user.id, id__in=rep_filter)
-
-        user_list = (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
+    elif main_form.template.form_type == "CREATE":
+        blocks.insert(
+            0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
-        for u in user_list:
-            if hasattr(u, "slack_integration"):
-                try:
-                    slack_requests.send_channel_message(
-                        u.slack_integration.channel,
-                        slack_access_token,
-                        text=f"Recap {main_form.template.resource}",
-                        block_set=blocks,
-                    )
-                except Exception as e:
-                    logger.exception(f"Failed to send recap to {u.email} due to {e}")
-                    continue
+    query = Q()
+    if send_summ_to_leadership is not None:
+        manager_list = send_summ_to_leadership.split(",")
+        manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
+        query |= Q(user_level="MANAGER", id__in=manager_filter)
+    if send_summ_to_owner is not None:
+        rep_list = send_summ_to_owner.split(",")
+        rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
+        query |= Q(id=user.id, id__in=rep_filter)
+
+    user_list = (
+        user.organization.users.filter(query)
+        .filter(is_active=True)
+        .distinct()
+        .select_related("slack_integration")
+    )
+    for u in user_list:
+        if hasattr(u, "slack_integration"):
+            try:
+                slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except Exception as e:
+                logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                continue

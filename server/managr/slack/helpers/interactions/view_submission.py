@@ -435,7 +435,6 @@ def process_submit_resource_data(payload, context):
             or all_form_data.get("__send_recap_to_owner") is not None
         ):
             _send_recap(current_form_ids)
-
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
             "trigger_id": trigger_id,
