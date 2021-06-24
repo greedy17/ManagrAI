@@ -7,6 +7,7 @@ import uuid
 
 
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework.response import Response
 
 
@@ -120,7 +121,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window, unless you have received a confirmation slack",
                     "fill": True,
                 },
             ),
@@ -240,7 +241,6 @@ def process_submit_resource_data(payload, context):
     # get context
     has_error = False
     state = payload["view"]["state"]["values"]
-
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
@@ -262,7 +262,6 @@ def process_submit_resource_data(payload, context):
         main_form.save_form(state)
 
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = {
@@ -423,6 +422,8 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
+        current_forms.update(is_submitted=True, submission_date=timezone.now())
+
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
@@ -432,11 +433,11 @@ def process_submit_resource_data(payload, context):
             text = f"Managr updated {main_form.resource_type}"
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
 
-        if all_form_data.get("__send_recap_to_leadership") or all_form_data.get(
-            "__send_recap_to_owner"
+        if (
+            all_form_data.get("__send_recap_to_leadership") is not None
+            or all_form_data.get("__send_recap_to_reps") is not None
         ):
             _send_recap(current_form_ids)
-
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
             "trigger_id": trigger_id,

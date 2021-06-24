@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 import pytz
 import uuid
 import random
@@ -132,6 +133,10 @@ def _refresh_zoom_token(zoom_account_id):
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
     logger.info("Retrieving past Zoom meeting details...")
 
+    def get_domain(email):
+        """Parse domain out of an email"""
+        return email[email.index("@") + 1 :]
+
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     user = zoom_account.user
@@ -186,26 +191,29 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # Gather unique emails from the Zoom Meeting participants
         participants = []
         user = zoom_account.user
-        for participant in zoom_participants:
-            if participant not in participants and participant.get("user_email") != user.email:
-                participants.append(participant)
-            ### ADDING RANDOM USER FOR TESTING PURPOSES ONLY ###
 
-        if settings.IN_DEV or settings.IN_STAGING:
-            participants.append(
-                {
-                    "name": "testertesty baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
-            participants.append(
-                {
-                    "name": "another1 baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
+        org_email_domain = get_domain(user.email)
+        remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+            org_email_domain
+        )
+        # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        #### first check if we care about this meeting before going forward
+        should_register_this_meeting = [
+            p
+            for p in zoom_participants
+            if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        ]
+        if not len(should_register_this_meeting):
+            return
+
+        memo = {}
+        for p in zoom_participants:
+            if p.get("user_email", "") not in ["", None, *memo.keys()] and not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
+            ):
+                memo[p.get("user_email")] = len(participants)
+                participants.append(p)
+
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -214,16 +222,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # emails with domains that match the owner, which are teammates of the owner.
         logger.info(f"    Got list of participants: {participants}")
 
-        def get_domain(email):
-            """Parse domain out of an email"""
-            return email[email.index("@") + 1 :]
-
-        participants = [
-            p
-            for p in [*participants, *calendar_participants]
-            if p.get("user_email", "") not in ["", user.email]
-            and get_domain(p.get("user_email", "")) != get_domain(user.email)
-        ]
+        for p in calendar_participants:
+            if not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
+            ) and p.get("user_email", "") not in ["", None]:
+                if p.get("user_email", "") in memo.keys():
+                    index = memo[p.get("user_email")]
+                    participants[index]["name"] = p.get("name", "")
+                else:
+                    memo[p.get("user_email")] = len(participants)
+                    participants.append(p)
 
         contact_forms = []
         if len(participants):
@@ -455,6 +463,8 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    organization = user.organization
     # only send meeting reviews for opps if the leadership box is selected or owner is selected
     send_summ_to_leadership = (
         workflow.forms.filter(template__form_type="MEETING_REVIEW")
@@ -464,27 +474,25 @@ def _send_meeting_summary(workflow_id):
     send_summ_to_owner = (
         workflow.forms.filter(template__form_type="MEETING_REVIEW")
         .first()
-        .saved_data.get("__send_recap_to_owner")
+        .saved_data.get("__send_recap_to_reps")
     )
     if hasattr(workflow.meeting, "zoom_meeting_review") and workflow.resource_type == "Opportunity":
+        slack_access_token = organization.slack_integration.access_token
 
-        user = workflow.user
-        if True not in [send_summ_to_leadership, send_summ_to_owner]:
-            return
         query = Q()
-        if send_summ_to_leadership:
-            query |= Q(user_level="MANAGER")
-        if send_summ_to_owner:
-            query |= Q(id=user.id)
+        if send_summ_to_leadership is not None:
+            manager_list = send_summ_to_leadership.split(";")
+            query |= Q(user_level="MANAGER", id__in=manager_list)
+        if send_summ_to_owner is not None:
+            rep_list = send_summ_to_owner.split(";")
+            query |= Q(id__in=rep_list)
 
         user_list = (
-            user.organization.users.filter(query)
+            organization.users.filter(query)
             .filter(is_active=True)
             .distinct()
             .select_related("slack_integration")
         )
-        slack_access_token = user.organization.slack_integration.access_token
-
         for u in user_list:
             if hasattr(u, "slack_integration"):
                 try:

@@ -970,10 +970,11 @@ class UserTestCase(TestCase):
             tz = pytz.all_timezones[random.randint(0, 10)]
             self.admin_user.timezone = tz
             self.admin_user.save()
-            today = datetime.datetime.now()
+
             self.assertEqual(
-                datetime.datetime(
-                    today.year, today.month, today.day, 7, 0, tzinfo=pytz.timezone(tz)
-                ).astimezone(pytz.utc),
+                timezone.make_aware(
+                    timezone.now().replace(hour=7, minute=0, second=0, microsecond=0, tzinfo=None),
+                    timezone=pytz.timezone(tz),
+                ),
                 conf_1.calculate_scheduled_time_for_alert(self.admin_user),
             )

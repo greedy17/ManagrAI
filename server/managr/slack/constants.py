@@ -183,6 +183,8 @@ FORM_TYPES = (
     (FORM_TYPE_MEETING_REVIEW, "Meeting Review"),
 )
 
+SLACK_ACTION_RESOURCE_USER = "User"
+
 FORM_TYPES_LIST = [
     FORM_TYPE_CREATE,
     FORM_TYPE_UPDATE,
@@ -199,8 +201,8 @@ FORM_RESOURCE_LIST = [
 DEFAULT_PUBLIC_FORM_FIELDS = {
     FORM_RESOURCE_ACCOUNT: {
         FORM_TYPE_CREATE: [
-            # "fae88a10-53cc-470e-86ec-32376c041893",
-            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
         ],
         FORM_TYPE_MEETING_REVIEW: [
             "fae88a10-53cc-470e-86ec-32376c041893",
@@ -215,8 +217,8 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
     },
     FORM_RESOURCE_CONTACT: {
         FORM_TYPE_CREATE: [
-            # "fae88a10-53cc-470e-86ec-32376c041893",
-            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
         ],
         FORM_TYPE_UPDATE: [
             "fae88a10-53cc-470e-86ec-32376c041893",
@@ -225,8 +227,8 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
     },
     FORM_RESOURCE_LEAD: {
         FORM_TYPE_CREATE: [
-            # "fae88a10-53cc-470e-86ec-32376c041893",
-            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
         ],
         FORM_TYPE_UPDATE: [
             "fae88a10-53cc-470e-86ec-32376c041893",
@@ -235,8 +237,8 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
     },
     FORM_RESOURCE_OPPORTUNITY: {
         FORM_TYPE_CREATE: [
-            # "fae88a10-53cc-470e-86ec-32376c041893",
-            # "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+            "fae88a10-53cc-470e-86ec-32376c041893",
+            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
         ],
         FORM_TYPE_MEETING_REVIEW: [
             "fae88a10-53cc-470e-86ec-32376c041893",
@@ -251,4 +253,3 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
     },
 }
 NO_FORM_FIELDS = "NO_FORM_FIELDS"
-

@@ -11,7 +11,7 @@ from managr.salesforce import constants as sf_consts
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
-from managr.salesforce.models import SObjectPicklist
+from managr.salesforce.models import SObjectPicklist, SObjectField
 
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
@@ -69,7 +69,7 @@ def process_get_local_resource_options(payload, context):
     value = payload["value"]
     resource = context.get("resource")
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
-
+    field_id = context.get("field_id")
     # conver type to make sure it follows {label:str|num, values:str|num}
 
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
@@ -114,6 +114,21 @@ def process_get_local_resource_options(payload, context):
                     l.as_slack_option
                     for l in user.organization.action_choices.filter(title__icontains=value)[:50]
                 ],
+            ],
+        }
+    elif resource == slack_const.SLACK_ACTION_RESOURCE_USER:
+        query = Q()
+        if field_id == "e286d1d5-5447-47e6-ad55-5f54fdd2b00d":
+            query = Q(user_level="MANAGER")
+        elif field_id == "fae88a10-53cc-470e-86ec-32376c041893":
+            query = Q(user_level="REP")
+
+        query &= Q(first_name__icontains=value) | Q(last_name__icontains=value)
+
+        return {
+            "options": [
+                *additional_opts,
+                *[u.as_slack_option for u in user.organization.users.filter(query)[:50]],
             ],
         }
 
