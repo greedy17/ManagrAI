@@ -917,13 +917,11 @@ def _send_recap(form_ids):
         )
         query = Q()
         if send_summ_to_leadership is not None:
-            manager_list = send_summ_to_leadership.split(",")
-            manager_filter = user.organization.users.filter(id__in=manager_list).distinct()
-            query |= Q(user_level="MANAGER", id__in=manager_filter)
+            manager_list = send_summ_to_leadership.split(";")
+            query |= Q(user_level="MANAGER", id__in=manager_list)
         if send_summ_to_owner is not None:
-            rep_list = send_summ_to_owner.split(",")
-            rep_filter = user.organization.users.filter(id__in=rep_list).distinct()
-            query |= Q(id__in=rep_filter)
+            rep_list = send_summ_to_owner.split(";")
+            query |= Q(id__in=rep_list)
 
         user_list = (
             user.organization.users.filter(query)
