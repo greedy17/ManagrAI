@@ -13,16 +13,13 @@
     <label :for="labelRelation" class="form-field__label"
       >{{ label }} {{ required ? '*' : '' }}</label
     >
-    <!-- v-bind="$attrs" loads attributes from parent -->
+    <!-- v-bind="$attrs" loads attributes from parent  if they are common must be explicit-->
     <!-- v-on="$listeners" loads listeners from parent -->
     <slot name="input">
-      <input
-        class="form-field__input"
+      <Input
         :id="$attrs.id"
-        :type="$attrs.type"
         :disabled="$attrs.disabled"
-        v-on="$listeners"
-        @input="$emit('input', $event)"
+        :type="$attrs.type"
         @blur="$emit('blur')"
       />
     </slot>
@@ -33,8 +30,11 @@
 </template>
 
 <script>
+import Input from '@/components/forms/inputs/Input.vue'
 export default {
-  components: {},
+  components: {
+    Input,
+  },
   props: {
     errors: {
       type: Array,

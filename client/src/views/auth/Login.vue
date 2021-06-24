@@ -9,7 +9,7 @@
       <!-- <label for="email">Enter your Email</label> -->
       <FormField
         labelRelation="email"
-        label="Enter an email"
+        label="Email"
         @input="execCheckEmail"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
@@ -21,6 +21,9 @@
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
       <FormField
+        labelRelation="password"
+        label="Password"
+        @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
         v-if="showPassword"
