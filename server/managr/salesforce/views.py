@@ -6,16 +6,16 @@ from urllib.parse import urlencode, unquote
 from datetime import datetime
 
 from django_filters.rest_framework import DjangoFilterBackend
-
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework import (
     authentication,
@@ -35,6 +35,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from background_task.models import Task
 
 from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email

@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 import pytz
 import uuid
 import random
@@ -132,6 +133,10 @@ def _refresh_zoom_token(zoom_account_id):
 def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, send_slack=True):
     logger.info("Retrieving past Zoom meeting details...")
 
+    def get_domain(email):
+        """Parse domain out of an email"""
+        return email[email.index("@") + 1 :]
+
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     user = zoom_account.user
@@ -186,26 +191,29 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # Gather unique emails from the Zoom Meeting participants
         participants = []
         user = zoom_account.user
-        for participant in zoom_participants:
-            if participant not in participants and participant.get("user_email") != user.email:
-                participants.append(participant)
-            ### ADDING RANDOM USER FOR TESTING PURPOSES ONLY ###
 
-        if settings.IN_DEV or settings.IN_STAGING:
-            participants.append(
-                {
-                    "name": "testertesty baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
-            participants.append(
-                {
-                    "name": "another1 baker",
-                    "id": "",
-                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
+        org_email_domain = get_domain(user.email)
+        remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+            org_email_domain
+        )
+        # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        #### first check if we care about this meeting before going forward
+        should_register_this_meeting = [
+            p
+            for p in zoom_participants
+            if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        ]
+        if not len(should_register_this_meeting):
+            return
+
+        memo = {}
+        for p in zoom_participants:
+            if p.get("user_email", "") not in ["", None, *memo.keys()] and not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
+            ):
+                memo[p.get("user_email")] = len(participants)
+                participants.append(p)
+
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -214,16 +222,16 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # emails with domains that match the owner, which are teammates of the owner.
         logger.info(f"    Got list of participants: {participants}")
 
-        def get_domain(email):
-            """Parse domain out of an email"""
-            return email[email.index("@") + 1 :]
-
-        participants = [
-            p
-            for p in [*participants, *calendar_participants]
-            if p.get("user_email", "") not in ["", user.email]
-            and get_domain(p.get("user_email", "")) != get_domain(user.email)
-        ]
+        for p in calendar_participants:
+            if not re.search(
+                remove_users_with_these_domains_regex, p.get("user_email", "")
+            ) and p.get("user_email", "") not in ["", None]:
+                if p.get("user_email", "") in memo.keys():
+                    index = memo[p.get("user_email")]
+                    participants[index]["name"] = p.get("name", "")
+                else:
+                    memo[p.get("user_email")] = len(participants)
+                    participants.append(p)
 
         contact_forms = []
         if len(participants):

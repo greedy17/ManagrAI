@@ -235,4 +235,3 @@ class SfSyncTestCase(TestCase):
                 f.formfield_set.count(),
                 len(slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, [])),
             )
-
