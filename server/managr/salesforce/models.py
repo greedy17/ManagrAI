@@ -2,6 +2,7 @@ import jwt
 import pytz
 import math
 import logging
+import json
 
 from functools import reduce
 
@@ -31,10 +32,20 @@ from .adapter.exceptions import (
     InvalidFieldError,
     UnhandledSalesforceError,
     InvalidRefreshToken,
+    CannotRetreiveObjectType,
 )
 from . import constants as sf_consts
 
 logger = logging.getLogger("managr")
+
+
+def getSobjectDefaults():
+    return {
+        sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+        sf_consts.RESOURCE_SYNC_CONTACT: True,
+        sf_consts.RESOURCE_SYNC_LEAD: True,
+        sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+    }
 
 
 class ArrayLength(models.Func):
@@ -107,6 +118,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
     length = models.PositiveIntegerField(default=0)
     reference = models.BooleanField(default=False)
     relationship_name = models.CharField(max_length=255, null=True)
+    allow_multiple = models.BooleanField(default=False)
+    default_filters = ArrayField(
+        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True
+    )
     reference_to_infos = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -135,7 +150,12 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def reference_display_label(self):
         """returns the reference object's name as a display label"""
 
-        if self.data_type == "Reference" and self.reference and self.relationship_name:
+        if (
+            self.data_type == "Reference"
+            and self.reference
+            and self.relationship_name
+            and not self.is_public
+        ):
             return self.relationship_name
         return self.label
 
@@ -211,11 +231,21 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
             initial_option = block_builders.option(value, value) if value else None
-            if self.is_public:
+            if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
                 action_query = (
                     f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
+                )
+            elif self.is_public and self.allow_multiple:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                return block_builders.multi_external_select(
+                    f"*{self.reference_display_label}*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_options=None,
                 )
 
             else:
@@ -514,6 +544,9 @@ class SFResourceSync(SFSyncOperation):
                             return logger.exception(
                                 f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
                             )
+                except CannotRetreiveObjectType:
+                    sf_account.sobjects[key] = False
+                    sf_account.save()
             max_count = 300
             count = min(count, max_count)
             for i in range(math.ceil(count / sf_consts.SALESFORCE_QUERY_LIMIT)):
@@ -742,7 +775,6 @@ class SalesforceAuthAccount(TimeStampModel):
     scope = models.CharField(max_length=255, blank=True)
     id_token = models.TextField(blank=True)
     instance_url = models.CharField(max_length=255, blank=True)
-    # TODO: need to split the value here as it returns a link
     salesforce_id = models.CharField(max_length=255, blank=True)
     salesforce_account = models.CharField(max_length=255, blank=True)
     login_link = models.CharField(max_length=255, blank=True)
@@ -751,8 +783,9 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
+    # default for json field must be a callable
     sobjects = JSONField(
-        default=dict, null=True, help_text="All resources we are retrieving", max_length=500,
+        default=getSobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,
@@ -801,6 +834,61 @@ class SalesforceAuthAccount(TimeStampModel):
             ),
         )
         return SalesforceAuthAccountAdapter(**data)
+
+    @property
+    def resource_sync_opts(self):
+        return list(
+            filter(
+                lambda resource: f"{resource}"
+                if self.sobjects.get(resource, None) not in ["", None, False]
+                else False,
+                self.sobjects,
+            )
+        )
+
+    @property
+    def field_sync_opts(self):
+        return list(
+            map(
+                lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
+                filter(
+                    lambda resource: resource
+                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    else False,
+                    self.sobjects,
+                ),
+            )
+        )
+
+    @property
+    def picklist_sync_opts(self):
+        return list(
+            map(
+                lambda resource: f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{resource}",
+                filter(
+                    lambda resource: resource
+                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    else False,
+                    self.sobjects,
+                ),
+            )
+        )
+
+    @property
+    def validation_sync_opts(self):
+        if self.user.is_admin:
+            return list(
+                map(
+                    lambda resource: f"{sf_consts.SALESFORCE_VALIDATIONS}.{resource}",
+                    filter(
+                        lambda resource: resource
+                        if self.sobjects.get(resource, None) not in ["", None, False]
+                        else False,
+                        self.sobjects,
+                    ),
+                )
+            )
+        return []
 
     def regenerate_token(self):
         data = self.__dict__

@@ -158,10 +158,10 @@
               </div>
             </div>
 
-            <!--             <div
+            <div
               v-if="
                 customForm.formType == 'CREATE' ||
-                  customForm.formType == 'MEETING_REVIEW' ||
+                  //|| customForm.formType == 'MEETING_REVIEW'
                   customForm.stage
               "
               class="form-field__left"
@@ -171,12 +171,10 @@
               <h5 class="space">
                 include in recap
                 <small
-                  ><i>{{
-                    customForm.stage ? ' (only available for create and meeting review)' : ''
-                  }}</i></small
+                  ><i>{{ customForm.stage ? ' (only available for create forms)' : '' }}</i></small
                 >
               </h5>
-            </div> -->
+            </div>
             <div class="form-field__middle">
               {{ field.required ? 'required' : '' }}
             </div>

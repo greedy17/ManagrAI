@@ -6,16 +6,16 @@ from urllib.parse import urlencode, unquote
 from datetime import datetime
 
 from django_filters.rest_framework import DjangoFilterBackend
-
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework import (
     authentication,
@@ -35,6 +35,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from background_task.models import Task
 
 from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email
@@ -85,26 +86,10 @@ def authenticate(request):
         # create sf sync object
 
         operations = [
-            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-            f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_LEAD}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-            f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            *serializer.instance.field_sync_opts,
+            *serializer.instance.picklist_sync_opts,
+            *serializer.instance.validation_sync_opts,
         ]
-        if serializer.instance.user.is_admin:
-            # we only need validations to show the user who is creating the forms
-
-            operations.extend(
-                [
-                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_ACCOUNT}",
-                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_CONTACT}",
-                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
-                    f"{sf_consts.SALESFORCE_VALIDATIONS}.{sf_consts.RESOURCE_SYNC_LEAD}",
-                ]
-            )
 
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
@@ -113,13 +98,7 @@ def authenticate(request):
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
         # emit resource sync
-        operations = []
-        operations = [
-            sf_consts.RESOURCE_SYNC_ACCOUNT,
-            sf_consts.RESOURCE_SYNC_CONTACT,
-            sf_consts.RESOURCE_SYNC_OPPORTUNITY,
-            sf_consts.RESOURCE_SYNC_LEAD,
-        ]
+        operations = [*serializer.instance.resource_sync_opts]
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(request.user.id), operations, formatted_time)

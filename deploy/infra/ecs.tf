@@ -170,13 +170,13 @@ resource "aws_ecs_task_definition" "app_scheduled_tasks" {
 
 resource "aws_cloudwatch_event_rule" "scheduled_task" {
   for_each            = { for st in local.scheduled_tasks : "${st.env.name}.${st.task.name}" => st }
-  name                = "${lower(each.value.task.name)}_${lower(each.value.env.name)}_scheduled_task"
+  name                = "managr-app-scheduled-tasks-${lower(each.value.task.name)}-${lower(each.value.env.name)}"
   schedule_expression = each.value.task.cron
 }
 
 resource "aws_cloudwatch_event_target" "scheduled_task" {
   for_each  = { for st in local.scheduled_tasks : "${st.env.name}.${st.task.name}" => st }
-  target_id = "${lower(each.value.task.name)}_${lower(each.value.env.name)}_scheduled_task_target"
+  target_id = "managr-app-scheduled-tasks-${lower(each.value.task.name)}-${lower(each.value.env.name)}"
   rule      = aws_cloudwatch_event_rule.scheduled_task[each.key].name
   arn       = aws_ecs_cluster.main.arn
   role_arn  = aws_iam_role.ecs_scheduled_tasks_cloud_watch.arn
@@ -243,10 +243,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
   secret_string = jsonencode({
     ddApiKey = var.dd_api_key
 
-    dbHost = aws_db_instance.managrdb[each.key].address
-    dbUser = each.value.rds_username
-    dbPass = each.value.rds_password
-    dbName = each.value.rds_db_name
+    dbHost     = aws_db_instance.managrdb[each.key].address
+    dbUser     = each.value.rds_username
+    dbPass     = each.value.rds_password
+    dbName     = each.value.rds_db_name
+    dbSnapShot = each.value.rds_db_snapshot_id
 
     superuserEmail    = each.value.superuser_email
     superuserPassword = each.value.superuser_password

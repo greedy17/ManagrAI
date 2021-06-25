@@ -4,7 +4,8 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationForm, UserChangeForm
+
 
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
@@ -51,7 +52,54 @@ def tz_as_choice_set():
     return list(map(lambda c: [c, c], pytz.all_timezones))
 
 
-class CustomUserForm(forms.ModelForm):
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        timezone = forms.ChoiceField(widget=forms.Select, choices=tz_as_choice_set())
+        model = User
+        fields = (
+            "password",
+            "last_login",
+            "first_name",
+            "last_name",
+            "email",
+            "profile_photo",
+            "is_active",
+            "is_invited",
+            "is_admin",
+            "is_superuser",
+            "is_staff",
+            "organization",
+            "user_level",
+            "role",
+            "timezone",
+        )
+
+
+class CustomUserChangeForm(UserChangeForm):
+    timezone = forms.ChoiceField(widget=forms.Select, choices=tz_as_choice_set())
+
+    class Meta:
+        model = User
+        fields = (
+            "password",
+            "last_login",
+            "first_name",
+            "last_name",
+            "email",
+            "profile_photo",
+            "is_active",
+            "is_invited",
+            "is_admin",
+            "is_superuser",
+            "is_staff",
+            "organization",
+            "user_level",
+            "role",
+            "timezone",
+        )
+
+
+class CustomUserForm(UserCreationForm):
     timezone = forms.ChoiceField(widget=forms.Select, choices=tz_as_choice_set())
     password = ReadOnlyPasswordHashField(
         label=("Password"),
@@ -84,7 +132,8 @@ class CustomUserForm(forms.ModelForm):
 
 
 class CustomUserAdmin(UserAdmin):
-    form = CustomUserForm
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
 
     fieldsets = (
         (

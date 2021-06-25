@@ -463,6 +463,8 @@ def _save_meeting_review(workflow_id):
 def _send_meeting_summary(workflow_id):
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    organization = user.organization
     # only send meeting reviews for opps if the leadership box is selected or owner is selected
     send_summ_to_leadership = (
         workflow.forms.filter(template__form_type="MEETING_REVIEW")
@@ -472,27 +474,25 @@ def _send_meeting_summary(workflow_id):
     send_summ_to_owner = (
         workflow.forms.filter(template__form_type="MEETING_REVIEW")
         .first()
-        .saved_data.get("__send_recap_to_owner")
+        .saved_data.get("__send_recap_to_reps")
     )
     if hasattr(workflow.meeting, "zoom_meeting_review") and workflow.resource_type == "Opportunity":
+        slack_access_token = organization.slack_integration.access_token
 
-        user = workflow.user
-        if True not in [send_summ_to_leadership, send_summ_to_owner]:
-            return
         query = Q()
-        if send_summ_to_leadership:
-            query |= Q(user_level="MANAGER")
-        if send_summ_to_owner:
-            query |= Q(id=user.id)
+        if send_summ_to_leadership is not None:
+            manager_list = send_summ_to_leadership.split(";")
+            query |= Q(user_level="MANAGER", id__in=manager_list)
+        if send_summ_to_owner is not None:
+            rep_list = send_summ_to_owner.split(";")
+            query |= Q(id__in=rep_list)
 
         user_list = (
-            user.organization.users.filter(query)
+            organization.users.filter(query)
             .filter(is_active=True)
             .distinct()
             .select_related("slack_integration")
         )
-        slack_access_token = user.organization.slack_integration.access_token
-
         for u in user_list:
             if hasattr(u, "slack_integration"):
                 try:

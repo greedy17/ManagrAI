@@ -10,6 +10,7 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
     InvalidFieldError,
     UnableToUnlockRow,
+    CannotRetreiveObjectType,
 )
 from managr.slack.helpers.exceptions import (
     TokenExpired,
@@ -180,6 +181,11 @@ def sf_api_exceptions(rethrow=False):
                     raise e
 
             except InvalidFieldError as e:
+                LOGGER.exception(f"{e}")
+                if rethrow:
+                    raise e
+
+            except CannotRetreiveObjectType as e:
                 LOGGER.exception(f"{e}")
                 if rethrow:
                     raise e

@@ -77,6 +77,7 @@ variable "environments" {
     rds_username       = string
     rds_password       = string
     rds_db_name        = string
+    rds_db_snapshot_id = string
     secret_key         = string
     staff_email        = string
     superuser_email    = string
@@ -177,5 +178,5 @@ variable "scheduled_tasks" {
 
 variable "db_snapshot_id" {
   type    = string
-  default = "rds:production-1-2021-06-20-04-50"
+  default = ""
 }
