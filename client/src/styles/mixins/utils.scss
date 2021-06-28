@@ -1,5 +1,18 @@
 @import '../variables';
 
+@mixin field-label() {
+  font-family: $base-font-family;
+  color: $slate-gray;
+  font-size: 14px;
+  letter-spacing: normal;
+}
+@mixin field-errors() {
+  font-family: $base-font-family;
+  color: $coral;
+  font-size: 10px;
+  letter-spacing: normal;
+}
+
 @mixin disable-text-select() {
   /* prevent selection of text */
   -webkit-user-select: none; /* Safari */
