@@ -14,6 +14,7 @@ OAUTH_V2_ACCESS = "oauth.v2.access"
 # https://api.slack.com/methods/conversations.open
 CONVERSATIONS_OPEN = "conversations.open"
 
+CONVERSATIONS_LIST = "conversations.list"
 # https://api.slack.com/methods/chat.postMessage
 POST_MESSAGE = "chat.postMessage"
 
@@ -40,6 +41,7 @@ WORKSPACE_SCOPES = [
     "commands",
     "im:write",
     "incoming-webhook",
+    "channels:read",
 ]
 
 USER_SCOPES = ["identity.basic"]

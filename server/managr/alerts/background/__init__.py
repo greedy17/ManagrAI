@@ -12,7 +12,7 @@ from django.utils import timezone
 from background_task import background
 from rest_framework.exceptions import ValidationError
 
-from managr.api.decorators import sf_api_exceptions
+from managr.api.decorators import sf_api_exceptions, slack_api_exceptions
 from managr.slack import constants as slack_const
 
 from managr.slack.helpers import requests as slack_requests
@@ -24,6 +24,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksFormatException,
     InvalidBlocksException,
     InvalidAccessToken,
+    CannotSendToChannel,
 )
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.exceptions import (
@@ -112,68 +113,118 @@ def _process_check_alert(config_id, user_id, run_time):
             }
             # create instance for each user group it will be sent to
             query = Q()
-            for user_group in config.recipients:
-                if user_group == "SELF":
+            if config.recipient_type == "USER_LEVEL":
+                for user_group in config.recipients:
+
+                    if user_group == "SELF":
+                        instance = AlertInstance.objects.create(
+                            template_id=alert_id,
+                            user_id=template_user.id,
+                            resource_id=str(existing.id),
+                            instance_meta=instance_meta,
+                            channel=template_user.slack_integration.channel
+                            if hasattr(template_user, "slack_integration")
+                            else None,
+                        )
+
+                        emit_send_alert(str(instance.id), scheduled_time=run_time)
+                    elif user_group == "OWNER":
+                        instance = AlertInstance.objects.create(
+                            template_id=alert_id,
+                            user_id=user.id,
+                            resource_id=str(existing.id),
+                            instance_meta=instance_meta,
+                            channel=user.slack_integration.channel
+                            if hasattr(user, "slack_integration")
+                            else None,
+                        )
+
+                        emit_send_alert(str(instance.id), scheduled_time=run_time)
+                    else:
+                        if user_group == "MANAGERS":
+                            query |= Q(Q(user_level="MANAGER", is_active=True))
+
+                        elif user_group == "REPS":
+                            query |= Q(user_level="REP", is_active=True)
+
+                        elif user_group == "SDR":
+                            query |= Q(user_level="SDR", is_active=True)
+
+                        elif user_group == "ALL":
+
+                            query = Q(is_active=True) & Q(
+                                Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
+                            )
+
+                        users = template.user.organization.users.filter(query).distinct()
+                        for u in users:
+                            instance = AlertInstance.objects.create(
+                                template_id=alert_id,
+                                user_id=u.id,
+                                resource_id=str(existing.id),
+                                instance_meta=instance_meta,
+                                channel=u.slack_integration.channel
+                                if hasattr(u, "slack_integration")
+                                else None,
+                            )
+
+                            emit_send_alert(str(instance.id), scheduled_time=run_time)
+            elif config.recipient_type == "SLACK_CHANNEL":
+                for channel in config.recipients:
                     instance = AlertInstance.objects.create(
                         template_id=alert_id,
                         user_id=template_user.id,
                         resource_id=str(existing.id),
                         instance_meta=instance_meta,
+                        channel=channel,
                     )
-
                     emit_send_alert(str(instance.id), scheduled_time=run_time)
-                elif user_group == "OWNER":
-                    instance = AlertInstance.objects.create(
-                        template_id=alert_id,
-                        user_id=user.id,
-                        resource_id=str(existing.id),
-                        instance_meta=instance_meta,
-                    )
 
-                    emit_send_alert(str(instance.id), scheduled_time=run_time)
-                else:
-                    if user_group == "MANAGERS":
-                        query |= Q(Q(user_level="MANAGER", is_active=True))
-
-                    elif user_group == "REPS":
-                        query |= Q(user_level="REP", is_active=True)
-
-                    elif user_group == "SDR":
-                        query |= Q(user_level="SDR", is_active=True)
-
-                    elif user_group == "ALL":
-
-                        query = Q(is_active=True) & Q(
-                            Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
-                        )
-
-                    users = template.user.organization.users.filter(query).distinct()
-                    for u in users:
-                        instance = AlertInstance.objects.create(
-                            template_id=alert_id,
-                            user_id=u.id,
-                            resource_id=str(existing.id),
-                            instance_meta=instance_meta,
-                        )
-
-                        emit_send_alert(str(instance.id), scheduled_time=run_time)
     return
 
 
 @background(queue="MANAGR_ALERTS_QUEUE", schedule=0)
 @sf_api_exceptions(rethrow=True)
+@slack_api_exceptions()
 def _process_send_alert(instance_id):
     alert_instance = AlertInstance.objects.filter(id=instance_id).select_related("user").first()
     instance_user = alert_instance.user
     if hasattr(instance_user, "slack_integration"):
-        channel_id = instance_user.slack_integration.channel
+        channel_id = (
+            alert_instance.channel
+            if alert_instance.channel
+            else instance_user.slack_integration.channel
+        )
         access_token = instance_user.organization.slack_integration.access_token
         text = alert_instance.template.message_template.notification_text
         blocks = get_block_set("alert_instance", {"instance_id": str(alert_instance.id)})
+        try:
+            slack_requests.send_channel_message(
+                channel_id, access_token, text=text, block_set=blocks
+            )
 
-        slack_requests.send_channel_message(channel_id, access_token, text=text, block_set=blocks)
-        alert_instance.rendered_text = alert_instance.render_text()
-        alert_instance.sent_at = datetime.now(pytz.utc)
-        alert_instance.save()
+            alert_instance.rendered_text = alert_instance.render_text()
+            alert_instance.sent_at = timezone.now()
+            alert_instance.save()
+        except CannotSendToChannel:
+            try:
+                slack_requests.send_channel_message(
+                    alert_instance.template.user.slack_integration.channel,
+                    access_token,
+                    text=text,
+                    block_set=[
+                        block_builders.simple_section(
+                            "Cannot send alert to channel please add Managr to the channel by @ tagging managr *@Managr* you can re run this alert through the preview page with the _run now_ button",
+                            "mrkdwn",
+                        )
+                    ],
+                )
+            except Exception:
+                logger.info(
+                    f"failed to send notification to user that alert could not be sent to channel because managr is not part of channel {alert_instance.template.user}"
+                )
+
+        except Exception as e:
+            raise (e)
 
     return alert_instance

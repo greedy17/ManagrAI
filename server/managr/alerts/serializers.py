@@ -79,6 +79,7 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
             "recurrence_frequency",
             "recurrence_day",
             "recipients",
+            "recipient_type",
             "template",
             "template_ref",
         )
@@ -97,6 +98,7 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
             "rendered_text",
             "resource_id",
             "sent_at",
+            "channel",
         )
 
 
@@ -211,6 +213,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             "recurrence_frequency",
             "recurrence_day",
             "recipients",
+            "recipient_type",
             "template",
         )
 
