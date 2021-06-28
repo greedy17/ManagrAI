@@ -60,109 +60,98 @@
         </div>
       </div>
 
-      <div>
-        Hint: Make sure you've included all your required fields
-        <div class="slack-form-builder__form">
-          <div class="form-header">
-            <div class="form-header__left">
-              <h3>
-                {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
-              </h3>
+      <div class="slack-form-builder__form">
+        <div class="form-header">
+          <h2>
+            {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
+          </h2>
+          <p>be sure to include all required fields</p>
+        </div>
+
+        <div class="slack-form-builder__form-meta" v-if="customForm.stage">
+          <h5>Previous stage specific forms</h5>
+          <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
+
+          <div :key="key" v-for="(form, key) in orderedStageForm">
+            <div style="margin-top: 1rem">
+              <i style="text-transform: uppercase; font-size: 12px"
+                >Fields from <strong>{{ form.stage }}</strong> stage</i
+              >
+            </div>
+            <div class="stages-list">
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    @item-selected="onAddField(val)"
+                    :key="key"
+                    v-for="(val, key) in form.fieldsRef"
+                    :item="val.referenceDisplayLabel"
+                    :active="addedFieldIds.includes(val.id)"
+                    showIcon
+                  />
+                </template>
+              </ListContainer>
             </div>
           </div>
-          <div class="save-button">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
-          <div class="slack-form-builder__form-meta" v-if="customForm.stage">
-            <h5>Previous stage specific forms</h5>
-            <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
+        </div>
 
-            <div :key="key" v-for="(form, key) in orderedStageForm">
-              <div style="margin-top: 1rem">
-                <i style="text-transform: uppercase; font-size: 12px"
-                  >Fields from <strong>{{ form.stage }}</strong> stage</i
-                >
+        <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
+          <div
+            v-if="
+              field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
+              field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+              field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
+              field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
+            "
+            class="form-field__label"
+          >
+            {{ field.referenceDisplayLabel }}
+          </div>
+          <div style="display: flex; width: 100%">
+            <div class="form-field__left">
+              <div
+                v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
+                class="form-field__body"
+              >
+                {{
+                  "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
+                }}
               </div>
-              <div class="stages-list">
-                <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="onAddField(val)"
-                      :key="key"
-                      v-for="(val, key) in form.fieldsRef"
-                      :item="val.referenceDisplayLabel"
-                      :active="addedFieldIds.includes(val.id)"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer>
+
+              <div
+                v-if="field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'"
+                class="form-field__body"
+              >
+                {{ 'Logs the rep’s comments about the meeting' }}
+              </div>
+
+              <div
+                v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
+                class="form-field__body"
+              >
+                {{ 'Gives the reps the option to send a recap to leadership' }}
+              </div>
+              <div
+                v-if="field.id === 'fae88a10-53cc-470e-86ec-32376c041893'"
+                class="form-field__body"
+              >
+                {{ 'Gives the reps the option to send themselves a recap' }}
+              </div>
+
+              <div
+                class="form-field__label"
+                v-if="
+                  field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                  field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                  field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                  field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
+                "
+              >
+                {{ field.referenceDisplayLabel }}
               </div>
             </div>
-          </div>
 
-          <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
-            <div
-              v-if="
-                field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
-              "
-              class="form-field__label"
-            >
-              {{ field.referenceDisplayLabel }}
-            </div>
-            <div style="display: flex; width: 100%">
-              <div class="form-field__left">
-                <div
-                  v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                  class="form-field__body"
-                >
-                  {{
-                    "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
-                  }}
-                </div>
-
-                <div
-                  v-if="field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'"
-                  class="form-field__body"
-                >
-                  {{ 'Logs the rep’s comments about the meeting' }}
-                </div>
-
-                <div
-                  v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send a recap to leadership' }}
-                </div>
-                <div
-                  v-if="field.id === 'fae88a10-53cc-470e-86ec-32376c041893'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send themselves a recap' }}
-                </div>
-
-                <div
-                  class="form-field__label"
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
-                  "
-                >
-                  {{ field.referenceDisplayLabel }}
-                </div>
-              </div>
-
-              <!--             <div
+            <!--             <div
               v-if="
                 customForm.formType == 'CREATE' ||
                   customForm.formType == 'MEETING_REVIEW' ||
@@ -181,55 +170,63 @@
                 >
               </h5>
             </div> -->
-              <div class="form-field__middle">
-                {{ field.required ? 'required' : '' }}
-              </div>
-              <div class="form-field__right">
-                <div
-                  class="form-field__btn form-field__btn--flipped"
-                  @click="() => onMoveFieldUp(field, index)"
-                >
-                  <img src="@/assets/images/dropdown-arrow-green.svg" />
-                </div>
-                <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
-                  <img src="@/assets/images/dropdown-arrow-green.svg" />
-                </div>
-              </div>
+            <div class="form-field__middle">
+              {{ field.required ? 'required' : '' }}
             </div>
-            <div style="display: flex; align-items: center">
-              <input
-                v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                placeholder="Enter Meeting Type"
-                class="meeting-type"
-                v-model="meetingType"
-                @keypress="updateMeeting"
-              />
-              <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
-            </div>
-
-            <div
-              v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
-              class="meeting-type__list"
-            >
-              <template v-if="!loadingMeetingTypes">
-                <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="removeMeetingType(val.id)"
-                      :key="key"
-                      v-for="(val, key) in actionChoices"
-                      :item="val.title"
-                      :active="true"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer>
-              </template>
-              <template v-else>
-                <PulseLoadingSpinner :loading="loadingMeetingTypes" />
-              </template>
+            <div class="form-field__right">
+              <div
+                class="form-field__btn form-field__btn--flipped"
+                @click="() => onMoveFieldUp(field, index)"
+              >
+                <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
+              <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
+                <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
             </div>
           </div>
+          <div style="display: flex; align-items: center">
+            <input
+              v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
+              placeholder="Enter Meeting Type"
+              class="meeting-type"
+              v-model="meetingType"
+              @keypress="updateMeeting"
+            />
+            <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
+          </div>
+
+          <div
+            v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
+            class="meeting-type__list"
+          >
+            <template v-if="!loadingMeetingTypes">
+              <ListContainer horizontal>
+                <template v-slot:list>
+                  <ListItem
+                    @item-selected="removeMeetingType(val.id)"
+                    :key="key"
+                    v-for="(val, key) in actionChoices"
+                    :item="val.title"
+                    :active="true"
+                    showIcon
+                  />
+                </template>
+              </ListContainer>
+            </template>
+            <template v-else>
+              <PulseLoadingSpinner :loading="loadingMeetingTypes" />
+            </template>
+          </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
       </div>
     </div>
@@ -608,16 +605,15 @@ export default {
 
   &__form {
     // flex: 10;
-    width: 80%;
-    margin: 45px 108px 1px 35px;
-    padding: 25px 17px 32px 39.6px;
+    width: 100%;
+    padding: 2rem;
+    margin: 0.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     border: solid 2px #dcdddf;
     background-color: #ffffff;
-    left: 13rem;
-    top: -6rem;
     min-height: 70vh;
+    overflow: scroll;
   }
 }
 .paginator {
@@ -636,6 +632,9 @@ export default {
 }
 .form-header {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 
   &__left {
     flex: 9;
@@ -722,9 +721,9 @@ export default {
   }
 }
 .save-button {
-  margin-left: 1rem;
-  // display: flex;
-  // justify-content: flex-end;
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
 }
 
 .primary-button {
@@ -766,5 +765,9 @@ export default {
 
 .space {
   margin: 0.5em;
+}
+h2 {
+  margin: -2px;
+  font-size: 1.7rem;
 }
 </style>

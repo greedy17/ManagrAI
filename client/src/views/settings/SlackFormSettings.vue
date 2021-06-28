@@ -679,7 +679,7 @@ export default {
     display: flex;
     flex-direction: column;
     text-align: left;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 
     &__item {
       font-size: 18px;
