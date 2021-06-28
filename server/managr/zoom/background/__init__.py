@@ -233,6 +233,21 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     memo[p.get("user_email")] = len(participants)
                     participants.append(p)
 
+        if settings.IN_DEV or settings.IN_STAGING:
+            participants.append(
+                {
+                    "name": "testertesty baker",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+                }
+            )
+            participants.append(
+                {
+                    "name": "another1 baker",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+                }
+            )
         contact_forms = []
         if len(participants):
             # Reduce to set of unique participant emails
