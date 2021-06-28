@@ -565,14 +565,20 @@ def _process_create_new_contacts(workflow_id, *args):
                     time.sleep(sleep)
                     attempts += 1
 
-        if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
+        if (
+            workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY
+            and res
+            and res.integration_id
+        ):
             while True:
                 sf = user.salesforce_account
                 sf_adapter = sf.adapter_class
-                logger.info(f"Data from form {data}")
+                logger.info(f"Adding Contact Role")
                 try:
 
-                    workflow.resource.add_contact_role(sf.access_token, sf.instance_url, res.id)
+                    workflow.resource.add_contact_role(
+                        sf.access_token, sf.instance_url, res.integration_id
+                    )
                     attempts = 1
                     break
                 except TokenExpired as e:
