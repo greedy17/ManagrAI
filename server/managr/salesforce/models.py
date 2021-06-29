@@ -362,7 +362,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif not self.is_public and hasattr(self, "picklist_options"):
             return self.picklist_options.as_slack_options
         else:
-            return [block_builders.option("No Options", "null")]
+            return [block_builders.option("No Options", None)]
 
 
 class SObjectValidation(TimeStampModel, IntegrationModel):
