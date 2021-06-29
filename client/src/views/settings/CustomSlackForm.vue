@@ -62,19 +62,12 @@
 
       <div class="slack-form-builder__form">
         <div class="form-header">
-          <div class="form-header__left">
-            <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
-          </div>
+          <h2>
+            {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
+          </h2>
+          <p>be sure to include all required fields</p>
         </div>
-        <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
-        </div>
+
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
           <h5>Previous stage specific forms</h5>
           <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
@@ -223,6 +216,15 @@
               <PulseLoadingSpinner :loading="loadingMeetingTypes" />
             </template>
           </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
       </div>
     </div>
@@ -601,16 +603,15 @@ export default {
 
   &__form {
     // flex: 10;
-    width: 80%;
-    margin: 45px 108px 1px 35px;
-    padding: 25px 17px 32px 39.6px;
+    width: 100%;
+    padding: 2rem;
+    margin: 0.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     border: solid 2px #dcdddf;
     background-color: #ffffff;
-    left: 13rem;
-    top: -6rem;
     min-height: 70vh;
+    overflow: scroll;
   }
 }
 .paginator {
@@ -629,6 +630,9 @@ export default {
 }
 .form-header {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 
   &__left {
     flex: 9;
@@ -715,9 +719,9 @@ export default {
   }
 }
 .save-button {
-  margin-left: 1rem;
-  // display: flex;
-  // justify-content: flex-end;
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
 }
 
 .primary-button {
@@ -759,5 +763,9 @@ export default {
 
 .space {
   margin: 0.5em;
+}
+h2 {
+  margin: -2px;
+  font-size: 1.7rem;
 }
 </style>
