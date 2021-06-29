@@ -364,6 +364,13 @@ class AlertInstance(TimeStampModel):
     channel = models.CharField(
         null=True, max_length=255, help_text="Channel the alert should be sent to added 06/30/21"
     )
+    config = models.ForeignKey(
+        "alerts.AlertConfig",
+        on_delete=models.SET_NULL,
+        related_name="instances",
+        help_text="Config was set on 06/30/21 and will only have data for that date",
+        null=True,
+    )
 
     objects = AlertGroupQuerySet.as_manager()
 

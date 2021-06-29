@@ -70,6 +70,7 @@ export class AlertInstance extends Model {
   static renderedText = new fields.CharField({})
   static resourceId = new fields.CharField({})
   static sentAt = new fields.CharField({})
+  static config = new fields.ModelField({ ModelClass: AlertConfig })
 }
 
 export default class AlertTemplate extends AlertTemplateRef {

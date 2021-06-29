@@ -122,6 +122,7 @@ def _process_check_alert(config_id, user_id, run_time):
                             user_id=template_user.id,
                             resource_id=str(existing.id),
                             instance_meta=instance_meta,
+                            config=config,
                             channel=template_user.slack_integration.channel
                             if hasattr(template_user, "slack_integration")
                             else None,
@@ -134,6 +135,7 @@ def _process_check_alert(config_id, user_id, run_time):
                             user_id=user.id,
                             resource_id=str(existing.id),
                             instance_meta=instance_meta,
+                            config=config,
                             channel=user.slack_integration.channel
                             if hasattr(user, "slack_integration")
                             else None,
@@ -163,6 +165,7 @@ def _process_check_alert(config_id, user_id, run_time):
                                 user_id=u.id,
                                 resource_id=str(existing.id),
                                 instance_meta=instance_meta,
+                                config=config,
                                 channel=u.slack_integration.channel
                                 if hasattr(u, "slack_integration")
                                 else None,
@@ -177,6 +180,7 @@ def _process_check_alert(config_id, user_id, run_time):
                         resource_id=str(existing.id),
                         instance_meta=instance_meta,
                         channel=channel,
+                        config=config,
                     )
                     emit_send_alert(str(instance.id), scheduled_time=run_time)
 

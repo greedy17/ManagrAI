@@ -99,6 +99,7 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
             "resource_id",
             "sent_at",
             "channel",
+            "config",
         )
 
 
