@@ -29,6 +29,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
 
 from ..routes import routes
@@ -889,6 +890,7 @@ def _send_recap(form_ids):
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
     send_summ_to_owner = new_data.get("__send_recap_to_reps")
+    send_summ_to_channels = new_data.get("__send_recap_to_channels")
 
     slack_access_token = user.organization.slack_integration.access_token
 
@@ -960,4 +962,39 @@ def _send_recap(form_ids):
                 )
             except Exception as e:
                 logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                continue
+    if send_summ_to_channels is not None:
+        channel_list = send_summ_to_channels.split(";")
+        for channel in channel_list:
+            try:
+                slack_requests.send_channel_message(
+                    channel,
+                    slack_access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        user.slack_integration.channel,
+                        slack_access_token,
+                        text=f"Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to channel please add managr to the channel {channel} using the _@managr_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
                 continue
