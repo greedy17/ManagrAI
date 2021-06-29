@@ -22,7 +22,7 @@ from managr.salesforce.adapter.exceptions import (
 from managr.organization.models import Organization
 from managr.core.models import User
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting, MeetingReview
+from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const

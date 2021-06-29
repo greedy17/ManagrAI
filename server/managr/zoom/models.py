@@ -319,54 +319,7 @@ class ZoomMeeting(TimeStampModel):
         return super(ZoomMeeting, self).delete(*args, **kwargs)
 
 
-class MeetingReview(TimeStampModel):
-    """Parent Model in preparation for other meeting types (aka not zoom)"""
-
-    resource_type = models.CharField(blank=True, max_length=255)
-    resource_id = models.CharField(blank=True, max_length=255)
-    meeting_type = models.CharField(
-        blank=True,
-        null=True,
-        max_length=255,
-        help_text="The value must corespond to the values in the ActionChoice Model",
-    )
-    forecast_category = models.CharField(blank=True, null=True, max_length=255)
-    stage = models.CharField(blank=True, null=True, max_length=255,)
-    meeting_comments = models.TextField(blank=True, null=True, max_length=255)
-    # amount cannot be blank we are allowing blank to deal with django admin
-    amount = models.DecimalField(
-        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
-    )
-    next_step = models.TextField(
-        blank=True, help_text="If user uses next step field this will be saved", null=True
-    )
-    close_date = models.DateField(null=True, blank=True)
-    prev_forecast = models.CharField(
-        choices=opp_consts.FORECAST_CHOICES, blank=True, null=True, max_length=255
-    )
-    prev_stage = models.CharField(
-        blank=True,
-        null=True,
-        max_length=255,
-        help_text="The values must correspond to the values in the Stage model and by Org",
-    )
-    prev_close_date = models.DateField(null=True, blank=True)
-
-    prev_amount = models.DecimalField(
-        max_digits=13, decimal_places=2, help_text="This field is editable", null=True, blank=True,
-    )
-
-    @property
-    def resource(self):
-        from managr.salesforce.routes import routes
-
-        model_route = routes.get(self.resource_type, None)
-        if model_route and self.resource_id:
-            return model_route["model"].objects.get(id=self.resource_id)
-        return None
-
-
-class ZoomMeetingReview(MeetingReview):
+class ZoomMeetingReview(TimeStampModel):
     meeting = models.OneToOneField(
         "ZoomMeeting",
         on_delete=models.CASCADE,

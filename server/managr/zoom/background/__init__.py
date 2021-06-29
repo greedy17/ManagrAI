@@ -32,7 +32,7 @@ from managr.api import constants as api_consts
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
-from ..models import ZoomAuthAccount, ZoomMeeting, MeetingReview, ZoomMeetingReview
+from ..models import ZoomAuthAccount, ZoomMeeting, ZoomMeetingReview
 from ..zoom_helper.models import ZoomAcct
 from ..serializers import ZoomMeetingSerializer
 
