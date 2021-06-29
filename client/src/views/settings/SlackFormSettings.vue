@@ -53,7 +53,7 @@
           </div>
 
           <div class="modal-container__box__footer">
-            <div style="display:flex;align-items:center;flex-direction:column">
+            <div style="display: flex; align-items: center; flex-direction: column">
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
               </span>
@@ -89,118 +89,118 @@
     </modal>
 
     <div class="header__container">
-      <h3 class="header__title">Customize your Slack form</h3>
+      <h3 class="header__title">Connect SalesForce to Slack!</h3>
       <div class="header__list">
         <div class="header__list__item">
-          1. Customize your Slack forms by picking from the fields on the left. Note required
-          “Managr” fields have been preselected
-        </div>
-        <div class="header__list__item">
-          2. Please make sure to fill out all the tabs for all Objects
-        </div>
-        <div class="header__list__item">
-          3. If your company has Validation rules, like “Stage Gating” fill out that tab as well by
-          selecting each Stage that is gated
-        </div>
-        <div class="header__list__item">
-          4. Make sure to double check that all your required fields are on the form
+          Click on each object below to build out your slack forms.
         </div>
       </div>
     </div>
-    <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
-      <template v-if="allForms && allForms.length">
-        <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
-          <span class="box-updated__title">
-            {{ resource }}
-            <img
-              v-if="selectedTab && isVisible"
-              style="height: 1rem; margin-left: 1rem; "
-              src="@/assets/images/tooltipgray.png"
-              @click.prevent.stop="toggleRequiredModal"
-            />
-          </span>
-        </div>
+    <div class="resources">
+      <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
+        <template v-if="allForms && allForms.length">
+          <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
+            <span class="box-updated__title">
+              {{ resource }}
+              <img
+                v-if="selectedTab && isVisible"
+                style="height: 1rem; margin-left: 1rem"
+                src="@/assets/images/tooltipgray.png"
+                @click.prevent.stop="toggleRequiredModal"
+              />
+            </span>
+          </div>
 
-        <div :ref="`${resource.toLowerCase()}-content`" class="box-updated__content">
-          <div class="box-updated__tab-header">
-            <div
-              :key="i"
-              v-for="(k, i) in allFormsByType"
-              class="box-updated__tab"
-              :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
-              @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
-              v-if="k.formType !== 'STAGE_GATING'"
-            >
-              <div v-if="k.resource !== 'Contact'">
-                {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
-              </div>
-              <div v-else>
-                {{ k.formType == 'CREATE' ? 'Create Contact' : 'Edit Existing Contacts' }}
-              </div>
-            </div>
-
-            <div class="stage__container">
+          <div :ref="`${resource.toLowerCase()}-content`" class="box-updated__content">
+            <div class="box-updated__tab-header">
               <div
+                :key="i"
+                v-for="(k, i) in allFormsByType"
                 class="box-updated__tab"
-                @click="openStageDropDown"
-                v-if="resource == OPPORTUNITY"
+                :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
+                @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
+                v-if="k.formType !== 'STAGE_GATING'"
               >
-                Stage Specific
-                <img src="@/assets/images/dropdown-arrow-green.svg" />
+                <div v-if="k.resource !== 'Contact'">
+                  {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
+                </div>
+                <div v-else>
+                  {{ k.formType == 'CREATE' ? 'Create Contact' : 'Edit Existing Contacts' }}
+                </div>
               </div>
-              <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
-                <div v-if="currentFormStages.length">
-                  <div class="stage__dropdown__header">Your Stage Gate Forms</div>
-                  <div
-                    v-for="(form, i) in formStages"
-                    :key="form.id"
-                    class="stage__dropdown__stages__container"
-                    :class="{
-                      'stage__dropdown__stages__container--selected':
-                        `${form.id}.${form.stage}` === selectedTab,
-                    }"
-                  >
+
+              <div class="stage__container">
+                <div
+                  class="box-updated__tab"
+                  @click="openStageDropDown"
+                  v-if="resource == OPPORTUNITY"
+                >
+                  Stage Specific
+                  <img src="@/assets/images/dropdown-arrow-green.svg" />
+                </div>
+                <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
+                  <div v-if="currentFormStages.length">
+                    <div class="stage__dropdown__header">Your Stage Gate Forms</div>
                     <div
-                      class="stage__dropdown__stages__title"
-                      @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+                      v-for="(form, i) in formStages"
+                      :key="form.id"
+                      class="stage__dropdown__stages__container"
+                      :class="{
+                        'stage__dropdown__stages__container--selected':
+                          `${form.id}.${form.stage}` === selectedTab,
+                      }"
                     >
-                      {{ form.stage }}
-                    </div>
-                    <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
-                      x
+                      <div
+                        class="stage__dropdown__stages__title"
+                        @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+                      >
+                        {{ form.stage }}
+                      </div>
+                      <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
+                        x
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div style="display: flex; justify-content: center;">
-                  <button @click="onAddForm" class="modal-container__box__button">Add</button>
+                  <div style="display: flex; justify-content: center">
+                    <button @click="onAddForm" class="modal-container__box__button">Add</button>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <div class="box__tab-content">
+              <template v-if="selectedForm">
+                <div class="field-title field-title__bold">
+                  Select or search for your <br />
+                  SFDC opportunity fields.
+                </div>
+                <CustomSlackForm
+                  :fields="formFields.list"
+                  :show-validations="showValidations"
+                  :customForm="selectedForm"
+                  :formType="selectedTab"
+                  :resource="resource"
+                  v-on:update:selectedForm="updateForm($event)"
+                  :loading="formFields.refreshing"
+                  :stageForms="formStages"
+                />
+              </template>
+            </div>
           </div>
-
-          <div class="box__tab-content">
-            <template v-if="selectedForm">
-              <div class="field-title field-title__bold">Available Fields</div>
-
-              <div class="field-title">Add or remove additional tags</div>
-
-              <CustomSlackForm
-                :fields="formFields.list"
-                :show-validations="showValidations"
-                :customForm="selectedForm"
-                :formType="selectedTab"
-                :resource="resource"
-                v-on:update:selectedForm="updateForm($event)"
-                :loading="formFields.refreshing"
-                :stageForms="formStages"
-              />
-            </template>
-          </div>
-        </div>
-      </template>
-      <template v-else
-        >We are currently generating your forms please check back in a few minutes</template
-      >
+        </template>
+        <template v-else
+          >We are currently generating your forms please check back in a few minutes</template
+        >
+      </div>
+    </div>
+    <div class="tip-continue">
+      <p>
+        <strong>Pro tip:</strong> to get the most out of Managr, make sure to click into ALL the
+        objects.
+      </p>
+      <button class="primary-button">
+        <router-link :to="{ name: 'CreateNew' }"> Continue to Smart Alerts </router-link>
+      </button>
     </div>
   </div>
 </template>
@@ -272,7 +272,7 @@ export default {
     },
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
+        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
       } else if (this.resource == this.OPPORTUNITY) {
         return [...this.FORM_TYPES, this.STAGE_GATING]
       }
@@ -286,7 +286,9 @@ export default {
     currentFormStages() {
       // users can only create one form for the stage
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
+        return this.allFormsByType
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .map((f) => f.stage)
       }
       return []
     },
@@ -294,10 +296,10 @@ export default {
       // users can only create one form for the stage orderd by stage
       let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach(s => {
+        this.stages.forEach((s) => {
           this.allFormsByType
-            .filter(f => f.formType == this.STAGE_GATING)
-            .forEach(sf => {
+            .filter((f) => f.formType == this.STAGE_GATING)
+            .forEach((sf) => {
               if (sf.stage == s.value) {
                 forms.push(sf)
               }
@@ -401,7 +403,7 @@ export default {
 
         SlackOAuth.api
           .delete(id)
-          .then(async res => {
+          .then(async (res) => {
             this.$Alert.alert({
               type: 'success',
 
@@ -410,13 +412,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter(f => {
+            const forms = this.formsByType.filter((f) => {
               return f.id !== form.id
             })
             this.formsByType = forms
           })
 
-          .catch(e => {
+          .catch((e) => {
             this.$Alert.alert({
               type: 'error',
 
@@ -428,7 +430,7 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter(f => {
+        const forms = this.newForms.filter((f) => {
           return f.id !== form.id
         })
         this.newForms = forms
@@ -466,7 +468,7 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
@@ -494,7 +496,7 @@ export default {
         } else {
           let prev = this.resource
           this.resource = resource
-          this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
 
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
@@ -509,7 +511,7 @@ export default {
         }
       } else {
         this.resource = resource
-        this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
@@ -521,7 +523,7 @@ export default {
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
-      let form = this.allFormsByType.find(f => f.id == id && f.stage == stage)
+      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
 
       if (form && typeof form != undefined) {
         this.selectedForm = form
@@ -529,7 +531,7 @@ export default {
     },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
+      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
         this.formsByType[index] = this.selectedForm
@@ -677,15 +679,15 @@ export default {
     display: flex;
     flex-direction: column;
     text-align: left;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 
     &__item {
-      font-size: 14px;
+      font-size: 18px;
     }
   }
 }
 .field-title {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   margin-left: 1rem;
 
   &__bold {
@@ -801,5 +803,22 @@ export default {
       padding: 1rem 3rem;
     }
   }
+}
+.resources {
+  padding-top: 2rem;
+}
+.tip-continue {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 4rem;
+}
+button {
+  margin-top: 2rem;
+}
+a {
+  text-decoration: none;
+  color: white;
 }
 </style>
