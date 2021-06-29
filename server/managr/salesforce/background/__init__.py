@@ -870,6 +870,29 @@ def _process_stale_data_for_delete(batch):
     return
 
 
+def check_for_display_value(field, value):
+    from managr.salesforce.routes import routes as model_routes
+
+    is_list = field.allow_multiple
+    model_class = model_routes.get(field.relationship_name, {}).get("model", None)
+    if not model_class:
+        return value
+
+    if field.is_public == True:
+        display_keys = field.display_value_keys.get("name_fields", None)
+        if not len(display_keys):
+            return
+        if is_list:
+            value = value.split(";")
+            results = list(model_class.objects.filter(id__in=value).values_list(*display_keys))
+        else:
+            results = list(model_class.objects.filter(id__in=value).values_list(*display_keys))
+        if results and len(results):
+            return ",".join(list(map(lambda display_vals: " ".join(display_vals), results)))
+        else:
+            return value
+
+
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids):
@@ -906,13 +929,18 @@ def _send_recap(form_ids):
 
             if old_data and key in old_data:
                 if str(old_data.get(key)) != str(new_value):
+                    old_value = old_data.get(key)
+                    if field.field.is_public and field.field.data_type == "Reference":
+                        old_value = check_for_display_value(field.field, old_value)
+                        new_value = check_for_display_value(field.field, new_value)
 
-                    message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
-                    )
+                    message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ {new_value}"
 
         elif main_form.template.form_type == "CREATE":
+
             if new_value:
+                if field.field.is_public and field.field.data_type == "Reference":
+                    new_value = check_for_display_value(field.field, new_value)
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"

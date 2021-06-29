@@ -247,7 +247,7 @@ def slack_api_exceptions(rethrow=False, return_opt=None):
                 if return_opt:
                     return return_opt
             except Exception as e:
-                LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+                LOGGER.exception(f"Unhandled error occured {e}")
 
         return wrapper_slack_api_exceptions
 
