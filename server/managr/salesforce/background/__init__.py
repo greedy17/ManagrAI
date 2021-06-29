@@ -936,19 +936,27 @@ def _send_recap(form_ids):
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
     query = Q()
+    user_list = User.objects.none()
     if send_summ_to_leadership is not None:
         manager_list = send_summ_to_leadership.split(";")
         query |= Q(user_level="MANAGER", id__in=manager_list)
+        user_list = (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+
     if send_summ_to_owner is not None:
         rep_list = send_summ_to_owner.split(";")
         query |= Q(id__in=rep_list)
+        user_list |= (
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
 
-    user_list = (
-        user.organization.users.filter(query)
-        .filter(is_active=True)
-        .distinct()
-        .select_related("slack_integration")
-    )
     for u in user_list:
         if hasattr(u, "slack_integration"):
             try:
