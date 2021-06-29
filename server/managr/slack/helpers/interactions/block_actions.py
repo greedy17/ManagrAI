@@ -909,7 +909,7 @@ def process_resource_selected_for_task(payload, context):
             "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
-    if payload["view"]["submit"]:
+    if payload["view"]["submit"] and form_id:
         data["view"]["submit"] = (payload["view"]["submit"],)
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
