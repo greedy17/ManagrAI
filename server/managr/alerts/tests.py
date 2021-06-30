@@ -249,6 +249,7 @@ class UserTestCase(TestCase):
             )
         for i in range(2):
             alert_models.AlertConfig.objects.create(
+                recipient_type="USER_LEVEL",
                 recurrence_day=timezone.now().day,
                 recurrence_frequency="MONTHLY",
                 recipients=["SELF"],
@@ -268,6 +269,7 @@ class UserTestCase(TestCase):
 
         for i in range(2):
             alert_models.AlertConfig.objects.create(
+                recipient_type="USER_LEVEL",
                 recurrence_day=timezone.now().weekday(),
                 recurrence_frequency="WEEKLY",
                 recipients=["SELF"],
@@ -275,6 +277,7 @@ class UserTestCase(TestCase):
             )
         for i in range(2):
             alert_models.AlertConfig.objects.create(
+                recipient_type="USER_LEVEL",
                 recurrence_day=timezone.now().day,
                 recurrence_frequency="MONTHLY",
                 recipients=["SELF"],
@@ -303,12 +306,14 @@ class UserTestCase(TestCase):
         opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
             template=self.template,
         )
         conf_2 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["OWNER"],
@@ -323,6 +328,7 @@ class UserTestCase(TestCase):
                     # if self expects two instances one for each opp matched (2 matched here)
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -331,6 +337,7 @@ class UserTestCase(TestCase):
                     # expects 2 since each owner will get 1
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -357,6 +364,7 @@ class UserTestCase(TestCase):
                         )
                         for u in users:
                             alert_models.AlertInstance.objects.create(
+                                config=setting,
                                 template_id=self.template.id,
                                 user_id=u.id,
                                 resource_id=str(opp.id),
@@ -374,6 +382,7 @@ class UserTestCase(TestCase):
         opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
@@ -388,6 +397,7 @@ class UserTestCase(TestCase):
                     # if self expects two instances one for each opp matched (2 matched here)
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -396,6 +406,7 @@ class UserTestCase(TestCase):
                     # expects 2 since each owner will get 1
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -414,6 +425,7 @@ class UserTestCase(TestCase):
         opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["OWNER"],
@@ -428,6 +440,7 @@ class UserTestCase(TestCase):
                     # if self expects two instances one for each opp matched (2 matched here)
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -436,6 +449,7 @@ class UserTestCase(TestCase):
                     # expects 2 since each owner will get 1
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -462,6 +476,7 @@ class UserTestCase(TestCase):
                         )
                         for u in users:
                             alert_models.AlertInstance.objects.create(
+                                config=setting,
                                 template_id=self.template.id,
                                 user_id=u.id,
                                 resource_id=str(opp.id),
@@ -478,6 +493,7 @@ class UserTestCase(TestCase):
         opp_1 = opp_factories.OpportunityFactory(owner=rep)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
@@ -491,6 +507,7 @@ class UserTestCase(TestCase):
                     # if self expects two instances one for each opp matched (2 matched here)
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -499,6 +516,7 @@ class UserTestCase(TestCase):
                     # expects 2 since each owner will get 1
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -528,6 +546,7 @@ class UserTestCase(TestCase):
         opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["MANAGERS"],
@@ -542,6 +561,7 @@ class UserTestCase(TestCase):
                     # if self expects two instances one for each opp matched (2 matched here)
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -550,6 +570,7 @@ class UserTestCase(TestCase):
                     # expects 2 since each owner will get 1
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -572,6 +593,7 @@ class UserTestCase(TestCase):
                         users = self.template.user.organization.users.filter(query).distinct()
                         for u in users:
                             alert_models.AlertInstance.objects.create(
+                                config=setting,
                                 template_id=self.template.id,
                                 user_id=u.id,
                                 resource_id=str(opp.id),
@@ -593,6 +615,7 @@ class UserTestCase(TestCase):
         opp_2 = opp_factories.OpportunityFactory(owner=self.admin_user)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=timezone.now().day,
             recurrence_frequency="MONTHLY",
             recipients=["SDR"],
@@ -606,6 +629,7 @@ class UserTestCase(TestCase):
                 for user_group in setting.recipients:
                     if user_group == "SELF":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=self.template.user.id,
                             resource_id=str(opp.id),
@@ -613,6 +637,7 @@ class UserTestCase(TestCase):
                         )
                     elif user_group == "OWNER":
                         alert_models.AlertInstance.objects.create(
+                            config=setting,
                             template_id=self.template.id,
                             user_id=opp.owner.id,
                             resource_id=str(opp.id),
@@ -639,6 +664,7 @@ class UserTestCase(TestCase):
                         users = self.template.user.organization.users.filter(query).distinct()
                         for u in users:
                             alert_models.AlertInstance.objects.create(
+                                config=setting,
                                 template_id=self.template.id,
                                 user_id=u.id,
                                 resource_id=str(opp.id),
@@ -652,6 +678,7 @@ class UserTestCase(TestCase):
         NOTE if row is top group order it will not append operator
         """
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=3,
             recurrence_frequency="WEEKLY",
             recipients=["MANAGERS"],
@@ -688,6 +715,7 @@ class UserTestCase(TestCase):
         alert_models.AlertOperand.objects.create(**op)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=27,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
@@ -724,6 +752,7 @@ class UserTestCase(TestCase):
         opp = alert_models.AlertOperand.objects.create(**op)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=27,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
@@ -769,6 +798,7 @@ class UserTestCase(TestCase):
         opp = alert_models.AlertOperand.objects.create(**op)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=27,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
@@ -961,6 +991,7 @@ class UserTestCase(TestCase):
         alert_models.AlertOperand.objects.create(**op)
 
         conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
             recurrence_day=27,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],

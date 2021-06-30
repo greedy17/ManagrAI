@@ -154,8 +154,8 @@
             <div
               v-if="
                 customForm.formType == 'CREATE' ||
-                  //|| customForm.formType == 'MEETING_REVIEW'
-                  customForm.stage
+                customForm.formType == 'MEETING_REVIEW' ||
+                customForm.stage
               "
               class="form-field__left"
               @click="field.includeInRecap = !field.includeInRecap"

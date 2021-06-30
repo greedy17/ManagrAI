@@ -1,6 +1,7 @@
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import User from '@/services/users'
+import { SlackListResponse } from '.'
 
 const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
 const TEST_DM_ENDPOINT = '/slack/test-dm/'
@@ -8,6 +9,7 @@ const GET_OAUTH_LINK_ENDPOINT = '/slack/get-oauth-link/'
 const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
 const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
+const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-public-channels/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -22,7 +24,10 @@ export default class SlackAPI {
 
   getOAuthLink = linkType => {
     const payload = { linkType, redirectUri: this.cls.redirectURI }
-    payload.redirectUri = process.env.NODE_ENV == 'development' ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + "/api/users/slack/re-direct" : this.cls.redirectURI
+    payload.redirectUri =
+      process.env.NODE_ENV == 'development'
+        ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + '/api/users/slack/re-direct'
+        : this.cls.redirectURI
     const promise = this.client
       .post(GET_OAUTH_LINK_ENDPOINT, objectToSnakeCase(payload))
       .then(r => objectToCamelCase(r.data))
@@ -32,7 +37,10 @@ export default class SlackAPI {
 
   generateAccessToken = code => {
     const payload = { code, redirectUri: this.cls.redirectURI }
-    payload.redirectUri = process.env.NODE_ENV == 'development' ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + "/api/users/slack/re-direct" : this.cls.redirectURI
+    payload.redirectUri =
+      process.env.NODE_ENV == 'development'
+        ? process.env.VUE_APP_SLACK_FRONTEND_REDIRECT + '/api/users/slack/re-direct'
+        : this.cls.redirectURI
     try {
       const res = this.client.post(GENERATE_ACCESS_TOKEN_ENDPOINT, objectToSnakeCase(payload))
       return new User(objectToCamelCase(res.data))
@@ -89,5 +97,13 @@ export default class SlackAPI {
       .delete(SLACK_CUSTOM_FORM_ENDPOINT + id + '/')
       .then(response => response)
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
+  }
+  async listPublicChannels(cursor) {
+    return this.client
+      .post(SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT, { cursor: cursor })
+      .then(response => {
+        return SlackListResponse.fromAPI(response.data)
+      })
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listPublicChannels' }))
   }
 }
