@@ -380,9 +380,11 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
     )
+    update_form_ids = []
     # aggregate the data
     data = dict()
     for form in update_forms:
+        update_form_ids.append(str(form.id))
         data = {**data, **form.saved_data}
 
     attempts = 1
@@ -414,18 +416,10 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
-            _send_recap(
-                workflow.forms.exclude(template__resource__in=["CONTACT", "LEAD"]).values_list(
-                    "id", flat=True
-                )
-            )
+            _send_recap(update_form_ids)
             raise e
 
-    _send_recap(
-        workflow.forms.exclude(template__resource__in=["CONTACT", "LEAD"]).values_list(
-            "id", flat=True
-        )
-    )
+    _send_recap(update_form_ids)
     # push to sf
     return res
 
