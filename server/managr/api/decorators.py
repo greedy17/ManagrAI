@@ -20,6 +20,7 @@ from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidArgumentsException,
     InvalidAccessToken,
+    CannotSendToChannel,
 )
 from managr.utils.misc import snake_to_space
 
@@ -246,8 +247,13 @@ def slack_api_exceptions(rethrow=False, return_opt=None):
                     raise InvalidArgumentsException
                 if return_opt:
                     return return_opt
+            except CannotSendToChannel as e:
+                if should_rethrow:
+                    raise CannotSendToChannel
+                if return_opt:
+                    return return_opt
             except Exception as e:
-                LOGGER.exception(f"Function wrapped in sfw logger but cannot find workflow {e}")
+                LOGGER.exception(f"Unhandled error occured {e}")
 
         return wrapper_slack_api_exceptions
 

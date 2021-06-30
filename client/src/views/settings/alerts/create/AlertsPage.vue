@@ -188,7 +188,19 @@
               </FormField>
             </div>
             <div class="alerts-page__settings__recipients">
-              <FormField :errors="form.field.recipients.errors">
+              <span
+                v-if="
+                  form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'
+                "
+                class="muted--link--important"
+              >
+                Please add managr to <em>{{ form.field._recipients.value.name }}</em> using the @
+                tag @managr
+              </span>
+              <FormField
+                v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                :errors="form.field.recipients.errors"
+              >
                 <template v-slot:input>
                   <DropDownSearch
                     :items.sync="alertRecipientOpts"
@@ -203,8 +215,50 @@
                   />
                 </template>
               </FormField>
+              <FormField
+                v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                :errors="form.field.recipients.errors"
+              >
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="channelOpts.channels"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="name"
+                    valueKey="id"
+                    nullDisplay="Channels"
+                    :hasNext="!!channelOpts.nextCursor"
+                    @load-more="listPublicChannels(channelOpts.nextCursor)"
+                  />
+                </template>
+              </FormField>
             </div>
-            <div>
+            <div class="alerts-page__settings__recipient-type">
+              <span
+                @click="
+                  form.field.recipientType.value = recipientTypeToggle(
+                    form.field.recipientType.value,
+                  )
+                "
+                class="muted--link"
+                v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                >Send to a channel instead ?</span
+              >
+
+              <span
+                @click="
+                  form.field.recipientType.value = recipientTypeToggle(
+                    form.field.recipientType.value,
+                  )
+                "
+                class="muted--link"
+                v-else
+              >
+                Send to a group of users (DM) instead ?
+              </span>
+            </div>
+            <div class="alerts-page__settings-remove">
               <button
                 class="btn btn--danger btn--icon"
                 @click.stop="onRemoveSetting(i)"
@@ -274,7 +328,6 @@ import ExpandablePanel from '@/components/ExpandablePanel'
  * Services
  */
 
-import { SOBJECTS_LIST } from '@/services/salesforce'
 import AlertTemplate, {
   AlertGroupForm,
   AlertTemplateForm,
@@ -289,8 +342,9 @@ import {
   SObjectValidations,
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
+  SOBJECTS_LIST,
 } from '@/services/salesforce'
-
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'AlertsPage',
   components: {
@@ -309,6 +363,7 @@ export default {
   },
   data() {
     return {
+      channelOpts: new SlackListResponse(),
       savingTemplate: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
@@ -341,6 +396,9 @@ export default {
       ],
     }
   },
+  async created() {
+    await this.listPublicChannels()
+  },
   watch: {
     selectedResourceType: {
       immediate: true,
@@ -351,13 +409,29 @@ export default {
         }
         if (this.selectedResourceType) {
           this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page=1
+          this.fields.filters.page = 1
           await this.fields.refresh()
         }
       },
     },
   },
   methods: {
+    async listPublicChannels(cursor = null) {
+      const res = await SlackOAuth.api.listPublicChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.channelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.channelOpts = results
+    },
+    recipientTypeToggle(value) {
+      if (value == 'USER_LEVEL') {
+        return 'SLACK_CHANNEL'
+      } else if (value == 'SLACK_CHANNEL') {
+        return 'USER_LEVEL'
+      }
+      return value
+    },
     async onSave() {
       this.savingTemplate = true
       this.alertTemplateForm.validate()
@@ -511,6 +585,8 @@ textarea {
 }
 .alerts-page__settings {
   display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 
   &__frequency {
     display: flex;
@@ -519,6 +595,9 @@ textarea {
       @include muted-font();
       margin: 0 0.5rem;
     }
+  }
+  &-remove {
+    justify-self: end;
   }
 }
 .btn {
@@ -534,6 +613,15 @@ textarea {
 
   &--icon {
     @include --icon();
+  }
+}
+.muted--link {
+  @include muted-font();
+  @include pointer-on-hover();
+  &--important {
+    color: red;
+    font-weight: bold;
+    font-size: 11px;
   }
 }
 </style>

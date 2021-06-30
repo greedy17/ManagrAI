@@ -291,6 +291,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 action_id=self.api_name,
                 block_id=self.api_name,
             )
+        elif self.data_type == "MultiChannelsSelect":
+            return block_builders.multi_channels_select_block(
+                section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
+            )
         else:
             if self.data_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder
@@ -320,6 +324,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 initial_value=value,
                 block_id=self.api_name,
             )
+
             # use this one.
 
     @property

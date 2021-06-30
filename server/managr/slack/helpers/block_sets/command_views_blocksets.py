@@ -83,26 +83,31 @@ def alert_instance_block_set(context):
     """
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     user = instance.user
+    config = instance.config
+    resource_owner = instance.resource.owner
+    in_channel = False
+    if config and config.recipient_type == "SLACK_CHANNEL":
+        in_channel = True
     blocks = [
         block_builders.divider_block(),
         block_builders.simple_section(instance.render_text(), "mrkdwn"),
     ]
-    if user.id == instance.resource.owner.id:
-        blocks.append(
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Update",
-                        instance.resource_id,
-                        action_id=f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={instance.template.resource_type}",
-                    )
-                ]
-            )
+
+    blocks.append(
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Update",
+                    instance.resource_id,
+                    action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
+                )
+            ]
         )
-    else:
+    )
+    if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.simple_section(
-                f"_*This {instance.template.resource_type} is owned by {instance.resource.owner.full_name} *_",
+                f"_*This {instance.template.resource_type} is owned by {resource_owner.full_name} *_",
                 "mrkdwn",
             ),
         )
