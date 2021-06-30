@@ -25,7 +25,7 @@
           itemDisplayKey="referenceDisplayLabel"
           :showSubmitBtn="false"
           @onClickItem="
-            e => {
+            (e) => {
               onAddField(e)
             }
           "
@@ -62,19 +62,12 @@
 
       <div class="slack-form-builder__form">
         <div class="form-header">
-          <div class="form-header__left">
-            <h3>{{ customForm.stage ? `${customForm.stage} Stage` : 'Your Slack Form' }}</h3>
-          </div>
+          <h2>
+            {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
+          </h2>
+          <p>be sure to include all required fields</p>
         </div>
-        <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
-        </div>
+
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
           <h5>Previous stage specific forms</h5>
           <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
@@ -106,9 +99,9 @@
           <div
             v-if="
               field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
+              field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+              field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
+              field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
             "
             class="form-field__label"
           >
@@ -149,19 +142,19 @@
                 class="form-field__label"
                 v-if="
                   field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
+                  field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                  field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                  field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
                 "
               >
                 {{ field.referenceDisplayLabel }}
               </div>
             </div>
 
-            <!--             <div
+            <div
               v-if="
                 customForm.formType == 'CREATE' ||
-                  customForm.formType == 'MEETING_REVIEW' ||
+                  //|| customForm.formType == 'MEETING_REVIEW'
                   customForm.stage
               "
               class="form-field__left"
@@ -171,12 +164,10 @@
               <h5 class="space">
                 include in recap
                 <small
-                  ><i>{{
-                    customForm.stage ? ' (only available for create and meeting review)' : ''
-                  }}</i></small
+                  ><i>{{ customForm.stage ? ' (only available for create forms)' : '' }}</i></small
                 >
               </h5>
-            </div> -->
+            </div>
             <div class="form-field__middle">
               {{ field.required ? 'required' : '' }}
             </div>
@@ -225,6 +216,15 @@
               <PulseLoadingSpinner :loading="loadingMeetingTypes" />
             </template>
           </div>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
       </div>
     </div>
@@ -346,7 +346,7 @@ export default {
     orderedStageForm() {
       let forms = []
       if (this.customForm.stage) {
-        let index = this.stageForms.findIndex(f => f.stage == this.customForm.stage)
+        let index = this.stageForms.findIndex((f) => f.stage == this.customForm.stage)
         if (~index) {
           forms = this.stageForms.slice(0, index)
         }
@@ -360,7 +360,7 @@ export default {
       return this.customForm ? this.customForm.fields : []
     },
     addedFieldIds() {
-      return this.addedFields.map(field => {
+      return this.addedFields.map((field) => {
         return field.id
       })
     },
@@ -376,7 +376,7 @@ export default {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
         .list({})
-        .then(res => {
+        .then((res) => {
           this.actionChoices = res.results
         })
         .finally((this.loadingMeetingTypes = false))
@@ -401,7 +401,7 @@ export default {
       } else if (this.formType == this.MEETING_REVIEW) {
         if (
           this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
-          ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex(f => field.key == f)
+          ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex((f) => field.key == f)
         ) {
           return false
         } else {
@@ -422,11 +422,11 @@ export default {
     onRemoveField(field) {
       // remove from the array if  it exists
 
-      this.addedFields = [...this.addedFields.filter(f => f.id != field.id)]
+      this.addedFields = [...this.addedFields.filter((f) => f.id != field.id)]
 
       // if it exists in the current fields add it to remove field
 
-      if (~this.currentFields.findIndex(f => f == field.id)) {
+      if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
     },
@@ -481,7 +481,7 @@ export default {
 
             await ActionChoice.api
               .create(obj)
-              .then(res => {
+              .then((res) => {
                 this.$Alert.alert({
                   type: 'success',
                   message: 'New meeting type created',
@@ -526,9 +526,9 @@ export default {
       }
       this.savingForm = true
 
-      let fields = new Set([...this.addedFields.map(f => f.id)])
-      fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
-      let fields_ref = this.addedFields.filter(f => fields.includes(f.id))
+      let fields = new Set([...this.addedFields.map((f) => f.id)])
+      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -536,7 +536,7 @@ export default {
           removedFields: this.removedFields,
           fields_ref: fields_ref,
         })
-        .then(res => {
+        .then((res) => {
           this.$emit('update:selectedForm', res)
         })
         .finally(() => {
@@ -603,16 +603,15 @@ export default {
 
   &__form {
     // flex: 10;
-    width: 80%;
-    margin: 45px 108px 1px 35px;
-    padding: 25px 17px 32px 39.6px;
+    width: 100%;
+    padding: 2rem;
+    margin: 0.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     border: solid 2px #dcdddf;
     background-color: #ffffff;
-    left: 13rem;
-    top: -6rem;
     min-height: 70vh;
+    overflow: scroll;
   }
 }
 .paginator {
@@ -631,6 +630,9 @@ export default {
 }
 .form-header {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 
   &__left {
     flex: 9;
@@ -717,9 +719,9 @@ export default {
   }
 }
 .save-button {
-  margin-left: 1rem;
-  // display: flex;
-  // justify-content: flex-end;
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
 }
 
 .primary-button {
@@ -761,5 +763,9 @@ export default {
 
 .space {
   margin: 0.5em;
+}
+h2 {
+  margin: -2px;
+  font-size: 1.7rem;
 }
 </style>

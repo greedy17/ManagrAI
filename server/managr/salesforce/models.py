@@ -2,6 +2,7 @@ import jwt
 import pytz
 import math
 import logging
+import json
 
 from functools import reduce
 
@@ -118,6 +119,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
     length = models.PositiveIntegerField(default=0)
     reference = models.BooleanField(default=False)
     relationship_name = models.CharField(max_length=255, null=True)
+    allow_multiple = models.BooleanField(default=False)
+    default_filters = ArrayField(
+        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True
+    )
     reference_to_infos = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -146,7 +151,12 @@ class SObjectField(TimeStampModel, IntegrationModel):
     def reference_display_label(self):
         """returns the reference object's name as a display label"""
 
-        if self.data_type == "Reference" and self.reference and self.relationship_name:
+        if (
+            self.data_type == "Reference"
+            and self.reference
+            and self.relationship_name
+            and not self.is_public
+        ):
             return self.relationship_name
         return self.label
 
@@ -222,11 +232,21 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
             initial_option = block_builders.option(value, value) if value else None
-            if self.is_public:
+            if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
                 action_query = (
                     f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
+                )
+            elif self.is_public and self.allow_multiple:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                return block_builders.multi_external_select(
+                    f"*{self.reference_display_label}*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_options=None,
                 )
 
             else:
@@ -338,7 +358,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif not self.is_public and hasattr(self, "picklist_options"):
             return self.picklist_options.as_slack_options
         else:
-            return [block_builders.option("No Options", "null")]
+            return [block_builders.option("No Options", None)]
 
 
 class SObjectValidation(TimeStampModel, IntegrationModel):

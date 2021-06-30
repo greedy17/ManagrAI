@@ -185,15 +185,19 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     template = models.ForeignKey(
         "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
     )
-    saved_data = JSONField(
-        default=dict,
-        help_text="The Generated form with instances of its fields as a json object",
-        blank=True,
+    saved_data = JSONField(default=dict, help_text="The data submitted on the form", blank=True,)
+    previous_data = JSONField(
+        default=dict, help_text="This will hold previous data for updated forms", blank=True,
     )
     resource_id = models.CharField(
         max_length=255, blank=True, help_text="The resource for this form (if not create"
     )
     workflow = models.ForeignKey("salesforce.MeetingWorkflow", models.CASCADE, "forms", null=True)
+    is_submitted = models.BooleanField(
+        help_text="If sf returned a success this will be true, this was set up on 06/25/2021 and will only be valid for forms therafter",
+        default=False,
+    )
+    submission_date = models.DateTimeField(null=True, help_text="Date form was submitted")
 
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
@@ -226,6 +230,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             .order_by("order")
         )
         user_fields = []
+
         # hack to maintain order
         for field in template_fields:
             f = SObjectField.objects.get(
@@ -234,20 +239,15 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                 & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
             )
             user_fields.append(f)
+        if not template_fields:
+            # user has not created form use all fields
+            user_fields = SObjectField.objects.filter(
+                salesforce_account=self.user.salesforce_account,
+                salesforce_object=self.resource_type,
+            )
         return user_fields
 
-    def generate_form(self, data=None):
-        """
-        Collects all the fields
-        and creates them into an object
-        that has all the necessary fields as
-        slack blocks
-        If a resource is available it's current values
-        will be passed in as values
-        ## Optionally pass in data to override instance data
-        """
-        # get all fields that belong to the user based on the template fields
-        user_fields = self.get_user_fields()
+    def generate_form_values(self, data=None):
         form_values = {}
         if data:
             form_values = data
@@ -261,7 +261,21 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_values = self.resource_object.secondary_data
                 else:
                     form_values = {}
+        return form_values
 
+    def generate_form(self, data=None):
+        """
+        Collects all the fields
+        and creates them into an object
+        that has all the necessary fields as
+        slack blocks
+        If a resource is available it's current values
+        will be passed in as values
+        ## Optionally pass in data to override instance data
+        """
+        # get all fields that belong to the user based on the template fields
+        user_fields = self.get_user_fields()
+        form_values = self.generate_form_values(data)
         form_blocks = []
         for field in user_fields:
             val = form_values.get(field.api_name, None)
@@ -311,14 +325,21 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         """gets all form values but only saves values for fields"""
         values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
+        old_values = self.generate_form_values()
 
-        data = dict()
+        new_data = dict()
+        old_data = dict()
         for k, v in values.items():
             if k in fields:
-                data[k] = v
+                new_data[k] = v
+                pass
+        for o_k, o_v in old_values.items():
+            if o_k in fields:
+                old_data[o_k] = o_v
                 pass
 
-        self.saved_data = data
+        self.saved_data = new_data
+        self.previous_data = old_data
         self.save()
 
 

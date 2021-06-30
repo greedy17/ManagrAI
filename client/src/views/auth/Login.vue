@@ -1,47 +1,55 @@
 <template>
   <div class="login-page">
+    <div class="column">
+      <img src="@/assets/images/logo.png" alt="logo" />
+      <h2>Log in to Managr</h2>
+      <p class="enter-email">Please enter your email to log into Managr</p>
+    </div>
     <div class="login-page__form">
-      <h2>Login</h2>
-      <div class="login-page__form__fields">
-        <FormField
-          @input="execCheckEmail"
-          :disabled="showPassword"
-          v-model="loginForm.field.email.value"
-          placeholder="email"
-          :errors="loginForm.field.email.errors"
-          name="email"
-          id="email"
-          large
-        />
-        <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
-
-        <FormField
-          v-on:keyup.enter.native="handleLoginAttempt"
-          :errors="loginForm.field.password.errors"
-          v-if="showPassword"
-          v-model="loginForm.field.password.value"
-          inputType="password"
-          placeholder="password"
-          name="password"
-          id="password"
-          large
-        />
-      </div>
-      <PulseLoadingSpinnerButton
+      <!-- <label for="email">Enter your Email</label> -->
+      <FormField
+        labelRelation="email"
+        label="Email"
+        @input="execCheckEmail"
+        :disabled="showPassword"
+        v-model="loginForm.field.email.value"
+        placeholder=""
+        :errors="loginForm.field.email.errors"
+        name="email"
+        id="email"
+        large
+      />
+      <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
+      <FormField
+        labelRelation="password"
+        label="Password"
+        @blur="loginForm.field.password.validate()"
+        v-on:keyup.enter.native="handleLoginAttempt"
+        :errors="loginForm.field.password.errors"
         v-if="showPassword"
+        v-model="loginForm.field.password.value"
+        type="password"
+        placeholder="Password"
+        name="password"
+        id="password"
+        large
+      />
+      <PulseLoadingSpinnerButton
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
-        class="primary-button"
-        text="Log In"
+        class="login-button"
+        text="Log in"
         :loading="loggingIn"
       />
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Register' }"> No account? Sign Up </router-link>
+      <div class="row">
+        <p class="pad-right">New to Managr?</p>
+        <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password? </router-link>
+      <div class="row">
+        <p class="pad-right">Forgot password?</p>
+        <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
       </div>
-      <div style="margin-top: 1rem">
+      <div class="links">
         <p>
           <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
           |
@@ -69,7 +77,7 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 /**
  * internal Components
  */
-import FormField from '@/components/forms/FormField'
+import FormField from '@/components/forms/inputs/FormField'
 
 export default {
   name: 'Login',
@@ -150,31 +158,27 @@ export default {
 @import '@/styles/mixins/utils';
 
 h2 {
-  @include base-font-styles();
   font-weight: bold;
-  color: $main-font-gray;
   text-align: center;
 }
 .login-page {
   padding: 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     padding: 0rem;
   }
 }
 .login-page__form {
-  @include standard-border();
-  position: relative;
-  left: 35%;
-  padding: 1rem 2rem;
-  margin-top: 3.125rem;
-  width: 31.25rem;
-  min-height: 15rem;
-  height: auto;
-  background-color: $white;
+  background-color: transparent;
   display: flex;
   flex-flow: column;
   align-items: center;
+  justify-content: center;
+  margin: 5.5rem 0;
+
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     width: 100%;
@@ -186,7 +190,7 @@ h2 {
   }
 }
 
-input {
+/* input {
   @include input-field();
   height: 2.5rem;
   width: 15.65rem;
@@ -197,15 +201,55 @@ input {
     border: 2px solid $dark-green;
   }
 }
-
+ */
 button {
   @include primary-button();
-  margin-top: 1.25rem;
-  height: 1.875rem;
-  width: 9.375rem;
+  margin-bottom: 6px;
+  height: 2.75rem;
+  width: 19rem;
+  background-color: #199e54 !important;
+  color: white !important;
 }
 
+a {
+  text-decoration: none;
+}
+
+label {
+  font-size: 15px;
+}
 .hidden {
   display: none;
 }
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: -20px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.enter-email {
+  @include muted-font();
+}
+img {
+  height: 80px;
+}
+.pad-right {
+  padding-right: 0.3em;
+}
+.links {
+  font-size: 13px;
+}
+/* #email,
+#password {
+  border: 1px solid $soft-gray;
+  border-radius: 3px;
+  margin-top: 5px;
+  background-color: #ffffff;
+} */
 </style>

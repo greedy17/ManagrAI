@@ -1,6 +1,6 @@
 variable "managr_domain" {
   type    = string
-  default = "mymanagrapp.com"
+  default = "managr.ai"
 }
 
 variable "ecs_task_role_name" {
