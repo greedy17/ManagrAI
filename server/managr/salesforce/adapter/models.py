@@ -630,7 +630,7 @@ class ContactAdapter:
 
     @property
     def name(self):
-        return f"{self.secondary_data.get('FirstName')} {self.secondary_date.get('LastName')}"
+        return f"{self.secondary_data.get('FirstName')} {self.secondary_data.get('LastName')}"
 
     @staticmethod
     def get_child_rels():
