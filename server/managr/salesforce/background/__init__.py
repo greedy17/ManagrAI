@@ -1041,7 +1041,7 @@ def _send_recap(form_ids):
                         text=f"Failed to send recap to channel",
                         block_set=[
                             block_builders.simple_section(
-                                f"Unable to send recap to channel please add managr to the channel {channel} using the _@managr_",
+                                f"Unable to send recap to one of the channels you selected, please add @managr to the channel",
                                 "mrkdwn",
                             )
                         ],

@@ -494,6 +494,38 @@ def multi_channels_select_block(
     return block
 
 
+def multi_conversations_select_block(
+    section_text,
+    placeholder_text="Select Channels",
+    section_text_type="mrkdwn",
+    block_id=None,
+    action_id=None,
+    initial_conversations=[],
+    max_selected_items=None,
+    default_to_current_conversation=False,
+    filter_opts=None,  # see https://api.slack.com/reference/block-kit/composition-objects#filter_conversations
+):
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    accessory_block = {
+        "type": "multi_conversations_select",
+        "placeholder": text_block(placeholder_text),
+    }
+    if action_id:
+        accessory_block["action_id"] = action_id
+    if initial_conversations and len(initial_conversations):
+        accessory_block["initial_conversations"] = initial_conversations
+    if max_selected_items not in ["", None]:
+        accessory_block["max_selected_items"] = max_selected_items
+    if filter_opts:
+        accessory_block["filter"] = filter_opts
+
+    block = section_with_accessory_block(
+        section_text, accessory_block, text_type=section_text_type, block_id=block_id
+    )
+    return block
+
+
 def simple_image_block(url, alt_text):
     """An image block object with the image's url and alt text.
 
@@ -511,7 +543,7 @@ def simple_image_block(url, alt_text):
     }
 
 
-def context_block(value, text_type="plain_text"):
+def context_block(value, text_type="plain_text", block_id=None):
     """Return a block for context, text will be muted and smaller that regular text blocks
 
     parameters
@@ -521,8 +553,11 @@ def context_block(value, text_type="plain_text"):
     text_type: str
         If mrkdwn is not entered will default to plain_text
     """
-
+    if not block_id:
+        block_id = str(uuid.uuid4())
     return {
         "type": "context",
         "elements": [{"type": text_type, "text": value}],
+        "block_id": block_id,
     }
+

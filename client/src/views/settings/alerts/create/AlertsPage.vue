@@ -229,7 +229,7 @@
                     valueKey="id"
                     nullDisplay="Channels"
                     :hasNext="!!channelOpts.nextCursor"
-                    @load-more="listPublicChannels(channelOpts.nextCursor)"
+                    @load-more="listChannels(channelOpts.nextCursor)"
                   />
                 </template>
               </FormField>
@@ -397,7 +397,7 @@ export default {
     }
   },
   async created() {
-    await this.listPublicChannels()
+    await this.listChannels()
   },
   watch: {
     selectedResourceType: {
@@ -416,8 +416,8 @@ export default {
     },
   },
   methods: {
-    async listPublicChannels(cursor = null) {
-      const res = await SlackOAuth.api.listPublicChannels(cursor)
+    async listChannels(cursor = null) {
+      const res = await SlackOAuth.api.listChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.channelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },

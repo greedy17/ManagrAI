@@ -218,7 +218,7 @@ def _process_send_alert(instance_id):
                     text=text,
                     block_set=[
                         block_builders.simple_section(
-                            "Cannot send alert to channel please add Managr to the channel by @ tagging managr *@Managr* you can re run this alert through the preview page with the _run now_ button",
+                            "Cannot send alert to one of the channels you selected, please add @managr to the channel",
                             "mrkdwn",
                         )
                     ],
