@@ -1,10 +1,13 @@
 from managr.organization import models as org_models
 from managr.opportunity import models as opp_models
+from managr.core import models as core_models
+from managr.core import serializers as core_ser
 from managr.organization import serializers as org_ser
 from managr.opportunity import serializers as opp_ser
 from managr.salesforce import constants as sf_consts
 
 ACTION_CHOICE_RESOURCE = "ActionChoice"
+USER_RESOURCE = "User"
 routes = {
     sf_consts.RESOURCE_SYNC_ACCOUNT: {
         "model": org_models.Account,
@@ -23,4 +26,5 @@ routes = {
         "model": org_models.ActionChoice,
         "serializer": org_ser.ActionChoiceSerializer,
     },
+    USER_RESOURCE: {"model": core_models.User, "serializer": core_ser.UserSerializer,},
 }
