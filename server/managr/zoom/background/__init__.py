@@ -32,7 +32,7 @@ from managr.api import constants as api_consts
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
-from ..models import ZoomAuthAccount, ZoomMeeting, ZoomMeetingReview
+from ..models import ZoomAuthAccount, ZoomMeeting
 from ..zoom_helper.models import ZoomAcct
 from ..serializers import ZoomMeetingSerializer
 
@@ -67,10 +67,6 @@ def emit_process_past_zoom_meeting(user_id, meeting_uuid, send_slack=True):
 
 def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
     return _kick_off_slack_interaction(user_id, managr_meeting_id)
-
-
-def emit_save_meeting_review(managr_meeting_id, data):
-    return _save_meeting_review(managr_meeting_id, data)
 
 
 def emit_send_meeting_summary(workflow_id):
@@ -428,50 +424,6 @@ def to_float(amount):
         return "{:.2f}".format(float(amount))
     except ValueError:
         return None
-
-
-@background(schedule=0)
-def _save_meeting_review(workflow_id):
-
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
-    # get the create form
-    meeting = workflow.meeting
-
-    if not hasattr(meeting, "zoom_meeting_review"):
-
-        # format data appropriately
-        review_form = workflow.forms.filter(
-            template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
-        ).first()
-
-        # get data
-        form_data = review_form.saved_data
-        forecast_category = ""
-        if form_data.get("ForecastCategoryName", None) not in ["", None]:
-            forecast_category = form_data.get("ForecastCategoryName")
-        elif form_data.get("ForecastCategory", None) not in ["", None]:
-            forecast_category = form_data.get("ForecastCategory")
-        # format data appropriately
-
-        data = {
-            "meeting": meeting,
-            "resource_type": workflow.resource_type,
-            "resource_id": workflow.resource_id,
-            "forecast_category": forecast_category,
-            "stage": form_data.get("StageName", ""),
-            "meeting_comments": form_data.get("meeting_comments", ""),
-            "meeting_type": form_data.get("meeting_type", ""),
-            "amount": to_float(form_data.get("Amount", None)),
-            "close_date": pytz.utc.localize(
-                datetime.strptime(form_data.get("CloseDate", None), "%Y-%m-%d")
-            )
-            if form_data.get("CloseDate", None) not in ["", None]
-            else None,
-            "next_step": form_data.get("NextStep", ""),
-        }
-
-        return ZoomMeetingReview.objects.create(**data)
 
 
 @background(schedule=0)

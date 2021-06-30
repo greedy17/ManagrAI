@@ -30,7 +30,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
+
 
 from ..routes import routes
 from ..models import (
@@ -89,10 +89,6 @@ def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=time
 def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
 
     return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
-
-
-def emit_save_meeting_review_data(user_id, data):
-    return _process_add_call_to_sf(user_id, data)
 
 
 def emit_add_call_to_sf(workflow_id, *args):
@@ -418,10 +414,18 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
-            _send_recap([workflow.resource_id], True)
+            _send_recap(
+                workflow.forms.exclude(template__resource__in=["CONTACT", "LEAD"]).values_list(
+                    "id", flat=True
+                )
+            )
             raise e
 
-    _send_recap([workflow.resource_id], True)
+    _send_recap(
+        workflow.forms.exclude(template__resource__in=["CONTACT", "LEAD"]).values_list(
+            "id", flat=True
+        )
+    )
     # push to sf
     return res
 
@@ -870,18 +874,17 @@ def _process_stale_data_for_delete(batch):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_recap(form_ids, resource_id=False):
-    if resource_id is True:
-        submitted_forms = OrgCustomSlackFormInstance.objects.filter(resource_id__in=form_ids)
-    else:
-        submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+def _send_recap(form_ids):
+
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
     user = main_form.user
-    old_data = None
+    old_data = dict()
     if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
-        old_data = main_form.previous_data
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
     form_fields = None
     for form in submitted_forms:
@@ -905,26 +908,21 @@ def _send_recap(form_ids, resource_id=False):
             continue
         field_label = field.field.reference_display_label
         if main_form.template.form_type == "UPDATE":
-            ## Only sends values for fields that have been updated
-            ## all fields on update form are included by default users cannot edit
+            # Only sends values for fields that have been updated
+            # all fields on update form are included by default users cannot edit
 
-            if old_data and key in old_data:
+            if key in old_data:
                 if str(old_data.get(key)) != str(new_value):
 
                     message_string_for_recap += (
                         f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
-            if key == "__send_recap_to_leadership" or key == "__send_recap_to_reps":
-                continue
-            if new_value and key not in old_data:
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-            if old_data and key in old_data:
-                if str(old_data.get(key)) != str(new_value):
 
-                    message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
-                    )
+            if key in old_data and str(old_data.get(key)) != str(new_value):
+                message_string_for_recap += f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
+            else:
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
 
         elif main_form.template.form_type == "CREATE":
             if new_value:
