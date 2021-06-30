@@ -14,6 +14,7 @@ OAUTH_V2_ACCESS = "oauth.v2.access"
 # https://api.slack.com/methods/conversations.open
 CONVERSATIONS_OPEN = "conversations.open"
 
+CONVERSATIONS_LIST = "conversations.list"
 # https://api.slack.com/methods/chat.postMessage
 POST_MESSAGE = "chat.postMessage"
 
@@ -40,6 +41,7 @@ WORKSPACE_SCOPES = [
     "commands",
     "im:write",
     "incoming-webhook",
+    "channels:read",
 ]
 
 USER_SCOPES = ["identity.basic"]
@@ -111,7 +113,7 @@ UPDATE_TASK_SELECTED_RESOURCE = "UPDATE_TASK_SELECTED_RESOURCE"
 ZOOM_MEETING__SELECTED_RESOURCE_OPTION = "SELECTED_RESOURCE_OPTION"
 HOME_REQUEST_SLACK_INVITE = "HOME_REQUEST_SLACK_INVITE"
 RETURN_TO_FORM_MODAL = "RETURN_TO_FORM_MODAL"
-
+CHECK_IS_OWNER_FOR_UPDATE_MODAL = "CHECK_IS_OWNER_FOR_UPDATE_MODAL"
 
 GET_PICKLIST_OPTIONS = "GET_PICKLIST_OPTIONS"
 # Static Block ID's
@@ -198,58 +200,40 @@ FORM_RESOURCE_LIST = [
     FORM_RESOURCE_CONTACT,
     FORM_RESOURCE_LEAD,
 ]
+
+UPDATE_PUBLIC_FIELD_IDS = [
+    "fae88a10-53cc-470e-86ec-32376c041893",
+    "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
+    "fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed",
+]
+CREATE_PUBLIC_FIELD_IDS = [*UPDATE_PUBLIC_FIELD_IDS]
+MEETING_REVIEW_PUBLIC_FIELD_IDS = [
+    *UPDATE_PUBLIC_FIELD_IDS,
+    "6407b7a1-a877-44e2-979d-1effafec5035",
+    "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
+]
+
+
 DEFAULT_PUBLIC_FORM_FIELDS = {
     FORM_RESOURCE_ACCOUNT: {
-        FORM_TYPE_CREATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
-        FORM_TYPE_MEETING_REVIEW: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-            "6407b7a1-a877-44e2-979d-1effafec5035",
-            "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
-        ],
-        FORM_TYPE_UPDATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
+        FORM_TYPE_CREATE: [*CREATE_PUBLIC_FIELD_IDS],
+        FORM_TYPE_MEETING_REVIEW: [*MEETING_REVIEW_PUBLIC_FIELD_IDS],
+        FORM_TYPE_UPDATE: [*UPDATE_PUBLIC_FIELD_IDS],
     },
     FORM_RESOURCE_CONTACT: {
-        FORM_TYPE_CREATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
-        FORM_TYPE_UPDATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
+        FORM_TYPE_CREATE: [*CREATE_PUBLIC_FIELD_IDS],
+        FORM_TYPE_UPDATE: [*UPDATE_PUBLIC_FIELD_IDS],
     },
     FORM_RESOURCE_LEAD: {
-        FORM_TYPE_CREATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
-        FORM_TYPE_UPDATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
+        FORM_TYPE_CREATE: [*CREATE_PUBLIC_FIELD_IDS],
+        FORM_TYPE_UPDATE: [*UPDATE_PUBLIC_FIELD_IDS],
     },
     FORM_RESOURCE_OPPORTUNITY: {
-        FORM_TYPE_CREATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
-        FORM_TYPE_MEETING_REVIEW: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-            "6407b7a1-a877-44e2-979d-1effafec5035",
-            "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
-        ],
-        FORM_TYPE_UPDATE: [
-            "fae88a10-53cc-470e-86ec-32376c041893",
-            "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-        ],
+        FORM_TYPE_CREATE: [*CREATE_PUBLIC_FIELD_IDS],
+        FORM_TYPE_MEETING_REVIEW: [*MEETING_REVIEW_PUBLIC_FIELD_IDS],
+        FORM_TYPE_UPDATE: [*UPDATE_PUBLIC_FIELD_IDS],
     },
 }
+
+
 NO_FORM_FIELDS = "NO_FORM_FIELDS"

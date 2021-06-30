@@ -50,6 +50,14 @@ class InvalidAccessToken(Exception):
         super().__init__(self.message)
 
 
+class CannotSendToChannel(Exception):
+    def __init(
+        self, message="Unable to post in channel most likely because bot/user not in channel"
+    ):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Api500Error(APIException):
     status_code = 500
     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
@@ -103,6 +111,9 @@ class CustomAPIException:
             raise InvalidArgumentsException(
                 f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}"
             )
+        elif self.code == 200 and self.param == "not_in_channel":
+            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
+            raise CannotSendToChannel(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
         else:
             # we may not have come accross this error yet
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")

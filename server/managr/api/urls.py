@@ -73,6 +73,7 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/list-public-channels", slack_views.create_task, name="list-public-channels",),
     path("slack/commands/create-resource", slack_views.create_resource, name="create-resource",),
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
