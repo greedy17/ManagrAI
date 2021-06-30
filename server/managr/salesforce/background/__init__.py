@@ -30,7 +30,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-from managr.zoom.background import _save_meeting_review, emit_send_meeting_summary
+
 
 from ..routes import routes
 from ..models import (
@@ -89,10 +89,6 @@ def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=time
 def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
 
     return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
-
-
-def emit_save_meeting_review_data(user_id, data):
-    return _process_add_call_to_sf(user_id, data)
 
 
 def emit_add_call_to_sf(workflow_id, *args):
@@ -384,13 +380,14 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
     )
+    update_form_ids = []
     # aggregate the data
     data = dict()
     for form in update_forms:
+        update_form_ids.append(str(form.id))
         data = {**data, **form.saved_data}
 
     attempts = 1
-
     while True:
         sf = user.salesforce_account
         try:
@@ -419,12 +416,10 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
-            _save_meeting_review.now(str(workflow.id))
-            emit_send_meeting_summary(str(workflow.id))
+            _send_recap(update_form_ids)
             raise e
 
-    _save_meeting_review.now(str(workflow.id))
-    emit_send_meeting_summary(str(workflow.id))
+    _send_recap(update_form_ids)
     # push to sf
     return res
 
@@ -874,11 +869,14 @@ def _process_stale_data_for_delete(batch):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids):
+
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
-    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    main_form = submitted_forms.filter(
+        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
+    ).first()
     user = main_form.user
     old_data = dict()
-    if main_form.template.form_type == "UPDATE":
+    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
         for additional_stage_form in submitted_forms:
             old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
@@ -907,12 +905,18 @@ def _send_recap(form_ids):
             # Only sends values for fields that have been updated
             # all fields on update form are included by default users cannot edit
 
-            if old_data and key in old_data:
+            if key in old_data:
                 if str(old_data.get(key)) != str(new_value):
 
                     message_string_for_recap += (
                         f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
                     )
+        elif main_form.template.form_type == "MEETING_REVIEW":
+
+            if key in old_data and str(old_data.get(key)) != str(new_value):
+                message_string_for_recap += f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
+            else:
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
 
         elif main_form.template.form_type == "CREATE":
             if new_value:
@@ -930,7 +934,14 @@ def _send_recap(form_ids):
                 f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
             ),
         )
-
+    elif main_form.template.form_type == "MEETING_REVIEW":
+        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+        blocks.insert(
+            0,
+            block_builders.header_block(
+                f"Meeting Recap for {main_form.template.resource} {resource_name}"
+            ),
+        )
     elif main_form.template.form_type == "CREATE":
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),

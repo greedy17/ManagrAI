@@ -22,7 +22,7 @@ from managr.salesforce.adapter.exceptions import (
 from managr.organization.models import Organization
 from managr.core.models import User
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting, MeetingReview
+from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -41,11 +41,7 @@ from managr.salesforce.background import (
     emit_meeting_workflow_tracker,
     _send_recap,
 )
-from managr.zoom.background import (
-    _save_meeting_review,
-    emit_send_meeting_summary,
-    _send_meeting_summary,
-)
+
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
