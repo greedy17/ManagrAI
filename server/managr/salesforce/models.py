@@ -294,6 +294,13 @@ class SObjectField(TimeStampModel, IntegrationModel):
             return block_builders.multi_channels_select_block(
                 section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
             )
+        elif self.data_type == "MultiConversationsSelect":
+            return block_builders.multi_conversations_select_block(
+                section_text=f"*{self.label}*",
+                initial_conversations=value,
+                filter_opts={"include": ["private", "public"]},
+                block_id=self.api_name,
+            )
         else:
             if self.data_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder

@@ -886,7 +886,7 @@ def process_check_is_owner(payload, context):
         return process_show_update_resource_form(payload, context)
     else:
         error_blocks = get_block_set(
-            "error_modal", {"message": f"You do not own this {resource} update not available"}
+            "error_modal", {"message": "You are not the Opportunity owner"}
         )
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
         trigger_id = payload.get("trigger_id")
