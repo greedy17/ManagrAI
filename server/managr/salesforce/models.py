@@ -291,16 +291,22 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 block_id=self.api_name,
             )
         elif self.data_type == "MultiChannelsSelect":
-            return block_builders.multi_channels_select_block(
-                section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
-            )
+            return [
+                block_builders.multi_channels_select_block(
+                    section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
         elif self.data_type == "MultiConversationsSelect":
-            return block_builders.multi_conversations_select_block(
-                section_text=f"*{self.label}*",
-                initial_conversations=value,
-                filter_opts={"include": ["private", "public"]},
-                block_id=self.api_name,
-            )
+            return [
+                block_builders.multi_conversations_select_block(
+                    section_text=f"*{self.label}*",
+                    initial_conversations=value,
+                    filter_opts={"include": ["private", "public"]},
+                    block_id=self.api_name,
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
         else:
             if self.data_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder

@@ -543,7 +543,7 @@ def simple_image_block(url, alt_text):
     }
 
 
-def context_block(value, text_type="plain_text"):
+def context_block(value, text_type="plain_text", block_id=None):
     """Return a block for context, text will be muted and smaller that regular text blocks
 
     parameters
@@ -553,8 +553,11 @@ def context_block(value, text_type="plain_text"):
     text_type: str
         If mrkdwn is not entered will default to plain_text
     """
-
+    if not block_id:
+        block_id = str(uuid.uuid4())
     return {
         "type": "context",
         "elements": [{"type": text_type, "text": value}],
+        "block_id": block_id,
     }
+
