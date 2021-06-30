@@ -14,6 +14,7 @@ OAUTH_V2_ACCESS = "oauth.v2.access"
 # https://api.slack.com/methods/conversations.open
 CONVERSATIONS_OPEN = "conversations.open"
 
+CONVERSATIONS_LIST = "conversations.list"
 # https://api.slack.com/methods/chat.postMessage
 POST_MESSAGE = "chat.postMessage"
 
@@ -40,6 +41,7 @@ WORKSPACE_SCOPES = [
     "commands",
     "im:write",
     "incoming-webhook",
+    "channels:read",
 ]
 
 USER_SCOPES = ["identity.basic"]
@@ -111,7 +113,7 @@ UPDATE_TASK_SELECTED_RESOURCE = "UPDATE_TASK_SELECTED_RESOURCE"
 ZOOM_MEETING__SELECTED_RESOURCE_OPTION = "SELECTED_RESOURCE_OPTION"
 HOME_REQUEST_SLACK_INVITE = "HOME_REQUEST_SLACK_INVITE"
 RETURN_TO_FORM_MODAL = "RETURN_TO_FORM_MODAL"
-
+CHECK_IS_OWNER_FOR_UPDATE_MODAL = "CHECK_IS_OWNER_FOR_UPDATE_MODAL"
 
 GET_PICKLIST_OPTIONS = "GET_PICKLIST_OPTIONS"
 # Static Block ID's

@@ -167,4 +167,17 @@ def generic_request(url, data, access_token=None):
         if access_token
         else slack_auth.json_headers(),
     )
-    return _handle_response(res, blocks=original_data.get("blocks"))
+    return _handle_response(res, blocks=original_data.get("blocks") if data else [])
+
+
+def list_public_channels(access_token, limit=25, cursor=None):
+    q = dict(types="public_channel", exclude_archived=True)
+    url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_LIST
+    if limit:
+        q["limit"] = limit
+    if cursor:
+        q["cursor"] = cursor
+
+    url += "?" + urlencode(q)
+    print(url)
+    return generic_request(url, None, access_token=access_token)

@@ -53,6 +53,7 @@ export class AlertConfigForm extends Form {
     ],
   })
   static recipients = new FormField({ validators: [new RequiredValidator()] })
+  static recipientType = new FormField({ value: 'USER_LEVEL' })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recipients = new FormField({ value: null })
   // Keeping a private copy of the dropdown ref obj for later use
