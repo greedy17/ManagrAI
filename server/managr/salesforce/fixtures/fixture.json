@@ -112,7 +112,7 @@
       "updateable": true,
       "unique": false,
       "required": false,
-      "data_type": "MultiChannelsSelect",
+      "data_type": "MultiConversationsSelect",
       "display_value": "",
       "value": null,
       "label": "Select Channels to send Recap to",

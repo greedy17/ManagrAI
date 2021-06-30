@@ -98,12 +98,12 @@ export default class SlackAPI {
       .then(response => response)
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm' }))
   }
-  async listPublicChannels(cursor) {
+  async listChannels(cursor) {
     return this.client
       .post(SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT, { cursor: cursor })
       .then(response => {
         return SlackListResponse.fromAPI(response.data)
       })
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.listPublicChannels' }))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listChannels' }))
   }
 }

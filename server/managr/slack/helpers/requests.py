@@ -170,8 +170,10 @@ def generic_request(url, data, access_token=None):
     return _handle_response(res, blocks=original_data.get("blocks") if data else [])
 
 
-def list_public_channels(access_token, limit=25, cursor=None):
-    q = dict(types="public_channel", exclude_archived=True)
+def list_channels(access_token, limit=25, cursor=None, types=[]):
+    q = dict(exclude_archived=True)
+    if len(types):
+        q["types"] = ",".join(types)
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_LIST
     if limit:
         q["limit"] = limit

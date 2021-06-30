@@ -279,11 +279,18 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg
-                form_blocks.append(
-                    field.to_slack_field(val, user=self.user, resource=self.resource_type,)
+                generated_field = field.to_slack_field(
+                    val, user=self.user, resource=self.resource_type,
                 )
+                if isinstance(generated_field, list):
+                    form_blocks = [*form_blocks, *generated_field]
+                else:
+                    form_blocks.append(generated_field)
             else:
-                form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
+                if isinstance(generated_field, list):
+                    form_blocks = [*form_blocks, *generated_field]
+                else:
+                    form_blocks.append(generated_field)
 
         return form_blocks
 
@@ -302,6 +309,14 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = (
                         ";".join(list(map(lambda val: val, value.get("selected_channels", []))))
                         if value.get("selected_channels", None)
+                        else None
+                    )
+                elif value["type"] == "multi_conversations_select":
+                    current_value = (
+                        ";".join(
+                            list(map(lambda val: val, value.get("selected_conversations", [])))
+                        )
+                        if value.get("selected_conversations", None)
                         else None
                     )
                 elif (
