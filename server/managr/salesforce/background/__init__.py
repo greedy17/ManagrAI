@@ -877,9 +877,10 @@ def _send_recap(form_ids):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = None
+    old_data = dict()
     if main_form.template.form_type == "UPDATE":
-        old_data = main_form.previous_data
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
     form_fields = None
     for form in submitted_forms:
@@ -903,8 +904,8 @@ def _send_recap(form_ids):
             continue
         field_label = field.field.reference_display_label
         if main_form.template.form_type == "UPDATE":
-            ## Only sends values for fields that have been updated
-            ## all fields on update form are included by default users cannot edit
+            # Only sends values for fields that have been updated
+            # all fields on update form are included by default users cannot edit
 
             if old_data and key in old_data:
                 if str(old_data.get(key)) != str(new_value):
