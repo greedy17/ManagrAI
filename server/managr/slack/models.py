@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
@@ -68,6 +69,7 @@ class OrganizationSlackIntegration(TimeStampModel):
 
     class Meta:
         ordering = ["organization"]
+        constraints = [UniqueConstraint(fields=["team_id"], name="unique_team_id")]
 
     def delete(self, *args, **kwargs):
         return super(OrganizationSlackIntegration, self).delete(*args, **kwargs)
