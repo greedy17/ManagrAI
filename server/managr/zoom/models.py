@@ -225,7 +225,9 @@ class ZoomMeeting(TimeStampModel):
         help_text="Json object of participants",
     )
 
-    latest_attempt = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    latest_attempt = models.DateTimeField(
+        auto_now_add=True, blank=True, null=True, default=timezone.now
+    )
 
     participants_count = models.SmallIntegerField(null=True, blank=True)
     total_minutes = models.SmallIntegerField(null=True, blank=True)
