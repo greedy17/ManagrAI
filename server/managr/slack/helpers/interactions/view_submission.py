@@ -436,6 +436,7 @@ def process_submit_resource_data(payload, context):
         if (
             all_form_data.get("__send_recap_to_leadership") is not None
             or all_form_data.get("__send_recap_to_reps") is not None
+            or all_form_data.get("__send_recap_to_channels") is not None
         ):
             _send_recap(current_form_ids)
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
