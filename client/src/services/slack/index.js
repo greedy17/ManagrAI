@@ -18,7 +18,6 @@ export class SlackListResponse {
     return new SlackListResponse(opts)
   }
   static fromAPI(json) {
-    console.log(new SlackListResponse(objectToCamelCase(json)))
     return new SlackListResponse(objectToCamelCase(json))
   }
 }
