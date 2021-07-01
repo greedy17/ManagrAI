@@ -499,7 +499,9 @@ export default {
     }
   },
   async created() {
-    await this.listChannels()
+    if (this.user.slackRef) {
+      await this.listChannels()
+    }
   },
   watch: {
     selectedResourceType: {
@@ -527,6 +529,10 @@ export default {
       this.channelOpts = results
     },
     recipientTypeToggle(value) {
+      if (!this.user.slackRef) {
+        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
+        return 'USER_LEVEL'
+      }
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
@@ -630,6 +636,9 @@ export default {
         message: this.formValue.alertMessages[0].body,
         resourceType: this.selectedResourceType,
       }
+    },
+    user() {
+      return this.$store.state.user
     },
     selectedResourceType: {
       get() {
