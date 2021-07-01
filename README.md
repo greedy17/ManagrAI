@@ -309,13 +309,9 @@ You can get the correct task_id by looking at the AWS Console under ECS tasks th
 ### One time code to add new public fields to user's forms 
 
 
-    form_templates=OrgCustomSlackForm.objects.filter()
-    for template in form_templates:
-      ## check to see if the form already has duplicates before adding 
-      exists = template.formfield_set.filter(field_id="fae88a10-53cc-470e-86ec-32376c041893").exists()
-      if not exists:
-        FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="fae88a10-53cc-470e-86ec-32376c041893"))
-      exists = template.formfield_set.filter(field_id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d").exists()
-      if not exists:
-        FormField.objects.create(form=template, order=0, field=SObjectField.objects.get(id="e286d1d5-5447-47e6-ad55-5f54fdd2b00d"))
-
+templates =OrgCustomSlackForm.objects.exclude(form_type="STAGE_GATING")
+for template in templates:
+     for field_id in ["fae88a10-53cc-470e-86ec-32376c041893","e286d1d5-5447-47e6-ad55-5f54fdd2b00d","fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed"]:
+             exists = FormField.objects.filter(form_id=template.id,field_id=field_id).exists()
+             if not exists:
+                    FormField.objects.create(form=template, field_id=field_id,order=0,include_in_recap=field_id in ["fae88a10-53cc-470e-86ec-32376c041893","e286d1d5-5447-47e6-ad55-5f54fdd2b00d"])
