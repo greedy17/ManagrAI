@@ -9,7 +9,7 @@ const GET_OAUTH_LINK_ENDPOINT = '/slack/get-oauth-link/'
 const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
 const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
-const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-public-channels/'
+const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-channels/'
 
 export default class SlackAPI {
   constructor(cls) {
