@@ -31,10 +31,10 @@ logger = logging.getLogger("managr")
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return "*No Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:*"
+        return "No Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
 
     # replace opp, review disregard
-    return f"*We mapped it to {resource_type} {resource_name}*"
+    return f"We mapped it to _{resource_type}_ *{resource_name}*"
 
 
 def _initial_meeting_step_one_message(resource_type=None):
@@ -331,7 +331,7 @@ def initial_meeting_interaction_block_set(context):
     default_blocks = [
         block_builders.simple_section("*I noticed you had this meeting:*", text_type="mrkdwn"),
         block_builders.simple_section(
-            f"{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
             text_type="mrkdwn",
         ),
         block_builders.simple_section(title_section, text_type="mrkdwn"),
