@@ -1,5 +1,12 @@
 <template>
-  <div class="tn-input">
+  <div
+    class="tn-input"
+    :class="{
+      'tn-input--small': isSmall,
+      'tn-input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
+      'tn-input--large': isLarge,
+    }"
+  >
     <label :for="labelRelation" class="tn-input__label"
       >{{ label }} {{ required ? '*' : '' }}</label
     >
@@ -9,12 +16,6 @@
       <InputField
         class="tn-input__input"
         :id="$attrs.id"
-        :class="{
-          'tn-input__input--small': isSmall,
-          'tn-input__input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
-          'tn-input__input--large': isLarge,
-          'tn-input__input--bordered': isBordered,
-        }"
         v-bind="$attrs"
         v-on="$listeners"
         :type="inputType"
@@ -80,11 +81,11 @@ export default {
 @import '@/styles/mixins/inputs';
 
 .tn-input {
-  width: 100%;
   margin-bottom: 1.3rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
   &__label {
     font-size: 14px;
     margin-bottom: 0.3rem;
@@ -111,7 +112,7 @@ export default {
   }
 }
 ::v-deep .input-content {
-  @include input-field();
+  @include input-field-white();
 }
 ::v-deep .input-content__active {
   outline: none;

@@ -3,7 +3,9 @@
     <div class="box">
       <template>
         <slot name="panel-header" :classes="'box__header'" :expand="expandDiv">
-          <div @click.prevent="expandDiv" class="box__header">{{ title }}</div>
+          <div @click.prevent="expandDiv" class="box__header">
+            {{ title }}
+          </div>
         </slot>
 
         <div ref="panel-content" class="box__content">

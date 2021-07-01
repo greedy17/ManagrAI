@@ -1,6 +1,29 @@
 <template>
   <div class="alerts-page">
-    <ExpandablePanel :title="`${selectedResourceType ? selectedResourceType : 'Select Resource'}`">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> {{ selectedResourceType ? selectedResourceType : 'Select Resource' }} </span>
+
+          <span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="alertTemplateForm.field.resourceType.isValid"
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <FormField :errors="alertTemplateForm.field.resourceType.errors">
           <template v-slot:input>
@@ -19,7 +42,34 @@
         </FormField>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Build Alert">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> Build Alert </span
+          ><span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="
+              alertTemplateForm.field.title.isValid &&
+                !alertTemplateForm.field.alertGroups.groups
+                  .map(fields => fields.isValid)
+                  .includes(false)
+            "
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <FormField
@@ -28,7 +78,6 @@
             placeholder="Alert Title"
             :errors="alertTemplateForm.field.title.errors"
             @blur="alertTemplateForm.field.title.validate()"
-            large
           />
           <div
             :key="index"
@@ -63,7 +112,34 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Construct Message">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span>Construct Message </span>
+
+          <span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="
+              !alertTemplateForm.field.alertMessages.groups
+                .map(fields => fields.isValid)
+                .includes(false)
+            "
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <div class="alerts-page__message">
@@ -137,7 +213,33 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Alert Settings">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> Alert Settings </span><span> </span>
+          <span
+            v-if="
+              !alertTemplateForm.field.alertConfig.groups
+                .map(fields => fields.isValid)
+                .includes(false)
+            "
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <div
@@ -557,6 +659,19 @@ export default {
 
 textarea {
   @extend .textarea;
+}
+.box__header {
+  &__status {
+    display: flex;
+    &--error {
+      color: $coral;
+      fill: $coral;
+    }
+    &--success {
+      color: $dark-green;
+      fill: $dark-green;
+    }
+  }
 }
 .alerts-page {
   &__previous-step {
