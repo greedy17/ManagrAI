@@ -25,6 +25,11 @@ resource "aws_db_instance" "managrdb" {
   publicly_accessible        = false
   auto_minor_version_upgrade = true
   snapshot_identifier        = each.value.rds_db_snapshot_id
+  lifecycle {
+    ignore_changes = [
+      "snapshot_identifier",
+    ]
+}
 
 
   tags = {
