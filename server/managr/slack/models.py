@@ -285,12 +285,15 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     val, user=self.user, resource=self.resource_type,
                 )
                 if isinstance(generated_field, list):
-                    form_blocks = [*form_blocks, *generated_field]
+                    form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
             else:
+                generated_field = field.to_slack_field(
+                    val, user=self.user, resource=self.resource_type,
+                )
                 if isinstance(generated_field, list):
-                    form_blocks = [*form_blocks, *generated_field]
+                    form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
 
