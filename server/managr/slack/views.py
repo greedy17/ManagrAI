@@ -206,6 +206,25 @@ class SlackViewSet(viewsets.GenericViewSet,):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-channels",
+    )
+    def slack_channels(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor")
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            channels = slack_requests.list_channels(
+                organization_slack.access_token,
+                cursor=cursor,
+                types=["public_channel", "private_channel"],
+            )
+        else:
+            channels = {"channels": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,

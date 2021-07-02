@@ -9,7 +9,7 @@ resource "aws_db_subnet_group" "managrdb" {
 
 resource "aws_db_instance" "managrdb" {
   for_each                   = { for e in var.environments : e.name => e }
-  identifier                 = "${replace(each.value.rds_db_name, "_", "-")}-${each.value.name}"
+  identifier                 = "${replace(each.value.rds_instance_name, "_", "-")}-${each.value.name}"
   allocated_storage          = 20
   engine                     = "postgres"
   engine_version             = "12.5"
@@ -25,11 +25,14 @@ resource "aws_db_instance" "managrdb" {
   publicly_accessible        = false
   auto_minor_version_upgrade = true
   snapshot_identifier        = each.value.rds_db_snapshot_id
-  lifecycle {
-    ignore_changes = [
-      "snapshot_identifier",
-    ]
-}
+  storage_encrypted          = each.value.name == "prod" ? true : false
+  kms_key_id                 = each.value.name == "prod" ? "arn:aws:kms:us-east-1:986523545926:key/36627a8d-ff13-4f18-a735-450f5ac59609" : ""
+  
+  //lifecycle {
+  //  ignore_changes = [
+  //    "snapshot_identifier",
+  //  ]
+//}
 
 
   tags = {

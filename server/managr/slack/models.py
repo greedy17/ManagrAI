@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
@@ -68,6 +69,7 @@ class OrganizationSlackIntegration(TimeStampModel):
 
     class Meta:
         ordering = ["organization"]
+        constraints = [UniqueConstraint(fields=["team_id"], name="unique_team_id")]
 
     def delete(self, *args, **kwargs):
         return super(OrganizationSlackIntegration, self).delete(*args, **kwargs)
@@ -279,11 +281,21 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg
-                form_blocks.append(
-                    field.to_slack_field(val, user=self.user, resource=self.resource_type,)
+                generated_field = field.to_slack_field(
+                    val, user=self.user, resource=self.resource_type,
                 )
+                if isinstance(generated_field, list):
+                    form_blocks.extend(generated_field)
+                else:
+                    form_blocks.append(generated_field)
             else:
-                form_blocks.append(field.to_slack_field(val, workflow=self.workflow,))
+                generated_field = field.to_slack_field(
+                    val, user=self.user, resource=self.resource_type,
+                )
+                if isinstance(generated_field, list):
+                    form_blocks.extend(generated_field)
+                else:
+                    form_blocks.append(generated_field)
 
         return form_blocks
 
@@ -296,6 +308,20 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = (
                         value.get("selected_option").get("value", None)
                         if value.get("selected_option", {})
+                        else None
+                    )
+                elif value["type"] == "multi_channels_select":
+                    current_value = (
+                        ";".join(list(map(lambda val: val, value.get("selected_channels", []))))
+                        if value.get("selected_channels", None)
+                        else None
+                    )
+                elif value["type"] == "multi_conversations_select":
+                    current_value = (
+                        ";".join(
+                            list(map(lambda val: val, value.get("selected_conversations", [])))
+                        )
+                        if value.get("selected_conversations", None)
                         else None
                     )
                 elif (

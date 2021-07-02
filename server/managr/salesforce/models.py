@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
+from django.db.models.constraints import UniqueConstraint
 
 from background_task.models import CompletedTask, Task
 
@@ -290,6 +291,23 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 action_id=self.api_name,
                 block_id=self.api_name,
             )
+        elif self.data_type == "MultiChannelsSelect":
+            return [
+                block_builders.multi_channels_select_block(
+                    section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
+        elif self.data_type == "MultiConversationsSelect":
+            return [
+                block_builders.multi_conversations_select_block(
+                    section_text=f"*{self.label}*",
+                    initial_conversations=value,
+                    filter_opts={"include": ["private", "public"]},
+                    block_id=self.api_name,
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
         else:
             if self.data_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder
@@ -319,6 +337,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 initial_value=value,
                 block_id=self.api_name,
             )
+
             # use this one.
 
     @property
@@ -357,7 +376,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif not self.is_public and hasattr(self, "picklist_options"):
             return self.picklist_options.as_slack_options
         else:
-            return [block_builders.option("No Options", "null")]
+            return [block_builders.option("No Options", None)]
 
 
 class SObjectValidation(TimeStampModel, IntegrationModel):
@@ -809,6 +828,7 @@ class SalesforceAuthAccount(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+        constraints = [UniqueConstraint(fields=["salesforce_id"], name="unique_salesforce_id")]
 
     def __str__(self):
         return f"SF-{self.user.email} {self.salesforce_id}"

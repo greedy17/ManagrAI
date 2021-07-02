@@ -246,7 +246,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     dbHost     = aws_db_instance.managrdb[each.key].address
     dbUser     = each.value.rds_username
     dbPass     = each.value.rds_password
-    dbName     = each.value.rds_db_name
+    dbName     = each.value.name == "prod" ? "managr_db" : each.value.rds_db_name
     dbSnapShot = each.value.rds_db_snapshot_id
 
     superuserEmail    = each.value.superuser_email
