@@ -163,8 +163,8 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "clearstaledata"
-      command    = "clearstaledata 1440"
+      name       = "clearsfstaledata"
+      command    = "clearsfstaledata 1440"
       cron       = "cron(0 7 * * ? *)"
       task_count = 1
     },
