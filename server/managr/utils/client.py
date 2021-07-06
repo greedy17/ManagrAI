@@ -46,6 +46,10 @@ class TimeoutHTTPAdapter(HTTPAdapter):
             # auto retry once
             logger.exception("Failed to send request")
             return super().send(request, **kwargs)
+        except ConnectionResetError:
+            # auto retry once
+            logger.exception("Failed to send request")
+            return super().send(request, **kwargs)
 
 
 # TimeoutHTTPAdapter(timeout=2.5)
