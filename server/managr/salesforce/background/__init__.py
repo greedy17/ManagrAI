@@ -1041,7 +1041,7 @@ def _send_recap(form_ids):
                         text=f"Failed to send recap to channel",
                         block_set=[
                             block_builders.simple_section(
-                                f"Unable to send recap to one of the channels you selected, please add @managr to the channel",
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
                                 "mrkdwn",
                             )
                         ],
