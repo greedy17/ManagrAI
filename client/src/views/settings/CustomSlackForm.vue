@@ -162,6 +162,7 @@
             </div>
             <div class="form-field__right">
               <img
+                v-if="canRemoveField(field)"
                 style="height: 1.25rem; padding-right: 0.75rem"
                 src="@/assets/images/trashcan.png"
                 @click="() => onRemoveField(field)"
@@ -430,13 +431,7 @@ export default {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
       // if form is meeting review depening on the resource it can/cant be removed
-      if (this.customForm.formType == this.CREATE) {
-        if (field.required) {
-          return false
-        } else {
-          return true
-        }
-      } else if (this.customForm.formType == this.MEETING_REVIEW) {
+      if (this.customForm.formType == this.MEETING_REVIEW) {
         if (
           this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
           ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex(f => field.key == f)

@@ -35,8 +35,8 @@ export default class SlackOAuth {
     WORKSPACE: 'WORKSPACE',
     USER: 'USER',
   }
-  static redirectURI = window.location.protocol + '//' + window.location.host + '/settings/integrations'
-
+  static redirectURI =
+    window.location.protocol + '//' + window.location.host + '/settings/integrations'
 }
 
 const MEETING_REVIEW = 'MEETING_REVIEW'
@@ -52,7 +52,8 @@ const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
   [ACCOUNT]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
   [OPPORTUNITY]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
-  [LEAD]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
+  [LEAD]: [],
+  [CONTACT]: [],
 }
 export {
   MEETING_REVIEW,
