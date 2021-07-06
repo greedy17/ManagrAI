@@ -140,18 +140,18 @@
           />
           <div v-if="resource">
             <button @click="selectForm(resource, CREATE)" class="buttons__">Create</button>
-            <button @click="selectForm(resource, CREATE)" class="buttons__">
+            <button @click="selectForm(resource, UPDATE)" class="buttons__">
               Update (Command)
             </button>
             <button
-              @click="selectForm(resource, CREATE)"
+              @click="selectForm(resource, MEETING_REVIEW)"
               v-if="resource == 'Opportunity' || resource == 'Account'"
               class="buttons__"
             >
               Update (Zoom)
             </button>
             <button
-              @click="selectForm(resource, CREATE)"
+              @click="selectForm(resource, STAGE_GATING)"
               v-if="resource == 'Opportunity'"
               class="buttons__"
             >
@@ -265,7 +265,7 @@ export default {
     },
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
+        return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
       } else if (this.resource == this.OPPORTUNITY) {
         return [...this.FORM_TYPES, this.STAGE_GATING]
       }
@@ -279,9 +279,7 @@ export default {
     currentFormStages() {
       // users can only create one form for the stage
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType
-          .filter((f) => f.formType == this.STAGE_GATING)
-          .map((f) => f.stage)
+        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
       }
       return []
     },
@@ -289,10 +287,10 @@ export default {
       // users can only create one form for the stage orderd by stage
       let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach((s) => {
+        this.stages.forEach(s => {
           this.allFormsByType
-            .filter((f) => f.formType == this.STAGE_GATING)
-            .forEach((sf) => {
+            .filter(f => f.formType == this.STAGE_GATING)
+            .forEach(sf => {
               if (sf.stage == s.value) {
                 forms.push(sf)
               }
@@ -358,9 +356,7 @@ export default {
     },
 
     async selectForm(resource, formType) {
-      this.selectedForm = this.allForms.find(
-        (f) => f.resource == resource && f.formType == formType,
-      )
+      this.selectedForm = this.allForms.find(f => f.resource == resource && f.formType == formType)
       this.formType = formType
     },
 
@@ -407,7 +403,7 @@ export default {
 
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
+          .then(async res => {
             this.$Alert.alert({
               type: 'success',
 
@@ -416,13 +412,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter((f) => {
+            const forms = this.formsByType.filter(f => {
               return f.id !== form.id
             })
             this.formsByType = forms
           })
 
-          .catch((e) => {
+          .catch(e => {
             this.$Alert.alert({
               type: 'error',
 
@@ -434,7 +430,7 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter((f) => {
+        const forms = this.newForms.filter(f => {
           return f.id !== form.id
         })
         this.newForms = forms
@@ -472,7 +468,7 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
@@ -500,7 +496,7 @@ export default {
         } else {
           let prev = this.resource
           this.resource = resource
-          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
+          this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
 
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
@@ -515,7 +511,7 @@ export default {
         }
       } else {
         this.resource = resource
-        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
+        this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
@@ -527,7 +523,7 @@ export default {
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
-      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
+      let form = this.allFormsByType.find(f => f.id == id && f.stage == stage)
 
       if (form && typeof form != undefined) {
         this.selectedForm = form
@@ -535,7 +531,7 @@ export default {
     },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
+      let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
 
       if (~index) {
         this.formsByType[index] = this.selectedForm
