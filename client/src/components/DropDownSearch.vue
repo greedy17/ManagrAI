@@ -45,6 +45,7 @@ export default {
   background-color: $white;
   border: 2px solid black;
   color: black;
+  margin-top: 0.5rem;
 }
 
 ::v-deep .tn-dropdown__selection-container {

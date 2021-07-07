@@ -130,64 +130,58 @@
               />
             </span>
           </div> -->
-        <div class="row">
+
+        <div :class="resource ? 'search_buttons_row' : ''">
           <DropDownSearch
             :items.sync="SOBJECTS_LIST"
             v-model="resource"
             displayKey="key"
             valueKey="value"
             nullDisplay="Select Salesforce Object"
+            class="search"
           />
-          <div v-if="resource">
-            <button
-              @click="selectForm(resource, CREATE)"
-              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-            >
-              Create
-            </button>
-            <button
-              @click="selectForm(resource, UPDATE)"
-              class="buttons__"
-              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
-            >
-              Update (Command)
-            </button>
-            <button
-              @click="selectForm(resource, MEETING_REVIEW)"
-              v-if="resource == 'Opportunity' || resource == 'Account'"
-              :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
-            >
-              Update (Zoom)
-            </button>
-            <button
-              @click="openStageDropDown"
-              v-if="resource == OPPORTUNITY"
-              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
-            >
-              Stage Specific
-            </button>
-            <img
-              style="height: 1.6rem; padding-left: 0.5rem; padding-bottom: 0.5rem; cursor: pointer"
-              src="@/assets/images/toolTip.png"
-              @click.prevent.stop="toggleObjectsModal"
-            />
-          </div>
-        </div>
 
-        <div class="box__tab-content">
-          <template v-if="selectedForm">
-            <div class="box__content--expanded">
-              <CustomSlackForm
-                :show-validations="showValidations"
-                :formType="formType"
-                :customForm="selectedForm"
-                :resource="resource"
-                v-on:update:selectedForm="updateForm($event)"
-                :loading="formFields.refreshing"
-                :stageForms="formStages"
+          <div class="row">
+            <div v-if="resource">
+              <button
+                @click="selectForm(resource, CREATE)"
+                :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
+              >
+                Create
+              </button>
+              <button
+                @click="selectForm(resource, UPDATE)"
+                class="buttons__"
+                :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
+              >
+                {{ ` Update ${resource}` }}
+              </button>
+              <button
+                @click="selectForm(resource, MEETING_REVIEW)"
+                v-if="resource == 'Opportunity' || resource == 'Account'"
+                :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
+              >
+                Update (Zoom Meetings)
+              </button>
+              <button
+                @click="openStageDropDown"
+                v-if="resource == OPPORTUNITY"
+                :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
+              >
+                Stage Related Fields
+              </button>
+              <img
+                style="
+                  height: 1.6rem;
+                  padding-left: 0.5rem;
+                  padding-bottom: 0.5rem;
+                  cursor: pointer;
+                "
+                src="@/assets/images/toolTip.png"
+                @click.prevent.stop="toggleObjectsModal"
               />
             </div>
-          </template>
+          </div>
         </div>
 
         <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
@@ -214,6 +208,22 @@
           <div style="display: flex; justify-content: center">
             <button @click="onAddForm" class="modal-container__box__button">Add</button>
           </div>
+        </div>
+
+        <div class="box__tab-content">
+          <template v-if="selectedForm">
+            <div class="box__content--expanded">
+              <CustomSlackForm
+                :show-validations="showValidations"
+                :formType="formType"
+                :customForm="selectedForm"
+                :resource="resource"
+                v-on:update:selectedForm="updateForm($event)"
+                :loading="formFields.refreshing"
+                :stageForms="formStages"
+              />
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -855,6 +865,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding-top: 2rem;
+  margin-top: -1.5rem;
 }
 
 a {
@@ -887,13 +898,14 @@ button {
 }
 .buttons__ {
   height: 3rem;
-  width: 11rem;
+  width: 12.5rem;
   text-align: center;
   border-radius: 0.75rem;
   border: 2px solid #199e54;
   color: #199e54;
   background-color: white;
   font-weight: bolder;
+  font-size: 0.975rem;
   box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
   margin-right: 1.5rem;
 }
@@ -910,14 +922,26 @@ button {
 }
 .activeTab {
   height: 3rem;
-  width: 11rem;
+  width: 12.5rem;
   text-align: center;
   border-radius: 0.75rem;
-  background-color: #199e54;
   border: 2px solid #199e54;
   color: white;
+  background-color: #199e54;
   font-weight: bolder;
+  font-size: 0.975rem;
   box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
   margin-right: 1.5rem;
+}
+.search {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.search_buttons_row {
+  display: flex;
+  flex-direction: row;
+  padding-left: 2.5rem;
 }
 </style>

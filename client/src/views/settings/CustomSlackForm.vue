@@ -66,7 +66,16 @@
           <h2>
             {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
           </h2>
-          <p class="muted">Please include all required fields</p>
+          <p class="muted">The fields below will show up in Slack</p>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
 
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
@@ -229,15 +238,6 @@
               <PulseLoadingSpinner :loading="loadingMeetingTypes" />
             </template>
           </div>
-        </div>
-        <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
         </div>
       </div>
     </div>
@@ -444,7 +444,7 @@ export default {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
-      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.addedFields.unshift({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
 
     onRemoveField(field) {
@@ -751,7 +751,8 @@ export default {
 .save-button {
   display: flex;
   justify-content: center;
-  padding-top: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .primary-button {
