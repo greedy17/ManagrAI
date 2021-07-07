@@ -4,6 +4,7 @@ import pytz
 from datetime import datetime
 import logging
 import uuid
+import time
 
 
 from django.http import JsonResponse
@@ -22,7 +23,7 @@ from managr.salesforce.adapter.exceptions import (
 from managr.organization.models import Organization
 from managr.core.models import User
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting, MeetingReview
+from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -41,11 +42,7 @@ from managr.salesforce.background import (
     emit_meeting_workflow_tracker,
     _send_recap,
 )
-from managr.zoom.background import (
-    _save_meeting_review,
-    emit_send_meeting_summary,
-    _send_meeting_summary,
-)
+
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -343,11 +340,36 @@ def process_submit_resource_data(payload, context):
 
         except TokenExpired:
             if attempts >= 5:
-                return logger.exception(
+                logger.exception(
                     f"Failed to Update data for user {str(user.id)} after {attempts} tries"
                 )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
             else:
                 sf.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
                 attempts += 1
 
     if has_error:
@@ -436,6 +458,7 @@ def process_submit_resource_data(payload, context):
         if (
             all_form_data.get("__send_recap_to_leadership") is not None
             or all_form_data.get("__send_recap_to_reps") is not None
+            or all_form_data.get("__send_recap_to_channels") is not None
         ):
             _send_recap(current_form_ids)
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE

@@ -100,7 +100,7 @@ def SF_COUNT_URI(resource, owner_id):
 
 
 def SF_DEFAULT_RECORD_ID(resource):
-    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT id, Name from RecordType where developerName = 'Task'"
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT id, Name from RecordType where developerName = '{resource}'"
     return url
 
 

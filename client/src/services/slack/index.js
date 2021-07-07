@@ -3,6 +3,25 @@ import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import SlackAPI from './api'
 import { SObjectField } from '../salesforce'
 
+export class SlackListResponse {
+  constructor({ channels = [], responseMetadata = {} } = {}) {
+    Object.assign(this, {
+      channels: channels.map(channel => objectToCamelCase(channel)),
+      nextCursor:
+        responseMetadata['nextCursor'] && responseMetadata['nextCursor'].length
+          ? responseMetadata['nextCursor']
+          : null,
+    })
+  }
+
+  static create(opts) {
+    return new SlackListResponse(opts)
+  }
+  static fromAPI(json) {
+    return new SlackListResponse(objectToCamelCase(json))
+  }
+}
+
 export class CustomSlackForm extends Model {
   static api = null
   static id = new fields.CharField({ readOnly: true })

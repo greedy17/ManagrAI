@@ -305,9 +305,8 @@ def init_sf_field_sync(user):
     if not hasattr(user, "salesforce_account"):
         return
     operations = [
-        *user.salesroce_account.field_sync_opts,
-        *user.salesroce_account.picklist_sync_opts,
-        *user.salesroce_account.validation_sync_opts,
+        *user.salesforce_account.field_sync_opts,
+        *user.salesforce_account.validation_sync_opts,
     ]
 
     scheduled_time = timezone.now()

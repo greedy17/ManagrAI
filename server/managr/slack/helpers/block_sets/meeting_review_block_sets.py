@@ -31,17 +31,19 @@ logger = logging.getLogger("managr")
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return "I couldn't find an Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
+        return "No Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
 
     # replace opp, review disregard
-    return f"We mapped it to {resource_type} *{resource_name}*"
+    return f"We mapped it to _{resource_type}_ *{resource_name}*"
 
 
-def _initial_meeting_step_one_message(initial_message, resource_type=None):
+def _initial_meeting_step_one_message(resource_type=None):
     if not resource_type:
-        return f"{initial_message}\n 1.\tClick *'Change/Create'* to map this meeting to the correct Opportunity, Account, or Lead. If none exists, you can create one!"
+        return "1.\tClick 'Change/Create' to map this meeting to an object, or create a new one!"
 
-    return f"{initial_message}\n 1.\tClick *'Change/Create'* to map this meeting to a different Account, Opportunity, or Lead. You can also create a new one!"
+    return (
+        "1.\tClick 'Change/Create' to map this meeting to a different object, or create a new one!"
+    )
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -322,12 +324,17 @@ def initial_meeting_interaction_block_set(context):
         if end_time
         else end_time
     )
+    if not resource:
+        title_section = _initial_interaction_message()
+    else:
+        title_section = _initial_interaction_message(resource.name, workflow.resource_type)
     default_blocks = [
-        block_builders.simple_section("I noticed you had this meeting:"),
+        block_builders.simple_section("*I noticed you had this meeting:*", text_type="mrkdwn"),
         block_builders.simple_section(
-            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n *Attendees:* {meeting.participants_count}",
+            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
             text_type="mrkdwn",
         ),
+        block_builders.simple_section(title_section, text_type="mrkdwn"),
         {"type": "divider"},
     ]
     create_change_button = block_builders.actions_block(
@@ -352,13 +359,12 @@ def initial_meeting_interaction_block_set(context):
         ]
     )
     if not resource:
-        title_section = _initial_interaction_message()
-        step_one = _initial_meeting_step_one_message(title_section)
+        step_one = _initial_meeting_step_one_message()
     else:
-        name = resource.name
-        title_section = _initial_interaction_message(name, workflow.resource_type)
-        step_one = _initial_meeting_step_one_message(title_section, workflow.resource_type)
-    step_two_text = "2.\t*Meeting participants*, make sure required fields such as *Last Name, Account*, :exclamation: \n etc are filled in or else SFDC may not save them as Contacts."
+        step_one = _initial_meeting_step_one_message(workflow.resource_type)
+    step_two_text = (
+        "2.\tAdd meeting participants as Contacts. Please review them first! :exclamation:"
+    )
     blocks = [
         *default_blocks,
         block_builders.simple_section(step_one, "mrkdwn",),
@@ -390,7 +396,7 @@ def initial_meeting_interaction_block_set(context):
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
-        step_three = f"3.\tClick *'Update'* to make changes to this {workflow.resource_type}, progress Stages, change the Forecast, Amount, Next Step, etc. "
+        step_three = f"3.\tClick 'Update' to update the {workflow.resource_type} and log the meeting as an Activity"
         blocks.append(review_participants_button)
         blocks.append(block_builders.simple_section(step_three, "mrkdwn"))
         action_blocks = [

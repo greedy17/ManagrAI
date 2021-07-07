@@ -16,7 +16,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.models import OrgCustomSlackFormInstance
+from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
 from managr.slack.helpers.exceptions import (
@@ -874,6 +874,41 @@ def process_request_invite_from_home_tab(payload, context):
     # update the home tab of the user with message that it was sent
 
 
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["resource", "u"])
+def process_check_is_owner(payload, context):
+    # CHECK_IS_OWNER
+    slack_id = payload.get("user", {}).get("id")
+    user_id = context.get("u")
+    resource = context.get("resource")
+    user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
+    if user_slack and str(user_slack.user.id) == user_id:
+        return process_show_update_resource_form(payload, context)
+    else:
+        error_blocks = get_block_set(
+            "error_modal", {"message": "You are not the Opportunity owner"}
+        )
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        trigger_id = payload.get("trigger_id")
+        slack_access_token = user_slack.user.organization.slack_integration.access_token
+
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Error",},
+                "blocks": error_blocks,
+                "external_id": f"error_modal.{str(uuid.uuid4())}",
+            },
+        }
+    try:
+        slack_requests.generic_request(url, data, access_token=slack_access_token)
+    except Exception as e:
+        # exception will only be thrown for caught errors using decorator
+        return logger.exception(f"Failed To show error message for user or show update form")
+    return
+
+
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
 
@@ -905,11 +940,13 @@ def process_resource_selected_for_task(payload, context):
             "callback_id": payload["view"]["callback_id"],
             "title": payload.get("view").get("title"),
             "blocks": get_block_set(view_type, {**context, "resource_type": selected_value}),
-            "submit": payload["view"]["submit"],
             "private_metadata": json.dumps(context),
             "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
+    if (payload["view"]["submit"] and form_id) or view_type == "create_task_modal":
+        data["view"]["submit"] = payload["view"]["submit"]
+
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
     except InvalidBlocksException as e:
@@ -1049,6 +1086,7 @@ def handle_block_actions(payload):
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
+        slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

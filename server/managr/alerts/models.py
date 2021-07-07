@@ -80,6 +80,7 @@ class AlertTemplate(TimeStampModel):
             recurrence_frequency="WEEKLY",
             recipients=["SELF"],
             template=self,
+            recipient_type="USER_LEVEL",
         )
 
         if hasattr(user, "salesforce_account"):
@@ -284,6 +285,7 @@ class AlertConfig(TimeStampModel):
     template = models.ForeignKey(
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configs"
     )
+    recipient_type = models.CharField(max_length=255, default="USER_LEVEL")
     objects = AlertConfigQuerySet.as_manager()
 
     def __str__(self):
@@ -358,6 +360,16 @@ class AlertInstance(TimeStampModel):
         null=True,
         blank=True,
         help_text="an object holding some metadata results_count: # across alert, query_sent: copy of sql, errors: Array of any errors ",
+    )
+    channel = models.CharField(
+        null=True, max_length=255, help_text="Channel the alert should be sent to added 06/30/21"
+    )
+    config = models.ForeignKey(
+        "alerts.AlertConfig",
+        on_delete=models.SET_NULL,
+        related_name="instances",
+        help_text="Config was set on 06/30/21 and will only have data for that date",
+        null=True,
     )
 
     objects = AlertGroupQuerySet.as_manager()

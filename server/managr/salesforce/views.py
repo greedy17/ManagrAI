@@ -13,7 +13,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.db import IntegrityError
 
 from rest_framework.views import APIView
 from rest_framework.decorators import action
@@ -75,19 +75,20 @@ from .filters import SObjectFieldFilterSet
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
-@log_all_exceptions
 def authenticate(request):
     code = request.data.get("code", None)
     if code:
         data = SalesforceAuthAccountAdapter.create_account(unquote(code), str(request.user.id))
         serializer = SalesforceAuthSerializer(data=data.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except IntegrityError:
+            raise ValidationError(detail="An integration with this salesforce id already exists")
         # create sf sync object
 
         operations = [
             *serializer.instance.field_sync_opts,
-            *serializer.instance.picklist_sync_opts,
             *serializer.instance.validation_sync_opts,
         ]
 
@@ -99,7 +100,7 @@ def authenticate(request):
             emit_generate_form_template(data.user)
         # emit resource sync
         operations = [*serializer.instance.resource_sync_opts]
-        scheduled_time = timezone.now()
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=2)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(request.user.id), operations, formatted_time)
 

@@ -76,6 +76,7 @@ variable "environments" {
     environment        = string
     rds_username       = string
     rds_password       = string
+    rds_instance_name  = string
     rds_db_name        = string
     rds_db_snapshot_id = string
     secret_key         = string
@@ -162,8 +163,8 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "clearstaledata"
-      command    = "clearstaledata 1440"
+      name       = "clearsfstaledata"
+      command    = "clearsfstaledata 1440"
       cron       = "cron(0 7 * * ? *)"
       task_count = 1
     },

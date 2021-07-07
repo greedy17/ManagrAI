@@ -1,6 +1,29 @@
 <template>
   <div class="alerts-page">
-    <ExpandablePanel :title="`${selectedResourceType ? selectedResourceType : 'Select Resource'}`">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> {{ selectedResourceType ? selectedResourceType : 'Select Resource' }} </span>
+
+          <span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="alertTemplateForm.field.resourceType.isValid"
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <FormField :errors="alertTemplateForm.field.resourceType.errors">
           <template v-slot:input>
@@ -19,7 +42,34 @@
         </FormField>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Build Alert">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> Build Alert </span
+          ><span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="
+              alertTemplateForm.field.title.isValid &&
+                !alertTemplateForm.field.alertGroups.groups
+                  .map(fields => fields.isValid)
+                  .includes(false)
+            "
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <FormField
@@ -28,7 +78,6 @@
             placeholder="Alert Title"
             :errors="alertTemplateForm.field.title.errors"
             @blur="alertTemplateForm.field.title.validate()"
-            large
           />
           <div
             :key="index"
@@ -63,7 +112,34 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Construct Message">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span>Construct Message </span>
+
+          <span
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+            v-if="
+              !alertTemplateForm.field.alertMessages.groups
+                .map(fields => fields.isValid)
+                .includes(false)
+            "
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <div class="alerts-page__message">
@@ -137,7 +213,33 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Alert Settings">
+    <ExpandablePanel>
+      <template v-slot:panel-header="{ classes, expand }" class="box__header">
+        <div :class="classes" @click="expand">
+          <span> Alert Settings </span><span> </span>
+          <span
+            v-if="
+              !alertTemplateForm.field.alertConfig.groups
+                .map(fields => fields.isValid)
+                .includes(false)
+            "
+            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
+          >
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
+            </svg>
+            <span>Complete</span>
+          </span>
+          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
+            <span>
+              Incomplete
+            </span>
+          </span>
+        </div>
+      </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <div
@@ -188,7 +290,19 @@
               </FormField>
             </div>
             <div class="alerts-page__settings__recipients">
-              <FormField :errors="form.field.recipients.errors">
+              <span
+                v-if="
+                  form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'
+                "
+                class="muted--link--important"
+              >
+                Please add managr to <em>{{ form.field._recipients.value.name }}</em> using the @
+                tag @managr
+              </span>
+              <FormField
+                v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                :errors="form.field.recipients.errors"
+              >
                 <template v-slot:input>
                   <DropDownSearch
                     :items.sync="alertRecipientOpts"
@@ -203,8 +317,50 @@
                   />
                 </template>
               </FormField>
+              <FormField
+                v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                :errors="form.field.recipients.errors"
+              >
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="channelOpts.channels"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="name"
+                    valueKey="id"
+                    nullDisplay="Channels"
+                    :hasNext="!!channelOpts.nextCursor"
+                    @load-more="listChannels(channelOpts.nextCursor)"
+                  />
+                </template>
+              </FormField>
             </div>
-            <div>
+            <div class="alerts-page__settings__recipient-type">
+              <span
+                @click="
+                  form.field.recipientType.value = recipientTypeToggle(
+                    form.field.recipientType.value,
+                  )
+                "
+                class="muted--link"
+                v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                >Send to a channel instead ?</span
+              >
+
+              <span
+                @click="
+                  form.field.recipientType.value = recipientTypeToggle(
+                    form.field.recipientType.value,
+                  )
+                "
+                class="muted--link"
+                v-else
+              >
+                Send to a group of users (DM) instead ?
+              </span>
+            </div>
+            <div class="alerts-page__settings-remove">
               <button
                 class="btn btn--danger btn--icon"
                 @click.stop="onRemoveSetting(i)"
@@ -274,7 +430,6 @@ import ExpandablePanel from '@/components/ExpandablePanel'
  * Services
  */
 
-import { SOBJECTS_LIST } from '@/services/salesforce'
 import AlertTemplate, {
   AlertGroupForm,
   AlertTemplateForm,
@@ -289,8 +444,9 @@ import {
   SObjectValidations,
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
+  SOBJECTS_LIST,
 } from '@/services/salesforce'
-
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'AlertsPage',
   components: {
@@ -309,6 +465,7 @@ export default {
   },
   data() {
     return {
+      channelOpts: new SlackListResponse(),
       savingTemplate: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
@@ -341,6 +498,11 @@ export default {
       ],
     }
   },
+  async created() {
+    if (this.user.slackRef) {
+      await this.listChannels()
+    }
+  },
   watch: {
     selectedResourceType: {
       immediate: true,
@@ -351,13 +513,33 @@ export default {
         }
         if (this.selectedResourceType) {
           this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page=1
+          this.fields.filters.page = 1
           await this.fields.refresh()
         }
       },
     },
   },
   methods: {
+    async listChannels(cursor = null) {
+      const res = await SlackOAuth.api.listChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.channelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.channelOpts = results
+    },
+    recipientTypeToggle(value) {
+      if (!this.user.slackRef) {
+        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
+        return 'USER_LEVEL'
+      }
+      if (value == 'USER_LEVEL') {
+        return 'SLACK_CHANNEL'
+      } else if (value == 'SLACK_CHANNEL') {
+        return 'USER_LEVEL'
+      }
+      return value
+    },
     async onSave() {
       this.savingTemplate = true
       this.alertTemplateForm.validate()
@@ -455,6 +637,9 @@ export default {
         resourceType: this.selectedResourceType,
       }
     },
+    user() {
+      return this.$store.state.user
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -484,6 +669,19 @@ export default {
 textarea {
   @extend .textarea;
 }
+.box__header {
+  &__status {
+    display: flex;
+    &--error {
+      color: $coral;
+      fill: $coral;
+    }
+    &--success {
+      color: $dark-green;
+      fill: $dark-green;
+    }
+  }
+}
 .alerts-page {
   &__previous-step {
     @include muted-font(12);
@@ -511,6 +709,8 @@ textarea {
 }
 .alerts-page__settings {
   display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 
   &__frequency {
     display: flex;
@@ -519,6 +719,9 @@ textarea {
       @include muted-font();
       margin: 0 0.5rem;
     }
+  }
+  &-remove {
+    justify-self: end;
   }
 }
 .btn {
@@ -534,6 +737,15 @@ textarea {
 
   &--icon {
     @include --icon();
+  }
+}
+.muted--link {
+  @include muted-font();
+  @include pointer-on-hover();
+  &--important {
+    color: red;
+    font-weight: bold;
+    font-size: 11px;
   }
 }
 </style>

@@ -357,7 +357,7 @@ class SalesforceAuthAccountAdapter:
     def get_individual_picklist_values(self, resource, field_name=None):
         """Sync method to get picklist values for resources not saved in our db"""
 
-        record_type_id = self.default_record_ids.get("resource", None)
+        record_type_id = self.default_record_ids.get(resource, None)
         if not record_type_id:
             # a record type id is required so we may get picklist values these are saved on the sf auth object
             # some orgs will have custom record id's if this is the case we can retrieve using this method lines 353-356
@@ -375,7 +375,16 @@ class SalesforceAuthAccountAdapter:
             if res.get("totalSize", 0) > 0:
                 record_type_id = res.get("Id")
             else:
-                record_type_id = self.default_record_ids.get("Opportunity",)
+                record_type_id = self.default_record_ids.get(resource, None)
+                if (
+                    not record_type_id
+                    and self.default_record_ids
+                    and len(self.default_record_ids.items())
+                ):
+                    record_type_id = self.default_record_ids.get(
+                        self.default_record_ids.items()[0], None
+                    )
+
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
 
         url = f"{url}/{field_name}" if field_name else url
@@ -630,7 +639,7 @@ class ContactAdapter:
 
     @property
     def name(self):
-        return f"{self.secondary_data.get('FirstName')} {self.secondary_date.get('LastName')}"
+        return f"{self.secondary_data.get('FirstName')} {self.secondary_data.get('LastName')}"
 
     @staticmethod
     def get_child_rels():
