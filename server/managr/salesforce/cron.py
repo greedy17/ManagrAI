@@ -54,6 +54,34 @@ class ArrayLength(Func):
     function = "CARDINALITY"
 
 
+def check_last_object_sync(flows):
+    latest_flow = flows.latest("datetime_created") if flows.count() else None
+    if not flows.count():
+        return True
+    else:
+        if latest_flow and latest_flow.progress == 100:
+            return True
+        elif latest_flow and latest_flow.progress != 100:
+            # check to see if the tasks were completed but not recorded
+            latest_flow.reconcile()
+            if latest_flow.progress == 100:
+                return True
+            else:
+                if settings.SLACK_ERROR_WEBHOOK:
+                    try:
+                        slack_requests.generic_request(
+                            slack_const.SLACK_ERROR_WEBHOOK,
+                            {
+                                "text": f"Unable to force complete object field workflow ({str(latest_flow.id)}) for user {latest_flow.user.email} with id {latest_flow.user.id} progress is {latest_flow.progress}"
+                            },
+                        )
+                    except Exception as fail_safe_error:
+                        logger.exception(
+                            f"Failed to send slack error to error channel {fail_safe_error}"
+                        )
+                return False
+
+
 @kronos.register("*/10  * * * *")
 def queue_users_sf_resource(force_all=False):
     """
@@ -62,12 +90,13 @@ def queue_users_sf_resource(force_all=False):
     """
     sf_accounts = SalesforceAuthAccount.objects.filter(user__is_active=True)
     for account in sf_accounts:
-        logger.info(f"syncing data for {account.user.email}")
-        # get latest workflow
         if not force_all:
             flows = SFResourceSync.objects.filter(user=account.user)
-            latest_flow = flows.latest("datetime_created") if flows else None
-            if not flows.count():
+            has_completed_object_field_flow = check_last_object_sync(
+                SFObjectFieldsOperation.objects.filter(user=account.user)
+            )
+            latest_flow = flows.latest("datetime_created") if flows.count() else None
+            if not flows.count() and has_completed_object_field_flow:
                 init_sf_resource_sync(account.user)
 
             else:
@@ -100,6 +129,7 @@ def queue_users_sf_resource(force_all=False):
                                 continue
 
         else:
+            # only init if the last field sync is at 100%
             init_sf_resource_sync(account.user)
             continue
 
@@ -117,38 +147,12 @@ def queue_users_sf_fields(force_all=False):
         # get latest workflow
         if not force_all:
             flows = SFObjectFieldsOperation.objects.filter(user=account.user)
-            latest_flow = flows.latest("datetime_created") if flows else None
-            if not flows.count():
+            should_run = check_last_object_sync(flows)
+            if should_run:
                 init_sf_field_sync(account.user)
                 continue
             else:
-                if latest_flow and latest_flow.progress == 100:
-                    logger.info(
-                        f"SF_LATEST_RESOURCE_SYNC --- Operation id {str(latest_flow.id)}, email {latest_flow.user.email}"
-                    )
-                    init_sf_field_sync(latest_flow.user)
-                    continue
-                elif latest_flow and latest_flow.progress != 100:
-                    # check to see if the tasks were completed but not recorded
-                    latest_flow.reconcile()
-                    if latest_flow.progress == 100:
-                        init_sf_field_sync(account.user)
-                        continue
-                    else:
-                        if settings.SLACK_ERROR_WEBHOOK:
-                            try:
-                                slack_requests.generic_request(
-                                    slack_const.SLACK_ERROR_WEBHOOK,
-                                    {
-                                        "text": f"Unable to force complete object field workflow ({str(latest_flow.id)}) for user {account.user.email} with id {account.user.id} progress is {latest_flow.progress}"
-                                    },
-                                )
-                            except Exception as fail_safe_error:
-                                logger.exception(
-                                    f"Failed to send slack error to error channel {fail_safe_error}"
-                                )
-                                continue
-
+                continue
         else:
             init_sf_field_sync(account.user)
             continue
