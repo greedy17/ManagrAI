@@ -89,7 +89,6 @@ def authenticate(request):
 
         operations = [
             *serializer.instance.field_sync_opts,
-            *serializer.instance.picklist_sync_opts,
             *serializer.instance.validation_sync_opts,
         ]
 
@@ -101,7 +100,7 @@ def authenticate(request):
             emit_generate_form_template(data.user)
         # emit resource sync
         operations = [*serializer.instance.resource_sync_opts]
-        scheduled_time = timezone.now()
+        scheduled_time = timezone.now() + timezone.timedelta(minutes=2)
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(request.user.id), operations, formatted_time)
 
