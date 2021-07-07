@@ -41,19 +41,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         timeout = kwargs.get("timeout")
         if timeout is None:
             kwargs["timeout"] = self.timeout
-        try:
-            print(request.url)
-            return super().send(request, **kwargs)
-        except ConnectionError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            time.sleep(2)
-            return super().send(request, **kwargs)
-        except ConnectionResetError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            time.sleep(2)
-            return super().send(request, **kwargs)
+        return super().send(request, **kwargs)
 
 
 # TimeoutHTTPAdapter(timeout=2.5)

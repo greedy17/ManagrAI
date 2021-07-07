@@ -358,7 +358,7 @@ def process_submit_resource_data(payload, context):
         except ConnectionResetError:
             if attempts >= 5:
                 logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
                 )
                 has_error = True
                 blocks = get_block_set(
