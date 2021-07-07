@@ -1,12 +1,13 @@
 import requests
 import time
+import logging
+import httpx
 
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-import logging
 
 logger = logging.getLogger("managr")
 ########
@@ -72,3 +73,6 @@ class HttpClient:
         client.mount("https://", adapter)
         client.mount("http://", adapter)
         return client
+
+
+Client = httpx.Client(timeout=20)
