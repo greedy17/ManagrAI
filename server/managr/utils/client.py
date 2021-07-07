@@ -1,4 +1,6 @@
 import requests
+import time
+
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 from requests.adapters import HTTPAdapter
@@ -39,17 +41,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         timeout = kwargs.get("timeout")
         if timeout is None:
             kwargs["timeout"] = self.timeout
-        try:
-            print(request.url)
-            return super().send(request, **kwargs)
-        except ConnectionError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            return super().send(request, **kwargs)
-        except ConnectionResetError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            return super().send(request, **kwargs)
+        return super().send(request, **kwargs)
 
 
 # TimeoutHTTPAdapter(timeout=2.5)

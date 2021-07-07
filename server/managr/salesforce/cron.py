@@ -306,7 +306,6 @@ def init_sf_field_sync(user):
         return
     operations = [
         *user.salesforce_account.field_sync_opts,
-        *user.salesforce_account.picklist_sync_opts,
         *user.salesforce_account.validation_sync_opts,
     ]
 
