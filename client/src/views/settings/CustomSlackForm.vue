@@ -19,7 +19,6 @@
     </div>
 
     <div style="display: flex">
-      {{ formType }} {{ resource }}
       <div>
         <div class="fields">Select or search for SFDC fields.</div>
         <CollectionSearch
@@ -27,7 +26,7 @@
           itemDisplayKey="referenceDisplayLabel"
           :showSubmitBtn="false"
           @onClickItem="
-            e => {
+            (e) => {
               onAddField(e)
             }
           "
@@ -105,9 +104,9 @@
           <div
             v-if="
               field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
+              field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+              field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
+              field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
             "
             class="form-field__label"
           >
@@ -148,9 +147,9 @@
                 class="form-field__label"
                 v-if="
                   field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
+                  field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                  field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                  field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
                 "
               >
                 {{ field.referenceDisplayLabel }}
@@ -180,8 +179,8 @@
               <div
                 v-if="
                   customForm.formType == 'CREATE' ||
-                    //|| customForm.formType == 'MEETING_REVIEW'
-                    customForm.stage
+                  //|| customForm.formType == 'MEETING_REVIEW'
+                  customForm.stage
                 "
                 class="form-field__right"
                 @click="field.includeInRecap = !field.includeInRecap"
@@ -385,7 +384,7 @@ export default {
     orderedStageForm() {
       let forms = []
       if (this.customForm.stage) {
-        let index = this.stageForms.findIndex(f => f.stage == this.customForm.stage)
+        let index = this.stageForms.findIndex((f) => f.stage == this.customForm.stage)
         if (~index) {
           forms = this.stageForms.slice(0, index)
         }
@@ -399,7 +398,7 @@ export default {
       return this.customForm ? this.customForm.fields : []
     },
     addedFieldIds() {
-      return this.addedFields.map(field => {
+      return this.addedFields.map((field) => {
         return field.id
       })
     },
@@ -415,7 +414,7 @@ export default {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
         .list({})
-        .then(res => {
+        .then((res) => {
           this.actionChoices = res.results
         })
         .finally((this.loadingMeetingTypes = false))
@@ -431,15 +430,11 @@ export default {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
       // if form is meeting review depening on the resource it can/cant be removed
-      if (this.customForm.formType == this.MEETING_REVIEW) {
-        if (
-          this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
-          ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex(f => field.key == f)
-        ) {
-          return false
-        } else {
-          return true
-        }
+      if (
+        this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
+        ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex((f) => field.id == f)
+      ) {
+        return false
       } else {
         return true
       }
@@ -455,11 +450,11 @@ export default {
     onRemoveField(field) {
       // remove from the array if  it exists
 
-      this.addedFields = [...this.addedFields.filter(f => f.id != field.id)]
+      this.addedFields = [...this.addedFields.filter((f) => f.id != field.id)]
 
       // if it exists in the current fields add it to remove field
 
-      if (~this.currentFields.findIndex(f => f == field.id)) {
+      if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
     },
@@ -514,7 +509,7 @@ export default {
 
             await ActionChoice.api
               .create(obj)
-              .then(res => {
+              .then((res) => {
                 this.$Alert.alert({
                   type: 'success',
                   message: 'New meeting type created',
@@ -559,9 +554,9 @@ export default {
       }
       this.savingForm = true
 
-      let fields = new Set([...this.addedFields.map(f => f.id)])
-      fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
-      let fields_ref = this.addedFields.filter(f => fields.includes(f.id))
+      let fields = new Set([...this.addedFields.map((f) => f.id)])
+      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -569,7 +564,7 @@ export default {
           removedFields: this.removedFields,
           fields_ref: fields_ref,
         })
-        .then(res => {
+        .then((res) => {
           this.$emit('update:selectedForm', res)
         })
         .finally(() => {

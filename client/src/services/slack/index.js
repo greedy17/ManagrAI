@@ -50,10 +50,10 @@ const STAGE_GATING = 'STAGE_GATING'
 const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT, LEAD]
 const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
-  [ACCOUNT]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
-  [OPPORTUNITY]: ['meeting_type', 'meeting_comments', 'meeting_sentiment'],
-  [LEAD]: [],
-  [CONTACT]: [],
+  [ACCOUNT]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893'],
+  [OPPORTUNITY]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893'],
+  [LEAD]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893'],
+  [CONTACT]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893'],
 }
 export {
   MEETING_REVIEW,

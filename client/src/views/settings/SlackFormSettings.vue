@@ -63,7 +63,7 @@
               <PulseLoadingSpinnerButton
                 @click="() => refreshFormStages()"
                 :loading="false"
-                class="primary-button"
+                class="primary-button mar"
                 text="Refresh"
               />
             </div>
@@ -139,21 +139,30 @@
             nullDisplay="Select Salesforce Object"
           />
           <div v-if="resource">
-            <button @click="selectForm(resource, CREATE)" class="buttons__">Create</button>
-            <button @click="selectForm(resource, UPDATE)" class="buttons__">
+            <button
+              @click="selectForm(resource, CREATE)"
+              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
+            >
+              Create
+            </button>
+            <button
+              @click="selectForm(resource, UPDATE)"
+              class="buttons__"
+              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
+            >
               Update (Command)
             </button>
             <button
               @click="selectForm(resource, MEETING_REVIEW)"
               v-if="resource == 'Opportunity' || resource == 'Account'"
-              class="buttons__"
+              :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
             >
               Update (Zoom)
             </button>
             <button
-              @click="selectForm(resource, STAGE_GATING)"
-              v-if="resource == 'Opportunity'"
-              class="buttons__"
+              @click="openStageDropDown"
+              v-if="resource == OPPORTUNITY"
+              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
             >
               Stage Specific
             </button>
@@ -179,6 +188,32 @@
               />
             </div>
           </template>
+        </div>
+
+        <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
+          <div v-if="currentFormStages.length">
+            <div class="stage__dropdown__header">Your Stage Gate Forms</div>
+            <div
+              v-for="(form, i) in formStages"
+              :key="form.id"
+              class="stage__dropdown__stages__container"
+              :class="{
+                'stage__dropdown__stages__container--selected':
+                  `${form.id}.${form.stage}` === selectedTab,
+              }"
+            >
+              <div
+                class="stage__dropdown__stages__title"
+                @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+              >
+                {{ form.stage }}
+              </div>
+              <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center">
+            <button @click="onAddForm" class="modal-container__box__button">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -265,7 +300,7 @@ export default {
     },
     formTabHeaders() {
       if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter(t => t != this.MEETING_REVIEW)
+        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
       } else if (this.resource == this.OPPORTUNITY) {
         return [...this.FORM_TYPES, this.STAGE_GATING]
       }
@@ -279,7 +314,9 @@ export default {
     currentFormStages() {
       // users can only create one form for the stage
       if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType.filter(f => f.formType == this.STAGE_GATING).map(f => f.stage)
+        return this.allFormsByType
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .map((f) => f.stage)
       }
       return []
     },
@@ -287,10 +324,10 @@ export default {
       // users can only create one form for the stage orderd by stage
       let forms = []
       if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach(s => {
+        this.stages.forEach((s) => {
           this.allFormsByType
-            .filter(f => f.formType == this.STAGE_GATING)
-            .forEach(sf => {
+            .filter((f) => f.formType == this.STAGE_GATING)
+            .forEach((sf) => {
               if (sf.stage == s.value) {
                 forms.push(sf)
               }
@@ -356,7 +393,9 @@ export default {
     },
 
     async selectForm(resource, formType) {
-      this.selectedForm = this.allForms.find(f => f.resource == resource && f.formType == formType)
+      this.selectedForm = this.allForms.find(
+        (f) => f.resource == resource && f.formType == formType,
+      )
       this.formType = formType
     },
 
@@ -403,7 +442,7 @@ export default {
 
         SlackOAuth.api
           .delete(id)
-          .then(async res => {
+          .then(async (res) => {
             this.$Alert.alert({
               type: 'success',
 
@@ -412,13 +451,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter(f => {
+            const forms = this.formsByType.filter((f) => {
               return f.id !== form.id
             })
             this.formsByType = forms
           })
 
-          .catch(e => {
+          .catch((e) => {
             this.$Alert.alert({
               type: 'error',
 
@@ -430,7 +469,7 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter(f => {
+        const forms = this.newForms.filter((f) => {
           return f.id !== form.id
         })
         this.newForms = forms
@@ -468,7 +507,7 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
@@ -496,7 +535,7 @@ export default {
         } else {
           let prev = this.resource
           this.resource = resource
-          this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
 
           let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
           let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
@@ -511,7 +550,7 @@ export default {
         }
       } else {
         this.resource = resource
-        this.formsByType = this.allForms.filter(f => f['resource'] == this.resource)
+        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
         let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
         classList.toggle('box__content--expanded')
       }
@@ -523,7 +562,7 @@ export default {
       this.selectedTab = tab
       let [id, stage] = tab.split('.')
 
-      let form = this.allFormsByType.find(f => f.id == id && f.stage == stage)
+      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
 
       if (form && typeof form != undefined) {
         this.selectedForm = form
@@ -531,7 +570,7 @@ export default {
     },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex(f => f.id == this.selectedForm.id)
+      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
         this.formsByType[index] = this.selectedForm
@@ -622,7 +661,7 @@ export default {
       display: flex;
 
       justify-content: center;
-      min-height: 35rem;
+      min-height: 30rem;
     }
     &__button {
       @include primary-button();
@@ -732,7 +771,7 @@ export default {
   &__dropdown {
     width: 15rem;
 
-    margin: 18px 113px 49px 108px;
+    margin: 2px 270px 49px 108px;
     padding: 6px 0 14px;
     border-radius: 3px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
@@ -865,5 +904,20 @@ button {
 }
 .primary-button:hover {
   transform: scale(1.05);
+}
+.mar {
+  margin-bottom: 0.5rem;
+}
+.activeTab {
+  height: 3rem;
+  width: 11rem;
+  text-align: center;
+  border-radius: 0.75rem;
+  background-color: #199e54;
+  border: 2px solid #199e54;
+  color: white;
+  font-weight: bolder;
+  box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
+  margin-right: 1.5rem;
 }
 </style>
