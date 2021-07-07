@@ -167,8 +167,8 @@ def generic_request(url, data, access_token=None):
         if access_token
         else slack_auth.json_headers(),
     )
-    blocks = original_data.get("view", {}).get("blocks", [])
-    return _handle_response(res, blocks=blocks if data else [])
+    blocks = original_data.get("view", {}).get("blocks", []) if data else []
+    return _handle_response(res, blocks=blocks)
 
 
 def list_channels(access_token, limit=25, cursor=None, types=[]):
