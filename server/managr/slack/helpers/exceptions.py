@@ -91,7 +91,7 @@ class CustomAPIException:
             raise ApiRateLimitExceeded()
         elif self.code == 200 and self.param == "invalid_blocks":
             # find the block_indexes
-            blocks = [self._extract_block(error) for error in self.message]
+            blocks = [self._extract_invalid_block(error) for error in self.message]
             message = f"Invalid Blocks {'------'.join(blocks)}"
             logger.error(f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}")
             raise InvalidBlocksException(message)
@@ -107,11 +107,15 @@ class CustomAPIException:
             raise InvalidBlocksFormatException(self.message)
         elif self.code == 200 and self.param == "invalid_arguments":
 
-            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
+            blocks = [self._extract_invalid_args_block(error) for error in self.message]
+            message = f"Invalid Args {'------'.join(blocks)}"
+            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}")
             raise InvalidArgumentsException(
-                f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}"
+                f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
             )
-        elif self.code == 200 and self.param == "not_in_channel":
+        elif self.code == 200 and (
+            self.param == "not_in_channel" or self.param == "channel_not_found"
+        ):
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
             raise CannotSendToChannel(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
         else:
@@ -121,10 +125,20 @@ class CustomAPIException:
                 f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}"
             )
 
-    def _extract_block(self, error):
+    def _extract_invalid_block(self, error):
         # regex to get [json-pointer:/blocks/0/text]
         matches = re.search(r"json-pointer:", error)
         if matches:
-            block_index = int(error[matches.end() + 8])
-            return f"{error[:matches.start()]} on block {self.blocks[block_index]}"
-        return [error]
+            if len(error) >= matches.end() + 8:
+                block_index = int(error[matches.end() + 8])
+                return f"{error[:matches.start()]} on block {self.blocks[block_index]}"
+        return error
+
+    def _extract_invalid_args_block(self, error):
+        # regex to get [json-pointer:/blocks/0/text]
+        matches = re.search(r"json-pointer:", error)
+        if matches:
+            if len(error) >= matches.end() + 13 and self.blocks:
+                block_index = int(error[matches.end() + 13])
+                return f"{error[:matches.start()]} on block {self.blocks[block_index]}"
+        return error

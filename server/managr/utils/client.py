@@ -1,12 +1,13 @@
 import requests
 import time
+import logging
+import httpx
 
 from urllib.parse import urlencode, quote_plus
 from requests.exceptions import HTTPError
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-import logging
 
 logger = logging.getLogger("managr")
 ########
@@ -41,19 +42,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         timeout = kwargs.get("timeout")
         if timeout is None:
             kwargs["timeout"] = self.timeout
-        try:
-            print(request.url)
-            return super().send(request, **kwargs)
-        except ConnectionError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            time.sleep(2)
-            return super().send(request, **kwargs)
-        except ConnectionResetError:
-            # auto retry once
-            logger.exception("Failed to send request")
-            time.sleep(2)
-            return super().send(request, **kwargs)
+        return super().send(request, **kwargs)
 
 
 # TimeoutHTTPAdapter(timeout=2.5)
@@ -84,3 +73,6 @@ class HttpClient:
         client.mount("https://", adapter)
         client.mount("http://", adapter)
         return client
+
+
+Client = httpx.Client(timeout=20)

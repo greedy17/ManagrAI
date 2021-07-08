@@ -275,6 +275,42 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
             serializer = SObjectFieldSerializer(data=field.as_dict)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        # additionally retrieve picklist values
+        if field.data_type == "Picklist" or field.data_type == "MultiPicklist":
+            object_picklist = None
+            while True:
+                sf = user.salesforce_account
+                try:
+                    object_picklist = sf.get_individual_picklist_values(
+                        resource, field=field.api_name
+                    )
+                    attempts = 1
+
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
+                        )
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        sf.regenerate_token()
+                        attempts += 1
+            if object_picklist:
+                existing_picklist = SObjectPicklist.objects.filter(
+                    picklist_for=object_picklist.picklist_for,
+                    salesforce_account_id=object_picklist.salesforce_account,
+                    salesforce_object=resource,
+                ).first()
+                if existing_picklist:
+                    picklist_serializer = SObjectPicklistSerializer(
+                        data=object_picklist.as_dict, instance=existing_picklist
+                    )
+                else:
+                    picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
+                picklist_serializer.is_valid(raise_exception=True)
+                picklist_serializer.save()
     return
 
 
@@ -1041,7 +1077,7 @@ def _send_recap(form_ids):
                         text=f"Failed to send recap to channel",
                         block_set=[
                             block_builders.simple_section(
-                                f"Unable to send recap to one of the channels you selected, please add @managr to the channel",
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
                                 "mrkdwn",
                             )
                         ],

@@ -296,8 +296,8 @@
                 "
                 class="muted--link--important"
               >
-                Please add managr to <em>{{ form.field._recipients.value.name }}</em> using the @
-                tag @managr
+                Please make sure @managr has been added to
+                <em>{{ form.field._recipients.value.name }}</em> channel
               </span>
               <FormField
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
