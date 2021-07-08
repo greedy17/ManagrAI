@@ -4,6 +4,7 @@ import pytz
 from datetime import datetime
 import logging
 import uuid
+import time
 
 
 from django.http import JsonResponse
@@ -339,11 +340,36 @@ def process_submit_resource_data(payload, context):
 
         except TokenExpired:
             if attempts >= 5:
-                return logger.exception(
+                logger.exception(
                     f"Failed to Update data for user {str(user.id)} after {attempts} tries"
                 )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
             else:
                 sf.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
                 attempts += 1
 
     if has_error:

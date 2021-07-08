@@ -76,6 +76,11 @@ class CustomPicklistValue(admin.ModelAdmin):
         "salesforce_account__user",
         "salesforce_object",
     )
+    list_display = (
+        "salesforce_account",
+        "salesforce_object",
+        "field",
+    )
 
 
 # Register your models here.
