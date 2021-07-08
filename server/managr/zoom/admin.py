@@ -30,7 +30,21 @@ class CustomZoomMeetingForm(ModelForm):
 class CustomZoomMeeting(admin.ModelAdmin):
     form = CustomZoomMeetingForm
     list_filter = ("zoom_account__user",)
+    list_display = (
+        "meeting_uuid",
+        "host_id",
+        "zoom_account",
+    )
 
 
-admin.site.register(models.ZoomAuthAccount)
+class CustomZoomAuthAccount(admin.ModelAdmin):
+    model = models.ZoomAuthAccount
+
+    list_display = (
+        "user",
+        "zoom_id",
+    )
+
+
+admin.site.register(models.ZoomAuthAccount, CustomZoomAuthAccount)
 admin.site.register(models.ZoomMeeting, CustomZoomMeeting)

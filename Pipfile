@@ -33,6 +33,7 @@ channels-redis = "==2.4.0"
 channels = "~=2.1"
 nylas = "*"
 ddtrace = "==0.48.0"
+httpx = "*"
 
 [requires]
 python_version = "3.9"

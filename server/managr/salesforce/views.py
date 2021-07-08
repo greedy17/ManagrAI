@@ -98,11 +98,6 @@ def authenticate(request):
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
-        # emit resource sync
-        operations = [*serializer.instance.resource_sync_opts]
-        scheduled_time = timezone.now() + timezone.timedelta(minutes=2)
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_sync(str(request.user.id), operations, formatted_time)
 
         return Response(data={"success": True})
 

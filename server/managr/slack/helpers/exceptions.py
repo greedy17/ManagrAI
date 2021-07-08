@@ -113,7 +113,9 @@ class CustomAPIException:
             raise InvalidArgumentsException(
                 f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
             )
-        elif self.code == 200 and self.param == "not_in_channel":
+        elif self.code == 200 and (
+            self.param == "not_in_channel" or self.param == "channel_not_found"
+        ):
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
             raise CannotSendToChannel(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
         else:
