@@ -31,19 +31,17 @@ logger = logging.getLogger("managr")
 
 def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return "No Opportunity, Account, or Lead associated with this meeting. Please follow the steps below to log this meeting back to SFDC:"
+        return "Your meeting just ended, but we couldn't find an Opp, Account, or Lead associated with the attendees that joined this meeting. *Please use the 'Map/Create' button*"
 
     # replace opp, review disregard
-    return f"We mapped it to _{resource_type}_ *{resource_name}*"
+    return f"Your meeting with _{resource_type}_ *{resource_name}* just ended, please review the steps below then click 'Update Salesforce'"
 
 
 def _initial_meeting_step_one_message(resource_type=None):
     if not resource_type:
-        return "1.\tClick 'Change/Create' to map this meeting to an object, or create a new one!"
+        return "Update SFDC by mapping this meeting to an Opp/Account/Lead"
 
-    return (
-        "1.\tClick 'Change/Create' to map this meeting to a different object, or create a new one!"
-    )
+    return "Click 'Map/Create' to map this meeting to a different object"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -320,56 +318,50 @@ def initial_meeting_interaction_block_set(context):
         else start_time
     )
     formatted_end = (
-        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p")
+        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
         if end_time
         else end_time
     )
     if not resource:
         title_section = _initial_interaction_message()
+        map_message = _initial_meeting_step_one_message()
     else:
         title_section = _initial_interaction_message(resource.name, workflow.resource_type)
+        map_message = _initial_meeting_step_one_message(workflow.resource_type)
     default_blocks = [
-        block_builders.simple_section("*I noticed you had this meeting:*", text_type="mrkdwn"),
-        block_builders.simple_section(
-            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
-            text_type="mrkdwn",
-        ),
         block_builders.simple_section(title_section, text_type="mrkdwn"),
         {"type": "divider"},
+        block_builders.section_with_accessory_block(
+            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+            block_builders.simple_image_block(
+                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
+            ),
+            text_type="mrkdwn",
+        ),
     ]
-    create_change_button = block_builders.actions_block(
-        [
-            block_builders.simple_button_block(
-                "Change/Create",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                style="primary",
-            )
-        ]
+    create_change_button = block_builders.section_with_button_block(
+        "Map/Create",
+        str(workflow.id),
+        map_message,
+        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+        style="primary",
     )
-    review_participants_button = block_builders.actions_block(
-        [
-            block_builders.simple_button_block(
-                "Review Participants",
-                str(workflow.id),
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
-                ),
-            )
-        ]
+
+    review_participants_button = block_builders.section_with_button_block(
+        "Meeting Attendees",
+        str(workflow.id),
+        "Click 'Meeting Attendees' to review, edit, or remove attendees",
+        action_id=action_with_params(
+            slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+        ),
+        style="primary",
     )
-    if not resource:
-        step_one = _initial_meeting_step_one_message()
-    else:
-        step_one = _initial_meeting_step_one_message(workflow.resource_type)
-    step_two_text = (
-        "2.\tAdd meeting participants as Contacts. Please review them first! :exclamation:"
-    )
+
     blocks = [
         *default_blocks,
-        block_builders.simple_section(step_one, "mrkdwn",),
         create_change_button,
-        block_builders.simple_section(step_two_text, "mrkdwn",),
+        review_participants_button,
+        {"type": "divider"},
     ]
     action_blocks = [
         block_builders.simple_button_block(
@@ -379,29 +371,13 @@ def initial_meeting_interaction_block_set(context):
             style="danger",
         )
     ]
-    if not resource:
-        # action button blocks
-        action_blocks = [
-            block_builders.simple_button_block(
-                "Review Participants",
-                str(workflow.id),
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,],
-                ),
-            ),
-            *action_blocks,
-        ]
-
-    elif (
+    if (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
     ):
-        step_three = f"3.\tClick 'Update' to update the {workflow.resource_type} and log the meeting as an Activity"
-        blocks.append(review_participants_button)
-        blocks.append(block_builders.simple_section(step_three, "mrkdwn"))
         action_blocks = [
             block_builders.simple_button_block(
-                "Update",
+                "Update Salesforce",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
