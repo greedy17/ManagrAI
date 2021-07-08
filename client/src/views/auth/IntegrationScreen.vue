@@ -1,9 +1,6 @@
 <template>
   <div class="integrations">
-    <h2>Integrate your apps</h2>
-    <div class="integrations__subtitle">
-      Connect with the apps below to sync your sales data for Managr to use.
-    </div>
+    <h2 class="title">Connect your apps to Managr</h2>
 
     <PulseLoadingSpinnerButton
       v-if="hasSalesforceIntegration && user.isAdmin"
@@ -26,9 +23,7 @@
           <img class="card-img" src="@/assets/images/salesforce.png" />
           <h3 class="card__title">Salesforce</h3>
         </div>
-        <p class="card-text">
-          Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.
-        </p>
+        <p class="card-text">Sync your Accounts, Opportunities, Contacts, & Leads.</p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
@@ -52,7 +47,11 @@
           <h3 class="card__title">Zoom</h3>
         </div>
 
-        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
+        <p class="card-text">Let Managr know when your meeting ends and who attended.</p>
+        <p class="note">
+          <strong class="bold">Note:</strong> we are only accesing your meetings not the company’s
+          or other employees.
+        </p>
         <PulseLoadingSpinnerButton
           v-if="!hasZoomIntegration"
           :disabled="hasZoomIntegration"
@@ -76,11 +75,17 @@
           <h3 class="card__title">Slack</h3>
         </div>
 
-        <p class="card-text">Connect Slack to enable messaging between apps.</p>
+        <p class="card-text">
+          Enable 2-way messaging by connecting Managr to your slack workspace.
+        </p>
+        <p class="note">
+          <strong class="bold">Note:</strong> if you need approval connecting to your company's
+          workspace, create a new one!
+        </p>
         <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
+            (orgHasSlackIntegration && !hasSlackIntegration)
           "
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
@@ -104,7 +109,7 @@
           <h3 class="card__title">Calendar</h3>
         </div>
 
-        <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>
+        <p class="card-text">Pull in meeting attendees that were aded to your Calendar invite</p>
         <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
             @click="onGetAuthLink('NYLAS')"
@@ -152,7 +157,7 @@
       by Managr.
     </div>
     <p>
-      <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+      <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
       |
       <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
       |
@@ -379,7 +384,8 @@ export default {
 }
 
 .card-text {
-  font-size: 1.1rem;
+  font-size: 16px;
+  font-weight: 900;
   color: $light-gray-blue;
   min-height: 4rem;
 }
@@ -409,5 +415,23 @@ export default {
 .lock {
   height: 2rem;
   margin-bottom: 1rem;
+}
+.note {
+  font: lato-bold;
+  font-size: 12px;
+  font-weight: 900;
+  color: $mid-gray;
+  margin-top: -2rem;
+}
+.bold {
+  font: lato-bold;
+  font-weight: 2rem;
+  color: $light-gray-blue;
+}
+.title {
+  font: lato-bold;
+  font-size: 1.4rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
 }
 </style>
