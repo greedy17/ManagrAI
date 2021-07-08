@@ -72,9 +72,7 @@
                 class="modal-container__box__button"
                 @click="
                   () => {
-                    $modal.hide('add-stage-modal'),
-                      addForm(this.selectedStage),
-                      toggleSelectedTab(`.${this.selectedStage}`)
+                    $modal.hide('add-stage-modal'), addForm(this.selectedStage)
                   }
                 "
                 :disabled="!this.selectedStage"
@@ -185,7 +183,7 @@
         </div>
 
         <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
-          <div v-if="currentFormStages.length">
+          <div>
             <div class="stage__dropdown__header">Your Stage Gate Forms</div>
             <div
               v-for="(form, i) in formStages"
@@ -193,12 +191,15 @@
               class="stage__dropdown__stages__container"
               :class="{
                 'stage__dropdown__stages__container--selected':
-                  `${form.id}.${form.stage}` === selectedTab,
+                  selectedForm &&
+                  selectedForm.formType == 'STAGE_GATING' &&
+                  selectedForm.resource == 'Opportunity' &&
+                  selectedForm.stage == form.stage,
               }"
             >
               <div
                 class="stage__dropdown__stages__title"
-                @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
+                @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
               >
                 {{ form.stage }}
               </div>
@@ -283,68 +284,35 @@ export default {
         ModelClass: SObjectValidation,
         pagination: Pagination.create({ size: 2 }),
       }),
+      formStages: [],
     }
   },
-  watch: {
-    selectedFormType: {
-      immediate: true,
-      async handler(val, prev) {},
-    },
-  },
+  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      // this.allFields = await this.listFields()
-      // await this.listPicklists({
-      //   salesforceObject: this.Opportunity,
-      //   picklistFor: 'StageName',
-      // })
+      this.allFields = await this.listFields()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
     } catch (error) {
       console.log(error)
     }
+
+    // users can only create one form for the stage orderd by stage
+
+    this.getStageForms()
   },
+
   computed: {
     ...mapState(['user']),
     selectedFormType() {
       return this.selectedForm ? this.selectedForm.formType : null
     },
-    formTabHeaders() {
-      if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
-      } else if (this.resource == this.OPPORTUNITY) {
-        return [...this.FORM_TYPES, this.STAGE_GATING]
-      }
-      return this.FORM_TYPES
-    },
-    allFormsByType() {
-      // this getter gets all forms byType existing and new (new forms arent appended until they are created)
-      return [...this.formsByType, ...this.newForms]
-    },
 
-    currentFormStages() {
-      // users can only create one form for the stage
-      if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType
-          .filter((f) => f.formType == this.STAGE_GATING)
-          .map((f) => f.stage)
-      }
-      return []
-    },
-    formStages() {
-      // users can only create one form for the stage orderd by stage
-      let forms = []
-      if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach((s) => {
-          this.allFormsByType
-            .filter((f) => f.formType == this.STAGE_GATING)
-            .forEach((sf) => {
-              if (sf.stage == s.value) {
-                forms.push(sf)
-              }
-            })
-        })
-      }
-      return forms
+    currentStagesWithForms() {
+      return this.formStages.map(sf => sf.stage)
     },
   },
   methods: {
@@ -402,9 +370,9 @@ export default {
       this.$modal.show('objects-modal')
     },
 
-    async selectForm(resource, formType) {
+    async selectForm(resource, formType, stage = '') {
       this.selectedForm = this.allForms.find(
-        (f) => f.resource == resource && f.formType == formType,
+        f => f.resource == resource && f.formType == formType && f.stage == stage,
       )
       this.formType = formType
     },
@@ -433,6 +401,21 @@ export default {
         })
       }
     },
+    getStageForms() {
+      // users can only create one form for the stage orderd by stage
+      let forms = []
+      this.stages.forEach(s => {
+        this.allForms
+          .filter(f => f.formType == this.STAGE_GATING)
+          .forEach(sf => {
+            if (sf.stage == s.value) {
+              forms.push(sf)
+            }
+          })
+      })
+
+      this.formStages = [...forms]
+    },
 
     async listPicklists(query_params = {}) {
       try {
@@ -445,14 +428,12 @@ export default {
     },
 
     async deleteForm(form) {
-      const forms = this.allFormsByType
-
-      if (form.id.length) {
+      if (form.id && form.id.length) {
         const id = form.id
 
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
+          .then(async res => {
             this.$Alert.alert({
               type: 'success',
 
@@ -461,13 +442,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter((f) => {
+            const forms = this.formsByType.filter(f => {
               return f.id !== form.id
             })
-            this.formsByType = forms
+            this.fallForms = [...forms]
           })
 
-          .catch((e) => {
+          .catch(e => {
             this.$Alert.alert({
               type: 'error',
 
@@ -479,14 +460,18 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter((f) => {
+        const forms = this.allForms.filter(f => {
           return f.id !== form.id
         })
-        this.newForms = forms
+        this.allForms = [...forms]
+        console.log(this.allForms)
       }
     },
 
     openStageDropDown() {
+      this.resource = 'Opportunity'
+      this.formType = 'STAGE_GATING'
+      this.getStageForms()
       this.stageDropDownOpen = !this.stageDropDownOpen
     },
 
@@ -505,7 +490,7 @@ export default {
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
-      if (this.currentFormStages.includes(stage)) {
+      if (this.currentStagesWithForms.includes(stage)) {
         return this.$Alert.alert({
           message: 'This Stage already has a form',
           timeout: 5000,
@@ -517,76 +502,22 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
-      this.newForms = [...this.newForms, newForm]
+      this.allForms = [...this.allForms, newForm]
+      this.getStageForms()
     },
-    async toggleSelectedFormResource(resource) {
-      this.isVisible = !this.isVisible
-      await this.listValidations({ salesforceObject: this.resource })
-      /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
-      if (this.resource && resource) {
-        if (this.resource == resource) {
-          let classList = this.$refs[`${resource.toLowerCase()}-content`][0].classList
-          if (classList.contains('box__content--expanded')) {
-            classList.toggle('box__content--closed')
-            classList.toggle('box__content--expanded')
-            setTimeout(() => {
-              classList.toggle('box__content--closed')
-            }, 500)
-          } else if (classList.contains('box__content--closed')) {
-            classList.toggle('box__content--expanded')
-            classList.toggle('box__content--closed')
-          } else {
-            classList.toggle('box__content--expanded')
-          }
-        } else {
-          let prev = this.resource
-          this.resource = resource
-          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
 
-          let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
-          let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
-          if (prevClassList.contains('box__content--expanded')) {
-            prevClassList.toggle('box__content--closed')
-            prevClassList.toggle('box__content--expanded')
-            setTimeout(() => {
-              prevClassList.toggle('box__content--closed')
-            }, 500)
-          }
-          classList.toggle('box__content--expanded')
-        }
-      } else {
-        this.resource = resource
-        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
-        let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
-        classList.toggle('box__content--expanded')
-      }
-
-      let f = this.allFormsByType[0]
-      this.toggleSelectedTab(`${f.id}.${f.stage}`)
-    },
-    toggleSelectedTab(tab) {
-      this.selectedTab = tab
-      let [id, stage] = tab.split('.')
-
-      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
-
-      if (form && typeof form != undefined) {
-        this.selectedForm = form
-      } else this.selectedForm = null
-    },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
+      let index = this.allForms.findIndex(f => f.id == this.selectedForm.id)
 
       if (~index) {
-        this.formsByType[index] = this.selectedForm
-        this.formsByType = [...this.formsByType]
+        this.allForms[index] = this.selectedForm
+        this.allForms = [...this.allForms]
       }
-      this.selectedTab = `${event.id}.${event.tage}`
     },
   },
 }
