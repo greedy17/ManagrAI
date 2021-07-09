@@ -394,9 +394,12 @@ class SalesforceAuthAccountAdapter:
                         and self.default_record_ids
                         and len(self.default_record_ids.items())
                     ):
-                        record_type_id = self.default_record_ids.get(
-                            self.default_record_ids.items()[0], None
-                        )
+                        items = list(self.default_record_ids.items())
+                        record_type_id = items[0][1] if len(items) else None
+                        if not record_type_id:
+                            return logger.exception(
+                                f"Unable to retreive record id for {url} from field {field_name} for resource {resource}"
+                            )
 
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
 

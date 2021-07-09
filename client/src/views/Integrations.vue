@@ -6,16 +6,17 @@
       <div class="card">
         <img class="card-img" src="@/assets/images/salesforce.svg" />
         <h3>Salesforce</h3>
-        <p
-          class="card-text"
-        >Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.</p>
+        <p class="card-text">
+          Connect Salesforce to sync Accounts, Opportunities & Contacts with Managr.
+        </p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesforceIntegration"
           @click="onGetAuthLink('SALESFORCE')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-        >Connect</PulseLoadingSpinnerButton>
+          >Connect</PulseLoadingSpinnerButton
+        >
         <PulseLoadingSpinnerButton
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -60,7 +61,7 @@
         <PulseLoadingSpinnerButton
           v-if="
             (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
+            (orgHasSlackIntegration && !hasSlackIntegration)
           "
           :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
           @click="onIntegrateSlack"
@@ -78,7 +79,11 @@
       </div>
 
       <div class="card">
-        <img class="card-img" src="@/assets/images/google-calendar.svg" style="margin-right: 1rem" />
+        <img
+          class="card-img"
+          src="@/assets/images/google-calendar.svg"
+          style="margin-right: 1rem"
+        />
         <img class="card-img" src="@/assets/images/outlook-icon.svg" />
         <h3>Calendar</h3>
         <p class="card-text">Connect Calendar to access upcoming meetings & attendees.</p>

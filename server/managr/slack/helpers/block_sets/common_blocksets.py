@@ -95,10 +95,12 @@ def onboarding_interaction_block_set(context):
     blocks = [
         block_builders.simple_section(
             (
-                f"Welcome <@{slack.slack_id}> I’m the Managr bot designed to help you streamline your sales process :clap:\n"
-                "- *I’ll send you messages when your meetings end so you can easily update Salesforce* :raised_hands:\n"
-                "- *Make sure to check out Managr commands, listed in my _'about'_ tab* :thought_balloon:\n"
-                "Happy selling! :moneybag:"
+                f"Welcome <@{slack.slack_id}> I’m the Managr bot designed to help you automate your pipeline management process so you can focus on selling :clap:\n"
+                "*I can help you:*\n"
+                "- Put your pipeline on autopilot :raised_hands:\n"
+                "- Update SFDC in seconds, adding meeting attendees as Contacts :file_cabinet:\n"
+                "- Steamline SDR handoffs :moneybag:\n"
+                "- Facilitate deal review and internal communication:busts_in_silhouette:"
             ),
             "mrkdwn",
         ),

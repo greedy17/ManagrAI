@@ -565,7 +565,7 @@ def process_create_or_search_selected(payload, context):
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(5, block_sets[0])
+        previous_blocks.insert(4, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
