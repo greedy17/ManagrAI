@@ -86,7 +86,11 @@ def get_zoom_authentication(request):
     if not code:
         raise ValidationError()
     res = ZoomAcct.create_account(code, request.user.id)
-    serializer = ZoomAuthSerializer(data=res.as_dict)
+    existing = ZoomAuthAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = ZoomAuthSerializer(data=res.as_dict, instance=existing)
+    else:
+        serializer = ZoomAuthSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(data={"success": True})
