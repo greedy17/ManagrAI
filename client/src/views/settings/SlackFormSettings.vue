@@ -63,7 +63,7 @@
               <PulseLoadingSpinnerButton
                 @click="() => refreshFormStages()"
                 :loading="false"
-                class="primary-button"
+                class="primary-button mar"
                 text="Refresh"
               />
             </div>
@@ -72,9 +72,7 @@
                 class="modal-container__box__button"
                 @click="
                   () => {
-                    $modal.hide('add-stage-modal'),
-                      addForm(this.selectedStage),
-                      toggleSelectedTab(`.${this.selectedStage}`)
+                    $modal.hide('add-stage-modal'), addForm(this.selectedStage)
                   }
                 "
                 :disabled="!this.selectedStage"
@@ -88,18 +86,38 @@
       </div>
     </modal>
 
+    <modal name="objects-modal" heading="Select a Stage">
+      <div class="required__container">
+        <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
+        <div class="required__title">Forms</div>
+        <div class="required__instructions">
+          <strong>Create:</strong>
+          This form is triggered when you run the slack command, "managr-create".
+          <br />
+          <strong>Update (Command):</strong>
+          This form is triggered when you run the slack command, "managr-update".
+          <br />
+          <strong>Update (zoom):</strong>
+          This form is triggered immediately after a zoom meeting ends.
+          <br />
+          <strong>Stage Specific:</strong>
+          Added fields that are needed to progress into a new stage / pass validation rules
+        </div>
+      </div>
+    </modal>
+
     <div class="header__container">
-      <h3 class="header__title">Connect SalesForce to Slack!</h3>
+      <h3 class="header__title">Slack form builder</h3>
       <div class="header__list">
         <div class="header__list__item">
-          Click on each object below to build out your slack forms.
+          <h3 class="muted">Map your Salesforce fields to Managr</h3>
         </div>
       </div>
     </div>
-    <div class="resources">
-      <div :key="resource.id" class="box-updated" v-for="(resource, i) in FORM_RESOURCES">
-        <template v-if="allForms && allForms.length">
-          <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
+
+    <div class="main__content">
+      <div class="box-updated">
+        <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
             <span class="box-updated__title">
               {{ resource }}
               <img
@@ -109,97 +127,115 @@
                 @click.prevent.stop="toggleRequiredModal"
               />
             </span>
-          </div>
+          </div> -->
 
-          <div :ref="`${resource.toLowerCase()}-content`" class="box-updated__content">
-            <div class="box-updated__tab-header">
-              <div
-                :key="i"
-                v-for="(k, i) in allFormsByType"
-                class="box-updated__tab"
-                :class="{ 'box-updated__tab--active': selectedTab == `${k.id}.${k.stage}` }"
-                @click="toggleSelectedTab(`${k.id}.${k.stage}`)"
-                v-if="k.formType !== 'STAGE_GATING'"
+        <div :class="resource ? 'search_buttons_row' : ''">
+          <DropDownSearch
+            :items.sync="SOBJECTS_LIST"
+            v-model="resource"
+            displayKey="key"
+            valueKey="value"
+            nullDisplay="Select Salesforce Object"
+            class="search"
+          />
+
+          <div class="row">
+            <div v-if="resource">
+              <button
+                @click="selectForm(resource, CREATE)"
+                :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
               >
-                <div v-if="k.resource !== 'Contact'">
-                  {{ k.formType | snakeCaseToTextFilter }} {{ k.stage }}
-                </div>
-                <div v-else>
-                  {{ k.formType == 'CREATE' ? 'Create Contact' : 'Edit Existing Contacts' }}
-                </div>
-              </div>
-
-              <div class="stage__container">
-                <div
-                  class="box-updated__tab"
-                  @click="openStageDropDown"
-                  v-if="resource == OPPORTUNITY"
-                >
-                  Stage Specific
-                  <img src="@/assets/images/dropdown-arrow-green.svg" />
-                </div>
-                <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
-                  <div v-if="currentFormStages.length">
-                    <div class="stage__dropdown__header">Your Stage Gate Forms</div>
-                    <div
-                      v-for="(form, i) in formStages"
-                      :key="form.id"
-                      class="stage__dropdown__stages__container"
-                      :class="{
-                        'stage__dropdown__stages__container--selected':
-                          `${form.id}.${form.stage}` === selectedTab,
-                      }"
-                    >
-                      <div
-                        class="stage__dropdown__stages__title"
-                        @click="toggleSelectedTab(`${form.id}.${form.stage}`)"
-                      >
-                        {{ form.stage }}
-                      </div>
-                      <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
-                        x
-                      </div>
-                    </div>
-                  </div>
-                  <div style="display: flex; justify-content: center">
-                    <button @click="onAddForm" class="modal-container__box__button">Add</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="box__tab-content">
-              <template v-if="selectedForm">
-                <div class="field-title field-title__bold">
-                  Select or search for your <br />
-                  SFDC opportunity fields.
-                </div>
-                <CustomSlackForm
-                  :fields="formFields.list"
-                  :show-validations="showValidations"
-                  :customForm="selectedForm"
-                  :formType="selectedTab"
-                  :resource="resource"
-                  v-on:update:selectedForm="updateForm($event)"
-                  :loading="formFields.refreshing"
-                  :stageForms="formStages"
-                />
-              </template>
+                Create
+              </button>
+              <button
+                @click="selectForm(resource, UPDATE)"
+                class="buttons__"
+                :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
+              >
+                {{ ` Update ${resource}` }}
+              </button>
+              <button
+                @click="selectForm(resource, MEETING_REVIEW)"
+                v-if="resource == 'Opportunity' || resource == 'Account'"
+                :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
+              >
+                Update (Zoom Meetings)
+              </button>
+              <button
+                @click="openStageDropDown"
+                v-if="resource == OPPORTUNITY"
+                :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
+              >
+                Stage Related Fields
+              </button>
+              <img
+                style="
+                  height: 1.6rem;
+                  padding-left: 0.5rem;
+                  padding-bottom: 0.5rem;
+                  cursor: pointer;
+                "
+                src="@/assets/images/toolTip.png"
+                @click.prevent.stop="toggleObjectsModal"
+              />
             </div>
           </div>
-        </template>
-        <template v-else
-          >We are currently generating your forms please check back in a few minutes</template
-        >
+        </div>
+
+        <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
+          <div>
+            <div class="stage__dropdown__header">Your Stage Gate Forms</div>
+            <div
+              v-for="(form, i) in formStages"
+              :key="form.id"
+              class="stage__dropdown__stages__container"
+              :class="{
+                'stage__dropdown__stages__container--selected':
+                  selectedForm &&
+                  selectedForm.formType == 'STAGE_GATING' &&
+                  selectedForm.resource == 'Opportunity' &&
+                  selectedForm.stage == form.stage,
+              }"
+            >
+              <div
+                class="stage__dropdown__stages__title"
+                @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
+              >
+                {{ form.stage }}
+              </div>
+              <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center">
+            <button @click="onAddForm" class="modal-container__box__button">Add</button>
+          </div>
+        </div>
+
+        <div class="box__tab-content">
+          <template v-if="selectedForm">
+            <div class="box__content--expanded">
+              <CustomSlackForm
+                :show-validations="showValidations"
+                :formType="formType"
+                :customForm="selectedForm"
+                :resource="resource"
+                v-on:update:selectedForm="updateForm($event)"
+                :loading="formFields.refreshing"
+                :stageForms="formStages"
+              />
+            </div>
+          </template>
+        </div>
       </div>
     </div>
+
     <div class="tip-continue">
-      <p>
-        <strong>Pro tip:</strong> to get the most out of Managr, make sure to click into ALL the
-        objects.
-      </p>
+      <div class="row">
+        <strong>Hint: </strong>
+        <p class="hint">Start with Opportunity then Contact objects, as they are used most.</p>
+      </div>
       <button class="primary-button">
-        <router-link :to="{ name: 'CreateNew' }"> Continue to Smart Alerts </router-link>
+        <router-link :to="{ name: 'CreateNew' }">Continue to Smart Alerts </router-link>
       </button>
     </div>
   </div>
@@ -214,6 +250,7 @@ import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
 import DropDownSearch from '@/components/DropDownSearch'
+import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -221,6 +258,8 @@ export default {
   components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
   data() {
     return {
+      ...FORM_CONSTS,
+      SOBJECTS_LIST,
       allForms: [],
       allFields: [],
       formsByType: [],
@@ -234,7 +273,7 @@ export default {
       selectedFormFields: [],
       stages: [],
       loadingStages: false,
-      ...FORM_CONSTS,
+      formType: null,
       search: '',
       fieldParam: null,
       loading: false,
@@ -245,14 +284,10 @@ export default {
         ModelClass: SObjectValidation,
         pagination: Pagination.create({ size: 2 }),
       }),
+      formStages: [],
     }
   },
-  watch: {
-    selectedFormType: {
-      immediate: true,
-      async handler(val, prev) {},
-    },
-  },
+  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -264,49 +299,20 @@ export default {
     } catch (error) {
       console.log(error)
     }
+
+    // users can only create one form for the stage orderd by stage
+
+    this.getStageForms()
   },
+
   computed: {
     ...mapState(['user']),
     selectedFormType() {
       return this.selectedForm ? this.selectedForm.formType : null
     },
-    formTabHeaders() {
-      if (this.resource == this.CONTACT) {
-        return this.FORM_TYPES.filter((t) => t != this.MEETING_REVIEW)
-      } else if (this.resource == this.OPPORTUNITY) {
-        return [...this.FORM_TYPES, this.STAGE_GATING]
-      }
-      return this.FORM_TYPES
-    },
-    allFormsByType() {
-      // this getter gets all forms byType existing and new (new forms arent appended until they are created)
-      return [...this.formsByType, ...this.newForms]
-    },
 
-    currentFormStages() {
-      // users can only create one form for the stage
-      if (this.resource == this.OPPORTUNITY) {
-        return this.allFormsByType
-          .filter((f) => f.formType == this.STAGE_GATING)
-          .map((f) => f.stage)
-      }
-      return []
-    },
-    formStages() {
-      // users can only create one form for the stage orderd by stage
-      let forms = []
-      if (this.resource == this.OPPORTUNITY) {
-        this.stages.forEach((s) => {
-          this.allFormsByType
-            .filter((f) => f.formType == this.STAGE_GATING)
-            .forEach((sf) => {
-              if (sf.stage == s.value) {
-                forms.push(sf)
-              }
-            })
-        })
-      }
-      return forms
+    currentStagesWithForms() {
+      return this.formStages.map(sf => sf.stage)
     },
   },
   methods: {
@@ -360,6 +366,17 @@ export default {
       this.$modal.show('required-modal')
     },
 
+    toggleObjectsModal() {
+      this.$modal.show('objects-modal')
+    },
+
+    async selectForm(resource, formType, stage = '') {
+      this.selectedForm = this.allForms.find(
+        f => f.resource == resource && f.formType == formType && f.stage == stage,
+      )
+      this.formType = formType
+    },
+
     async listFields(query_params = {}) {
       try {
         this.formFields.filters = query_params
@@ -384,6 +401,21 @@ export default {
         })
       }
     },
+    getStageForms() {
+      // users can only create one form for the stage orderd by stage
+      let forms = []
+      this.stages.forEach(s => {
+        this.allForms
+          .filter(f => f.formType == this.STAGE_GATING)
+          .forEach(sf => {
+            if (sf.stage == s.value) {
+              forms.push(sf)
+            }
+          })
+      })
+
+      this.formStages = [...forms]
+    },
 
     async listPicklists(query_params = {}) {
       try {
@@ -396,14 +428,12 @@ export default {
     },
 
     async deleteForm(form) {
-      const forms = this.allFormsByType
-
-      if (form.id.length) {
+      if (form.id && form.id.length) {
         const id = form.id
 
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
+          .then(async res => {
             this.$Alert.alert({
               type: 'success',
 
@@ -412,13 +442,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter((f) => {
+            const forms = this.formsByType.filter(f => {
               return f.id !== form.id
             })
-            this.formsByType = forms
+            this.fallForms = [...forms]
           })
 
-          .catch((e) => {
+          .catch(e => {
             this.$Alert.alert({
               type: 'error',
 
@@ -430,14 +460,18 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.newForms.filter((f) => {
+        const forms = this.allForms.filter(f => {
           return f.id !== form.id
         })
-        this.newForms = forms
+        this.allForms = [...forms]
+        console.log(this.allForms)
       }
     },
 
     openStageDropDown() {
+      this.resource = 'Opportunity'
+      this.formType = 'STAGE_GATING'
+      this.getStageForms()
       this.stageDropDownOpen = !this.stageDropDownOpen
     },
 
@@ -456,7 +490,7 @@ export default {
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
-      if (this.currentFormStages.includes(stage)) {
+      if (this.currentStagesWithForms.includes(stage)) {
         return this.$Alert.alert({
           message: 'This Stage already has a form',
           timeout: 5000,
@@ -468,76 +502,22 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
-      this.newForms = [...this.newForms, newForm]
+      this.allForms = [...this.allForms, newForm]
+      this.getStageForms()
     },
-    async toggleSelectedFormResource(resource) {
-      this.isVisible = !this.isVisible
-      await this.listValidations({ salesforceObject: this.resource })
-      /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
-      if (this.resource && resource) {
-        if (this.resource == resource) {
-          let classList = this.$refs[`${resource.toLowerCase()}-content`][0].classList
-          if (classList.contains('box__content--expanded')) {
-            classList.toggle('box__content--closed')
-            classList.toggle('box__content--expanded')
-            setTimeout(() => {
-              classList.toggle('box__content--closed')
-            }, 500)
-          } else if (classList.contains('box__content--closed')) {
-            classList.toggle('box__content--expanded')
-            classList.toggle('box__content--closed')
-          } else {
-            classList.toggle('box__content--expanded')
-          }
-        } else {
-          let prev = this.resource
-          this.resource = resource
-          this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
 
-          let prevClassList = this.$refs[`${prev.toLowerCase()}-content`][0].classList
-          let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
-          if (prevClassList.contains('box__content--expanded')) {
-            prevClassList.toggle('box__content--closed')
-            prevClassList.toggle('box__content--expanded')
-            setTimeout(() => {
-              prevClassList.toggle('box__content--closed')
-            }, 500)
-          }
-          classList.toggle('box__content--expanded')
-        }
-      } else {
-        this.resource = resource
-        this.formsByType = this.allForms.filter((f) => f['resource'] == this.resource)
-        let classList = this.$refs[`${this.resource.toLowerCase()}-content`][0].classList
-        classList.toggle('box__content--expanded')
-      }
-
-      let f = this.allFormsByType[0]
-      this.toggleSelectedTab(`${f.id}.${f.stage}`)
-    },
-    toggleSelectedTab(tab) {
-      this.selectedTab = tab
-      let [id, stage] = tab.split('.')
-
-      let form = this.allFormsByType.find((f) => f.id == id && f.stage == stage)
-
-      if (form && typeof form != undefined) {
-        this.selectedForm = form
-      } else this.selectedForm = null
-    },
     updateForm(event) {
       this.selectedForm = event
-      let index = this.formsByType.findIndex((f) => f.id == this.selectedForm.id)
+      let index = this.allForms.findIndex(f => f.id == this.selectedForm.id)
 
       if (~index) {
-        this.formsByType[index] = this.selectedForm
-        this.formsByType = [...this.formsByType]
+        this.allForms[index] = this.selectedForm
+        this.allForms = [...this.allForms]
       }
-      this.selectedTab = `${event.id}.${event.tage}`
     },
   },
 }
@@ -600,6 +580,8 @@ export default {
   animation-duration: 1.5s;
   animation-iteration-count: 1;
   overflow-y: scroll;
+  margin: 0 4em;
+  padding-top: 2rem;
 }
 .modal-container {
   height: 100%;
@@ -620,7 +602,7 @@ export default {
       display: flex;
 
       justify-content: center;
-      min-height: 35rem;
+      min-height: 30rem;
     }
     &__button {
       @include primary-button();
@@ -674,6 +656,7 @@ export default {
     flex-direction: column;
     align-items: center;
     font-size: 1.25rem;
+    padding-top: 2rem;
   }
   &__list {
     display: flex;
@@ -729,7 +712,7 @@ export default {
   &__dropdown {
     width: 15rem;
 
-    margin: 18px 113px 49px 108px;
+    margin: 2px 270px 49px 108px;
     padding: 6px 0 14px;
     border-radius: 3px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
@@ -787,13 +770,11 @@ export default {
 
   &__title {
     font-family: #{$bold-font-family};
+    border-bottom: 2px solid #2f9e54;
   }
   &__instructions {
-    text-align: center;
-    padding: 1rem 4rem;
-  }
-
-  .image {
+    padding: 1.5rem 4.5rem;
+    margin-bottom: 2rem;
   }
 
   &__content {
@@ -805,20 +786,93 @@ export default {
   }
 }
 .resources {
-  padding-top: 2rem;
+  padding-top: 0.5rem;
+  display: flex;
+  justify-content: center;
 }
 .tip-continue {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-top: 4rem;
+  padding-top: 2rem;
+  margin-top: -1.5rem;
 }
-button {
-  margin-top: 2rem;
-}
+
 a {
   text-decoration: none;
   color: white;
+}
+
+.main__content {
+  padding-top: 1rem;
+}
+.muted {
+  color: #9f9cb7;
+  font-size: 1rem;
+  margin-top: -5px;
+}
+.hint {
+  color: $base-gray;
+  font-weight: 0.25rem;
+  padding-left: 0.25rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1em;
+}
+button {
+  margin-top: 1em;
+}
+.buttons__ {
+  height: 3rem;
+  width: 12.5rem;
+  text-align: center;
+  border-radius: 0.75rem;
+  border: 2px solid #199e54;
+  color: #199e54;
+  background-color: white;
+  font-weight: bolder;
+  font-size: 0.975rem;
+  box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
+  margin-right: 1.5rem;
+}
+.buttons__:hover {
+  background-color: #199e54;
+  color: white;
+  cursor: pointer;
+}
+.primary-button:hover {
+  transform: scale(1.05);
+}
+.mar {
+  margin-bottom: 0.5rem;
+}
+.activeTab {
+  height: 3rem;
+  width: 12.5rem;
+  text-align: center;
+  border-radius: 0.75rem;
+  border: 2px solid #199e54;
+  color: white;
+  background-color: #199e54;
+  font-weight: bolder;
+  font-size: 0.975rem;
+  box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
+  margin-right: 1.5rem;
+}
+.search {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.search_buttons_row {
+  display: flex;
+  flex-direction: row;
+  padding-left: 2.5rem;
 }
 </style>
