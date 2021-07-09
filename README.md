@@ -303,7 +303,16 @@ You can get the correct task_id by looking at the AWS Console under ECS tasks th
 
 ### Describe the task definition
 
-`aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"`
+`aws ecs describe-task-definition --task-definition managr-app-task-demo`
+
+
+### Connect to the instances helper ### 
+
+You can also add a shortcut to connect to prod or staging by copying these into your ~/.zshrc or ~/.bash_profile depending on what you use (remember to source your env after closing the file)
+
+`alias connect-prod-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"`
+
+`alias connect-prod-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-staging | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"`
 
 
 ### One time code to add new public fields to user's forms 
