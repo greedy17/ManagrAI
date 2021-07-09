@@ -52,7 +52,7 @@ from .models import (
     OrgCustomSlackForm,
     OrgCustomSlackFormInstance,
 )
-from .serializers import OrgCustomSlackFormSerializer
+from .serializers import OrgCustomSlackFormSerializer, OrgSlackIntegrationWriteSerializer
 
 
 from managr.salesforce.routes import routes as model_routes
@@ -102,11 +102,19 @@ class SlackViewSet(viewsets.GenericViewSet,):
             raise ValidationError("Missing data.redirect_uri")
         response = slack_requests.request_access_token(code, redirect_uri)
         data = response.json()
+        organization = request.user.organization
+        team_id = data.get("team", {}).get("id")
+        if not team_id:
+            raise ValidationError(
+                "We hit an issue getting your team id, please try the integration again."
+            )
+
         # NOTE:
         # Only AddToWorkspace yields tokenType == 'bot'.
         # Both AddToWorkspace and UserSignIn yield data.authedUser, and in both cases
         # the user needs to integrate slack.
         # Therefore user slack integration can and should take place regardless.
+        is_refresh = False
         if data.get("token_type") == slack_const.TOKEN_TYPE_BOT:
             scope = data.get("scope")
             team_name = data.get("team").get("name")
@@ -115,42 +123,81 @@ class SlackViewSet(viewsets.GenericViewSet,):
             access_token = data.get("access_token")
             incoming_webhook = data.get("incoming_webhook")
             enterprise = data.get("enterprise")
-            integration = OrganizationSlackIntegration.objects.create(
-                organization=request.user.organization,
-                scope=scope,
-                team_name=team_name,
-                team_id=team_id,
-                bot_user_id=bot_user_id,
-                access_token=access_token,
-                incoming_webhook=incoming_webhook,
-                enterprise=enterprise,
-            )
-            # TODO: Investigate option to not workspace integration pb 04/20/21 Mike ok'd
+            check_for_existing_team_id = OrganizationSlackIntegration.objects.filter(
+                team_id=team_id
+            ).first()
+            if (
+                check_for_existing_team_id
+                and check_for_existing_team_id.organization.id != organization.id
+            ):
+                serializer = OrgSlackIntegrationWriteSerializer(
+                    data=dict(
+                        scope=scope,
+                        team_name=team_name,
+                        team_id=team_id,
+                        bot_user_id=bot_user_id,
+                        access_token=access_token,
+                        incoming_webhook=incoming_webhook,
+                        enterprise=enterprise,
+                    ),
+                    instance=check_for_existing_team_id,
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                raise ValidationError(
+                    "It seems there is already an existing slack integration for this workspace"
+                )
+            elif (
+                check_for_existing_team_id
+                and check_for_existing_team_id.organization.id == organization.id
+            ):
+                is_refresh = True
+                serializer = OrgSlackIntegrationWriteSerializer(
+                    data=dict(
+                        organization=request.user.organization.id,
+                        scope=scope,
+                        team_name=team_name,
+                        team_id=team_id,
+                        bot_user_id=bot_user_id,
+                        access_token=access_token,
+                        incoming_webhook=incoming_webhook,
+                        enterprise=enterprise,
+                    ),
+                    instance=check_for_existing_team_id,
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            else:
+                serializer = OrgSlackIntegrationWriteSerializer(
+                    data=dict(
+                        organization=request.user.organization.id,
+                        scope=scope,
+                        team_name=team_name,
+                        team_id=team_id,
+                        bot_user_id=bot_user_id,
+                        access_token=access_token,
+                        incoming_webhook=incoming_webhook,
+                        enterprise=enterprise,
+                    )
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+            if is_refresh:
+                return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
+
+            integration = serializer.instance
 
             text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/settings/integrations"
 
             channel = integration.incoming_webhook.get("channel_id", None)
-            if not channel:
-                integration.delete()
-                raise ValidationError(
-                    {
-                        "detail": {
-                            "key": "non_field_error",
-                            "message": "No Channel Selected, please select a group channel for Managr to connect to",
-                            "field": "email",
-                        }
-                    }
-                )
             slack_requests.generic_request(
                 integration.incoming_webhook.get("url"), dict(text=text,), integration.access_token,
             )
 
         else:
             team_id = data.get("team", {}).get("id")
-            if not team_id:
-                raise ValidationError(
-                    "We hit an issue getting your team id, please try the integration again."
-                )
+
             if team_id != request.user.organization.slack_integration.team_id:
                 raise ValidationError(
                     "You signed into the wrong Slack workspace, please try again."
