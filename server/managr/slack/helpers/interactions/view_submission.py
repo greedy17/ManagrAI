@@ -118,7 +118,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation:Please DO NOT close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
+                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
                     "fill": True,
                 },
             ),
@@ -270,7 +270,7 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation:Please DO NOT close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
+                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
                     "fill": True,
                 },
             ),
