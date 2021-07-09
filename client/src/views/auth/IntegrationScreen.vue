@@ -61,13 +61,20 @@
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'ZOOM'"
         ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          text="Revoke"
-          :loading="generatingToken && selectedIntegration == 'ZOOM'"
-          v-else
-          @click="onRevoke('ZOOM')"
-          class="btn btn--danger"
-        ></PulseLoadingSpinnerButton>
+        <div v-else style="display:flex;justify-content:space-between;">
+          <PulseLoadingSpinnerButton
+            text="Revoke"
+            :loading="generatingToken && selectedIntegration == 'ZOOM'"
+            @click="onRevoke('ZOOM')"
+            class="btn btn--danger"
+          ></PulseLoadingSpinnerButton>
+          <PulseLoadingSpinnerButton
+            text="Refresh Token"
+            :loading="generatingToken && selectedIntegration == 'ZOOM'"
+            @click="onGetAuthLink('ZOOM')"
+            class="secondary-button"
+          ></PulseLoadingSpinnerButton>
+        </div>
       </div>
 
       <div class="card">
@@ -102,7 +109,7 @@
             v-if="userCanIntegrateSlack"
             @click="onRefreshSlack"
             class="secondary-button"
-            text="Refresh"
+            text="Refresh Token"
             :loading="generatingToken && selectedIntegration == 'SLACK'"
           ></PulseLoadingSpinnerButton>
         </div>
