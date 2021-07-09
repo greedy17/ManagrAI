@@ -37,7 +37,7 @@
           :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
           @click="onRevoke('SALESFORCE')"
           v-else
-          class="secondary-button"
+          class="btn btn--danger"
         ></PulseLoadingSpinnerButton>
       </div>
 
@@ -65,7 +65,7 @@
           :loading="generatingToken && selectedIntegration == 'ZOOM'"
           v-else
           @click="onRevoke('ZOOM')"
-          class="secondary-button"
+          class="btn btn--danger"
         ></PulseLoadingSpinnerButton>
       </div>
 
@@ -93,13 +93,24 @@
           :text="slackButtonMessage"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
         ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
+        <div
           v-else-if="hasSlackIntegration && orgHasSlackIntegration"
-          @click="onRevoke('SLACK')"
-          class="secondary-button"
-          text="Revoke"
-          :loading="generatingToken && selectedIntegration == 'SLACK'"
-        ></PulseLoadingSpinnerButton>
+          style="display:flex;justify-content:space-between;"
+        >
+          <PulseLoadingSpinnerButton
+            @click="onRevoke('SLACK')"
+            class="btn btn--danger"
+            text="Revoke"
+            :loading="generatingToken && selectedIntegration == 'SLACK'"
+          ></PulseLoadingSpinnerButton>
+          <PulseLoadingSpinnerButton
+            v-if="userCanIntegrateSlack"
+            @click="onRefreshSlack"
+            class="secondary-button"
+            text="Refresh"
+            :loading="generatingToken && selectedIntegration == 'SLACK'"
+          ></PulseLoadingSpinnerButton>
+        </div>
       </div>
 
       <div class="card">
@@ -130,7 +141,7 @@
           :loading="generatingToken && selectedIntegration == 'NYLAS'"
           v-else
           @click="onRevoke('NYLAS')"
-          class="secondary-button"
+          class="btn btn--danger"
         ></PulseLoadingSpinnerButton>
       </div>
       <div class="card">
@@ -245,6 +256,23 @@ export default {
           } finally {
             this.generatingToken = false
           }
+        }
+      }
+    },
+    async onRefreshSlack() {
+      const confirmation = confirm('This will refresh the access token for the workspace')
+      if (!confirmation) {
+        return
+      }
+      this.generatingToken = true
+      if (this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
+        try {
+          let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.WORKSPACE)
+          if (res.link) {
+            window.location.href = res.link
+          }
+        } finally {
+          this.generatingToken = false
         }
       }
     },
@@ -403,6 +431,21 @@ export default {
     margin: 6rem 0 5rem 0;
     @include secondary-button();
     cursor: default !important;
+  }
+}
+.btn {
+  &--danger {
+    @include button-danger();
+  }
+  &--primary {
+    @include primary-button();
+  }
+  &--secondary {
+    @include secondary-button();
+  }
+
+  &--icon {
+    @include --icon();
   }
 }
 
