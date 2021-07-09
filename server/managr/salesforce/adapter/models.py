@@ -1053,7 +1053,7 @@ class OpportunityAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
-                url, json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
