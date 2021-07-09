@@ -156,14 +156,7 @@ def update_modal_block_set(context, *args, **kwargs):
         slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         form_blocks = slack_form.generate_form(slack_form.saved_data)
         if len(form_blocks):
-            blocks.append(
-                block_builders.simple_section(
-                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                    "mrkdwn",
-                ),
-            )
-
-            blocks = [*blocks, *form_blocks]
+            blocks = [*form_blocks]
         else:
 
             blocks = [
@@ -194,14 +187,7 @@ def create_modal_block_set(context, *args, **kwargs):
             slack_form.saved_data
         )  # optionally pass any saved data from this form
         if len(form_blocks):
-            blocks.append(
-                block_builders.simple_section(
-                    ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                    "mrkdwn",
-                ),
-            )
-
-            blocks = [*blocks, *form_blocks]
+            blocks = [*form_blocks]
         else:
 
             blocks = [
