@@ -82,6 +82,7 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
             "recipient_type",
             "template",
             "template_ref",
+            "alert_targets",
         )
 
 
@@ -216,6 +217,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             "recipients",
             "recipient_type",
             "template",
+            "alert_targets",
         )
 
 

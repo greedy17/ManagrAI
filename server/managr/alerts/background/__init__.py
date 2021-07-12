@@ -58,8 +58,7 @@ def _process_init_alert(config_id):
     config = AlertConfig.objects.filter(id=config_id).first()
     if not config:
         return logger.exception(f"Could not find config for template to send {config_id}")
-    template = config.template
-    users = template.get_users
+    users = config.alert_targets
 
     for user in users:
         run_time = config.calculate_scheduled_time_for_alert(user).strftime("%Y-%m-%dT%H:%M%z")
