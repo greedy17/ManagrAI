@@ -140,6 +140,21 @@ class AlertGroup(TimeStampModel):
             q_s = f"{self.group_condition} {q_s}"
         return q_s
 
+    def delete(self, *args, **kwargs):
+        current_item_order = self.group_order
+        items_in_template = (
+            self.template.groups.exclude(id=self.id)
+            .filter(group_order__gte=current_item_order)
+            .order_by("group_order")
+        )
+        for index, operand in enumerate(items_in_template):
+            operand.group_order = current_item_order + index
+            if operand.group_order == 0:
+                operand.group_condition = "OR"
+            operand.save()
+
+        return super(AlertGroup, self).delete(*args, **kwargs)
+
 
 class AlertOperandQuerySet(models.QuerySet):
     def for_user(self, user):
