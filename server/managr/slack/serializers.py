@@ -27,6 +27,21 @@ class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
         )
 
 
+class OrgSlackIntegrationWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationSlackIntegration
+        fields = (
+            "organization",
+            "scope",
+            "team_name",
+            "team_id",
+            "bot_user_id",
+            "access_token",
+            "incoming_webhook",
+            "enterprise",
+        )
+
+
 class UserSlackIntegrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSlackIntegration

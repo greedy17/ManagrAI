@@ -235,9 +235,12 @@ label {
 }
 .enter-email {
   @include muted-font();
+  margin-bottom: -16px;
 }
 img {
   height: 80px;
+  margin-top: 4rem;
+  padding-top: 0.5rem;
 }
 .pad-right {
   padding-right: 0.3em;
