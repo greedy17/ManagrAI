@@ -43,7 +43,7 @@ export default {
   @include base-font-styles();
   border-radius: 0.5rem;
   background-color: $white;
-  border: 3px solid $dark-green;
+  border: 1.75px solid $dark-green;
   color: black;
   margin-top: 2rem;
 }
@@ -56,8 +56,8 @@ export default {
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
   border-radius: 0.5rem;
-  border: 3px solid $dark-green;
-  box-shadow: 0 3px 6px 0 $gray;
+  border: 1.75px solid $dark-green;
+  box-shadow: 0 4px 8px 2px $very-light-gray;
   box-sizing: border-box;
   line-height: 1.29;
   letter-spacing: 0.5px;
