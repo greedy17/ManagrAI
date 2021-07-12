@@ -265,7 +265,7 @@ def process_stage_selected(payload, context):
     else:
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
-        if view_type == slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT:
+        if view_type == "meeting_review_modal":
             context = {
                 **context,
                 "form_type": slack_const.FORM_TYPE_MEETING_REVIEW,
@@ -358,7 +358,12 @@ def process_stage_selected_command_form(payload, context):
     context = {**context, "f": ",".join([str(main_form.id), *added_form_ids])}
     private_metadata.update(context)
     updated_view_title = view["title"]
-    submit_button_message = "Next" if len(added_form_ids) else view["submit"]["text"]
+    if len(added_form_ids):
+        submit_button_message = "Next"
+    elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
+        submit_button_message = "Update"
+    elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
+        submit_button_message = "Create"
     callback_id = (
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
         if len(added_form_ids)
@@ -490,6 +495,23 @@ def process_meeting_selected_resource_option(payload, context):
             block_finder("select_existing", payload["view"]["blocks"])[1],
             *get_block_set("create_modal_block_set", context,),
         ]
+        try:
+            index, stage_block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            stage_block = None
+            pass
+
+        if stage_block:
+            stage_block = {
+                **stage_block,
+                "accessory": {
+                    **stage_block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(workflow.forms.filter(template__form_type='CREATE', template__resource=resource_type).first().id)}",
+                },
+            }
+            blocks = [*blocks[:index], stage_block, *blocks[index + 1 :]]
+
         external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
 
     organization = workflow.user.organization
@@ -650,6 +672,9 @@ def process_show_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     show_submit_button_if_fields_added = False
+    has_stage_forms = False
+    stage_form = None
+
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -662,7 +687,20 @@ def process_show_update_resource_form(payload, context):
             template=template, resource_id=resource_id, user=user,
         )
         if slack_form:
-            context.update({"f": str(slack_form.id)})
+            current_stage = slack_form.resource_object.secondary_data.get("StageName")
+            stage_template = (
+                OrgCustomSlackForm.objects.filter(stage=current_stage).first()
+                if current_stage
+                else None
+            )
+            form_ids = [str(slack_form.id)]
+            if stage_template:
+                stage_form = OrgCustomSlackFormInstance.objects.create(
+                    template=stage_template, resource_id=resource_id, user=user,
+                )
+                form_ids.append(str(stage_form.id))
+            context.update({"f": ",".join(form_ids)})
+
     else:
         slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
         slack_form = None
@@ -720,8 +758,15 @@ def process_show_update_resource_form(payload, context):
         },
     }
     if show_submit_button_if_fields_added:
-        data["view"]["submit"] = {"type": "plain_text", "text": "Update", "emoji": True}
+        if stage_form:
+            submit_button_text = "Next"
+            callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+        else:
+            submit_button_text = "Update"
+            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
 
+        data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
+        data["view"]["callback_id"] = callback_id
     if is_update:
         data["view_id"] = is_update.get("id")
 
