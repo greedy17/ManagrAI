@@ -104,4 +104,5 @@ router.register(
     "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"
 )
 router.register("alerts/operands", alert_views.AlertOperandViewSet, "alert-operands")
+router.register("alerts/groups", alert_views.AlertGroupViewSet, "alert-groups")
 urlpatterns += router.urls

@@ -132,11 +132,11 @@ class AlertGroupViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = alert_serializers.AlertMessageTemplateRefSerializer
+    serializer_class = alert_serializers.AlertGroupRefSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return alert_models.AlertGroupTemplate.objects.for_user(self.request.user)
+        return alert_models.AlertGroup.objects.for_user(self.request.user)
 
 
 class AlertOperandViewSet(
