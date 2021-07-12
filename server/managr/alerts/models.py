@@ -235,7 +235,7 @@ class AlertOperand(TimeStampModel):
         return super(AlertOperand, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        current_item_order = self.order
+        current_item_order = self.operand_order
         items_in_template = (
             self.group.operands.exclude(id=self.id)
             .filter(operand_order__gte=current_item_order)
@@ -243,6 +243,8 @@ class AlertOperand(TimeStampModel):
         )
         for index, operand in enumerate(items_in_template):
             operand.operand_order = current_item_order + index
+            if operand.operand_order == 0:
+                operand.operand_condition = "OR"
             operand.save()
 
         return super(AlertOperand, self).delete(*args, **kwargs)
