@@ -40,16 +40,31 @@ export default {
 @import '@/styles/variables.scss';
 @import '@/styles/mixins/inputs.scss';
 ::v-deep .tn-dropdown__options__container {
-  top: 50px;
-  background-color: white;
-  @include input-field-white();
+  @include base-font-styles();
+  border-radius: 0.5rem;
+  background-color: $white;
+  border: 1.75px solid $dark-green;
+  color: black;
+  margin-top: 2rem;
 }
 
 ::v-deep .tn-dropdown__selection-container {
-  @include input-field-white();
+  @include base-font-styles();
+  padding: 4%;
+  margin: 3%;
 }
 ::v-deep .tn-dropdown__selection-container {
-  @include input-field-white();
+  @include base-font-styles();
+  border-radius: 0.5rem;
+  border: 1.75px solid $dark-green;
+  box-shadow: 0 4px 8px 2px $very-light-gray;
+  box-sizing: border-box;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+  width: 16rem;
+  height: 3.35rem;
+  margin-left: 2rem;
   .tn-dropdown__search {
     @include input-field-white();
     border: none;

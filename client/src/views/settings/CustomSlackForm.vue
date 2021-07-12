@@ -20,6 +20,7 @@
 
     <div style="display: flex">
       <div>
+        <div class="fields">Select or search for SFDC fields.</div>
         <CollectionSearch
           :collection="formFields"
           itemDisplayKey="referenceDisplayLabel"
@@ -60,12 +61,21 @@
         </div>
       </div>
 
-      <div class="slack-form-builder__form">
+      <div class="slack-form-builder__form" v-if="customForm">
         <div class="form-header">
           <h2>
             {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
           </h2>
-          <p>be sure to include all required fields</p>
+          <p class="muted">The fields below will show up in Slack</p>
+        </div>
+        <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
         </div>
 
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
@@ -93,6 +103,10 @@
               </ListContainer>
             </div>
           </div>
+        </div>
+
+        <div v-if="customForm.formType == 'CREATE' || customForm.stage" class="recap">
+          <h5>Include in recap</h5>
         </div>
 
         <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
@@ -151,27 +165,17 @@
               </div>
             </div>
 
-            <div
-              v-if="
-                customForm.formType == 'CREATE' ||
-                customForm.formType == 'MEETING_REVIEW' ||
-                customForm.stage
-              "
-              class="form-field__left"
-              @click="field.includeInRecap = !field.includeInRecap"
-            >
-              <CheckBox :checked="field.includeInRecap" />
-              <h5 class="space">
-                include in recap
-                <small
-                  ><i>{{ customForm.stage ? ' (only available for create forms)' : '' }}</i></small
-                >
-              </h5>
-            </div>
             <div class="form-field__middle">
               {{ field.required ? 'required' : '' }}
             </div>
             <div class="form-field__right">
+              <img
+                v-if="canRemoveField(field)"
+                style="height: 1.25rem; padding-right: 0.75rem"
+                src="@/assets/images/trashcan.png"
+                @click="() => onRemoveField(field)"
+              />
+
               <div
                 class="form-field__btn form-field__btn--flipped"
                 @click="() => onMoveFieldUp(field, index)"
@@ -180,6 +184,24 @@
               </div>
               <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
                 <img src="@/assets/images/dropdown-arrow-green.svg" />
+              </div>
+              <div
+                v-if="
+                  customForm.formType == 'CREATE' ||
+                  //|| customForm.formType == 'MEETING_REVIEW'
+                  customForm.stage
+                "
+                class="form-field__right"
+                @click="field.includeInRecap = !field.includeInRecap"
+              >
+                <CheckBox :checked="field.includeInRecap" />
+                <h5 class="space">
+                  <small
+                    ><i>{{
+                      customForm.stage ? ' (only available for create forms)' : ''
+                    }}</i></small
+                  >
+                </h5>
               </div>
             </div>
           </div>
@@ -290,6 +312,7 @@ export default {
   },
   data() {
     return {
+      currentStageForm: null,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
       salesforceFields,
       customSlackFormConfig: [],
@@ -314,22 +337,47 @@ export default {
         }
       },
     },
-    selectedFormResourceType: {
-      immediate: true,
-
+    resource: {
       async handler(val) {
         if (val) {
-          let searchParams = val.split('.')
+          let searchParams = this.formType
           if (searchParams.length) {
             let fieldParam = {}
-            if (searchParams[0] == this.CREATE) {
+            if (searchParams == this.CREATE) {
               fieldParam['createable'] = true
             } else {
               fieldParam['updateable'] = true
             }
             try {
               this.formFields.filters = {
-                salesforceObject: searchParams[1],
+                salesforceObject: val,
+
+                ...fieldParam,
+              }
+              this.formFields.refresh()
+            } catch (e) {
+              console.log(e)
+            }
+          }
+        }
+      },
+    },
+    formType: {
+      immediate: true,
+
+      async handler(val) {
+        if (val) {
+          let searchParams = val
+          if (searchParams.length) {
+            let fieldParam = {}
+            if (searchParams == this.CREATE) {
+              fieldParam['createable'] = true
+            } else {
+              fieldParam['updateable'] = true
+            }
+            try {
+              this.formFields.filters = {
+                salesforceObject: this.resource,
 
                 ...fieldParam,
               }
@@ -365,7 +413,7 @@ export default {
       })
     },
     selectedFormResourceType() {
-      return `${this.customForm.formType}.${this.resource}`
+      return `${this.formType}.${this.resource}`
     },
   },
   created() {
@@ -392,21 +440,11 @@ export default {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
       // if form is meeting review depening on the resource it can/cant be removed
-      if (this.formType == this.CREATE) {
-        if (field.required) {
-          return false
-        } else {
-          return true
-        }
-      } else if (this.formType == this.MEETING_REVIEW) {
-        if (
-          this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
-          ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex((f) => field.key == f)
-        ) {
-          return false
-        } else {
-          return true
-        }
+      if (
+        this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
+        ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex((f) => field.id == f)
+      ) {
+        return false
       } else {
         return true
       }
@@ -416,7 +454,7 @@ export default {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
-      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.addedFields.unshift({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
 
     onRemoveField(field) {
@@ -576,6 +614,11 @@ export default {
   margin: 1rem;
 }
 
+::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
+  border: none;
+  border-bottom: 2px solid #eaebed;
+}
+
 .slack-form-builder {
   display: flex;
   flex-direction: column;
@@ -676,6 +719,8 @@ export default {
   &__right {
     flex: 2;
     display: flex;
+    padding-left: 1rem;
+    margin-right: -0.5rem;
 
     display: flex;
     align-items: center;
@@ -721,7 +766,8 @@ export default {
 .save-button {
   display: flex;
   justify-content: center;
-  padding-top: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .primary-button {
@@ -762,10 +808,23 @@ export default {
 }
 
 .space {
-  margin: 0.5em;
+  margin: 1em;
 }
 h2 {
   margin: -2px;
-  font-size: 1.7rem;
+  font-size: 1.5rem;
+}
+.recap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -2rem;
+}
+.fields {
+  padding-left: 1rem;
+  font-weight: bolder;
+  font-size: 0.9rem;
+}
+img:hover {
+  cursor: pointer;
 }
 </style>
