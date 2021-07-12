@@ -6,21 +6,28 @@
       </div>
 
       <div class="right" ref="user-menu-icon">
-        <div>
-          <img
-            src="@/assets/images/toolTip.png"
-            class="tooltip__icon"
-            @mouseover="toggleTooltip"
-            @mouseleave="toggleTooltip"
-          />
-          <div class="tooltip__popup" v-if="tooltipOpen">
-            <div class="tooltip__popup__bold">Having issues?</div>
-            <div>Email support@mymanagr.com</div>
-          </div>
-        </div>
-
-        <div v-if="userIsLoggedIn" class="right__items" @click="toggleDropDown">
-          <DropDownMenu
+        <div v-if="userIsLoggedIn" class="right__items">
+          <ul>
+            <li>
+              <router-link :to="{ name: 'Integrations' }">Integrations </router-link>
+            </li>
+            <li>
+              <router-link :to="{ name: 'SlackFormSettings' }">Forms </router-link>
+            </li>
+            <li>
+              <router-link :to="{ name: 'CreateNew' }">Alerts </router-link>
+            </li>
+            <li>
+              <router-link :to="{ name: 'InviteUsers' }">invite </router-link>
+            </li>
+            <li>
+              <router-link :to="{ name: 'ProfilePage' }">Profile</router-link>
+            </li>
+            <li>
+              <router-link :to="{ name: 'CreateNew' }">Logout</router-link>
+            </li>
+          </ul>
+          <!-- <DropDownMenu
             @selectedItem="routeToSelected"
             :right="10"
             :items="[
@@ -55,7 +62,20 @@
                 <use xlink:href="@/assets/images/icon-menu.svg#settings" />
               </svg>
             </template>
-          </DropDownMenu>
+          </DropDownMenu> -->
+        </div>
+
+        <div>
+          <img
+            src="@/assets/images/toolTip.png"
+            class="tooltip__icon"
+            @mouseover="toggleTooltip"
+            @mouseleave="toggleTooltip"
+          />
+          <div class="tooltip__popup" v-if="tooltipOpen">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div>Email support@mymanagr.com</div>
+          </div>
         </div>
       </div>
     </nav>
@@ -259,5 +279,17 @@ nav {
       font-family: #{$bold-font-family};
     }
   }
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  display: inline;
+  padding: 1rem;
+  text-align: center;
 }
 </style>
