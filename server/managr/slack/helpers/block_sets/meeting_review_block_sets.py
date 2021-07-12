@@ -409,12 +409,7 @@ def meeting_review_modal_block_set(context):
         template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
     ).first()
 
-    blocks = [
-        block_builders.simple_section(
-            ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-            "mrkdwn",
-        ),
-    ]
+    blocks = []
 
     # additional validations
     validations = None
@@ -534,14 +529,7 @@ def create_modal_block_set(context, *args, **kwargs):
             )
             form_blocks = slack_form.generate_form()
     if len(form_blocks):
-        blocks = [
-            block_builders.simple_section(
-                ":exclamation: *Please fill out all fields, not doing so may result in errors*",
-                "mrkdwn",
-            ),
-        ]
-
-        blocks = [*blocks, *form_blocks]
+        blocks = [*form_blocks]
     else:
 
         blocks = [

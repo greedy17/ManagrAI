@@ -118,7 +118,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window, unless you have received a confirmation slack",
+                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
                     "fill": True,
                 },
             ),
@@ -270,7 +270,7 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: If you see a red banner error above, please disregard it, we are processing your update. Please _DO NOT_ close this window.",
+                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
                     "fill": True,
                 },
             ),
