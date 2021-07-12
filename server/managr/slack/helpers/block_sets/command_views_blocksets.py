@@ -121,7 +121,14 @@ def update_modal_block_set(context, *args, **kwargs):
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
-    form_id = context.get("f")
+    form_ids = context.get("f")
+    main_form = None
+    if form_ids:
+        form_ids = form_ids.split(",")
+    if len(form_ids):
+        main_form = OrgCustomSlackFormInstance.objects.filter(
+            id__in=form_ids, template__form_type__in=["UPDATE", "CREATE"]
+        ).first()
     user = User.objects.get(id=user_id)
     blocks = []
     blocks.append(
@@ -152,8 +159,8 @@ def update_modal_block_set(context, *args, **kwargs):
             ),
         )
 
-    if form_id:
-        slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+    if main_form:
+        slack_form = main_form
         form_blocks = slack_form.generate_form(slack_form.saved_data)
         if len(form_blocks):
             blocks = [*form_blocks]

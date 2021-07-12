@@ -19,6 +19,7 @@ from managr.slack.helpers.utils import (
     action_with_params,
     block_set,
     map_fields_to_type,
+    block_finder,
 )
 
 from managr.slack.helpers import block_builders
@@ -412,29 +413,24 @@ def meeting_review_modal_block_set(context):
     blocks = []
 
     # additional validations
-    validations = None
-    if validations:
-
-        blocks.extend(
-            [
-                block_builders.simple_section(
-                    ":warning: *_Additional Validations required to avoid errors_*", "mrkdwn"
-                ),
-                block_builders.simple_section_multiple(
-                    list(
-                        map(
-                            lambda validation: block_builders.text_block(
-                                f'_{validation[0]+1}. {validation[1]["message"]}_', "mrkdwn"
-                            ),
-                            enumerate(validations),
-                        )
-                    )
-                ),
-            ]
-        )
 
     blocks.extend(slack_form.generate_form())
     # static blocks
+    if slack_form:
+        try:
+            index, block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
+
+        if block:
+            action_id = slack_const.ZOOM_MEETING__STAGE_SELECTED + f"?w={context.get('w')}"
+            block = {
+                **block,
+                "accessory": {**block["accessory"], "action_id": f"{action_id}",},
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
 
     # make params here
 
