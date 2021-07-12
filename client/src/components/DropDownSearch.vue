@@ -57,6 +57,7 @@ export default {
   @include base-font-styles();
   border-radius: 0.5rem;
   border: 3px solid $dark-green;
+  box-shadow: 0 3px 6px 0 $gray;
   box-sizing: border-box;
   line-height: 1.29;
   letter-spacing: 0.5px;

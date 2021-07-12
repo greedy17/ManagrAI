@@ -231,7 +231,7 @@
 
     <div class="tip-continue">
       <div class="row">
-        <strong>Hint: </strong>
+        <strong>Pro tip: </strong>
         <p class="hint">Start with Opportunity then Contact objects, as they are used most.</p>
       </div>
       <button class="primary-button">
