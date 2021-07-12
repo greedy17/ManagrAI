@@ -43,11 +43,15 @@
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
+          <img
+            class="card-img card-img__radius"
+            src="@/assets/images/zoom.png"
+            style="height: 3rem; width: 3rem"
+          />
           <h3 class="card__title">Zoom</h3>
         </div>
 
-        <p class="card-text">Let Managr know when your meeting ends and who attended.</p>
+        <p class="card-text">Enable meeting recap automation.</p>
         <p class="note">
           <strong class="bold">Note:</strong> we are only accesing your meetings not the company’s
           or other employees.
@@ -75,9 +79,7 @@
           <h3 class="card__title">Slack</h3>
         </div>
 
-        <p class="card-text">
-          Enable 2-way messaging by connecting Managr to your slack workspace.
-        </p>
+        <p class="card-text">Enable 2-way messaging.</p>
         <p class="note">
           <strong class="bold">Note:</strong> if you need approval connecting to your company's
           workspace, create a new one!
@@ -104,12 +106,20 @@
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/gmail.png" style="margin-right: 1rem" />
-          <img class="card-img" src="@/assets/images/outlook.png" />
+          <img
+            class="card-img"
+            src="@/assets/images/gmail.png"
+            style="margin-right: 1rem; height: 3rem; width: 3rem"
+          />
+          <img
+            class="card-img"
+            src="@/assets/images/outlook.png"
+            style="height: 3rem; width: 3rem"
+          />
           <h3 class="card__title">Calendar</h3>
         </div>
 
-        <p class="card-text">Pull in meeting attendees that were aded to your Calendar invite</p>
+        <p class="card-text">Pull in meeting attendees.</p>
         <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
             @click="onGetAuthLink('NYLAS')"
@@ -418,10 +428,10 @@ export default {
 }
 .note {
   font: lato-bold;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   color: $mid-gray;
-  margin-top: -2rem;
+  margin-top: -2.5rem;
 }
 .bold {
   font: lato-bold;
