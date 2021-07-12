@@ -312,7 +312,7 @@ export default {
     },
 
     currentStagesWithForms() {
-      return this.formStages.map(sf => sf.stage)
+      return this.formStages.map((sf) => sf.stage)
     },
   },
   methods: {
@@ -372,7 +372,7 @@ export default {
 
     async selectForm(resource, formType, stage = '') {
       this.selectedForm = this.allForms.find(
-        f => f.resource == resource && f.formType == formType && f.stage == stage,
+        (f) => f.resource == resource && f.formType == formType && f.stage == stage,
       )
       this.formType = formType
     },
@@ -404,10 +404,10 @@ export default {
     getStageForms() {
       // users can only create one form for the stage orderd by stage
       let forms = []
-      this.stages.forEach(s => {
+      this.stages.forEach((s) => {
         this.allForms
-          .filter(f => f.formType == this.STAGE_GATING)
-          .forEach(sf => {
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .forEach((sf) => {
             if (sf.stage == s.value) {
               forms.push(sf)
             }
@@ -433,7 +433,7 @@ export default {
 
         SlackOAuth.api
           .delete(id)
-          .then(async res => {
+          .then(async (res) => {
             this.$Alert.alert({
               type: 'success',
 
@@ -442,13 +442,13 @@ export default {
               timeout: 2000,
             })
 
-            const forms = this.formsByType.filter(f => {
+            const forms = this.formsByType.filter((f) => {
               return f.id !== form.id
             })
             this.fallForms = [...forms]
           })
 
-          .catch(e => {
+          .catch((e) => {
             this.$Alert.alert({
               type: 'error',
 
@@ -460,7 +460,7 @@ export default {
 
           .finally(() => {})
       } else {
-        const forms = this.allForms.filter(f => {
+        const forms = this.allForms.filter((f) => {
           return f.id !== form.id
         })
         this.allForms = [...forms]
@@ -502,7 +502,7 @@ export default {
         stage: stage,
       })
       newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
-        let fields = curr.fieldsRef.filter(f => !acc.map(af => af.id).includes(f.id))
+        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
         acc = [...acc, ...fields]
         return acc
       }, [])
@@ -512,7 +512,7 @@ export default {
 
     updateForm(event) {
       this.selectedForm = event
-      let index = this.allForms.findIndex(f => f.id == this.selectedForm.id)
+      let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
         this.allForms[index] = this.selectedForm
@@ -840,13 +840,14 @@ button {
   box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
   margin-right: 1.5rem;
 }
-.buttons__:hover {
+.buttons__:hover,
+.primary-button:hover {
   background-color: #199e54;
   color: white;
   cursor: pointer;
 }
 .primary-button:hover {
-  transform: scale(1.05);
+  transform: scale(1.025);
 }
 .mar {
   margin-bottom: 0.5rem;
@@ -869,10 +870,12 @@ button {
   justify-content: center;
   align-items: center;
   margin-bottom: 1rem;
+  margin-top: -1rem;
 }
 .search_buttons_row {
   display: flex;
   flex-direction: row;
   padding-left: 2.5rem;
+  margin-top: -1rem;
 }
 </style>
