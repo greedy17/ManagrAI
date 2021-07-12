@@ -230,6 +230,23 @@ class AlertOperand(TimeStampModel):
 
         return q_s
 
+    def save(self, *args, **kwargs):
+
+        return super(AlertOperand, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        current_item_order = self.order
+        items_in_template = (
+            self.group.operands.exclude(id=self.id)
+            .filter(operand_order__gte=current_item_order)
+            .order_by("operand_order")
+        )
+        for index, operand in enumerate(items_in_template):
+            operand.operand_order = current_item_order + index
+            operand.save()
+
+        return super(AlertOperand, self).delete(*args, **kwargs)
+
 
 class AlertMessageTemplateQuerySet(models.QuerySet):
     def for_user(self, user):
