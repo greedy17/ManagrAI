@@ -125,7 +125,7 @@ def update_modal_block_set(context, *args, **kwargs):
     main_form = None
     if form_ids:
         form_ids = form_ids.split(",")
-    if len(form_ids):
+    if form_ids and len(form_ids):
         main_form = OrgCustomSlackFormInstance.objects.filter(
             id__in=form_ids, template__form_type__in=["UPDATE", "CREATE"]
         ).first()
