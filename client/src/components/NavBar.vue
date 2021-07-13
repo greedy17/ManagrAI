@@ -1,33 +1,45 @@
 <template>
   <div>
-    <nav id="nav">
+    <nav id="nav" v-if="userIsLoggedIn">
       <div class="logo">
         <img src="@/assets/images/logo-with-name.png" />
       </div>
 
-      <div class="right" ref="user-menu-icon">
-        <div v-if="userIsLoggedIn" class="right__items">
+      <div class="left" ref="user-menu-icon">
+        <div class="mar" v-if="isAdmin">
+          <ul>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+                >Integrations
+              </router-link>
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'SlackFormSettings' }"
+                >Form Builder
+              </router-link>
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'CreateNew' }"
+                >Smart Alerts
+              </router-link>
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+                >Invite Users</router-link
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="mar" v-if="!isAdmin">
           <ul>
             <li>
               <router-link :to="{ name: 'Integrations' }">Integrations </router-link>
             </li>
-            <li>
-              <router-link :to="{ name: 'SlackFormSettings' }">Forms </router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'CreateNew' }">Alerts </router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'InviteUsers' }">invite </router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'ProfilePage' }">Profile</router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'CreateNew' }">Logout</router-link>
-            </li>
           </ul>
-          <!-- <DropDownMenu
+        </div>
+
+        <!-- <DropDownMenu
             @selectedItem="routeToSelected"
             :right="10"
             :items="[
@@ -63,19 +75,30 @@
               </svg>
             </template>
           </DropDownMenu> -->
+      </div>
+
+      <div class="right">
+        <img
+          src="@/assets/images/toolTip.png"
+          class="tooltip__icon"
+          @mouseover="toggleTooltip"
+          @mouseleave="toggleTooltip"
+        />
+        <div class="tooltip__popup" v-if="tooltipOpen">
+          <div class="tooltip__popup__bold">Having issues?</div>
+          <div>Email support@mymanagr.com</div>
+        </div>
+
+        <div class="profile">
+          <router-link style="color: #199e54" :to="{ name: 'ProfilePage' }">{{
+            userInitials
+          }}</router-link>
         </div>
 
         <div>
-          <img
-            src="@/assets/images/toolTip.png"
-            class="tooltip__icon"
-            @mouseover="toggleTooltip"
-            @mouseleave="toggleTooltip"
-          />
-          <div class="tooltip__popup" v-if="tooltipOpen">
-            <div class="tooltip__popup__bold">Having issues?</div>
-            <div>Email support@mymanagr.com</div>
-          </div>
+          <router-link :to="{ name: 'Login' }"
+            ><img @click="logOut" src="@/assets/images/logout.png" alt="" style="height: 1.5rem"
+          /></router-link>
         </div>
       </div>
     </nav>
@@ -99,6 +122,7 @@ export default {
       items: [],
       tooltipOpen: false,
       dropdownOpen: false,
+      userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
     }
   },
 
@@ -171,6 +195,7 @@ nav {
 .logo {
   @include disable-text-select();
   margin-left: 1.5rem;
+  margin-right: 2rem;
   display: flex;
   align-items: center;
 
@@ -221,8 +246,8 @@ nav {
   margin-left: auto;
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
-  position: relative;
+  align-items: center;
+  justify-content: center;
   margin-right: 1rem;
 
   > * {
@@ -239,6 +264,14 @@ nav {
       background-color: darken($soft-gray, 5%);
     }
   }
+}
+.left {
+  margin-right: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  position: relative;
+  margin-right: 1rem;
 }
 .icon {
   width: 20px;
@@ -258,6 +291,7 @@ nav {
   position: relative;
   &__icon {
     width: 18px;
+    margin-top: 1rem;
     &:hover {
       cursor: pointer;
     }
@@ -291,5 +325,35 @@ li {
   display: inline;
   padding: 1rem;
   text-align: center;
+  font-weight: bold;
+  margin-top: 1rem;
+}
+.profile {
+  border: 3px solid $dark-green;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0.25rem;
+  margin-top: 1rem;
+  margin-right: 1rem;
+}
+img {
+  margin-top: 1rem;
+}
+a {
+  text-decoration: none;
+  color: $night-rider;
+}
+
+a:hover {
+  color: $dark-green;
+}
+.mar {
+  margin-top: 1rem;
+}
+.active {
+  border-bottom: 3px solid $dark-green;
+  padding-bottom: 1rem;
+  color: $dark-green;
 }
 </style>
