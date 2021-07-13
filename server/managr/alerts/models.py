@@ -303,11 +303,7 @@ class AlertConfig(TimeStampModel):
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configs"
     )
     recipient_type = models.CharField(max_length=255, default="USER_LEVEL")
-    alert_targets = models.ArrayField(
-        models.ForeignKey(
-            "core.User", on_delete=models.CASCADE, related_name="alert_config_targets"
-        )
-    )
+    alert_targets = models.ManyToManyField("core.User", related_name="alert_config_targets")
 
     objects = AlertConfigQuerySet.as_manager()
 
