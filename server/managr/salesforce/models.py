@@ -165,11 +165,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name == "StageName":
-                if kwargs.get("workflow") not in ["", None]:
-                    action_id = (
-                        slack_consts.ZOOM_MEETING__STAGE_SELECTED
-                        + f"?w={str(kwargs.get('workflow').id)}"
-                    )
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),

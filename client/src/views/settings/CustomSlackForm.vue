@@ -68,7 +68,7 @@
           </h2>
           <p class="muted">The fields below will show up in Slack</p>
         </div>
-        <div class="save-button">
+        <!-- <div class="save-button">
           <PulseLoadingSpinnerButton
             @click="onSave"
             class="primary-button"
@@ -76,7 +76,7 @@
             :loading="savingForm"
             :disabled="!$store.state.user.isAdmin"
           />
-        </div>
+        </div> -->
 
         <div class="slack-form-builder__form-meta" v-if="customForm.stage">
           <h5>Previous stage specific forms</h5>
@@ -655,6 +655,7 @@ export default {
     background-color: #ffffff;
     min-height: 70vh;
     overflow: scroll;
+    border-radius: 1rem;
   }
 }
 .paginator {
