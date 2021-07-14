@@ -125,7 +125,6 @@ export default {
     }
   },
   created() {
-    this.registrationForm.dynamicValidators()
     const validCode = this.$route.params.validCode
 
     if (!validCode) {
