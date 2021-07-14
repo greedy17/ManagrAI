@@ -181,14 +181,14 @@ def tasks_list_block_set(context={}):
                 block_builders.simple_section(
                     f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
                     "mrkdwn",
-                ),
-                block_builders.divider_block(),
+                ),           
                 block_builders.section_with_button_block(
                     "View Task",
                     "view_task",
-                    "_*View task in salesforce*_",
+                    "_View task in salesforce_",
                     url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
                 ),
+                block_builders.divider_block(),
             ]
         )
     return task_blocks
