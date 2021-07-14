@@ -43,9 +43,14 @@ export default {
   @include base-font-styles();
   border-radius: 0.5rem;
   background-color: $white;
-  border: 1.75px solid $dark-green;
+  border: 2px solid $dark-green;
   color: black;
   margin-top: 2rem;
+}
+
+::v-deep .tn-dropdown__options__container:hover,
+::v-deep .tn-dropdown__selection-container:hover {
+  border: 3px solid $dark-green;
 }
 
 ::v-deep .tn-dropdown__selection-container {
@@ -56,7 +61,7 @@ export default {
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
   border-radius: 0.5rem;
-  border: 1.75px solid $dark-green;
+  border: 2px solid $dark-green;
   box-shadow: 0 4px 8px 2px $very-light-gray;
   box-sizing: border-box;
   line-height: 1.29;
