@@ -87,35 +87,48 @@
     </modal>
 
     <modal name="objects-modal" heading="Select a Stage">
-      <div class="required__container">
+      <div class="objects__">
         <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
         <div class="required__title">Forms</div>
-        <div class="required__instructions">
-          <strong>Create:</strong>
-          This form is triggered when you run the slack command, "managr-create".
-          <br />
-          <strong>Update (Command):</strong>
-          This form is triggered when you run the slack command, "managr-update".
-          <br />
-          <strong>Update (zoom):</strong>
-          This form is triggered immediately after a zoom meeting ends.
-          <br />
-          <strong>Stage Specific:</strong>
-          Added fields that are needed to progress into a new stage / pass validation rules
+        <div>
+          <p class="mar">
+            <strong>Update:</strong>
+            This form appears whenever you see the “Update” button
+          </p>
+          <p class="mar">
+            <strong>Zoom Meeting:</strong>
+            This form is triggered immediately after your Zoom meeting ends
+          </p>
+
+          <p class="mar">
+            <strong>Create:</strong>
+            This form is triggered when you run the slack command, "managr-create"
+          </p>
+          <p class="mar">
+            <strong>Stage Related Fields:</strong>
+            Additional fields needed to advance Stages
+          </p>
         </div>
       </div>
     </modal>
 
-    <div class="header__container">
-      <h3 class="header__title">Slack form builder</h3>
-      <div class="header__list">
-        <div class="header__list__item">
-          <h3 class="muted">Map your Salesforce fields to Managr</h3>
-        </div>
-      </div>
+    <div v-if="!started" class="col mar__top">
+      <h2 class="header__title">Welcome to the Slack form builder!</h2>
+      <p class="muted">This is where you'll map your Salesforce fields to Manangr.</p>
+      <button class="buttons__" @click="started = !started">Get started!</button>
     </div>
 
-    <div class="main__content">
+    <div class="main__content" v-if="started">
+      <div class="header__container" v-if="!resource">
+        <div class="col" style="margin-top: 4rem">
+          <h3 class="header__title">Select a Salesforce Object to get started.</h3>
+          <h3 class="muted">
+            <strong class="purple">Pro-tip:</strong> Start with the Opportunity and Contacts
+            objects, they are the most used.
+          </h3>
+        </div>
+      </div>
+
       <div class="box-updated">
         <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
             <span class="box-updated__title">
@@ -135,18 +148,19 @@
             v-model="resource"
             displayKey="key"
             valueKey="value"
-            nullDisplay="Select Salesforce Object"
+            nullDisplay="Select salesforce object"
             class="search"
           />
 
+          <div class="col" v-if="resource && !formType">
+            <p class="muted mar__">
+              <strong class="purple">Pro tip:</strong> Start with the “Update” form as that is the
+              most used. Try to fill out all of the forms.
+            </p>
+          </div>
+
           <div class="row">
             <div v-if="resource">
-              <button
-                @click="selectForm(resource, CREATE)"
-                :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-              >
-                Create
-              </button>
               <button
                 @click="selectForm(resource, UPDATE)"
                 class="buttons__"
@@ -159,7 +173,13 @@
                 v-if="resource == 'Opportunity' || resource == 'Account'"
                 :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
               >
-                Update (Zoom Meetings)
+                Zoom Meeting
+              </button>
+              <button
+                @click="selectForm(resource, CREATE)"
+                :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
+              >
+                {{ ` Create ${resource}` }}
               </button>
               <button
                 @click="openStageDropDown"
@@ -227,16 +247,12 @@
           </template>
         </div>
       </div>
-    </div>
 
-    <div class="tip-continue">
-      <div class="row">
-        <strong>Pro tip: </strong>
-        <p class="hint">Start with Opportunity then Contact objects, as they are used most.</p>
+      <div class="tip-continue" v-if="resource">
+        <button class="primary-button">
+          <router-link :to="{ name: 'CreateNew' }">Continue to Smart Alerts </router-link>
+        </button>
       </div>
-      <button class="primary-button">
-        <router-link :to="{ name: 'CreateNew' }">Continue to Smart Alerts </router-link>
-      </button>
     </div>
   </div>
 </template>
@@ -285,6 +301,7 @@ export default {
         pagination: Pagination.create({ size: 2 }),
       }),
       formStages: [],
+      started: false,
     }
   },
   watch: {},
@@ -758,7 +775,7 @@ export default {
 
 .tooltip {
   height: 1rem;
-  margin: 2rem 0rem;
+  margin: 1rem;
 }
 
 .required {
@@ -770,7 +787,7 @@ export default {
 
   &__title {
     font-family: #{$bold-font-family};
-    border-bottom: 2px solid #2f9e54;
+    border-bottom: 2px solid #cc3873;
   }
   &__instructions {
     padding: 1.5rem 4.5rem;
@@ -796,7 +813,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding-top: 2rem;
-  margin-top: -1.5rem;
+  margin-top: -1rem;
 }
 
 a {
@@ -822,7 +839,7 @@ a {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
 }
 button {
   margin-top: 1em;
@@ -831,20 +848,22 @@ button {
   height: 3rem;
   width: 12.5rem;
   text-align: center;
-  border-radius: 0.75rem;
-  border: 2px solid #199e54;
-  color: #199e54;
+  border-radius: 0.5rem;
+  border: 2px solid $theme-gray;
+  color: $gray;
   background-color: white;
   font-weight: bolder;
   font-size: 0.975rem;
-  box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
   margin-right: 1.5rem;
 }
-.buttons__:hover,
-.primary-button:hover {
-  background-color: #199e54;
-  color: white;
+.buttons__:hover {
+  color: #cc3873;
+  border: 2px solid #cc3873;
   cursor: pointer;
+}
+.primary-button {
+  padding: 1rem;
+  border-radius: 0.5rem;
 }
 .primary-button:hover {
   transform: scale(1.025);
@@ -852,30 +871,51 @@ button {
 .mar {
   margin-bottom: 0.5rem;
 }
+.mar__ {
+  margin-top: 1.5rem;
+}
 .activeTab {
   height: 3rem;
   width: 12.5rem;
   text-align: center;
-  border-radius: 0.75rem;
-  border: 2px solid #199e54;
-  color: white;
-  background-color: #199e54;
+  border-radius: 0.5rem;
+  background-color: white;
+  border: 2px solid #cc3873;
+  color: #cc3873;
   font-weight: bolder;
   font-size: 0.975rem;
-  box-shadow: -0.5px 0.3px 0.5px 0.5px grey;
   margin-right: 1.5rem;
 }
 .search {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 3rem;
   margin-top: -1rem;
 }
 .search_buttons_row {
   display: flex;
-  flex-direction: row;
-  padding-left: 2.5rem;
-  margin-top: -1rem;
+  flex-direction: column;
+  margin-top: 1rem;
+}
+.objects__ {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.mar__top {
+  margin-top: 7rem;
+}
+.purple {
+  color: #645289;
 }
 </style>

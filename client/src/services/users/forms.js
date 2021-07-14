@@ -19,24 +19,15 @@ export class UserRegistrationForm extends Form {
     ],
   })
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
+  static dynamicFormValidators = {
+    confirmPassword: [new MustMatchValidator({ matcher: 'password' })],
+  }
   static organizationName = new FormField({ validators: [new RequiredValidator()] })
   static role = new FormField({ validators: [new RequiredValidator()] })
-  static timezone = new FormField({ value: moment.tz.guess(), validators: [new RequiredValidator()] })
-
-  dynamicValidators() {
-    /**
-     * helper method to add dynamic validators
-     *
-     * */
-
-    this.addValidator(
-      'confirmPassword',
-      new MustMatchValidator({
-        matcher: this.field['password'],
-        message: 'Passwords do not match',
-      }),
-    )
-  }
+  static timezone = new FormField({
+    value: moment.tz.guess(),
+    validators: [new RequiredValidator()],
+  })
 
   toAPI() {
     const fullName = this.field.fullName.value
@@ -63,20 +54,8 @@ export class RepRegistrationForm extends Form {
     ],
   })
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
-
-  dynamicValidators() {
-    /**
-     * helper method to add dynamic validators
-     *
-     * */
-
-    this.addValidator(
-      'confirmPassword',
-      new MustMatchValidator({
-        matcher: this.field['password'],
-        message: 'Passwords do not match',
-      }),
-    )
+  static dynamicFormValidators = {
+    confirmPassword: [new MustMatchValidator({ matcher: 'password' })],
   }
 
   toAPI() {
@@ -103,7 +82,9 @@ export class UserInviteForm extends Form {
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
   static slackInvite = new FormField({ value: false })
-
+  static dynamicFormValidators = {
+    confirmEmail: [new MustMatchValidator({ matcher: 'email' })],
+  }
   dynamicValidators() {
     /**
      * helper method to add dynamic validators
@@ -134,7 +115,10 @@ export class UserLoginForm extends Form {
 export class UserProfileForm extends Form {
   static firstName = new FormField({ validators: [new RequiredValidator()] })
   static lastName = new FormField({ validators: [new RequiredValidator()] })
-  static timezone = new FormField({ value: moment.tz.guess(), validators: [new RequiredValidator()] })
+  static timezone = new FormField({
+    value: moment.tz.guess(),
+    validators: [new RequiredValidator()],
+  })
 }
 
 export { MustMatchValidator }

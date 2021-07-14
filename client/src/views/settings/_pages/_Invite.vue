@@ -165,7 +165,6 @@ export default {
   },
   watch: {},
   async created() {
-    this.userInviteForm.dynamicValidators()
     this.refresh()
   },
 
