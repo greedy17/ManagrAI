@@ -8,6 +8,10 @@
         >
         </span>
       </template>
+
+      <template v-slot:tn-dropdown-option="{ option }">
+        <slot name="tn-dropdown-option" :option="option"> </slot>
+      </template>
       <template v-if="$attrs.hasNext" v-slot:tn-dropdown__pagination>
         <div
           @click.stop="$emit('load-more')"

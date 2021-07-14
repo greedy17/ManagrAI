@@ -29,7 +29,7 @@ npm-debug.log*
 
 # Ignore built and static files
 server/static
-#client/dist
+client/dist
 
 ### Terraform ###
 # Local .terraform directories

@@ -168,18 +168,20 @@
                   </template>
                 </FormField>
                 <div class="alerts-page__message-options-body__bindings">
-                  <DropDownSearch
-                    :items="fields.list"
-                    @input="bindText(`${selectedResourceType}.${$event}`)"
-                    displayKey="referenceDisplayLabel"
-                    valueKey="apiName"
-                    nullDisplay="Select a field"
-                    searchable
-                    :hasNext="!!fields.pagination.hasNextPage"
-                    @load-more="fieldNextPage"
-                    @search-term="onSearchFields"
-                    small
-                  />
+                  <div class="alerts-page__message-options-body__bindings__fields">
+                    <DropDownSearch
+                      :items="fields.list"
+                      @input="bindText(`${selectedResourceType}.${$event}`)"
+                      displayKey="referenceDisplayLabel"
+                      valueKey="apiName"
+                      nullDisplay="Select a field"
+                      searchable
+                      :hasNext="!!fields.pagination.hasNextPage"
+                      @load-more="fieldNextPage"
+                      @search-term="onSearchFields"
+                      auto
+                    />
+                  </div>
                   <ListContainer horizontal>
                     <template v-slot:list>
                       <ListItem
@@ -332,7 +334,17 @@
                     nullDisplay="Channels"
                     :hasNext="!!channelOpts.nextCursor"
                     @load-more="listChannels(channelOpts.nextCursor)"
-                  />
+                  >
+                    <template v-slot:tn-dropdown-option="{ option }">
+                      <img
+                        v-if="option.isPrivate == true"
+                        class="card-img"
+                        style="width:1rem;height:1rem;margin-right:0.2rem;"
+                        src="@/assets/images/lockAsset.png"
+                      />
+                      {{ option['name'] }}
+                    </template>
+                  </DropDownSearch>
                 </template>
               </FormField>
             </div>
@@ -747,5 +759,9 @@ textarea {
     font-weight: bold;
     font-size: 11px;
   }
+}
+.alerts-page__message-options-body__bindings__fields {
+  margin: 2rem 0rem;
+  width: 20rem;
 }
 </style>
