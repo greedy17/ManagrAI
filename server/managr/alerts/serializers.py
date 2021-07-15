@@ -220,6 +220,19 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             "alert_targets",
         )
 
+    def validate_recurrence_day(self, value):
+        return value
+
+    def validate_recipients(self, value):
+
+        return value
+
+    def validate_alert_targets(self, value):
+        if not self.context.is_admin:
+            value = list(filter(lambda opt: opt == "SELF" or opt == str(self.context.id), value))
+
+        return value
+
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
 
@@ -261,7 +274,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
 
-            _new_configs = AlertConfigWriteSerializer(data=new_configs, many=True)
+            _new_configs = AlertConfigWriteSerializer(
+                data=new_configs, many=True, context=self.context
+            )
             _new_configs.is_valid(raise_exception=True)
             _new_configs.save()
         return data

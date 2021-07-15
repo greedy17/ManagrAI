@@ -58,7 +58,7 @@ class AlertTemplateViewSet(
     def create(self, request, *args, **kwargs):
         data = request.data
         data.update({"user": request.user.id})
-        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data)
+        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request.user)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response_serializer = self.serializer_class(serializer.instance)
@@ -117,7 +117,7 @@ class AlertConfigViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = alert_serializers.AlertMessageTemplateRefSerializer
+    serializer_class = alert_serializers.AlertConfigRefSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):

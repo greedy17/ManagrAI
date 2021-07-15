@@ -12,7 +12,7 @@
       <label class="alert-operand-row__condition-label">OR</label>
     </div>
     <div class="alert-operand-row__options">
-      <div class="alert-operand-row__field">
+      <div class="alert-operand-row__field" style="margin:0 0.3rem;">
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -32,7 +32,7 @@
           </template>
         </FormField>
       </div>
-      <div class="alert-operand-row__operator">
+      <div class="alert-operand-row__operator" style="margin:0 0.3rem;">
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -51,7 +51,7 @@
       </div>
       <div class="alert-operand-row__value">
         <FormField
-          v-if="selectedFieldTypeRaw == 'Picklist'"
+          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
           :errors="form.field.operandValue.errors"
         >
           <template v-slot:input>
@@ -86,6 +86,7 @@
         </FormField>
 
         <FormField
+          style="margin:1rem 2rem;"
           v-else
           @blur="form.field.operandValue.validate()"
           :itemsRef.sync="form.field.operandValue.value"
@@ -170,7 +171,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        filters: { forAlerts: true, filterable: true, page:1 },
+        filters: { forAlerts: true, filterable: true, page: 1 },
       }),
 
       // used by dropdown as a ref field to retrieve obj of selected opt
