@@ -1009,3 +1009,35 @@ class UserTestCase(TestCase):
                 ),
                 conf_1.calculate_scheduled_time_for_alert(self.admin_user),
             )
+
+    def test_selects_correct_users(self):
+        conf_1 = alert_models.AlertConfig.objects.create(
+            recipient_type="USER_LEVEL",
+            recurrence_day=timezone.now().day,
+            recurrence_frequency="MONTHLY",
+            recipients=["MANAGERS"],
+            template=self.template,
+            alert_targets=["SELF"],
+        )
+        self.assertEquals(str(conf_1.target_users.first().id), str(self.admin_user.id))
+
+        conf_1.alert_targets = ["SELF", "REPS"]
+        conf_1.save()
+        rep = core_factories.UserFactory(
+            is_admin=False, user_level="REP", organization=self.admin_user.organization
+        )
+        self.assertEquals(conf_1.target_users.count(), 2)
+        self.assertIn(rep.email, conf_1.target_users.values_list("email", flat=True))
+
+        conf_1.alert_targets = [str(rep.id)]
+        conf_1.save()
+
+        self.assertEquals(conf_1.target_users.count(), 1)
+        self.assertIn(rep.id, conf_1.target_users.values_list("id", flat=True))
+
+        conf_1.alert_targets = ["MANAGERS", str(self.admin_user.id)]
+        conf_1.save()
+
+        self.assertEquals(conf_1.target_users.count(), 1)
+        self.assertIn(self.admin_user.id, conf_1.target_users.values_list("id", flat=True))
+

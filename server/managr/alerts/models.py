@@ -7,11 +7,13 @@ from dateutil.relativedelta import relativedelta
 from calendar import monthrange
 
 from django.db import models
+from django.db.models import Q
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.utils import timezone
 
 from managr.alerts.utils.utils import convertToSlackFormat
 from managr.core.models import TimeStampModel
+from managr.core import constants as core_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
@@ -81,6 +83,7 @@ class AlertTemplate(TimeStampModel):
             recipients=["SELF"],
             template=self,
             recipient_type="USER_LEVEL",
+            alert_targets=["SELF"],
         )
 
         if hasattr(user, "salesforce_account"):
@@ -303,7 +306,7 @@ class AlertConfig(TimeStampModel):
         "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="configs"
     )
     recipient_type = models.CharField(max_length=255, default="USER_LEVEL")
-    alert_targets = models.ManyToManyField("core.User", related_name="alert_config_targets")
+    alert_targets = ArrayField(models.CharField(max_length=255), default=list)
 
     objects = AlertConfigQuerySet.as_manager()
 
@@ -339,6 +342,27 @@ class AlertConfig(TimeStampModel):
                 return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day)
 
         return timezone.now()
+
+    @property
+    def target_users(self):
+        query = Q()
+        user_ids_to_include = []
+        for target in self.alert_targets:
+            if target == "SELF":
+                user_ids_to_include.append(self.template.user.id)
+            elif target == "MANAGERS":
+                query |= Q(user_level=core_consts.USER_LEVEL_MANAGER, is_active=True)
+            elif target == "REPS":
+                query |= Q(user_level=core_consts.USER_LEVEL_REP, is_active=True)
+            elif target == "ALL":
+                query |= Q(is_active=True)
+            elif target == "SDR":
+                query |= Q(user_level=core_consts.USER_LEVEL_SDR, is_active=True)
+            else:
+                user_ids_to_include.append(target)
+        if len(user_ids_to_include):
+            query |= Q(id__in=user_ids_to_include, is_active=True)
+        return self.template.user.organization.users.filter(query).distinct()
 
     def calculate_scheduled_time_for_alert(self, user):
         user_tz = user.timezone

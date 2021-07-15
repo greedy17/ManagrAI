@@ -58,7 +58,7 @@ def _process_init_alert(config_id):
     config = AlertConfig.objects.filter(id=config_id).first()
     if not config:
         return logger.exception(f"Could not find config for template to send {config_id}")
-    users = config.alert_targets
+    users = config.target_users
 
     for user in users:
         run_time = config.calculate_scheduled_time_for_alert(user).strftime("%Y-%m-%dT%H:%M%z")
@@ -116,31 +116,10 @@ def _process_check_alert(config_id, user_id, run_time):
                 for user_group in config.recipients:
 
                     if user_group == "SELF":
-                        instance = AlertInstance.objects.create(
-                            template_id=alert_id,
-                            user_id=template_user.id,
-                            resource_id=str(existing.id),
-                            instance_meta=instance_meta,
-                            config=config,
-                            channel=template_user.slack_integration.channel
-                            if hasattr(template_user, "slack_integration")
-                            else None,
-                        )
 
-                        emit_send_alert(str(instance.id), scheduled_time=run_time)
+                        query |= Q(id=template_user.id, is_active=True)
                     elif user_group == "OWNER":
-                        instance = AlertInstance.objects.create(
-                            template_id=alert_id,
-                            user_id=user.id,
-                            resource_id=str(existing.id),
-                            instance_meta=instance_meta,
-                            config=config,
-                            channel=user.slack_integration.channel
-                            if hasattr(user, "slack_integration")
-                            else None,
-                        )
-
-                        emit_send_alert(str(instance.id), scheduled_time=run_time)
+                        query |= Q(id=user.id, is_active=True)
                     else:
                         if user_group == "MANAGERS":
                             query |= Q(Q(user_level="MANAGER", is_active=True))
@@ -157,20 +136,20 @@ def _process_check_alert(config_id, user_id, run_time):
                                 Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
                             )
 
-                        users = template.user.organization.users.filter(query).distinct()
-                        for u in users:
-                            instance = AlertInstance.objects.create(
-                                template_id=alert_id,
-                                user_id=u.id,
-                                resource_id=str(existing.id),
-                                instance_meta=instance_meta,
-                                config=config,
-                                channel=u.slack_integration.channel
-                                if hasattr(u, "slack_integration")
-                                else None,
-                            )
+                users = template.user.organization.users.filter(query).distinct()
+                for u in users:
+                    instance = AlertInstance.objects.create(
+                        template_id=alert_id,
+                        user_id=u.id,
+                        resource_id=str(existing.id),
+                        instance_meta=instance_meta,
+                        config=config,
+                        channel=u.slack_integration.channel
+                        if hasattr(u, "slack_integration")
+                        else None,
+                    )
 
-                            emit_send_alert(str(instance.id), scheduled_time=run_time)
+                    emit_send_alert(str(instance.id), scheduled_time=run_time)
             elif config.recipient_type == "SLACK_CHANNEL":
                 for channel in config.recipients:
                     instance = AlertInstance.objects.create(
