@@ -775,14 +775,6 @@ export default {
   width: 10rem;
 }
 
-.search-bar {
-  @include input-field();
-  height: 2.5rem !important;
-  width: 13rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-}
-
 .field-title {
   font-size: 0.75rem;
   margin-left: 1rem;
