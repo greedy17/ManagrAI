@@ -66,7 +66,7 @@
           <h2>
             {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
           </h2>
-          <p class="muted">The fields below will show up in Slack</p>
+          <p class="muted">Add fields that you’d like to update using Slack</p>
 
           <div class="save-button">
             <PulseLoadingSpinnerButton
