@@ -67,55 +67,57 @@
             />
           </template>
         </FormField>
-        <FormField
-          v-else-if="selectedFieldType == 'BOOLEAN'"
-          :errors="form.field.operandValue.errors"
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="valueOpts"
-              :itemsRef.sync="form.field._operandValue.value"
-              v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-            />
-          </template>
-        </FormField>
+        <template v-else>
+          <FormField
+            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+            :errors="form.field.operandValue.errors"
+          >
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="valueOpts"
+                :itemsRef.sync="form.field._operandValue.value"
+                v-model="form.field.operandValue.value"
+                displayKey="label"
+                valueKey="value"
+                nullDisplay="Select a value"
+                searchable
+                local
+              />
+            </template>
+          </FormField>
 
-        <FormField
-          style="margin:1rem 2rem;"
-          v-else
-          @blur="form.field.operandValue.validate()"
-          :itemsRef.sync="form.field.operandValue.value"
-          :errors="form.field.operandValue.errors"
-          v-model="form.field.operandValue.value"
-          :inputType="getInputType(form.field._operandIdentifier.value)"
-          large
-          bordered
-          placeholder="Enter a value"
-        />
-        <div
-          v-if="
-            form.field.operandValue.isValid &&
-              (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
-          "
-          class="alert-operand-row__date-range"
-        >
-          This alert will look for resources {{ form.field.operandValue.value }}
-          {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
-          selected alert trigger date
-          {{
-            form.field.operandOperator.value
-              ? /=/.test(form.field.operandOperator.value)
-                ? ' including the specified day '
-                : ' excluding the specified day '
-              : ''
-          }}
-          see preview for details
-        </div>
+          <FormField
+            v-else
+            style="margin:1rem 2rem;"
+            @blur="form.field.operandValue.validate()"
+            :itemsRef.sync="form.field.operandValue.value"
+            :errors="form.field.operandValue.errors"
+            v-model="form.field.operandValue.value"
+            :inputType="getInputType(form.field._operandIdentifier.value)"
+            large
+            bordered
+            placeholder="Enter a value"
+          />
+          <div
+            v-if="
+              form.field.operandValue.isValid &&
+                (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
+            "
+            class="alert-operand-row__date-range"
+          >
+            This alert will look for resources {{ form.field.operandValue.value }}
+            {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
+            selected alert trigger date
+            {{
+              form.field.operandOperator.value
+                ? /=/.test(form.field.operandOperator.value)
+                  ? ' including the specified day '
+                  : ' excluding the specified day '
+                : ''
+            }}
+            see preview for details
+          </div>
+        </template>
       </div>
     </div>
   </div>
