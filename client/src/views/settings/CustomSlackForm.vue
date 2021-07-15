@@ -63,11 +63,6 @@
 
       <div class="slack-form-builder__form" v-if="customForm">
         <div class="form-header">
-          <h2>
-            {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
-          </h2>
-          <p class="muted">Add fields that you’d like to update using Slack</p>
-
           <div class="save-button">
             <PulseLoadingSpinnerButton
               @click="onSave"
@@ -76,6 +71,12 @@
               :loading="savingForm"
               :disabled="!$store.state.user.isAdmin"
             />
+          </div>
+          <div class="heading">
+            <h2>
+              {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
+            </h2>
+            <p class="muted">Add fields that you’d like to update using Slack</p>
           </div>
         </div>
         <div>
@@ -677,13 +678,20 @@ export default {
 }
 .form-header {
   display: flex;
-  justify-content: center;
+
   align-items: center;
-  flex-direction: column;
+
   position: -webkit-sticky;
   position: sticky;
   background-color: white;
   top: 0;
+  border-bottom: 2px solid lighten($very-light-gray, 15);
+  > .save-button {
+    flex: 0.5 0 auto;
+  }
+  > .heading {
+    flex: 1 0 auto;
+  }
   &__left {
     flex: 9;
   }
