@@ -64,6 +64,7 @@
               nullDisplay="Select a value"
               searchable
               local
+              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
             />
           </template>
         </FormField>
@@ -82,6 +83,7 @@
                 nullDisplay="Select a value"
                 searchable
                 local
+                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
               />
             </template>
           </FormField>
@@ -89,7 +91,6 @@
           <FormField
             v-else
             @blur="form.field.operandValue.validate()"
-            :itemsRef.sync="form.field.operandValue.value"
             :errors="form.field.operandValue.errors"
             v-model="form.field.operandValue.value"
             :inputType="getInputType(form.field._operandIdentifier.value)"
