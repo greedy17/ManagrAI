@@ -291,6 +291,32 @@
                 </template>
               </FormField>
             </div>
+            <div class="alerts-page__settings__target-users">
+              <span class="muted">
+                <em>select one/multiple users/groups to include in the search</em>
+              </span>
+              <FormField :errors="form.field.alertTargets.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="userTargetsOpts"
+                    :itemsRef.sync="form.field._alertTargets.value"
+                    v-model="form.field.alertTargets.value"
+                    @input="form.field.alertTargets.validate()"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Search"
+                    searchable
+                    local
+                    multi
+                    medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
+                  />
+                </template>
+              </FormField>
+            </div>
             <div class="alerts-page__settings__recipients">
               <span
                 v-if="
@@ -301,13 +327,16 @@
                 Please make sure @managr has been added to
                 <em>{{ form.field._recipients.value.name }}</em> channel
               </span>
+              <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
+                <em>select one or multiple user groups</em>
+              </span>
               <FormField
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
                 :errors="form.field.recipients.errors"
               >
                 <template v-slot:input>
                   <DropDownSearch
-                    :items.sync="alertRecipientOpts"
+                    :items.sync="recipientOpts"
                     :itemsRef.sync="form.field._recipients.value"
                     v-model="form.field.recipients.value"
                     @input="form.field.recipients.validate()"
@@ -316,9 +345,12 @@
                     nullDisplay="Select user groups"
                     searchable
                     local
+                    multi
+                    medium
                   />
                 </template>
               </FormField>
+
               <FormField
                 v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
                 :errors="form.field.recipients.errors"
@@ -458,6 +490,7 @@ import {
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
 } from '@/services/salesforce'
+import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'AlertsPage',
@@ -485,6 +518,7 @@ export default {
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
+      users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -513,6 +547,9 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
+    }
+    if (this.user.isAdmin) {
+      await this.users.refresh()
     }
   },
   watch: {
@@ -631,8 +668,41 @@ export default {
     async fieldNextPage() {
       await this.fields.addNextPage()
     },
+    async onSearchUsers(v) {
+      this.users.pagination = new Pagination()
+      this.users.filters = {
+        ...this.users.filters,
+        search: v,
+      }
+      await this.fields.refresh()
+    },
+    async onUsersNextPage() {
+      await this.users.addNextPage()
+    },
   },
   computed: {
+    userTargetsOpts() {
+      if (this.user.isAdmin) {
+        return [
+          ...this.alertRecipientOpts.map(opt => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
+      } else {
+        return [{ fullName: 'Myself', id: 'SELF' }]
+      }
+    },
+    recipientOpts() {
+      if (this.user.isAdmin) {
+        return this.alertRecipientOpts
+      } else {
+        return [{ key: 'Myself', value: 'SELF' }]
+      }
+    },
     formValue() {
       return this.alertTemplateForm.value
     },

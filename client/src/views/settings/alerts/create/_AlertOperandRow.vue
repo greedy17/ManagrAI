@@ -12,7 +12,7 @@
       <label class="alert-operand-row__condition-label">OR</label>
     </div>
     <div class="alert-operand-row__options">
-      <div class="alert-operand-row__field">
+      <div class="alert-operand-row__field" style="margin:0 0.3rem;">
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -32,7 +32,7 @@
           </template>
         </FormField>
       </div>
-      <div class="alert-operand-row__operator">
+      <div class="alert-operand-row__operator" style="margin:0 0.3rem;">
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -90,6 +90,7 @@
 
           <FormField
             v-else
+            style="margin:1rem 2rem;"
             @blur="form.field.operandValue.validate()"
             :errors="form.field.operandValue.errors"
             v-model="form.field.operandValue.value"
