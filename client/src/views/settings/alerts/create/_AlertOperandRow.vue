@@ -51,7 +51,7 @@
       </div>
       <div class="alert-operand-row__value">
         <FormField
-          v-if="selectedFieldTypeRaw == 'Picklist'"
+          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
           :errors="form.field.operandValue.errors"
         >
           <template v-slot:input>
@@ -64,26 +64,29 @@
               nullDisplay="Select a value"
               searchable
               local
+              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
             />
           </template>
         </FormField>
-        <FormField
-          v-else-if="selectedFieldType == 'BOOLEAN'"
-          :errors="form.field.operandValue.errors"
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="valueOpts"
-              :itemsRef.sync="form.field._operandValue.value"
-              v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-            />
-          </template>
-        </FormField>
+        <template v-else>
+          <FormField
+            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+            :errors="form.field.operandValue.errors"
+          >
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="valueOpts"
+                :itemsRef.sync="form.field._operandValue.value"
+                v-model="form.field.operandValue.value"
+                displayKey="label"
+                valueKey="value"
+                nullDisplay="Select a value"
+                searchable
+                local
+                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+              />
+            </template>
+          </FormField>
 
         <FormField
           v-else
