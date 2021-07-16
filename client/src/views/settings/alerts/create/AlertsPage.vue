@@ -342,7 +342,7 @@
                     @input="form.field.recipients.validate()"
                     displayKey="key"
                     valueKey="value"
-                    nullDisplay="User groups"
+                    nullDisplay="Select user groups"
                     searchable
                     local
                     multi
