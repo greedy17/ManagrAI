@@ -109,7 +109,7 @@ export default {
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  @include standard-border();
+  border: 1px solid $silver;
 }
 .box__content {
   display: none;

@@ -22,7 +22,7 @@
               v-model="form.field.operandIdentifier.value"
               displayKey="referenceDisplayLabel"
               valueKey="apiName"
-              nullDisplay="Select a field"
+              nullDisplay="Select an SFDC field"
               searchable
               :hasNext="!!objectFields.pagination.hasNextPage"
               @load-more="objectFieldNextPage"
@@ -99,7 +99,7 @@
         <div
           v-if="
             form.field.operandValue.isValid &&
-              (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
+            (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
           "
           class="alert-operand-row__date-range"
         >
@@ -170,7 +170,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        filters: { forAlerts: true, filterable: true, page:1 },
+        filters: { forAlerts: true, filterable: true, page: 1 },
       }),
 
       // used by dropdown as a ref field to retrieve obj of selected opt

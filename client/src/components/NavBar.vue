@@ -19,7 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'CreateNew' }"
+              <router-link active-class="active" :to="{ name: 'alerts' }"
                 >Smart Alerts
               </router-link>
             </li>

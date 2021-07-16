@@ -97,6 +97,7 @@ export default new Router({
     },
     {
       path: '/alerts',
+      name: 'alerts',
       component: () =>
         import(/* webpackChunkName: "settings" */ '../views/settings/alerts/AlertsDashboard'),
       beforeEnter: Auth.requireIsAdminAuth,

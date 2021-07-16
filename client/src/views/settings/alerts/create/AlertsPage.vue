@@ -3,7 +3,13 @@
     <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span> {{ selectedResourceType ? selectedResourceType : 'Select Resource' }} </span>
+          <span class="gray">
+            {{
+              selectedResourceType
+                ? selectedResourceType
+                : "Select the Salesforce Object you'd like to build an alert for"
+            }}
+          </span>
 
           <span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -18,9 +24,7 @@
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
-            <span>
-              Incomplete
-            </span>
+            <span> Incomplete </span>
           </span>
         </div>
       </template>
@@ -33,7 +37,7 @@
               v-model="alertTemplateForm.field.resourceType.value"
               displayKey="key"
               valueKey="value"
-              nullDisplay="Salesforce Resources"
+              nullDisplay="Salesforce Objects"
               searchable
               local
               @input="alertTemplateForm.field.resourceType.validate()"
@@ -42,17 +46,20 @@
         </FormField>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel>
+    <ExpandablePanel v-if="alertTemplateForm.field.resourceType.isValid">
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span> Build Alert </span
+          <span class="gray">
+            {{
+              selectedResourceType ? `Build your ${selectedResourceType} alert` : 'Build alert'
+            }}</span
           ><span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               alertTemplateForm.field.title.isValid &&
-                !alertTemplateForm.field.alertGroups.groups
-                  .map(fields => fields.isValid)
-                  .includes(false)
+              !alertTemplateForm.field.alertGroups.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
             "
           >
             <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -64,9 +71,7 @@
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
-            <span>
-              Incomplete
-            </span>
+            <span> Incomplete </span>
           </span>
         </div>
       </template>
@@ -75,7 +80,7 @@
           <FormField
             id="alert-title"
             v-model="alertTemplateForm.field.title.value"
-            placeholder="Alert Title"
+            placeholder="Alert Title (required)"
             :errors="alertTemplateForm.field.title.errors"
             @blur="alertTemplateForm.field.title.validate()"
           />
@@ -112,16 +117,21 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel>
+    <ExpandablePanel
+      v-if="
+        alertTemplateForm.field.title.isValid &&
+        !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
+      "
+    >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span>Construct Message </span>
+          <span class="gray">Construct Message </span>
 
           <span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               !alertTemplateForm.field.alertMessages.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
             "
           >
@@ -134,9 +144,7 @@
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
-            <span>
-              Incomplete
-            </span>
+            <span> Incomplete </span>
           </span>
         </div>
       </template>
@@ -215,14 +223,20 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel>
+    <ExpandablePanel
+      v-if="
+        !alertTemplateForm.field.alertMessages.groups
+          .map((fields) => fields.isValid)
+          .includes(false)
+      "
+    >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span> Alert Settings </span><span> </span>
+          <span class="gray"> Alert Settings </span><span> </span>
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
             "
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -236,9 +250,7 @@
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
-            <span>
-              Incomplete
-            </span>
+            <span> Incomplete </span>
           </span>
         </div>
       </template>
@@ -339,7 +351,7 @@
                       <img
                         v-if="option.isPrivate == true"
                         class="card-img"
-                        style="width:1rem;height:1rem;margin-right:0.2rem;"
+                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
                         src="@/assets/images/lockAsset.png"
                       />
                       {{ option['name'] }}
@@ -395,7 +407,13 @@
         </template>
       </template>
     </ExpandablePanel>
-    <ExpandablePanel title="Preview Alert Configuration">
+    <ExpandablePanel
+      class="gray"
+      title="Preview Alert Configuration"
+      v-if="
+        !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
+      "
+    >
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <AlertSummary :form="alertTemplateForm" />
@@ -763,5 +781,9 @@ textarea {
 .alerts-page__message-options-body__bindings__fields {
   margin: 2rem 0rem;
   width: 20rem;
+}
+.gray {
+  color: $gray;
+  text-align: center;
 }
 </style>
