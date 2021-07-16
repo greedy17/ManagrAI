@@ -89,6 +89,7 @@ class Organization(TimeStampModel):
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
+        new_admin.user_level = "MANAGER"
         new_admin.save()
 
     def __str__(self):

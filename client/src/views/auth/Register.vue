@@ -65,15 +65,6 @@
             bordered
           />
 
-          <!-- <div class="registration__input__label">
-        Company
-        <input
-          v-model="registrationForm.field.organizationName.value"
-          type="text"
-          class="registration__input"
-        />
-      </div> -->
-
           <div class="registration__privacy">
             By clicking Sign Up, I agree to the
             <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
@@ -126,7 +117,6 @@ export default {
     this.userId = this.$route.params.userId
     this.token = this.$route.params.magicToken
     await this.retrieveEmail(this.userId, this.token)
-    this.registrationForm.dynamicValidators()
   },
   methods: {
     async retrieveEmail(id, token) {
