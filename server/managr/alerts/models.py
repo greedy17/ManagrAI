@@ -248,6 +248,15 @@ class AlertOperand(TimeStampModel):
 
         return q_s
 
+    @property
+    def operand_identifier_ref(self):
+        if self.operand_identifier:
+            return self.group.template.user.imported_sobjectfield.filter(
+                api_name=self.operand_identifier,
+                salesforce_object=self.group.template.resource_type,
+            ).first()
+        return None
+
     def save(self, *args, **kwargs):
 
         return super(AlertOperand, self).save(*args, **kwargs)

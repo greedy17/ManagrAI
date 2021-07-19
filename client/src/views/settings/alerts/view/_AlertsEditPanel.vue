@@ -69,9 +69,9 @@
                     v-for="(operand, i) in group.operandsRef"
                     :key="i"
                     :item="
-                      `${operand.operandOrder != 0 ? operand.operandCondition : ''} ${
-                        operand.operandIdentifier
-                      }     ${operand.operandOperator}     ${operand.operandValue} `
+                      `${
+                        operand.operandOrder != 0 ? operand.operandCondition : ''
+                      } ${getReadableOperandRow(operand)}`
                     "
                     :active="true"
                   />
@@ -255,6 +255,27 @@ export default {
         { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
         { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
       ],
+      intOpts: [
+        { label: '>= (Greater or Equal)', value: '>=' },
+        { label: '<= (Less or Equal)', value: '<=' },
+        { label: '< (Less)', value: '<' },
+        { label: '> (Greater)', value: '>' },
+        { label: '= (Equals)', value: '=' },
+        { label: '!= (Not Equals)', value: '!=' },
+        // string based equality
+      ],
+      strOpts: [
+        // string based equality
+        { label: 'Contains', value: 'CONTAINS' },
+        { label: 'Starts With', value: 'STARTSWITH' },
+        { label: 'Ends With', value: 'ENDSWITH' },
+        { label: '= (Equals)', value: '=' },
+        { label: '!= (Not Equals)', value: '!=' },
+      ],
+      booleanValueOpts: [
+        { label: 'True', value: 'true' },
+        { label: 'False', value: 'false' },
+      ],
     }
   },
   watch: {
@@ -273,11 +294,34 @@ export default {
         resourceType: this.alert.resourceType,
       }
     },
+
     editor() {
       return this.$refs['message-body'].quill
     },
   },
   methods: {
+    selectedFieldType(operatorField) {
+      if (operatorField) {
+        return ALERT_DATA_TYPE_MAP[operatorField.dataType]
+      } else {
+        return STRING
+      }
+    },
+    getInputType(type) {
+      if (type && INPUT_TYPE_MAP[type.dataType]) {
+        return INPUT_TYPE_MAP[type.dataType]
+      }
+      return 'text'
+    },
+    getReadableOperandRow(rowData) {
+      let operandOperator = rowData.operandOperator
+      let value = rowData.operandValue
+      let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
+      let operandOperatorLabel = operandOpts.find(opt => opt.value == operandOperator)
+        ? operandOpts.find(opt => opt.value == operandOperator).label
+        : operandOperator
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${rowData.operandValue} `
+    },
     async onDeleteOperand(id) {
       // await AlertGroup.api.delete(id)
       return

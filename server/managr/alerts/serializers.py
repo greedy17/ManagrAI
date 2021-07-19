@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-
+from managr.salesforce.serializers import SObjectFieldSerializer
 from . import models as alert_models
 
 # REF SERIALIZERS
@@ -37,6 +37,7 @@ class AlertGroupRefSerializer(serializers.ModelSerializer):
 
 class AlertOperandRefSerializer(serializers.ModelSerializer):
     group_ref = AlertGroupRefSerializer(source="group")
+    operand_identifier_ref = serializers.SerializerMethodField("get_field_ref")
 
     class Meta:
         model = alert_models.AlertOperand
@@ -48,10 +49,14 @@ class AlertOperandRefSerializer(serializers.ModelSerializer):
             "operand_type",
             "operand_identifier",
             "operand_operator",
+            "operand_identifier_ref",
             "operand_value",
             "operand_order",
             "data_type",
         )
+
+    def get_field_ref(self, instance):
+        return SObjectFieldSerializer(instance.operand_identifier_ref).data
 
 
 class AlertMessageTemplateRefSerializer(serializers.ModelSerializer):
