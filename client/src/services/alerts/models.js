@@ -1,7 +1,7 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import User from '../users/models'
 import { objectToCamelCase } from '../utils'
-import AlertTemplateAPI, { AlertMessageTemplateAPI } from './api'
+import AlertTemplateAPI, { AlertMessageTemplateAPI, AlertOperandAPI, AlertConfigAPI } from './api'
 
 export class AlertTemplateRef extends Model {
   /**
@@ -35,7 +35,8 @@ export class AlertGroupOperand extends Model {
   static operandValue = new fields.CharField({})
   static operandOrder = new fields.IntegerField({})
   static dataType = new fields.CharField({})
-  static operandIdentifierRef = new fields.CharField({})
+  static operandIdentifierRef = new fields.Field({})
+  static api = AlertOperandAPI.create(AlertGroupOperand)
 }
 
 export class AlertGroup extends AlertGroupRef {
@@ -54,6 +55,7 @@ export class AlertMessageTemplate extends Model {
 }
 
 export class AlertConfig extends Model {
+  static api = new AlertConfigAPI(AlertConfig)
   static id = new fields.IdField({ readOnly: true })
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
@@ -61,6 +63,8 @@ export class AlertConfig extends Model {
   static recurrenceDay = new fields.IntegerField({})
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
   static recipientType = new fields.CharField({})
+  static alertTargetsRef = new fields.Field({})
+  static recipientsRef = new fields.Field({})
 }
 
 export class AlertInstance extends Model {

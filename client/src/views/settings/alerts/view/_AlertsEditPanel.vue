@@ -143,11 +143,7 @@
                   large
                   :key="index"
                   v-for="(config, index) in alert.configsRef"
-                  :item="
-                    `Send an alert on day ${config.recurrenceDay}, ${
-                      config.recurrenceFrequency
-                    } to ${config.recipients.join(',')} `
-                  "
+                  :item="getReadableConfig(config)"
                   :active="true"
                 />
               </template>
@@ -172,11 +168,11 @@ import debounce from 'lodash.debounce'
 import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-
+import moment from 'moment'
 //Internal
 
+import ListContainer from '@/components/ListContainer'
+import ListItem from '@/components/ListItem'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
@@ -204,16 +200,21 @@ import AlertTemplate, {
   AlertTemplateForm,
   AlertConfigForm,
   AlertMessageTemplateForm,
+  AlertGroupOperand,
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
+import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
 import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-} from '@/services/salesforce'
-
+  ALERT_DATA_TYPE_MAP,
+  INPUT_TYPE_MAP,
+  INTEGER,
+  STRING,
+  DATE,
+  DECIMAL,
+  BOOLEAN,
+  DATETIME,
+} from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'General Info' },
   { key: 'GROUPS', label: 'Conditions' },
@@ -276,6 +277,15 @@ export default {
         { label: 'True', value: 'true' },
         { label: 'False', value: 'false' },
       ],
+      weeklyOpts: [
+        { key: 'Monday', value: '0' },
+        { key: 'Tuesday', value: '1' },
+        { key: 'Wednesday', value: '2' },
+        { key: 'Thursday', value: '3' },
+        { key: 'Friday', value: '4' },
+        { key: 'Saturday', value: '5' },
+        { key: 'Sunday', value: '6' },
+      ],
     }
   },
   watch: {
@@ -317,19 +327,62 @@ export default {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
+      let valueLabel = value
       let operandOperatorLabel = operandOpts.find(opt => opt.value == operandOperator)
         ? operandOpts.find(opt => opt.value == operandOperator).label
         : operandOperator
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${rowData.operandValue} `
+      let dataType = this.selectedFieldType(rowData.operandIdentifierRef)
+      if (dataType == 'DATETIME' || dataType == 'DATE') {
+        if (value.startsWith('-')) {
+          valueLabel = moment()
+            .subtract(value, 'days')
+            .format('MM-DD-YYYY')
+        } else {
+          valueLabel = moment()
+            .add(value, 'days')
+            .format('MM-DD-YYYY')
+        }
+      }
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
     },
-    async onDeleteOperand(id) {
-      // await AlertGroup.api.delete(id)
-      return
+    getReadableConfig(config) {
+      let recurrenceDayString = config.recurrenceDay
+      let recurrenceFrequencyString = config.recurrenceFrequency
+      if (config.recurrenceFrequency == 'WEEKLY') {
+        let day = this.weeklyOpts.find(opt => opt.value == config.recurrenceDay)
+          ? this.weeklyOpts.find(opt => opt.value == config.recurrenceDay).key
+          : config.recurrenceDay
+        recurrenceDayString = `Check every ${day} (Weekly)`
+      } else if ((config.recurrenceFrequency = 'MONTHLY')) {
+        let day = config.recurrenceDay
+        recurrenceFrequencyString = `Check on the ${day} of every Month`
+      }
+      return `${recurrenceDayString} and send alert to ${config.recipientsRef
+        .map(rec => rec.key)
+        .join(',')} filtering against ${config.alertTargetsRef
+        .map(target => target.key)
+        .join(',')}'s data`
     },
 
     async onDeleteConfig(id) {
-      // await AlertConfig.api.delete(id)
-      return
+      let confirmation = confirm('Delete this row ?')
+      if (confirmation) {
+        try {
+          await AlertConfig.api.delete(id)
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
+    async onDeleteOperand(id) {
+      let confirmation = confirm('Delete this row ?')
+      if (confirmation) {
+        try {
+          await AlertGroupOperand.api.delete(id)
+        } catch (e) {
+          console.log(e)
+        }
+      }
     },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()

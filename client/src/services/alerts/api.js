@@ -71,3 +71,40 @@ export class AlertMessageTemplateAPI extends ModelAPI {
     }
   }
 }
+
+export class AlertOperandAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/operands/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async delete(id) {
+    try {
+      this.client.delete(`${AlertOperandAPI.ENDPOINT}${id}/`)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertOperandAPI.delete' })(e)
+    }
+  }
+}
+export class AlertConfigAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/configs/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async delete(id) {
+    try {
+      this.client.delete(`${AlertConfigAPI.ENDPOINT}${id}/`)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertConfigAPI.delete' })(e)
+    }
+  }
+}
