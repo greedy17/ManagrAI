@@ -108,3 +108,21 @@ export class AlertConfigAPI extends ModelAPI {
     }
   }
 }
+export class AlertGroupAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/groups/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async delete(id) {
+    try {
+      this.client.delete(`${AlertGroupAPI.ENDPOINT}${id}/`)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertGroupAPI.delete' })(e)
+    }
+  }
+}

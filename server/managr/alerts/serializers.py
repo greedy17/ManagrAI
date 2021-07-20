@@ -144,7 +144,7 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
                 # *list(map(lambda u: u.data, UserSerializer(instance=target_users, many=True)))
             ]
         else:
-            list(map(lambda channel: dict(key=channel, value=channel), instance.recipients))
+            return list(map(lambda channel: dict(key=channel, value=channel), instance.recipients))
 
 
 class AlertInstanceRefSerializer(serializers.ModelSerializer):

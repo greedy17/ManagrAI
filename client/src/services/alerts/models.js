@@ -1,7 +1,12 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import User from '../users/models'
 import { objectToCamelCase } from '../utils'
-import AlertTemplateAPI, { AlertMessageTemplateAPI, AlertOperandAPI, AlertConfigAPI } from './api'
+import AlertTemplateAPI, {
+  AlertMessageTemplateAPI,
+  AlertOperandAPI,
+  AlertConfigAPI,
+  AlertGroupAPI,
+} from './api'
 
 export class AlertTemplateRef extends Model {
   /**
@@ -43,6 +48,7 @@ export class AlertGroup extends AlertGroupRef {
   static operands = new fields.ArrayField({ type: new fields.CharField() })
   static operandsRef = new fields.ModelField({ ModelClass: AlertGroupOperand, many: true })
   static newOperands = new fields.ModelField({ ModelClass: AlertGroupOperand, many: true })
+  static api = AlertGroupAPI.create(AlertGroup)
 }
 export class AlertMessageTemplate extends Model {
   static api = AlertMessageTemplateAPI.create(AlertMessageTemplate)

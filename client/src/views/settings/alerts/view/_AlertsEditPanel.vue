@@ -77,6 +77,15 @@
                   />
                 </template>
               </ListContainer>
+              <button
+                class="btn btn--danger btn--icon"
+                @click.stop="onRemoveAlertGroup(id)"
+                :disabled="index <= 0"
+              >
+                <svg width="24px" height="24px" viewBox="0 0 24 24">
+                  <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -169,6 +178,7 @@ import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import moment from 'moment'
+
 //Internal
 
 import ListContainer from '@/components/ListContainer'
@@ -183,6 +193,7 @@ import DropDownSearch from '@/components/DropDownSearch'
  *
  */
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { toNumberSuffix } from '@/services/filters'
 import Form, { FormArray, FormField as FormFieldService } from '@thinknimble/tn-forms'
 import {
   MustMatchValidator,
@@ -310,6 +321,16 @@ export default {
     },
   },
   methods: {
+    async onRemoveAlertGroup(id) {
+      let confirmation = confirm('Delete this row ?')
+      if (confirmation) {
+        try {
+          await AlertGroup.api.delete(id)
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
     selectedFieldType(operatorField) {
       if (operatorField) {
         return ALERT_DATA_TYPE_MAP[operatorField.dataType]
@@ -347,17 +368,16 @@ export default {
     },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
-      let recurrenceFrequencyString = config.recurrenceFrequency
       if (config.recurrenceFrequency == 'WEEKLY') {
         let day = this.weeklyOpts.find(opt => opt.value == config.recurrenceDay)
           ? this.weeklyOpts.find(opt => opt.value == config.recurrenceDay).key
           : config.recurrenceDay
-        recurrenceDayString = `Check every ${day} (Weekly)`
+        recurrenceDayString = `Run every ${day} (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
-        recurrenceFrequencyString = `Check on the ${day} of every Month`
+        recurrenceFrequencyString = `Run every ${toNumberSuffix(day)} Monthly`
       }
-      return `${recurrenceDayString} and send alert to ${config.recipientsRef
+      return `${recurrenceDayString} and alert ${config.recipientsRef
         .map(rec => rec.key)
         .join(',')} filtering against ${config.alertTargetsRef
         .map(target => target.key)
@@ -503,6 +523,21 @@ export default {
     &--medium {
       flex: 1 0 auto;
     }
+  }
+}
+.btn {
+  &--danger {
+    @include button-danger();
+  }
+  &--primary {
+    @include primary-button();
+  }
+  &--secondary {
+    @include secondary-button();
+  }
+
+  &--icon {
+    @include --icon();
   }
 }
 .tab__panel {
