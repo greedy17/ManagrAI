@@ -4,11 +4,10 @@ Managr deployment information and instructions.
 
 ## Architecture
 
-Managr leverages a container-based architecture that is facilitated via Bitbucket Pipelines. Both the back-end Django application and front-end client are bundled into a Docker image. The Pipeline is configured to build an image for each PR and for every new tagged deployment into staging and production. All images are pushed into AWS ECR before they are deployed. Images are tagged as follows:
+Managr leverages a container-based architecture that is facilitated via Bitbucket Pipelines. Both the back-end Django application and front-end client are bundled into a Docker image. The Pipeline is configured to build an image for every new tagged deployment into staging and production. All images are pushed into AWS ECR before they are deployed. Images are tagged as follows:
 
 | stage      | tags                                                                                                                                               |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR         | `<ecr_endpoint>/thinknimble/managr/server:pr-$BITBUCKET_PR_ID`<br/>`<ecr_endpoint>/thinknimble/managr/server-tasks:pr-$BITBUCKET_PR_ID`            |
 | staging    | `<ecr_endpoint>/thinknimble/managr/server:staging-$BITBUCKET_COMMIT`<br/>`<ecr_endpoint>/thinknimble/managr/server-tasks:staging-$BITBUCKET_PR_ID` |
 | production | `<ecr_endpoint>/thinknimble/managr/server:prod-$BITBUCKET_TAG`<br/>`<ecr_endpoint>/thinknimble/managr/server-tasks:prod-$BITBUCKET_TAG`            |
 
@@ -71,4 +70,5 @@ The following Bitbucket variables are required for deployment:
 Datadog is used to collect metrics for the deployed application stages. The agent included in the ECS task definition is configured to collect tracing information from the managr server and worker containers. Datadog is also configured to collect metrics from the AWS components including RDS and ALB.
 
 ### Helpful commands
-terraform apply -auto-approve -parallelism=1
+When updating values for environment variables you will need to re apply the terraform configuration 
+`terraform apply -auto-approve -parallelism=1`

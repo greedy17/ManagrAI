@@ -58,7 +58,7 @@ class AlertTemplateViewSet(
     def create(self, request, *args, **kwargs):
         data = request.data
         data.update({"user": request.user.id})
-        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data)
+        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request.user)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response_serializer = self.serializer_class(serializer.instance)
@@ -107,3 +107,48 @@ class AlertMessageTemplateViewSet(
 
     def get_queryset(self):
         return alert_models.AlertMessageTemplate.objects.for_user(self.request.user)
+
+
+class AlertConfigViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = alert_serializers.AlertConfigRefSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertConfig.objects.for_user(self.request.user)
+
+
+class AlertGroupViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = alert_serializers.AlertGroupRefSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertGroup.objects.for_user(self.request.user)
+
+
+class AlertOperandViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = alert_serializers.AlertOperandRefSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertOperand.objects.for_user(self.request.user)
