@@ -82,8 +82,18 @@
                 @click.stop="onRemoveAlertGroup(group.id)"
                 :disabled="index <= 0"
               >
-                <svg width="24px" height="24px" viewBox="0 0 24 24">
+                <svg width="14px" height="14px" viewBox="0 0 24 24">
                   <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
+              </button>
+              <button class="btn btn--secondary btn--icon" @click="onShowOperandModal(index)">
+                <svg width="14px" height="14px" viewBox="0 0 24 24">
+                  <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                </svg>
+              </button>
+              <button class="btn btn--secondary btn--icon" @click="onShowGroupModal()">
+                <svg width="14px" height="14px" viewBox="0 0 24 24">
+                  <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
                 </svg>
               </button>
             </div>
@@ -180,7 +190,8 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import moment from 'moment'
 
 //Internal
-
+import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
+import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import ExpandablePanel from '@/components/ExpandablePanel'
@@ -243,6 +254,7 @@ export default {
     ListContainer,
     PulseLoadingSpinner,
     DropDownSearch,
+    AlertOperandModal,
   },
   props: {
     alert: {
@@ -330,6 +342,28 @@ export default {
           console.log(e)
         }
       }
+    },
+    onShowOperandModal(groupIndex) {
+      let newForm = new AlertOperandForm({
+        operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
+      })
+
+      this.$modal.show(
+        AlertOperandModal,
+        { form: newForm, resourceType: 'Opportunity' },
+        { width: 1200, height: 600, scrollable: true },
+      )
+    },
+    onShowGroupModal() {
+      let newForm = new AlertGroupForm({
+        groupOrder: this.alert.groupsRef.length,
+      })
+
+      this.$modal.show(
+        AlertGroupModal,
+        { form: newForm, resourceType: 'Opportunity' },
+        { width: 1200, height: 600, scrollable: true },
+      )
     },
     selectedFieldType(operatorField) {
       if (operatorField) {

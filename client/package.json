@@ -27,7 +27,7 @@
     "@thinknimble/tn-forms": "^1.0.10",
     "@thinknimble/tn-models": "^1.1.34",
     "@thinknimble/tn-utils": "^1.4.0",
-    "@thinknimble/tn-validators": "^1.1.0",
+    "@thinknimble/tn-validators": "^1.1.1",
     "@thinknimble/togglecheckbox": "^0.1.4",
     "axios": "^0.18.0",
     "email-validator": "^2.0.4",
