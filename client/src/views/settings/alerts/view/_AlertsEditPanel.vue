@@ -79,7 +79,7 @@
               </ListContainer>
               <button
                 class="btn btn--danger btn--icon"
-                @click.stop="onRemoveAlertGroup(id)"
+                @click.stop="onRemoveAlertGroup(group.id)"
                 :disabled="index <= 0"
               >
                 <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -368,6 +368,7 @@ export default {
     },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
+
       if (config.recurrenceFrequency == 'WEEKLY') {
         let day = this.weeklyOpts.find(opt => opt.value == config.recurrenceDay)
           ? this.weeklyOpts.find(opt => opt.value == config.recurrenceDay).key
@@ -375,7 +376,7 @@ export default {
         recurrenceDayString = `Run every ${day} (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
-        recurrenceFrequencyString = `Run every ${toNumberSuffix(day)} Monthly`
+        recurrenceDayString = `Run every ${toNumberSuffix(day)} Monthly`
       }
       return `${recurrenceDayString} and alert ${config.recipientsRef
         .map(rec => rec.key)
