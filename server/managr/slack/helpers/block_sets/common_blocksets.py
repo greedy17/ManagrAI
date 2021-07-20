@@ -181,7 +181,7 @@ def tasks_list_block_set(context={}):
                 block_builders.simple_section(
                     f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
                     "mrkdwn",
-                ),           
+                ),
                 block_builders.section_with_button_block(
                     "View Task",
                     "view_task",
