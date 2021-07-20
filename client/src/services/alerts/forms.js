@@ -64,10 +64,14 @@ export class AlertConfigForm extends Form {
 
   get toAPI() {
     //overriding .value here to set recipients into an array for future support
+    let recipients = this.value.recipients
+    if (!Array.isArray(recipients)) {
+      recipients = [recipients]
+    }
     let val = {
       ...this.value,
-      recipients: this.value.recipients,
-      alertTargets: this.value.recipients,
+      recipients: recipients,
+      alertTargets: this.value.alertTargets,
     }
     // object to snakecase side effect, will change var with _ into var without camelcase
     delete val['_recipients']
