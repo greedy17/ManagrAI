@@ -1,11 +1,7 @@
 <template>
-  <div>
+  <div class="alert-operand-modal">
     <AlertOperandRow :resourceType="resourceType" :form.sync="form" />
-    <input
-      type="date"
-      v-model="form.field.dateField.value"
-      @blur="form.field.dateField.validate()"
-    />
+
     <button @click="onSave" class="btn btn--primary">Save</button>
   </div>
 </template>
@@ -25,7 +21,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
-import { AlertOperandForm } from '@/services/alerts/'
+import { AlertOperandForm, AlertGroupOperand } from '@/services/alerts/'
 
 export default {
   /**
@@ -35,18 +31,40 @@ export default {
    *
    */
   name: 'AlertOperandModal',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, AlertOperandRow },
+  components: {
+    ListContainer,
+    ToggleCheckBox,
+    DropDownSearch,
+    FormField,
+    AlertOperandRow,
+    AlertGroupOperand,
+  },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
   },
   data() {
-    return {}
+    return {
+      saving: false,
+    }
   },
   created() {},
   methods: {
-    onSave() {
-      console.log(this.form.value)
+    async onSave() {
+      this.form.validate()
+      if (this.form.isValid) {
+        try {
+          await AlertGroupOperand.api.createOperand(this.form.toAPI)
+          this.$Alert.alert({
+            message: 'Successfully Added added and operand',
+            type: 'success',
+            timeout: 2000,
+          })
+          this.$modal.hideAll()
+        } finally {
+          this.saving = false
+        }
+      }
     },
   },
   computed: {},
@@ -78,10 +96,12 @@ export default {
     @include --icon();
   }
 }
-.alert-group-modal {
+.alert-operand-modal {
   padding: 0.5rem;
   height: 100%;
   overflow-y: scroll;
+
   max-height: 100%;
+  width: 100%;
 }
 </style>

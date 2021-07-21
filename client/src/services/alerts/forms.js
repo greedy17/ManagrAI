@@ -26,6 +26,7 @@ export class AlertConfigForm extends Form {
   static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
   static alertTargets = new FormField({ validators: [new RequiredValidator()], value: [] })
   static recipientType = new FormField({ value: 'USER_LEVEL' })
+  static alertTemplateId = new FormField({})
   // Keeping a private copy of the dropdown ref obj for later use
   static _recipients = new FormField({ value: [] })
   // Keeping a private copy of the dropdown ref obj for later use
@@ -43,6 +44,7 @@ export class AlertConfigForm extends Form {
       ...this.value,
       recipients: recipients,
       alertTargets: this.value.alertTargets,
+      template: this.value.alertTemplateId,
     }
     // object to snakecase side effect, will change var with _ into var without camelcase
     delete val['_recipients']
@@ -59,6 +61,7 @@ export class AlertOperandForm extends Form {
   static operandType = new FormField({ value: 'FIELD' })
   static operandOrder = new FormField({ value: 0, validators: [] })
   static dataType = new FormField({})
+  static groupId = new FormField({})
 
   // Keeping a private copy of the dropdown ref obj for later use
   static _operandIdentifier = new FormField({ value: null })
@@ -80,6 +83,7 @@ export class AlertOperandForm extends Form {
       operandType: originalValue.operandType,
       operandOrder: originalValue.operandOrder,
       dataType: dataType,
+      group: originalValue.groupId,
     }
   }
 }

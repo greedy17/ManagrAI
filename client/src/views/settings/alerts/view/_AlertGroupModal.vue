@@ -90,6 +90,8 @@ export default {
   padding: 0.5rem;
   height: 100%;
   overflow-y: scroll;
+
   max-height: 100%;
+  width: 100%;
 }
 </style>

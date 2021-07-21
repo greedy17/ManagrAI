@@ -376,7 +376,7 @@ export default {
   padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+
   &--label {
     top: -1.05rem;
     position: relative;
@@ -385,7 +385,7 @@ export default {
 }
 .alert-operand-row__condition {
   position: relative;
-  top: -2rem;
+  top: 0rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -406,6 +406,7 @@ export default {
 .alert-operand-row__options {
   display: flex;
   padding: 1rem;
+  flex-wrap: wrap;
   justify-content: space-evenly;
   &-label {
     color: black;

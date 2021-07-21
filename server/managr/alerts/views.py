@@ -55,15 +55,6 @@ class AlertTemplateViewSet(
     def get_queryset(self):
         return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        data.update({"user": request.user.id})
-        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request.user)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response_serializer = self.serializer_class(serializer.instance)
-        return Response(data=response_serializer.data)
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -123,6 +114,12 @@ class AlertConfigViewSet(
     def get_queryset(self):
         return alert_models.AlertConfig.objects.for_user(self.request.user)
 
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertConfigWriteSerializer
+
+        return alert_serializers.AlertConfigRefSerializer
+
 
 class AlertGroupViewSet(
     mixins.CreateModelMixin,
@@ -158,3 +155,10 @@ class AlertOperandViewSet(
 
     def get_queryset(self):
         return alert_models.AlertOperand.objects.for_user(self.request.user)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertOperandWriteSerializer
+
+        return alert_serializers.AlertOperandWriteSerializer
+

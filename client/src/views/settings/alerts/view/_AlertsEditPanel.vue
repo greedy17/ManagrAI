@@ -61,6 +61,14 @@
           >
             <span v-if="group.groupOrder != 0">{{ group.groupCondition }}</span>
             <div class="alerts-template-list__content-conditions__operand">
+              <div class="alerts-template-list__add-opts">
+                <button class="btn btn--secondary btn--icon" @click="onShowOperandModal(index)">
+                  <svg width="14px" height="14px" viewBox="0 0 24 24">
+                    <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                  </svg>
+                </button>
+                <span>Add Operands</span>
+              </div>
               <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
@@ -77,26 +85,24 @@
                   />
                 </template>
               </ListContainer>
-              <button
-                class="btn btn--danger btn--icon"
-                @click.stop="onRemoveAlertGroup(group.id, index)"
-                :disabled="index <= 0"
-              >
-                <svg width="14px" height="14px" viewBox="0 0 24 24">
-                  <use xlink:href="@/assets/images/remove.svg#remove" />
-                </svg>
-              </button>
-              <button class="btn btn--secondary btn--icon" @click="onShowOperandModal(index)">
-                <svg width="14px" height="14px" viewBox="0 0 24 24">
-                  <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                </svg>
-              </button>
-              <button class="btn btn--secondary btn--icon" @click="onShowGroupModal()">
-                <svg width="14px" height="14px" viewBox="0 0 24 24">
-                  <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                </svg>
-              </button>
             </div>
+            <button
+              class="btn btn--danger btn--icon"
+              @click.stop="onRemoveAlertGroup(group.id, index)"
+              :disabled="index <= 0"
+            >
+              <svg width="14px" height="14px" viewBox="0 0 24 24">
+                <use xlink:href="@/assets/images/remove.svg#remove" />
+              </svg>
+            </button>
+          </div>
+          <div class="alerts-template-list__add-opts">
+            <button class="btn btn--secondary btn--icon" @click="onShowGroupModal()">
+              <svg width="14px" height="14px" viewBox="0 0 24 24">
+                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+              </svg>
+            </button>
+            <span>Add Group</span>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
@@ -162,6 +168,11 @@
                 />
               </template>
             </ListContainer>
+            <button class="btn btn--secondary btn--icon" @click="onShowSettingsModal">
+              <svg width="14px" height="14px" viewBox="0 0 24 24">
+                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -187,6 +198,7 @@ import moment from 'moment'
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
 import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
+import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import ExpandablePanel from '@/components/ExpandablePanel'
@@ -331,12 +343,13 @@ export default {
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
+        groupId: this.alert.groupsRef[groupIndex].id,
       })
 
       this.$modal.show(
         AlertOperandModal,
         { form: newForm, resourceType: 'Opportunity' },
-        { width: 1200, height: 600, scrollable: true },
+        { height: 'auto', minHeight: 800, minWidth: 600, scrollable: true, adaptive: true },
       )
     },
     onShowGroupModal() {
@@ -348,7 +361,18 @@ export default {
       this.$modal.show(
         AlertGroupModal,
         { form: newForm, resourceType: 'Opportunity' },
-        { width: 1200, height: 600, scrollable: true },
+        { height: 'auto', minHeight: 800, scrollable: true, adaptive: true },
+      )
+    },
+    onShowSettingsModal() {
+      let newForm = new AlertConfigForm({
+        alertTemplateId: this.alert.id,
+      })
+
+      this.$modal.show(
+        AlertSettingsModal,
+        { form: newForm, resourceType: 'Opportunity' },
+        { height: 'auto', minHeight: 800, scrollable: true, adaptive: true },
       )
     },
     selectedFieldType(operatorField) {
@@ -605,5 +629,9 @@ export default {
 }
 .left {
   margin-bottom: 5rem;
+}
+.alerts-template-list__add-opts {
+  display: flex;
+  align-items: center;
 }
 </style>

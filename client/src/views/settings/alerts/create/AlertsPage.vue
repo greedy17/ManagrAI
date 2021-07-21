@@ -592,7 +592,7 @@ export default {
     if (this.user.slackRef) {
       await this.listChannels()
     }
-    if (this.user.isAdmin) {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
   },

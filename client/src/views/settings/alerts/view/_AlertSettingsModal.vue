@@ -1,10 +1,6 @@
 <template>
   <div class="alert-settings-modal">
-    <div
-      class="alerts-page__settings"
-      :key="i"
-      v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-    >
+    <div class="alerts-page__settings">
       <div class="alerts-page__settings__frequency">
         <label class="alerts-page__settings__frequency-label">Weekly</label>
         <ToggleCheckBox
@@ -154,23 +150,13 @@
           Send to a group of users (DM) instead ?
         </span>
       </div>
-      <div class="alerts-page__settings-remove">
-        <button
-          class="btn btn--danger btn--icon"
-          @click.stop="onRemoveSetting(i)"
-          :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
-        >
-          <svg width="24px" height="24px" viewBox="0 0 24 24">
-            <use xlink:href="@/assets/images/remove.svg#remove" />
-          </svg>
-        </button>
-      </div>
     </div>
-    <button class="btn btn--secondary btn--icon" @click="onAddAlertSetting">
-      <svg width="24px" height="24px" viewBox="0 0 24 24">
-        <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-      </svg>
-    </button>
+    <PulseLoadingSpinnerButton
+      text="save"
+      @click="onSave"
+      class="btn btn--primary"
+      :loading="isSaving"
+    />
   </div>
 </template>
 
@@ -186,10 +172,14 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 import DropDownSearch from '@/components/DropDownSearch'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
  */
-import { AlertConfigForm } from '@/services/alerts/'
+import User from '@/services/users'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { AlertConfigForm, AlertConfig } from '@/services/alerts/'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 
 export default {
   /**
@@ -198,8 +188,14 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'AlertOperandModal',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, AlertOperandRow },
+  name: 'AlertSettingsModal',
+  components: {
+    ListContainer,
+    ToggleCheckBox,
+    DropDownSearch,
+    FormField,
+    PulseLoadingSpinnerButton,
+  },
   props: {
     form: { type: AlertConfigForm },
     resourceType: { type: String },
@@ -223,22 +219,46 @@ export default {
         { key: 'Everyone', value: 'ALL' },
         { key: 'SDR', value: 'SDR' },
       ],
+      weeklyOpts: [
+        { key: 'Monday', value: '0' },
+        { key: 'Tuesday', value: '1' },
+        { key: 'Wednesday', value: '2' },
+        { key: 'Thursday', value: '3' },
+        { key: 'Friday', value: '4' },
+        { key: 'Saturday', value: '5' },
+        { key: 'Sunday', value: '6' },
+      ],
+      isSaving: false,
     }
   },
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
     }
-    if (this.user.isAdmin) {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
   },
   methods: {
-    onSave() {
-      console.log(this.form.value)
+    async onSave() {
+      this.form.validate()
+      if (this.form.isValid) {
+        try {
+          await AlertConfig.api.createConfig(this.form.toAPI)
+          this.$Alert.alert({
+            message: 'Successfully Added new settings',
+            type: 'success',
+            timeout: 2000,
+          })
+          this.$modal.hideAll()
+        } catch (e) {
+          console.log(e)
+        }
+      }
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
+      console.log(res)
       const results = new SlackListResponse({
         channels: [...this.channelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
@@ -257,19 +277,6 @@ export default {
       }
       return value
     },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
     async onSearchUsers(v) {
       this.users.pagination = new Pagination()
       this.users.filters = {
@@ -284,9 +291,9 @@ export default {
   },
   computed: {
     userTargetsOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertRecipientOpts.map(opt => {
+          ...this.alertTargetOpts.map(opt => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -299,7 +306,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return this.alertRecipientOpts
       } else {
         return [{ key: 'Myself', value: 'SELF' }]

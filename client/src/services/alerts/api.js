@@ -15,7 +15,7 @@ export default class AlertTemplateAPI extends ModelAPI {
     const d = objectToSnakeCase(data)
 
     try {
-      const res = this.client.post(AlertTemplateAPI.ENDPOINT, d)
+      const res = await this.client.post(AlertTemplateAPI.ENDPOINT, d)
       return this.cls.fromAPI(res.data)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.createAlertTemplate' })(e)
@@ -23,21 +23,21 @@ export default class AlertTemplateAPI extends ModelAPI {
   }
   async deleteAlertTemplate(id) {
     try {
-      this.client.delete(`${AlertTemplateAPI.ENDPOINT}${id}/`)
+      await this.client.delete(`${AlertTemplateAPI.ENDPOINT}${id}/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
   }
   async testAlertTemplate(id) {
     try {
-      this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/test/`)
+      await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/test/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
   }
   async runAlertTemplateNow(id) {
     try {
-      this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`)
+      await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
@@ -46,7 +46,7 @@ export default class AlertTemplateAPI extends ModelAPI {
   async updateAlertTemplate(id, data) {
     const d = objectToSnakeCase(data)
     try {
-      this.client.patch(`${AlertTemplateAPI.ENDPOINT}${id}/`, d)
+      await this.client.patch(`${AlertTemplateAPI.ENDPOINT}${id}/`, d)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.UpdateAlertTemplate' })(e)
     }
@@ -65,7 +65,7 @@ export class AlertMessageTemplateAPI extends ModelAPI {
   async updateMessageTemplate(id, data) {
     const d = objectToSnakeCase(data)
     try {
-      this.client.patch(`${AlertMessageTemplateAPI.ENDPOINT}${id}/`, d)
+      await this.client.patch(`${AlertMessageTemplateAPI.ENDPOINT}${id}/`, d)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.UpdateAlertTemplate' })(e)
     }
@@ -81,10 +81,17 @@ export class AlertOperandAPI extends ModelAPI {
   get client() {
     return apiClient()
   }
-
+  async createOperand(data) {
+    let formData = objectToSnakeCase(data)
+    try {
+      await this.client.post(`${AlertOperandAPI.ENDPOINT}`, formData)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
+    }
+  }
   async delete(id) {
     try {
-      this.client.delete(`${AlertOperandAPI.ENDPOINT}${id}/`)
+      await this.client.delete(`${AlertOperandAPI.ENDPOINT}${id}/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertOperandAPI.delete' })(e)
     }
@@ -99,10 +106,17 @@ export class AlertConfigAPI extends ModelAPI {
   get client() {
     return apiClient()
   }
-
+  async createConfig(data) {
+    let formData = objectToSnakeCase(data)
+    try {
+      await this.client.post(`${AlertConfigAPI.ENDPOINT}`, formData)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
+    }
+  }
   async delete(id) {
     try {
-      this.client.delete(`${AlertConfigAPI.ENDPOINT}${id}/`)
+      await this.client.delete(`${AlertConfigAPI.ENDPOINT}${id}/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertConfigAPI.delete' })(e)
     }
@@ -121,7 +135,7 @@ export class AlertGroupAPI extends ModelAPI {
   async createGroup(data) {
     let formData = objectToSnakeCase(data)
     try {
-      this.client.post(`${AlertGroupAPI.ENDPOINT}`, formData)
+      await this.client.post(`${AlertGroupAPI.ENDPOINT}`, formData)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
@@ -129,7 +143,7 @@ export class AlertGroupAPI extends ModelAPI {
 
   async delete(id) {
     try {
-      this.client.delete(`${AlertGroupAPI.ENDPOINT}${id}/`)
+      await this.client.delete(`${AlertGroupAPI.ENDPOINT}${id}/`)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.delete' })(e)
     }

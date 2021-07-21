@@ -116,8 +116,15 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
                 filter(
                     lambda opt: opt.get("value") in target_groups, alert_consts.ALERT_TARGET_GROUPS
                 )
-            )
-            # *list(map(lambda u: u.data, UserSerializer(instance=target_users, many=True)))
+            ),
+            *list(
+                map(
+                    lambda u: dict(key=u.full_name, value=u.id),
+                    instance.template.user.organization.users.filter(
+                        id__in=target_users, is_active=True
+                    ),
+                )
+            ),
         ]
 
     def get_recipients_ref(self, instance):
@@ -125,13 +132,13 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
             target_groups = list(
                 filter(
                     lambda group: group in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
-                    instance.alert_targets,
+                    instance.recipients,
                 )
             )
             target_users = list(
                 filter(
                     lambda group: group not in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
-                    instance.alert_targets,
+                    instance.recipients,
                 )
             )
             return [
@@ -140,8 +147,15 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
                         lambda opt: opt.get("value") in target_groups,
                         alert_consts.ALERT_RECIPIENT_GROUPS,
                     )
-                )
-                # *list(map(lambda u: u.data, UserSerializer(instance=target_users, many=True)))
+                ),
+                *list(
+                    map(
+                        lambda u: dict(key=u.full_name, value=u.id),
+                        instance.template.user.organization.users.filter(
+                            id__in=target_users, is_active=True
+                        ),
+                    )
+                ),
             ]
         else:
             return list(map(lambda channel: dict(key=channel, value=channel), instance.recipients))
@@ -285,11 +299,13 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_recipients(self, value):
+        if not self.context["request"].user.user_level == "MANAGER":
+            value = list(filter(lambda opt: opt == "SELF" or opt == str(self.context.id), value))
 
         return value
 
     def validate_alert_targets(self, value):
-        if not self.context.is_admin:
+        if not self.context["request"].user.user_level == "MANAGER":
             value = list(filter(lambda opt: opt == "SELF" or opt == str(self.context.id), value))
 
         return value
