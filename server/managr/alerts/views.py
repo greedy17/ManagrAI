@@ -85,7 +85,7 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         for config in obj.configs.all():
             template = config.template
-            users = template.get_users
+            users = config.target_users
             for user in users:
                 run_time = datetime.now(pytz.utc)
                 _process_check_alert(
