@@ -72,13 +72,14 @@ class Organization(TimeStampModel):
                 current_admin = self.users.filter(is_admin=True).first()
                 fields = form.fields.filter(is_public=False)
                 form_fields = fields.values_list("api_name", flat=True)
-                new_admin_fields = new_admin.imported_sobjecfield.filter(
-                    api_name__in=[form_fields], salesforce_object=templates.resource
+                new_admin_fields = new_admin.imported_sobjectfield.filter(
+                    api_name__in=[form_fields], salesforce_object=form.resource
                 )
                 form_field_set = form.formfield_set.all()
-
                 for formfield in form_field_set:
-                    new_field = new_admin_fields.filter(api_name=formfield.api_name).first()
+                    new_field = new_admin_fields.filter(
+                        api_name=formfield.field.api_name
+                    ).first()
                     if new_field:
                         formfield.field = new_field
                         formfield.save()
