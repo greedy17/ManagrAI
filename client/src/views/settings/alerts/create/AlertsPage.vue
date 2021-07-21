@@ -6,8 +6,8 @@
           <span class="gray">
             {{
               selectedResourceType
-                ? selectedResourceType
-                : "Select the Salesforce Object you'd like to build an alert for"
+                ? `1. ${selectedResourceType}`
+                : "1. Select the Salesforce Object you'd like to build an alert for"
             }}
           </span>
 
@@ -41,6 +41,7 @@
               searchable
               local
               @input="alertTemplateForm.field.resourceType.validate()"
+              class="pad"
             />
           </template>
         </FormField>
@@ -51,12 +52,12 @@
         <div :class="classes" @click="expand">
           <span class="gray">
             {{
-              selectedResourceType ? `Build your ${selectedResourceType} alert` : 'Build alert'
+              selectedResourceType ? `2. Build your ${selectedResourceType} alert` : 'Build alert'
             }}</span
           ><span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
-              alertTemplateForm.field.title.isValid &&
+              alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value &&
               !alertTemplateForm.field.alertGroups.groups
                 .map((fields) => fields.isValid)
                 .includes(false)
@@ -77,40 +78,55 @@
       </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
-          <FormField
+          <!-- <FormField
             id="alert-title"
             v-model="alertTemplateForm.field.title.value"
             placeholder="Alert Title (required)"
             :errors="alertTemplateForm.field.title.errors"
             @blur="alertTemplateForm.field.title.validate()"
-          />
+          /> -->
+          <div style="display: flex; flex-direction: row">
+            <FormField
+              v-model="alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value"
+              id="notification-text"
+              large
+              placeholder="Name your alert (required)"
+            />
+            <p class="sub__">*This will also be the slack notification snippet</p>
+          </div>
+
           <div
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-            class="alerts-page__groups__group"
+            class="alerts-page__groups__group mar col"
           >
             <AlertGroup
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
-
-            <div>
-              <button
-                class="btn btn--danger btn--icon"
-                @click.stop="onRemoveAlertGroup(index)"
-                :disabled="alertTemplateForm.field.alertGroups.groups.length - 1 <= 0"
-              >
-                <svg width="24px" height="24px" viewBox="0 0 24 24">
-                  <use xlink:href="@/assets/images/remove.svg#remove" />
-                </svg>
-              </button>
+            <div class="row">
+              <div class="group">
+                <button class="btn btn--secondary btn--icon" @click="onAddAlertGroup">
+                  <svg width="24px" height="24px" viewBox="0 0 24 24">
+                    <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                  </svg>
+                </button>
+                <p class="sub">Add group</p>
+              </div>
+              <div class="group" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
+                <button
+                  class="btn btn--danger btn--icon"
+                  @click.stop="onRemoveAlertGroup(index)"
+                  :disabled="alertTemplateForm.field.alertGroups.groups.length - 1 <= 0"
+                >
+                  <svg width="24px" height="24px" viewBox="0 0 24 24">
+                    <use xlink:href="@/assets/images/remove.svg#remove" />
+                  </svg>
+                </button>
+                <p class="sub">Remove</p>
+              </div>
             </div>
           </div>
-          <button class="btn btn--secondary btn--icon" @click="onAddAlertGroup">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-            </svg>
-          </button>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">Please Select a resource to get started</div>
@@ -119,14 +135,13 @@
     </ExpandablePanel>
     <ExpandablePanel
       v-if="
-        alertTemplateForm.field.title.isValid &&
+        alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value &&
         !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray">Construct Message </span>
-
+          <span class="gray">3. Construct your alert message </span>
           <span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
@@ -152,14 +167,14 @@
         <template v-if="selectedResourceType">
           <div class="alerts-page__message">
             <div class="alerts-page__message-options">
-              <FormField
+              <!-- <FormField
                 v-model="
                   alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
                 "
                 id="notification-text"
                 large
                 placeholder="Snippet in slack notification"
-              />
+              /> -->
               <div class="alerts-page__message-options-body" style="height: 5rem; width: 30rem">
                 <FormField
                   :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
@@ -171,41 +186,46 @@
                       v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
                       :options="{
                         modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
+                        placeholder:
+                          'Type your message here!  \n \nPRO TIP: try adding the links below or selecting a field in order to display the {field value}. \n \nEx. Hey {FIRST.NAME} your deal {opp.name} has a passed {close.date} please update it!',
+                        theme: 'snow',
                       }"
+                      class="bottom top"
                     />
                   </template>
                 </FormField>
                 <div class="alerts-page__message-options-body__bindings">
                   <div class="alerts-page__message-options-body__bindings__fields">
+                    <ListContainer horizontal>
+                      <template v-slot:list>
+                        <ListItem
+                          :key="key"
+                          v-for="(val, key) in recipientBindings"
+                          :item="val.referenceDisplayLabel"
+                          :active="true"
+                          @item-selected="bindText(`__Recipient.${val.apiName}`)"
+                        />
+                      </template>
+                    </ListContainer>
                     <DropDownSearch
                       :items="fields.list"
                       @input="bindText(`${selectedResourceType}.${$event}`)"
                       displayKey="referenceDisplayLabel"
                       valueKey="apiName"
-                      nullDisplay="Select a field"
+                      nullDisplay="Select a field to display"
                       searchable
                       :hasNext="!!fields.pagination.hasNextPage"
                       @load-more="fieldNextPage"
                       @search-term="onSearchFields"
                       auto
+                      class="left"
                     />
                   </div>
-                  <ListContainer horizontal>
-                    <template v-slot:list>
-                      <ListItem
-                        :key="key"
-                        v-for="(val, key) in recipientBindings"
-                        :item="val.referenceDisplayLabel"
-                        :active="true"
-                        @item-selected="bindText(`__Recipient.${val.apiName}`)"
-                      />
-                    </template>
-                  </ListContainer>
                 </div>
               </div>
             </div>
             <div class="alerts-page__message-template">
-              <div class="alerts-page__message-template__notification">
+              <div class="alerts-page__message-template__notification" style="margin-top: -0.25rem">
                 <SlackNotificationTemplate
                   :msg="
                     alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
@@ -232,7 +252,7 @@
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray"> Alert Settings </span><span> </span>
+          <span class="gray"> 4. Choose your delivery options </span><span> </span>
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
@@ -261,7 +281,7 @@
             :key="i"
             v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
           >
-            <div class="alerts-page__settings__frequency">
+            <div class="alerts-page__settings__frequency" style="margin-top: 1rem">
               <label class="alerts-page__settings__frequency-label">Weekly</label>
               <ToggleCheckBox
                 @input="
@@ -283,6 +303,7 @@
                 @blur="form.field.recurrenceDay.validate()"
                 v-model="form.field.recurrenceDay.value"
                 small
+                style="margin-top: 2rem"
               />
               <FormField
                 v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
@@ -296,9 +317,10 @@
                     @input="form.field.recurrenceDay.validate()"
                     displayKey="key"
                     valueKey="value"
-                    nullDisplay="Select"
+                    nullDisplay="Select Day"
                     searchable
                     local
+                    style="margin-left: -2rem"
                   />
                 </template>
               </FormField>
@@ -325,9 +347,10 @@
                     @input="form.field.recipients.validate()"
                     displayKey="key"
                     valueKey="value"
-                    nullDisplay="Select user groups"
+                    nullDisplay="Select Group"
                     searchable
                     local
+                    style="margin-left: -4rem"
                   />
                 </template>
               </FormField>
@@ -368,9 +391,11 @@
                   )
                 "
                 class="muted--link"
+                style="margin-left: -3rem; margin-bottom: -3.5rem"
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
-                >Send to a channel instead ?</span
               >
+                Send to channel instead ?
+              </span>
 
               <span
                 @click="
@@ -384,23 +409,30 @@
                 Send to a group of users (DM) instead ?
               </span>
             </div>
-            <div class="alerts-page__settings-remove">
+            <div
+              class="alerts-page__settings-remove"
+              style="margin-left: -3rem; margin-bottom: -1.5rem"
+            >
               <button
+                style="padding: 0.5rem"
                 class="btn btn--danger btn--icon"
                 @click.stop="onRemoveSetting(i)"
                 :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
               >
-                <svg width="24px" height="24px" viewBox="0 0 24 24">
+                <svg width="16px" height="16px" viewBox="0 0 24 24">
                   <use xlink:href="@/assets/images/remove.svg#remove" />
                 </svg>
               </button>
             </div>
           </div>
-          <button class="btn btn--secondary btn--icon" @click="onAddAlertSetting">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-            </svg>
-          </button>
+          <div class="add__group">
+            <button class="btn btn--secondary btn--icon" @click="onAddAlertSetting">
+              <svg width="24px" height="24px" viewBox="0 0 24 24">
+                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+              </svg>
+            </button>
+            <p class="sub">Add a group</p>
+          </div>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">Please Select a resource to get started</div>
@@ -409,7 +441,7 @@
     </ExpandablePanel>
     <ExpandablePanel
       class="gray"
-      title="Preview Alert Configuration"
+      title="5. Confirm and save your alert"
       v-if="
         !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
       "
@@ -417,13 +449,15 @@
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <AlertSummary :form="alertTemplateForm" />
-          <PulseLoadingSpinnerButton
-            :loading="savingTemplate"
-            class="primary-button"
-            text="Save"
-            @click.stop="onSave"
-            :disabled="!alertTemplateForm.isValid || savingTemplate"
-          />
+          <div class="center">
+            <PulseLoadingSpinnerButton
+              :loading="savingTemplate"
+              class="primary-button"
+              text="Save alert"
+              @click.stop="onSave"
+              :disabled="!alertTemplateForm.isValid || savingTemplate"
+            />
+          </div>
         </template>
         <template v-else>
           <div class="alerts-page__previous-step">Please Select a resource to get started</div>
@@ -779,11 +813,75 @@ textarea {
   }
 }
 .alerts-page__message-options-body__bindings__fields {
-  margin: 2rem 0rem;
-  width: 20rem;
+  // margin: 3rem 0rem;
+  // width: 40rem;
 }
 .gray {
   color: $gray;
-  text-align: center;
+}
+.pad {
+  padding-bottom: 1rem;
+  margin-top: -1rem;
+  margin-left: -2rem;
+}
+.pink {
+  color: $dark-green;
+  font-weight: bold;
+}
+.mar {
+  margin-top: -2rem;
+}
+.center {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.sub {
+  font-size: 12px;
+  margin-left: 0.5rem;
+}
+.sub__ {
+  font-size: 12px;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  color: $gray;
+}
+.group {
+  display: flex;
+  flex-direction: row;
+  height: auto;
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  border-bottom: 3px solid $silver;
+}
+.bottom {
+  margin-bottom: 1.25rem;
+  height: 170px;
+}
+.left {
+  margin-left: -2rem;
+  margin-bottom: 5rem;
+}
+.space {
+  margin-bottom: 0.5rem;
+}
+.add__group {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 3rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid $mid-gray;
 }
 </style>

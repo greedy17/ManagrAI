@@ -1,6 +1,6 @@
 <template>
   <div class="alert-operand-row">
-    <span class="alert-operand-row--label">Alert Operands</span>
+    <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
     <div class="alert-operand-row__condition" v-if="form.field.operandOrder.value != 0">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
@@ -97,6 +97,7 @@
             large
             bordered
             placeholder="Enter a value"
+            class="mar"
           />
           <div
             v-if="
@@ -371,7 +372,7 @@ export default {
   }
 }
 .alert-operand-row {
-  @include standard-border();
+  // @include standard-border();
   margin: 1rem;
   padding: 0.5rem 1rem;
   display: flex;
@@ -410,5 +411,8 @@ export default {
   &-label {
     color: black;
   }
+}
+.mar {
+  margin-top: 1rem;
 }
 </style>

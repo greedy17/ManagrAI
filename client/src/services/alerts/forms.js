@@ -125,7 +125,7 @@ export class AlertMessageTemplateForm extends Form {
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
 export class AlertTemplateForm extends Form {
-  static title = new FormField({ validators: [new RequiredValidator()] })
+  // static title = new FormField({ validators: [new RequiredValidator()] })
   static resourceType = new FormField({ validators: [new RequiredValidator()] })
   static isActive = new FormField({ value: false })
   static alertLevel = new FormField({ value: 'ORGANIZATION' })

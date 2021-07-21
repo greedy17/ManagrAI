@@ -1,6 +1,6 @@
 <template>
-  <div class="alert-group-row">
-    <span class="alert-group-row--label">Alert Group</span>
+  <div class="alert-group-row debug">
+    <!-- <span class="alert-group-row--label">create automation</span> -->
     <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
       <label class="alert-group-row__condition-label">AND</label>
       <ToggleCheckBox
@@ -15,7 +15,7 @@
     </div>
     <div class="alert-group-row__operands">
       <div
-        class="alert-group-row__operands__row"
+        class="alert-group-row__operands__row rows"
         :key="i"
         v-for="(alertOperand, i) in form.field.alertOperands.groups"
       >
@@ -23,25 +23,30 @@
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
           :form.sync="alertOperand"
+          class="left"
         />
 
-        <div>
+        <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
           <button
             class="btn btn--danger btn--icon"
             @click.stop="onRemoveOperand(i)"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
+            <svg width="16px" height="16px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
           </button>
+          <p class="sub">Remove</p>
+        </div>
+        <div class="add__remove">
+          <button class="btn btn--secondary btn--icon" @click="addOperandForm">
+            <svg width="16px" height="16px" viewBox="0 0 24 24">
+              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+            </svg>
+          </button>
+          <p class="sub">Row</p>
         </div>
       </div>
-      <button class="btn btn--secondary btn--icon" @click="addOperandForm">
-        <svg width="24px" height="24px" viewBox="0 0 24 24">
-          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-        </svg>
-      </button>
     </div>
   </div>
 </template>
@@ -143,9 +148,6 @@ export default {
   }
 }
 .alert-group-row {
-  @include standard-border();
-  margin: 0.5rem;
-  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -167,6 +169,7 @@ export default {
   position: relative;
   top: -2.4rem;
   display: flex;
+
   align-items: center;
   justify-content: center;
   &-label {
@@ -175,5 +178,25 @@ export default {
   }
 }
 .alert-group-row__operands {
+}
+.add__remove {
+  margin-right: 1.5rem;
+  display: flex;
+  flex-direction: row;
+
+  margin-left: -2.5rem;
+  padding: 1rem;
+}
+.sub {
+  font-size: 12px;
+  margin-left: 0.5rem;
+}
+.rows {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.left {
+  margin-left: -5rem;
 }
 </style>

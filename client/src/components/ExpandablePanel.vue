@@ -108,14 +108,16 @@ export default {
 .box__header {
   cursor: pointer;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid $silver;
+
+  border-bottom: 2px solid $soft-gray;
+  // border: 1px solid $silver;
 }
 .box__content {
   display: none;
 }
 .box__content--expanded {
-  @include standard-border();
+  // @include standard-border();
+
   margin-top: 1rem;
   border-radius: 0.5rem;
   display: block;
@@ -124,7 +126,7 @@ export default {
   animation-iteration-count: 1;
 }
 .box__content--closed {
-  @include standard-border();
+  // @include standard-border();
 
   display: block;
   animation: closemenu forwards;

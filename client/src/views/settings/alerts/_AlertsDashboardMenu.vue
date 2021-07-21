@@ -7,7 +7,7 @@
           <h3 class="title">Build</h3>
         </div>
 
-        <p class="sub">Build alerts that help keep you proactive.</p>
+        <p class="card-text">Create smart alerts.</p>
       </div>
       <div @click="$router.push({ name: 'ListTemplates' })" class="card">
         <div class="card__header">
@@ -15,7 +15,7 @@
           <h3 class="title">View</h3>
         </div>
 
-        <p class="sub">View & Edit Existing Alerts</p>
+        <p class="card-text">View, Edit, & Run Alerts</p>
       </div>
 
       <div class="card card--disabled">
@@ -24,15 +24,15 @@
           <h3 class="title">Analyze</h3>
         </div>
 
-        <p class="card-text">See how many times your alert was triggered</p>
+        <p class="card-text">Analyze the impact of your alert</p>
         <p class="coming-soon">Coming Soon</p>
       </div>
     </div>
     <router-view :key="$route.fullPath"></router-view>
-    <div class="center">
+    <div class="note">
       <p class="gray">
-        <strong class="pink">Note:</strong> Smart Alerts are fully customizable and will be sent to
-        your slack channels based on how you set them up here.
+        <strong class="pink">Note:</strong> Smart Alerts enable pipeline automation, allowing Managr
+        to Slack you when its time to take action.
       </p>
     </div>
   </div>
@@ -41,24 +41,6 @@
 <script>
 export default {
   name: 'AlertsDashboardMenu',
-  // data() {
-  //   return {
-  //     showBuild: false,
-  //     showView: false,
-  //     showAnalyze: false,
-  //   }
-  // },
-  // methods: {
-  //   showBuildText() {
-  //     this.showBuild = !this.showBuild
-  //   },
-  //   showViewText() {
-  //     this.showView = !this.showView
-  //   },
-  //   showAnalyzeText() {
-  //     this.showAnalyze = !this.showAnalyze
-  //   },
-  // },
 }
 </script>
 
@@ -151,5 +133,8 @@ img {
 }
 .pink {
   color: $candy;
+}
+.note {
+  margin-top: 3rem;
 }
 </style>
