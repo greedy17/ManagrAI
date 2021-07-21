@@ -5,10 +5,11 @@
         <div class="box__header-title"></div>
         <div class="box__header-subtitle"></div>
       </div>
-      <div class="box__content">
-        <h2>
-          {{ form.value.title ? form.value.title : 'No title' }} for {{ form.value.resourceType }}
-        </h2>
+      <div class="box__content center outline">
+        <!-- <h2>
+          {{ form.value.title ? form.value.title : 'No title' }}
+        </h2> -->
+        <h2 class="title">Alert Details</h2>
 
         <div
           class="box__content-recipient-group__recipient-group"
@@ -19,7 +20,7 @@
             class="box__content-recipient-group__recipient-group__recipient"
             v-if="config.recurrenceFrequency == 'WEEKLY'"
           >
-            Will run every <u><b>week</b></u> on
+            This alert will run every <u><b>week</b></u> on
             <u
               ><b>{{ config._recurrenceDay ? config._recurrenceDay.key : '' }}</b></u
             >
@@ -36,7 +37,7 @@
             class="box__content-recipient-group__recipient-group__recipient"
             v-else-if="config.recurrenceFrequency == 'MONTHLY'"
           >
-            Will run every <u><b>Month</b></u> on the
+            This alert will run every <u><b>Month</b></u> on the
             <u
               ><b>{{ config.recurrenceDay | numberSuffix }}</b></u
             >
@@ -56,23 +57,25 @@
             v-for="(group, i) in form.value.alertGroups"
           >
             <span class="box__content-recipient-group__recipient-group__conditions-condition">
-              {{ group.groupOrder == 0 ? 'If ' : `${group.groupCondition} ` }} Group
-              {{ ` ${i + 1}` }}
+              {{ group.groupOrder == 0 ? 'if ' : `${group.groupCondition} ` }} Group
+              {{ ` ${i + 1} meets the following criteria:` }}
             </span>
 
             <div
-              class="box__content-recipient-group__recipient-group__conditions__operands"
+              class="box__content-recipient-group__recipient-group__conditions__operands pink"
               :key="key"
               v-for="(operandRow, key) in group.alertOperands"
             >
               <span
-                class="box__content-recipient-group__recipient-group__conditions__operands-condition"
+                class="
+                  box__content-recipient-group__recipient-group__conditions__operands-condition
+                "
                 v-if="key != 0"
               >
                 {{ operandRow.operandCondition }}
               </span>
               <div
-                style="display:flex;justify-content:space-evenly;"
+                style="display: flex; justify-content: space-evenly"
                 class="box__content-recipient-group__recipient-group__conditions__operands-operand"
               >
                 <span>{{ form.value.resourceType }} </span>
@@ -91,8 +94,8 @@
                 <span
                   v-if="
                     operandRow._operandIdentifier &&
-                      (operandRow._operandIdentifier.dataType == 'Date' ||
-                        operandRow._operandIdentifier.dataType == 'DateTime')
+                    (operandRow._operandIdentifier.dataType == 'Date' ||
+                      operandRow._operandIdentifier.dataType == 'DateTime')
                   "
                 >
                   {{
@@ -108,7 +111,7 @@
                 <span
                   v-else-if="
                     operandRow._operandIdentifier &&
-                      operandRow._operandIdentifier.dataType == 'Picklist'
+                    operandRow._operandIdentifier.dataType == 'Picklist'
                   "
                   >{{
                     operandRow._operandValue
@@ -199,9 +202,7 @@ export default {
       } else {
         // assume weekly
         // get todays weekday (as iso 1-7)
-        let m = moment()
-          .startOf('isoweek')
-          .add(day, 'd')
+        let m = moment().startOf('isoweek').add(day, 'd')
         m.add(diffValue, 'd')
         return m.format('MM/DD')
       }
@@ -222,7 +223,7 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .alert-group-row {
-  @include standard-border();
+  // @include standard-border();
   margin: 0.5rem;
   padding: 0.5rem 1rem;
   display: flex;
@@ -247,6 +248,26 @@ export default {
 }
 .box__content-recipient-group__recipient-group {
   padding: 1rem;
-  border-bottom: 1px solid gray;
+}
+.pink {
+  font-weight: bold;
+  margin-right: -2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.outline {
+  color: $white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px 1px $grape;
+  background: linear-gradient($grape, #231049);
+}
+.title {
+  color: $gray;
 }
 </style>

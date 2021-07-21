@@ -52,14 +52,14 @@ export default {
   flex: 0 0 auto;
   background-color: lightgray;
   border-radius: 2px;
-  color: white;
-
-  padding: 0.2rem 1rem;
+  color: #cc3873;
+  padding: 0.2rem 0.5rem;
   font-size: 13px;
   font-weight: bold;
-  margin: 0rem 0.2rem;
+  margin: 0rem 0.1rem;
   &--active {
-    background-color: #199e54;
+    background-color: transparent;
+    margin-left: -1rem;
   }
   &--small {
     width: 10rem;
@@ -76,8 +76,8 @@ export default {
   }
   &__label {
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
+    border-bottom: 1px solid #cc3873;
   }
   &__icon {
   }
