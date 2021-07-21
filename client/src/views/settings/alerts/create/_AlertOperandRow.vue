@@ -12,7 +12,7 @@
       <label class="alert-operand-row__condition-label">OR</label>
     </div>
     <div class="alert-operand-row__options">
-      <div class="alert-operand-row__field" style="margin:0 0.3rem;">
+      <div class="alert-operand-row__field" style="margin: 0 0.3rem">
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -32,7 +32,7 @@
           </template>
         </FormField>
       </div>
-      <div class="alert-operand-row__operator" style="margin:0 0.3rem;">
+      <div class="alert-operand-row__operator" style="margin: 0 0.3rem">
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -90,7 +90,7 @@
 
           <FormField
             v-else
-            style="margin:1rem 2rem;"
+            style="margin: 1rem 2rem"
             @blur="form.field.operandValue.validate()"
             :errors="form.field.operandValue.errors"
             v-model="form.field.operandValue.value"
@@ -101,13 +101,10 @@
             class="mar"
           />
           <div
-            v-if="
-              form.field.operandValue.isValid &&
-              (selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')
-            "
+            v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             class="alert-operand-row__date-range"
           >
-            This alert will look for resources {{ form.field.operandValue.value }}
+            <!-- This alert will look for resources {{ form.field.operandValue.value }}
             {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
             selected alert trigger date
             {{
@@ -117,7 +114,8 @@
                   : ' excluding the specified day '
                 : ''
             }}
-            see preview for details
+            see preview for details -->
+            -1 = yesterday, 0 = today, 1 = tomorrow
           </div>
         </template>
       </div>
@@ -402,7 +400,7 @@ export default {
   display: flex;
   flex-direction: column;
   width: 15rem;
-
+  margin-left: 2rem;
   @include muted-font(11px);
 }
 .alert-operand-row__options {

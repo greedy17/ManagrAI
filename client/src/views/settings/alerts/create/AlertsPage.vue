@@ -57,7 +57,7 @@
           ><span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
-              alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value &&
+              alertTemplateForm.field.title.isValid &&
               !alertTemplateForm.field.alertGroups.groups
                 .map((fields) => fields.isValid)
                 .includes(false)
@@ -78,21 +78,15 @@
       </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
-          <!-- <FormField
-            id="alert-title"
-            v-model="alertTemplateForm.field.title.value"
-            placeholder="Alert Title (required)"
-            :errors="alertTemplateForm.field.title.errors"
-            @blur="alertTemplateForm.field.title.validate()"
-          /> -->
           <div style="display: flex; flex-direction: row">
             <FormField
-              v-model="alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value"
-              id="notification-text"
-              large
+              id="alert-title"
+              v-model="alertTemplateForm.field.title.value"
               placeholder="Name your alert (required)"
+              :errors="alertTemplateForm.field.title.errors"
+              @blur="alertTemplateForm.field.title.validate()"
             />
-            <p class="sub__">*This will also be the slack notification snippet</p>
+            <!-- <p class="sub__">*This will also be the slack notification snippet</p> -->
           </div>
 
           <div
@@ -135,7 +129,7 @@
     </ExpandablePanel>
     <ExpandablePanel
       v-if="
-        alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value &&
+        alertTemplateForm.field.title.isValid &&
         !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
       "
     >
@@ -187,7 +181,7 @@
                       :options="{
                         modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                         placeholder:
-                          'Type your message here!  \n \nPRO TIP: try adding the links below or selecting a field in order to display the {field value}. \n \nEx. Hey {FIRST.NAME} your deal {opp.name} has a passed {close.date} please update it!',
+                          'Type your message here!  \n \nPRO TIP: try adding the links below or selecting a field in order to display the {field value}. \n \nEx. Hey, { __Recipient.full_name } your deal { Opportunity.Name } has a passed closed date { Opportunity.CloseDate } . Please update it!',
                         theme: 'snow',
                       }"
                       class="bottom top"
@@ -212,7 +206,7 @@
                       @input="bindText(`${selectedResourceType}.${$event}`)"
                       displayKey="referenceDisplayLabel"
                       valueKey="apiName"
-                      nullDisplay="Select a field to display"
+                      nullDisplay="Additional fields"
                       searchable
                       :hasNext="!!fields.pagination.hasNextPage"
                       @load-more="fieldNextPage"
@@ -225,13 +219,13 @@
               </div>
             </div>
             <div class="alerts-page__message-template">
-              <div class="alerts-page__message-template__notification" style="margin-top: -0.25rem">
+              <!-- <div class="alerts-page__message-template__notification" style="margin-top: -0.25rem">
                 <SlackNotificationTemplate
                   :msg="
                     alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
                   "
                 />
-              </div>
+              </div> -->
               <div class="alerts-page__message-template__message">
                 <SlackMessagePreview :alert="alertObj" />
               </div>
@@ -329,7 +323,7 @@
             </div>
             <div class="alerts-page__settings__target-users">
               <span class="muted">
-                <em>select one/multiple users/groups to include in the search</em>
+                <em style="margin-left: 0.5rem">select one/multiple users or groups.</em>
               </span>
               <FormField :errors="form.field.alertTargets.errors">
                 <template v-slot:input>
@@ -365,12 +359,12 @@
                 <em>{{ form.field._recipients.value.name }}</em> channel
               </span>
               <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
-                <em>select one or multiple user groups</em>
+                <em style="margin-left: 0.5rem">select one or multiple user-groups.</em>
               </span>
               <FormField
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
                 :errors="form.field.recipients.errors"
-                style="margin-left: -4rem; padding-bottom: 0.25rem"
+                style="padding-bottom: 0.25rem"
               >
                 <template v-slot:input>
                   <DropDownSearch
