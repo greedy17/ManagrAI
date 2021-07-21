@@ -138,6 +138,12 @@ class AlertGroupViewSet(
     def get_queryset(self):
         return alert_models.AlertGroup.objects.for_user(self.request.user)
 
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertGroupWriteSerializer
+
+        return alert_serializers.AlertGroupRefSerializer
+
 
 class AlertOperandViewSet(
     mixins.CreateModelMixin,

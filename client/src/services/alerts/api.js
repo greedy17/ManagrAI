@@ -118,6 +118,15 @@ export class AlertGroupAPI extends ModelAPI {
     return apiClient()
   }
 
+  async createGroup(data) {
+    let formData = objectToSnakeCase(data)
+    try {
+      this.client.post(`${AlertGroupAPI.ENDPOINT}`, formData)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
+    }
+  }
+
   async delete(id) {
     try {
       this.client.delete(`${AlertGroupAPI.ENDPOINT}${id}/`)

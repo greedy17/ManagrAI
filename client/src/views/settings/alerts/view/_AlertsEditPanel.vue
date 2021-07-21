@@ -64,7 +64,7 @@
               <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
-                    @item-selected="onDeleteOperand(operand.id)"
+                    @item-selected="onDeleteOperand(operand.id, i, index)"
                     medium
                     v-for="(operand, i) in group.operandsRef"
                     :key="i"
@@ -79,7 +79,7 @@
               </ListContainer>
               <button
                 class="btn btn--danger btn--icon"
-                @click.stop="onRemoveAlertGroup(group.id)"
+                @click.stop="onRemoveAlertGroup(group.id, index)"
                 :disabled="index <= 0"
               >
                 <svg width="14px" height="14px" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@
             <ListContainer horizontal>
               <template v-slot:list>
                 <ListItem
-                  @item-selected="onDeleteConfig(config.id)"
+                  @item-selected="onDeleteConfig(config.id, index)"
                   large
                   :key="index"
                   v-for="(config, index) in alert.configsRef"
@@ -333,16 +333,6 @@ export default {
     },
   },
   methods: {
-    async onRemoveAlertGroup(id) {
-      let confirmation = confirm('Delete this row ?')
-      if (confirmation) {
-        try {
-          await AlertGroup.api.delete(id)
-        } catch (e) {
-          console.log(e)
-        }
-      }
-    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -357,6 +347,7 @@ export default {
     onShowGroupModal() {
       let newForm = new AlertGroupForm({
         groupOrder: this.alert.groupsRef.length,
+        alertTemplateId: this.alert.id,
       })
 
       this.$modal.show(
@@ -419,21 +410,52 @@ export default {
         .join(',')}'s data`
     },
 
-    async onDeleteConfig(id) {
+    async onDeleteConfig(id, index) {
       let confirmation = confirm('Delete this row ?')
       if (confirmation) {
         try {
           await AlertConfig.api.delete(id)
+
+          this.alert.configsRef = [
+            ...this.alert.configsRef.slice(0, index),
+            ...this.alert.configsRef.slice(index + 1, this.alert.configsRef.length),
+          ]
+          this.alert.groups = this.alert.configsRef.map(group => group.id)
         } catch (e) {
           console.log(e)
         }
       }
     },
-    async onDeleteOperand(id) {
+    async onDeleteOperand(id, index, groupIndex) {
       let confirmation = confirm('Delete this row ?')
       if (confirmation) {
         try {
           await AlertGroupOperand.api.delete(id)
+          this.alert.groupsRef[groupIndex].operandsRef = [
+            ...this.alert.groupsRef[groupIndex].operandsRef.slice(0, index),
+            ...this.alert.groupsRef[groupIndex].operandsRef.slice(
+              index + 1,
+              this.alert.groupsRef[groupIndex].operandsRef.length,
+            ),
+          ]
+          this.alert.groupsRef[groupIndex].operands = this.alert.groupsRef[
+            groupIndex
+          ].operandsRef.map(op => op.id)
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
+    async onRemoveAlertGroup(id, index) {
+      let confirmation = confirm('Delete this row ?')
+      if (confirmation) {
+        try {
+          await AlertGroup.api.delete(id)
+          this.alert.groupsRef = [
+            ...this.alert.groupsRef.slice(0, index),
+            ...this.alert.groupsRef.slice(index + 1, this.alert.groupsRef.length),
+          ]
+          this.alert.groups = this.alert.groupsRef.map(group => group.id)
         } catch (e) {
           console.log(e)
         }

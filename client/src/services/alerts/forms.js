@@ -84,6 +84,7 @@ export class AlertOperandForm extends Form {
   }
 }
 export class AlertGroupForm extends Form {
+  static alertTemplateId = new FormField({})
   static groupCondition = new FormField({ value: 'AND' })
   static groupOrder = new FormField({ value: 0, validators: [] })
   static alertOperands = new FormArray({
@@ -97,6 +98,7 @@ export class AlertGroupForm extends Form {
       groupCondition: originalValue.groupCondition,
       newOperands: this.field.alertOperands.groups.map(o => o.toAPI),
       groupOrder: originalValue.groupOrder,
+      template: originalValue.alertTemplateId,
     }
   }
 }

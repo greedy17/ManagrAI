@@ -20,7 +20,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { AlertOperandForm, AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
 
 export default {
   /**
@@ -40,8 +40,21 @@ export default {
   },
   created() {},
   methods: {
-    onSave() {
-      console.log(this.form.value)
+    async onSave() {
+      this.form.validate()
+      if (this.form.isValid) {
+        try {
+          await AlertGroupModel.api.createGroup(this.form.toAPI)
+          this.$Alert.alert({
+            message: 'Successfully Added new group and operands',
+            type: 'success',
+            timeout: 2000,
+          })
+          this.$modal.hideAll()
+        } catch (e) {
+          console.log(e)
+        }
+      }
     },
   },
   computed: {},
