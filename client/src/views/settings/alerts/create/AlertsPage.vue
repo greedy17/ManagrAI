@@ -570,6 +570,13 @@ export default {
         { key: 'Everyone', value: 'ALL' },
         { key: 'SDR', value: 'SDR' },
       ],
+      alertTargetOpts: [
+        { key: 'Myself', value: 'SELF' },
+        { key: 'All Managers', value: 'MANAGERS' },
+        { key: 'All Reps', value: 'REPS' },
+        { key: 'Everyone', value: 'ALL' },
+        { key: 'SDR', value: 'SDR' },
+      ],
       weeklyOpts: [
         { key: 'Monday', value: '0' },
         { key: 'Tuesday', value: '1' },
@@ -719,9 +726,9 @@ export default {
   },
   computed: {
     userTargetsOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertRecipientOpts.map(opt => {
+          ...this.alertTargetOpts.map(opt => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -734,7 +741,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return this.alertRecipientOpts
       } else {
         return [{ key: 'Myself', value: 'SELF' }]
