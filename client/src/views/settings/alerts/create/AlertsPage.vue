@@ -58,9 +58,9 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               alertTemplateForm.field.title.isValid &&
-              !alertTemplateForm.field.alertGroups.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
+                !alertTemplateForm.field.alertGroups.groups
+                  .map(fields => fields.isValid)
+                  .includes(false)
             "
           >
             <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@
     <ExpandablePanel
       v-if="
         alertTemplateForm.field.title.isValid &&
-        !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
+          !alertTemplateForm.field.alertGroups.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -140,7 +140,7 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               !alertTemplateForm.field.alertMessages.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
             "
           >
@@ -219,13 +219,6 @@
               </div>
             </div>
             <div class="alerts-page__message-template">
-              <!-- <div class="alerts-page__message-template__notification" style="margin-top: -0.25rem">
-                <SlackNotificationTemplate
-                  :msg="
-                    alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
-                  "
-                />
-              </div> -->
               <div class="alerts-page__message-template__message">
                 <SlackMessagePreview :alert="alertObj" />
               </div>
@@ -239,9 +232,7 @@
     </ExpandablePanel>
     <ExpandablePanel
       v-if="
-        !alertTemplateForm.field.alertMessages.groups
-          .map((fields) => fields.isValid)
-          .includes(false)
+        !alertTemplateForm.field.alertMessages.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -250,7 +241,7 @@
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
             "
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -469,7 +460,7 @@
       class="gray"
       title="5. Confirm and save your alert"
       v-if="
-        !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
+        !alertTemplateForm.field.alertConfig.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template slot="panel-content">
@@ -730,7 +721,7 @@ export default {
     userTargetsOpts() {
       if (this.user.isAdmin) {
         return [
-          ...this.alertRecipientOpts.map((opt) => {
+          ...this.alertRecipientOpts.map(opt => {
             return {
               id: opt.value,
               fullName: opt.key,

@@ -82,11 +82,6 @@
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
           <div class="alerts-template-list__content-message__form">
-            <FormField
-              @input="executeUpdateMessageTemplate"
-              v-model="messageTemplateForm.field.notificationText.value"
-              :errors="messageTemplateForm.field.notificationText.errors"
-            />
             <div class="alerts-template-list__content-message__form-body">
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
@@ -114,7 +109,8 @@
                 :hasNext="!!fields.pagination.hasNextPage"
                 @load-more="fieldNextPage"
                 @search-term="onSearchFields"
-                small
+                auto
+                class="left"
               />
               <ListContainer horizontal>
                 <template v-slot:list>
@@ -130,7 +126,6 @@
             </div>
           </div>
           <div class="alerts-template-list__content-message__preview">
-            <SlackNotificationTemplate :msg="messageTemplateForm.field.notificationText.value" />
             <SlackMessagePreview :alert="alertObj" />
           </div>
         </div>
@@ -364,7 +359,6 @@ export default {
     // for this version only allowing edit of certain fields or delete of array items
     if (this.alert) {
       this.templateTitleField.value = this.alert.title
-      this.messageTemplateForm.field.notificationText.value = this.alert.messageTemplateRef.notificationText
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
   },
@@ -419,5 +413,8 @@ export default {
   }
   &__preview {
   }
+}
+.left {
+  margin-bottom: 5rem;
 }
 </style>
