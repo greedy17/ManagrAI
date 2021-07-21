@@ -250,7 +250,7 @@
 
       <div class="tip-continue" v-if="resource">
         <button class="primary-button">
-          <router-link :to="{ name: 'CreateNew' }">Continue to Smart Alerts </router-link>
+          <router-link :to="{ name: 'alerts' }">Continue to Smart Alerts </router-link>
         </button>
       </div>
     </div>

@@ -130,7 +130,7 @@ export class AlertGroupForm extends Form {
 }
 export class AlertMessageTemplateForm extends Form {
   static bindings = new FormField({})
-  static notificationText = new FormField({ validators: [new RequiredValidator()] })
+  // static notificationText = new FormField({ validators: [new RequiredValidator()] })
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
 export class AlertTemplateForm extends Form {
