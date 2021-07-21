@@ -24,9 +24,13 @@
             <u
               ><b>{{ config._recurrenceDay ? config._recurrenceDay.key : '' }}</b></u
             >
-            and will check all <u><b>users</b></u> resources but only alert
+            and will check
             <u
-              ><b>{{ config._recipients ? config._recipients.key : '' }}</b></u
+              ><b>{{ getListOfTargets(config._alertTargets) }}</b></u
+            >
+            objects but only alert
+            <u
+              ><b>{{ getListOfRecipeints(config._recipients) }}</b></u
             >
           </div>
           <div
@@ -37,9 +41,13 @@
             <u
               ><b>{{ config.recurrenceDay | numberSuffix }}</b></u
             >
-            and will check <u><b>all users'</b></u> resources but only alert
+            and will check
             <u
-              ><b>{{ config._recipients ? config._recipients.key : '' }}</b></u
+              ><b>{{ getListOfTargets(config._alertTargets) }}</b></u
+            >
+            resources but only alert
+            <u
+              ><b>{{ getListOfRecipeints(config._recipients) }}</b></u
             >
           </div>
 
@@ -159,6 +167,24 @@ export default {
   watch: {},
   async created() {},
   methods: {
+    getListOfTargets(targets) {
+      if (targets && targets.length) {
+        return targets
+          .map(opt => {
+            return opt.id == 'SELF' ? 'Your' : opt.fullName + "'s"
+          })
+          .join(', ')
+      }
+    },
+    getListOfRecipeints(recipients) {
+      if (recipients && recipients.length) {
+        return recipients
+          .map(opt => {
+            return opt.value == 'SELF' ? 'You' : opt.key
+          })
+          .join(', ')
+      }
+    },
     operandDateValToStr(frequency, day, diffValue) {
       /**
        * Helper for converting the selected recurrence frequency to

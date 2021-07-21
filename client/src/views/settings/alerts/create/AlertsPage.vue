@@ -281,20 +281,6 @@
             :key="i"
             v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
           >
-            <div class="alerts-page__settings__frequency" style="margin-top: 1rem">
-              <label class="alerts-page__settings__frequency-label">Weekly</label>
-              <ToggleCheckBox
-                @input="
-                  form.field.recurrenceFrequency.value == 'WEEKLY'
-                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                "
-                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label class="alerts-page__settings__frequency-label">Monthly</label>
-            </div>
             <div class="alerts-page__settings__day">
               <FormField
                 v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
@@ -320,7 +306,50 @@
                     nullDisplay="Select Day"
                     searchable
                     local
-                    style="margin-left: -2rem"
+                  />
+                </template>
+              </FormField>
+              <div
+                class="alerts-page__settings__frequency"
+                style="margin-bottom: -3rem; padding-top: 1.25rem"
+              >
+                <label class="alerts-page__settings__frequency-label">Weekly</label>
+                <ToggleCheckBox
+                  @input="
+                    form.field.recurrenceFrequency.value == 'WEEKLY'
+                      ? (form.field.recurrenceFrequency.value = 'MONTHLY')
+                      : (form.field.recurrenceFrequency.value = 'WEEKLY')
+                  "
+                  :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+                  offColor="#199e54"
+                  onColor="#199e54"
+                />
+                <label class="alerts-page__settings__frequency-label">Monthly</label>
+              </div>
+            </div>
+            <div class="alerts-page__settings__target-users">
+              <span class="muted">
+                <em>select one/multiple users/groups to include in the search</em>
+              </span>
+              <FormField :errors="form.field.alertTargets.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="userTargetsOpts"
+                    :itemsRef.sync="form.field._alertTargets.value"
+                    v-model="form.field.alertTargets.value"
+                    @input="form.field.alertTargets.validate()"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Search"
+                    searchable
+                    local
+                    multi
+                    medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
+                    style="padding-bottom: 0.25rem"
                   />
                 </template>
               </FormField>
@@ -335,13 +364,17 @@
                 Please make sure @managr has been added to
                 <em>{{ form.field._recipients.value.name }}</em> channel
               </span>
+              <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
+                <em>select one or multiple user groups</em>
+              </span>
               <FormField
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
                 :errors="form.field.recipients.errors"
+                style="margin-left: -4rem; padding-bottom: 0.25rem"
               >
                 <template v-slot:input>
                   <DropDownSearch
-                    :items.sync="alertRecipientOpts"
+                    :items.sync="recipientOpts"
                     :itemsRef.sync="form.field._recipients.value"
                     v-model="form.field.recipients.value"
                     @input="form.field.recipients.validate()"
@@ -350,10 +383,12 @@
                     nullDisplay="Select Group"
                     searchable
                     local
-                    style="margin-left: -4rem"
+                    multi
+                    medium
                   />
                 </template>
               </FormField>
+
               <FormField
                 v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
                 :errors="form.field.recipients.errors"
@@ -383,7 +418,7 @@
                 </template>
               </FormField>
             </div>
-            <div class="alerts-page__settings__recipient-type">
+            <div class="row__">
               <span
                 @click="
                   form.field.recipientType.value = recipientTypeToggle(
@@ -391,7 +426,7 @@
                   )
                 "
                 class="muted--link"
-                style="margin-left: -3rem; margin-bottom: -3.5rem"
+                style="margin-left: -3rem"
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
               >
                 Send to channel instead ?
@@ -408,21 +443,18 @@
               >
                 Send to a group of users (DM) instead ?
               </span>
-            </div>
-            <div
-              class="alerts-page__settings-remove"
-              style="margin-left: -3rem; margin-bottom: -1.5rem"
-            >
-              <button
-                style="padding: 0.5rem"
-                class="btn btn--danger btn--icon"
-                @click.stop="onRemoveSetting(i)"
-                :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
-              >
-                <svg width="16px" height="16px" viewBox="0 0 24 24">
-                  <use xlink:href="@/assets/images/remove.svg#remove" />
-                </svg>
-              </button>
+              <div class="alerts-page__settings-remove">
+                <button
+                  style="margin-left: 0.5rem"
+                  class="btn btn--danger btn--icon"
+                  @click.stop="onRemoveSetting(i)"
+                  :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
+                >
+                  <svg width="16px" height="16px" viewBox="0 0 24 24">
+                    <use xlink:href="@/assets/images/remove.svg#remove" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           <div class="add__group">
@@ -510,6 +542,7 @@ import {
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
 } from '@/services/salesforce'
+import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'AlertsPage',
@@ -537,6 +570,7 @@ export default {
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
+      users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -565,6 +599,9 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
+    }
+    if (this.user.isAdmin) {
+      await this.users.refresh()
     }
   },
   watch: {
@@ -683,8 +720,41 @@ export default {
     async fieldNextPage() {
       await this.fields.addNextPage()
     },
+    async onSearchUsers(v) {
+      this.users.pagination = new Pagination()
+      this.users.filters = {
+        ...this.users.filters,
+        search: v,
+      }
+      await this.fields.refresh()
+    },
+    async onUsersNextPage() {
+      await this.users.addNextPage()
+    },
   },
   computed: {
+    userTargetsOpts() {
+      if (this.user.isAdmin) {
+        return [
+          ...this.alertRecipientOpts.map((opt) => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
+      } else {
+        return [{ fullName: 'Myself', id: 'SELF' }]
+      }
+    },
+    recipientOpts() {
+      if (this.user.isAdmin) {
+        return this.alertRecipientOpts
+      } else {
+        return [{ key: 'Myself', value: 'SELF' }]
+      }
+    },
     formValue() {
       return this.alertTemplateForm.value
     },
@@ -822,7 +892,6 @@ textarea {
 .pad {
   padding-bottom: 1rem;
   margin-top: -1rem;
-  margin-left: -2rem;
 }
 .pink {
   color: $dark-green;
@@ -865,12 +934,17 @@ textarea {
   margin-top: 1rem;
   border-bottom: 3px solid $silver;
 }
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10rem;
+}
 .bottom {
   margin-bottom: 1.25rem;
   height: 170px;
 }
 .left {
-  margin-left: -2rem;
   margin-bottom: 5rem;
 }
 .space {

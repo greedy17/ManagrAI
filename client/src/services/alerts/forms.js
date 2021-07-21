@@ -52,21 +52,30 @@ export class AlertConfigForm extends Form {
       new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
     ],
   })
-  static recipients = new FormField({ validators: [new RequiredValidator()] })
+  static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
+  static alertTargets = new FormField({ validators: [new RequiredValidator()], value: [] })
   static recipientType = new FormField({ value: 'USER_LEVEL' })
   // Keeping a private copy of the dropdown ref obj for later use
-  static _recipients = new FormField({ value: null })
+  static _recipients = new FormField({ value: [] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recurrenceDay = new FormField({ value: null })
+  // Keeping a private copy of the dropdown ref obj for later use
+  static _alertTargets = new FormField({ value: [] })
 
   get toAPI() {
     //overriding .value here to set recipients into an array for future support
+    let recipients = this.value.recipients
+    if (!Array.isArray(recipients)) {
+      recipients = [recipients]
+    }
     let val = {
       ...this.value,
-      recipients: [this.value.recipients],
+      recipients: recipients,
+      alertTargets: this.value.alertTargets,
     }
     // object to snakecase side effect, will change var with _ into var without camelcase
     delete val['_recipients']
+    delete val['_alertTargets']
     delete val['_recurrenceDay']
     return val
   }
