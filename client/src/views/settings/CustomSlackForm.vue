@@ -200,7 +200,7 @@
                 <div
                   v-if="
                     customForm.formType == 'CREATE' ||
-                      //|| customForm.formType == 'MEETING_REVIEW'
+                      customForm.formType == 'MEETING_REVIEW' ||
                       customForm.stage
                   "
                   class="form-field__right"
