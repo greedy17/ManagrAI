@@ -44,10 +44,10 @@
         </FormField>
       </div>
       <div class="alerts-page__settings__target-users">
-        <span class="muted">
-          <em>select one/multiple users/groups to include in the search</em>
-        </span>
-        <FormField :errors="form.field.alertTargets.errors">
+        <FormField
+          :errors="form.field.alertTargets.errors"
+          label="select one/multiple users/groups to include in the search"
+        >
           <template v-slot:input>
             <DropDownSearch
               :items.sync="userTargetsOpts"
@@ -77,12 +77,14 @@
           Please make sure @managr has been added to
           <em>{{ form.field._recipients.value.name }}</em> channel
         </span>
-        <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
-          <em>select one or multiple user groups</em>
-        </span>
         <FormField
           v-if="form.field.recipientType.value == 'USER_LEVEL'"
           :errors="form.field.recipients.errors"
+          :label="
+            form.field.recipientType.value == 'USER_LEVEL'
+              ? 'select one or multiple user groups'
+              : ''
+          "
         >
           <template v-slot:input>
             <DropDownSearch
@@ -261,7 +263,6 @@ export default {
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
-      console.log(res)
       const results = new SlackListResponse({
         channels: [...this.channelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
@@ -352,5 +353,8 @@ export default {
   height: 100%;
   overflow-y: scroll;
   max-height: 100%;
+}
+::v-deep .dropdown-search {
+  margin: 1rem 0rem;
 }
 </style>

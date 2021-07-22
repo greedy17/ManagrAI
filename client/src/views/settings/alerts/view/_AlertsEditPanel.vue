@@ -111,7 +111,7 @@
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
-                    style="width:20rem;"
+                    style="width:100%;height:20rem;overflow-y:scroll;"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -150,7 +150,10 @@
               </ListContainer>
             </div>
           </div>
-          <div class="alerts-template-list__content-message__preview">
+          <div
+            class="alerts-template-list__content-message__preview"
+            style="width:40rem;height:20rem;overflow-y:scroll;"
+          >
             <SlackMessagePreview :alert="alertObj" />
           </div>
         </div>
@@ -352,16 +355,14 @@ export default {
 
         {
           name: 'alert-operands-modal',
-          height: 'auto',
-          minHeight: 800,
+          minHeight: 600,
           minWidth: 600,
-          scrollable: true,
-          adaptive: true,
+          height: 600,
+          width: 600,
         },
         {
           'before-close': e => {
-            if (e.params.createdObj) {
-              console.log(e.params.createdObj)
+            if (e.params && e.params.createdObj) {
               this.alert.groupsRef[groupIndex].operandsRef = [
                 ...this.alert.groupsRef[groupIndex].operandsRef,
                 e.params.createdObj,
@@ -386,15 +387,17 @@ export default {
 
         {
           name: 'alert-groups-modal',
-          height: 'auto',
-          minHeight: 800,
+
+          minHeight: 600,
           minWidth: 600,
-          scrollable: true,
+          height: 600,
+          width: 600,
+
           adaptive: true,
         },
         {
           'before-close': e => {
-            if (e.params.createdObj) {
+            if (e.params && e.params.createdObj) {
               console.log(e.params.createdObj)
               this.alert.groupsRef = [...this.alert.groupsRef, e.params.createdObj]
               this.alert.groups = [...this.alert.groupsRef.map(op => op.id)]
@@ -414,15 +417,14 @@ export default {
 
         {
           name: 'alert-settings-modal',
-          height: 'auto',
-          minHeight: 800,
+          minHeight: 600,
           minWidth: 600,
-          scrollable: true,
-          adaptive: true,
+          height: 600,
+          width: 600,
         },
         {
           'before-close': e => {
-            if (e.params.createdObj) {
+            if (e.params && e.params.createdObj) {
               this.alert.configsRef = [...this.alert.configsRef, e.params.createdObj]
               this.alert.configs = [...this.alert.configsRef.map(op => op.id)]
             }
@@ -587,7 +589,6 @@ export default {
           const bindings = stringRenderer('{', '}', this.messageTemplateForm.field.body.value)
           await AlertMessageTemplate.api.updateMessageTemplate(this.alert.messageTemplateRef.id, {
             body: this.messageTemplateForm.field.body.value,
-            notificationText: this.messageTemplateForm.field.notificationText.value,
             bindings: bindings,
           })
           this.savedChanges = true

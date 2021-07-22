@@ -299,14 +299,18 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_recipients(self, value):
-        if not self.context["request"].user.user_level == "MANAGER":
-            value = list(filter(lambda opt: opt == "SELF" or opt == str(self.context.id), value))
+        if not self.context.user.user_level == "MANAGER":
+            value = list(
+                filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
+            )
 
         return value
 
     def validate_alert_targets(self, value):
-        if not self.context["request"].user.user_level == "MANAGER":
-            value = list(filter(lambda opt: opt == "SELF" or opt == str(self.context.id), value))
+        if not self.context.user.user_level == "MANAGER":
+            value = list(
+                filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
+            )
 
         return value
 
