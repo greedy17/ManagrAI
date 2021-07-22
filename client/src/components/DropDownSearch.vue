@@ -90,7 +90,10 @@ export default {
   margin-right: 0.25rem;
 }
 
-::v-deep.tn-dropdown__selected-items--multi__item {
-  color: red;
+::v-deep .tn-dropdown__selected-items--multi__item {
+  font-size: 16px;
+  background-color: $grape;
+  color: white;
+  width: 100%;
 }
 </style>

@@ -401,7 +401,7 @@ export default {
   flex-direction: column;
   width: 15rem;
   margin-left: 2rem;
-  @include muted-font(11px);
+  @include muted-font(14px);
 }
 .alert-operand-row__options {
   display: flex;
