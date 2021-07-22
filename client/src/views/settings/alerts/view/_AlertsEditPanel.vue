@@ -348,8 +348,30 @@ export default {
 
       this.$modal.show(
         AlertOperandModal,
-        { form: newForm, resourceType: 'Opportunity' },
-        { height: 'auto', minHeight: 800, minWidth: 600, scrollable: true, adaptive: true },
+        { form: newForm, resourceType: this.alert.resourceType },
+
+        {
+          name: 'alert-operands-modal',
+          height: 'auto',
+          minHeight: 800,
+          minWidth: 600,
+          scrollable: true,
+          adaptive: true,
+        },
+        {
+          'before-close': e => {
+            if (e.params.createdObj) {
+              console.log(e.params.createdObj)
+              this.alert.groupsRef[groupIndex].operandsRef = [
+                ...this.alert.groupsRef[groupIndex].operandsRef,
+                e.params.createdObj,
+              ]
+              this.alert.groupsRef[groupIndex].operands = [
+                ...this.alert.groupsRef[groupIndex].operandsRef.map(op => op.id),
+              ]
+            }
+          },
+        },
       )
     },
     onShowGroupModal() {
@@ -360,8 +382,25 @@ export default {
 
       this.$modal.show(
         AlertGroupModal,
-        { form: newForm, resourceType: 'Opportunity' },
-        { height: 'auto', minHeight: 800, scrollable: true, adaptive: true },
+        { form: newForm, resourceType: this.alert.resourceType },
+
+        {
+          name: 'alert-groups-modal',
+          height: 'auto',
+          minHeight: 800,
+          minWidth: 600,
+          scrollable: true,
+          adaptive: true,
+        },
+        {
+          'before-close': e => {
+            if (e.params.createdObj) {
+              console.log(e.params.createdObj)
+              this.alert.groupsRef = [...this.alert.groupsRef, e.params.createdObj]
+              this.alert.groups = [...this.alert.groupsRef.map(op => op.id)]
+            }
+          },
+        },
       )
     },
     onShowSettingsModal() {
@@ -371,8 +410,24 @@ export default {
 
       this.$modal.show(
         AlertSettingsModal,
-        { form: newForm, resourceType: 'Opportunity' },
-        { height: 'auto', minHeight: 800, scrollable: true, adaptive: true },
+        { form: newForm },
+
+        {
+          name: 'alert-settings-modal',
+          height: 'auto',
+          minHeight: 800,
+          minWidth: 600,
+          scrollable: true,
+          adaptive: true,
+        },
+        {
+          'before-close': e => {
+            if (e.params.createdObj) {
+              this.alert.configsRef = [...this.alert.configsRef, e.params.createdObj]
+              this.alert.configs = [...this.alert.configsRef.map(op => op.id)]
+            }
+          },
+        },
       )
     },
     selectedFieldType(operatorField) {
@@ -439,7 +494,7 @@ export default {
             ...this.alert.configsRef.slice(0, index),
             ...this.alert.configsRef.slice(index + 1, this.alert.configsRef.length),
           ]
-          this.alert.groups = this.alert.configsRef.map(group => group.id)
+          this.alert.configs = this.alert.configsRef.map(config => config.id)
         } catch (e) {
           console.log(e)
         }

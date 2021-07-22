@@ -76,7 +76,6 @@ class Organization(TimeStampModel):
                     api_name__in=[form_fields], salesforce_object=form.resource
                 )
                 form_field_set = form.formfield_set.all()
-
                 for formfield in form_field_set:
                     new_field = new_admin_fields.filter(api_name=formfield.field.api_name).first()
                     if new_field:

@@ -1,8 +1,13 @@
 <template>
   <div class="alert-operand-modal">
-    <AlertOperandRow :resourceType="resourceType" :form.sync="form" />
+    <AlertOperandRow v-if="form" :resourceType="resourceType" :form.sync="form" />
 
-    <button @click="onSave" class="btn btn--primary">Save</button>
+    <PulseLoadingSpinnerButton
+      text="save"
+      @click="onSave"
+      class="btn btn--primary"
+      :loading="isSaving"
+    />
   </div>
 </template>
 
@@ -18,6 +23,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 import DropDownSearch from '@/components/DropDownSearch'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
  */
@@ -38,6 +44,7 @@ export default {
     FormField,
     AlertOperandRow,
     AlertGroupOperand,
+    PulseLoadingSpinnerButton,
   },
   props: {
     form: { type: AlertOperandForm },
@@ -45,24 +52,28 @@ export default {
   },
   data() {
     return {
-      saving: false,
+      isSaving: false,
+      createdObj: null,
     }
   },
   created() {},
   methods: {
     async onSave() {
+      this.isSaving = true
       this.form.validate()
       if (this.form.isValid) {
         try {
-          await AlertGroupOperand.api.createOperand(this.form.toAPI)
+          const res = await AlertGroupOperand.api.createOperand(this.form.toAPI)
           this.$Alert.alert({
             message: 'Successfully Added added and operand',
             type: 'success',
             timeout: 2000,
           })
-          this.$modal.hideAll()
+          this.createdObj = res
+          this.$modal.hide('alert-operands-modal', { createdObj: this.createdObj })
+          this.isSaving = false
         } finally {
-          this.saving = false
+          this.isSaving = false
         }
       }
     },

@@ -241,18 +241,21 @@ export default {
   },
   methods: {
     async onSave() {
+      this.isSaving = true
       this.form.validate()
       if (this.form.isValid) {
         try {
-          await AlertConfig.api.createConfig(this.form.toAPI)
+          const res = await AlertConfig.api.createConfig(this.form.toAPI)
           this.$Alert.alert({
             message: 'Successfully Added new settings',
             type: 'success',
             timeout: 2000,
           })
-          this.$modal.hideAll()
-        } catch (e) {
-          console.log(e)
+          this.createdObj = res
+          this.$modal.hide('alert-settings-modal', { createdObj: this.createdObj })
+          this.isSaving = false
+        } finally {
+          this.isSaving = false
         }
       }
     },

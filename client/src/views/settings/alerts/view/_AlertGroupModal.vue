@@ -1,7 +1,12 @@
 <template>
   <div class="alert-group-modal">
     <AlertGroup :resourceType="resourceType" :form.sync="form" />
-    <button @click="onSave" class="btn btn--primary">Save</button>
+    <PulseLoadingSpinnerButton
+      text="save"
+      @click="onSave"
+      class="btn btn--primary"
+      :loading="isSaving"
+    />
   </div>
 </template>
 
@@ -12,6 +17,7 @@
 // Pacakges
 import AlertGroup from '../create/_AlertGroup'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 //Internal
 import ListContainer from '@/components/ListContainer'
@@ -30,29 +36,42 @@ export default {
    *
    */
   name: 'AlertGroupModal',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, AlertGroup },
+  components: {
+    ListContainer,
+    ToggleCheckBox,
+    DropDownSearch,
+    FormField,
+    AlertGroup,
+    PulseLoadingSpinnerButton,
+  },
   props: {
     form: { type: AlertGroupForm },
     resourceType: { type: String },
   },
   data() {
-    return {}
+    return {
+      isSaving: false,
+      createdObj: null,
+    }
   },
   created() {},
   methods: {
     async onSave() {
+      this.isSaving = true
       this.form.validate()
       if (this.form.isValid) {
         try {
-          await AlertGroupModel.api.createGroup(this.form.toAPI)
+          const res = await AlertGroupModel.api.createGroup(this.form.toAPI)
           this.$Alert.alert({
             message: 'Successfully Added new group and operands',
             type: 'success',
             timeout: 2000,
           })
-          this.$modal.hideAll()
-        } catch (e) {
-          console.log(e)
+          this.createdObj = res
+          this.$modal.hide('alert-groups-modal', { createdObj: this.createdObj })
+          this.isSaving = false
+        } finally {
+          this.isSaving = false
         }
       }
     },

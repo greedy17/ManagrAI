@@ -84,7 +84,8 @@ export class AlertOperandAPI extends ModelAPI {
   async createOperand(data) {
     let formData = objectToSnakeCase(data)
     try {
-      await this.client.post(`${AlertOperandAPI.ENDPOINT}`, formData)
+      const res = await this.client.post(`${AlertOperandAPI.ENDPOINT}`, formData)
+      return this.cls.fromAPI(res.data)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
@@ -109,7 +110,8 @@ export class AlertConfigAPI extends ModelAPI {
   async createConfig(data) {
     let formData = objectToSnakeCase(data)
     try {
-      await this.client.post(`${AlertConfigAPI.ENDPOINT}`, formData)
+      const res = await this.client.post(`${AlertConfigAPI.ENDPOINT}`, formData)
+      return this.cls.fromAPI(res.data)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
@@ -135,7 +137,8 @@ export class AlertGroupAPI extends ModelAPI {
   async createGroup(data) {
     let formData = objectToSnakeCase(data)
     try {
-      await this.client.post(`${AlertGroupAPI.ENDPOINT}`, formData)
+      const res = await this.client.post(`${AlertGroupAPI.ENDPOINT}`, formData)
+      return this.cls.fromAPI(res.data)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
