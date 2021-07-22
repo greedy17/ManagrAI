@@ -69,6 +69,46 @@ The following Bitbucket variables are required for deployment:
 
 Datadog is used to collect metrics for the deployed application stages. The agent included in the ECS task definition is configured to collect tracing information from the managr server and worker containers. Datadog is also configured to collect metrics from the AWS components including RDS and ALB.
 
+
+
+
+### Adding new variables to the terraform configuration 
+
+1. 
+   1. ***Sensitive*** in **ecs.tf** add variable to **aws_secretsmanager_secret_version** this will add the variable to the secrets managr
+   2. ***Insensitive*** in **ecs.tf** add variable to the **template_file** since it can be exposed 
+2. Add the variable in the **variables.tf** to **environments**
+3. Add the variable in the **managr_app.json.tpl** and the **managr_app_tasks.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
+4. add to **Dockerfile** for each environment (if needed)
+5. add to **default.auto.tfvars** for deployment 
+6. Run `terraform apply -auto-approve -parallelism=1` to apply changes 
+
+### SSH Into (New) Environments 
+
+
+`aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"`
+
+You can get the correct task_id by looking at the AWS Console under ECS tasks there may be multiple definitions running (if there was autoscaling) any one will do, the container_name corresponds to the container you are accessing aka managr-app, managr-tasks etc. 
+
+### Describe the task definition
+
+`aws ecs describe-task-definition --task-definition managr-app-task-demo`
+
+
+### Connect to the instances helper ### 
+
+You can also add a shortcut to connect to prod or staging by copying these into your ~/.zshrc or ~/.bash_profile depending on what you use (remember to source your env after closing the file)
+```
+alias connect-prod-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"
+```
+```
+alias connect-staging-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-staging | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"
+```
+
+
+
 ### Helpful commands
 When updating values for environment variables you will need to re apply the terraform configuration 
 `terraform apply -auto-approve -parallelism=1`
+
+
