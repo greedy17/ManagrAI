@@ -77,9 +77,7 @@ class Organization(TimeStampModel):
                 )
                 form_field_set = form.formfield_set.all()
                 for formfield in form_field_set:
-                    new_field = new_admin_fields.filter(
-                        api_name=formfield.field.api_name
-                    ).first()
+                    new_field = new_admin_fields.filter(api_name=formfield.field.api_name).first()
                     if new_field:
                         formfield.field = new_field
                         formfield.save()

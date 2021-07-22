@@ -105,4 +105,5 @@ router.register(
 )
 router.register("alerts/operands", alert_views.AlertOperandViewSet, "alert-operands")
 router.register("alerts/groups", alert_views.AlertGroupViewSet, "alert-groups")
+router.register("alerts/configs", alert_views.AlertConfigViewSet, "alert-configs")
 urlpatterns += router.urls
