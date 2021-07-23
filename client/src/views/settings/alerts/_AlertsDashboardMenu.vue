@@ -7,7 +7,7 @@
           <h3 class="title">Build</h3>
         </div>
 
-        <p class="card-text">Create smart alerts.</p>
+        <p class="card-text">Create Smart Alerts.</p>
       </div>
       <div @click="$router.push({ name: 'ListTemplates' })" class="card">
         <div class="card__header">
@@ -15,7 +15,7 @@
           <h3 class="title">View</h3>
         </div>
 
-        <p class="card-text">View, Edit, & Run Alerts</p>
+        <p class="card-text">View, edit, & run Smart Alerts</p>
       </div>
 
       <div class="card card--disabled">
@@ -24,7 +24,7 @@
           <h3 class="title">Analyze</h3>
         </div>
 
-        <p class="card-text">Analyze the impact of your alert</p>
+        <p class="card-text">Analyze the impact of your Smart Alerts</p>
         <p class="coming-soon">Coming Soon</p>
       </div>
     </div>

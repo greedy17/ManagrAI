@@ -32,7 +32,7 @@
             @click.stop="onRemoveOperand(i)"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            <svg width="16px" height="16px" viewBox="0 0 24 24">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use xlink:href="@/assets/images/remove.svg#remove" />
             </svg>
           </button>
@@ -40,7 +40,7 @@
         </div>
         <div class="add__remove">
           <button class="btn btn--secondary btn--icon" @click="addOperandForm">
-            <svg width="16px" height="16px" viewBox="0 0 24 24">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
               <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
             </svg>
           </button>
@@ -183,12 +183,12 @@ export default {
   margin-right: 1.5rem;
   display: flex;
   flex-direction: row;
-
-  margin-left: -2.5rem;
+  margin-bottom: -1rem;
+  margin-left: -3rem;
   padding: 1rem;
 }
 .sub {
-  font-size: 12px;
+  font-size: 13px;
   margin-left: 0.5rem;
 }
 .rows {
