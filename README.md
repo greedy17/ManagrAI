@@ -132,64 +132,18 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
 
 Prod is built on AWS, and is deployed using terraform as an orchestration, you can find the relevant informatin in the deploy/Readme.md
 
-For SSH Access
 
-- Upgarde AWS cli to the latest version if you do not have it (2.x and up)
-- Install [session manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-macos)
 
-There are a couple of ways to ssh into the instance:
-1. use the helper commands (see section bellow named connect to the instances helper command)
-2. use the two commands to list the instances and then connect 
-   1. `aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod`   cluster will always be managr-cluster family will be managr-app-task-{env} (not app-task is the app you can change that to scheduled tasks etc)
-   2. `aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"` task id will be from the previous command which returns an arn the last part of the arn is the id container name is managr-app
+***Checkout the readme.md in the deploy directory for more information like how to connect, add variables and apply changes***
 
-3. Login to the aws console, navigate to ECS tasks and choose the task definition for the environment you are looking for and grab the task id then use the previous command to connect
+## Logs 
 
-## Logs
+
+Currently logs are collected from each individual container they are set up using terraform in the logs.tf file. 
+These are sent to CloudWatch and are maintained for 30 days before being deleted. Once in CloudWatch we pipe the logs to datadog where you can watch the logs in a tail form.
+You can build different dashboards to match up to the logs in datadog with requests being made. 
+To view the logs you can visitn this link [Logs](https://app.datadoghq.com/logs)
 
 
 
 
-### Adding new variables to the terraform configuration 
-
-1. 
-   1. ***Sensitive*** in **ecs.tf** add variable to **aws_secretsmanager_secret_version** this will add the variable to the secrets managr
-   2. ***Insensitive*** in **ecs.tf** add variable to the **template_file** since it can be exposed 
-2. Add the variable in the **variables.tf** to **environments**
-3. Add the variable in the **managr_app.json.tpl** and the **managr_app_tasks.json.tpl** file since we have multiple task definitions here add the variable to the ones that it needs (eg. app and tasks)
-4. add to **Dockerfile** for each environment (if needed)
-5. add to **default.auto.tfvars** for deployment 
-6. Run `terraform apply -auto-approve -parallelism=1` to apply changes 
-
-### SSH Into (New) Environments 
-
-
-`aws ecs execute-command --cluster managr-cluster --task <task_id> --container <container_name> --interactive --command "/bin/bash"`
-
-You can get the correct task_id by looking at the AWS Console under ECS tasks there may be multiple definitions running (if there was autoscaling) any one will do, the container_name corresponds to the container you are accessing aka managr-app, managr-tasks etc. 
-
-### Describe the task definition
-
-`aws ecs describe-task-definition --task-definition managr-app-task-demo`
-
-
-### Connect to the instances helper ### 
-
-You can also add a shortcut to connect to prod or staging by copying these into your ~/.zshrc or ~/.bash_profile depending on what you use (remember to source your env after closing the file)
-```
-alias connect-prod-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"
-```
-```
-alias connect-staging-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-staging | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"
-```
-
-
-### One time code to add new public fields to user's forms 
-
-
-templates =OrgCustomSlackForm.objects.exclude(form_type="STAGE_GATING")
-for template in templates:
-     for field_id in ["fae88a10-53cc-470e-86ec-32376c041893","e286d1d5-5447-47e6-ad55-5f54fdd2b00d","fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed"]:
-             exists = FormField.objects.filter(form_id=template.id,field_id=field_id).exists()
-             if not exists:
-                    FormField.objects.create(form=template, field_id=field_id,order=0,include_in_recap=field_id in ["fae88a10-53cc-470e-86ec-32376c041893","e286d1d5-5447-47e6-ad55-5f54fdd2b00d"])

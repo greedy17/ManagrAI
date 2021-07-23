@@ -55,15 +55,6 @@ class AlertTemplateViewSet(
     def get_queryset(self):
         return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        data.update({"user": request.user.id})
-        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request.user)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response_serializer = self.serializer_class(serializer.instance)
-        return Response(data=response_serializer.data)
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -84,8 +75,7 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         for config in obj.configs.all():
-            template = config.template
-            users = template.get_users
+            users = config.target_users
             for user in users:
                 run_time = datetime.now(pytz.utc)
                 _process_check_alert(
@@ -123,6 +113,20 @@ class AlertConfigViewSet(
     def get_queryset(self):
         return alert_models.AlertConfig.objects.for_user(self.request.user)
 
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertConfigWriteSerializer
+
+        return self.serializer_class
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = alert_serializers.AlertConfigWriteSerializer(data=data, context=request)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        readSerializer = self.serializer_class(instance=serializer.instance)
+        return Response(data=readSerializer.data)
+
 
 class AlertGroupViewSet(
     mixins.CreateModelMixin,
@@ -132,11 +136,25 @@ class AlertGroupViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = alert_serializers.AlertGroupRefSerializer
+    serializer_class = alert_serializers.AlertGroupSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         return alert_models.AlertGroup.objects.for_user(self.request.user)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertGroupWriteSerializer
+
+        return self.serializer_class
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = alert_serializers.AlertGroupWriteSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        readSerializer = alert_serializers.AlertGroupSerializer(instance=serializer.instance)
+        return Response(data=readSerializer.data)
 
 
 class AlertOperandViewSet(
@@ -152,3 +170,10 @@ class AlertOperandViewSet(
 
     def get_queryset(self):
         return alert_models.AlertOperand.objects.for_user(self.request.user)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertOperandWriteSerializer
+
+        return self.serializer_class
+

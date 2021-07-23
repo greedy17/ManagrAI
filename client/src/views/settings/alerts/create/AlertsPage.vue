@@ -67,9 +67,9 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               alertTemplateForm.field.title.isValid &&
-              !alertTemplateForm.field.alertGroups.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
+                !alertTemplateForm.field.alertGroups.groups
+                  .map(fields => fields.isValid)
+                  .includes(false)
             "
           >
             <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@
     <ExpandablePanel
       v-if="
         alertTemplateForm.field.title.isValid &&
-        !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
+          !alertTemplateForm.field.alertGroups.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -160,7 +160,7 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               !alertTemplateForm.field.alertMessages.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
             "
           >
@@ -239,13 +239,6 @@
               </div>
             </div>
             <div class="alerts-page__message-template">
-              <!-- <div class="alerts-page__message-template__notification" style="margin-top: -0.25rem">
-                <SlackNotificationTemplate
-                  :msg="
-                    alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
-                  "
-                />
-              </div> -->
               <div class="alerts-page__message-template__message">
                 <SlackMessagePreview :alert="alertObj" />
               </div>
@@ -259,9 +252,7 @@
     </ExpandablePanel>
     <ExpandablePanel
       v-if="
-        !alertTemplateForm.field.alertMessages.groups
-          .map((fields) => fields.isValid)
-          .includes(false)
+        !alertTemplateForm.field.alertMessages.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -280,7 +271,7 @@
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
             "
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -499,7 +490,7 @@
       class="slate"
       title="5. Confirm and save your alert"
       v-if="
-        !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
+        !alertTemplateForm.field.alertConfig.groups.map(fields => fields.isValid).includes(false)
       "
     >
       <template slot="panel-content">
@@ -609,6 +600,13 @@ export default {
         { key: 'Everyone', value: 'ALL' },
         { key: 'SDR', value: 'SDR' },
       ],
+      alertTargetOpts: [
+        { key: 'Myself', value: 'SELF' },
+        { key: 'All Managers', value: 'MANAGERS' },
+        { key: 'All Reps', value: 'REPS' },
+        { key: 'Everyone', value: 'ALL' },
+        { key: 'SDR', value: 'SDR' },
+      ],
       weeklyOpts: [
         { key: 'Monday', value: '0' },
         { key: 'Tuesday', value: '1' },
@@ -624,7 +622,7 @@ export default {
     if (this.user.slackRef) {
       await this.listChannels()
     }
-    if (this.user.isAdmin) {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
   },
@@ -758,9 +756,9 @@ export default {
   },
   computed: {
     userTargetsOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertRecipientOpts.map((opt) => {
+          ...this.alertTargetOpts.map(opt => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -773,7 +771,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.user.isAdmin) {
+      if (this.user.userLevel == 'MANAGER') {
         return this.alertRecipientOpts
       } else {
         return [{ key: 'Myself', value: 'SELF' }]

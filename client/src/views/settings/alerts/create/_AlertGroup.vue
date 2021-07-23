@@ -167,7 +167,7 @@ export default {
 }
 .alert-group-row__condition {
   position: relative;
-  top: -2.4rem;
+  top: 0rem;
   display: flex;
 
   align-items: center;
