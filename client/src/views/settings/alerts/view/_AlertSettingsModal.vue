@@ -266,6 +266,7 @@ export default {
           this.isSaving = false
         }
       }
+      this.isSaving = false
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)

@@ -77,6 +77,7 @@ export default {
           this.isSaving = false
         }
       }
+      this.isSaving = false
     },
   },
   computed: {},
