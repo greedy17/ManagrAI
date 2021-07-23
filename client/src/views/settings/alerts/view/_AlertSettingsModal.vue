@@ -92,13 +92,17 @@
               :itemsRef.sync="form.field._recipients.value"
               v-model="form.field.recipients.value"
               @input="form.field.recipients.validate()"
-              displayKey="key"
-              valueKey="value"
-              nullDisplay="Select user groups"
+              displayKey="fullName"
+              valueKey="id"
+              nullDisplay="Search"
               searchable
               local
               multi
               medium
+              :loading="users.loadingNextPage"
+              :hasNext="!!users.pagination.hasNextPage"
+              @load-more="onUsersNextPage"
+              @search-term="onSearchUsers"
             />
           </template>
         </FormField>
@@ -151,6 +155,7 @@
         >
           Send to a group of users (DM) instead ?
         </span>
+        {{ form.isValid }}
       </div>
     </div>
     <PulseLoadingSpinnerButton
@@ -158,6 +163,7 @@
       @click="onSave"
       class="btn btn--primary"
       :loading="isSaving"
+      :disabled="!form.isValid"
     />
   </div>
 </template>
@@ -260,6 +266,7 @@ export default {
           this.isSaving = false
         }
       }
+      this.isSaving = false
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
@@ -311,9 +318,17 @@ export default {
     },
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
-        return this.alertRecipientOpts
+        return [
+          ...this.alertRecipientOpts.map(opt => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
       } else {
-        return [{ key: 'Myself', value: 'SELF' }]
+        return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
     user() {
