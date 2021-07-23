@@ -34,8 +34,6 @@ channels = "~=2.1"
 nylas = "*"
 ddtrace = "==0.48.0"
 httpx = "*"
-django-otp = "==1.*"
-qrcode = "==7.*"
 
 [requires]
 python_version = "3.9"
