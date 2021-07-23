@@ -132,20 +132,7 @@ If you have added your token you can initiate ngrok to a subdomain (note that ng
 
 Prod is built on AWS, and is deployed using terraform as an orchestration, you can find the relevant informatin in the deploy/Readme.md
 
-For SSH Access
 
-- Upgarde AWS cli to the latest version if you do not have it (2.x and up)
-- Install [session manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-macos)
-
-There are a couple of ways to ssh into the instance:
-1. use the helper commands (see section bellow named connect to the instances helper command)
-2. use the two commands to list the instances and then connect 
-   1. `aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod`   cluster will always be managr-cluster family will be managr-app-task-{env} (not app-task is the app you can change that to scheduled tasks etc)
-   2. `aws ecs execute-command --cluster managr-cluster --task <task_id> --container managr-app --interactive --command "/bin/bash"` task id will be from the previous command which returns an arn the last part of the arn is the id container name is managr-app
-
-***You will notice we are specifically setting the container name to managr-app but this could be any container we run***
-
-3. Login to the aws console, navigate to ECS tasks and choose the task definition for the environment you are looking for from there you can grab the task id  (note this is the task id not the container id) then use the previous command to connect
 
 ***Checkout the readme.md in the deploy directory for more information like how to connect, add variables and apply changes***
 

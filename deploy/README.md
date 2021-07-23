@@ -90,9 +90,22 @@ Datadog is used to collect metrics for the deployed application stages. The agen
 
 You can get the correct task_id by looking at the AWS Console under ECS tasks there may be multiple definitions running (if there was autoscaling) any one will do, the container_name corresponds to the container you are accessing aka managr-app, managr-tasks etc. 
 
-### Describe the task definition
 
-`aws ecs describe-task-definition --task-definition managr-app-task-demo`
+
+For SSH Access
+
+- Upgarde AWS cli to the latest version if you do not have it (2.x and up)
+- Install [session manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-macos)
+
+There are a couple of ways to ssh into the instance:
+1. use the helper commands (see section bellow named connect to the instances helper command)
+2. use the two commands to list the instances and then connect 
+   1. `aws ecs list-tasks --cluster managr-cluster --family managr-app-task-prod`   cluster will always be managr-cluster family will be managr-app-task-{env} (not app-task is the app you can change that to scheduled tasks etc)
+   2. `aws ecs execute-command --cluster managr-cluster --task <task_id> --container managr-app --interactive --command "/bin/bash"` task id will be from the previous command which returns an arn the last part of the arn is the id container name is managr-app
+
+***You will notice we are specifically setting the container name to managr-app but this could be any container we run***
+
+3. Login to the aws console, navigate to ECS tasks and choose the task definition for the environment you are looking for from there you can grab the task id  (note this is the task id not the container id) then use the previous command to connect
 
 
 ### Connect to the instances helper ### 
@@ -105,9 +118,13 @@ alias connect-prod-app="aws ecs execute-command --cluster managr-cluster --task 
 alias connect-staging-app="aws ecs execute-command --cluster managr-cluster --task \"$(aws ecs list-tasks --cluster managr-cluster --family managr-app-task-staging | grep -e "arn" | grep -o '/managr-cluster/\w*' | sed "s@/managr-cluster/@@g")\" --container managr-app --interactive --command \"/bin/bash"\"
 ```
 
+### Describe the task definition
+
+`aws ecs describe-task-definition --task-definition managr-app-task-demo`
 
 
 ### Helpful commands
+
 When updating values for environment variables you will need to re apply the terraform configuration 
 `terraform apply -auto-approve -parallelism=1`
 
