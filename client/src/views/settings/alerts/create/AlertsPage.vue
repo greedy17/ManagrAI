@@ -3,11 +3,11 @@
     <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray">
+          <span :class="selectedResourceType ? 'slate' : 'gray'">
             {{
               selectedResourceType
                 ? `1. ${selectedResourceType}`
-                : "1. Select the Salesforce Object you'd like to build an alert for"
+                : "1. Select the Salesforce Object that you'd like to build an alert for"
             }}
           </span>
 
@@ -50,7 +50,16 @@
     <ExpandablePanel v-if="alertTemplateForm.field.resourceType.isValid">
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray">
+          <span
+            :class="
+              alertTemplateForm.field.title.isValid &&
+              !alertTemplateForm.field.alertGroups.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+                ? 'slate'
+                : 'gray'
+            "
+          >
             {{
               selectedResourceType ? `2. Build your ${selectedResourceType} alert` : 'Build alert'
             }}</span
@@ -86,7 +95,9 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <!-- <p class="sub__">*This will also be the slack notification snippet</p> -->
+            <!-- <p style="margin-left: 6rem; color: #aaaaaa">
+              Select the events you'd like to recieve a Smart Alert for
+            </p> -->
           </div>
 
           <div
@@ -105,7 +116,7 @@
                     <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
                   </svg>
                 </button>
-                <p class="sub">Add group</p>
+                <p class="sub">Group</p>
               </div>
               <div class="group" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
                 <button
@@ -135,7 +146,16 @@
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray">3. Construct your alert message </span>
+          <span
+            :class="
+              !alertTemplateForm.field.alertMessages.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+                ? 'slate'
+                : 'gray'
+            "
+            >3. Construct your alert message
+          </span>
           <span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
@@ -237,7 +257,17 @@
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray"> 4. Choose your delivery options </span><span> </span>
+          <span
+            :class="
+              !alertTemplateForm.field.alertConfig.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+                ? 'slate'
+                : 'gray'
+            "
+          >
+            4. Choose your delivery options </span
+          ><span> </span>
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
@@ -363,13 +393,17 @@
                     :itemsRef.sync="form.field._recipients.value"
                     v-model="form.field.recipients.value"
                     @input="form.field.recipients.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Group"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Search"
                     searchable
                     local
                     multi
                     medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
                   />
                 </template>
               </FormField>
@@ -457,7 +491,7 @@
       </template>
     </ExpandablePanel>
     <ExpandablePanel
-      class="gray"
+      class="slate"
       title="5. Confirm and save your alert"
       v-if="
         !alertTemplateForm.field.alertConfig.groups.map(fields => fields.isValid).includes(false)
@@ -742,9 +776,17 @@ export default {
     },
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
-        return this.alertRecipientOpts
+        return [
+          ...this.alertRecipientOpts.map(opt => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
       } else {
-        return [{ key: 'Myself', value: 'SELF' }]
+        return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
     formValue() {
@@ -881,12 +923,19 @@ textarea {
 .gray {
   color: $gray;
 }
+.slate {
+  color: $slate-gray;
+}
 .pad {
   padding-bottom: 1rem;
   margin-top: -1rem;
 }
 .pink {
-  color: $dark-green;
+  color: $candy;
+  font-weight: bold;
+}
+.purple {
+  color: $grape;
   font-weight: bold;
 }
 .mar {

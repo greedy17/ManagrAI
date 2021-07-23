@@ -7,6 +7,7 @@
       @click="onSave"
       class="btn btn--primary"
       :loading="isSaving"
+      :disabled="!form.isValid"
     />
   </div>
 </template>
@@ -76,6 +77,7 @@ export default {
           this.isSaving = false
         }
       }
+      this.isSaving = false
     },
   },
   computed: {},

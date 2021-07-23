@@ -135,6 +135,12 @@ def _process_check_alert(config_id, user_id, run_time):
                             query = Q(is_active=True) & Q(
                                 Q(user_level="MANAGER") | Q(user_level="REP") | Q(user_level="SDR")
                             )
+                        else:
+                            try:
+                                uuid.UUID(user_group)
+                                query |= Q(id=user_group)
+                            except ValueError:
+                                continue
 
                 users = template.user.organization.users.filter(query).distinct()
                 for u in users:
