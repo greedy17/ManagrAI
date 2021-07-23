@@ -363,13 +363,17 @@
                     :itemsRef.sync="form.field._recipients.value"
                     v-model="form.field.recipients.value"
                     @input="form.field.recipients.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Group"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Search"
                     searchable
                     local
                     multi
                     medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
                   />
                 </template>
               </FormField>
@@ -742,9 +746,17 @@ export default {
     },
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
-        return this.alertRecipientOpts
+        return [
+          ...this.alertRecipientOpts.map(opt => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
       } else {
-        return [{ key: 'Myself', value: 'SELF' }]
+        return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
     formValue() {

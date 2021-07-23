@@ -6,6 +6,7 @@
       @click="onSave"
       class="btn btn--primary"
       :loading="isSaving"
+      :disabled="!form.isValid"
     />
   </div>
 </template>
