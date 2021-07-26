@@ -55,6 +55,20 @@ class AlertTemplateViewSet(
     def get_queryset(self):
         return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == "POST":
+            return alert_serializers.AlertTemplateWriteSerializer
+
+        return self.serializer_class
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        readSerializer = self.serializer_class(instance=serializer.instance)
+        return Response(data=readSerializer.data)
+
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],

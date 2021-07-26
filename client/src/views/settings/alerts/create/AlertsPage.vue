@@ -54,7 +54,7 @@
             :class="
               alertTemplateForm.field.title.isValid &&
               !alertTemplateForm.field.alertGroups.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -149,7 +149,7 @@
           <span
             :class="
               !alertTemplateForm.field.alertMessages.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -260,7 +260,7 @@
           <span
             :class="
               !alertTemplateForm.field.alertConfig.groups
-                .map((fields) => fields.isValid)
+                .map(fields => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -672,7 +672,10 @@ export default {
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
-          const res = await AlertTemplate.api.createAlertTemplate(this.alertTemplateForm.toAPI)
+          const res = await AlertTemplate.api.createAlertTemplate({
+            ...this.alertTemplateForm.toAPI,
+            user: this.$store.state.user.id,
+          })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
           this.$Alert.alert({
