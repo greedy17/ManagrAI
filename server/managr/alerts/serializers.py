@@ -131,13 +131,13 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
         if instance.recipient_type == "USER_LEVEL":
             target_groups = list(
                 filter(
-                    lambda group: group in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                    lambda group: group in ["SELF", "MANAGERS", "REPS", "ALL", "SDR", "OWNER"],
                     instance.recipients,
                 )
             )
             target_users = list(
                 filter(
-                    lambda group: group not in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                    lambda group: group not in ["SELF", "MANAGERS", "REPS", "ALL", "SDR", "OWNER"],
                     instance.recipients,
                 )
             )
