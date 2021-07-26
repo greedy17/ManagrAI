@@ -30,7 +30,9 @@
             :key="`${item[valueKey]}-${i}`"
             @click.prevent="emitSelected(item[valueKey])"
             class="dd-item"
-          >{{ item[displayKey] }}</div>
+          >
+            {{ item[displayKey] }}
+          </div>
         </slot>
       </template>
     </div>

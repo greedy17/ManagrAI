@@ -4,6 +4,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from managr.core import views as core_views
 
+# from django_otp.admin import OTPAdminSite
+
+# admin.site.__class__ = OTPAdminSite
+
 urlpatterns = [
     path(r"admin/", admin.site.urls),
     path(r"api/", include("managr.api.urls", namespace="api")),

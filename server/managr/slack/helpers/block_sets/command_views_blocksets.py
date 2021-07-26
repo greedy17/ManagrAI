@@ -107,11 +107,11 @@ def alert_instance_block_set(context):
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.simple_section(
-                f"_*This {instance.template.resource_type} is owned by {resource_owner.full_name} *_",
+                f"_This {instance.template.resource_type} is owned by {resource_owner.full_name}_",
                 "mrkdwn",
             ),
         )
-
+    blocks.append(block_builders.divider_block())
     return blocks
 
 

@@ -19,7 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'CreateNew' }"
+              <router-link active-class="active" :to="{ name: 'alerts' }"
                 >Smart Alerts
               </router-link>
             </li>
@@ -36,45 +36,13 @@
             <li>
               <router-link :to="{ name: 'Integrations' }">Integrations </router-link>
             </li>
+            <li>
+              <router-link active-class="active" :to="{ name: 'alerts' }"
+                >Smart Alerts
+              </router-link>
+            </li>
           </ul>
         </div>
-
-        <!-- <DropDownMenu
-            @selectedItem="routeToSelected"
-            :right="10"
-            :items="[
-              { key: 'Integrations', value: 'Integrations' },
-              { key: 'Slack Forms', value: 'SlackFormSettings' },
-              { key: 'Invite Users', value: 'InviteUsers' },
-              { key: 'Smart Alerts (Beta)', value: 'CreateNew' },
-              { key: 'Profile', value: 'ProfilePage' },
-              { key: 'Log Out', value: 'logout' },
-            ]"
-            v-if="isAdmin"
-          >
-            <template v-slot:dropdown-trigger="{ toggle }">
-              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
-                <use xlink:href="@/assets/images/icon-menu.svg#settings" />
-              </svg>
-            </template>
-          </DropDownMenu>
-
-          <DropDownMenu
-            @selectedItem="routeToSelected"
-            :right="10"
-            :items="[
-              { key: 'Integrations', value: 'Integrations' },
-              { key: 'Profile', value: 'ProfilePage' },
-              { key: 'Log Out', value: 'logout' },
-            ]"
-            v-if="!isAdmin"
-          >
-            <template v-slot:dropdown-trigger="{ toggle }">
-              <svg ref="dd-user-settings" @click="toggle" class="dd-icon" viewBox="-5 0 24 18">
-                <use xlink:href="@/assets/images/icon-menu.svg#settings" />
-              </svg>
-            </template>
-          </DropDownMenu> -->
       </div>
 
       <div class="right">

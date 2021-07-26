@@ -8,19 +8,15 @@
         <!-- horizontal stacked divs -->
         <div class="slack-message__container-content__heading">
           <!--Horizontal spans -->
-          <span class="slack-message__container-content__heading-title">
-            Managr
-          </span>
-          <span class="slack-message__container-content__heading-type">
-            APP
-          </span>
+          <span class="slack-message__container-content__heading-title"> Managr </span>
+          <span class="slack-message__container-content__heading-type"> APP </span>
           <span class="slack-message__container-content__heading-time">
             {{ new Date() | timeOnlyShort }}
           </span>
         </div>
         <div class="slack-message__container-content__body">
           <div class="divider"></div>
-          <span v-html="alert.message" style="word-wrap:break-word;"></span>
+          <span v-html="alert.message" style="word-wrap: break-word"></span>
           <div class="divider"></div>
           <button class="btn btn--primary">Update {{ alert.resourceType }}</button>
         </div>
@@ -101,7 +97,7 @@ export default {
     }
   }
   .divider {
-    @include standard-border();
+    // @include standard-border();
     margin: 1rem 0rem;
   }
 }

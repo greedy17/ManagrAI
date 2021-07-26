@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from managr.salesforce.serializers import SObjectFieldSerializer
+from managr.core.serializers import UserSerializer
 
+from . import constants as alert_consts
 from . import models as alert_models
 
 # REF SERIALIZERS
@@ -37,6 +40,7 @@ class AlertGroupRefSerializer(serializers.ModelSerializer):
 
 class AlertOperandRefSerializer(serializers.ModelSerializer):
     group_ref = AlertGroupRefSerializer(source="group")
+    operand_identifier_ref = serializers.SerializerMethodField("get_field_ref")
 
     class Meta:
         model = alert_models.AlertOperand
@@ -48,10 +52,14 @@ class AlertOperandRefSerializer(serializers.ModelSerializer):
             "operand_type",
             "operand_identifier",
             "operand_operator",
+            "operand_identifier_ref",
             "operand_value",
             "operand_order",
             "data_type",
         )
+
+    def get_field_ref(self, instance):
+        return SObjectFieldSerializer(instance.operand_identifier_ref).data
 
 
 class AlertMessageTemplateRefSerializer(serializers.ModelSerializer):
@@ -71,6 +79,8 @@ class AlertMessageTemplateRefSerializer(serializers.ModelSerializer):
 
 class AlertConfigRefSerializer(serializers.ModelSerializer):
     template_ref = AlertTemplateRefSerializer(source="template")
+    alert_targets_ref = serializers.SerializerMethodField("get_alert_targets_ref")
+    recipients_ref = serializers.SerializerMethodField("get_recipients_ref")
 
     class Meta:
         model = alert_models.AlertConfig
@@ -80,9 +90,75 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
             "recurrence_day",
             "recipients",
             "recipient_type",
+            "recipients_ref",
             "template",
             "template_ref",
+            "alert_targets",
+            "alert_targets_ref",
+            "recipients_ref",
         )
+
+    def get_alert_targets_ref(self, instance):
+        target_groups = list(
+            filter(
+                lambda group: group in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                instance.alert_targets,
+            )
+        )
+        target_users = list(
+            filter(
+                lambda group: group not in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                instance.alert_targets,
+            )
+        )
+        return [
+            *list(
+                filter(
+                    lambda opt: opt.get("value") in target_groups, alert_consts.ALERT_TARGET_GROUPS
+                )
+            ),
+            *list(
+                map(
+                    lambda u: dict(key=u.full_name, value=u.id),
+                    instance.template.user.organization.users.filter(
+                        id__in=target_users, is_active=True
+                    ),
+                )
+            ),
+        ]
+
+    def get_recipients_ref(self, instance):
+        if instance.recipient_type == "USER_LEVEL":
+            target_groups = list(
+                filter(
+                    lambda group: group in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                    instance.recipients,
+                )
+            )
+            target_users = list(
+                filter(
+                    lambda group: group not in ["SELF", "MANAGERS", "REPS", "ALL", "SDR"],
+                    instance.recipients,
+                )
+            )
+            return [
+                *list(
+                    filter(
+                        lambda opt: opt.get("value") in target_groups,
+                        alert_consts.ALERT_RECIPIENT_GROUPS,
+                    )
+                ),
+                *list(
+                    map(
+                        lambda u: dict(key=u.full_name, value=u.id),
+                        instance.template.user.organization.users.filter(
+                            id__in=target_users, is_active=True
+                        ),
+                    )
+                ),
+            ]
+        else:
+            return list(map(lambda channel: dict(key=channel, value=channel), instance.recipients))
 
 
 class AlertInstanceRefSerializer(serializers.ModelSerializer):
@@ -216,7 +292,27 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             "recipients",
             "recipient_type",
             "template",
+            "alert_targets",
         )
+
+    def validate_recurrence_day(self, value):
+        return value
+
+    def validate_recipients(self, value):
+        if not self.context.user.user_level == "MANAGER":
+            value = list(
+                filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
+            )
+
+        return value
+
+    def validate_alert_targets(self, value):
+        if not self.context.user.user_level == "MANAGER":
+            value = list(
+                filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
+            )
+
+        return value
 
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
@@ -259,7 +355,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
 
-            _new_configs = AlertConfigWriteSerializer(data=new_configs, many=True)
+            _new_configs = AlertConfigWriteSerializer(
+                data=new_configs, many=True, context=self.context
+            )
             _new_configs.is_valid(raise_exception=True)
             _new_configs.save()
         return data

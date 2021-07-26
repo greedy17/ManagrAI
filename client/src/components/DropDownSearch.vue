@@ -59,8 +59,6 @@ export default {
 
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
-  padding: 4%;
-  margin: 3%;
 }
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
@@ -71,9 +69,10 @@ export default {
   line-height: 1.29;
   letter-spacing: 0.5px;
   color: $base-gray;
-  width: 16rem;
+
   height: 3.35rem;
-  margin-left: 2rem;
+  padding: 4%;
+  margin: 3%;
   .tn-dropdown__search {
     @include input-field-white();
     border: none;
@@ -91,6 +90,10 @@ export default {
   margin-right: 0.25rem;
 }
 
-.dropdown-search__select ::v-deep .tn-dropdown__search {
+::v-deep .tn-dropdown__selected-items--multi__item {
+  font-size: 16px;
+  background-color: $grape;
+  color: white;
+  width: 100%;
 }
 </style>
