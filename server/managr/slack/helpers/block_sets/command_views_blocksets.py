@@ -122,20 +122,14 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     blocks = [
-        block_builders.simple_section(instance.render_text(), "mrkdwn"),
+        block_builders.section_with_button_block(
+            "Update",
+            instance.resource_id,
+            instance.render_text(),
+            action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
+        ),
     ]
 
-    blocks.append(
-        block_builders.actions_block(
-            [
-                block_builders.simple_button_block(
-                    "Update",
-                    instance.resource_id,
-                    action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
-                )
-            ]
-        )
-    )
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.simple_section(
