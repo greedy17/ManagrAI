@@ -3,6 +3,7 @@ import pytz
 import uuid
 import json
 
+from urllib.parse import urlencode, quote_plus, urlparse
 from datetime import datetime
 
 from django.db.models import Q
@@ -71,6 +72,38 @@ def command_meeting_summary(context):
     ]
 
 
+def custom_paginator_block(pagination_object, invocation, channel, config_id):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = [
+        block_builders.context_block(f"Alert Returned {pagination_object.get('count')} results")
+    ]
+    button_blocks = []
+    page_context = {"invocation": invocation, "channel": channel, "config_id": config_id}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="primary",
+            action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            style="primary",
+            action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
     """
@@ -89,7 +122,6 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     blocks = [
-        block_builders.divider_block(),
         block_builders.simple_section(instance.render_text(), "mrkdwn"),
     ]
 
@@ -111,6 +143,7 @@ def alert_instance_block_set(context):
                 "mrkdwn",
             ),
         )
+    blocks.append(block_builders.context_block(f"Triggered from alert {instance.template.title}"))
     blocks.append(block_builders.divider_block())
     return blocks
 

@@ -20,6 +20,8 @@ class AlertTemplateRefSerializer(serializers.ModelSerializer):
             "is_active",
             "resource_type",
             "alert_level",
+            "invocation",
+            "last_invocation_datetime",
         )
 
 
@@ -176,6 +178,7 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
             "sent_at",
             "channel",
             "config",
+            "invocation",
         )
 
 
