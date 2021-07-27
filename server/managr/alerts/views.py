@@ -9,7 +9,7 @@ from datetime import datetime
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
-
+from django.utils import timezone
 
 from rest_framework.views import APIView
 from rest_framework import (
@@ -76,8 +76,8 @@ class AlertTemplateViewSet(
         url_path="test",
     )
     def test_alert(self, request, *args, **kwargs):
-        obj = self.get_object()
-        obj.test_alert()
+        # obj = self.get_object()
+        # obj.test_alert()
         return Response()
 
     @action(
@@ -89,11 +89,18 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         for config in obj.configs.all():
+            template = config.template
+            template.invocation = template.invocation + 1
+            template.last_invocation_datetime = timezone.now()
+            template.save()
             users = config.target_users
             for user in users:
                 run_time = datetime.now(pytz.utc)
                 _process_check_alert(
-                    str(config.id), str(user.id), run_time.strftime("%Y-%m-%dT%H:%M%z")
+                    str(config.id),
+                    str(user.id),
+                    template.invocation,
+                    run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
         return Response()
 

@@ -23,5 +23,10 @@ def init_alert_check():
         )
     )
     for config in configs:
-        emit_init_alert(str(config.id))
+        template = config.template
+        template.invocation = template.invocation + 1
+        template.last_invocation_datetime = timezone.now()
+        template.save()
+        invocation = template.invocation
+        emit_init_alert(str(config.id), invocation)
     return
