@@ -1134,7 +1134,7 @@ def process_paginate_alerts(payload, context):
             error_blocks = get_block_set(
                 "error_modal",
                 {
-                    "message": "The settings for these instances was deleted the data is no longer available"
+                    "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
                 },
             )
             slack_requests.update_channel_message(
