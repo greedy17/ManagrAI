@@ -184,7 +184,7 @@ export default {
     async refresh() {
       this.user = this.$store.state.user
 
-      if (!this.user.isAdmin) {
+      if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'Integrations' })
       }
 
