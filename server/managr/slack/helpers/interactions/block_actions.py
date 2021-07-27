@@ -1128,6 +1128,18 @@ def process_paginate_alerts(payload, context):
     )
     alert_instance = alert_instances.first()
     if not alert_instance:
+        # check if the config was deleted
+        config = AlertConfig.objects.filter(id=config_id).first()
+        if not config:
+            error_blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": "The settings for these instances was deleted the data is no longer available"
+                },
+            )
+            slack_requests.update_channel_message(
+                channel_id, ts, access_token, text="Error", block_set=error_blocks
+            )
         return
     alert_template = alert_instance.template
     alert_text = alert_template.title
