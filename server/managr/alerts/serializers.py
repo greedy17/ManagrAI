@@ -20,6 +20,8 @@ class AlertTemplateRefSerializer(serializers.ModelSerializer):
             "is_active",
             "resource_type",
             "alert_level",
+            "invocation",
+            "last_invocation_datetime",
         )
 
 
@@ -176,6 +178,7 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
             "sent_at",
             "channel",
             "config",
+            "invocation",
         )
 
 
@@ -299,7 +302,9 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_recipients(self, value):
-        if not self.context.user.user_level == "MANAGER":
+        if not self.context.user.user_level == "MANAGER" and not self.initial_data.get(
+            "recipient_type", None
+        ):
             value = list(
                 filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
             )

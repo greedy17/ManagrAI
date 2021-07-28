@@ -40,6 +40,11 @@ class AlertTemplate(TimeStampModel):
     alert_level = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     objects = AlertTemplateQuerySet.as_manager()
+    invocation = models.PositiveIntegerField(
+        default=0,
+        help_text="Keeps track of the number of times this alert has been triggered, this is used to inform the workspace and paginate slack views",
+    )
+    last_invocation_datetime = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"{self.title} created by {self.user.email}"
@@ -88,7 +93,9 @@ class AlertTemplate(TimeStampModel):
 
         if hasattr(user, "salesforce_account"):
             try:
-                _process_check_alert.now(str(c.id), str(user.id), datetime.datetime.now(pytz.utc))
+                _process_check_alert.now(
+                    str(c.id), str(user.id), self.invocation, datetime.datetime.now(pytz.utc)
+                )
             except Exception as e:
                 logger.info(f"Failed to send test alert for user {user.email} {e}")
                 return c.delete()
@@ -439,6 +446,10 @@ class AlertInstance(TimeStampModel):
         related_name="instances",
         help_text="Config was set on 06/30/21 and will only have data for that date",
         null=True,
+    )
+    invocation = models.PositiveIntegerField(
+        default=0,
+        help_text="Keeps track of the number of times this alert has been triggered, this is used to inform the workspace and paginate slack views",
     )
 
     objects = AlertGroupQuerySet.as_manager()

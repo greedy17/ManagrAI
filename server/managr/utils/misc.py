@@ -11,6 +11,9 @@ from rest_framework.response import Response
 from rest_framework import filters
 
 
+from django.core.paginator import Paginator, EmptyPage
+
+
 def to_snake_case(val):
     # note if first value is capital then it will return a starting _
     if not val:
@@ -103,6 +106,26 @@ def apply_filter_and_search(viewset, request):
     # Apply 'search' filter to results as well, and return
     filter = filters.SearchFilter()
     return filter.filter_queryset(request, results, viewset)
+
+
+def custom_paginator(items, serializer=None, count=10, page=1):
+    paginator = Paginator(items, count)
+    page = paginator.page(page)
+    results = page.object_list
+    next_page = page.next_page_number() if page.has_next() else None
+    previous_page = page.previous_page_number() if page.has_previous() else None
+    page_index = page.__str__()
+
+    if serializer:
+        results = serializer(results, many=True).data
+
+    return {
+        "count": paginator.count,
+        "next_page": next_page,
+        "previous_page": previous_page,
+        "results": results,
+        "page": page_index,
+    }
 
 
 def paginate_results(viewset, results, serializer, request=None):

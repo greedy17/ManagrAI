@@ -7,6 +7,8 @@ from urllib.parse import urlencode
 from django.db.models import Q
 from django.utils import timezone
 
+from managr.utils.misc import custom_paginator
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.organization.models import Organization, Stage
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -26,7 +28,7 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.api.decorators import slack_api_exceptions
-
+from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 
 logger = logging.getLogger("managr")
 
@@ -1108,6 +1110,60 @@ def process_return_to_form_modal(payload, context):
     return
 
 
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_alerts(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    config_id = context.get("config_id")
+    alert_instances = AlertInstance.objects.filter(
+        invocation=invocation, channel=channel, config_id=config_id
+    )
+    alert_instance = alert_instances.first()
+    if not alert_instance:
+        # check if the config was deleted
+        config = AlertConfig.objects.filter(id=config_id).first()
+        if not config:
+            error_blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
+                },
+            )
+            slack_requests.update_channel_message(
+                channel_id, ts, access_token, text="Error", block_set=error_blocks
+            )
+        return
+    alert_template = alert_instance.template
+    alert_text = alert_template.title
+    blocks = []
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
+    for alert_instance in alert_instances.get("results", []):
+        blocks = [
+            *blocks,
+            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+        ]
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.save()
+    if len(blocks):
+        blocks = [
+            *blocks,
+            *custom_paginator_block(alert_instances, invocation, channel, config_id),
+        ]
+    slack_requests.update_channel_message(
+        channel_id, ts, access_token, text=alert_text, block_set=blocks
+    )
+
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1132,6 +1188,7 @@ def handle_block_actions(payload):
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
+        slack_const.PAGINATE_ALERTS: process_paginate_alerts,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

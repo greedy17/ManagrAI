@@ -31,10 +31,32 @@
           </ul>
         </div>
 
-        <div class="mar" v-if="!isAdmin">
+        <div class="mar" v-else-if="!isAdmin && userLevel === 'MANAGER'">
           <ul>
             <li>
-              <router-link :to="{ name: 'Integrations' }">Integrations </router-link>
+              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+                >Integrations
+              </router-link>
+            </li>
+            <li>
+              <router-link active-class="active" :to="{ name: 'alerts' }"
+                >Smart Alerts
+              </router-link>
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+                >Invite Users</router-link
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="mar" v-else>
+          <ul>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+                >Integrations
+              </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'alerts' }"
@@ -91,6 +113,7 @@ export default {
       tooltipOpen: false,
       dropdownOpen: false,
       userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
+      userLevel: this.$store.state.user.userLevel,
     }
   },
 
