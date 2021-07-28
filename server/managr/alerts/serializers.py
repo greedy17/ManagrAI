@@ -302,7 +302,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_recipients(self, value):
-        if not self.context.user.user_level == "MANAGER" and not self.initial_data.get(
+        if not self.context.user.user_level == "MANAGER" and not self.context.data.get(
             "recipient_type", None
         ):
             value = list(
