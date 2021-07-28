@@ -9,11 +9,12 @@ from django.views import View
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.conf import settings
-
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import (
+    filters,
     permissions,
     generics,
     mixins,
@@ -134,6 +135,12 @@ class UserViewSet(
 
     serializer_class = UserSerializer
     filter_fields = ("organization",)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+
+    search_fields = ("first_name", "last_name", "email")
 
     def get_queryset(self):
         return User.objects.for_user(self.request.user)

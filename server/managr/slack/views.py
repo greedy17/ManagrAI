@@ -266,6 +266,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
                 organization_slack.access_token,
                 cursor=cursor,
                 types=["public_channel", "private_channel"],
+                limit=100,
             )
         else:
             channels = {"channels": [], "response_metadata": {}}
