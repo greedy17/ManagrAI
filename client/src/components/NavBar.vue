@@ -31,7 +31,7 @@
           </ul>
         </div>
 
-        <div class="mar" v-if="!isAdmin && userLevel === 'MANAGER'">
+        <div class="mar" v-else-if="!isAdmin && userLevel === 'MANAGER'">
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
@@ -51,7 +51,7 @@
           </ul>
         </div>
 
-        <div class="mar" v-if="!isAdmin && !userLevel === 'MANAGER'">
+        <div class="mar" v-else>
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"

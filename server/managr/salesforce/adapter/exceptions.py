@@ -20,6 +20,12 @@ class InvalidRefreshToken(Exception):
         super().__init__(self.message)
 
 
+class MalformedQuery(Exception):
+    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class ApiRateLimitExceeded(Exception):
     def __init(self, message="Token Expired"):
         self.message = message
@@ -108,6 +114,8 @@ class CustomAPIException:
             raise FieldValidationError(self.message)
         elif self.status_code == 400 and self.param == "REQUIRED_FIELD_MISSING":
             raise RequiredFieldError(self.message)
+        elif self.status_code == 400 and self.param == "MALFORMED_QUERY":
+            raise MalformedQuery(self.message)
         elif self.status_code == 400 and self.param == "NUMBER_OUTSIDE_VALID_RANGE":
             raise SFQueryOffsetError(self.message)
         elif self.status_code == 400 and self.param == "invalid_grant":
