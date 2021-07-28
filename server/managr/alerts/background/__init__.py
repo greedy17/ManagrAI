@@ -77,6 +77,7 @@ def _process_init_alert(config_id, invocation):
 def _process_check_alert(config_id, user_id, invocation, run_time):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
+
     alert_id = str(template.id)
     resource = template.resource_type
     route = model_routes[resource]

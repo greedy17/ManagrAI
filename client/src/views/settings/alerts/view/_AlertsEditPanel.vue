@@ -505,6 +505,14 @@ export default {
     async onDeleteOperand(id, index, groupIndex) {
       let confirmation = confirm('Delete this row ?')
       if (confirmation) {
+        if (!index) {
+          return this.$Alert.alert({
+            type: 'error',
+            message: 'Groups must have at least one operand',
+            timeout: 2000,
+          })
+        }
+
         try {
           await AlertGroupOperand.api.delete(id)
           this.alert.groupsRef[groupIndex].operandsRef = [
@@ -523,8 +531,16 @@ export default {
       }
     },
     async onRemoveAlertGroup(id, index) {
-      let confirmation = confirm('Delete this row ?')
+      let confirmation = confirm('Delete this Group and all its rows ?')
+
       if (confirmation) {
+        if (!index) {
+          return this.$Alert.alert({
+            type: 'error',
+            message: 'Groups must have at least one operand',
+            timeout: 2000,
+          })
+        }
         try {
           await AlertGroup.api.delete(id)
           this.alert.groupsRef = [
