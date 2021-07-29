@@ -456,13 +456,9 @@ export default {
       let dataType = this.selectedFieldType(rowData.operandIdentifierRef)
       if (dataType == 'DATETIME' || dataType == 'DATE') {
         if (value.startsWith('-')) {
-          valueLabel = moment()
-            .subtract(value, 'days')
-            .format('MM-DD-YYYY')
+          valueLabel = `${value} days before run date`
         } else {
-          valueLabel = moment()
-            .add(value, 'days')
-            .format('MM-DD-YYYY')
+          valueLabel = `${value} days after run date`
         }
       }
       return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
