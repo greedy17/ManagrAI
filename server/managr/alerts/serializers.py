@@ -301,16 +301,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
     def validate_recurrence_day(self, value):
         return value
 
-    def validate_recipients(self, value):
-        if not self.context.user.user_level == "MANAGER" and not self.context.data.get(
-            "recipient_type", None
-        ):
-            value = list(
-                filter(lambda opt: opt == "SELF" or opt == str(self.context.user.id), value)
-            )
-
-        return value
-
     def validate_alert_targets(self, value):
         if not self.context.user.user_level == "MANAGER":
             value = list(
@@ -318,6 +308,25 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+    def to_internal_value(self, data):
+        if (
+            not self.context.user.user_level == "MANAGER"
+            and not data.get("recipient_type") == "SLACK_CHANNEL"
+        ):
+            value = list(
+                filter(
+                    lambda opt: opt == "SELF" or opt == str(self.context.user.id),
+                    data.get("recipients", []),
+                )
+            )
+            if not len(value):
+                value = ["SELF"]
+
+            data.update({"recipients": value})
+
+        internal_data = super().to_internal_value(data)
+        return internal_data
 
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
@@ -361,7 +370,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
 
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs, many=True, context=self.context
+                data=new_configs, many=True, context=self.context,
             )
             _new_configs.is_valid(raise_exception=True)
             _new_configs.save()
