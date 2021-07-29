@@ -268,7 +268,7 @@ def _process_send_alert(invocation, channel, config_id):
                     text=text,
                     block_set=[
                         block_builders.simple_section(
-                            f"Cannot send alert to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integrations.bot_user_id}> to the channel <#{channel_id}>",
+                            f"Cannot send alert to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integration.bot_user_id}> to the channel <#{channel_id}>",
                             "mrkdwn",
                         )
                     ],
