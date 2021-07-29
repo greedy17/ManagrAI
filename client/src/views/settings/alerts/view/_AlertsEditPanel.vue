@@ -500,8 +500,9 @@ export default {
     },
     async onDeleteOperand(id, index, groupIndex) {
       let confirmation = confirm('Delete this row ?')
+      let countOperands = this.alert.groupsRef[groupIndex].operandsRef.length
       if (confirmation) {
-        if (!index) {
+        if (countOperands <= 1) {
           return this.$Alert.alert({
             type: 'error',
             message: 'Groups must have at least one operand',
@@ -530,7 +531,7 @@ export default {
       let confirmation = confirm('Delete this Group and all its rows ?')
 
       if (confirmation) {
-        if (!index) {
+        if (this.alert.groupsRef[index] <= 1) {
           return this.$Alert.alert({
             type: 'error',
             message: 'Groups must have at least one operand',
