@@ -16,32 +16,32 @@
         <label class="alerts-page__settings__frequency-label">Monthly</label>
       </div>
       <div class="alerts-page__settings__day">
-        <FormField
-          v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-          placeholder="Day of month"
-          :errors="form.field.recurrenceDay.errors"
-          @blur="form.field.recurrenceDay.validate()"
-          v-model="form.field.recurrenceDay.value"
-          small
-        />
-        <FormField
-          v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-          :errors="form.field.recurrenceDay.errors"
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="weeklyOpts"
-              :itemsRef.sync="form.field._recurrenceDay.value"
-              v-model="form.field.recurrenceDay.value"
-              @input="form.field.recurrenceDay.validate()"
-              displayKey="key"
-              valueKey="value"
-              nullDisplay="Select"
-              searchable
-              local
-            />
-          </template>
-        </FormField>
+        <div v-if="weeklyOrMonthly == 'WEEKLY'">
+          <FormField :errors="form.field.recurrenceDay.errors">
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="weeklyOpts"
+                :itemsRef.sync="form.field._recurrenceDay.value"
+                v-model="form.field.recurrenceDay.value"
+                @input="form.field.recurrenceDay.validate()"
+                displayKey="key"
+                valueKey="value"
+                nullDisplay="Select"
+                searchable
+                local
+              />
+            </template>
+          </FormField>
+        </div>
+        <span v-else-if="weeklyOrMonthly == 'MONTHLY'">
+          <FormField
+            placeholder="Day of month"
+            :errors="form.field.recurrenceDay.errors"
+            @blur="form.field.recurrenceDay.validate()"
+            v-model="form.field.recurrenceDay.value"
+            small
+          />
+        </span>
       </div>
       <div class="alerts-page__settings__target-users">
         <FormField
@@ -155,7 +155,6 @@
         >
           Send to a group of users (DM) instead ?
         </span>
-        {{ form.isValid }}
       </div>
     </div>
     <PulseLoadingSpinnerButton
@@ -335,6 +334,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    weeklyOrMonthly() {
+      return this.form.field.recurrenceFrequency.value
+    },
   },
 }
 </script>
@@ -372,5 +374,18 @@ export default {
 }
 ::v-deep .dropdown-search {
   margin: 1rem 0rem;
+}
+.alerts-page__settings {
+  &__frequency {
+    display: flex;
+    align-items: center;
+    &-label {
+      @include muted-font();
+      margin: 0 0.5rem;
+    }
+  }
+  &-remove {
+    justify-self: end;
+  }
 }
 </style>
