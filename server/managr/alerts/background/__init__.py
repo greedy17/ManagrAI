@@ -273,7 +273,8 @@ def _process_send_alert(invocation, channel, config_id):
                         )
                     ],
                 )
-            except Exception:
+            except Exception as e:
+                logger.exception(f"{e}")
                 logger.info(
                     f"failed to send notification to user that alert could not be sent to channel because managr is not part of channel {alert_instance.template.user}"
                 )
