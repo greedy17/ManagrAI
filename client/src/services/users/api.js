@@ -47,6 +47,7 @@ export default class UserAPI {
       pageSize: ApiFilter.create({ key: 'page_size' }),
       active: ApiFilter.create({ key: 'active' }),
       ordering: ApiFilter.create({ key: 'ordering' }),
+      search: ApiFilter.create({ key: 'search' }),
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),

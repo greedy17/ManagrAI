@@ -456,13 +456,9 @@ export default {
       let dataType = this.selectedFieldType(rowData.operandIdentifierRef)
       if (dataType == 'DATETIME' || dataType == 'DATE') {
         if (value.startsWith('-')) {
-          valueLabel = moment()
-            .subtract(value, 'days')
-            .format('MM-DD-YYYY')
+          valueLabel = `${value} days before run date`
         } else {
-          valueLabel = moment()
-            .add(value, 'days')
-            .format('MM-DD-YYYY')
+          valueLabel = `${value} days after run date`
         }
       }
       return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
@@ -504,7 +500,16 @@ export default {
     },
     async onDeleteOperand(id, index, groupIndex) {
       let confirmation = confirm('Delete this row ?')
+      let countOperands = this.alert.groupsRef[groupIndex].operandsRef.length
       if (confirmation) {
+        if (countOperands <= 1) {
+          return this.$Alert.alert({
+            type: 'error',
+            message: 'Groups must have at least one operand',
+            timeout: 2000,
+          })
+        }
+
         try {
           await AlertGroupOperand.api.delete(id)
           this.alert.groupsRef[groupIndex].operandsRef = [
@@ -523,8 +528,16 @@ export default {
       }
     },
     async onRemoveAlertGroup(id, index) {
-      let confirmation = confirm('Delete this row ?')
+      let confirmation = confirm('Delete this Group and all its rows ?')
+
       if (confirmation) {
+        if (this.alert.groupsRef[index] <= 1) {
+          return this.$Alert.alert({
+            type: 'error',
+            message: 'Groups must have at least one operand',
+            timeout: 2000,
+          })
+        }
         try {
           await AlertGroup.api.delete(id)
           this.alert.groupsRef = [

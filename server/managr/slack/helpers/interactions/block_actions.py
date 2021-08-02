@@ -7,6 +7,8 @@ from urllib.parse import urlencode
 from django.db.models import Q
 from django.utils import timezone
 
+from managr.utils.misc import custom_paginator
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.organization.models import Organization, Stage
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -19,6 +21,8 @@ from managr.slack.helpers import block_builders
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
+from managr.salesforce.background import emit_meeting_workflow_tracker
+from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -26,7 +30,7 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.api.decorators import slack_api_exceptions
-
+from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 
 logger = logging.getLogger("managr")
 
@@ -806,6 +810,23 @@ def process_disregard_meeting_review(payload, context):
     workflow.save()
 
 
+@processor()
+def process_no_changes_made(payload, context):
+    workflow_id = payload["actions"][0]["value"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
+    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form.save_form(state, False)
+    ops = [
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+    ]
+    workflow.operations_list = ops
+    workflow.save()
+    workflow.begin_tasks()
+    emit_meeting_workflow_tracker(str(workflow.id))
+    return {"response_action": "clear"}
+
+
 @processor(requried_context="u")
 def process_coming_soon(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1108,6 +1129,60 @@ def process_return_to_form_modal(payload, context):
     return
 
 
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_alerts(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    config_id = context.get("config_id")
+    alert_instances = AlertInstance.objects.filter(
+        invocation=invocation, channel=channel, config_id=config_id
+    )
+    alert_instance = alert_instances.first()
+    if not alert_instance:
+        # check if the config was deleted
+        config = AlertConfig.objects.filter(id=config_id).first()
+        if not config:
+            error_blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
+                },
+            )
+            slack_requests.update_channel_message(
+                channel_id, ts, access_token, text="Error", block_set=error_blocks
+            )
+        return
+    alert_template = alert_instance.template
+    alert_text = alert_template.title
+    blocks = []
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
+    for alert_instance in alert_instances.get("results", []):
+        blocks = [
+            *blocks,
+            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+        ]
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.save()
+    if len(blocks):
+        blocks = [
+            *blocks,
+            *custom_paginator_block(alert_instances, invocation, channel, config_id),
+        ]
+    slack_requests.update_channel_message(
+        channel_id, ts, access_token, text=alert_text, block_set=blocks
+    )
+
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1120,6 +1195,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
+        slack_const.ZOOM_MEETING__PROCESS_NO_CHANGES: process_no_changes_made,
         slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
@@ -1132,6 +1208,7 @@ def handle_block_actions(payload):
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
+        slack_const.PAGINATE_ALERTS: process_paginate_alerts,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

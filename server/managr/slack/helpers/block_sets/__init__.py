@@ -26,6 +26,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "create_modal_block_set": meeting_review_block_sets.create_modal_block_set,
         "disregard_meeting_review": meeting_review_block_sets.disregard_meeting_review_block_set,
         "final_meeting_interaction": meeting_review_block_sets.final_meeting_interaction_block_set,
+        "no_change_interaction": meeting_review_block_sets.no_changes_interaction_block_set,
         "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
         "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
         "loading": common_blocksets.loading_block_set,

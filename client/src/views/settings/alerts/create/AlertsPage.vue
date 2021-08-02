@@ -542,7 +542,6 @@
                     valueKey="id"
                     nullDisplay="Search"
                     searchable
-                    local
                     multi
                     medium
                     :loading="users.loadingNextPage"
@@ -581,7 +580,6 @@
                     valueKey="id"
                     nullDisplay="Search"
                     searchable
-                    local
                     multi
                     medium
                     :loading="users.loadingNextPage"
@@ -607,6 +605,8 @@
                     nullDisplay="Channels"
                     :hasNext="!!channelOpts.nextCursor"
                     @load-more="listChannels(channelOpts.nextCursor)"
+                    searchable
+                    local
                   >
                     <template v-slot:tn-dropdown-option="{ option }">
                       <img
@@ -941,7 +941,7 @@ export default {
         ...this.users.filters,
         search: v,
       }
-      await this.fields.refresh()
+      await this.users.refresh()
     },
     async onUsersNextPage() {
       await this.users.addNextPage()
