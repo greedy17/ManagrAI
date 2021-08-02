@@ -303,7 +303,7 @@
       </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
-          <div class="alerts-page__message">
+          <div class="alerts-page__message" style="height: 60vh">
             <div class="alerts-page__message-options">
               <!-- <FormField
                 v-model="
@@ -325,16 +325,16 @@
                       :options="{
                         modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                         placeholder:
-                          'Type your message here!\n \n \nExample: Hey, { __Recipient.full_name } your deal { Opportunity.Name } has a passed closed date { Opportunity.CloseDate } . Please update it!',
+                          'Type your message here, or copy and paste your favorite template...',
                         theme: 'snow',
                       }"
-                      class="bottom top"
+                      class="bottom"
                     />
                   </template>
                 </FormField>
                 <div class="alerts-page__message-options-body__bindings">
                   <div class="alerts-page__message-options-body__bindings__fields">
-                    <ListContainer horizontal>
+                    <ListContainer v-if="!listVisible" horizontal>
                       <template v-slot:list>
                         <ListItem
                           :key="key"
@@ -346,6 +346,7 @@
                       </template>
                     </ListContainer>
                     <DropDownSearch
+                      v-if="!dropdownVisible"
                       :items="fields.list"
                       @input="bindText(`${selectedResourceType}.${$event}`)"
                       displayKey="referenceDisplayLabel"
@@ -359,12 +360,72 @@
                       class="left"
                     />
                   </div>
+                  <div style="display: flex; flex-direction: row">
+                    <div class="group">
+                      <button class="btn btn--secondary btn--icon" @click="showList">
+                        <svg width="24px" height="24px" viewBox="0 0 24 24">
+                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                        </svg>
+                      </button>
+                      <p class="sub">Recipient name</p>
+                    </div>
+                    <div class="group">
+                      <button class="btn btn--secondary btn--icon" @click="showDropDown">
+                        <svg width="24px" height="24px" viewBox="0 0 24 24">
+                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                        </svg>
+                      </button>
+                      <p class="sub">Insert Salesforce field</p>
+                    </div>
+                  </div>
+                  <p style="font-size: 14px">
+                    <strong class="pink">Pro Tip:</strong> inserting the
+                    <strong>Salesforce field</strong> will display the field value in the message.
+                  </p>
                 </div>
               </div>
             </div>
-            <div class="alerts-page__message-template">
-              <div class="alerts-page__message-template__message">
+            <div
+              class="alerts-page__message-template"
+              style="margin-left: 7.5rem; margin-top: -1rem"
+            >
+              <!-- <div class="alerts-page__message-template__message">
                 <SlackMessagePreview :alert="alertObj" />
+              </div> -->
+              <h3 class="pink">Templates:</h3>
+              <div style="font-size: 14px">
+                <div class="templates">
+                  <p>
+                    Hey <strong>{ __Recipient.full_name }</strong>, your deal
+                    <strong>{ Opportunity.Name }</strong> has a passed closed date
+                    <strong>{ Opportunity.Name }</strong>. Please update it!
+                  </p>
+                </div>
+
+                <div class="templates">
+                  <p>
+                    <strong>{ Opportunity.Name }</strong> is a new Opp booked for this week! The
+                    appointment was booked via <strong>{ Opportunity.LeadSource }</strong>!
+                  </p>
+                  <p>Handoff notes: <strong>{ Opportunity.Handoff_Notes_c }</strong></p>
+                  <p style="margin-top: -0.75rem">
+                    Using a Competitor: <strong>{ Opportunity.Competitors_c }</strong>
+                  </p>
+                  <p style="margin-top: -0.75rem">
+                    Meeting date:
+                    <strong>{ Opportunity.Meeting_Date_c }</strong>
+                  </p>
+                </div>
+
+                <div class="templates">
+                  <p>
+                    Please update the forecast for <strong>{ Opportunity.Name }</strong>! it's
+                    expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted
+                    as <strong>{ Opportunity.ForecastCategoryName }</strong> - please ither move to
+                    Commit or update the Close Date.
+                  </p>
+                  <p>Next Step: <strong>{ Opportunity.NextStep }</strong></p>
+                </div>
               </div>
             </div>
           </div>
@@ -706,6 +767,8 @@ export default {
     return {
       channelOpts: new SlackListResponse(),
       savingTemplate: false,
+      listVisible: true,
+      dropdownVisible: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -882,6 +945,12 @@ export default {
     },
     async onUsersNextPage() {
       await this.users.addNextPage()
+    },
+    showList() {
+      this.listVisible = !this.listVisible
+    },
+    showDropDown() {
+      this.dropdownVisible = !this.dropdownVisible
     },
   },
   computed: {
@@ -1112,7 +1181,7 @@ textarea {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   margin-top: 10rem;
 }
 .bottom {
@@ -1120,7 +1189,7 @@ textarea {
   height: 170px;
 }
 .left {
-  margin-bottom: 5rem;
+  margin-bottom: 2rem;
 }
 .space {
   margin-bottom: 0.5rem;
@@ -1157,13 +1226,17 @@ textarea {
 .top {
   border-top: 3px solid $grape;
 }
+.templates {
+  border-bottom: 1px solid $gray;
+}
 input {
   width: 130px;
   text-align: center;
   height: 36px;
   border-radius: 0.25rem;
-  margin-top: 0.25rem;
-  border: 1px solid $slate-gray;
+  margin-top: 0.75rem;
+  border: none;
+  border-bottom: 1px solid $slate-gray;
   font-weight: bold;
 }
 </style>
