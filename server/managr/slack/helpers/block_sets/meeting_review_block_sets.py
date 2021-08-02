@@ -364,14 +364,7 @@ def initial_meeting_interaction_block_set(context):
         review_participants_button,
         {"type": "divider"},
     ]
-    action_blocks = [
-        block_builders.simple_button_block(
-            "Hide*",
-            str(workflow.id),
-            action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-            style="danger",
-        )
-    ]
+    action_blocks = None
     if (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
         or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
@@ -383,7 +376,6 @@ def initial_meeting_interaction_block_set(context):
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
             ),
-            *action_blocks,
         ]
     elif workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
         action_blocks = [
@@ -395,10 +387,17 @@ def initial_meeting_interaction_block_set(context):
                 ),
                 style="primary",
             ),
-            *action_blocks,
         ]
-    blocks.append(block_builders.actions_block(action_blocks))
-    blocks.append(block_builders.context_block("*Clicking 'Hide' will minimize this alert"))
+    if action_blocks:
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "No Update Needed",
+                str(workflow.id),
+                action_id=slack_const.ZOOM_MEETING__PROCESS_NO_CHANGES,
+                style="danger",
+            )
+        )
+        blocks.append(block_builders.actions_block(action_blocks))
     return blocks
 
 
@@ -559,13 +558,35 @@ def disregard_meeting_review_block_set(context, *args, **kwargs):
 @block_set(required_context=["w"])
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    meeting = workflow.meeting
+    meeting_form = OrgCustomSlackFormInstance.objects.get(resource_id=workflow.resource_id)
+    blocks = None
+    if meeting_form.saved_data["meeting_type"] == "No Update":
+        blocks = [
+            block_builders.simple_section(
+                f":+1: Got it! No updated needed for meeting *{meeting.topic}* :calendar:",
+                "mrkdwn",
+            )
+        ]
+    else:
+        blocks = [
+            block_builders.simple_section(
+                f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {workflow.resource.name}",
+                "mrkdwn",
+            ),
+        ]
+    return blocks
+
+
+@block_set(required_context=["w"])
+def no_changes_interaction_block_set(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     meeting = workflow.meeting
 
     blocks = [
         block_builders.simple_section(
-            f":heavy_check_mark: Logged meeting :calendar: for *{meeting.topic}* regarding :dart: {workflow.resource.name}",
-            "mrkdwn",
+            f":+1: Got it! No updated needed for meeting *{meeting.topic}* :calendar:", "mrkdwn",
         ),
     ]
 
