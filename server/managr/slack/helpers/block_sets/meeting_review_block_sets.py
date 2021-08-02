@@ -110,7 +110,7 @@ def create_meeting_task(context):
     return block_builders.section_with_button_block(
         "Create Task",
         "CREATE_A_TASK",
-        "Would you like to create a task from this meeting?",
+        "Would you like to Create a task?",
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__CREATE_TASK,
             params=[
