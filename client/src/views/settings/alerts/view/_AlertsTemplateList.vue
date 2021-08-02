@@ -11,19 +11,17 @@
               >Title</span
             >
             <span class="alerts-template-list__header-item">Run Now</span>
+            <span class="alerts-template-list__header-item">Schedule</span>
             <span class="alerts-template-list__header-item">Delete</span>
-            <span class="alerts-template-list__header-item">Active</span>
-            <span class="alerts-template-list__header-item">Test</span>
           </div>
         </template>
       </ExpandablePanel>
       <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
         <template v-slot:panel-header="{ classes, expand }">
           <div :data-key="alert.id" @click="expand" :class="classes">
-            <span
-              class="alerts-template-list__header-item alerts-template-list__header-item--main"
-              >{{ alert.title }}</span
-            >
+            <span class="alerts-template-list__header-item alerts-template-list__header-item--main"
+              >{{ alert.title }} <img src="@/assets/images/edit.png" style="height: 1rem" alt=""
+            /></span>
             <span
               @click.stop="onRunAlertTemplateNow(alert.id)"
               class="alerts-template-list__header-item alerts-template-list__header-item"
@@ -32,14 +30,7 @@
                 <use xlink:href="@/assets/images/loop.svg#loop" />
               </svg>
             </span>
-            <span
-              class="alerts-template-list__header-item alerts-template-list__header-item"
-              @click.stop="onDeleteTemplate(alert.id)"
-            >
-              <svg class="icon" fill="black" viewBox="0 0 30 30">
-                <use xlink:href="@/assets/images/remove.svg#remove" />
-              </svg>
-            </span>
+
             <span class="alerts-template-list__header-item alerts-template-list__header-item">
               <ToggleCheckBox
                 @input="onToggleAlert(alert.id, alert.isActive)"
@@ -53,14 +44,23 @@
                 "
               />
             </span>
+
             <span
+              class="alerts-template-list__header-item alerts-template-list__header-item"
+              @click.stop="onDeleteTemplate(alert.id)"
+            >
+              <svg class="icon" fill="black" viewBox="0 0 30 30">
+                <use xlink:href="@/assets/images/remove.svg#remove" />
+              </svg>
+            </span>
+            <!-- <span
               @click.stop="onTest(alert.id)"
               class="alerts-template-list__header-item alerts-template-list__header-item"
             >
               <svg class="icon" fill="black" viewBox="0 0 30 30">
                 <use xlink:href="@/assets/images/loop.svg#loop" />
               </svg>
-            </span>
+            </span> -->
           </div>
         </template>
         <template slot="panel-content">
@@ -72,7 +72,7 @@
     </template>
     <template v-else-if="!templates.isLoading && !templates.list.length">
       <div class="no-data">
-        No alert templates
+        <p>No alerts found. Click <strong>''Build''</strong> to create your first Smart Alert!</p>
       </div>
     </template>
     <template v-else>
@@ -198,7 +198,9 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .no-data {
-  @include muted-font();
+  color: $gray;
+  margin-left: 0.5rem;
+  font-size: 15px;
 }
 .alerts-template-list__header--heading {
   @include header-subtitle();
@@ -221,5 +223,8 @@ export default {
   cursor: pointer;
   width: 20px;
   height: 30px;
+}
+.pink {
+  color: $candy;
 }
 </style>
