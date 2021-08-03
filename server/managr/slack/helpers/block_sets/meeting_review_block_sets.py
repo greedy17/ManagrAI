@@ -566,8 +566,7 @@ def final_meeting_interaction_block_set(context):
     if meeting_form.saved_data["meeting_type"] == "No Update":
         blocks = [
             block_builders.simple_section(
-                f":+1: Got it! No updated needed for meeting *{meeting.topic}* :calendar:",
-                "mrkdwn",
+                f"No updated needed for meeting *{meeting.topic}* :calendar:", "mrkdwn",
             )
         ]
     else:
