@@ -7,7 +7,7 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-    <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
+    <!-- <img src="@/assets/images/backgroundLogo.png" class="background-logo" /> -->
   </div>
 </template>
 

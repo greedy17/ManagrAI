@@ -1,22 +1,23 @@
 <template>
   <div>
     <div class="integrations__cards">
-      <div @click="$router.push({ name: 'CreateNew' })" class="card">
+      <router-link active-class="active" :to="{ name: 'CreateNew' }" class="card">
         <div class="card__header">
           <img class="card-img" src="@/assets/images/logo.png" />
           <h3 class="title">Build</h3>
         </div>
 
         <p class="card-text">Create Smart Alerts.</p>
-      </div>
-      <div @click="$router.push({ name: 'ListTemplates' })" class="card">
+      </router-link>
+
+      <router-link active-class="active" :to="{ name: 'ListTemplates' }" class="card">
         <div class="card__header">
           <img class="card-img" src="@/assets/images/logo.png" />
           <h3 class="title">View</h3>
         </div>
 
         <p class="card-text">View, edit, & run Smart Alerts</p>
-      </div>
+      </router-link>
 
       <div class="card card--disabled">
         <div class="card__header">
@@ -29,12 +30,6 @@
       </div>
     </div>
     <router-view :key="$route.fullPath"></router-view>
-    <div class="note">
-      <p class="gray">
-        <strong class="pink">Note:</strong> Smart Alerts enable pipeline automation, allowing Managr
-        to Slack you when its time to take action.
-      </p>
-    </div>
   </div>
 </template>
 
@@ -66,7 +61,7 @@ export default {
 
 .card {
   width: 10rem;
-
+  text-decoration: none;
   margin-right: 1rem;
   margin-bottom: 2rem;
   margin-top: 1rem;
@@ -136,5 +131,12 @@ img {
 }
 .note {
   margin-top: 3rem;
+}
+.active {
+  -moz-box-shadow: 0 4px 8px 2px $grape;
+  -webkit-box-shadow: 0 4px 8px 2px $grape;
+  box-shadow: 0 4px 8px 2px $grape;
+  color: white;
+  border: 3px solid $ocean;
 }
 </style>
