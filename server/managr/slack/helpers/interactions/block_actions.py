@@ -814,6 +814,17 @@ def process_disregard_meeting_review(payload, context):
 def process_no_changes_made(payload, context):
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    organization = workflow.user.organization
+    access_token = organization.slack_integration.access_token
+    blocks = payload["message"]["blocks"]
+    blocks.pop()
+    blocks.append(block_builders.simple_section(":+1: Got it!", text_type="mrkdwn"))
+    try:
+        slack_requests.update_channel_message(
+            payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
+        )
+    except Exception as e:
+        return logger.exception(f"Bad request {e}")
     state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
     form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
     form.save_form(state, False)
