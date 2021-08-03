@@ -112,25 +112,20 @@
       </div>
     </modal>
 
-    <div v-if="!started" class="col mar__top">
-      <h2 class="header__title">Welcome to the Slack form builder!</h2>
-      <p class="muted">This is where you'll map your Salesforce fields to Manangr.</p>
-      <button class="buttons__" @click="started = !started">Get started!</button>
+    <div class="header__container" v-if="!resource">
+      <div class="col" style="margin-top: 4rem">
+        <h3 class="header__title">Select a Salesforce Object</h3>
+        <h3 class="muted">
+          <strong style="font-size: 17px">Pro-tip:</strong> Start with the
+          <strong style="font-size: 16px; color: #cc3873">Opportunity</strong> and
+          <strong style="font-size: 16px; color: #cc3873">Contact</strong>
+          objects, they are the most used.
+        </h3>
+      </div>
     </div>
 
-    <div class="main__content" v-if="started">
-      <div class="header__container" v-if="!resource">
-        <div class="col" style="margin-top: 4rem">
-          <h3 class="header__title">Select a Salesforce Object to get started.</h3>
-          <h3 class="muted">
-            <strong class="purple">Pro-tip:</strong> Start with the Opportunity and Contacts
-            objects, they are the most used.
-          </h3>
-        </div>
-      </div>
-
-      <div class="box-updated">
-        <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
+    <div class="box-updated">
+      <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
             <span class="box-updated__title">
               {{ resource }}
               <img
@@ -142,117 +137,115 @@
             </span>
           </div> -->
 
-        <div :class="resource ? 'search_buttons_row' : ''">
-          <DropDownSearch
-            :items.sync="SOBJECTS_LIST"
-            v-model="resource"
-            displayKey="key"
-            valueKey="value"
-            nullDisplay="Select salesforce object"
-            class="search"
-          />
+      <div :class="resource ? 'search_buttons_row' : ''">
+        <DropDownSearch
+          :items.sync="SOBJECTS_LIST"
+          v-model="resource"
+          displayKey="key"
+          valueKey="value"
+          nullDisplay="Select salesforce object"
+          class="search"
+        />
 
-          <div class="col" v-if="resource && !formType">
-            <p class="muted mar__">
-              <strong class="purple">Pro tip:</strong> Start with the “Update” form as that is the
-              most used. Try to fill out all of the forms.
-            </p>
-          </div>
-
-          <div class="row">
-            <div v-if="resource">
-              <button
-                @click="selectForm(resource, UPDATE)"
-                class="buttons__"
-                :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
-              >
-                {{ ` Update ${resource}` }}
-              </button>
-              <button
-                @click="selectForm(resource, MEETING_REVIEW)"
-                v-if="resource == 'Opportunity' || resource == 'Account'"
-                :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
-              >
-                Zoom Meeting
-              </button>
-              <button
-                @click="selectForm(resource, CREATE)"
-                :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-              >
-                {{ ` Create ${resource}` }}
-              </button>
-              <button
-                @click="openStageDropDown"
-                v-if="resource == OPPORTUNITY"
-                :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
-              >
-                Stage Related Fields
-              </button>
-              <img
-                style="
-                  height: 1.6rem;
-                  padding-left: 0.5rem;
-                  padding-bottom: 0.5rem;
-                  cursor: pointer;
-                "
-                src="@/assets/images/toolTip.png"
-                @click.prevent.stop="toggleObjectsModal"
-              />
-            </div>
-          </div>
+        <div class="col" v-if="resource && !formType">
+          <p class="muted mar__">
+            <strong class="purple">Pro tip:</strong> Start with the “Update” form as that is the
+            most used. Try to fill out all of the forms.
+          </p>
         </div>
 
-        <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
-          <div>
-            <div class="stage__dropdown__header">Your Stage Gate Forms</div>
-            <div
-              v-for="(form, i) in formStages"
-              :key="form.id"
-              class="stage__dropdown__stages__container"
-              :class="{
-                'stage__dropdown__stages__container--selected':
-                  selectedForm &&
-                  selectedForm.formType == 'STAGE_GATING' &&
-                  selectedForm.resource == 'Opportunity' &&
-                  selectedForm.stage == form.stage,
-              }"
+        <div class="row">
+          <div v-if="resource">
+            <button
+              @click="selectForm(resource, UPDATE)"
+              class="buttons__"
+              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
             >
-              <div
-                class="stage__dropdown__stages__title"
-                @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
-              >
-                {{ form.stage }}
-              </div>
-              <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
-            </div>
+              <img src="@/assets/images/edit.png" alt="update" />
+              {{ ` Update ${resource}` }}
+            </button>
+            <button
+              @click="selectForm(resource, MEETING_REVIEW)"
+              v-if="resource == 'Opportunity' || resource == 'Account'"
+              :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
+            >
+              <img src="@/assets/images/zoom.png" alt="zoom" height="24rem" />
+              Zoom Meeting
+            </button>
+            <button
+              @click="selectForm(resource, CREATE)"
+              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
+            >
+              <img src="@/assets/images/create.png" alt="create" />
+              {{ ` Create ${resource}` }}
+            </button>
+            <button
+              @click="openStageDropDown"
+              v-if="resource == OPPORTUNITY"
+              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
+            >
+              <img src="@/assets/images/stageStairs.png" alt="" />
+              Stage Related Fields
+            </button>
+            <img
+              style="height: 2rem; cursor: pointer"
+              src="@/assets/images/info.png"
+              @click.prevent.stop="toggleObjectsModal"
+            />
           </div>
-          <div style="display: flex; justify-content: center">
-            <button @click="onAddForm" class="modal-container__box__button">Add</button>
-          </div>
-        </div>
-
-        <div class="box__tab-content">
-          <template v-if="selectedForm">
-            <div class="box__content--expanded">
-              <CustomSlackForm
-                :show-validations="showValidations"
-                :formType="formType"
-                :customForm="selectedForm"
-                :resource="resource"
-                v-on:update:selectedForm="updateForm($event)"
-                :loading="formFields.refreshing"
-                :stageForms="formStages"
-              />
-            </div>
-          </template>
         </div>
       </div>
 
-      <div class="tip-continue" v-if="resource">
-        <button class="primary-button">
-          <router-link :to="{ name: 'alerts' }">Continue to Smart Alerts </router-link>
-        </button>
+      <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
+        <div>
+          <div class="stage__dropdown__header">Your Stage Gate Forms</div>
+          <div
+            v-for="(form, i) in formStages"
+            :key="form.id"
+            class="stage__dropdown__stages__container"
+            :class="{
+              'stage__dropdown__stages__container--selected':
+                selectedForm &&
+                selectedForm.formType == 'STAGE_GATING' &&
+                selectedForm.resource == 'Opportunity' &&
+                selectedForm.stage == form.stage,
+            }"
+          >
+            <div
+              class="stage__dropdown__stages__title"
+              @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
+            >
+              {{ form.stage }}
+            </div>
+            <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: center">
+          <button @click="onAddForm" class="modal-container__box__button">Add</button>
+        </div>
       </div>
+
+      <div class="box__tab-content">
+        <template v-if="selectedForm">
+          <div class="box__content--expanded">
+            <CustomSlackForm
+              :show-validations="showValidations"
+              :formType="formType"
+              :customForm="selectedForm"
+              :resource="resource"
+              v-on:update:selectedForm="updateForm($event)"
+              :loading="formFields.refreshing"
+              :stageForms="formStages"
+            />
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="tip-continue" v-if="resource">
+      <button class="primary-button">
+        <router-link :to="{ name: 'ListTemplates' }">Continue to Smart Alerts </router-link>
+      </button>
     </div>
   </div>
 </template>
@@ -843,13 +836,15 @@ a {
 }
 button {
   margin-top: 1em;
+  border: none;
+  text-align: center;
 }
 .buttons__ {
   height: 3rem;
-  width: 12.5rem;
+  width: 13rem;
   text-align: center;
   border-radius: 0.5rem;
-  border: 2px solid $theme-gray;
+  border-bottom: 2px solid $theme-gray;
   color: $gray;
   background-color: white;
   font-weight: bolder;
@@ -858,7 +853,7 @@ button {
 }
 .buttons__:hover {
   color: #cc3873;
-  border: 2px solid #cc3873;
+  border-bottom: 2px solid #cc3873;
   cursor: pointer;
 }
 .primary-button {
@@ -880,7 +875,7 @@ button {
   text-align: center;
   border-radius: 0.5rem;
   background-color: white;
-  border: 2px solid #cc3873;
+  border-bottom: 2px solid #cc3873;
   color: #cc3873;
   font-weight: bolder;
   font-size: 0.975rem;
@@ -916,6 +911,11 @@ button {
   margin-top: 7rem;
 }
 .purple {
-  color: #645289;
+  color: $grape;
+  font-size: 18px;
+}
+img {
+  margin-right: 0.25rem;
+  margin-top: 0.5rem;
 }
 </style>

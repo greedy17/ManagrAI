@@ -21,6 +21,8 @@ from managr.slack.helpers import block_builders
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
+from managr.salesforce.background import emit_meeting_workflow_tracker
+from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -808,6 +810,34 @@ def process_disregard_meeting_review(payload, context):
     workflow.save()
 
 
+@processor()
+def process_no_changes_made(payload, context):
+    workflow_id = payload["actions"][0]["value"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    organization = workflow.user.organization
+    access_token = organization.slack_integration.access_token
+    blocks = payload["message"]["blocks"]
+    blocks.pop()
+    blocks.append(block_builders.simple_section(":+1: Got it!", text_type="mrkdwn"))
+    try:
+        slack_requests.update_channel_message(
+            payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
+        )
+    except Exception as e:
+        return logger.exception(f"Bad request {e}")
+    state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
+    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form.save_form(state, False)
+    ops = [
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+    ]
+    workflow.operations_list = ops
+    workflow.save()
+    workflow.begin_tasks()
+    emit_meeting_workflow_tracker(str(workflow.id))
+    return {"response_action": "clear"}
+
+
 @processor(requried_context="u")
 def process_coming_soon(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1176,6 +1206,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
+        slack_const.ZOOM_MEETING__PROCESS_NO_CHANGES: process_no_changes_made,
         slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
         slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
