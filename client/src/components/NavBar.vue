@@ -19,7 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+              <router-link active-class="active" :to="{ name: 'alerts' }"
                 >Smart Alerts
               </router-link>
             </li>
