@@ -131,17 +131,12 @@ def meeting_contacts_block_set(context):
 
     contacts = meeting.participants
     sf_account = meeting.zoom_account.user.salesforce_account
-    header = {
-        "type": "header",
-        "text": {
-            "type": "plain_text",
-            "text": "Attendees below will be saved as Contacts :busts_in_silhouette:",
-            "emoji": True,
-        },
-    }
-    json_header = json.dumps(header)
+
     block_sets = [
-        json_header,
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
+        },
         {"type": "divider"},
     ]
     # list contacts we already had from sf
@@ -155,7 +150,7 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    "_Click_ '*Edit*' _to fill in the missing details. Click_ '*Remove*' _to discard_",
+                    "_Click_ *'Edit'* _to fill in the missing details. Click_ *'Remove'* _to discard_",
                     "mrkdwn",
                 )
             ]
