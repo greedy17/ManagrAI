@@ -133,7 +133,10 @@ def meeting_contacts_block_set(context):
     sf_account = meeting.zoom_account.user.salesforce_account
 
     block_sets = [
-        {"type": "header", "text": {"type": "plain_text", "text": "Review Meeting Participants",},},
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
+        },
         {"type": "divider"},
     ]
     # list contacts we already had from sf
@@ -147,13 +150,9 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":exclamation: *Managr did not add these participants from the meeting to Salesforce*",
+                    "_Click_ *'Edit'* _to fill in the missing details. Click_ *'Remove'* _to discard_",
                     "mrkdwn",
-                ),
-                block_builders.simple_section(
-                    f":ballot_box_with_check: _These contacts will be added to Salesforce and attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
-                    "mrkdwn",
-                ),
+                )
             ]
         )
 
